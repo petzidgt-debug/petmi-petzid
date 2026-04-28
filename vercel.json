@@ -1,7 +1,5 @@
 {
-  "functions": {
-    "api/submit.js": {
-      "runtime": "edge"
-    }
-  }
+  "rewrites": [
+    { "source": "/api/submit", "destination": "/api/submit.js" }
+  ]
 }
