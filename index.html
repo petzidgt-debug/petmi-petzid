@@ -636,6 +636,11 @@ function addSibling(){
   window.scrollTo(0,0);
 }
 
+let photoUploaded = false;
+let photoFilename = null;
+let photoBase64 = null;
+let photoMime = null;
+
 // Init
 drawBarcode(document.getElementById('barcodeSvg'),uid);
 document.getElementById('cId').textContent=uid;
