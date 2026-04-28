@@ -553,7 +553,18 @@ function openWhatsApp(){
 }
 
 function addSibling(){
-  // Guardar pill
+  // Guardar datos familiares ANTES de limpiar
+  if(!isSibling){
+    familyData={
+      dueno:   document.getElementById('inDueno').value.trim(),
+      email:   document.getElementById('inEmail').value.trim(),
+      whatsapp:'+502'+(document.getElementById('inWhatsapp').value||'').trim(),
+      zona:    document.getElementById('inZona').value.trim(),
+      vet:     document.getElementById('inVet').value.trim()
+    };
+  }
+
+  // Guardar pill del hermano anterior
   const nombre=document.getElementById('inNombre').value||'Mascota';
   const especie=getChip('chipsEspecie');
   siblings.push({nombre,especie});
@@ -565,7 +576,6 @@ function addSibling(){
   pill.textContent='🐾 '+nombre+' ('+especie+')';
   bar.appendChild(pill);
 
-  // Mini en desktop
   const mini=document.createElement('div');
   mini.style.cssText='background:rgba(255,255,255,.15);border-radius:10px;padding:8px 12px;font-size:12px;color:#fff;font-weight:700';
   mini.textContent='🐾 '+nombre+' — '+especie;
@@ -575,18 +585,22 @@ function addSibling(){
   isSibling=true;
   uid=genId();
 
-  // Ocultar bloque familia
+  // Ocultar bloque familia en step 2
   document.getElementById('familyBlock').style.display='none';
   document.getElementById('siblingFamilyInfo').style.display='block';
 
-  // Limpiar solo datos de mascota
+  // Limpiar campos de mascota
   ['inNombre','inApodo','inRaza','inFecha','inInsta','inAlimento','inEspecial'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
 
-  // Reset foto
+  // Reset foto completamente
+  const fileInput=document.getElementById('fileInput');
+  fileInput.value='';
   const img=document.getElementById('petPhoto');
-  img.src='';img.style.display='none';
+  img.src='';
+  img.style.display='none';
+  img.removeAttribute('src');
   document.getElementById('phIcon').style.display='block';
   document.getElementById('phTxt').style.display='block';
   document.getElementById('cPhoto').innerHTML='🐾';
@@ -594,12 +608,14 @@ function addSibling(){
   // Reset chips gustos
   document.querySelectorAll('#chipsTipoComida .chip,#chipsActividad .chip,#chipsPersonalidad .chip').forEach(c=>c.classList.remove('sel'));
 
-  // Reset especie/sexo a defaults
+  // Reset especie/sexo
   selectChip('chipsEspecie', document.querySelector('#chipsEspecie .chip'));
   selectChip('chipsSexo', document.querySelector('#chipsSexo .chip'));
 
+  // Ir al paso 1
+  cur=1; showStep(1); updateProgress();
   syncCard();
-  cur=1;showStep(1);updateProgress();
+  window.scrollTo(0,0);
 }
 
 // Init
