@@ -6,11 +6,55 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;font-size:16px}
-.app{display:flex;flex-direction:column;min-height:100vh;max-width:480px;margin:0 auto;background:#fff}
 
-/* CARD PREVIEW */
-.card-preview-bar{background:#00B4B4;padding:16px;display:flex;justify-content:center;position:sticky;top:0;z-index:50}
-.card-mini{background:#fff;border-radius:12px;overflow:hidden;width:100%;max-width:320px;box-shadow:0 4px 16px rgba(0,0,0,.18)}
+/* HEADER */
+.site-header{background:#fff;border-bottom:1px solid #eee;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:200;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.header-logo img{height:44px;display:block}
+.header-nav{display:flex;align-items:center;gap:4px}
+.header-nav a{font-size:13px;font-weight:600;color:#333;text-decoration:none;padding:6px 10px;border-radius:8px;transition:background .15s;white-space:nowrap}
+.header-nav a:hover{background:#f5f5f5;color:#00B4B4}
+.header-nav a.active{color:#00B4B4}
+.btn-ingresar{padding:8px 18px;border:1.5px solid #00B4B4;border-radius:20px;font-size:13px;font-weight:700;color:#00B4B4;background:#fff;cursor:pointer;white-space:nowrap;text-decoration:none;transition:all .15s;margin-left:8px}
+.btn-ingresar:hover{background:#00B4B4;color:#fff}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
+.hamburger span{width:22px;height:2px;background:#333;border-radius:2px;transition:all .3s}
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:#fff;border-bottom:1px solid #eee;padding:12px 24px;flex-direction:column;gap:4px;z-index:199;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.mobile-menu.open{display:flex}
+.mobile-menu a{font-size:15px;font-weight:600;color:#333;text-decoration:none;padding:10px 0;border-bottom:1px solid #f5f5f5}
+.mobile-menu a:last-child{border-bottom:none}
+.mobile-menu .btn-ingresar{margin:8px 0 0;text-align:center;display:block}
+@media(max-width:640px){
+  .header-nav{display:none}
+  .btn-ingresar:not(.mobile-menu .btn-ingresar){display:none}
+  .hamburger{display:flex}
+}
+/* LAYOUT RESPONSIVE */
+.app{display:flex;flex-direction:column;min-height:100vh;background:#fff}
+
+/* DESKTOP: side by side */
+@media(min-width:900px){
+  .app{flex-direction:row;max-width:1100px;margin:0 auto;min-height:100vh;box-shadow:0 0 40px rgba(0,0,0,.08)}
+  .left-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .right-panel{width:320px;flex-shrink:0;background:#00B4B4;display:flex;flex-direction:column;align-items:center;padding:30px 20px;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .card-preview-bar{display:none}
+  .desktop-card{display:flex!important;flex-direction:column;align-items:center;gap:16px;width:100%}
+  .nav-bar{position:sticky}
+}
+
+/* TABLET */
+@media(min-width:600px) and (max-width:899px){
+  .app{max-width:640px;margin:0 auto}
+  .form-area{padding:24px 28px 100px}
+}
+
+.left-panel{display:flex;flex-direction:column;flex:1}
+.right-panel{display:none}
+.desktop-card{display:none}
+
+/* CARD PREVIEW - mobile sticky top */
+.card-preview-bar{background:#00B4B4;padding:14px 16px;display:flex;justify-content:center;position:sticky;top:0;z-index:50}
+
+.card-mini{background:#fff;border-radius:12px;overflow:hidden;width:100%;max-width:340px;box-shadow:0 4px 16px rgba(0,0,0,.18)}
 .card-mini-top{background:#00B4B4;padding:14px 14px 0;display:flex;gap:12px;align-items:flex-end}
 .mini-photo{width:72px;height:82px;border-radius:7px;overflow:hidden;border:2px solid rgba(255,255,255,.4);background:#b2e0e0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;color:rgba(255,255,255,.7)}
 .mini-photo img{width:100%;height:100%;object-fit:cover}
@@ -27,6 +71,11 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;font-size:
 .footer-tag{width:28px;height:28px;background:#E05090;border-radius:6px 6px 6px 0;display:flex;align-items:center;justify-content:center;font-size:12px}
 .brand-txt{font-size:16px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#1a1a1a;letter-spacing:-1px}
 .brand-txt span{color:#E05090}
+
+/* DESKTOP CARD LABEL */
+.desktop-label{color:rgba(255,255,255,.7);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:center;margin-bottom:4px}
+.desktop-title{color:#fff;font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;text-align:center;margin-bottom:16px}
+.desktop-title span{color:#F5C842}
 
 /* SIBLINGS */
 .sib-bar{padding:8px 12px;background:#e0f7f7;display:none;flex-wrap:wrap;gap:6px;border-bottom:1px solid #b2ddd5}
@@ -53,7 +102,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;font-size:
 .ssub{font-size:13px;color:#888;margin-bottom:18px}
 
 label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;display:block;margin-bottom:5px;margin-top:14px}
-input[type=text],input[type=email],input[type=date],select,textarea{width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;color:#222;background:#fff;outline:none;transition:border .2s;-webkit-appearance:none;appearance:none}
+input[type=text],input[type=email],input[type=date],input[type=tel],select,textarea{width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;color:#222;background:#fff;outline:none;transition:border .2s;-webkit-appearance:none;appearance:none}
 input:focus,select:focus,textarea:focus{border-color:#00B4B4}
 textarea{resize:none;height:80px;line-height:1.5}
 
@@ -84,7 +133,7 @@ input:checked+.tog-slider{background:#00B4B4}
 input:checked+.tog-slider:before{transform:translateX(20px)}
 
 /* NAV */
-.nav-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid #eee;padding:12px 16px;display:flex;gap:10px;z-index:100}
+.nav-bar{position:sticky;bottom:0;background:#fff;border-top:1px solid #eee;padding:12px 16px;display:flex;gap:10px;z-index:100}
 .btn-back{flex:0 0 80px;padding:14px;border:1.5px solid #ddd;border-radius:12px;font-size:15px;font-weight:700;color:#888;background:#fff;cursor:pointer;min-height:48px}
 .btn-next{flex:1;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;color:#fff;background:#00B4B4;cursor:pointer;min-height:48px}
 .btn-next:disabled{background:#aaa;cursor:not-allowed}
@@ -94,215 +143,307 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 .done-icon{font-size:56px;margin-bottom:12px}
 .done-title{font-size:22px;font-weight:900;color:#222;margin-bottom:6px}
 .done-sub{font-size:14px;color:#888;line-height:1.6;margin-bottom:24px}
-.btn-action{width:100%;padding:15px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;min-height:52px;border:none}
+.btn-action{width:100%;padding:15px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;min-height:52px;border:none;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-dl{background:#00B4B4;color:#fff}
+.btn-wa{background:#25D366;color:#fff}
 .btn-hermano{background:#fff;color:#E05090;border:1.5px solid #E05090!important}
 .btn-comunidad{background:#fff;color:#888;border:1.5px solid #ddd!important}
 
+/* INFO BOX */
+.info-box{background:#e0f7f7;border-radius:10px;padding:12px 14px;font-size:13px;color:#007a7a;margin-top:8px;border:1px solid #b2ddd5;display:flex;gap:8px;align-items:flex-start}
+
 /* ERROR */
 .error-msg{background:#fbeaf0;border:1px solid #f4c0d1;border-radius:10px;padding:12px 14px;font-size:13px;color:#993556;margin-top:12px;display:none}
+
+/* SECTION DIVIDER */
+.sdivider{font-size:10px;font-weight:700;letter-spacing:1.5px;color:#ccc;text-transform:uppercase;margin:20px 0 6px;display:flex;align-items:center;gap:8px}
+.sdivider::after{content:'';flex:1;height:1px;background:#eee}
 </style>
 </head>
 <body>
+<!-- HEADER -->
+<header class="site-header">
+  <a href="https://www.revistapetmi.com" target="_blank" class="header-logo">
+    <img src="https://static.wixstatic.com/media/11a62b_c7b9f267a65c4a698f09ede28ef9f61b~mv2.png" alt="PetMi" onerror="this.style.display='none';this.nextSibling.style.display='block'">
+    <span style="display:none;font-size:20px;font-weight:900;color:#00B4B4;font-family:'Arial Black',Arial,sans-serif">PET<span style="color:#E05090">mi</span></span>
+  </a>
+  <nav class="header-nav">
+    <a href="https://www.revistapetmi.com" target="_blank">Blog</a>
+    <a href="https://www.revistapetmi.com/home" target="_blank" class="active">Petmi ID</a>
+    <a href="https://www.revistapetmi.com/category/all-products" target="_blank">Tienda</a>
+    <a href="https://www.revistapetmi.com/miembros" target="_blank">Miembros</a>
+    <a href="https://www.revistapetmi.com/miembros" target="_blank" class="btn-ingresar">Ingresar</a>
+  </nav>
+  <div class="hamburger" onclick="toggleMenu()" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+</header>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="https://www.revistapetmi.com" target="_blank" onclick="toggleMenu()">Blog</a>
+  <a href="https://www.revistapetmi.com/home" target="_blank" onclick="toggleMenu()">Petmi ID</a>
+  <a href="https://www.revistapetmi.com/category/all-products" target="_blank" onclick="toggleMenu()">Tienda</a>
+  <a href="https://www.revistapetmi.com/miembros" target="_blank" onclick="toggleMenu()">Miembros</a>
+  <a href="https://www.revistapetmi.com/miembros" target="_blank" class="btn-ingresar" onclick="toggleMenu()">Ingresar</a>
+</div>
+
 <div class="app">
 
-<!-- CARD PREVIEW -->
-<div class="card-preview-bar">
-  <div class="card-mini">
-    <div class="card-mini-top">
-      <div class="mini-photo" id="cPhoto">🐾</div>
-      <div class="mini-info">
-        <div class="mini-name" id="cNombre">"NOMBRE"</div>
-        <div class="mini-nametag" id="cApodo">Apodo</div>
-        <div class="mini-apodo" id="cEspecieSexo">Especie · Sexo</div>
-      </div>
-    </div>
-    <div class="card-mini-body">
-      <div><div class="mflbl">Responsable</div><div class="mfval" id="cDueno">—</div></div>
-      <div><div class="mflbl">Zona</div><div class="mfval" id="cZona">—</div></div>
-      <div><div class="mflbl">Fecha</div><div class="mfval" id="cFecha">—</div></div>
-      <div><div class="mflbl">Vet</div><div class="mfval" id="cVet">—</div></div>
-    </div>
-    <div class="card-mini-bc">
-      <svg id="barcodeSvg" width="180" height="28" viewBox="0 0 180 28"></svg>
-      <div class="bc-id" id="cId">—</div>
-    </div>
-    <div class="card-mini-footer">
-      <div class="footer-tag">🐾</div>
-      <div class="brand-txt">petz<span>ID</span></div>
-    </div>
-  </div>
-</div>
+<!-- LEFT PANEL -->
+<div class="left-panel">
 
-<!-- SIBLINGS BAR -->
-<div class="sib-bar" id="sibBar"></div>
-
-<!-- PROGRESS -->
-<div class="prog-bar">
-  <div class="steps-row">
-    <div class="sdot active" id="sd1">1</div>
-    <div class="sline" id="sl1"></div>
-    <div class="sdot" id="sd2">2</div>
-    <div class="sline" id="sl2"></div>
-    <div class="sdot" id="sd3">3</div>
-    <div class="sline" id="sl3"></div>
-    <div class="sdot" id="sd4">✓</div>
-  </div>
-  <div class="slabels">
-    <div class="slbl active" id="slbl1">Mi ID</div>
-    <div class="slbl" id="slbl2">Familia</div>
-    <div class="slbl" id="slbl3">Gustos</div>
-    <div class="slbl" id="slbl4">¡Listo!</div>
-  </div>
-</div>
-
-<!-- FORM -->
-<div class="form-area">
-
-  <!-- STEP 1 -->
-  <div class="screen active" id="step1">
-    <div class="stitle">Crea tu PetzID 🐾</div>
-    <div class="ssub">Datos principales de tu mascota</div>
-    <div style="text-align:center">
-      <div class="photo-upload" onclick="document.getElementById('fileInput').click()">
-        <img id="petPhoto" src="" style="display:none"/>
-        <span id="phIcon" style="font-size:28px;color:#ccc">📷</span>
-        <span style="font-size:11px;color:#bbb;margin-top:4px" id="phTxt">Agregar foto</span>
-      </div>
-      <input type="file" id="fileInput" accept="image/*" onchange="loadPhoto(event)">
-    </div>
-    <label>Nombre *</label>
-    <input type="text" id="inNombre" placeholder="¿Cómo se llama?" oninput="syncCard()">
-    <label>Apodo cariñoso</label>
-    <input type="text" id="inApodo" placeholder="Ej: Gordita, Peluchín..." oninput="syncCard()">
-    <div class="two-col">
-      <div>
-        <label>Especie</label>
-        <div class="chips" id="chipsEspecie">
-          <div class="chip sel" onclick="selectChip('chipsEspecie',this);syncCard()">🐶 Perro</div>
-          <div class="chip" onclick="selectChip('chipsEspecie',this);syncCard()">🐱 Gato</div>
+  <!-- CARD PREVIEW mobile/tablet -->
+  <div class="card-preview-bar">
+    <div class="card-mini" id="cardMini">
+      <div class="card-mini-top">
+        <div class="mini-photo" id="cPhoto">🐾</div>
+        <div class="mini-info">
+          <div class="mini-name" id="cNombre">"NOMBRE"</div>
+          <div class="mini-nametag" id="cApodo">Apodo</div>
+          <div class="mini-apodo" id="cEspecieSexo">Especie · Sexo</div>
         </div>
       </div>
-      <div>
-        <label>Sexo</label>
-        <div class="chips" id="chipsSexo">
-          <div class="chip sel" onclick="selectChip('chipsSexo',this);syncCard()">Hembra</div>
-          <div class="chip" onclick="selectChip('chipsSexo',this);syncCard()">Macho</div>
+      <div class="card-mini-body">
+        <div><div class="mflbl">Responsable</div><div class="mfval" id="cDueno">—</div></div>
+        <div><div class="mflbl">Zona</div><div class="mfval" id="cZona">—</div></div>
+        <div><div class="mflbl">Fecha</div><div class="mfval" id="cFecha">—</div></div>
+        <div><div class="mflbl">Vet</div><div class="mfval" id="cVet">—</div></div>
+      </div>
+      <div class="card-mini-bc">
+        <svg id="barcodeSvg" width="180" height="28" viewBox="0 0 180 28"></svg>
+        <div class="bc-id" id="cId">—</div>
+      </div>
+      <div class="card-mini-footer">
+        <div class="footer-tag">🐾</div>
+        <div class="brand-txt">petz<span>ID</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIBLINGS BAR -->
+  <div class="sib-bar" id="sibBar"></div>
+
+  <!-- PROGRESS -->
+  <div class="prog-bar">
+    <div class="steps-row">
+      <div class="sdot active" id="sd1">1</div>
+      <div class="sline" id="sl1"></div>
+      <div class="sdot" id="sd2">2</div>
+      <div class="sline" id="sl2"></div>
+      <div class="sdot" id="sd3">3</div>
+      <div class="sline" id="sl3"></div>
+      <div class="sdot" id="sd4">✓</div>
+    </div>
+    <div class="slabels">
+      <div class="slbl active" id="slbl1">Mi ID</div>
+      <div class="slbl" id="slbl2">Familia</div>
+      <div class="slbl" id="slbl3">Gustos</div>
+      <div class="slbl" id="slbl4">¡Listo!</div>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="form-area">
+
+    <!-- STEP 1: MASCOTA -->
+    <div class="screen active" id="step1">
+      <div class="stitle">Crea tu PetzID 🐾</div>
+      <div class="ssub">Datos principales de tu mascota</div>
+      <div style="text-align:center">
+        <div class="photo-upload" onclick="document.getElementById('fileInput').click()">
+          <img id="petPhoto" src="" style="display:none"/>
+          <span id="phIcon" style="font-size:28px;color:#ccc">📷</span>
+          <span style="font-size:11px;color:#bbb;margin-top:4px" id="phTxt">Agregar foto</span>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" onchange="loadPhoto(event)">
+      </div>
+      <label>Nombre *</label>
+      <input type="text" id="inNombre" placeholder="¿Cómo se llama?" oninput="syncCard()">
+      <label>Apodo cariñoso</label>
+      <input type="text" id="inApodo" placeholder="Ej: Gordita, Peluchín..." oninput="syncCard()">
+      <div class="two-col">
+        <div>
+          <label>Especie</label>
+          <div class="chips" id="chipsEspecie">
+            <div class="chip sel" onclick="selectChip('chipsEspecie',this);syncCard()">🐶 Perro</div>
+            <div class="chip" onclick="selectChip('chipsEspecie',this);syncCard()">🐱 Gato</div>
+          </div>
+        </div>
+        <div>
+          <label>Sexo</label>
+          <div class="chips" id="chipsSexo">
+            <div class="chip sel" onclick="selectChip('chipsSexo',this);syncCard()">Hembra</div>
+            <div class="chip" onclick="selectChip('chipsSexo',this);syncCard()">Macho</div>
+          </div>
         </div>
       </div>
-    </div>
-    <label>Raza</label>
-    <input type="text" id="inRaza" placeholder="Ej: Pug, Labrador, Mestizo...">
-    <label>¿Cuándo llegó a tu vida?</label>
-    <div class="date-toggle">
-      <div class="dt-opt sel" id="dtNac" onclick="switchDate('nac')">Fecha de nacimiento</div>
-      <div class="dt-opt" id="dtCasa" onclick="switchDate('casa')">Llegó a casa</div>
-    </div>
-    <input type="date" id="inFecha" oninput="syncCard()" style="margin-top:8px">
-    <div style="font-size:11px;color:#bbb;margin-top:4px" id="dateHint">Fecha en que nació tu mascota</div>
-    <label>Zona donde vive</label>
-    <input type="text" id="inZona" placeholder="Ej: Zona 10, Cayalá..." oninput="syncCard()">
-  </div>
-
-  <!-- STEP 2 -->
-  <div class="screen" id="step2">
-    <div class="stitle">Su familia 🏠</div>
-    <div class="ssub">Datos del responsable y veterinario</div>
-    <label>Tu nombre *</label>
-    <input type="text" id="inDueno" placeholder="Nombre completo" oninput="syncCard()">
-    <label>Correo electrónico *</label>
-    <input type="email" id="inEmail" placeholder="Para enviarte el PetzID" inputmode="email">
-    <label>Veterinario de confianza</label>
-    <input type="text" id="inVet" placeholder="Nombre o clínica" oninput="syncCard()">
-    <label>¿Vive con otras mascotas?</label>
-    <div class="chips" id="chipsConvive">
-      <div class="chip sel" onclick="selectChip('chipsConvive',this)">Solo/a</div>
-      <div class="chip" onclick="selectChip('chipsConvive',this)">Con perros</div>
-      <div class="chip" onclick="selectChip('chipsConvive',this)">Con gatos</div>
-      <div class="chip" onclick="selectChip('chipsConvive',this)">Con ambos</div>
-    </div>
-    <label>Instagram de tu mascota (opcional)</label>
-    <input type="text" id="inInsta" placeholder="@usuario">
-  </div>
-
-  <!-- STEP 3 -->
-  <div class="screen" id="step3">
-    <div class="stitle">Sus gustos 🌟</div>
-    <div class="ssub">Comida, actividades y preferencias</div>
-    <label>Alimento que consume</label>
-    <input type="text" id="inAlimento" placeholder="Marca y tipo de comida">
-    <label>Tipo de alimentación</label>
-    <div class="chips" id="chipsTipoComida">
-      <div class="chip" onclick="toggleChip(this)">Croquetas</div>
-      <div class="chip" onclick="toggleChip(this)">Comida húmeda</div>
-      <div class="chip" onclick="toggleChip(this)">BARF / natural</div>
-      <div class="chip" onclick="toggleChip(this)">Mixta</div>
-    </div>
-    <label>Actividades favoritas o que le gustaría</label>
-    <div class="chips" id="chipsActividad">
-      <div class="chip" onclick="toggleChip(this)">Paseos</div>
-      <div class="chip" onclick="toggleChip(this)">Agility</div>
-      <div class="chip" onclick="toggleChip(this)">Natación</div>
-      <div class="chip" onclick="toggleChip(this)">Socialización</div>
-      <div class="chip" onclick="toggleChip(this)">Juegos en casa</div>
-      <div class="chip" onclick="toggleChip(this)">Obediencia</div>
-      <div class="chip" onclick="toggleChip(this)">Dog park</div>
-      <div class="chip" onclick="toggleChip(this)">Grooming / spa</div>
-    </div>
-    <label>Personalidad</label>
-    <div class="chips" id="chipsPersonalidad">
-      <div class="chip" onclick="toggleChip(this)">Juguetón</div>
-      <div class="chip" onclick="toggleChip(this)">Tranquilo</div>
-      <div class="chip" onclick="toggleChip(this)">Protector</div>
-      <div class="chip" onclick="toggleChip(this)">Curioso</div>
-      <div class="chip" onclick="toggleChip(this)">Sociable</div>
-      <div class="chip" onclick="toggleChip(this)">Cariñoso</div>
-      <div class="chip" onclick="toggleChip(this)">Independiente</div>
-    </div>
-    <div style="margin-top:18px;background:#fafafa;border-radius:12px;padding:14px 16px;border:1px solid #eee">
-      <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Comunicaciones</div>
-      <div class="toggle-row">
-        <span class="toggle-lbl">Recibir ofertas y promos</span>
-        <label class="toggle"><input type="checkbox" id="togOfertas" checked><span class="tog-slider"></span></label>
+      <label>Raza</label>
+      <input type="text" id="inRaza" placeholder="Ej: Pug, Labrador, Mestizo...">
+      <label>¿Cuándo llegó a tu vida?</label>
+      <div class="date-toggle">
+        <div class="dt-opt sel" id="dtNac" onclick="switchDate('nac')">Fecha de nacimiento</div>
+        <div class="dt-opt" id="dtCasa" onclick="switchDate('casa')">Llegó a casa</div>
       </div>
-      <div class="toggle-row">
-        <span class="toggle-lbl">Info de actividades pet-friendly</span>
-        <label class="toggle"><input type="checkbox" id="togActividades" checked><span class="tog-slider"></span></label>
+      <input type="date" id="inFecha" oninput="syncCard()" style="margin-top:8px">
+      <div style="font-size:11px;color:#bbb;margin-top:4px" id="dateHint">Fecha en que nació tu mascota</div>
+    </div>
+
+    <!-- STEP 2: FAMILIA (se oculta en hermanos) -->
+    <div class="screen" id="step2">
+      <div class="stitle">Su familia 🏠</div>
+      <div class="ssub" id="step2sub">Datos del responsable y veterinario</div>
+
+      <!-- Bloque familia (se oculta si es hermano) -->
+      <div id="familyBlock">
+        <label>Tu nombre *</label>
+        <input type="text" id="inDueno" placeholder="Nombre completo" oninput="syncCard()">
+        <label>Correo electrónico *</label>
+        <input type="email" id="inEmail" placeholder="Para enviarte el PetzID" inputmode="email">
+        <label>WhatsApp</label>
+        <div style="display:flex;gap:8px">
+          <div style="background:#f0f0ee;border:1.5px solid #e0e0e0;border-radius:12px;padding:13px 14px;font-size:16px;color:#555;white-space:nowrap;display:flex;align-items:center">+502</div>
+          <input type="tel" id="inWhatsapp" placeholder="####-####" inputmode="numeric" style="flex:1">
+        </div>
+        <label>Zona donde viven</label>
+        <input type="text" id="inZona" placeholder="Ej: Zona 10, Cayalá..." oninput="syncCard()">
+        <label>Veterinario de confianza</label>
+        <input type="text" id="inVet" placeholder="Nombre o clínica" oninput="syncCard()">
       </div>
-      <div class="toggle-row">
-        <span class="toggle-lbl">Novedades de la comunidad Petmi</span>
-        <label class="toggle"><input type="checkbox" id="togComunidad" checked><span class="tog-slider"></span></label>
+
+      <!-- Info si es hermano -->
+      <div id="siblingFamilyInfo" style="display:none">
+        <div class="info-box">🏠 Los datos del dueño y zona se comparten con el hermano registrado anteriormente.</div>
+      </div>
+
+      <label>¿Vive con otras mascotas?</label>
+      <div class="chips" id="chipsConvive">
+        <div class="chip sel" onclick="selectChip('chipsConvive',this)">Solo/a</div>
+        <div class="chip" onclick="selectChip('chipsConvive',this)">Con perros</div>
+        <div class="chip" onclick="selectChip('chipsConvive',this)">Con gatos</div>
+        <div class="chip" onclick="selectChip('chipsConvive',this)">Con ambos</div>
+      </div>
+      <label>Instagram de tu mascota (opcional)</label>
+      <input type="text" id="inInsta" placeholder="@usuario">
+    </div>
+
+    <!-- STEP 3: GUSTOS -->
+    <div class="screen" id="step3">
+      <div class="stitle">Sus gustos 🌟</div>
+      <div class="ssub">Comida, actividades y preferencias</div>
+      <label>Alimento que consume</label>
+      <input type="text" id="inAlimento" placeholder="Marca y tipo de comida">
+      <label>Tipo de alimentación</label>
+      <div class="chips" id="chipsTipoComida">
+        <div class="chip" onclick="toggleChip(this)">Croquetas</div>
+        <div class="chip" onclick="toggleChip(this)">Comida húmeda</div>
+        <div class="chip" onclick="toggleChip(this)">BARF / natural</div>
+        <div class="chip" onclick="toggleChip(this)">Mixta</div>
+      </div>
+      <label>Actividades favoritas o que le gustaría</label>
+      <div class="chips" id="chipsActividad">
+        <div class="chip" onclick="toggleChip(this)">Paseos</div>
+        <div class="chip" onclick="toggleChip(this)">Agility</div>
+        <div class="chip" onclick="toggleChip(this)">Natación</div>
+        <div class="chip" onclick="toggleChip(this)">Socialización</div>
+        <div class="chip" onclick="toggleChip(this)">Juegos en casa</div>
+        <div class="chip" onclick="toggleChip(this)">Obediencia</div>
+        <div class="chip" onclick="toggleChip(this)">Dog park</div>
+        <div class="chip" onclick="toggleChip(this)">Grooming / spa</div>
+      </div>
+      <label>Personalidad</label>
+      <div class="chips" id="chipsPersonalidad">
+        <div class="chip" onclick="toggleChip(this)">Juguetón</div>
+        <div class="chip" onclick="toggleChip(this)">Tranquilo</div>
+        <div class="chip" onclick="toggleChip(this)">Protector</div>
+        <div class="chip" onclick="toggleChip(this)">Curioso</div>
+        <div class="chip" onclick="toggleChip(this)">Sociable</div>
+        <div class="chip" onclick="toggleChip(this)">Cariñoso</div>
+        <div class="chip" onclick="toggleChip(this)">Independiente</div>
+      </div>
+      <div style="margin-top:18px;background:#fafafa;border-radius:12px;padding:14px 16px;border:1px solid #eee">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Comunicaciones</div>
+        <div class="toggle-row">
+          <span class="toggle-lbl">Recibir ofertas y promos</span>
+          <label class="toggle"><input type="checkbox" id="togOfertas" checked><span class="tog-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-lbl">Info de actividades pet-friendly</span>
+          <label class="toggle"><input type="checkbox" id="togActividades" checked><span class="tog-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-lbl">Novedades de la comunidad Petmi</span>
+          <label class="toggle"><input type="checkbox" id="togComunidad" checked><span class="tog-slider"></span></label>
+        </div>
+      </div>
+      <label>Algo especial de tu mascota</label>
+      <textarea id="inEspecial" placeholder="Un dato curioso, su historia..."></textarea>
+      <div class="error-msg" id="errorMsg">⚠️ Hubo un problema. Por favor intenta de nuevo.</div>
+    </div>
+
+    <!-- STEP 4: DONE -->
+    <div class="screen" id="step4">
+      <div class="done-wrap">
+        <div class="done-icon">🎉</div>
+        <div class="done-title">¡PetzID listo!</div>
+        <div class="done-sub">El perfil de <strong id="doneNombre">tu mascota</strong> está completo.<br>Te enviamos tu PetzID al correo en unos segundos.</div>
+        <button class="btn-action btn-wa" onclick="openWhatsApp()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.132 1.527 5.88L0 24l6.272-1.504A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.002-1.368l-.36-.214-3.726.893.924-3.638-.235-.374A9.818 9.818 0 1112 21.818z"/></svg>
+          Recibir ofertas por WhatsApp
+        </button>
+        <button class="btn-action btn-hermano" onclick="addSibling()">🐾 Agregar mascota hermana</button>
+        <button class="btn-action btn-comunidad" onclick="window.open('https://www.revistapetmi.com','_blank')">Explorar comunidad Petmi →</button>
       </div>
     </div>
-    <label>Algo especial de tu mascota</label>
-    <textarea id="inEspecial" placeholder="Un dato curioso, su historia..."></textarea>
-    <div class="error-msg" id="errorMsg">⚠️ Hubo un problema al guardar. Por favor intenta de nuevo.</div>
+
+  </div><!-- /form-area -->
+
+  <!-- NAV -->
+  <div class="nav-bar" id="navBar">
+    <button class="btn-back" id="btnBack" onclick="goBack()" style="display:none">← Atrás</button>
+    <button class="btn-next" id="btnNext" onclick="goNext()">Siguiente →</button>
   </div>
 
-  <!-- STEP 4: DONE -->
-  <div class="screen" id="step4">
-    <div class="done-wrap">
-      <div class="done-icon">🎉</div>
-      <div class="done-title">¡PetzID listo!</div>
-      <div class="done-sub">El perfil de <strong id="doneNombre">tu mascota</strong> está completo.<br>Te enviamos tu PetzID al correo en unos segundos.</div>
-      <button class="btn-action btn-hermano" onclick="addSibling()">🐾 Agregar mascota hermana</button>
-      <button class="btn-action btn-comunidad" onclick="window.parent.postMessage('petmi-comunidad','*')">Explorar comunidad Petmi →</button>
+</div><!-- /left-panel -->
+
+<!-- RIGHT PANEL (desktop only) -->
+<div class="right-panel">
+  <div class="desktop-card">
+    <div class="desktop-label">Vista previa en tiempo real</div>
+    <div class="desktop-title">petz<span>ID</span></div>
+    <div class="card-mini">
+      <div class="card-mini-top">
+        <div class="mini-photo" id="cPhotoD">🐾</div>
+        <div class="mini-info">
+          <div class="mini-name" id="cNombreD">"NOMBRE"</div>
+          <div class="mini-nametag" id="cApodoD">Apodo</div>
+          <div class="mini-apodo" id="cEspecieSexoD">Especie · Sexo</div>
+        </div>
+      </div>
+      <div class="card-mini-body">
+        <div><div class="mflbl">Responsable</div><div class="mfval" id="cDuenoD">—</div></div>
+        <div><div class="mflbl">Zona</div><div class="mfval" id="cZonaD">—</div></div>
+        <div><div class="mflbl">Fecha</div><div class="mfval" id="cFechaD">—</div></div>
+        <div><div class="mflbl">Vet</div><div class="mfval" id="cVetD">—</div></div>
+      </div>
+      <div class="card-mini-bc">
+        <svg id="barcodeSvgD" width="180" height="28" viewBox="0 0 180 28"></svg>
+        <div class="bc-id" id="cIdD">—</div>
+      </div>
+      <div class="card-mini-footer">
+        <div class="footer-tag">🐾</div>
+        <div class="brand-txt">petz<span>ID</span></div>
+      </div>
     </div>
+    <div id="sibCardsDesktop" style="width:100%;display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
   </div>
-
-</div><!-- /form-area -->
-
-<!-- NAV -->
-<div class="nav-bar" id="navBar">
-  <button class="btn-back" id="btnBack" onclick="goBack()" style="display:none">← Atrás</button>
-  <button class="btn-next" id="btnNext" onclick="goNext()">Siguiente →</button>
 </div>
 
 </div><!-- /app -->
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydKuG0LAVR68shj-UFNM9AfnWkhiZyCQrVM2QlHk5eK7LDySeArHemvRSs7rCUYxe0/exec';
-let cur=1, siblings=[], uid=genId(), dateMode='nac';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbydKuG0LAVR68shj-UFNM9AfnWkhiZyCQrVM2QlHk5eK7LDySeArHemvRSs7rCUYxe0/exec';
+let cur=1, siblings=[], uid=genId(), dateMode='nac', isSibling=false, familyData=null;
 
 function genId(){
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
@@ -333,6 +474,48 @@ function getChips(id){
   return[...document.querySelectorAll('#'+id+' .chip.sel')].map(c=>c.textContent.trim().replace(/[🐶🐱]/g,'').trim());
 }
 
+function setCard(ids, vals){
+  ids.forEach((id,i)=>{const el=document.getElementById(id);if(el)el.textContent=vals[i]||'—';});
+}
+
+function syncCard(){
+  const n=(document.getElementById('inNombre').value||'').toUpperCase()||'NOMBRE';
+  const a=document.getElementById('inApodo').value||'Apodo';
+  const esp=getChip('chipsEspecie'), sx=getChip('chipsSexo');
+  const zona=(isSibling?familyData?.zona:document.getElementById('inZona')?.value||'')?.toUpperCase()||'—';
+  const dueno=(isSibling?familyData?.dueno:document.getElementById('inDueno')?.value||'')?.toUpperCase()||'—';
+  const vet=(isSibling?familyData?.vet:document.getElementById('inVet')?.value||'')?.toUpperCase()||'—';
+  const fecha=fmtDate(document.getElementById('inFecha').value);
+
+  // Mobile card
+  document.getElementById('cNombre').textContent='"'+n+'"';
+  document.getElementById('cApodo').textContent=a;
+  document.getElementById('cEspecieSexo').textContent=esp+' · '+sx;
+  document.getElementById('cZona').textContent=zona;
+  document.getElementById('cDueno').textContent=dueno;
+  document.getElementById('cVet').textContent=vet;
+  document.getElementById('cFecha').textContent=fecha;
+  document.getElementById('cId').textContent=uid;
+  drawBarcode(document.getElementById('barcodeSvg'),uid);
+
+  // Desktop card
+  document.getElementById('cNombreD').textContent='"'+n+'"';
+  document.getElementById('cApodoD').textContent=a;
+  document.getElementById('cEspecieSexoD').textContent=esp+' · '+sx;
+  document.getElementById('cZonaD').textContent=zona;
+  document.getElementById('cDuenoD').textContent=dueno;
+  document.getElementById('cVetD').textContent=vet;
+  document.getElementById('cFechaD').textContent=fecha;
+  document.getElementById('cIdD').textContent=uid;
+  drawBarcode(document.getElementById('barcodeSvgD'),uid);
+
+  // Photo
+  const img=document.getElementById('petPhoto');
+  const photoHTML=img.src&&img.style.display!=='none'?`<img src="${img.src}">`:'🐾';
+  document.getElementById('cPhoto').innerHTML=photoHTML;
+  document.getElementById('cPhotoD').innerHTML=photoHTML;
+}
+
 function switchDate(mode){
   dateMode=mode;
   document.getElementById('dtNac').classList.toggle('sel',mode==='nac');
@@ -340,26 +523,6 @@ function switchDate(mode){
   document.getElementById('dateHint').textContent=mode==='nac'?'Fecha en que nació tu mascota':'Fecha en que llegó a tu hogar';
   document.getElementById('inFecha').value='';
   syncCard();
-}
-
-function syncCard(){
-  const n=(document.getElementById('inNombre').value||'').toUpperCase()||'NOMBRE';
-  const a=document.getElementById('inApodo').value||'Apodo';
-  document.getElementById('cNombre').textContent='"'+n+'"';
-  document.getElementById('cApodo').textContent=a;
-  document.getElementById('cEspecieSexo').textContent=getChip('chipsEspecie')+' · '+getChip('chipsSexo');
-  document.getElementById('cZona').textContent=(document.getElementById('inZona').value||'—').toUpperCase();
-  document.getElementById('cFecha').textContent=fmtDate(document.getElementById('inFecha').value);
-  const dEl=document.getElementById('inDueno');
-  const vEl=document.getElementById('inVet');
-  if(dEl)document.getElementById('cDueno').textContent=(dEl.value||'—').toUpperCase();
-  if(vEl)document.getElementById('cVet').textContent=(vEl.value||'—').toUpperCase();
-  document.getElementById('cId').textContent=uid;
-  drawBarcode(document.getElementById('barcodeSvg'),uid);
-  const img=document.getElementById('petPhoto');
-  if(img.src&&img.style.display!=='none'){
-    document.getElementById('cPhoto').innerHTML=`<img src="${img.src}">`;
-  }
 }
 
 function loadPhoto(e){
@@ -385,7 +548,7 @@ function validate(){
   if(cur===1&&!document.getElementById('inNombre').value.trim()){
     alert('Por favor ingresa el nombre de tu mascota');return false;
   }
-  if(cur===2){
+  if(cur===2&&!isSibling){
     if(!document.getElementById('inDueno').value.trim()){alert('Por favor ingresa tu nombre');return false;}
     const em=document.getElementById('inEmail').value.trim();
     if(!em||!em.includes('@')){alert('Por favor ingresa un correo válido');return false;}
@@ -428,8 +591,16 @@ async function submitPetzID(){
   btn.disabled=true;
   document.getElementById('errorMsg').style.display='none';
 
+  const fd = isSibling ? familyData : {
+    dueno:    document.getElementById('inDueno').value.trim(),
+    email:    document.getElementById('inEmail').value.trim(),
+    whatsapp: '+502'+document.getElementById('inWhatsapp').value.trim(),
+    zona:     document.getElementById('inZona').value.trim(),
+    vet:      document.getElementById('inVet').value.trim()
+  };
+
   const payload={
-    uid,
+    uid, isSibling,
     nombre:   document.getElementById('inNombre').value.trim(),
     apodo:    document.getElementById('inApodo').value.trim(),
     especie:  getChip('chipsEspecie'),
@@ -437,10 +608,9 @@ async function submitPetzID(){
     raza:     document.getElementById('inRaza').value.trim(),
     tipoFecha: dateMode,
     fecha:    document.getElementById('inFecha').value,
-    zona:     document.getElementById('inZona').value.trim(),
-    dueno:    document.getElementById('inDueno').value.trim(),
-    email:    document.getElementById('inEmail').value.trim(),
-    veterinario: document.getElementById('inVet').value.trim(),
+    dueno:    fd.dueno, email: fd.email,
+    whatsapp: fd.whatsapp,
+    zona:     fd.zona, veterinario: fd.vet,
     conviveCon:  getChip('chipsConvive'),
     instagram:   document.getElementById('inInsta').value.trim(),
     alimento:    document.getElementById('inAlimento').value.trim(),
@@ -453,36 +623,32 @@ async function submitPetzID(){
     especial: document.getElementById('inEspecial').value.trim()
   };
 
-  try {
-    // Usamos no-cors para Wix (no podemos leer la respuesta pero el dato llega)
-    await fetch(SCRIPT_URL, {
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
+  // Guardar familyData para hermanos
+  if(!isSibling) familyData = fd;
+
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
     cur=4;showStep(4);updateProgress();
-  } catch(err){
+  }catch(err){
     document.getElementById('errorMsg').style.display='block';
     btn.textContent='¡Crear mi PetzID! 🐾';
     btn.disabled=false;
   }
 }
 
-function addSibling(){
-  // Guardar datos familiares del primer registro
-  const familyData={
-    dueno:   document.getElementById('inDueno').value,
-    email:   document.getElementById('inEmail').value,
-    vet:     document.getElementById('inVet').value,
-    zona:    document.getElementById('inZona').value,
-    convive: getChip('chipsConvive')
-  };
+function openWhatsApp(){
+  const wa = familyData?.whatsapp || '';
+  const num = wa.replace(/\D/g,'');
+  const msg = encodeURIComponent('¡Hola Petmi! 🐾 Quiero recibir ofertas y novedades para mi mascota.');
+  window.open(`https://wa.me/502${num}?text=${msg}`,'_blank');
+}
 
-  const pet={nombre:document.getElementById('inNombre').value||'Mascota',especie:getChip('chipsEspecie'), family:familyData};
+function addSibling(){
+  const pet={nombre:document.getElementById('inNombre').value||'Mascota', especie:getChip('chipsEspecie')};
   siblings.push(pet);
 
+  // Pill en barra
   const bar=document.getElementById('sibBar');
   bar.style.display='flex';
   const pill=document.createElement('div');
@@ -490,40 +656,49 @@ function addSibling(){
   pill.textContent='🐾 '+pet.nombre+' ('+pet.especie+')';
   bar.appendChild(pill);
 
+  // Mini card en desktop
+  const sibCardsD=document.getElementById('sibCardsDesktop');
+  const mini=document.createElement('div');
+  mini.style.cssText='background:rgba(255,255,255,.15);border-radius:10px;padding:8px 12px;font-size:12px;color:#fff;font-weight:700';
+  mini.textContent='🐾 '+pet.nombre+' — '+pet.especie;
+  sibCardsD.appendChild(mini);
+
+  // Activar modo hermano
+  isSibling=true;
   uid=genId();
+
+  // Mostrar/ocultar bloque familia en step 2
+  document.getElementById('familyBlock').style.display='none';
+  document.getElementById('siblingFamilyInfo').style.display='block';
 
   // Limpiar solo datos de la mascota
   ['inNombre','inApodo','inRaza','inFecha','inInsta','inAlimento','inEspecial'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
 
-  // Pre-llenar datos familiares compartidos
-  document.getElementById('inDueno').value = familyData.dueno;
-  document.getElementById('inEmail').value  = familyData.email;
-  document.getElementById('inVet').value    = familyData.vet;
-  document.getElementById('inZona').value   = familyData.zona;
-
-  // Pre-seleccionar convivencia
-  document.querySelectorAll('#chipsConvive .chip').forEach(c=>{
-    c.classList.toggle('sel', c.textContent.trim()===familyData.convive);
-  });
-
-  // Reset foto
+  // Reset foto y chips
   document.getElementById('petPhoto').src='';
   document.getElementById('petPhoto').style.display='none';
   document.getElementById('phIcon').style.display='block';
   document.getElementById('phTxt').style.display='block';
   document.getElementById('cPhoto').innerHTML='🐾';
-
-  // Reset chips de gustos
-  document.querySelectorAll('#chipsTipoComida .chip, #chipsActividad .chip, #chipsPersonalidad .chip').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('cPhotoD').innerHTML='🐾';
+  document.querySelectorAll('#chipsTipoComida .chip,#chipsActividad .chip,#chipsPersonalidad .chip').forEach(c=>c.classList.remove('sel'));
 
   syncCard();
   cur=1;showStep(1);updateProgress();
 }
 
+function toggleMenu(){
+  const m=document.getElementById('mobileMenu');
+  m.classList.toggle('open');
+}
+
+// Init
 drawBarcode(document.getElementById('barcodeSvg'),uid);
+drawBarcode(document.getElementById('barcodeSvgD'),uid);
 document.getElementById('cId').textContent=uid;
+document.getElementById('cIdD').textContent=uid;
 updateProgress();
 </script>
 </body>
