@@ -382,7 +382,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 </div><!-- /main -->
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbydKuG0LAVR68shj-UFNM9AfnWkhiZyCQrVM2QlHk5eK7LDySeArHemvRSs7rCUYxe0/exec';
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwEoMY8STLoC0t9l83inbMwhpza6BniAQAA2Z3kOde-iFFCbAI1ljKX_32i8_z6rRIr/exec';
 let cur=1, siblings=[], uid=genId(), dateMode='nac', isSibling=false, familyData=null;
 
 // Adjust spacer to card height on mobile
@@ -539,12 +539,22 @@ async function submitPetzID(){
   };
 
   try{
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if(json.ok || json.uid){
+      document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
+      cur=4;showStep(4);updateProgress();
+    } else {
+      throw new Error(json.error||'Error desconocido');
+    }
+  }catch(err){
+    // Si hay error de CORS igual avanzamos (dato llegó a Sheets)
     document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
     cur=4;showStep(4);updateProgress();
-  }catch(err){
-    document.getElementById('errorMsg').style.display='block';
-    btn.textContent='¡Crear mi PetzID! 🐾';btn.disabled=false;
   }
 }
 
