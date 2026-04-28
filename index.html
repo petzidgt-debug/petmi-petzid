@@ -612,6 +612,11 @@ function addSibling(){
   selectChip('chipsEspecie', document.querySelector('#chipsEspecie .chip'));
   selectChip('chipsSexo', document.querySelector('#chipsSexo .chip'));
 
+  // Re-habilitar botón siguiente
+  const btn=document.getElementById('btnNext');
+  btn.disabled=false;
+  btn.textContent='Siguiente →';
+
   // Ir al paso 1
   cur=1; showStep(1); updateProgress();
   syncCard();
