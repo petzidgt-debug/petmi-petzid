@@ -471,23 +471,53 @@ async function submitPetzID(){
 }
 
 function addSibling(){
-  const pet={nombre:document.getElementById('inNombre').value||'Mascota',especie:getChip('chipsEspecie')};
+  // Guardar datos familiares del primer registro
+  const familyData={
+    dueno:   document.getElementById('inDueno').value,
+    email:   document.getElementById('inEmail').value,
+    vet:     document.getElementById('inVet').value,
+    zona:    document.getElementById('inZona').value,
+    convive: getChip('chipsConvive')
+  };
+
+  const pet={nombre:document.getElementById('inNombre').value||'Mascota',especie:getChip('chipsEspecie'), family:familyData};
   siblings.push(pet);
+
   const bar=document.getElementById('sibBar');
   bar.style.display='flex';
   const pill=document.createElement('div');
   pill.className='sib-pill';
   pill.textContent='🐾 '+pet.nombre+' ('+pet.especie+')';
   bar.appendChild(pill);
+
   uid=genId();
-  ['inNombre','inApodo','inRaza','inZona','inFecha','inDueno','inEmail','inVet','inInsta','inAlimento','inEspecial'].forEach(id=>{
+
+  // Limpiar solo datos de la mascota
+  ['inNombre','inApodo','inRaza','inFecha','inInsta','inAlimento','inEspecial'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
+
+  // Pre-llenar datos familiares compartidos
+  document.getElementById('inDueno').value = familyData.dueno;
+  document.getElementById('inEmail').value  = familyData.email;
+  document.getElementById('inVet').value    = familyData.vet;
+  document.getElementById('inZona').value   = familyData.zona;
+
+  // Pre-seleccionar convivencia
+  document.querySelectorAll('#chipsConvive .chip').forEach(c=>{
+    c.classList.toggle('sel', c.textContent.trim()===familyData.convive);
+  });
+
+  // Reset foto
   document.getElementById('petPhoto').src='';
   document.getElementById('petPhoto').style.display='none';
   document.getElementById('phIcon').style.display='block';
   document.getElementById('phTxt').style.display='block';
   document.getElementById('cPhoto').innerHTML='🐾';
+
+  // Reset chips de gustos
+  document.querySelectorAll('#chipsTipoComida .chip, #chipsActividad .chip, #chipsPersonalidad .chip').forEach(c=>c.classList.remove('sel'));
+
   syncCard();
   cur=1;showStep(1);updateProgress();
 }
