@@ -535,7 +535,8 @@ async function submitPetzID(){
     recibeOfertas:    document.getElementById('togOfertas').checked,
     recibeActividades:document.getElementById('togActividades').checked,
     recibeComunidad:  document.getElementById('togComunidad').checked,
-    photoUrl:    photoUrl || '',
+    photoBase64: photoBase64 || null,
+    photoMime:   photoMime || null,
     especial:    document.getElementById('inEspecial').value.trim()
   };
 
