@@ -1,1 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;font-size:16px}
+.app{display:flex;flex-direction:column;min-height:100vh;max-width:480px;margin:0 auto;background:#fff}
 
+/* CARD PREVIEW */
+.card-preview-bar{background:#00B4B4;padding:16px;display:flex;justify-content:center;position:sticky;top:0;z-index:50}
+.card-mini{background:#fff;border-radius:12px;overflow:hidden;width:100%;max-width:320px;box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.card-mini-top{background:#00B4B4;padding:14px 14px 0;display:flex;gap:12px;align-items:flex-end}
+.mini-photo{width:72px;height:82px;border-radius:7px;overflow:hidden;border:2px solid rgba(255,255,255,.4);background:#b2e0e0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;color:rgba(255,255,255,.7)}
+.mini-photo img{width:100%;height:100%;object-fit:cover}
+.mini-info{color:#fff;padding-bottom:10px;flex:1;min-width:0}
+.mini-name{font-size:16px;font-weight:900;letter-spacing:1px;font-family:'Arial Black',Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-nametag{background:#F4A0B0;color:#7a1a2e;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:4px}
+.mini-apodo{font-size:11px;opacity:.85;margin-top:2px}
+.card-mini-body{padding:10px 12px 8px;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+.mflbl{font-size:8px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#bbb}
+.mfval{font-size:11px;font-weight:900;color:#222;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-mini-bc{padding:6px 12px 8px;border-top:1px solid #f0f0f0;text-align:center}
+.bc-id{font-size:8px;color:#E05555;font-family:monospace;letter-spacing:.5px}
+.card-mini-footer{background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:7px 12px}
+.footer-tag{width:28px;height:28px;background:#E05090;border-radius:6px 6px 6px 0;display:flex;align-items:center;justify-content:center;font-size:12px}
+.brand-txt{font-size:16px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#1a1a1a;letter-spacing:-1px}
+.brand-txt span{color:#E05090}
+
+/* SIBLINGS */
+.sib-bar{padding:8px 12px;background:#e0f7f7;display:none;flex-wrap:wrap;gap:6px;border-bottom:1px solid #b2ddd5}
+.sib-pill{padding:4px 10px;border-radius:20px;background:#fff;border:1.5px solid #00B4B4;font-size:11px;font-weight:700;color:#007a7a}
+
+/* PROGRESS */
+.prog-bar{padding:12px 16px 0;border-bottom:1px solid #eee;background:#fff}
+.steps-row{display:flex;align-items:center;margin-bottom:6px}
+.sdot{width:26px;height:26px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#bbb;background:#fff;transition:all .3s;flex-shrink:0}
+.sdot.active{border-color:#00B4B4;color:#00B4B4}
+.sdot.done{border-color:#00B4B4;background:#00B4B4;color:#fff}
+.sline{height:2px;flex:1;background:#ddd;transition:background .3s}
+.sline.done{background:#00B4B4}
+.slabels{display:flex;justify-content:space-between;padding-bottom:8px}
+.slbl{font-size:9px;color:#bbb;text-align:center;flex:1;letter-spacing:.3px}
+.slbl.active{color:#00B4B4;font-weight:700}
+.slbl.done{color:#00B4B4}
+
+/* FORM */
+.form-area{flex:1;overflow-y:auto;padding:18px 16px 100px}
+.screen{display:none}
+.screen.active{display:block}
+.stitle{font-size:20px;font-weight:900;color:#222;margin-bottom:2px}
+.ssub{font-size:13px;color:#888;margin-bottom:18px}
+
+label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;display:block;margin-bottom:5px;margin-top:14px}
+input[type=text],input[type=email],input[type=date],select,textarea{width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;color:#222;background:#fff;outline:none;transition:border .2s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{border-color:#00B4B4}
+textarea{resize:none;height:80px;line-height:1.5}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{padding:9px 14px;border-radius:24px;border:1.5px solid #ddd;font-size:13px;font-weight:600;color:#888;cursor:pointer;background:#fff;transition:all .15s;user-select:none;min-height:40px;display:flex;align-items:center}
+.chip.sel{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* DATE TOGGLE */
+.date-toggle{display:flex;background:#f0f0ee;border-radius:12px;padding:3px;margin-top:6px}
+.dt-opt{flex:1;padding:10px;text-align:center;border-radius:9px;font-size:13px;font-weight:600;color:#888;cursor:pointer;transition:all .2s}
+.dt-opt.sel{background:#fff;color:#00B4B4;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+/* PHOTO */
+.photo-upload{width:100px;height:114px;border-radius:12px;border:2px dashed #ccc;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;background:#fafafa;overflow:hidden;margin:0 auto 4px}
+.photo-upload img{width:100%;height:100%;object-fit:cover}
+#fileInput{display:none}
+
+/* TOGGLES */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f5f5f5}
+.toggle-row:last-child{border-bottom:none}
+.toggle-lbl{font-size:14px;color:#333;padding-right:12px}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.tog-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ddd;border-radius:24px;transition:.3s}
+.tog-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+input:checked+.tog-slider{background:#00B4B4}
+input:checked+.tog-slider:before{transform:translateX(20px)}
+
+/* NAV */
+.nav-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid #eee;padding:12px 16px;display:flex;gap:10px;z-index:100}
+.btn-back{flex:0 0 80px;padding:14px;border:1.5px solid #ddd;border-radius:12px;font-size:15px;font-weight:700;color:#888;background:#fff;cursor:pointer;min-height:48px}
+.btn-next{flex:1;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;color:#fff;background:#00B4B4;cursor:pointer;min-height:48px}
+.btn-next:disabled{background:#aaa;cursor:not-allowed}
+
+/* DONE */
+.done-wrap{text-align:center;padding:10px 0 20px}
+.done-icon{font-size:56px;margin-bottom:12px}
+.done-title{font-size:22px;font-weight:900;color:#222;margin-bottom:6px}
+.done-sub{font-size:14px;color:#888;line-height:1.6;margin-bottom:24px}
+.btn-action{width:100%;padding:15px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;min-height:52px;border:none}
+.btn-dl{background:#00B4B4;color:#fff}
+.btn-hermano{background:#fff;color:#E05090;border:1.5px solid #E05090!important}
+.btn-comunidad{background:#fff;color:#888;border:1.5px solid #ddd!important}
+
+/* ERROR */
+.error-msg{background:#fbeaf0;border:1px solid #f4c0d1;border-radius:10px;padding:12px 14px;font-size:13px;color:#993556;margin-top:12px;display:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- CARD PREVIEW -->
+<div class="card-preview-bar">
+  <div class="card-mini">
+    <div class="card-mini-top">
+      <div class="mini-photo" id="cPhoto">🐾</div>
+      <div class="mini-info">
+        <div class="mini-name" id="cNombre">"NOMBRE"</div>
+        <div class="mini-nametag" id="cApodo">Apodo</div>
+        <div class="mini-apodo" id="cEspecieSexo">Especie · Sexo</div>
+      </div>
+    </div>
+    <div class="card-mini-body">
+      <div><div class="mflbl">Responsable</div><div class="mfval" id="cDueno">—</div></div>
+      <div><div class="mflbl">Zona</div><div class="mfval" id="cZona">—</div></div>
+      <div><div class="mflbl">Fecha</div><div class="mfval" id="cFecha">—</div></div>
+      <div><div class="mflbl">Vet</div><div class="mfval" id="cVet">—</div></div>
+    </div>
+    <div class="card-mini-bc">
+      <svg id="barcodeSvg" width="180" height="28" viewBox="0 0 180 28"></svg>
+      <div class="bc-id" id="cId">—</div>
+    </div>
+    <div class="card-mini-footer">
+      <div class="footer-tag">🐾</div>
+      <div class="brand-txt">petz<span>ID</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIBLINGS BAR -->
+<div class="sib-bar" id="sibBar"></div>
+
+<!-- PROGRESS -->
+<div class="prog-bar">
+  <div class="steps-row">
+    <div class="sdot active" id="sd1">1</div>
+    <div class="sline" id="sl1"></div>
+    <div class="sdot" id="sd2">2</div>
+    <div class="sline" id="sl2"></div>
+    <div class="sdot" id="sd3">3</div>
+    <div class="sline" id="sl3"></div>
+    <div class="sdot" id="sd4">✓</div>
+  </div>
+  <div class="slabels">
+    <div class="slbl active" id="slbl1">Mi ID</div>
+    <div class="slbl" id="slbl2">Familia</div>
+    <div class="slbl" id="slbl3">Gustos</div>
+    <div class="slbl" id="slbl4">¡Listo!</div>
+  </div>
+</div>
+
+<!-- FORM -->
+<div class="form-area">
+
+  <!-- STEP 1 -->
+  <div class="screen active" id="step1">
+    <div class="stitle">Crea tu PetzID 🐾</div>
+    <div class="ssub">Datos principales de tu mascota</div>
+    <div style="text-align:center">
+      <div class="photo-upload" onclick="document.getElementById('fileInput').click()">
+        <img id="petPhoto" src="" style="display:none"/>
+        <span id="phIcon" style="font-size:28px;color:#ccc">📷</span>
+        <span style="font-size:11px;color:#bbb;margin-top:4px" id="phTxt">Agregar foto</span>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" onchange="loadPhoto(event)">
+    </div>
+    <label>Nombre *</label>
+    <input type="text" id="inNombre" placeholder="¿Cómo se llama?" oninput="syncCard()">
+    <label>Apodo cariñoso</label>
+    <input type="text" id="inApodo" placeholder="Ej: Gordita, Peluchín..." oninput="syncCard()">
+    <div class="two-col">
+      <div>
+        <label>Especie</label>
+        <div class="chips" id="chipsEspecie">
+          <div class="chip sel" onclick="selectChip('chipsEspecie',this);syncCard()">🐶 Perro</div>
+          <div class="chip" onclick="selectChip('chipsEspecie',this);syncCard()">🐱 Gato</div>
+        </div>
+      </div>
+      <div>
+        <label>Sexo</label>
+        <div class="chips" id="chipsSexo">
+          <div class="chip sel" onclick="selectChip('chipsSexo',this);syncCard()">Hembra</div>
+          <div class="chip" onclick="selectChip('chipsSexo',this);syncCard()">Macho</div>
+        </div>
+      </div>
+    </div>
+    <label>Raza</label>
+    <input type="text" id="inRaza" placeholder="Ej: Pug, Labrador, Mestizo...">
+    <label>¿Cuándo llegó a tu vida?</label>
+    <div class="date-toggle">
+      <div class="dt-opt sel" id="dtNac" onclick="switchDate('nac')">Fecha de nacimiento</div>
+      <div class="dt-opt" id="dtCasa" onclick="switchDate('casa')">Llegó a casa</div>
+    </div>
+    <input type="date" id="inFecha" oninput="syncCard()" style="margin-top:8px">
+    <div style="font-size:11px;color:#bbb;margin-top:4px" id="dateHint">Fecha en que nació tu mascota</div>
+    <label>Zona donde vive</label>
+    <input type="text" id="inZona" placeholder="Ej: Zona 10, Cayalá..." oninput="syncCard()">
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="screen" id="step2">
+    <div class="stitle">Su familia 🏠</div>
+    <div class="ssub">Datos del responsable y veterinario</div>
+    <label>Tu nombre *</label>
+    <input type="text" id="inDueno" placeholder="Nombre completo" oninput="syncCard()">
+    <label>Correo electrónico *</label>
+    <input type="email" id="inEmail" placeholder="Para enviarte el PetzID" inputmode="email">
+    <label>Veterinario de confianza</label>
+    <input type="text" id="inVet" placeholder="Nombre o clínica" oninput="syncCard()">
+    <label>¿Vive con otras mascotas?</label>
+    <div class="chips" id="chipsConvive">
+      <div class="chip sel" onclick="selectChip('chipsConvive',this)">Solo/a</div>
+      <div class="chip" onclick="selectChip('chipsConvive',this)">Con perros</div>
+      <div class="chip" onclick="selectChip('chipsConvive',this)">Con gatos</div>
+      <div class="chip" onclick="selectChip('chipsConvive',this)">Con ambos</div>
+    </div>
+    <label>Instagram de tu mascota (opcional)</label>
+    <input type="text" id="inInsta" placeholder="@usuario">
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="screen" id="step3">
+    <div class="stitle">Sus gustos 🌟</div>
+    <div class="ssub">Comida, actividades y preferencias</div>
+    <label>Alimento que consume</label>
+    <input type="text" id="inAlimento" placeholder="Marca y tipo de comida">
+    <label>Tipo de alimentación</label>
+    <div class="chips" id="chipsTipoComida">
+      <div class="chip" onclick="toggleChip(this)">Croquetas</div>
+      <div class="chip" onclick="toggleChip(this)">Comida húmeda</div>
+      <div class="chip" onclick="toggleChip(this)">BARF / natural</div>
+      <div class="chip" onclick="toggleChip(this)">Mixta</div>
+    </div>
+    <label>Actividades favoritas o que le gustaría</label>
+    <div class="chips" id="chipsActividad">
+      <div class="chip" onclick="toggleChip(this)">Paseos</div>
+      <div class="chip" onclick="toggleChip(this)">Agility</div>
+      <div class="chip" onclick="toggleChip(this)">Natación</div>
+      <div class="chip" onclick="toggleChip(this)">Socialización</div>
+      <div class="chip" onclick="toggleChip(this)">Juegos en casa</div>
+      <div class="chip" onclick="toggleChip(this)">Obediencia</div>
+      <div class="chip" onclick="toggleChip(this)">Dog park</div>
+      <div class="chip" onclick="toggleChip(this)">Grooming / spa</div>
+    </div>
+    <label>Personalidad</label>
+    <div class="chips" id="chipsPersonalidad">
+      <div class="chip" onclick="toggleChip(this)">Juguetón</div>
+      <div class="chip" onclick="toggleChip(this)">Tranquilo</div>
+      <div class="chip" onclick="toggleChip(this)">Protector</div>
+      <div class="chip" onclick="toggleChip(this)">Curioso</div>
+      <div class="chip" onclick="toggleChip(this)">Sociable</div>
+      <div class="chip" onclick="toggleChip(this)">Cariñoso</div>
+      <div class="chip" onclick="toggleChip(this)">Independiente</div>
+    </div>
+    <div style="margin-top:18px;background:#fafafa;border-radius:12px;padding:14px 16px;border:1px solid #eee">
+      <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Comunicaciones</div>
+      <div class="toggle-row">
+        <span class="toggle-lbl">Recibir ofertas y promos</span>
+        <label class="toggle"><input type="checkbox" id="togOfertas" checked><span class="tog-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-lbl">Info de actividades pet-friendly</span>
+        <label class="toggle"><input type="checkbox" id="togActividades" checked><span class="tog-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-lbl">Novedades de la comunidad Petmi</span>
+        <label class="toggle"><input type="checkbox" id="togComunidad" checked><span class="tog-slider"></span></label>
+      </div>
+    </div>
+    <label>Algo especial de tu mascota</label>
+    <textarea id="inEspecial" placeholder="Un dato curioso, su historia..."></textarea>
+    <div class="error-msg" id="errorMsg">⚠️ Hubo un problema al guardar. Por favor intenta de nuevo.</div>
+  </div>
+
+  <!-- STEP 4: DONE -->
+  <div class="screen" id="step4">
+    <div class="done-wrap">
+      <div class="done-icon">🎉</div>
+      <div class="done-title">¡PetzID listo!</div>
+      <div class="done-sub">El perfil de <strong id="doneNombre">tu mascota</strong> está completo.<br>Te enviamos tu PetzID al correo en unos segundos.</div>
+      <button class="btn-action btn-hermano" onclick="addSibling()">🐾 Agregar mascota hermana</button>
+      <button class="btn-action btn-comunidad" onclick="window.parent.postMessage('petmi-comunidad','*')">Explorar comunidad Petmi →</button>
+    </div>
+  </div>
+
+</div><!-- /form-area -->
+
+<!-- NAV -->
+<div class="nav-bar" id="navBar">
+  <button class="btn-back" id="btnBack" onclick="goBack()" style="display:none">← Atrás</button>
+  <button class="btn-next" id="btnNext" onclick="goNext()">Siguiente →</button>
+</div>
+
+</div><!-- /app -->
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydKuG0LAVR68shj-UFNM9AfnWkhiZyCQrVM2QlHk5eK7LDySeArHemvRSs7rCUYxe0/exec';
+let cur=1, siblings=[], uid=genId(), dateMode='nac';
+
+function genId(){
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
+    const r=Math.random()*16|0,v=c=='x'?r:(r&0x3|0x8);return v.toString(16).toUpperCase();
+  });
+}
+
+function drawBarcode(svg,text){
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  let x=4;
+  for(let i=0;i<text.length;i++){
+    const code=text.charCodeAt(i),w=(code%3)+1,gap=(code%2===0)?1:2;
+    const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x',x);rect.setAttribute('y',2);
+    rect.setAttribute('width',w);rect.setAttribute('height',24);
+    rect.setAttribute('fill','#222');svg.appendChild(rect);
+    x+=w+gap;if(x>176)break;
+  }
+}
+
+function fmtDate(v){if(!v)return'—';const[y,m,d]=v.split('-');return`${d}/${m}/${y}`;}
+
+function getChip(id){
+  const el=document.querySelector('#'+id+' .chip.sel');
+  return el?el.textContent.trim().replace(/[🐶🐱]/g,'').trim():'—';
+}
+function getChips(id){
+  return[...document.querySelectorAll('#'+id+' .chip.sel')].map(c=>c.textContent.trim().replace(/[🐶🐱]/g,'').trim());
+}
+
+function switchDate(mode){
+  dateMode=mode;
+  document.getElementById('dtNac').classList.toggle('sel',mode==='nac');
+  document.getElementById('dtCasa').classList.toggle('sel',mode==='casa');
+  document.getElementById('dateHint').textContent=mode==='nac'?'Fecha en que nació tu mascota':'Fecha en que llegó a tu hogar';
+  document.getElementById('inFecha').value='';
+  syncCard();
+}
+
+function syncCard(){
+  const n=(document.getElementById('inNombre').value||'').toUpperCase()||'NOMBRE';
+  const a=document.getElementById('inApodo').value||'Apodo';
+  document.getElementById('cNombre').textContent='"'+n+'"';
+  document.getElementById('cApodo').textContent=a;
+  document.getElementById('cEspecieSexo').textContent=getChip('chipsEspecie')+' · '+getChip('chipsSexo');
+  document.getElementById('cZona').textContent=(document.getElementById('inZona').value||'—').toUpperCase();
+  document.getElementById('cFecha').textContent=fmtDate(document.getElementById('inFecha').value);
+  const dEl=document.getElementById('inDueno');
+  const vEl=document.getElementById('inVet');
+  if(dEl)document.getElementById('cDueno').textContent=(dEl.value||'—').toUpperCase();
+  if(vEl)document.getElementById('cVet').textContent=(vEl.value||'—').toUpperCase();
+  document.getElementById('cId').textContent=uid;
+  drawBarcode(document.getElementById('barcodeSvg'),uid);
+  const img=document.getElementById('petPhoto');
+  if(img.src&&img.style.display!=='none'){
+    document.getElementById('cPhoto').innerHTML=`<img src="${img.src}">`;
+  }
+}
+
+function loadPhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=document.getElementById('petPhoto');
+    img.src=ev.target.result;img.style.display='block';
+    document.getElementById('phIcon').style.display='none';
+    document.getElementById('phTxt').style.display='none';
+    syncCard();
+  };
+  reader.readAsDataURL(file);
+}
+
+function selectChip(gid,el){
+  document.querySelectorAll('#'+gid+' .chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function toggleChip(el){el.classList.toggle('sel');}
+
+function validate(){
+  if(cur===1&&!document.getElementById('inNombre').value.trim()){
+    alert('Por favor ingresa el nombre de tu mascota');return false;
+  }
+  if(cur===2){
+    if(!document.getElementById('inDueno').value.trim()){alert('Por favor ingresa tu nombre');return false;}
+    const em=document.getElementById('inEmail').value.trim();
+    if(!em||!em.includes('@')){alert('Por favor ingresa un correo válido');return false;}
+  }
+  return true;
+}
+
+function updateProgress(){
+  for(let i=1;i<=4;i++){
+    const d=document.getElementById('sd'+i),l=document.getElementById('slbl'+i);
+    d.classList.remove('active','done');l.classList.remove('active','done');
+    if(i<cur){d.classList.add('done');l.classList.add('done');}
+    else if(i===cur){d.classList.add('active');l.classList.add('active');}
+    if(i<4){const ln=document.getElementById('sl'+i);if(ln)ln.classList.toggle('done',i<cur);}
+  }
+  document.getElementById('btnBack').style.display=cur>1&&cur<4?'block':'none';
+  const nav=document.getElementById('navBar');
+  if(cur===4){nav.style.display='none';}
+  else{
+    nav.style.display='flex';
+    document.getElementById('btnNext').textContent=cur===3?'¡Crear mi PetzID! 🐾':'Siguiente →';
+  }
+}
+
+function goNext(){
+  if(!validate())return;
+  if(cur===3){submitPetzID();return;}
+  if(cur<4){cur++;showStep(cur);updateProgress();}
+}
+function goBack(){if(cur>1){cur--;showStep(cur);updateProgress();}}
+function showStep(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('step'+n).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+async function submitPetzID(){
+  const btn=document.getElementById('btnNext');
+  btn.textContent='Creando tu PetzID...';
+  btn.disabled=true;
+  document.getElementById('errorMsg').style.display='none';
+
+  const payload={
+    uid,
+    nombre:   document.getElementById('inNombre').value.trim(),
+    apodo:    document.getElementById('inApodo').value.trim(),
+    especie:  getChip('chipsEspecie'),
+    sexo:     getChip('chipsSexo'),
+    raza:     document.getElementById('inRaza').value.trim(),
+    tipoFecha: dateMode,
+    fecha:    document.getElementById('inFecha').value,
+    zona:     document.getElementById('inZona').value.trim(),
+    dueno:    document.getElementById('inDueno').value.trim(),
+    email:    document.getElementById('inEmail').value.trim(),
+    veterinario: document.getElementById('inVet').value.trim(),
+    conviveCon:  getChip('chipsConvive'),
+    instagram:   document.getElementById('inInsta').value.trim(),
+    alimento:    document.getElementById('inAlimento').value.trim(),
+    tipoAlimento: getChips('chipsTipoComida'),
+    actividades:  getChips('chipsActividad'),
+    personalidad: getChips('chipsPersonalidad'),
+    recibeOfertas:     document.getElementById('togOfertas').checked,
+    recibeActividades: document.getElementById('togActividades').checked,
+    recibeComunidad:   document.getElementById('togComunidad').checked,
+    especial: document.getElementById('inEspecial').value.trim()
+  };
+
+  try {
+    // Usamos no-cors para Wix (no podemos leer la respuesta pero el dato llega)
+    await fetch(SCRIPT_URL, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
+    cur=4;showStep(4);updateProgress();
+  } catch(err){
+    document.getElementById('errorMsg').style.display='block';
+    btn.textContent='¡Crear mi PetzID! 🐾';
+    btn.disabled=false;
+  }
+}
+
+function addSibling(){
+  const pet={nombre:document.getElementById('inNombre').value||'Mascota',especie:getChip('chipsEspecie')};
+  siblings.push(pet);
+  const bar=document.getElementById('sibBar');
+  bar.style.display='flex';
+  const pill=document.createElement('div');
+  pill.className='sib-pill';
+  pill.textContent='🐾 '+pet.nombre+' ('+pet.especie+')';
+  bar.appendChild(pill);
+  uid=genId();
+  ['inNombre','inApodo','inRaza','inZona','inFecha','inDueno','inEmail','inVet','inInsta','inAlimento','inEspecial'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('petPhoto').src='';
+  document.getElementById('petPhoto').style.display='none';
+  document.getElementById('phIcon').style.display='block';
+  document.getElementById('phTxt').style.display='block';
+  document.getElementById('cPhoto').innerHTML='🐾';
+  syncCard();
+  cur=1;showStep(1);updateProgress();
+}
+
+drawBarcode(document.getElementById('barcodeSvg'),uid);
+document.getElementById('cId').textContent=uid;
+updateProgress();
+</script>
+</body>
+</html>
