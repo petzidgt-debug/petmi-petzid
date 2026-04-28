@@ -38,7 +38,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;font-size:16px;overflow-x:h
 .mini-apodo{font-size:11px;opacity:.85;margin-top:3px}
 .card-mini-body{padding:10px 14px 8px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px 8px}
 .mflbl{font-size:8px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#bbb}
-.mfval{font-size:11px;font-weight:900;color:#222;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mfval{font-size:11px;font-weight:900;color:#222;text-transform:uppercase;letter-spacing:.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:block}
 .card-mini-bc{display:none}
 .card-mini-footer{background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:6px 12px}
 .footer-tag{width:24px;height:24px;background:#E05090;border-radius:5px 5px 5px 0;display:flex;align-items:center;justify-content:center;font-size:11px}
@@ -174,10 +174,10 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
       </div>
     </div>
     <div class="card-mini-body">
-      <div><div class="mflbl">Responsable</div><div class="mfval" id="cDueno">—</div></div>
-      <div><div class="mflbl">Zona</div><div class="mfval" id="cZona">—</div></div>
-      <div><div class="mflbl">Fecha</div><div class="mfval" id="cFecha">—</div></div>
-      <div><div class="mflbl">Vet</div><div class="mfval" id="cVet">—</div></div>
+      <div style="grid-column:span 3"><div class="mflbl">Responsable</div><div class="mfval" id="cDueno" style="max-width:280px">—</div></div>
+      <div><div class="mflbl">Zona</div><div class="mfval" id="cZona" style="max-width:60px">—</div></div>
+      <div><div class="mflbl">Fecha</div><div class="mfval" id="cFecha" style="max-width:70px">—</div></div>
+      <div><div class="mflbl">Vet</div><div class="mfval" id="cVet" style="max-width:100px">—</div></div>
     </div>
     <div class="card-mini-bc">
       <svg id="barcodeSvg" width="160" height="24" viewBox="0 0 160 24"></svg>
@@ -550,7 +550,7 @@ async function submitPetzID(){
 
 function openWhatsApp(){
   const msg=encodeURIComponent('¡Hola Petmi! 🐾 Quiero recibir ofertas y novedades para mi mascota.');
-  window.open('https://wa.me/502?text='+msg,'_blank');
+  window.open('https://wa.me/50237673927?text='+msg,'_blank');
 }
 
 function addSibling(){
