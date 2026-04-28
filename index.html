@@ -382,7 +382,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 </div><!-- /main -->
 
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbz6FD0ztBA7ueXm4jddFmEeQ5prfNiEN3K_yfgFskgqU6iWVGFxISsjRZRMYbAI_dm9/exec';
+const SCRIPT_URL='/api/submit';
 let cur=1, siblings=[], uid=genId(), dateMode='nac', isSibling=false, familyData=null;
 
 // Adjust spacer to card height on mobile
@@ -541,15 +541,18 @@ async function submitPetzID(){
   };
 
   try{
-    // Usamos no-cors — el dato llega aunque no podamos leer la respuesta
-    await fetch(SCRIPT_URL, {
+    const res = await fetch(SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'text/plain'},
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(payload)
     });
-    document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
-    cur=4;showStep(4);updateProgress();
+    const json = await res.json();
+    if(json.ok || json.uid){
+      document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
+      cur=4;showStep(4);updateProgress();
+    } else {
+      throw new Error(json.error||'Error');
+    }
   }catch(err){
     document.getElementById('errorMsg').style.display='block';
     btn.textContent='¡Crear mi PetzID! 🐾';btn.disabled=false;
