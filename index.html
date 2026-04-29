@@ -102,6 +102,9 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
   .card-spacer{display:none}
   .form-col{flex:1;margin-right:300px;display:flex;flex-direction:column}
   .nav-bar{right:300px}
+  .card-mini-top{padding:14px;gap:14px}
+  .mini-photo{width:80px;height:80px;font-size:28px}
+  .mini-name{font-size:18px}
 }
 @media(max-width:899px){.form-col{flex:1;display:flex;flex-direction:column}}
 @media(max-width:640px){
@@ -112,32 +115,9 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 </head>
 <body>
 
-<header class="site-header">
-  <a href="https://www.revistapetmi.com" target="_blank" class="header-logo">
-    <img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" onerror="this.style.display='none';document.getElementById('logoFallback').style.display='block'">
-    <span id="logoFallback" style="display:none;font-size:20px;font-weight:900;color:#00B4B4;font-family:'Arial Black',Arial,sans-serif">PET<span style="color:#E05090">mi</span></span>
-  </a>
-  <nav class="header-nav">
-    <a href="https://www.revistapetmi.com" target="_blank">Blog</a>
-    <a href="https://www.revistapetmi.com/home" target="_blank" class="active">Petmi ID</a>
-    <a href="https://www.revistapetmi.com/category/all-products" target="_blank">Tienda</a>
-    <a href="https://www.revistapetmi.com/miembros" target="_blank">Miembros</a>
-    <a href="https://www.revistapetmi.com/miembros" target="_blank" class="btn-ingresar">Ingresar</a>
-  </nav>
-  <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
-</header>
-
-<div class="mobile-menu" id="mobileMenu">
-  <a href="https://www.revistapetmi.com" target="_blank" onclick="toggleMenu()">Blog</a>
-  <a href="https://www.revistapetmi.com/home" target="_blank" onclick="toggleMenu()">Petmi ID</a>
-  <a href="https://www.revistapetmi.com/category/all-products" target="_blank" onclick="toggleMenu()">Tienda</a>
-  <a href="https://www.revistapetmi.com/miembros" target="_blank" onclick="toggleMenu()">Miembros</a>
-  <a href="https://www.revistapetmi.com/miembros" target="_blank" class="btn-ingresar" onclick="toggleMenu()">Ingresar</a>
-</div>
-
-<!-- TARJETA OCULTA PARA GENERAR PNG -->
-<div id="pngCard" style="position:fixed;left:-9999px;top:0;width:580px;font-family:Arial,sans-serif;border-radius:0;overflow:hidden;background:#fff">
-  <div style="background:#00B4B4;display:flex;gap:0;align-items:stretch">
+<!-- TARJETA OCULTA PARA PNG -->
+<div id="pngCard" style="position:fixed;left:-9999px;top:0;width:580px;font-family:Arial,sans-serif;overflow:hidden;background:#fff">
+  <div style="background:#00B4B4;display:flex;align-items:stretch">
     <div id="pngPhoto" style="width:170px;height:210px;flex-shrink:0;background:#b2e0e0;display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden">🐾</div>
     <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:16px 20px 14px">
       <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.7);margin-bottom:4px">NOMBRE</div>
@@ -165,6 +145,29 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
   </div>
 </div>
 
+<header class="site-header">
+  <a href="https://www.revistapetmi.com" target="_blank" class="header-logo">
+    <img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" onerror="this.style.display='none';document.getElementById('logoFallback').style.display='block'">
+    <span id="logoFallback" style="display:none;font-size:20px;font-weight:900;color:#00B4B4;font-family:'Arial Black',Arial,sans-serif">PET<span style="color:#E05090">mi</span></span>
+  </a>
+  <nav class="header-nav">
+    <a href="https://www.revistapetmi.com" target="_blank">Blog</a>
+    <a href="https://www.revistapetmi.com/home" target="_blank" class="active">Petmi ID</a>
+    <a href="https://www.revistapetmi.com/category/all-products" target="_blank">Tienda</a>
+    <a href="https://www.revistapetmi.com/miembros" target="_blank">Miembros</a>
+    <a href="https://www.revistapetmi.com/miembros" target="_blank" class="btn-ingresar">Ingresar</a>
+  </nav>
+  <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="https://www.revistapetmi.com" target="_blank" onclick="toggleMenu()">Blog</a>
+  <a href="https://www.revistapetmi.com/home" target="_blank" onclick="toggleMenu()">Petmi ID</a>
+  <a href="https://www.revistapetmi.com/category/all-products" target="_blank" onclick="toggleMenu()">Tienda</a>
+  <a href="https://www.revistapetmi.com/miembros" target="_blank" onclick="toggleMenu()">Miembros</a>
+  <a href="https://www.revistapetmi.com/miembros" target="_blank" class="btn-ingresar" onclick="toggleMenu()">Ingresar</a>
+</div>
+
 <div class="card-bar" id="cardBar">
   <div class="card-mini">
     <div class="card-mini-top">
@@ -172,13 +175,13 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
       <div class="mini-info">
         <div class="mini-name" id="cNombre">"NOMBRE"</div>
         <div class="mini-nametag" id="cApodo">Apodo</div>
-        <div class="mini-apodo" id="cEspecieSexo">Especie · Sexo</div>
+        <div class="mini-apodo" id="cEspecieSexo">Especie - Sexo</div>
       </div>
     </div>
     <div class="card-mini-body">
-      <div><div class="mflbl">Responsable</div><div class="mfval" id="cDueno">—</div></div>
-      <div><div class="mflbl">Zona</div><div class="mfval" id="cZona">—</div></div>
-      <div><div class="mflbl">Vet</div><div class="mfval" id="cVet">—</div></div>
+      <div><div class="mflbl">Responsable</div><div class="mfval" id="cDueno">-</div></div>
+      <div><div class="mflbl">Zona</div><div class="mfval" id="cZona">-</div></div>
+      <div><div class="mflbl">Vet</div><div class="mfval" id="cVet">-</div></div>
     </div>
     <div class="card-mini-footer">
       <div class="footer-tag">🐾</div>
@@ -204,7 +207,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
       <div class="slbl active" id="slbl1">Mi ID</div>
       <div class="slbl" id="slbl2">Familia</div>
       <div class="slbl" id="slbl3">Gustos</div>
-      <div class="slbl" id="slbl4">¡Listo!</div>
+      <div class="slbl" id="slbl4">Listo!</div>
     </div>
   </div>
 
@@ -212,19 +215,19 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 
     <!-- STEP 1 -->
     <div class="screen active" id="step1">
-      <div class="stitle">Crea tu PetzID 🐾</div>
+      <div class="stitle">Crea tu PetzID</div>
       <div class="ssub">Datos principales de tu mascota</div>
       <div style="text-align:center">
         <div class="photo-upload" onclick="document.getElementById('fileInput').click()">
           <img id="petPhoto" src="" style="display:none"/>
           <span id="phIcon" style="font-size:26px;color:#ccc">📷</span>
-          <span style="font-size:11px;color:#bbb;margin-top:4px" id="phTxt">Agregar foto</span>
+          <span style="font-size:11px;color:#bbb;margin-top:4px" id="phTxt">Agregar foto *</span>
         </div>
         <input type="file" id="fileInput" accept="image/*" onchange="loadPhoto(event)">
       </div>
       <label>Nombre *</label>
       <input type="text" id="inNombre" placeholder="Como se llama?" oninput="syncCard()">
-      <label>Apodo cariñoso</label>
+      <label>Apodo</label>
       <input type="text" id="inApodo" placeholder="Ej: Gordita, Peluchin..." oninput="syncCard()">
       <div class="two-col">
         <div>
@@ -256,7 +259,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
     <!-- STEP 2 -->
     <div class="screen" id="step2">
       <div class="stitle">Su familia</div>
-      <div class="ssub">Datos del responsable y veterinario</div>
+      <div class="ssub">Datos del responsable</div>
       <div id="familyBlock">
         <label>Tu nombre *</label>
         <input type="text" id="inDueno" placeholder="Nombre completo" oninput="syncCard()">
@@ -269,7 +272,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
         </div>
         <label>Zona donde viven</label>
         <input type="text" id="inZona" placeholder="Ej: Zona 10, Cayala..." oninput="syncCard()">
-        <label>Veterinario de confianza</label>
+        <label>Veterinario</label>
         <input type="text" id="inVet" placeholder="Nombre o clinica" oninput="syncCard()">
       </div>
       <div id="siblingFamilyInfo" style="display:none">
@@ -337,7 +340,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
           <label class="toggle"><input type="checkbox" id="togComunidad" checked><span class="tog-slider"></span></label>
         </div>
       </div>
-      <label>Algo especial de tu mascota</label>
+      <label>Algo especial</label>
       <textarea id="inEspecial" placeholder="Un dato curioso, su historia..."></textarea>
       <div class="error-msg" id="errorMsg">Hubo un problema. Por favor intenta de nuevo.</div>
     </div>
@@ -369,8 +372,8 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 
 <script>
 var SCRIPT_URL='/api/submit';
-var cur=1, siblings=[], dateMode='nac', isSibling=false, familyData=null;
-var photoBase64=null, photoMime=null, photoFilename=null;
+var cur=1,siblings=[],dateMode='nac',isSibling=false,familyData=null;
+var photoBase64=null,photoMime=null,photoFilename=null;
 var uid=genId();
 
 function genId(){
@@ -390,9 +393,20 @@ function adjustSpacer(){
 window.addEventListener('resize',adjustSpacer);
 window.addEventListener('load',adjustSpacer);
 
-function fmtDate(v){if(!v)return'—';var p=v.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
-function getChip(id){var el=document.querySelector('#'+id+' .chip.sel');return el?el.textContent.trim():'—';}
-function getChips(id){return Array.from(document.querySelectorAll('#'+id+' .chip.sel')).map(function(c){return c.textContent.trim();});}
+function fmtDate(v){
+  if(!v)return'-';
+  var p=v.split('-');
+  if(p.length===3)return p[2]+'/'+p[1]+'/'+p[0];
+  return String(v);
+}
+
+function getChip(id){
+  var el=document.querySelector('#'+id+' .chip.sel');
+  return el?el.textContent.trim():'-';
+}
+function getChips(id){
+  return Array.from(document.querySelectorAll('#'+id+' .chip.sel')).map(function(c){return c.textContent.trim();});
+}
 
 function syncCard(){
   var n=(document.getElementById('inNombre').value||'').toUpperCase()||'NOMBRE';
@@ -405,10 +419,9 @@ function syncCard(){
   document.getElementById('cNombre').textContent='"'+n+'"';
   document.getElementById('cApodo').textContent=a;
   document.getElementById('cEspecieSexo').textContent=getChip('chipsEspecie')+' - '+getChip('chipsSexo');
-  document.getElementById('cZona').textContent=(fd&&fd.zona?fd.zona:'—').toUpperCase();
-  document.getElementById('cDueno').textContent=(fd&&fd.dueno?fd.dueno:'—').toUpperCase();
-  document.getElementById('cVet').textContent=(fd&&fd.vet?fd.vet:'—').toUpperCase();
-  document.getElementById('cFecha').textContent=fmtDate(document.getElementById('inFecha').value);
+  document.getElementById('cZona').textContent=String(fd&&fd.zona?fd.zona:'-').toUpperCase();
+  document.getElementById('cDueno').textContent=String(fd&&fd.dueno?fd.dueno:'-').toUpperCase();
+  document.getElementById('cVet').textContent=String(fd&&fd.vet?fd.vet:'-').toUpperCase();
   var img=document.getElementById('petPhoto');
   document.getElementById('cPhoto').innerHTML=img.src&&img.style.display!=='none'?'<img src="'+img.src+'">':"🐾";
   adjustSpacer();
@@ -441,21 +454,15 @@ function compressPhoto(dataUrl){
   var canvas=document.createElement('canvas');
   var img=new Image();
   img.onload=function(){
-    var MAX=600,w=img.width,h=img.height;
+    var MAX=800,w=img.width,h=img.height;
     if(w>MAX){h=h*(MAX/w);w=MAX;}
     if(h>MAX){w=w*(MAX/h);h=MAX;}
     canvas.width=w;canvas.height=h;
     canvas.getContext('2d').drawImage(img,0,0,w,h);
-    var compressed=canvas.toDataURL('image/jpeg',0.7);
+    var compressed=canvas.toDataURL('image/jpeg',0.8);
     photoBase64=compressed.split(',')[1];
     photoMime='image/jpeg';
     photoFilename=uid+'.jpg';
-    // Subir foto a Drive en segundo plano
-    fetch(SCRIPT_URL,{
-      method:'POST',mode:'no-cors',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'uploadPhoto',base64:photoBase64,mimeType:photoMime,filename:photoFilename})
-    }).catch(function(){});
   };
   img.src=dataUrl;
 }
@@ -469,12 +476,8 @@ function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('op
 
 function validate(){
   if(cur===1){
-    if(!document.getElementById('inNombre').value.trim()){
-      alert('Por favor ingresa el nombre de tu mascota');return false;
-    }
-    if(!photoBase64){
-      alert('Por favor agrega una foto de tu mascota');return false;
-    }
+    if(!document.getElementById('inNombre').value.trim()){alert('Por favor ingresa el nombre de tu mascota');return false;}
+    if(!photoBase64){alert('Por favor agrega una foto de tu mascota');return false;}
   }
   if(cur===2&&!isSibling){
     if(!document.getElementById('inDueno').value.trim()){alert('Por favor ingresa tu nombre');return false;}
@@ -518,7 +521,7 @@ function updatePngCard(){
     vet:(document.getElementById('inVet')?document.getElementById('inVet').value:'')
   };
   document.getElementById('pngNombre').textContent='"'+(document.getElementById('inNombre').value||'NOMBRE').toUpperCase()+'"';
-  document.getElementById('pngApodo').textContent=(document.getElementById('inApodo').value||'Apodo').toUpperCase();
+  document.getElementById('pngApodo').textContent=(document.getElementById('inApodo').value||'').toUpperCase();
   document.getElementById('pngEspecie').textContent=getChip('chipsEspecie');
   document.getElementById('pngSexo').textContent=getChip('chipsSexo');
   document.getElementById('pngFechaLbl').textContent=dateMode==='llegada'?'LLEGO A CASA':'NACIMIENTO';
@@ -531,15 +534,16 @@ function updatePngCard(){
 async function generatePNGBase64(){
   updatePngCard();
   var card=document.getElementById('pngCard');
-  card.style.left='-9999px';
   var canvas=await html2canvas(card,{
-    scale:2, useCORS:true, allowTaint:true,
-    backgroundColor:null, logging:false
+    scale:2,useCORS:true,allowTaint:true,
+    backgroundColor:'#ffffff',logging:false
   });
   return canvas.toDataURL('image/png').split(',')[1];
 }
+
+async function submitPetzID(){
   var btn=document.getElementById('btnNext');
-  btn.textContent='Creando...';btn.disabled=true;
+  btn.textContent='Generando ID...';btn.disabled=true;
   document.getElementById('errorMsg').style.display='none';
 
   if(!isSibling){
@@ -552,8 +556,14 @@ async function generatePNGBase64(){
     };
   }
 
+  var pngBase64=null;
+  try{
+    btn.textContent='Creando tu PetzID...';
+    pngBase64=await generatePNGBase64();
+  }catch(e){console.log('PNG error:',e);}
+
   var payload={
-    uid:uid, isSibling:isSibling,
+    uid:uid,isSibling:isSibling,
     nombre:      document.getElementById('inNombre').value.trim(),
     apodo:       document.getElementById('inApodo').value.trim(),
     especie:     getChip('chipsEspecie'),
@@ -575,24 +585,19 @@ async function generatePNGBase64(){
     recibeOfertas:    document.getElementById('togOfertas').checked,
     recibeActividades:document.getElementById('togActividades').checked,
     recibeComunidad:  document.getElementById('togComunidad').checked,
-    especial:      document.getElementById('inEspecial').value.trim(),
-    photoFilename: photoFilename||null,
-    photoBase64:   photoBase64||null,
-    photoMime:     photoMime||null
+    especial:    document.getElementById('inEspecial').value.trim(),
+    pngBase64:   pngBase64
   };
 
   fetch('/api/submit',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(payload)
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
+  }).then(function(r){return r.json();})
+  .then(function(){
     document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
     cur=4;showStep(4);updateProgress();
-  })
-  .catch(function(){
-    // Avanzar igual aunque falle
+  }).catch(function(){
     document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
     cur=4;showStep(4);updateProgress();
   });
@@ -624,7 +629,7 @@ function addSibling(){
   bar.appendChild(pill);
   var mini=document.createElement('div');
   mini.style.cssText='background:rgba(255,255,255,.15);border-radius:10px;padding:8px 12px;font-size:12px;color:#fff;font-weight:700';
-  mini.textContent='🐾 '+nombre+' — '+especie;
+  mini.textContent='🐾 '+nombre+' - '+especie;
   document.getElementById('sibCardsDesktop').appendChild(mini);
   isSibling=true;
   uid=genId();
