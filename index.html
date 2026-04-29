@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="icon" href="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" type="image/png">
 <title>PetzID — PetMi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;font-size:16px;overflow-x:hidden}
@@ -23,21 +24,21 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;font-size:16px;overflow-x:h
 .mobile-menu a{font-size:15px;font-weight:600;color:#333;text-decoration:none;padding:10px 0;border-bottom:1px solid #f5f5f5}
 .mobile-menu .btn-ingresar{margin:8px 0 0;text-align:center;display:block}
 .main{padding-top:60px;display:flex;flex-direction:column;min-height:calc(100vh - 60px)}
-.card-bar{position:fixed;top:60px;left:0;right:0;z-index:200;background:#00B4B4;padding:12px 16px;display:flex;justify-content:center}
-.card-mini{background:#fff;border-radius:12px;overflow:hidden;width:100%;max-width:420px;height:200px;box-shadow:0 4px 16px rgba(0,0,0,.18);display:flex;flex-direction:column}
-.card-mini-top{background:#00B4B4;padding:12px;display:flex;flex-direction:row;gap:12px;align-items:stretch;flex:1}
-.mini-photo{width:90px;border-radius:8px;overflow:hidden;border:2px solid rgba(255,255,255,.4);background:#b2e0e0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:28px;color:rgba(255,255,255,.7)}
+.card-bar{position:fixed;top:60px;left:0;right:0;z-index:200;background:#00B4B4;padding:8px 12px;display:flex;justify-content:center}
+.card-mini{background:#fff;border-radius:10px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 2px 12px rgba(0,0,0,.15);display:flex;flex-direction:column}
+.card-mini-top{background:#00B4B4;padding:8px 10px;display:flex;flex-direction:row;gap:10px;align-items:center}
+.mini-photo{width:52px;height:52px;border-radius:6px;overflow:hidden;border:2px solid rgba(255,255,255,.4);background:#b2e0e0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;color:rgba(255,255,255,.7)}
 .mini-photo img{width:100%;height:100%;object-fit:cover}
-.mini-info{color:#fff;display:flex;flex-direction:column;justify-content:flex-end;flex:1;min-width:0;padding-bottom:4px;overflow:hidden}
-.mini-name{font-size:18px;font-weight:900;letter-spacing:1px;font-family:'Arial Black',Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mini-nametag{background:#F4A0B0;color:#7a1a2e;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:3px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mini-apodo{font-size:11px;opacity:.85;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-mini-body{padding:6px 12px 4px;display:grid;grid-template-columns:1fr auto auto;gap:2px 8px}
+.mini-info{color:#fff;display:flex;flex-direction:column;justify-content:center;flex:1;min-width:0}
+.mini-name{font-size:15px;font-weight:900;letter-spacing:1px;font-family:'Arial Black',Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-nametag{background:#F4A0B0;color:#7a1a2e;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:2px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini-apodo{font-size:10px;opacity:.85;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-mini-body{padding:6px 10px 5px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px 8px}
 .mflbl{font-size:7px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#bbb;white-space:nowrap}
-.mfval{font-size:10px;font-weight:900;color:#222;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%}
-.card-mini-footer{background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:5px 10px;height:28px;flex-shrink:0}
-.footer-tag{width:20px;height:20px;background:#E05090;border-radius:4px 4px 4px 0;display:flex;align-items:center;justify-content:center;font-size:10px}
-.brand-txt{font-size:13px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#1a1a1a;letter-spacing:-1px}
+.mfval{font-size:10px;font-weight:900;color:#222;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.card-mini-footer{background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:4px 10px;height:26px;flex-shrink:0}
+.footer-tag{width:18px;height:18px;background:#E05090;border-radius:4px 4px 4px 0;display:flex;align-items:center;justify-content:center;font-size:9px}
+.brand-txt{font-size:12px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#1a1a1a;letter-spacing:-1px}
 .brand-txt span{color:#E05090}
 .card-spacer{height:0px;transition:height .2s}
 .sib-bar{background:#e0f7f7;padding:6px 12px;display:none;flex-wrap:wrap;gap:6px;border-bottom:1px solid #b2ddd5}
@@ -134,6 +135,36 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
   <a href="https://www.revistapetmi.com/miembros" target="_blank" class="btn-ingresar" onclick="toggleMenu()">Ingresar</a>
 </div>
 
+<!-- TARJETA OCULTA PARA GENERAR PNG -->
+<div id="pngCard" style="position:fixed;left:-9999px;top:0;width:580px;font-family:Arial,sans-serif;border-radius:0;overflow:hidden;background:#fff">
+  <div style="background:#00B4B4;display:flex;gap:0;align-items:stretch">
+    <div id="pngPhoto" style="width:170px;height:210px;flex-shrink:0;background:#b2e0e0;display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden">🐾</div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:16px 20px 14px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.7);margin-bottom:4px">NOMBRE</div>
+      <div id="pngNombre" style="font-size:28px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;letter-spacing:2px;color:#fff;line-height:1">"NOMBRE"</div>
+      <div id="pngApodo" style="margin-top:8px;display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;align-self:flex-start">Apodo</div>
+    </div>
+  </div>
+  <div style="background:#fff;padding:16px 20px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;margin-bottom:12px">
+      <div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Especie</div><div id="pngEspecie" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
+      <div style="text-align:right"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Sexo</div><div id="pngSexo" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;margin-bottom:12px">
+      <div><div id="pngFechaLbl" style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Nacimiento</div><div id="pngFecha" style="font-size:16px;font-weight:900;color:#222">-</div></div>
+      <div style="text-align:right"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Zona</div><div id="pngZona" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px">
+      <div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Responsable</div><div id="pngDueno" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
+      <div style="text-align:right"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Veterinario</div><div id="pngVet" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
+    </div>
+  </div>
+  <div style="background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:10px 16px">
+    <div style="width:36px;height:36px;background:#E05090;border-radius:8px 8px 8px 0;display:flex;align-items:center;justify-content:center;font-size:16px">🐾</div>
+    <div style="font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#1a1a1a;letter-spacing:-1px">petz<span style="color:#E05090">ID</span></div>
+  </div>
+</div>
+
 <div class="card-bar" id="cardBar">
   <div class="card-mini">
     <div class="card-mini-top">
@@ -145,9 +176,8 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
       </div>
     </div>
     <div class="card-mini-body">
-      <div style="grid-column:span 3"><div class="mflbl">Responsable</div><div class="mfval" id="cDueno">—</div></div>
+      <div><div class="mflbl">Responsable</div><div class="mfval" id="cDueno">—</div></div>
       <div><div class="mflbl">Zona</div><div class="mfval" id="cZona">—</div></div>
-      <div><div class="mflbl">Fecha</div><div class="mfval" id="cFecha">—</div></div>
       <div><div class="mflbl">Vet</div><div class="mfval" id="cVet">—</div></div>
     </div>
     <div class="card-mini-footer">
@@ -476,7 +506,38 @@ function showStep(n){
   window.scrollTo(0,0);
 }
 
-function submitPetzID(){
+function updatePngCard(){
+  var img=document.getElementById('petPhoto');
+  var pngPhoto=document.getElementById('pngPhoto');
+  if(img.src&&img.style.display!=='none'){
+    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:170px;height:210px;object-fit:cover">';
+  }
+  var fd=isSibling?familyData:{
+    dueno:(document.getElementById('inDueno')?document.getElementById('inDueno').value:''),
+    zona:(document.getElementById('inZona')?document.getElementById('inZona').value:''),
+    vet:(document.getElementById('inVet')?document.getElementById('inVet').value:'')
+  };
+  document.getElementById('pngNombre').textContent='"'+(document.getElementById('inNombre').value||'NOMBRE').toUpperCase()+'"';
+  document.getElementById('pngApodo').textContent=(document.getElementById('inApodo').value||'Apodo').toUpperCase();
+  document.getElementById('pngEspecie').textContent=getChip('chipsEspecie');
+  document.getElementById('pngSexo').textContent=getChip('chipsSexo');
+  document.getElementById('pngFechaLbl').textContent=dateMode==='llegada'?'LLEGO A CASA':'NACIMIENTO';
+  document.getElementById('pngFecha').textContent=fmtDate(document.getElementById('inFecha').value);
+  document.getElementById('pngZona').textContent=String(fd&&fd.zona?fd.zona:'-').toUpperCase();
+  document.getElementById('pngDueno').textContent=String(fd&&fd.dueno?fd.dueno:'-').toUpperCase();
+  document.getElementById('pngVet').textContent=String(fd&&fd.vet?fd.vet:'-').toUpperCase();
+}
+
+async function generatePNGBase64(){
+  updatePngCard();
+  var card=document.getElementById('pngCard');
+  card.style.left='-9999px';
+  var canvas=await html2canvas(card,{
+    scale:2, useCORS:true, allowTaint:true,
+    backgroundColor:null, logging:false
+  });
+  return canvas.toDataURL('image/png').split(',')[1];
+}
   var btn=document.getElementById('btnNext');
   btn.textContent='Creando...';btn.disabled=true;
   document.getElementById('errorMsg').style.display='none';
