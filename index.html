@@ -436,7 +436,14 @@ function toggleChip(el){el.classList.toggle('sel');}
 function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open');}
 
 function validate(){
-  if(cur===1&&!document.getElementById('inNombre').value.trim()){alert('Por favor ingresa el nombre de tu mascota');return false;}
+  if(cur===1){
+    if(!document.getElementById('inNombre').value.trim()){
+      alert('Por favor ingresa el nombre de tu mascota');return false;
+    }
+    if(!photoBase64){
+      alert('Por favor agrega una foto de tu mascota');return false;
+    }
+  }
   if(cur===2&&!isSibling){
     if(!document.getElementById('inDueno').value.trim()){alert('Por favor ingresa tu nombre');return false;}
     var em=document.getElementById('inEmail').value.trim();
