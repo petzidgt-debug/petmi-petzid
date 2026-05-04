@@ -4,11 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Panel Admin — PetMi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
-
-/* LOGIN */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#00B4B4}
 .login-box{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.15)}
 .login-logo{font-size:28px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#00B4B4;text-align:center;margin-bottom:8px}
@@ -17,61 +16,47 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .login-box input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:15px;margin-bottom:12px;outline:none}
 .login-box input:focus{border-color:#00B4B4}
 .login-btn{width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
-.login-btn:hover{background:#009898}
 .login-err{color:#E05090;font-size:13px;text-align:center;margin-top:8px;display:none}
-
-/* LAYOUT */
-.app{display:none;min-height:100vh}
-.sidebar{width:220px;background:#1a1a2e;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column}
+.app{display:none;min-height:100vh;flex-direction:row}
+.sidebar{width:220px;background:#1a1a2e;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100}
 .sidebar-logo{padding:20px;font-size:20px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;border-bottom:1px solid rgba(255,255,255,.1)}
 .sidebar-logo span{color:#F5C842}
-.sidebar-nav{flex:1;padding:12px 0}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
 .nav-item{display:flex;align-items:center;gap:10px;padding:12px 20px;color:rgba(255,255,255,.7);cursor:pointer;font-size:14px;font-weight:600;transition:all .15s;border-left:3px solid transparent}
 .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
 .nav-item.active{background:rgba(0,180,180,.2);color:#00B4B4;border-left-color:#00B4B4}
 .nav-icon{font-size:16px;width:20px;text-align:center}
 .sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
 .logout-btn{color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;background:none;border:none}
-.logout-btn:hover{color:#fff}
-
 .content{margin-left:220px;padding:24px;min-height:100vh}
-
-/* HEADER */
-.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
 .page-title{font-size:22px;font-weight:900;color:#222}
 .page-sub{font-size:13px;color:#888;margin-top:2px}
-.btn-refresh{padding:8px 16px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
-
-/* STATS */
+.btn-primary{padding:9px 18px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-primary:hover{background:#009898}
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
 .stat-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .stat-num{font-size:32px;font-weight:900;color:#222;margin-bottom:4px}
 .stat-lbl{font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .stat-icon{font-size:24px;margin-bottom:8px}
-
-/* CHARTS */
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
 .chart-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .chart-title{font-size:14px;font-weight:700;color:#333;margin-bottom:16px}
 .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.bar-label{font-size:12px;color:#555;width:80px;flex-shrink:0}
-.bar-track{flex:1;background:#f0f0ee;border-radius:4px;height:20px;overflow:hidden}
-.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:700;color:#fff;transition:width .5s}
-
-/* SEARCH BAR */
-.search-bar{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;gap:10px;flex-wrap:wrap}
-.search-bar input,.search-bar select{padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none}
-.search-bar input{flex:1;min-width:200px}
+.bar-label{font-size:12px;color:#555;width:80px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:#f0f0ee;border-radius:4px;height:22px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:700;color:#fff;transition:width .5s;min-width:30px}
+.search-bar{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search-bar input,.search-bar select{padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none;background:#fff}
+.search-bar input{min-width:160px}
 .search-bar input:focus,.search-bar select:focus{border-color:#00B4B4}
-.btn-search{padding:8px 16px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
-.btn-clear{padding:8px 16px;background:#f0f0ee;color:#666;border:none;border-radius:8px;font-size:13px;cursor:pointer}
-
-/* TABLE */
+.btn-search{padding:8px 14px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-clear{padding:8px 14px;background:#f0f0ee;color:#666;border:none;border-radius:8px;font-size:13px;cursor:pointer}
 .table-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{background:#f8f8f8;padding:12px 14px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #eee;white-space:nowrap}
-tbody td{padding:12px 14px;border-bottom:1px solid #f5f5f5;color:#333}
+thead th{background:#f8f8f8;padding:11px 12px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #eee;white-space:nowrap}
+tbody td{padding:10px 12px;border-bottom:1px solid #f5f5f5;color:#333;vertical-align:middle}
 tbody tr:hover{background:#fafafa}
 tbody tr:last-child td{border-bottom:none}
 .badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
@@ -79,27 +64,24 @@ tbody tr:last-child td{border-bottom:none}
 .badge-gato{background:#fbeaf0;color:#993556}
 .badge-si{background:#d4edda;color:#155724}
 .badge-no{background:#f8d7da;color:#721c24}
-.pet-photo{width:36px;height:36px;border-radius:6px;object-fit:cover;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:16px}
-.pet-photo img{width:36px;height:36px;border-radius:6px;object-fit:cover}
-.btn-action-sm{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;margin-right:4px}
+.badge-pending{background:#fff3cd;color:#856404}
+.pet-thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.pet-thumb img{width:40px;height:40px;border-radius:8px;object-fit:cover}
+.btn-sm{padding:5px 9px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;white-space:nowrap}
 .btn-view{background:#e0f7f7;color:#007a7a}
 .btn-edit{background:#fff3cd;color:#856404}
 .btn-send{background:#d4edda;color:#155724}
-
-/* PAGINATION */
-.pagination{display:flex;align-items:center;justify-content:between;padding:14px 20px;border-top:1px solid #f0f0f0;gap:8px}
+.btn-dl{background:#e0e8ff;color:#3730a3}
+.pagination{display:flex;align-items:center;padding:12px 16px;border-top:1px solid #f0f0f0;gap:8px;flex-wrap:wrap}
 .page-info{font-size:13px;color:#888;flex:1}
 .page-btn{padding:6px 12px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;cursor:pointer;background:#fff;font-weight:600}
 .page-btn:hover{border-color:#00B4B4;color:#00B4B4}
-.page-btn.active{background:#00B4B4;color:#fff;border-color:#00B4B4}
 .page-btn:disabled{opacity:.4;cursor:not-allowed}
-
-/* MODAL */
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
-.modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
 .modal-title{font-size:18px;font-weight:900;color:#222;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
-.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#888}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1}
 .modal label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;display:block;margin-bottom:4px;margin-top:12px}
 .modal input,.modal select,.modal textarea{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none}
 .modal input:focus,.modal select:focus{border-color:#00B4B4}
@@ -107,23 +89,23 @@ tbody tr:last-child td{border-bottom:none}
 .modal-footer{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
 .btn-save{padding:10px 24px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
 .btn-cancel{padding:10px 24px;background:#f0f0ee;color:#666;border:none;border-radius:8px;font-size:14px;cursor:pointer}
-
-/* LOADING */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.family-card{background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid #00B4B4}
+.family-name{font-size:14px;font-weight:700;color:#222;margin-bottom:4px}
+.family-pets{font-size:12px;color:#666}
+.pet-id-preview{background:#00B4B4;border-radius:12px;overflow:hidden;width:100%;max-width:500px;margin:0 auto}
 .loading{text-align:center;padding:60px;color:#888}
-.spinner{width:40px;height:40px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* SCREENS */
 .screen{display:none}
 .screen.active{display:block}
-
 @media(max-width:768px){
-  .sidebar{width:100%;height:60px;flex-direction:row;position:fixed;bottom:0;top:auto;z-index:100}
+  .sidebar{width:100%;height:56px;flex-direction:row;position:fixed;bottom:0;top:auto}
   .sidebar-logo,.sidebar-footer{display:none}
   .sidebar-nav{display:flex;flex-direction:row;padding:0;overflow-x:auto}
-  .nav-item{flex-direction:column;gap:2px;padding:8px 14px;font-size:10px;border-left:none;border-top:3px solid transparent}
+  .nav-item{flex-direction:column;gap:2px;padding:6px 12px;font-size:10px;border-left:none;border-top:3px solid transparent;min-width:60px;justify-content:center}
   .nav-item.active{border-top-color:#00B4B4;border-left:none}
-  .content{margin-left:0;padding:16px;padding-bottom:80px}
+  .content{margin-left:0;padding:14px;padding-bottom:70px}
   .stats-grid{grid-template-columns:1fr 1fr}
   .charts-grid{grid-template-columns:1fr}
 }
@@ -135,40 +117,35 @@ tbody tr:last-child td{border-bottom:none}
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo">petz<span>ID</span></div>
-    <div class="login-sub">Panel de administración PetMi</div>
-    <input type="password" id="loginPass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-sub">Panel de administracion PetMi</div>
+    <input type="password" id="loginPass" placeholder="Contrasena" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Ingresar</button>
-    <div class="login-err" id="loginErr">Contraseña incorrecta</div>
+    <div class="login-err" id="loginErr">Contrasena incorrecta</div>
   </div>
 </div>
 
 <!-- APP -->
 <div class="app" id="appWrap">
-
-  <!-- SIDEBAR -->
   <div class="sidebar">
-    <div class="sidebar-logo">petz<span>ID</span> Admin</div>
+    <div class="sidebar-logo">petz<span>ID</span></div>
     <nav class="sidebar-nav">
-      <div class="nav-item active" onclick="showScreen('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
-      <div class="nav-item" onclick="showScreen('mascotas')"><span class="nav-icon">🐾</span>Mascotas</div>
-      <div class="nav-item" onclick="showScreen('campanas')"><span class="nav-icon">📧</span>Campanas</div>
+      <div class="nav-item active" id="nav-dashboard" onclick="showScreen('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
+      <div class="nav-item" id="nav-mascotas" onclick="showScreen('mascotas',this)"><span class="nav-icon">🐾</span>Mascotas</div>
+      <div class="nav-item" id="nav-familias" onclick="showScreen('familias',this)"><span class="nav-icon">🏠</span>Familias</div>
+      <div class="nav-item" id="nav-campanas" onclick="showScreen('campanas',this)"><span class="nav-icon">📧</span>Campanas</div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
     </div>
   </div>
 
-  <!-- CONTENT -->
   <div class="content">
 
     <!-- DASHBOARD -->
     <div class="screen active" id="screenDashboard">
       <div class="page-header">
-        <div>
-          <div class="page-title">Dashboard</div>
-          <div class="page-sub">Resumen general de PetzIDs registrados</div>
-        </div>
-        <button class="btn-refresh" onclick="loadData()">Actualizar</button>
+        <div><div class="page-title">Dashboard</div><div class="page-sub">Resumen general</div></div>
+        <button class="btn-primary" onclick="loadData()">Actualizar</button>
       </div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon">🐾</div><div class="stat-num" id="statTotal">-</div><div class="stat-lbl">Total registros</div></div>
@@ -177,33 +154,35 @@ tbody tr:last-child td{border-bottom:none}
         <div class="stat-card"><div class="stat-icon">📧</div><div class="stat-num" id="statEnviados">-</div><div class="stat-lbl">IDs enviados</div></div>
       </div>
       <div class="charts-grid">
-        <div class="chart-card">
-          <div class="chart-title">Top Zonas</div>
-          <div id="chartZonas"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">Registros por mes</div>
-          <div id="chartMeses"><div class="loading"><div class="spinner"></div>Cargando...</div></div>
-        </div>
+        <div class="chart-card"><div class="chart-title">Top Zonas</div><div id="chartZonas"><div class="loading"><div class="spinner"></div></div></div></div>
+        <div class="chart-card"><div class="chart-title">Registros por mes</div><div id="chartMeses"><div class="loading"><div class="spinner"></div></div></div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><div class="chart-title">Top Alimentos</div><div id="chartAlimentos"><div class="loading"><div class="spinner"></div></div></div></div>
+        <div class="chart-card"><div class="chart-title">Estado de envios</div><div id="chartEnvios"><div class="loading"><div class="spinner"></div></div></div></div>
       </div>
     </div>
 
     <!-- MASCOTAS -->
     <div class="screen" id="screenMascotas">
       <div class="page-header">
-        <div>
-          <div class="page-title">Mascotas</div>
-          <div class="page-sub" id="tableInfo">Cargando...</div>
-        </div>
+        <div><div class="page-title">Mascotas</div><div class="page-sub" id="tableInfo">Cargando...</div></div>
       </div>
       <div class="search-bar">
-        <input type="text" id="searchNombre" placeholder="Buscar por nombre...">
+        <input type="text" id="searchNombre" placeholder="Nombre mascota...">
+        <input type="text" id="searchDueno" placeholder="Nombre dueno...">
         <select id="filterEspecie">
           <option value="">Todas las especies</option>
           <option value="Perro">Perro</option>
           <option value="Gato">Gato</option>
         </select>
         <input type="text" id="filterZona" placeholder="Zona...">
+        <select id="filterEnviado">
+          <option value="">Todos los estados</option>
+          <option value="Si">ID Enviado</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="migraci">Migracion pendiente</option>
+        </select>
         <button class="btn-search" onclick="applyFilters()">Buscar</button>
         <button class="btn-clear" onclick="clearFilters()">Limpiar</button>
       </div>
@@ -213,18 +192,19 @@ tbody tr:last-child td{border-bottom:none}
             <thead>
               <tr>
                 <th>Foto</th>
-                <th>Nombre</th>
+                <th>Mascota</th>
                 <th>Especie</th>
                 <th>Zona</th>
                 <th>Dueno</th>
                 <th>Email</th>
+                <th>Alimento</th>
                 <th>Fecha Reg.</th>
-                <th>ID Enviado</th>
+                <th>Estado ID</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="9" class="loading"><div class="spinner" style="margin:20px auto"></div></td></tr>
+              <tr><td colspan="10"><div class="loading"><div class="spinner"></div></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -236,23 +216,27 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
 
+    <!-- FAMILIAS -->
+    <div class="screen" id="screenFamilias">
+      <div class="page-header">
+        <div><div class="page-title">Grupos Familiares</div><div class="page-sub" id="familiaInfo">Cargando...</div></div>
+        <input type="text" id="searchFamilia" placeholder="Buscar familia..." oninput="renderFamilias()" style="padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none;min-width:200px">
+      </div>
+      <div id="familiasGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+
     <!-- CAMPANAS -->
     <div class="screen" id="screenCampanas">
       <div class="page-header">
-        <div>
-          <div class="page-title">Campanas</div>
-          <div class="page-sub">Historial de correos enviados</div>
-        </div>
+        <div><div class="page-title">Campanas</div><div class="page-sub">Historial de correos enviados</div></div>
       </div>
       <div class="table-card">
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr><th>Fecha</th><th>Segmento</th><th>Asunto</th><th>Enviados</th><th>Errores</th></tr>
-            </thead>
-            <tbody id="campanaBody">
-              <tr><td colspan="5" class="loading"><div class="spinner" style="margin:20px auto"></div></td></tr>
-            </tbody>
+            <thead><tr><th>Fecha</th><th>Segmento</th><th>Asunto</th><th>Enviados</th><th>Errores</th></tr></thead>
+            <tbody id="campanaBody"><tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -262,33 +246,48 @@ tbody tr:last-child td{border-bottom:none}
 </div>
 
 <!-- MODAL EDITAR -->
-<div class="modal-overlay" id="modalOverlay">
+<div class="modal-overlay" id="modalEdit">
   <div class="modal">
-    <div class="modal-title">
-      <span id="modalTitle">Editar mascota</span>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div id="modalBody"></div>
+    <div class="modal-title"><span id="modalEditTitle">Editar mascota</span><button class="modal-close" onclick="closeModal('modalEdit')">✕</button></div>
+    <div id="modalEditBody"></div>
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-cancel" onclick="closeModal('modalEdit')">Cancelar</button>
       <button class="btn-save" onclick="saveEdit()">Guardar</button>
     </div>
   </div>
 </div>
 
-<script>
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwciw9EcA0q-6MMHcuGZTtaXLO8OrCvCSR4WvN_WJwW6qIB-4JUoWQiGPSddaJIfbkd/exec';
-var PASSWORD = 'petmi2024';
-var allData = [];
-var filtered = [];
-var page = 1;
-var perPage = 20;
-var editRow = null;
+<!-- MODAL VER PETZID -->
+<div class="modal-overlay" id="modalID">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title"><span>PetzID</span><button class="modal-close" onclick="closeModal('modalID')">✕</button></div>
+    <div id="modalIDBody"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalID')">Cerrar</button>
+      <button class="btn-save" onclick="downloadID()">Descargar PNG</button>
+    </div>
+  </div>
+</div>
 
-// LOGIN
+<!-- MODAL FAMILIA -->
+<div class="modal-overlay" id="modalFamilia">
+  <div class="modal">
+    <div class="modal-title"><span id="modalFamiliaTitle">Familia</span><button class="modal-close" onclick="closeModal('modalFamilia')">✕</button></div>
+    <div id="modalFamiliaBody"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalFamilia')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SCRIPT_URL='https://script.google.com/macros/s/AKfycbwPBXamNnxr_I0uUH2Ud0gT9IRDvW7F-IGRXVOb1DOBc1GEUINs0OLh3NTFWYYbMskH/exec';
+var PASSWORD='petmi2024';
+var allData=[],filtered=[],familias={},campanas=[];
+var page=1,perPage=25,editIdx=null;
+
 function doLogin(){
-  var p = document.getElementById('loginPass').value;
-  if(p === PASSWORD){
+  if(document.getElementById('loginPass').value===PASSWORD){
     document.getElementById('loginWrap').style.display='none';
     document.getElementById('appWrap').style.display='flex';
     loadData();
@@ -296,151 +295,340 @@ function doLogin(){
     document.getElementById('loginErr').style.display='block';
   }
 }
-
 function doLogout(){
   document.getElementById('loginWrap').style.display='flex';
   document.getElementById('appWrap').style.display='none';
   document.getElementById('loginPass').value='';
 }
 
-// NAVIGATION
-function showScreen(name){
+function showScreen(name,el){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
-  event.currentTarget.classList.add('active');
+  if(el)el.classList.add('active');
 }
 
-// LOAD DATA
 function loadData(){
   fetch(SCRIPT_URL+'?action=getData')
   .then(function(r){return r.json();})
-  .then(function(data){
-    allData = data.rows || [];
-    filtered = allData.slice();
+  .then(function(d){
+    allData=d.rows||[];
+    campanas=d.campanas||[];
+    filtered=allData.slice();
+    buildFamilias();
     renderDashboard();
     renderTable();
-    renderCampanas(data.campanas||[]);
-  }).catch(function(e){
-    console.log('Error:', e);
+    renderFamilias();
+    renderCampanas();
+  }).catch(function(e){console.log('Error:',e);});
+}
+
+function buildFamilias(){
+  familias={};
+  allData.forEach(function(r){
+    var email=String(r[11]||'').trim().toLowerCase();
+    if(!email)return;
+    if(!familias[email]){
+      familias[email]={
+        dueno:String(r[10]||'').trim(),
+        email:email,
+        whatsapp:String(r[12]||'').trim(),
+        zona:String(r[9]||'').trim(),
+        mascotas:[]
+      };
+    }
+    familias[email].mascotas.push({
+      nombre:String(r[2]||'').trim(),
+      apodo:String(r[3]||'').trim(),
+      especie:String(r[4]||'').trim(),
+      sexo:String(r[5]||'').trim(),
+      uid:String(r[1]||'').trim(),
+      row:r
+    });
   });
 }
 
-// DASHBOARD
 function renderDashboard(){
-  var total = allData.length;
-  var perros = allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('perro')>=0;}).length;
-  var gatos  = allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('gato')>=0;}).length;
-  var enviados = allData.filter(function(r){return r[24]==='Si';}).length;
-  document.getElementById('statTotal').textContent = total;
-  document.getElementById('statPerros').textContent = perros;
-  document.getElementById('statGatos').textContent = gatos;
-  document.getElementById('statEnviados').textContent = enviados;
+  var total=allData.length;
+  var perros=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('perro')>=0;}).length;
+  var gatos=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('gato')>=0;}).length;
+  var enviados=allData.filter(function(r){return String(r[24])==='Si';}).length;
+  document.getElementById('statTotal').textContent=total;
+  document.getElementById('statPerros').textContent=perros;
+  document.getElementById('statGatos').textContent=gatos;
+  document.getElementById('statEnviados').textContent=enviados;
 
   // Zonas
-  var zonas = {};
-  allData.forEach(function(r){
-    var z = String(r[9]||'Sin zona').toUpperCase();
-    zonas[z] = (zonas[z]||0)+1;
-  });
-  var topZonas = Object.keys(zonas).sort(function(a,b){return zonas[b]-zonas[a];}).slice(0,6);
-  var maxZ = zonas[topZonas[0]]||1;
-  var zonaHTML = topZonas.map(function(z){
-    var pct = Math.round(zonas[z]/maxZ*100);
-    return '<div class="bar-row"><div class="bar-label">'+z+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:#00B4B4">'+zonas[z]+'</div></div></div>';
-  }).join('');
-  document.getElementById('chartZonas').innerHTML = zonaHTML || '<p style="color:#888;font-size:13px">Sin datos</p>';
+  var zonas={};
+  allData.forEach(function(r){var z=String(r[9]||'Sin zona').toUpperCase();zonas[z]=(zonas[z]||0)+1;});
+  renderBars('chartZonas',zonas,6,'#00B4B4');
 
   // Meses
-  var meses = {};
-  var mNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var meses={};
+  var mn=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   allData.forEach(function(r){
     if(!r[0])return;
-    var d = new Date(r[0]);
-    var k = mNames[d.getMonth()]+' '+d.getFullYear();
+    var d=new Date(r[0]);var k=mn[d.getMonth()]+' '+d.getFullYear();
     meses[k]=(meses[k]||0)+1;
   });
-  var topMeses = Object.keys(meses).slice(-6);
-  var maxM = Math.max.apply(null, topMeses.map(function(m){return meses[m];})) || 1;
-  var mesesHTML = topMeses.map(function(m){
-    var pct = Math.round(meses[m]/maxM*100);
-    return '<div class="bar-row"><div class="bar-label">'+m+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:#E05090">'+meses[m]+'</div></div></div>';
-  }).join('');
-  document.getElementById('chartMeses').innerHTML = mesesHTML || '<p style="color:#888;font-size:13px">Sin datos</p>';
+  renderBars('chartMeses',meses,6,'#E05090');
+
+  // Alimentos
+  var alimentos={};
+  allData.forEach(function(r){
+    var a=String(r[16]||'Sin registrar').trim();
+    if(!a)a='Sin registrar';
+    alimentos[a]=(alimentos[a]||0)+1;
+  });
+  renderBars('chartAlimentos',alimentos,6,'#534AB7');
+
+  // Estado envios
+  var estados={'Enviado':enviados,'Pendiente':total-enviados};
+  renderBars('chartEnvios',estados,2,'#3B6D11');
 }
 
-// TABLE
+function renderBars(id,obj,top,color){
+  var keys=Object.keys(obj).sort(function(a,b){return obj[b]-obj[a];}).slice(0,top);
+  var max=obj[keys[0]]||1;
+  document.getElementById(id).innerHTML=keys.map(function(k){
+    var pct=Math.round(obj[k]/max*100);
+    return '<div class="bar-row"><div class="bar-label" title="'+k+'">'+k+'</div>'
+      +'<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+color+'">'+obj[k]+'</div></div></div>';
+  }).join('')||'<p style="color:#888;font-size:13px">Sin datos</p>';
+}
+
 function applyFilters(){
-  var nombre = document.getElementById('searchNombre').value.toLowerCase();
-  var especie = document.getElementById('filterEspecie').value.toLowerCase();
-  var zona = document.getElementById('filterZona').value.toLowerCase();
-  filtered = allData.filter(function(r){
-    if(nombre && String(r[2]).toLowerCase().indexOf(nombre)<0) return false;
-    if(especie && String(r[4]).toLowerCase().indexOf(especie)<0) return false;
-    if(zona && String(r[9]).toLowerCase().indexOf(zona)<0) return false;
+  var nombre=document.getElementById('searchNombre').value.toLowerCase();
+  var dueno=document.getElementById('searchDueno').value.toLowerCase();
+  var especie=document.getElementById('filterEspecie').value.toLowerCase();
+  var zona=document.getElementById('filterZona').value.toLowerCase();
+  var enviado=document.getElementById('filterEnviado').value.toLowerCase();
+  filtered=allData.filter(function(r){
+    if(nombre&&String(r[2]).toLowerCase().indexOf(nombre)<0)return false;
+    if(dueno&&String(r[10]).toLowerCase().indexOf(dueno)<0)return false;
+    if(especie&&String(r[4]).toLowerCase().indexOf(especie)<0)return false;
+    if(zona&&String(r[9]).toLowerCase().indexOf(zona)<0)return false;
+    if(enviado&&String(r[24]).toLowerCase().indexOf(enviado)<0)return false;
     return true;
   });
-  page=1;
-  renderTable();
+  page=1;renderTable();
 }
-
 function clearFilters(){
-  document.getElementById('searchNombre').value='';
+  ['searchNombre','searchDueno','filterZona'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('filterEspecie').value='';
-  document.getElementById('filterZona').value='';
-  filtered=allData.slice();
-  page=1;
-  renderTable();
+  document.getElementById('filterEnviado').value='';
+  filtered=allData.slice();page=1;renderTable();
 }
-
 function changePage(dir){
-  var maxPage = Math.ceil(filtered.length/perPage);
-  page = Math.max(1, Math.min(maxPage, page+dir));
+  var max=Math.ceil(filtered.length/perPage);
+  page=Math.max(1,Math.min(max,page+dir));
   renderTable();
 }
 
 function renderTable(){
-  var start = (page-1)*perPage;
-  var end = Math.min(start+perPage, filtered.length);
-  var rows = filtered.slice(start, end);
-  var maxPage = Math.ceil(filtered.length/perPage);
+  var start=(page-1)*perPage;
+  var rows=filtered.slice(start,start+perPage);
+  var max=Math.ceil(filtered.length/perPage);
+  document.getElementById('tableInfo').textContent=filtered.length+' mascotas';
+  document.getElementById('pageInfo').textContent='Pag '+page+'/'+max+' ('+filtered.length+' total)';
+  document.getElementById('btnPrev').disabled=page<=1;
+  document.getElementById('btnNext').disabled=page>=max;
 
-  document.getElementById('tableInfo').textContent = filtered.length + ' mascotas encontradas';
-  document.getElementById('pageInfo').textContent = 'Pagina '+page+' de '+maxPage+' ('+filtered.length+' total)';
-  document.getElementById('btnPrev').disabled = page<=1;
-  document.getElementById('btnNext').disabled = page>=maxPage;
-
-  var html = rows.map(function(r, i){
-    var idx = start + i;
-    var espBadge = String(r[4]).toLowerCase().indexOf('gato')>=0
-      ? '<span class="badge badge-gato">Gato</span>'
-      : '<span class="badge badge-perro">Perro</span>';
-    var envBadge = r[24]==='Si'
-      ? '<span class="badge badge-si">Si</span>'
-      : '<span class="badge badge-no">Pendiente</span>';
-    var fecha = r[0] ? new Date(r[0]).toLocaleDateString('es-GT') : '-';
+  var html=rows.map(function(r,i){
+    var idx=start+i;
+    var esp=String(r[4]).toLowerCase().indexOf('gato')>=0
+      ?'<span class="badge badge-gato">Gato</span>'
+      :'<span class="badge badge-perro">Perro</span>';
+    var est=String(r[24]);
+    var estBadge=est==='Si'
+      ?'<span class="badge badge-si">Enviado</span>'
+      :est.indexOf('migraci')>=0
+        ?'<span class="badge badge-pending">Migracion</span>'
+        :'<span class="badge badge-no">Pendiente</span>';
+    var fecha=r[0]?new Date(r[0]).toLocaleDateString('es-GT'):'-';
+    var foto=r[5]&&String(r[5]).indexOf('http')>=0
+      ?'<img src="'+r[5]+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.outerHTML=\'🐾\'">'
+      :'<div style="width:40px;height:40px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px">🐾</div>';
     return '<tr>'
-      +'<td><div class="pet-photo">🐾</div></td>'
+      +'<td>'+foto+'</td>'
       +'<td><strong>'+String(r[2]||'-')+'</strong><br><span style="font-size:11px;color:#888">'+String(r[3]||'')+'</span></td>'
-      +'<td>'+espBadge+'</td>'
-      +'<td>'+String(r[9]||'-')+'</td>'
-      +'<td>'+String(r[10]||'-')+'</td>'
-      +'<td style="font-size:12px;color:#534AB7">'+String(r[11]||'-')+'</td>'
-      +'<td style="font-size:12px">'+fecha+'</td>'
-      +'<td>'+envBadge+'</td>'
-      +'<td>'
-      +'<button class="btn-action-sm btn-edit" onclick="openEdit('+idx+')">Editar</button>'
-      +'<button class="btn-action-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button>'
+      +'<td>'+esp+'</td>'
+      +'<td style="font-size:12px">'+String(r[9]||'-')+'</td>'
+      +'<td style="font-size:12px">'+String(r[10]||'-')+'</td>'
+      +'<td style="font-size:11px;color:#534AB7">'+String(r[11]||'-')+'</td>'
+      +'<td style="font-size:12px">'+String(r[16]||'-')+'</td>'
+      +'<td style="font-size:11px;color:#888">'+fecha+'</td>'
+      +'<td>'+estBadge+'</td>'
+      +'<td style="white-space:nowrap">'
+      +'<button class="btn-sm btn-view" onclick="viewID('+idx+')" style="margin-right:3px">ID</button>'
+      +'<button class="btn-sm btn-edit" onclick="openEdit('+idx+')" style="margin-right:3px">Editar</button>'
+      +'<button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button>'
       +'</td>'
       +'</tr>';
   }).join('');
-  document.getElementById('tableBody').innerHTML = html || '<tr><td colspan="9" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
+  document.getElementById('tableBody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
 }
 
-// CAMPANAS
-function renderCampanas(campanas){
-  var html = campanas.map(function(c){
-    var fecha = c[0] ? new Date(c[0]).toLocaleDateString('es-GT') : '-';
+function renderFamilias(){
+  var buscar=(document.getElementById('searchFamilia').value||'').toLowerCase();
+  var keys=Object.keys(familias).filter(function(k){
+    var f=familias[k];
+    return !buscar||f.dueno.toLowerCase().indexOf(buscar)>=0||k.indexOf(buscar)>=0;
+  }).sort(function(a,b){return familias[b].mascotas.length-familias[a].mascotas.length;});
+
+  document.getElementById('familiaInfo').textContent=keys.length+' familias registradas';
+
+  var html=keys.map(function(k){
+    var f=familias[k];
+    var mascotas=f.mascotas.map(function(m){
+      return '<span style="background:#e0f7f7;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;color:#007a7a;margin-right:4px;margin-bottom:4px;display:inline-block">'
+        +m.nombre+' ('+m.especie+')</span>';
+    }).join('');
+    return '<div class="family-card" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer" onclick="viewFamilia(\''+k+'\',event)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'
+      +'<div><div style="font-size:15px;font-weight:700;color:#222">'+f.dueno+'</div>'
+      +'<div style="font-size:12px;color:#888;margin-top:2px">'+f.email+'</div></div>'
+      +'<div style="background:#00B4B4;color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700">'+f.mascotas.length+' mascota'+(f.mascotas.length>1?'s':'')+'</div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:#888;margin-bottom:8px">Zona: '+f.zona+' | WA: '+f.whatsapp+'</div>'
+      +'<div>'+mascotas+'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('familiasGrid').innerHTML=html||'<p style="color:#888">Sin familias</p>';
+}
+
+function viewFamilia(email,ev){
+  var f=familias[email];
+  if(!f)return;
+  document.getElementById('modalFamiliaTitle').textContent='Familia de '+f.dueno;
+  var html='<div style="margin-bottom:16px">'
+    +'<div style="font-size:13px;color:#555"><strong>Email:</strong> '+f.email+'</div>'
+    +'<div style="font-size:13px;color:#555"><strong>WhatsApp:</strong> '+f.whatsapp+'</div>'
+    +'<div style="font-size:13px;color:#555"><strong>Zona:</strong> '+f.zona+'</div>'
+    +'</div>'
+    +'<div style="font-size:12px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Mascotas ('+f.mascotas.length+')</div>';
+  f.mascotas.forEach(function(m){
+    html+='<div style="background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'
+      +'<div>'
+      +'<div style="font-weight:700;color:#222">'+m.nombre+'</div>'
+      +'<div style="font-size:12px;color:#888">'+m.especie+' · '+m.sexo+(m.apodo?' · "'+m.apodo+'"':'')+'</div>'
+      +'</div>'
+      +'<div style="font-size:10px;font-family:monospace;color:#bbb;max-width:120px;overflow:hidden;text-overflow:ellipsis">'+m.uid+'</div>'
+      +'</div>';
+  });
+  document.getElementById('modalFamiliaBody').innerHTML=html;
+  document.getElementById('modalFamilia').classList.add('open');
+}
+
+// VER PETZID
+function viewID(idx){
+  var r=filtered[idx];
+  var html='<div id="pngPreview" style="font-family:Arial,sans-serif;border-radius:12px;overflow:hidden;width:100%">'
+    // Top teal
+    +'<div style="background:#00B4B4;display:flex;align-items:stretch">'
+    +'<div style="width:140px;height:175px;flex-shrink:0;overflow:hidden;background:#b2e0e0;display:flex;align-items:center;justify-content:center;font-size:40px">'
+    +(r[5]&&String(r[5]).indexOf('http')>=0?'<img src="'+r[5]+'" style="width:140px;height:175px;object-fit:cover" onerror="this.outerHTML=\'🐾\'">':'🐾')
+    +'</div>'
+    +'<div style="flex:1;padding:16px 20px 14px;display:flex;flex-direction:column;justify-content:flex-end">'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.7);margin-bottom:4px">NOMBRE</div>'
+    +'<div style="font-size:24px;font-weight:900;color:#fff;font-family:Arial Black,Arial,sans-serif;letter-spacing:1px">"'+String(r[2]||'').toUpperCase()+'"</div>'
+    +'<div style="margin-top:8px;display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;align-self:flex-start">'+String(r[3]||'-').toUpperCase()+'</div>'
+    +'</div></div>'
+    // Body blanco
+    +'<div style="background:#fff;padding:14px 18px">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:10px">'
+    +'<div><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Especie</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[4]||'-')+'</div></div>'
+    +'<div style="text-align:right"><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Sexo</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[5]||'-')+'</div></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:10px">'
+    +'<div><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Zona</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[9]||'-')+'</div></div>'
+    +'<div style="text-align:right"><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Veterinario</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+String(r[13]||'-')+'</div></div>'
+    +'</div>'
+    +'<div><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Responsable</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[10]||'-')+'</div></div>'
+    +'</div>'
+    // Footer
+    +'<div style="background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:8px 14px">'
+    +'<div style="width:30px;height:30px;background:#E05090;border-radius:6px 6px 6px 0;display:flex;align-items:center;justify-content:center;font-size:14px">🐾</div>'
+    +'<div style="font-size:18px;font-weight:900;font-family:Arial Black,Arial,sans-serif;color:#1a1a1a;letter-spacing:-1px">petz<span style="color:#E05090">ID</span></div>'
+    +'</div></div>';
+  document.getElementById('modalIDBody').innerHTML=html;
+  document.getElementById('modalID').classList.add('open');
+}
+
+function downloadID(){
+  var el=document.getElementById('pngPreview');
+  html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#fff'}).then(function(canvas){
+    var link=document.createElement('a');
+    link.download='PetzID.png';
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+  });
+}
+
+// EDITAR
+function openEdit(idx){
+  editIdx=idx;
+  var r=filtered[idx];
+  document.getElementById('modalEditTitle').textContent='Editar: '+String(r[2]||'');
+  document.getElementById('modalEditBody').innerHTML=
+    '<div class="two-col">'
+    +'<div><label>Nombre</label><input id="eNombre" value="'+String(r[2]||'')+'"></div>'
+    +'<div><label>Apodo</label><input id="eApodo" value="'+String(r[3]||'')+'"></div>'
+    +'</div>'
+    +'<div class="two-col">'
+    +'<div><label>Especie</label><select id="eEspecie"><option '+(String(r[4]).toLowerCase().indexOf('perro')>=0?'selected':'')+'>Perro</option><option '+(String(r[4]).toLowerCase().indexOf('gato')>=0?'selected':'')+'>Gato</option></select></div>'
+    +'<div><label>Sexo</label><select id="eSexo"><option '+(String(r[5]).toLowerCase().indexOf('hembra')>=0?'selected':'')+'>Hembra</option><option '+(String(r[5]).toLowerCase().indexOf('macho')>=0?'selected':'')+'>Macho</option></select></div>'
+    +'</div>'
+    +'<div class="two-col">'
+    +'<div><label>Zona</label><input id="eZona" value="'+String(r[9]||'')+'"></div>'
+    +'<div><label>Veterinario</label><input id="eVet" value="'+String(r[13]||'')+'"></div>'
+    +'</div>'
+    +'<label>Dueno</label><input id="eDueno" value="'+String(r[10]||'')+'">'
+    +'<label>Email</label><input id="eEmail" value="'+String(r[11]||'')+'">'
+    +'<label>WhatsApp</label><input id="eWA" value="'+String(r[12]||'')+'">'
+    +'<label>Alimento</label><input id="eAlimento" value="'+String(r[16]||'')+'">';
+  document.getElementById('modalEdit').classList.add('open');
+}
+
+function saveEdit(){
+  if(editIdx===null)return;
+  var r=filtered[editIdx];
+  r[2]=document.getElementById('eNombre').value;
+  r[3]=document.getElementById('eApodo').value;
+  r[4]=document.getElementById('eEspecie').value;
+  r[5]=document.getElementById('eSexo').value;
+  r[9]=document.getElementById('eZona').value;
+  r[10]=document.getElementById('eDueno').value;
+  r[11]=document.getElementById('eEmail').value;
+  r[12]=document.getElementById('eWA').value;
+  r[13]=document.getElementById('eVet').value;
+  r[16]=document.getElementById('eAlimento').value;
+  fetch(SCRIPT_URL+'?action=updateRow',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid:r[1],data:r})
+  }).then(function(){
+    buildFamilias();renderTable();renderFamilias();
+    closeModal('modalEdit');
+    alert('Guardado correctamente');
+  }).catch(function(){
+    buildFamilias();renderTable();renderFamilias();
+    closeModal('modalEdit');
+  });
+}
+
+function reenviarID(idx){
+  var r=filtered[idx];
+  if(!confirm('Reenviar PetzID a '+String(r[11])+'?'))return;
+  fetch(SCRIPT_URL+'?action=reenviar',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid:r[1],email:r[11],nombre:r[2]})
+  }).then(function(){alert('PetzID reenviado a '+String(r[11]));})
+  .catch(function(){alert('Error al reenviar');});
+}
+
+function renderCampanas(){
+  var html=campanas.map(function(c){
+    var fecha=c[0]?new Date(c[0]).toLocaleDateString('es-GT'):'-';
     return '<tr>'
       +'<td>'+fecha+'</td>'
       +'<td><span style="background:#e0f7f7;padding:2px 8px;border-radius:4px;font-size:12px">'+String(c[1]||'TODOS')+'</span></td>'
@@ -449,72 +637,10 @@ function renderCampanas(campanas){
       +'<td style="color:#721c24">'+String(c[4]||0)+'</td>'
       +'</tr>';
   }).join('');
-  document.getElementById('campanaBody').innerHTML = html || '<tr><td colspan="5" style="text-align:center;padding:40px;color:#888">Sin campanas aun</td></tr>';
+  document.getElementById('campanaBody').innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:#888">Sin campanas aun</td></tr>';
 }
 
-// EDITAR
-function openEdit(idx){
-  editRow = idx;
-  var r = filtered[idx];
-  document.getElementById('modalTitle').textContent = 'Editar: '+String(r[2]||'');
-  document.getElementById('modalBody').innerHTML =
-    '<label>Nombre</label><input id="eNombre" value="'+String(r[2]||'')+'">'
-    +'<label>Apodo</label><input id="eApodo" value="'+String(r[3]||'')+'">'
-    +'<label>Especie</label><select id="eEspecie"><option '+(String(r[4]).toLowerCase().indexOf('perro')>=0?'selected':'')+'>Perro</option><option '+(String(r[4]).toLowerCase().indexOf('gato')>=0?'selected':'')+'>Gato</option></select>'
-    +'<label>Sexo</label><select id="eSexo"><option '+(String(r[5]).toLowerCase().indexOf('hembra')>=0?'selected':'')+'>Hembra</option><option '+(String(r[5]).toLowerCase().indexOf('macho')>=0?'selected':'')+'>Macho</option></select>'
-    +'<label>Zona</label><input id="eZona" value="'+String(r[9]||'')+'">'
-    +'<label>Dueno</label><input id="eDueno" value="'+String(r[10]||'')+'">'
-    +'<label>Email</label><input id="eEmail" value="'+String(r[11]||'')+'">'
-    +'<label>WhatsApp</label><input id="eWA" value="'+String(r[12]||'')+'">'
-    +'<label>Veterinario</label><input id="eVet" value="'+String(r[13]||'')+'">';
-  document.getElementById('modalOverlay').classList.add('open');
-}
-
-function closeModal(){
-  document.getElementById('modalOverlay').classList.remove('open');
-  editRow = null;
-}
-
-function saveEdit(){
-  if(editRow===null)return;
-  var r = filtered[editRow];
-  r[2]  = document.getElementById('eNombre').value;
-  r[3]  = document.getElementById('eApodo').value;
-  r[4]  = document.getElementById('eEspecie').value;
-  r[5]  = document.getElementById('eSexo').value;
-  r[9]  = document.getElementById('eZona').value;
-  r[10] = document.getElementById('eDueno').value;
-  r[11] = document.getElementById('eEmail').value;
-  r[12] = document.getElementById('eWA').value;
-  r[13] = document.getElementById('eVet').value;
-
-  fetch(SCRIPT_URL+'?action=updateRow', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({uid: r[1], data: r})
-  }).then(function(){
-    renderTable();
-    closeModal();
-    alert('Guardado correctamente');
-  }).catch(function(){
-    renderTable();
-    closeModal();
-  });
-}
-
-function reenviarID(idx){
-  var r = filtered[idx];
-  if(!confirm('Reenviar PetzID a '+String(r[11])+'?'))return;
-  fetch(SCRIPT_URL+'?action=reenviar', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({uid: r[1], email: r[11], nombre: r[2]})
-  }).then(function(){
-    alert('PetzID reenviado a '+String(r[11]));
-  }).catch(function(){
-    alert('Error al reenviar');
-  });
-}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
 </script>
 </body>
 </html>
