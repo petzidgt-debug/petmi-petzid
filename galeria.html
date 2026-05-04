@@ -150,8 +150,13 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <div class="modal-fields">
         <div><div class="modal-field-lbl">Especie</div><div class="modal-field-val" id="modalEspecie">-</div></div>
         <div><div class="modal-field-lbl">Sexo</div><div class="modal-field-val" id="modalSexo">-</div></div>
-        <div><div class="modal-field-lbl">Zona</div><div class="modal-field-val" id="modalZona">-</div></div>
-        <div><div class="modal-field-lbl">Alimento</div><div class="modal-field-val" id="modalAlimento">-</div></div>
+      </div>
+      <div id="modalComentario" style="display:none;background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:14px;border-left:3px solid #00B4B4">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Sobre mi</div>
+        <div id="modalComentarioText" style="font-size:13px;color:#555;line-height:1.6"></div>
+      </div>
+      <div id="modalRegistroMsg" style="display:none;background:#e0f7f7;border-radius:10px;padding:12px;margin-bottom:14px;text-align:center">
+        <div style="font-size:13px;color:#007a7a;font-weight:600">Registra tu mascota para ver mas detalles y conectar con esta mascota</div>
       </div>
     </div>
     <div class="modal-footer">
@@ -174,17 +179,13 @@ fetch('/api/admin?action=getData')
       apodo:   String(r[3]||'').trim(),
       especie: String(r[4]||'').trim(),
       sexo:    String(r[5]||'').trim(),
-      foto:    String(r[5]||'').trim(), // col F = foto URL
       zona:    String(r[9]||'').trim(),
       alimento:String(r[16]||'').trim(),
+      comentario: String(r[23]||'').trim(),
+      foto:    String(r[27]||'').trim(), // columna AB = index 27
       uid:     String(r[1]||'').trim()
     };
   }).filter(function(p){return p.nombre;});
-
-  // Fix: foto está en columna index 5 del row original
-  rows.forEach(function(r,i){
-    if(allPets[i]) allPets[i].foto = String(r[5]||'').trim();
-  });
 
   var perros=allPets.filter(function(p){return p.especie.toLowerCase().indexOf('perro')>=0;}).length;
   var gatos=allPets.filter(function(p){return p.especie.toLowerCase().indexOf('gato')>=0;}).length;
@@ -230,7 +231,7 @@ function renderGallery(append){
     var idx=shown-toShow.length+i;
     var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
     var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
-      ?'<img src="'+p.foto+'" alt="'+p.nombre+'" loading="lazy" onerror="this.outerHTML=\'<div style=width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:#e0f7f7>'+(esGato?'🐱':'🐶')+'</div>\'">'
+      ?'<img src="'+p.foto+'" alt="'+p.nombre+'" loading="lazy" onerror="this.outerHTML=\'<div style=\\\"width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:#e0f7f7\\\">'+(esGato?'🐱':'🐶')+'</div>\'">'
       :'<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:#e0f7f7">'+(esGato?'🐱':'🐶')+'</div>';
     return '<div class="pet-card" onclick="openModal('+idx+')">'
       +'<div class="pet-photo">'+fotoHTML+'</div>'
@@ -238,7 +239,6 @@ function renderGallery(append){
       +'<div class="pet-name">'+p.nombre+'</div>'
       +'<div class="pet-meta">'
       +'<span class="pet-especie '+(esGato?'gato':'perro')+'">'+(esGato?'Gato':'Perro')+'</span>'
-      +'<span class="pet-zona">'+(p.zona||'')+'</span>'
       +'</div></div></div>';
   }).join('');
 
@@ -262,15 +262,25 @@ function openModal(idx){
   if(!p)return;
   var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
   var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
-    ?'<img src="'+p.foto+'" style="width:100%;height:280px;object-fit:cover" onerror="this.outerHTML=\'<div class=modal-photo>'+(esGato?'🐱':'🐶')+'</div>\'">'
-    :'<div class="modal-photo">'+(esGato?'🐱':'🐶')+'</div>';
-  document.getElementById('modalPhoto').outerHTML='<div id="modalPhoto">'+fotoHTML+'</div>';
+    ?'<img src="'+p.foto+'" style="width:100%;height:280px;object-fit:cover" onerror="this.style.display=\'none\'">'
+    :'';
+  document.getElementById('modalPhoto').innerHTML=fotoHTML||(esGato?'🐱':'🐶');
   document.getElementById('modalName').textContent='"'+p.nombre.toUpperCase()+'"';
   document.getElementById('modalApodo').textContent=p.apodo||p.nombre;
   document.getElementById('modalEspecie').textContent=p.especie||'-';
   document.getElementById('modalSexo').textContent=p.sexo||'-';
   document.getElementById('modalZona').textContent=p.zona||'-';
   document.getElementById('modalAlimento').textContent=p.alimento||'-';
+
+  // Comentario
+  var comentarioEl=document.getElementById('modalComentario');
+  if(comentarioEl){
+    comentarioEl.style.display=p.comentario?'block':'none';
+    document.getElementById('modalComentarioText').textContent=p.comentario||'';
+  }
+
+  // Mostrar mensaje de registro en vez de detalle completo
+  document.getElementById('modalRegistroMsg').style.display='block';
   document.getElementById('modalOverlay').classList.add('open');
 }
 
