@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Panel Admin — PetMi</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -135,13 +136,11 @@ tbody tr:last-child td{border-bottom:none}
         <div><div class="page-title">Dashboard</div><div class="page-sub">Resumen general</div></div>
         <button class="btn-primary" onclick="loadData()">Actualizar</button>
       </div>
-      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon">🐾</div><div class="stat-num" id="statTotal">-</div><div class="stat-lbl">Total registros</div></div>
         <div class="stat-card"><div class="stat-icon">🐶</div><div class="stat-num" id="statPerros">-</div><div class="stat-lbl">Perros</div></div>
         <div class="stat-card"><div class="stat-icon">🐱</div><div class="stat-num" id="statGatos">-</div><div class="stat-lbl">Gatos</div></div>
         <div class="stat-card"><div class="stat-icon">📧</div><div class="stat-num" id="statEnviados">-</div><div class="stat-lbl">IDs enviados</div></div>
-        <div class="stat-card"><div class="stat-icon">👼</div><div class="stat-num" id="statAngelitos">-</div><div class="stat-lbl">Angelitos</div></div>
-        <div class="stat-card"><div class="stat-icon">🎂</div><div class="stat-num" id="statCumple">-</div><div class="stat-lbl">Cumpleañeros este mes</div></div>
       </div>
       <div class="charts-grid">
         <div class="chart-card"><div class="chart-title">Top Zonas</div><div id="chartZonas"><div class="loading"><div class="spinner"></div></div></div></div>
@@ -298,18 +297,10 @@ function renderDashboard(){
   var perros=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('perro')>=0;}).length;
   var gatos=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('gato')>=0;}).length;
   var enviados=allData.filter(function(r){return String(r[24])==='Si';}).length;
-  var angelitos=allData.filter(function(r){return String(r[28]||'').toLowerCase()==='si';}).length;
-  var mesActual=new Date().getMonth();
-  var cumpleMes=allData.filter(function(r){
-    if(!r[8])return false;
-    var d=new Date(r[8]);return !isNaN(d)&&d.getMonth()===mesActual;
-  }).length;
   document.getElementById('statTotal').textContent=total;
   document.getElementById('statPerros').textContent=perros;
   document.getElementById('statGatos').textContent=gatos;
   document.getElementById('statEnviados').textContent=enviados;
-  if(document.getElementById('statAngelitos'))document.getElementById('statAngelitos').textContent=angelitos;
-  if(document.getElementById('statCumple'))document.getElementById('statCumple').textContent=cumpleMes;
   var zonas={};allData.forEach(function(r){var z=String(r[9]||'Sin zona').toUpperCase();zonas[z]=(zonas[z]||0)+1;});
   renderBars('chartZonas',zonas,6,'#00B4B4');
   var mn=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -361,7 +352,7 @@ function renderTable(){
     var est=String(r[24]);
     var estB=est==='Si'?'<span class="badge badge-si">Enviado</span>':est.indexOf('migraci')>=0?'<span class="badge badge-pending">Migracion</span>':'<span class="badge badge-no">Pendiente</span>';
     var fecha=r[0]?new Date(r[0]).toLocaleDateString('es-GT'):'-';
-    var foto=r[27]&&String(r[27]).indexOf('http')>=0?'<img src="'+r[27]+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.style.display=\'none\'">':'<div style="width:40px;height:40px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px">🐾</div>';
+    var foto=r[5]&&String(r[5]).indexOf('http')>=0?'<img src="'+r[5]+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.style.display=\'none\'">':'<div style="width:40px;height:40px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px">🐾</div>';
     return '<tr><td>'+foto+'</td><td><strong>'+String(r[2]||'-')+'</strong><br><span style="font-size:11px;color:#888">'+String(r[3]||'')+'</span></td><td>'+esp+'</td><td style="font-size:12px">'+String(r[9]||'-')+'</td><td style="font-size:12px">'+String(r[10]||'-')+'</td><td style="font-size:11px;color:#534AB7">'+String(r[11]||'-')+'</td><td style="font-size:12px">'+String(r[16]||'-')+'</td><td style="font-size:11px;color:#888">'+fecha+'</td><td>'+estB+'</td><td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button></td></tr>';
   }).join('');
   document.getElementById('tableBody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
@@ -388,7 +379,7 @@ function viewFamilia(email){
 }
 function viewID(idx){
   var r=filtered[idx];
-  var foto=r[27]&&String(r[27]).indexOf('http')>=0?'<img src="'+r[27]+'" style="width:140px;height:175px;object-fit:cover">':'<div style="width:140px;height:175px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">🐾</div>';
+  var foto=r[5]&&String(r[5]).indexOf('http')>=0?'<img src="'+r[5]+'" style="width:140px;height:175px;object-fit:cover">':'<div style="width:140px;height:175px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">🐾</div>';
   var html='<div id="pngPreview" style="font-family:Arial,sans-serif;border-radius:12px;overflow:hidden">'
     +'<div style="background:#00B4B4;display:flex;align-items:stretch"><div style="flex-shrink:0;overflow:hidden">'+foto+'</div>'
     +'<div style="flex:1;padding:16px 20px 14px;display:flex;flex-direction:column;justify-content:flex-end"><div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.7);margin-bottom:4px">NOMBRE</div>'
