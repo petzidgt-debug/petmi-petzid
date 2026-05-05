@@ -323,6 +323,7 @@ fetch('/api/admin?action=getData')
         comentario: String(r[23]||'').trim(),
         foto:       String(r[27]||'').trim(),
         angelito:   String(r[28]||'').trim().toLowerCase()==='si',
+        fechaAngelito: String(r[29]||'').trim(),
         email:      String(r[11]||'').trim(),
         actividades:String(r[18]||'').trim(),
         especial:   String(r[23]||'').trim(),
@@ -392,7 +393,15 @@ function renderAngeles(){
     return '<div class="angel-card">'
       +'<div class="angel-foto">'+fotoHTML+'<div class="angel-overlay"></div><div class="angel-emoji">👼</div></div>'
       +'<div class="angel-info"><div class="angel-nombre">'+p.nombre+'</div>'
-      +'<div class="angel-fecha">Siempre en nuestro corazón</div></div></div>';
+      +(function(){
+        var anios='';
+        if(p.fecha&&p.fechaAngelito){
+          var ny=new Date(p.fecha.indexOf('/')>=0?p.fecha.split('/')[2]+'-'+p.fecha.split('/')[1]+'-'+p.fecha.split('/')[0]:p.fecha).getFullYear();
+          var ay=new Date(p.fechaAngelito).getFullYear();
+          if(!isNaN(ny)&&!isNaN(ay))anios=ny+'-'+ay;
+        }
+        return '<div class="angel-fecha">'+(anios||'Siempre en nuestro corazón')+'</div>';
+      }())+'</div></div>';
   }).join('');
   document.getElementById('angelesScroll').innerHTML=html;
 }
@@ -546,6 +555,64 @@ function renderModalFooter(p){
 }
 
 function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+
+function openModalByUID(uid){
+  // Buscar en allPets (incluyendo angelitos)
+  var p = allPets.find(function(x){return x.uid===uid;});
+  if(!p)return;
+  // Si está en filtered, usar su índice; si no, abrirlo directamente
+  var idx = filtered.indexOf(p);
+  if(idx>=0){
+    openModal(idx);
+  } else {
+    // Angelito o cumpleañero fuera del filtro actual — abrir directo
+    openModalDirect(p);
+  }
+}
+
+function openModalDirect(p){
+  currentModalPet = p;
+  var esGato = p.especie.toLowerCase().indexOf('gato')>=0;
+  var emoji  = esGato?'🐱':'🐶';
+  var photoEl = document.getElementById('modalPhoto');
+  photoEl.innerHTML='';
+  if(p.angelito){
+    var badge=document.createElement('div');
+    badge.className='modal-angel-badge';badge.textContent='👼';
+    photoEl.appendChild(badge);
+  }
+  if(p.foto&&p.foto.indexOf('http')>=0){
+    var img=document.createElement('img');
+    img.src=p.foto;
+    img.style='width:100%;height:280px;object-fit:cover'+(p.angelito?';filter:grayscale(20%)':'');
+    img.onerror=function(){photoEl.innerHTML=emoji;};
+    photoEl.appendChild(img);
+  } else { photoEl.innerHTML=emoji; }
+  document.getElementById('modalName').textContent='"'+p.nombre.toUpperCase()+'"';
+  document.getElementById('modalApodo').textContent=p.apodo||p.nombre;
+  document.getElementById('modalEspecie').textContent=p.especie||'-';
+  document.getElementById('modalSexo').textContent=p.sexo||'-';
+  var comentarioEl=document.getElementById('modalComentario');
+  comentarioEl.style.display=p.comentario?'block':'none';
+  document.getElementById('modalComentarioText').textContent=p.comentario||'';
+  var actEl=document.getElementById('modalActividades');
+  if(actEl){
+    if(p.actividades){
+      var acts=p.actividades.split(',').map(function(a){return a.trim();}).filter(Boolean);
+      actEl.innerHTML=acts.map(function(a){return '<span style="display:inline-block;background:#e0f7f7;color:#007a7a;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;margin:2px">'+a+'</span>';}).join('');
+      actEl.parentElement.style.display='block';
+    } else { actEl.parentElement.style.display='none'; }
+  }
+  var espEl=document.getElementById('modalEspecial');
+  if(espEl){
+    espEl.style.display=p.especial?'block':'none';
+    var espTxt=document.getElementById('modalEspecialText');
+    if(espTxt)espTxt.textContent=p.especial||'';
+  }
+  cargarMensajes(p.uid);
+  renderModalFooter(p);
+  document.getElementById('modalOverlay').classList.add('open');
+}
 function actualizarMascota(uid){window.location.href='/editar.html?uid='+uid;}
 function agregarOtra(){window.location.href='/index.html?agregar=1';}
 
@@ -553,30 +620,53 @@ function agregarOtra(){window.location.href='/index.html?agregar=1';}
 function toggleAngel(esAngel){
   if(!currentModalPet)return;
   var p=currentModalPet;
-  var msg=esAngel
-    ?'¿Marcar a '+p.nombre+' como angelito? 👼\nSu foto aparecerá en la sección especial.'
-    :'¿Quitar a '+p.nombre+' de los angelitos?';
 
-  mostrarConfirm(
-    esAngel?'👼 Marcar como angelito':'💔 Quitar de angelitos',
-    msg,
-    function(){
-      fetch('/api/admin?action=updateRow',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:esAngel})
-      }).then(function(){
-        p.angelito=esAngel;
-        closeModal();
-        closeConfirm();
-        // Recargar página para reflejar cambio
-        setTimeout(function(){location.reload();},500);
-      }).catch(function(){
-        alert('Error al actualizar. Intenta de nuevo.');
-        closeConfirm();
-      });
-    }
-  );
+  if(!esAngel){
+    mostrarConfirm('💔 Quitar de angelitos','¿Quitar a '+p.nombre+' de la sección de angelitos?',function(){
+      fetch('/api/admin?action=updateRow',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:false})
+      }).then(function(){closeModal();closeConfirm();setTimeout(function(){location.reload();},500);})
+      .catch(function(){alert('Error.');closeConfirm();});
+    });
+    return;
+  }
+
+  // Pedir fecha de angelito
+  closeConfirm();
+  var overlay=document.getElementById('angelFechaOverlay');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='angelFechaOverlay';
+    overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:800;display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML=`
+      <div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center">
+        <div style="font-size:36px;margin-bottom:10px">👼</div>
+        <div style="font-size:18px;font-weight:900;color:#222;margin-bottom:6px">Fecha en que nos dejó</div>
+        <div style="font-size:13px;color:#888;margin-bottom:20px">Esta fecha aparecerá en su tarjeta como <strong>2011-2026</strong></div>
+        <input type="date" id="angelFechaInput" style="width:100%;padding:13px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;outline:none;margin-bottom:16px">
+        <button onclick="confirmarAngel()" style="width:100%;padding:14px;background:#764ba2;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">👼 Confirmar</button>
+        <button onclick="document.getElementById('angelFechaOverlay').style.display='none'" style="width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cancelar</button>
+      </div>`;
+    document.body.appendChild(overlay);
+  } else {
+    overlay.style.display='flex';
+  }
+  document.getElementById('angelFechaInput').value=new Date().toISOString().split('T')[0];
+}
+
+function confirmarAngel(){
+  var p=currentModalPet;
+  var fecha=document.getElementById('angelFechaInput').value;
+  document.getElementById('angelFechaOverlay').style.display='none';
+
+  fetch('/api/admin?action=updateRow',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:true,fechaAngelito:fecha})
+  }).then(function(){
+    closeModal();
+    setTimeout(function(){location.reload();},500);
+  }).catch(function(){alert('Error al actualizar.');});
 }
 
 // ── Eliminar cuenta ───────────────────────────────────────────
