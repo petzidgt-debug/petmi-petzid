@@ -9,12 +9,17 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
+/* HEADER */
 .header{background:#fff;border-bottom:1px solid #eee;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.07)}
 .header-logo img{height:38px;display:block}
 .header-logo-fallback{font-size:20px;font-weight:900;color:#00B4B4;font-family:'Arial Black',Arial,sans-serif}
 .header-logo-fallback span{color:#E05090}
 .btn-registro{padding:8px 18px;background:#00B4B4;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
+.header-user{display:flex;align-items:center;gap:10px}
+.user-badge{font-size:12px;color:#007a7a;font-weight:600;background:#e0f7f7;padding:6px 12px;border-radius:20px}
+.btn-salir{font-size:12px;color:#aaa;background:none;border:none;cursor:pointer;padding:4px 8px}
 
+/* HERO */
 .hero{background:#00B4B4;padding:40px 20px;text-align:center}
 .hero h1{font-size:28px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:8px}
 .hero h1 span{color:#F5C842}
@@ -24,6 +29,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .hero-stat-num{font-size:28px;font-weight:900;color:#fff}
 .hero-stat-lbl{font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1px}
 
+/* FILTERS */
 .filters{background:#fff;border-bottom:1px solid #eee;padding:12px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:60px;z-index:90}
 .filter-btn{padding:8px 16px;border-radius:24px;border:1.5px solid #ddd;font-size:13px;font-weight:600;color:#888;cursor:pointer;background:#fff;transition:all .15s;white-space:nowrap}
 .filter-btn.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
@@ -31,6 +37,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .search-input:focus{border-color:#00B4B4}
 .results-count{font-size:13px;color:#888;margin-left:auto;white-space:nowrap}
 
+/* GRID */
 .gallery-wrap{padding:20px;max-width:1200px;margin:0 auto}
 .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
 .pet-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer;transition:transform .2s,box-shadow .2s}
@@ -44,13 +51,15 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .pet-especie.perro{background:#e0f7f7;color:#007a7a}
 .pet-especie.gato{background:#fbeaf0;color:#993556}
 
+/* LOAD MORE */
 .load-more-wrap{text-align:center;padding:24px}
 .btn-load{padding:12px 32px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer}
 .btn-load:hover{background:#009898}
 
+/* MODAL */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
-.modal{background:#fff;border-radius:20px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 12px 48px rgba(0,0,0,.2)}
+.modal{background:#fff;border-radius:20px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 12px 48px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
 .modal-photo{width:100%;height:280px;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:80px}
 .modal-photo img{width:100%;height:280px;object-fit:cover}
 .modal-body{padding:20px}
@@ -59,17 +68,35 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .modal-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .modal-field-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:3px}
 .modal-field-val{font-size:14px;font-weight:700;color:#222}
-.modal-footer{display:flex;gap:10px;padding:0 20px 20px}
-.btn-agregar{flex:1;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.modal-footer{display:flex;gap:10px;padding:0 20px 20px;flex-wrap:wrap}
+.btn-primary{flex:1;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;min-width:120px}
+.btn-secondary{flex:1;padding:12px;background:#f0f0ee;color:#555;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;min-width:100px}
+.btn-pink{background:#E05090;color:#fff}
 .btn-cerrar{padding:12px 20px;background:#f0f0ee;color:#666;border:none;border-radius:10px;font-size:14px;cursor:pointer}
 
+/* LOGIN MODAL */
+.login-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.login-modal-overlay.open{display:flex}
+.login-modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;box-shadow:0 12px 48px rgba(0,0,0,.2)}
+.login-title{font-size:20px;font-weight:900;color:#222;margin-bottom:6px}
+.login-sub{font-size:13px;color:#888;margin-bottom:20px;line-height:1.5}
+.login-input{width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;color:#222;outline:none;transition:border .2s;margin-bottom:12px}
+.login-input:focus{border-color:#00B4B4}
+.btn-login{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.btn-login:disabled{background:#aaa;cursor:not-allowed}
+.btn-login-cancel{width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer}
+.login-msg{font-size:13px;text-align:center;padding:8px;border-radius:8px;margin-bottom:10px;display:none}
+.login-msg.error{background:#fbeaf0;color:#993556}
+.login-msg.success{background:#e0f7f7;color:#007a7a}
+
+/* EMPTY / LOADING */
 .empty{text-align:center;padding:60px 20px;color:#aaa}
 .empty-icon{font-size:48px;margin-bottom:12px}
-
 .loading{text-align:center;padding:60px}
 .spinner{width:40px;height:40px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* FOOTER */
 .footer{background:#1a1a2e;padding:24px;text-align:center;margin-top:40px}
 .footer-brand{font-size:18px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;margin-bottom:8px}
 .footer-brand span{color:#F5C842}
@@ -79,20 +106,25 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   .gallery-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
   .hero h1{font-size:22px}
   .hero-stats{gap:20px}
+  .modal-footer{flex-direction:column}
 }
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <header class="header">
   <a href="https://www.revistapetmi.com" class="header-logo">
     <img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="38"
       onerror="this.style.display='none';this.nextSibling.style.display='block'">
     <div class="header-logo-fallback" style="display:none">PET<span>mi</span></div>
   </a>
-  <a href="/index.html" class="btn-registro">Registra tu mascota</a>
+  <div class="header-user" id="headerUser">
+    <!-- Se llena dinámicamente -->
+  </div>
 </header>
 
+<!-- HERO -->
 <div class="hero">
   <h1>La comunidad <span>PetzID</span></h1>
   <p>Conoce a todas las mascotas de la familia PetMi</p>
@@ -103,6 +135,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   </div>
 </div>
 
+<!-- FILTERS -->
 <div class="filters">
   <button class="filter-btn active" onclick="setFilter('todos',this)">Todos</button>
   <button class="filter-btn" onclick="setFilter('perro',this)">🐶 Perros</button>
@@ -111,6 +144,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <span class="results-count" id="resultsCount"></span>
 </div>
 
+<!-- GALLERY -->
 <div class="gallery-wrap">
   <div class="gallery-grid" id="galleryGrid">
     <div style="grid-column:1/-1"><div class="loading"><div class="spinner"></div><p>Cargando mascotas...</p></div></div>
@@ -120,11 +154,13 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   </div>
 </div>
 
+<!-- FOOTER -->
 <div class="footer">
   <div class="footer-brand">petz<span>ID</span></div>
   <div class="footer-sub">PetMi Guatemala — Comunidad de mascotas</div>
 </div>
 
+<!-- MODAL MASCOTA -->
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div id="modalPhoto" class="modal-photo">🐾</div>
@@ -139,20 +175,55 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
         <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Sobre mi</div>
         <div id="modalComentarioText" style="font-size:13px;color:#555;line-height:1.6"></div>
       </div>
-      <div style="background:#e0f7f7;border-radius:10px;padding:12px;margin-bottom:14px;text-align:center">
-        <div style="font-size:13px;color:#007a7a;font-weight:600">Registra tu mascota para conectar con esta mascota</div>
-      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn-agregar" onclick="window.location.href='/index.html'">Registra tu mascota</button>
-      <button class="btn-cerrar" onclick="closeModal()">Cerrar</button>
+    <div class="modal-footer" id="modalFooter">
+      <!-- Se llena dinámicamente según sesión -->
     </div>
   </div>
 </div>
 
-<script>
-var allPets = [], filtered = [], shown = 0, perPage = 40, currentFilter = 'todos';
+<!-- MODAL LOGIN -->
+<div class="login-modal-overlay" id="loginOverlay">
+  <div class="login-modal">
+    <div class="login-title">¿Ya tienes PetzID?</div>
+    <div class="login-sub">Ingresa tu correo registrado para ver y editar tus mascotas.</div>
+    <div class="login-msg" id="loginMsg"></div>
+    <input type="email" class="login-input" id="loginEmail" placeholder="tu@correo.com" inputmode="email">
+    <button class="btn-login" id="btnLogin" onclick="verificarEmail()">Ingresar</button>
+    <button class="btn-login-cancel" onclick="closeLoginModal()">Cancelar</button>
+  </div>
+</div>
 
+<script>
+// ── Estado global ────────────────────────────────────────────
+var allPets = [], filtered = [], shown = 0, perPage = 40, currentFilter = 'todos';
+var sessionEmail = localStorage.getItem('petzid_email') || '';
+var sessionDueno = localStorage.getItem('petzid_dueno') || '';
+var misMascotas  = [];
+
+// ── Inicializar header ───────────────────────────────────────
+function renderHeader() {
+  var el = document.getElementById('headerUser');
+  if (sessionEmail) {
+    el.innerHTML =
+      '<span class="user-badge">🐾 ' + (sessionDueno || sessionEmail) + '</span>' +
+      '<button class="btn-salir" onclick="cerrarSesion()">Salir</button>';
+  } else {
+    el.innerHTML =
+      '<button class="btn-registro" onclick="window.location.href=\'/index.html\'">Registra tu mascota</button>';
+  }
+}
+
+function cerrarSesion() {
+  localStorage.removeItem('petzid_email');
+  localStorage.removeItem('petzid_dueno');
+  sessionEmail = '';
+  sessionDueno = '';
+  misMascotas  = [];
+  renderHeader();
+}
+
+// ── Cargar datos ─────────────────────────────────────────────
 fetch('/api/admin?action=getData')
   .then(function(r){ return r.json(); })
   .then(function(d){
@@ -166,7 +237,9 @@ fetch('/api/admin?action=getData')
         zona:       String(r[9]  || '').trim(),
         alimento:   String(r[16] || '').trim(),
         comentario: String(r[23] || '').trim(),
-        foto:       String(r[27] || '').trim()
+        foto:       String(r[27] || '').trim(),
+        email:      String(r[11] || '').trim(),
+        uid:        String(r[1]  || '').trim()
       };
     }).filter(function(p){ return p.nombre; });
 
@@ -175,6 +248,14 @@ fetch('/api/admin?action=getData')
     document.getElementById('statTotal').textContent  = allPets.length;
     document.getElementById('statPerros').textContent = perros;
     document.getElementById('statGatos').textContent  = gatos;
+
+    // Si hay sesión, cargar mis mascotas
+    if (sessionEmail) {
+      misMascotas = allPets.filter(function(p){
+        return p.email.toLowerCase() === sessionEmail.toLowerCase();
+      }).map(function(p){ return p.nombre.toLowerCase(); });
+    }
+
     applyFilter();
   })
   .catch(function(){
@@ -182,6 +263,9 @@ fetch('/api/admin?action=getData')
       '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#888">Error cargando mascotas. Intenta de nuevo.</div>';
   });
 
+renderHeader();
+
+// ── Filtros ──────────────────────────────────────────────────
 function setFilter(type, el){
   currentFilter = type;
   document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
@@ -206,6 +290,7 @@ function loadMore(){
   renderGallery(true);
 }
 
+// ── Galería ──────────────────────────────────────────────────
 function renderGallery(append){
   var grid   = document.getElementById('galleryGrid');
   var toShow = filtered.slice(shown, shown + perPage);
@@ -246,12 +331,14 @@ function renderGallery(append){
   document.getElementById('loadMoreWrap').style.display = shown < filtered.length ? 'block' : 'none';
 }
 
+// ── Modal mascota ────────────────────────────────────────────
 function openModal(idx){
   var p = filtered[idx];
   if (!p) return;
   var esGato = p.especie.toLowerCase().indexOf('gato') >= 0;
   var emoji  = esGato ? '🐱' : '🐶';
 
+  // Foto
   var photoEl = document.getElementById('modalPhoto');
   if (p.foto && p.foto.indexOf('http') >= 0) {
     var img = document.createElement('img');
@@ -264,14 +351,38 @@ function openModal(idx){
     photoEl.innerHTML = emoji;
   }
 
-  document.getElementById('modalName').textContent   = '"' + p.nombre.toUpperCase() + '"';
-  document.getElementById('modalApodo').textContent  = p.apodo || p.nombre;
+  document.getElementById('modalName').textContent    = '"' + p.nombre.toUpperCase() + '"';
+  document.getElementById('modalApodo').textContent   = p.apodo || p.nombre;
   document.getElementById('modalEspecie').textContent = p.especie || '-';
-  document.getElementById('modalSexo').textContent   = p.sexo || '-';
+  document.getElementById('modalSexo').textContent    = p.sexo || '-';
 
   var comentarioEl = document.getElementById('modalComentario');
   comentarioEl.style.display = p.comentario ? 'block' : 'none';
   document.getElementById('modalComentarioText').textContent = p.comentario || '';
+
+  // Botones condicionales
+  var footer = document.getElementById('modalFooter');
+  var esMiMascota = sessionEmail &&
+    p.email.toLowerCase() === sessionEmail.toLowerCase();
+
+  if (esMiMascota) {
+    // Es mascota del usuario logueado
+    footer.innerHTML =
+      '<button class="btn-primary btn-pink" onclick="actualizarMascota(\'' + p.uid + '\')">✏️ Actualizar datos</button>' +
+      '<button class="btn-primary" onclick="agregarOtra()">➕ Agregar mascota</button>' +
+      '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+  } else if (sessionEmail) {
+    // Está logueado pero es mascota de otro
+    footer.innerHTML =
+      '<button class="btn-primary" onclick="agregarOtra()">➕ Agregar mi mascota</button>' +
+      '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+  } else {
+    // No está logueado
+    footer.innerHTML =
+      '<button class="btn-primary" onclick="window.location.href=\'/index.html\'">Registra tu mascota</button>' +
+      '<button class="btn-secondary" onclick="openLoginModal()">¿Ya tienes PetzID?</button>' +
+      '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+  }
 
   document.getElementById('modalOverlay').classList.add('open');
 }
@@ -279,6 +390,88 @@ function openModal(idx){
 function closeModal(){
   document.getElementById('modalOverlay').classList.remove('open');
 }
+
+function actualizarMascota(uid) {
+  // Por ahora redirige al index — en Fase 2 abrirá form de edición
+  window.location.href = '/index.html?editar=' + uid;
+}
+
+function agregarOtra() {
+  window.location.href = '/index.html?agregar=1';
+}
+
+// ── Login modal ──────────────────────────────────────────────
+function openLoginModal() {
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginMsg').style.display = 'none';
+  document.getElementById('loginMsg').textContent = '';
+  document.getElementById('btnLogin').disabled = false;
+  document.getElementById('loginOverlay').classList.add('open');
+}
+
+function closeLoginModal() {
+  document.getElementById('loginOverlay').classList.remove('open');
+}
+
+function verificarEmail() {
+  var email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  if (!email || email.indexOf('@') < 0) {
+    mostrarMsgLogin('Por favor ingresa un correo valido', 'error');
+    return;
+  }
+
+  var btn = document.getElementById('btnLogin');
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+  mostrarMsgLogin('', '');
+
+  fetch('/api/admin?action=checkEmail&email=' + encodeURIComponent(email))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.found && d.mascotas && d.mascotas.length > 0) {
+        // Guardar sesión
+        sessionEmail = email;
+        sessionDueno = d.mascotas[0].dueno || '';
+        localStorage.setItem('petzid_email', sessionEmail);
+        localStorage.setItem('petzid_dueno', sessionDueno);
+
+        // Actualizar mis mascotas
+        misMascotas = d.mascotas.map(function(m){ return m.nombre.toLowerCase(); });
+
+        mostrarMsgLogin('¡Bienvenido/a ' + (sessionDueno || '') + '! Encontramos ' + d.mascotas.length + ' mascota(s).', 'success');
+
+        setTimeout(function(){
+          closeLoginModal();
+          closeModal();
+          renderHeader();
+          // Recargar galería para actualizar botones
+          shown = 0;
+          applyFilter();
+        }, 1500);
+      } else {
+        mostrarMsgLogin('No encontramos ese correo. ¿Quieres registrarte?', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Ingresar';
+      }
+    })
+    .catch(function(){
+      mostrarMsgLogin('Error de conexion. Intenta de nuevo.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Ingresar';
+    });
+}
+
+function mostrarMsgLogin(texto, tipo) {
+  var el = document.getElementById('loginMsg');
+  el.textContent = texto;
+  el.className = 'login-msg ' + tipo;
+  el.style.display = texto ? 'block' : 'none';
+}
+
+// Permitir Enter en el input de login
+document.getElementById('loginEmail').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') verificarEmail();
+});
 </script>
 </body>
 </html>
