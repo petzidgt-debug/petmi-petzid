@@ -90,8 +90,8 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-box">
     <div class="confirm-icon">⚠️</div>
-    <div class="confirm-title">¿Eliminar cuenta?</div>
-    <div class="confirm-sub">Se eliminarán <strong>todas tus mascotas</strong> registradas. Esta acción no se puede deshacer.</div>
+    <div class="confirm-title" id="confirmTitle">¿Eliminar mascota?</div>
+    <div class="confirm-sub" id="confirmSub">Se eliminará este perfil permanentemente. Esta acción no se puede deshacer.</div>
     <div class="confirm-btns">
       <button onclick="confirmarEliminar()" style="flex:1;padding:13px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Sí, eliminar</button>
       <button onclick="document.getElementById('confirmOverlay').classList.remove('open')" style="flex:1;padding:13px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cancelar</button>
@@ -269,7 +269,7 @@ function renderForm(){
 
     <button class="btn-guardar" id="btnGuardar" onclick="guardar()">💾 Guardar cambios</button>
     <button class="btn-cancelar" onclick="window.location.href='/galeria.html'">Cancelar</button>
-    <button class="btn-danger" onclick="document.getElementById('confirmOverlay').classList.add('open')">🗑️ Eliminar mi cuenta</button>
+    <button class="btn-danger" onclick="document.getElementById('confirmOverlay').classList.add('open')">🗑️ Eliminar esta mascota</button>
     <div style="height:20px"></div>
   `;
 }
@@ -380,19 +380,17 @@ function mostrarToast(msg){var el=document.getElementById('toast');el.textConten
 
 function confirmarEliminar(){
   document.getElementById('confirmOverlay').classList.remove('open');
-  var emailAEliminar=sessionEmail||(mascota&&mascota.email)||'';
-  if(!emailAEliminar){mostrarError('No se pudo identificar la cuenta.');return;}
+  if(!mascota||!mascota.uid){mostrarError('No se pudo identificar la mascota.');return;}
+
   fetch('/api/admin?action=updateRow',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'deleteAccount',email:emailAEliminar})
+    body:JSON.stringify({action:'deleteMascota',uid:mascota.uid})
   }).then(function(r){return r.json();})
   .then(function(d){
     if(d.ok){
-      localStorage.removeItem('petzid_email');
-      localStorage.removeItem('petzid_dueno');
-      mostrarToast('Cuenta eliminada');
-      setTimeout(function(){window.location.href='/index.html';},1500);
+      mostrarToast('Mascota eliminada');
+      setTimeout(function(){window.location.href='/familia.html';},1500);
     } else {
       mostrarError('Error al eliminar. Intenta de nuevo.');
     }
