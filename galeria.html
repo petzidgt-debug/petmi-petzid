@@ -35,7 +35,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .seccion-sub{font-size:13px;color:rgba(0,0,0,.6);margin-bottom:16px}
 .cumple-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;-ms-overflow-style:none;scrollbar-width:none}
 .cumple-scroll::-webkit-scrollbar{display:none}
-.cumple-card{background:#fff;border-radius:14px;overflow:hidden;min-width:130px;max-width:130px;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-shrink:0;position:relative}
+.cumple-card{background:#fff;border-radius:14px;overflow:hidden;min-width:130px;max-width:130px;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-shrink:0;position:relative;cursor:pointer;transition:transform .2s}
 .cumple-foto{width:130px;height:130px;object-fit:cover;background:#fff3cd;display:flex;align-items:center;justify-content:center;font-size:36px}
 .cumple-foto img{width:130px;height:130px;object-fit:cover}
 .cumple-info{padding:8px 10px}
@@ -47,7 +47,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .seccion-angeles{background:linear-gradient(135deg,#667eea,#764ba2);padding:24px 20px}
 .seccion-angeles .seccion-titulo{color:#fff}
 .seccion-angeles .seccion-sub{color:rgba(255,255,255,.7)}
-.angel-card{background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.3);border-radius:14px;overflow:hidden;min-width:130px;max-width:130px;flex-shrink:0;position:relative}
+.angel-card{background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.3);border-radius:14px;overflow:hidden;min-width:130px;max-width:130px;flex-shrink:0;position:relative;cursor:pointer;transition:transform .2s}
 .angel-foto{width:130px;height:130px;object-fit:cover;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:36px;position:relative}
 .angel-foto img{width:130px;height:130px;object-fit:cover;filter:grayscale(30%)}
 .angel-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(102,126,234,.2)}
@@ -371,7 +371,7 @@ function renderCumpleaneros(){
     var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
       ?'<img src="'+p.foto+'" onerror="this.style.display=\'none\'">'
       :'<div style="width:130px;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px;background:#fff3cd">'+(esGato?'🐱':'🐶')+'</div>';
-    return '<div class="cumple-card">'
+    return '<div class="cumple-card" onclick="openModalByUID(\''+p.uid+'\')">'
       +'<div class="cumple-foto">'+fotoHTML+'</div>'
       +'<div class="cumple-badge">🎂</div>'
       +'<div class="cumple-info"><div class="cumple-nombre">'+p.nombre+'</div>'
@@ -390,8 +390,8 @@ function renderAngeles(){
     var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
       ?'<img src="'+p.foto+'" onerror="this.style.display=\'none\'">'
       :'<div style="width:130px;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px">'+(esGato?'🐱':'🐶')+'</div>';
-    return '<div class="angel-card">'
-      +'<div class="angel-foto">'+fotoHTML+'<div class="angel-overlay"></div><div class="angel-emoji">👼</div></div>'
+    return '<div class="angel-card" onclick="openModalByUID(\''+p.uid+'\')" style="cursor:pointer">'
+      +'<div class="angel-foto">'+fotoHTML+'<div class="angel-overlay"></div><div class="angel-emoji">🐾</div></div>'
       +'<div class="angel-info"><div class="angel-nombre">'+p.nombre+'</div>'
       +(function(){
         var anios='';
