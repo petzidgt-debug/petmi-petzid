@@ -380,10 +380,12 @@ function mostrarToast(msg){var el=document.getElementById('toast');el.textConten
 
 function confirmarEliminar(){
   document.getElementById('confirmOverlay').classList.remove('open');
+  var emailAEliminar=sessionEmail||(mascota&&mascota.email)||'';
+  if(!emailAEliminar){mostrarError('No se pudo identificar la cuenta.');return;}
   fetch('/api/admin?action=updateRow',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'deleteAccount',email:sessionEmail})
+    body:JSON.stringify({action:'deleteAccount',email:emailAEliminar})
   }).then(function(r){return r.json();})
   .then(function(d){
     if(d.ok){
