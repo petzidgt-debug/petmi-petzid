@@ -305,35 +305,36 @@ function cerrarSesion(){
 renderHeader();
 
 // ── Cargar datos ──────────────────────────────────────────────
-fetch('/api/admin?action=getData')
+// ── Carga progresiva ─────────────────────────────────────────
+// Fase 1: datos básicos para galería (rápido)
+// Fase 2: secciones especiales en paralelo
+
+fetch('/api/admin?action=getBasic')
   .then(function(r){return r.json();})
   .then(function(d){
     var rows=d.rows||[];
     allPets=rows.map(function(r){
       return {
-        uid:        String(r[1] ||'').trim(),
-        nombre:     String(r[2] ||'').trim(),
-        apodo:      String(r[3] ||'').trim(),
-        especie:    String(r[4] ||'').trim(),
-        sexo:       String(r[5] ||'').trim(),
-        fecha:      String(r[8] ||'').trim(),
-        tipoFecha:  String(r[7] ||'').trim(),
-        zona:       String(r[9] ||'').trim(),
-        alimento:   String(r[16]||'').trim(),
-        comentario: String(r[23]||'').trim(),
-        foto:       String(r[27]||'').trim(),
-        angelito:   String(r[28]||'').trim().toLowerCase()==='si',
-        fechaAngelito: String(r[29]||'').trim(),
-        email:      String(r[11]||'').trim(),
-        notifMensajes: String(r[30]||'').trim(),
-        actividades:String(r[18]||'').trim(),
-        especial:   String(r[23]||'').trim(),
-        raza:       String(r[6] ||'').trim()
+        uid:          String(r[0]||'').trim(),
+        nombre:       String(r[1]||'').trim(),
+        apodo:        String(r[2]||'').trim(),
+        especie:      String(r[3]||'').trim(),
+        sexo:         String(r[4]||'').trim(),
+        raza:         String(r[5]||'').trim(),
+        tipoFecha:    String(r[6]||'').trim(),
+        fecha:        String(r[7]||'').trim(),
+        email:        String(r[8]||'').trim(),
+        foto:         String(r[9]||'').trim(),
+        angelito:     String(r[10]||'').trim().toLowerCase()==='si',
+        fechaAngelito:String(r[11]||'').trim(),
+        // detalle se carga al abrir modal
+        actividades:'', especial:'', comentario:'', alimento:'',
+        zona:'', notifMensajes:''
       };
     }).filter(function(p){return p.nombre;});
 
-    var perros=allPets.filter(function(p){return p.especie.toLowerCase().indexOf('perro')>=0;}).length;
-    var gatos =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('gato') >=0;}).length;
+    var perros =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('perro')>=0;}).length;
+    var gatos  =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('gato') >=0;}).length;
     var angeles=allPets.filter(function(p){return p.angelito;}).length;
     document.getElementById('statTotal').textContent=allPets.length;
     document.getElementById('statPerros').textContent=perros;
@@ -343,9 +344,68 @@ fetch('/api/admin?action=getData')
     renderCumpleaneros();
     renderAngeles();
     applyFilter();
+
+    // Fase 2: cargar detalle en background (no bloquea UI)
+    fetch('/api/admin?action=getData')
+      .then(function(r2){return r2.json();})
+      .then(function(d2){
+        var rows2=d2.rows||[];
+        rows2.forEach(function(r){
+          var uid=String(r[1]||'').trim();
+          var pet=allPets.find(function(p){return p.uid===uid;});
+          if(pet){
+            pet.actividades  = String(r[18]||'').trim();
+            pet.especial     = String(r[23]||'').trim();
+            pet.comentario   = String(r[23]||'').trim();
+            pet.alimento     = String(r[16]||'').trim();
+            pet.zona         = String(r[9] ||'').trim();
+            pet.notifMensajes= String(r[30]||'').trim();
+          }
+        });
+      }).catch(function(){});
   })
   .catch(function(){
-    document.getElementById('galleryGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:#888">Error cargando mascotas. Intenta de nuevo.</div>';
+    // Fallback al getData completo si getBasic no existe
+    fetch('/api/admin?action=getData')
+      .then(function(r){return r.json();})
+      .then(function(d){
+        var rows=d.rows||[];
+        allPets=rows.map(function(r){
+          return {
+            uid:          String(r[1] ||'').trim(),
+            nombre:       String(r[2] ||'').trim(),
+            apodo:        String(r[3] ||'').trim(),
+            especie:      String(r[4] ||'').trim(),
+            sexo:         String(r[5] ||'').trim(),
+            raza:         String(r[6] ||'').trim(),
+            tipoFecha:    String(r[7] ||'').trim(),
+            fecha:        String(r[8] ||'').trim(),
+            email:        String(r[11]||'').trim(),
+            foto:         String(r[27]||'').trim(),
+            angelito:     String(r[28]||'').trim().toLowerCase()==='si',
+            fechaAngelito:String(r[29]||'').trim(),
+            actividades:  String(r[18]||'').trim(),
+            especial:     String(r[23]||'').trim(),
+            comentario:   String(r[23]||'').trim(),
+            alimento:     String(r[16]||'').trim(),
+            zona:         String(r[9] ||'').trim(),
+            notifMensajes:String(r[30]||'').trim()
+          };
+        }).filter(function(p){return p.nombre;});
+        var perros =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('perro')>=0;}).length;
+        var gatos  =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('gato') >=0;}).length;
+        var angeles=allPets.filter(function(p){return p.angelito;}).length;
+        document.getElementById('statTotal').textContent=allPets.length;
+        document.getElementById('statPerros').textContent=perros;
+        document.getElementById('statGatos').textContent=gatos;
+        document.getElementById('statAngeles').textContent=angeles;
+        renderCumpleaneros();
+        renderAngeles();
+        applyFilter();
+      })
+      .catch(function(){
+        document.getElementById('galleryGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:#888">Error cargando mascotas. Intenta de nuevo.</div>';
+      });
   });
 
 // ── Cumpleañeros del mes ──────────────────────────────────────
@@ -479,7 +539,7 @@ function openModal(idx){
   if(p.angelito){
     var badge=document.createElement('div');
     badge.className='modal-angel-badge';
-    badge.textContent='👼';
+    badge.textContent='🐾';
     photoEl.appendChild(badge);
   }
   if(p.foto&&p.foto.indexOf('http')>=0){
@@ -531,7 +591,7 @@ function openModal(idx){
 
 function renderModalFooter(p){
   var footer=document.getElementById('modalFooter');
-  var esMia=sessionEmail&&p.email.toLowerCase()===sessionEmail.toLowerCase();
+  var esMia=sessionEmail&&p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();
 
   if(esMia){
     var angelBtn=p.angelito
@@ -579,7 +639,7 @@ function openModalDirect(p){
   photoEl.innerHTML='';
   if(p.angelito){
     var badge=document.createElement('div');
-    badge.className='modal-angel-badge';badge.textContent='👼';
+    badge.className='modal-angel-badge';badge.textContent='🐾';
     photoEl.appendChild(badge);
   }
   if(p.foto&&p.foto.indexOf('http')>=0){
