@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     // ── getBasic — galería principal ─────────────────────────
     if (action === 'getBasic') {
       const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?select=uid,nombre,apodo,especie,sexo,raza,tipo_fecha,fecha,email,foto,angelito,fecha_angelito&order=nombre.asc',
+        SUPABASE_URL + '/rest/v1/mascotas?select=uid,nombre,apodo,especie,sexo,raza,tipo_fecha,fecha,email,foto,angelito,fecha_angelito,created_at&order=created_at.desc',
         {
           headers: {
             'apikey':        SUPABASE_KEY,
@@ -35,7 +35,8 @@ export default async function handler(req, res) {
         m.email,         // 8
         m.foto,          // 9
         m.angelito ? 'Si' : 'No', // 10
-        m.fecha_angelito // 11
+        m.fecha_angelito, // 11
+        m.created_at    // 12
       ]);
       return res.status(200).json({ rows });
     }
