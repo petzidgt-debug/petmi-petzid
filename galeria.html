@@ -327,7 +327,7 @@ renderHeader();
 // Fase 1: datos básicos para galería (rápido)
 // Fase 2: secciones especiales en paralelo
 
-fetch('/api/admin?action=getBasic')
+fetch('/api/galeria?action=getBasic')
   .then(function(r){return r.json();})
   .then(function(d){
     var rows=d.rows||[];
@@ -365,7 +365,7 @@ fetch('/api/admin?action=getBasic')
     renderHeader(); // actualizar header con link correcto una vez cargados los datos
 
     // Fase 2: cargar detalle en background (no bloquea UI)
-    fetch('/api/admin?action=getData')
+    fetch('/api/galeria?action=getData')
       .then(function(r2){return r2.json();})
       .then(function(d2){
         var rows2=d2.rows||[];
@@ -385,7 +385,7 @@ fetch('/api/admin?action=getBasic')
   })
   .catch(function(){
     // Fallback al getData completo si getBasic no existe
-    fetch('/api/admin?action=getData')
+    fetch('/api/galeria?action=getData')
       .then(function(r){return r.json();})
       .then(function(d){
         var rows=d.rows||[];
@@ -842,7 +842,7 @@ function verificarEmail(){
   var btn=document.getElementById('btnLogin');
   btn.disabled=true;btn.textContent='Verificando...';
 
-  fetch('/api/admin?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
     .then(function(r){return r.json();})
     .then(function(d){
       if(d.found&&d.mascotas&&d.mascotas.length>0){
@@ -907,7 +907,7 @@ function cargarMensajes(uid){
   var lista = document.getElementById('mensajesLista');
   lista.innerHTML = '<div style="text-align:center;padding:12px;color:#bbb;font-size:13px">Cargando...</div>';
 
-  fetch('/api/admin?action=getMensajes&uid='+encodeURIComponent(uid))
+  fetch('/api/galeria?action=getMensajes&uid='+encodeURIComponent(uid))
     .then(function(r){return r.json();})
     .then(function(d){
       var msgs = d.mensajes||[];
