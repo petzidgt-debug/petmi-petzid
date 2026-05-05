@@ -108,7 +108,7 @@ var uid          = new URLSearchParams(window.location.search).get('uid');
 if (!uid) window.location.href = '/galeria.html';
 
 // Cargar datos
-fetch('/api/admin?action=getData')
+fetch('/api/galeria?action=getData')
   .then(function(r){ return r.json(); })
   .then(function(d){
     var rows = d.rows || [];
@@ -274,7 +274,7 @@ function cargarMensajes(){
     if(!esCumple) return;
   }
 
-  fetch('/api/admin?action=getMensajes&uid='+encodeURIComponent(uid))
+  fetch('/api/galeria?action=getMensajes&uid='+encodeURIComponent(uid))
     .then(function(r){return r.json();})
     .then(function(d){
       var msgs = d.mensajes||[];
