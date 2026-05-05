@@ -189,89 +189,68 @@ function renderPerfil(){
     ? '<div style="background:#F5C842;border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><div style="font-size:24px">🎂</div><div style="font-size:14px;font-weight:700;color:#1a1a1a">Este mes cumple años o llegó a casa</div></div>'
     : '';
 
-  document.getElementById('mainContent').innerHTML = `
-    <div class="${heroClass}">
-      <div class="perfil-foto-wrap">
-        ${fotoHTML}
-        <div class="perfil-overlay">
-          <div class="perfil-nombre">"${m.nombre.toUpperCase()}"</div>
-          ${m.apodo ? '<div class="perfil-apodo">' + m.apodo + '</div>' : ''}
-          ${aniosAngel ? '<div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:6px">' + aniosAngel + '</div>' : ''}
-        </div>
-        ${m.angelito ? '<div class="angel-badge-hero">🐾</div>' : ''}
-      </div>
-    </div>
+  var mostrarMensajes = m.angelito || esCumple;
+  var secTituloClass  = m.angelito ? 'purple' : '';
 
-    <div class="wrap">
-      ${cumpleBanner}
+  var html = '';
+  html += '<div class="'+heroClass+'">';
+  html += '<div class="perfil-foto-wrap">';
+  html += fotoHTML;
+  html += '<div class="perfil-overlay">';
+  html += '<div class="perfil-nombre">"'+m.nombre.toUpperCase()+'"</div>';
+  if(m.apodo) html += '<div class="perfil-apodo">'+m.apodo+'</div>';
+  if(aniosAngel) html += '<div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:6px">'+aniosAngel+'</div>';
+  html += '</div>';
+  if(m.angelito) html += '<div class="angel-badge-hero">🐾</div>';
+  html += '</div></div>';
 
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-lbl">Especie</div>
-          <div class="stat-val">${emoji} ${m.especie||'-'}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-lbl">Sexo</div>
-          <div class="stat-val">${m.sexo||'-'}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-lbl">${m.tipoFecha==='llegada'?'Llegó a casa':'Nacimiento'}</div>
-          <div class="stat-val" style="font-size:12px">${formatFecha(m.fecha)}</div>
-        </div>
-      </div>
+  html += '<div class="wrap">';
+  html += cumpleBanner;
 
-      <div class="seccion">
-        <div class="sec-titulo">🏠 Datos</div>
-        <div class="campos-grid">
-          <div><div class="campo-lbl">Raza</div><div class="campo-val">${m.raza||'-'}</div></div>
-          <div><div class="campo-lbl">Responsable</div><div class="campo-val">${m.dueno||'-'}</div></div>
-          ${m.veterinario ? '<div><div class="campo-lbl">Veterinario</div><div class="campo-val">'+m.veterinario+'</div></div>' : ''}
-          ${m.zona ? '<div><div class="campo-lbl">Zona</div><div class="campo-val">'+m.zona+'</div></div>' : ''}
-        </div>
-      </div>
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card"><div class="stat-lbl">Especie</div><div class="stat-val">'+emoji+' '+(m.especie||'-')+'</div></div>';
+  html += '<div class="stat-card"><div class="stat-lbl">Sexo</div><div class="stat-val">'+(m.sexo||'-')+'</div></div>';
+  html += '<div class="stat-card"><div class="stat-lbl">'+(m.tipoFecha==='llegada'?'Llegó a casa':'Nacimiento')+'</div><div class="stat-val" style="font-size:12px">'+formatFecha(m.fecha)+'</div></div>';
+  html += '</div>';
 
-      ${m.actividades ? `
-      <div class="seccion">
-        <div class="sec-titulo">🎾 Le gusta</div>
-        ${actividadesHTML}
-      </div>` : ''}
+  html += '<div class="seccion"><div class="sec-titulo">🏠 Datos</div><div class="campos-grid">';
+  html += '<div><div class="campo-lbl">Raza</div><div class="campo-val">'+(m.raza||'-')+'</div></div>';
+  html += '<div><div class="campo-lbl">Responsable</div><div class="campo-val">'+(m.dueno||'-')+'</div></div>';
+  if(m.veterinario) html += '<div><div class="campo-lbl">Veterinario</div><div class="campo-val">'+m.veterinario+'</div></div>';
+  if(m.zona) html += '<div><div class="campo-lbl">Zona</div><div class="campo-val">'+m.zona+'</div></div>';
+  html += '</div></div>';
 
-      ${m.alimento ? `
-      <div class="seccion">
-        <div class="sec-titulo">🍖 Alimento</div>
-        <div style="font-size:14px;color:#333">${m.alimento}</div>
-      </div>` : ''}
+  if(m.actividades){
+    html += '<div class="seccion"><div class="sec-titulo">🎾 Le gusta</div>';
+    html += actividadesHTML+'</div>';
+  }
+  if(m.alimento){
+    html += '<div class="seccion"><div class="sec-titulo">🍖 Alimento</div>';
+    html += '<div style="font-size:14px;color:#333">'+m.alimento+'</div></div>';
+  }
+  if(m.especial){
+    html += '<div class="seccion" style="border-left:4px solid #F5C842"><div class="sec-titulo">✨ Algo especial</div>';
+    html += '<div style="font-size:14px;color:#555;line-height:1.6">'+m.especial+'</div></div>';
+  }
+  if(m.instagram){
+    html += '<div class="seccion"><div class="sec-titulo">📸 Instagram</div>';
+    html += '<a href="https://instagram.com/'+m.instagram.replace('@','')+'" target="_blank" style="font-size:14px;color:#00B4B4;font-weight:700">'+m.instagram+'</a></div>';
+  }
 
-      ${m.especial ? `
-      <div class="seccion" style="border-left:4px solid #F5C842">
-        <div class="sec-titulo">✨ Algo especial</div>
-        <div style="font-size:14px;color:#555;line-height:1.6">${m.especial}</div>
-      </div>` : ''}
+  html += '<div class="seccion" id="mensajesSeccion" style="'+(mostrarMensajes?'':'display:none')+'">';
+  html += '<div class="sec-titulo '+secTituloClass+'">💬 Mensajes</div>';
+  html += '<div id="mensajesLista"><div class="mensaje-empty">Cargando...</div></div>';
+  html += '<div class="input-mensaje">';
+  html += '<input type="text" class="input-autor" id="msgAutor" placeholder="Tu nombre">';
+  html += '<input type="text" class="input-txt" id="msgTxt" placeholder="Deja un mensaje...">';
+  html += '<button class="btn-enviar" onclick="enviarMensaje()">✉️</button>';
+  html += '</div></div>';
 
-      ${m.instagram ? `
-      <div class="seccion">
-        <div class="sec-titulo">📸 Instagram</div>
-        <a href="https://instagram.com/${m.instagram.replace('@','')}" target="_blank" style="font-size:14px;color:#00B4B4;font-weight:700">${m.instagram}</a>
-      </div>` : ''}
+  html += '</div>';
+  html += '<div class="footer"><div class="footer-brand">petz<span>ID</span></div>';
+  html += '<div class="footer-sub">PetMi Guatemala — Comunidad de mascotas</div></div>';
 
-      <!-- Mensajes -->
-      <div class="seccion" id="mensajesSeccion" style="${m.angelito||esCumple?'':'display:none'}">
-        <div class="sec-titulo ${m.angelito?'purple':''}">💬 Mensajes</div>
-        <div id="mensajesLista"><div class="mensaje-empty">Cargando...</div></div>
-        <div class="input-mensaje">
-          <input type="text" class="input-autor" id="msgAutor" placeholder="Tu nombre">
-          <input type="text" class="input-txt" id="msgTxt" placeholder="Deja un mensaje...">
-          <button class="btn-enviar" onclick="enviarMensaje()">✉️</button>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="footer">
-      <div class="footer-brand">petz<span>ID</span></div>
-      <div class="footer-sub">PetMi Guatemala — Comunidad de mascotas</div>
-    </div>
-  `;
+  document.getElementById('mainContent').innerHTML = html;
 }
 
 function formatFecha(val){
