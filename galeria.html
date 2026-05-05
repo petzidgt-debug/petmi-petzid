@@ -300,14 +300,14 @@ var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Se
 function renderHeader(){
   var el=document.getElementById('headerUser');
   if(sessionEmail){
-    // Buscar uid de primera mascota del usuario para editar
-    var miMascota=allPets.find(function(p){return p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();});
-    var editLink='/familia.html';
     el.innerHTML=
       '<span class="user-badge">🐾 '+(sessionDueno||sessionEmail)+'</span>'+
-      '<a href="'+editLink+'" style="padding:6px 12px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;background:#fff;text-decoration:none;white-space:nowrap" id="headerPerfilLink">Mi perfil</a>'+
+      '<a href="/familia.html" style="padding:6px 12px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;background:#fff;text-decoration:none;white-space:nowrap">Mi perfil</a>'+
       '<button class="btn-salir" onclick="cerrarSesion()">Salir</button>';
   } else {
+    el.innerHTML='<a href="/index.html" class="btn-registro">Registra tu mascota</a>';
+  }
+} else {
     el.innerHTML='<a href="/index.html" class="btn-registro">Registra tu mascota</a>';
   }
 }
@@ -345,6 +345,7 @@ fetch('/api/galeria?action=getBasic')
         foto:         String(r[9]||'').trim(),
         angelito:     String(r[10]||'').trim().toLowerCase()==='si',
         fechaAngelito:String(r[11]||'').trim(),
+        createdAt:    String(r[12]||'').trim(),
         // detalle se carga al abrir modal
         actividades:'', especial:'', comentario:'', alimento:'',
         zona:'', notifMensajes:''
@@ -527,8 +528,15 @@ function renderGallery(append){
       ?'<img src="'+p.foto+'" alt="'+p.nombre+'" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover" onerror="this.style.display=\'none\'">'
       :'<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:#e0f7f7">'+emoji+'</div>';
 
+    var esNuevo=false;
+    if(p.createdAt){
+      var diffDias=(Date.now()-new Date(p.createdAt).getTime())/(1000*60*60*24);
+      esNuevo=diffDias<=7;
+    }
+    var badgeNuevo=esNuevo?'<div style="position:absolute;top:8px;left:8px;background:#E05090;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.5px">✨ Nuevo</div>':'';
+
     return '<div class="pet-card" onclick="openModal('+idx+')">'
-      +'<div class="pet-photo">'+fotoHTML+'</div>'
+      +'<div class="pet-photo" style="position:relative">'+fotoHTML+badgeNuevo+'</div>'
       +'<div class="pet-info"><div class="pet-name">'+p.nombre+'</div>'
       +'<div><span class="pet-especie '+(esGato?'gato':'perro')+'">'+(esGato?'Gato':'Perro')+'</span>'
       +'</div></div></div>';
