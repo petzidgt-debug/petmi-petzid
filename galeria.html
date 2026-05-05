@@ -533,7 +533,7 @@ function renderGallery(append){
       var diffDias=(Date.now()-new Date(p.createdAt).getTime())/(1000*60*60*24);
       esNuevo=diffDias<=7;
     }
-    var badgeNuevo=esNuevo?'<div style="position:absolute;top:8px;left:8px;background:#E05090;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.5px">✨ Nuevo</div>':'';
+    var badgeNuevo=esNuevo?'<div style="position:absolute;top:8px;right:8px;background:#E05090;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.5px">⭐ New</div>':'';
 
     return '<div class="pet-card" onclick="openModal('+idx+')">'
       +'<div class="pet-photo" style="position:relative">'+fotoHTML+badgeNuevo+'</div>'
