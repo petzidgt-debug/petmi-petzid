@@ -301,8 +301,6 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
     <div class="screen" id="step3">
       <div class="stitle">Sus gustos</div>
       <div class="ssub">Comida, actividades e info de contacto</div>
-      <label>Alimento que consume</label>
-      <input type="text" id="inAlimento" placeholder="Marca y tipo de comida">
       <label>Actividades favoritas</label>
       <div class="chips" id="chipsActividad">
         <div class="chip" onclick="toggleChip(this)">Paseos</div>
@@ -316,6 +314,8 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
       </div>
       <label>Instagram (opcional)</label>
       <input type="text" id="inInsta" placeholder="@usuario">
+      <label>Alimento que consume</label>
+      <input type="text" id="inAlimento" placeholder="Marca y tipo de comida">
       <label>Algo especial sobre tu mascota</label>
       <textarea id="inEspecial" placeholder="Un dato curioso, su historia..."></textarea>
       <div style="margin-top:18px;background:#fafafa;border-radius:12px;padding:14px 16px;border:1px solid #eee">
@@ -337,12 +337,12 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
         <div class="done-icon">🎉</div>
         <div class="done-title">PetzID listo!</div>
         <div class="done-sub">El perfil de <strong id="doneNombre">tu mascota</strong> esta completo.<br>Te enviamos tu PetzID al correo en unos segundos.</div>
+        <button class="btn-action btn-hermano" onclick="addSibling()">🐾 Agregar otra mascota</button>
+        <button class="btn-action btn-comunidad" onclick="window.location.href='/galeria.html'">🌟 Ver la comunidad PetzID</button>
         <button class="btn-action btn-wa" onclick="openWhatsApp()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.132 1.527 5.88L0 24l6.272-1.504A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.002-1.368l-.36-.214-3.726.893.924-3.638-.235-.374A9.818 9.818 0 1112 21.818z"/></svg>
           Recibir ofertas por WhatsApp
         </button>
-        <button class="btn-action btn-hermano" onclick="addSibling()">Agregar mascota hermana</button>
-        <button class="btn-action btn-comunidad" onclick="window.open('https://www.revistapetmi.com','_blank')">Explorar comunidad Petmi</button>
       </div>
     </div>
 
