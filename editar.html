@@ -94,12 +94,20 @@ var nuevaFotoMime   = null;
   var uid    = params.get('uid');
   if(!uid){ window.location.href='/galeria.html'; return; }
 
-  fetch('/api/admin?action=checkEmail&email='+encodeURIComponent(sessionEmail))
+  fetch('/api/admin?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d.found){ window.location.href='/galeria.html'; return; }
-      mascota = d.mascotas.find(function(m){ return m.uid===uid; });
-      if(!mascota){ window.location.href='/galeria.html'; return; }
+      var uidLower=uid.trim().toLowerCase();
+      mascota = d.mascotas.find(function(m){ return m.uid.trim().toLowerCase()===uidLower; });
+      if(!mascota){
+        // Si no encuentra por uid exacto, tomar la primera mascota del dueño
+        if(d.mascotas.length>0){
+          mascota=d.mascotas[0];
+        } else {
+          window.location.href='/galeria.html'; return;
+        }
+      }
       renderForm();
     })
     .catch(function(){
