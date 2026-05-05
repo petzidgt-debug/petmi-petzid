@@ -9,14 +9,12 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
-/* HEADER */
 .header{background:#fff;border-bottom:1px solid #eee;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.07)}
 .header-logo img{height:38px;display:block}
 .header-logo-fallback{font-size:20px;font-weight:900;color:#00B4B4;font-family:'Arial Black',Arial,sans-serif}
 .header-logo-fallback span{color:#E05090}
 .btn-registro{padding:8px 18px;background:#00B4B4;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
 
-/* HERO */
 .hero{background:#00B4B4;padding:40px 20px;text-align:center}
 .hero h1{font-size:28px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:8px}
 .hero h1 span{color:#F5C842}
@@ -26,7 +24,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .hero-stat-num{font-size:28px;font-weight:900;color:#fff}
 .hero-stat-lbl{font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1px}
 
-/* FILTERS */
 .filters{background:#fff;border-bottom:1px solid #eee;padding:12px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:60px;z-index:90}
 .filter-btn{padding:8px 16px;border-radius:24px;border:1.5px solid #ddd;font-size:13px;font-weight:600;color:#888;cursor:pointer;background:#fff;transition:all .15s;white-space:nowrap}
 .filter-btn.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
@@ -34,7 +31,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .search-input:focus{border-color:#00B4B4}
 .results-count{font-size:13px;color:#888;margin-left:auto;white-space:nowrap}
 
-/* GRID */
 .gallery-wrap{padding:20px;max-width:1200px;margin:0 auto}
 .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
 .pet-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer;transition:transform .2s,box-shadow .2s}
@@ -47,18 +43,15 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .pet-especie{font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px}
 .pet-especie.perro{background:#e0f7f7;color:#007a7a}
 .pet-especie.gato{background:#fbeaf0;color:#993556}
-.pet-zona{font-size:11px;color:#aaa}
 
-/* LOAD MORE */
 .load-more-wrap{text-align:center;padding:24px}
 .btn-load{padding:12px 32px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer}
 .btn-load:hover{background:#009898}
 
-/* MODAL */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border-radius:20px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 12px 48px rgba(0,0,0,.2)}
-.modal-photo{width:100%;height:280px;object-fit:cover;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:80px}
+.modal-photo{width:100%;height:280px;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:80px}
 .modal-photo img{width:100%;height:280px;object-fit:cover}
 .modal-body{padding:20px}
 .modal-name{font-size:24px;font-weight:900;color:#222;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
@@ -70,16 +63,13 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .btn-agregar{flex:1;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
 .btn-cerrar{padding:12px 20px;background:#f0f0ee;color:#666;border:none;border-radius:10px;font-size:14px;cursor:pointer}
 
-/* EMPTY */
 .empty{text-align:center;padding:60px 20px;color:#aaa}
 .empty-icon{font-size:48px;margin-bottom:12px}
 
-/* LOADING */
 .loading{text-align:center;padding:60px}
 .spinner{width:40px;height:40px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* FOOTER */
 .footer{background:#1a1a2e;padding:24px;text-align:center;margin-top:40px}
 .footer-brand{font-size:18px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;margin-bottom:8px}
 .footer-brand span{color:#F5C842}
@@ -94,7 +84,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="header">
   <a href="https://www.revistapetmi.com" class="header-logo">
     <img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="38"
@@ -104,7 +93,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <a href="/index.html" class="btn-registro">Registra tu mascota</a>
 </header>
 
-<!-- HERO -->
 <div class="hero">
   <h1>La comunidad <span>PetzID</span></h1>
   <p>Conoce a todas las mascotas de la familia PetMi</p>
@@ -115,7 +103,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   </div>
 </div>
 
-<!-- FILTERS -->
 <div class="filters">
   <button class="filter-btn active" onclick="setFilter('todos',this)">Todos</button>
   <button class="filter-btn" onclick="setFilter('perro',this)">🐶 Perros</button>
@@ -124,7 +111,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <span class="results-count" id="resultsCount"></span>
 </div>
 
-<!-- GALLERY -->
 <div class="gallery-wrap">
   <div class="gallery-grid" id="galleryGrid">
     <div style="grid-column:1/-1"><div class="loading"><div class="spinner"></div><p>Cargando mascotas...</p></div></div>
@@ -134,13 +120,11 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   </div>
 </div>
 
-<!-- FOOTER -->
 <div class="footer">
   <div class="footer-brand">petz<span>ID</span></div>
   <div class="footer-sub">PetMi Guatemala — Comunidad de mascotas</div>
 </div>
 
-<!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div id="modalPhoto" class="modal-photo">🐾</div>
@@ -155,67 +139,67 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
         <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Sobre mi</div>
         <div id="modalComentarioText" style="font-size:13px;color:#555;line-height:1.6"></div>
       </div>
-      <div id="modalRegistroMsg" style="display:none;background:#e0f7f7;border-radius:10px;padding:12px;margin-bottom:14px;text-align:center">
-        <div style="font-size:13px;color:#007a7a;font-weight:600">Registra tu mascota para ver mas detalles y conectar con esta mascota</div>
+      <div style="background:#e0f7f7;border-radius:10px;padding:12px;margin-bottom:14px;text-align:center">
+        <div style="font-size:13px;color:#007a7a;font-weight:600">Registra tu mascota para conectar con esta mascota</div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-agregar" onclick="registrarMascota()">Registra tu mascota</button>
+      <button class="btn-agregar" onclick="window.location.href='/index.html'">Registra tu mascota</button>
       <button class="btn-cerrar" onclick="closeModal()">Cerrar</button>
     </div>
   </div>
 </div>
 
 <script>
-var allPets=[], filtered=[], shown=0, perPage=40, currentFilter='todos';
+var allPets = [], filtered = [], shown = 0, perPage = 40, currentFilter = 'todos';
 
 fetch('/api/admin?action=getData')
-.then(function(r){return r.json();})
-.then(function(d){
-  var rows=d.rows||[];
-  allPets=rows.map(function(r){
-    return {
-      nombre:  String(r[2]||'').trim(),
-      apodo:   String(r[3]||'').trim(),
-      especie: String(r[4]||'').trim(),
-      sexo:    String(r[5]||'').trim(),
-      zona:    String(r[9]||'').trim(),
-      alimento:String(r[16]||'').trim(),
-      comentario: String(r[23]||'').trim(),
-      foto:    String(r[27]||'').trim(), // columna AB = index 27
-      uid:     String(r[1]||'').trim()
-    };
-  }).filter(function(p){return p.nombre;});
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var rows = d.rows || [];
+    allPets = rows.map(function(r){
+      return {
+        nombre:     String(r[2]  || '').trim(),
+        apodo:      String(r[3]  || '').trim(),
+        especie:    String(r[4]  || '').trim(),
+        sexo:       String(r[5]  || '').trim(),
+        zona:       String(r[9]  || '').trim(),
+        alimento:   String(r[16] || '').trim(),
+        comentario: String(r[23] || '').trim(),
+        foto:       String(r[27] || '').trim()
+      };
+    }).filter(function(p){ return p.nombre; });
 
-  var perros=allPets.filter(function(p){return p.especie.toLowerCase().indexOf('perro')>=0;}).length;
-  var gatos=allPets.filter(function(p){return p.especie.toLowerCase().indexOf('gato')>=0;}).length;
-  document.getElementById('statTotal').textContent=allPets.length;
-  document.getElementById('statPerros').textContent=perros;
-  document.getElementById('statGatos').textContent=gatos;
-
-  applyFilter();
-}).catch(function(e){
-  document.getElementById('galleryGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:#888">Error cargando mascotas. Intenta de nuevo.</div>';
-});
+    var perros = allPets.filter(function(p){ return p.especie.toLowerCase().indexOf('perro') >= 0; }).length;
+    var gatos  = allPets.filter(function(p){ return p.especie.toLowerCase().indexOf('gato')  >= 0; }).length;
+    document.getElementById('statTotal').textContent  = allPets.length;
+    document.getElementById('statPerros').textContent = perros;
+    document.getElementById('statGatos').textContent  = gatos;
+    applyFilter();
+  })
+  .catch(function(){
+    document.getElementById('galleryGrid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#888">Error cargando mascotas. Intenta de nuevo.</div>';
+  });
 
 function setFilter(type, el){
-  currentFilter=type;
-  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+  currentFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
   el.classList.add('active');
-  shown=0;
+  shown = 0;
   applyFilter();
 }
 
 function applyFilter(){
-  var search=document.getElementById('searchInput').value.toLowerCase();
-  filtered=allPets.filter(function(p){
-    if(currentFilter==='perro'&&p.especie.toLowerCase().indexOf('perro')<0)return false;
-    if(currentFilter==='gato'&&p.especie.toLowerCase().indexOf('gato')<0)return false;
-    if(search&&p.nombre.toLowerCase().indexOf(search)<0)return false;
+  var search = document.getElementById('searchInput').value.toLowerCase();
+  filtered = allPets.filter(function(p){
+    if (currentFilter === 'perro' && p.especie.toLowerCase().indexOf('perro') < 0) return false;
+    if (currentFilter === 'gato'  && p.especie.toLowerCase().indexOf('gato')  < 0) return false;
+    if (search && p.nombre.toLowerCase().indexOf(search) < 0) return false;
     return true;
   });
-  shown=0;
-  renderGallery();
+  shown = 0;
+  renderGallery(false);
 }
 
 function loadMore(){
@@ -223,73 +207,77 @@ function loadMore(){
 }
 
 function renderGallery(append){
-  var grid=document.getElementById('galleryGrid');
-  var toShow=filtered.slice(shown, shown+perPage);
-  shown+=toShow.length;
+  var grid   = document.getElementById('galleryGrid');
+  var toShow = filtered.slice(shown, shown + perPage);
+  shown += toShow.length;
 
-  var html=toShow.map(function(p,i){
-    var idx=shown-toShow.length+i;
-    var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
-    var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
-      ?'<img src="'+p.foto+'" alt="'+p.nombre+'" loading="lazy" onerror="this.outerHTML=\'<div style=\\\"width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:#e0f7f7\\\">'+(esGato?'🐱':'🐶')+'</div>\'">'
-      :'<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:#e0f7f7">'+(esGato?'🐱':'🐶')+'</div>';
-    return '<div class="pet-card" onclick="openModal('+idx+')">'
-      +'<div class="pet-photo">'+fotoHTML+'</div>'
-      +'<div class="pet-info">'
-      +'<div class="pet-name">'+p.nombre+'</div>'
-      +'<div class="pet-meta">'
-      +'<span class="pet-especie '+(esGato?'gato':'perro')+'">'+(esGato?'Gato':'Perro')+'</span>'
-      +'</div></div></div>';
+  var html = toShow.map(function(p, i){
+    var idx    = shown - toShow.length + i;
+    var esGato = p.especie.toLowerCase().indexOf('gato') >= 0;
+    var emoji  = esGato ? '🐱' : '🐶';
+    var fotoHTML;
+
+    if (p.foto && p.foto.indexOf('http') >= 0) {
+      fotoHTML = '<img src="' + p.foto + '" alt="' + p.nombre + '" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover" onerror="this.style.display=\'none\'">';
+    } else {
+      fotoHTML = '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:#e0f7f7">' + emoji + '</div>';
+    }
+
+    return '<div class="pet-card" onclick="openModal(' + idx + ')">'
+      + '<div class="pet-photo">' + fotoHTML + '</div>'
+      + '<div class="pet-info">'
+      + '<div class="pet-name">' + p.nombre + '</div>'
+      + '<div class="pet-meta">'
+      + '<span class="pet-especie ' + (esGato ? 'gato' : 'perro') + '">' + (esGato ? 'Gato' : 'Perro') + '</span>'
+      + '</div></div></div>';
   }).join('');
 
-  if(!append){
-    if(filtered.length===0){
-      grid.innerHTML='<div style="grid-column:1/-1"><div class="empty"><div class="empty-icon">🔍</div><p>No se encontraron mascotas</p></div></div>';
+  if (!append) {
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1"><div class="empty"><div class="empty-icon">🔍</div><p>No se encontraron mascotas</p></div></div>';
     } else {
-      grid.innerHTML=html;
+      grid.innerHTML = html;
     }
   } else {
-    grid.insertAdjacentHTML('beforeend',html);
+    grid.insertAdjacentHTML('beforeend', html);
   }
 
-  document.getElementById('resultsCount').textContent=filtered.length+' mascotas';
-  var loadWrap=document.getElementById('loadMoreWrap');
-  loadWrap.style.display=shown<filtered.length?'block':'none';
+  document.getElementById('resultsCount').textContent = filtered.length + ' mascotas';
+  document.getElementById('loadMoreWrap').style.display = shown < filtered.length ? 'block' : 'none';
 }
 
 function openModal(idx){
-  var p=filtered[idx];
-  if(!p)return;
-  var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
-  var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
-    ?'<img src="'+p.foto+'" style="width:100%;height:280px;object-fit:cover" onerror="this.style.display=\'none\'">'
-    :'';
-  document.getElementById('modalPhoto').innerHTML=fotoHTML||(esGato?'🐱':'🐶');
-  document.getElementById('modalName').textContent='"'+p.nombre.toUpperCase()+'"';
-  document.getElementById('modalApodo').textContent=p.apodo||p.nombre;
-  document.getElementById('modalEspecie').textContent=p.especie||'-';
-  document.getElementById('modalSexo').textContent=p.sexo||'-';
-  document.getElementById('modalZona').textContent=p.zona||'-';
-  document.getElementById('modalAlimento').textContent=p.alimento||'-';
+  var p = filtered[idx];
+  if (!p) return;
+  var esGato = p.especie.toLowerCase().indexOf('gato') >= 0;
+  var emoji  = esGato ? '🐱' : '🐶';
 
-  // Comentario
-  var comentarioEl=document.getElementById('modalComentario');
-  if(comentarioEl){
-    comentarioEl.style.display=p.comentario?'block':'none';
-    document.getElementById('modalComentarioText').textContent=p.comentario||'';
+  var photoEl = document.getElementById('modalPhoto');
+  if (p.foto && p.foto.indexOf('http') >= 0) {
+    var img = document.createElement('img');
+    img.src = p.foto;
+    img.style = 'width:100%;height:280px;object-fit:cover';
+    img.onerror = function(){ photoEl.innerHTML = emoji; };
+    photoEl.innerHTML = '';
+    photoEl.appendChild(img);
+  } else {
+    photoEl.innerHTML = emoji;
   }
 
-  // Mostrar mensaje de registro en vez de detalle completo
-  document.getElementById('modalRegistroMsg').style.display='block';
+  document.getElementById('modalName').textContent   = '"' + p.nombre.toUpperCase() + '"';
+  document.getElementById('modalApodo').textContent  = p.apodo || p.nombre;
+  document.getElementById('modalEspecie').textContent = p.especie || '-';
+  document.getElementById('modalSexo').textContent   = p.sexo || '-';
+
+  var comentarioEl = document.getElementById('modalComentario');
+  comentarioEl.style.display = p.comentario ? 'block' : 'none';
+  document.getElementById('modalComentarioText').textContent = p.comentario || '';
+
   document.getElementById('modalOverlay').classList.add('open');
 }
 
 function closeModal(){
   document.getElementById('modalOverlay').classList.remove('open');
-}
-
-function registrarMascota(){
-  window.location.href='/index.html';
 }
 </script>
 </body>
