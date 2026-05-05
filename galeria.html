@@ -294,10 +294,10 @@ function renderHeader(){
   if(sessionEmail){
     // Buscar uid de primera mascota del usuario para editar
     var miMascota=allPets.find(function(p){return p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();});
-    var editLink=miMascota?'/editar.html?uid='+miMascota.uid:'#';
+    var editLink=miMascota?'/perfil.html?uid='+miMascota.uid:'#';
     el.innerHTML=
       '<span class="user-badge">🐾 '+(sessionDueno||sessionEmail)+'</span>'+
-      '<a href="'+editLink+'" style="padding:6px 12px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;text-decoration:none;white-space:nowrap">Mi perfil</a>'+
+      '<a href="'+editLink+'" style="padding:6px 12px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;background:#fff;text-decoration:none;white-space:nowrap" id="headerPerfilLink">Mi perfil</a>'+
       '<button class="btn-salir" onclick="cerrarSesion()">Salir</button>';
   } else {
     el.innerHTML='<a href="/index.html" class="btn-registro">Registra tu mascota</a>';
@@ -354,6 +354,7 @@ fetch('/api/admin?action=getBasic')
     renderCumpleaneros();
     renderAngeles();
     applyFilter();
+    renderHeader(); // actualizar header con link correcto una vez cargados los datos
 
     // Fase 2: cargar detalle en background (no bloquea UI)
     fetch('/api/admin?action=getData')
@@ -412,6 +413,7 @@ fetch('/api/admin?action=getBasic')
         renderCumpleaneros();
         renderAngeles();
         applyFilter();
+        renderHeader();
       })
       .catch(function(){
         document.getElementById('galleryGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:#888">Error cargando mascotas. Intenta de nuevo.</div>';
