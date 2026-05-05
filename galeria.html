@@ -191,6 +191,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <button class="filter-btn active" onclick="setFilter('todos',this)">Todos</button>
   <button class="filter-btn" onclick="setFilter('perro',this)">🐶 Perros</button>
   <button class="filter-btn" onclick="setFilter('gato',this)">🐱 Gatos</button>
+  <button class="filter-btn" onclick="setFilter('angelito',this)">🐾🌈 Angelitos</button>
   <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre..." oninput="applyFilter()">
   <span class="results-count" id="resultsCount"></span>
 </div>
@@ -386,9 +387,13 @@ function setFilter(type,el){
 function applyFilter(){
   var search=document.getElementById('searchInput').value.toLowerCase();
   filtered=allPets.filter(function(p){
-    if(p.angelito)return false; // ángeles no aparecen en galería principal
-    if(currentFilter==='perro'&&p.especie.toLowerCase().indexOf('perro')<0)return false;
-    if(currentFilter==='gato' &&p.especie.toLowerCase().indexOf('gato') <0)return false;
+    if(currentFilter==='angelito'){
+      if(!p.angelito)return false;
+    } else {
+      if(p.angelito)return false; // angelitos no aparecen en galería principal
+      if(currentFilter==='perro'&&p.especie.toLowerCase().indexOf('perro')<0)return false;
+      if(currentFilter==='gato' &&p.especie.toLowerCase().indexOf('gato') <0)return false;
+    }
     if(search&&p.nombre.toLowerCase().indexOf(search)<0)return false;
     return true;
   });
@@ -476,11 +481,11 @@ function renderModalFooter(p){
 
   if(esMia){
     var angelBtn=p.angelito
-      ?'<button class="btn-primary btn-purple" onclick="toggleAngel(false)">💔 Ya no es angelito</button>'
-      :'<button class="btn-primary btn-purple" onclick="toggleAngel(true)">👼 Es un angelito</button>';
+      ?'<button class="btn-primary btn-purple" onclick="toggleAngel(false)">🐾🌈 Ya no es angelito</button>'
+      :'<button class="btn-primary btn-purple" onclick="toggleAngel(true)">🐾🌈 Ya es un angelito</button>';
     footer.innerHTML=
-      '<button class="btn-primary btn-pink" onclick="actualizarMascota(\''+p.uid+'\')">✏️ Actualizar</button>'+
-      '<button class="btn-primary" onclick="agregarOtra()">➕ Agregar</button>'+
+      '<button class="btn-primary btn-pink" onclick="actualizarMascota(\''+p.uid+'\')">✏️ Actualizar información</button>'+
+      '<button class="btn-primary" onclick="agregarOtra()">🐾 Agregar mascota</button>'+
       angelBtn+
       '<button class="btn-danger btn-secondary" onclick="confirmarEliminarCuenta()">🗑️ Eliminar cuenta</button>'+
       '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
