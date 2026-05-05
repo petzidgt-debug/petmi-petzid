@@ -225,7 +225,16 @@ function renderForm(){
         <div style="font-size:12px;color:#aaa;margin-bottom:10px">¿Quieres recibir ofertas, actividades y novedades de PetMi?</div>
         <div class="toggle-row">
           <span class="toggle-lbl">Sí, quiero recibir información</span>
-          <label class="toggle"><input type="checkbox" id="togOfertas" ${m.ofertas!=='No'?'checked':''}><span class="tog-slider"></span></label>
+          <label class="toggle"><input type="checkbox" id="togOfertas" \${m.ofertas!=='No'?'checked':''}><span class="tog-slider"></span></label>
+        </div>
+      </div>
+
+      <div id="notificaciones" style="margin-top:12px;background:#fafafa;border-radius:12px;padding:14px 16px;border:1px solid #eee">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Notificaciones de mensajes</div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:10px">Recibir un email cuando alguien deje un mensaje en el perfil de tu mascota</div>
+        <div class="toggle-row">
+          <span class="toggle-lbl">Recibir notificaciones de mensajes</span>
+          <label class="toggle"><input type="checkbox" id="togNotifMensajes" \${m.notifMensajes!=='No'?'checked':''}><span class="tog-slider"></span></label>
         </div>
       </div>
     </div>
@@ -319,7 +328,8 @@ async function guardar(){
       instagram:   document.getElementById('eInsta').value.trim(),
       alimento:    document.getElementById('eAlimento').value.trim(),
       especial:    document.getElementById('eEspecial').value.trim(),
-      ofertas:     document.getElementById('togOfertas').checked?'Si':'No'
+      ofertas:        document.getElementById('togOfertas').checked?'Si':'No',
+      notifMensajes:  document.getElementById('togNotifMensajes')?document.getElementById('togNotifMensajes').checked?'Si':'No':'Si'
     }
   };
   if(fotoUrl)payload.data.foto=fotoUrl;
