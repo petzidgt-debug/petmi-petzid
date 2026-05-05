@@ -561,7 +561,7 @@ function openModal(idx){
   var fechaVal=document.getElementById('modalFecha');
   if(fechaLbl&&fechaVal){
     fechaLbl.textContent=p.tipoFecha==='llegada'?'Llegó a casa':'Nacimiento';
-    fechaVal.textContent=p.fecha||'-';
+    fechaVal.textContent=formatFecha(p.fecha);
   }
 
   var comentarioEl=document.getElementById('modalComentario');
@@ -665,7 +665,7 @@ function openModalDirect(p){
   var fechaVal=document.getElementById('modalFecha');
   if(fechaLbl&&fechaVal){
     fechaLbl.textContent=p.tipoFecha==='llegada'?'Llegó a casa':'Nacimiento';
-    fechaVal.textContent=p.fecha||'-';
+    fechaVal.textContent=formatFecha(p.fecha);
   }
   var comentarioEl=document.getElementById('modalComentario');
   comentarioEl.style.display=p.comentario?'block':'none';
@@ -827,6 +827,18 @@ function verificarEmail(){
 function mostrarMsgLogin(texto,tipo){
   var el=document.getElementById('loginMsg');
   el.textContent=texto;el.className='login-msg '+tipo;el.style.display=texto?'block':'none';
+}
+
+// ── Formato de fecha ─────────────────────────────────────────
+function formatFecha(val){
+  if(!val||val==='-')return'-';
+  var d;
+  // dd/mm/yyyy
+  var p=String(val).split('/');
+  if(p.length===3)d=new Date(p[2]+'-'+p[1]+'-'+p[0]);
+  else d=new Date(val);
+  if(isNaN(d.getTime()))return String(val);
+  return d.toLocaleDateString('es-GT',{year:'numeric',month:'short',day:'numeric'});
 }
 
 document.getElementById('loginEmail').addEventListener('keydown',function(e){
