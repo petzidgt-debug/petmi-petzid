@@ -219,9 +219,10 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <div class="modal-body">
       <div class="modal-name" id="modalName">-</div>
       <div class="modal-apodo" id="modalApodo">-</div>
-      <div class="modal-fields">
+      <div class="modal-fields" style="grid-template-columns:1fr 1fr 1fr">
         <div><div class="modal-field-lbl">Especie</div><div class="modal-field-val" id="modalEspecie">-</div></div>
         <div><div class="modal-field-lbl">Sexo</div><div class="modal-field-val" id="modalSexo">-</div></div>
+        <div><div class="modal-field-lbl" id="modalFechaLbl">Fecha</div><div class="modal-field-val" id="modalFecha">-</div></div>
       </div>
       <!-- Sobre mi eliminado - mismo contenido que Algo especial -->
       <div id="modalComentario" style="display:none">
@@ -556,6 +557,12 @@ function openModal(idx){
   document.getElementById('modalApodo').textContent=p.apodo||p.nombre;
   document.getElementById('modalEspecie').textContent=p.especie||'-';
   document.getElementById('modalSexo').textContent=p.sexo||'-';
+  var fechaLbl=document.getElementById('modalFechaLbl');
+  var fechaVal=document.getElementById('modalFecha');
+  if(fechaLbl&&fechaVal){
+    fechaLbl.textContent=p.tipoFecha==='llegada'?'Llegó a casa':'Nacimiento';
+    fechaVal.textContent=p.fecha||'-';
+  }
 
   var comentarioEl=document.getElementById('modalComentario');
   comentarioEl.style.display=p.comentario?'block':'none';
@@ -608,9 +615,10 @@ function renderModalFooter(p){
       '<button class="btn-primary" onclick="agregarOtra()">➕ Agregar mi mascota</button>'+
       '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
   } else {
+    var esAngelitoSinSesion = p.angelito;
     footer.innerHTML=
-      '<button class="btn-primary" onclick="window.location.href=\'/index.html\'">Registra tu mascota</button>'+
-      '<button class="btn-secondary" onclick="openLoginModal()">¿Ya tienes PetzID?</button>'+
+      (esAngelitoSinSesion ? '' : '<button class="btn-primary" onclick="window.location.href=\'/index.html\'">Registra tu mascota</button>')+
+      '<button class="btn-secondary" onclick="openLoginModal()">'+(esAngelitoSinSesion?'🔑 Soy el dueño':'¿Ya tienes PetzID?')+'</button>'+
       '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
   }
 }
@@ -653,6 +661,12 @@ function openModalDirect(p){
   document.getElementById('modalApodo').textContent=p.apodo||p.nombre;
   document.getElementById('modalEspecie').textContent=p.especie||'-';
   document.getElementById('modalSexo').textContent=p.sexo||'-';
+  var fechaLbl=document.getElementById('modalFechaLbl');
+  var fechaVal=document.getElementById('modalFecha');
+  if(fechaLbl&&fechaVal){
+    fechaLbl.textContent=p.tipoFecha==='llegada'?'Llegó a casa':'Nacimiento';
+    fechaVal.textContent=p.fecha||'-';
+  }
   var comentarioEl=document.getElementById('modalComentario');
   comentarioEl.style.display=p.comentario?'block':'none';
   document.getElementById('modalComentarioText').textContent=p.comentario||'';
@@ -790,9 +804,14 @@ function verificarEmail(){
         mostrarMsgLogin('¡Bienvenido/a '+(sessionDueno||'')+'! '+d.mascotas.length+' mascota(s) encontrada(s).','success');
         setTimeout(function(){
           closeLoginModal();
-          closeModal();
           renderHeader();
           shown=0;applyFilter();
+          // Reabrir modal si había uno abierto
+          if(currentModalPet){
+            renderModalFooter(currentModalPet);
+          } else {
+            closeModal();
+          }
         },1500);
       } else {
         mostrarMsgLogin('No encontramos ese correo. ¿Quieres registrarte?','error');
