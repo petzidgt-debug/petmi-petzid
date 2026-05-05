@@ -133,7 +133,7 @@ function mostrarNoSession(){
 }
 
 function cargarFamilia(email){
-  fetch('/api/admin?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d.found || d.mascotas.length === 0){
@@ -261,7 +261,7 @@ function verificarEmail(){
   var btn = document.getElementById('btnLoginOk');
   btn.disabled=true; btn.textContent='Verificando...';
 
-  fetch('/api/admin?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.found && d.mascotas && d.mascotas.length > 0){
