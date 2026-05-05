@@ -154,8 +154,8 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
     <a href="https://www.revistapetmi.com" target="_blank">Blog</a>
     <a href="https://www.revistapetmi.com/home" target="_blank" class="active">Petmi ID</a>
     <a href="https://www.revistapetmi.com/category/all-products" target="_blank">Tienda</a>
-    <a href="https://www.revistapetmi.com/miembros" target="_blank">Miembros</a>
-    <a href="https://www.revistapetmi.com/miembros" target="_blank" class="btn-ingresar">Ingresar</a>
+    <a href="/galeria.html">Miembros</a>
+    <a href="/galeria.html" class="btn-ingresar">Ingresar</a>
   </nav>
   <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
 </header>
@@ -164,8 +164,8 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
   <a href="https://www.revistapetmi.com" target="_blank" onclick="toggleMenu()">Blog</a>
   <a href="https://www.revistapetmi.com/home" target="_blank" onclick="toggleMenu()">Petmi ID</a>
   <a href="https://www.revistapetmi.com/category/all-products" target="_blank" onclick="toggleMenu()">Tienda</a>
-  <a href="https://www.revistapetmi.com/miembros" target="_blank" onclick="toggleMenu()">Miembros</a>
-  <a href="https://www.revistapetmi.com/miembros" target="_blank" class="btn-ingresar" onclick="toggleMenu()">Ingresar</a>
+  <a href="/galeria.html" onclick="toggleMenu()">Miembros</a>
+  <a href="/galeria.html" class="btn-ingresar" onclick="toggleMenu()">Ingresar</a>
 </div>
 
 <div class="card-bar" id="cardBar">
@@ -595,9 +595,19 @@ async function submitPetzID(){
     body:JSON.stringify(payload)
   }).then(function(r){return r.json();})
   .then(function(){
+    // Guardar sesion en localStorage
+    if(payload.email){
+      localStorage.setItem('petzid_email', payload.email);
+      localStorage.setItem('petzid_dueno', payload.dueno||'');
+    }
     document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
     cur=4;showStep(4);updateProgress();
   }).catch(function(){
+    // Guardar sesion en localStorage aunque haya error de red
+    if(payload.email){
+      localStorage.setItem('petzid_email', payload.email);
+      localStorage.setItem('petzid_dueno', payload.dueno||'');
+    }
     document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
     cur=4;showStep(4);updateProgress();
   });
