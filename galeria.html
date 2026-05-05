@@ -223,9 +223,27 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
         <div><div class="modal-field-lbl">Especie</div><div class="modal-field-val" id="modalEspecie">-</div></div>
         <div><div class="modal-field-lbl">Sexo</div><div class="modal-field-val" id="modalSexo">-</div></div>
       </div>
-      <div id="modalComentario" style="display:none;background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:14px;border-left:3px solid #00B4B4">
+      <div id="modalComentario" style="display:none;background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #00B4B4">
         <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Sobre mi</div>
         <div id="modalComentarioText" style="font-size:13px;color:#555;line-height:1.6"></div>
+      </div>
+      <div id="actividadesWrap" style="display:none;margin-bottom:10px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Le gustaba / Le gusta</div>
+        <div id="modalActividades" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+      </div>
+      <div id="modalEspecial" style="display:none;background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #F5C842">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Algo especial</div>
+        <div id="modalEspecialText" style="font-size:13px;color:#555;line-height:1.6"></div>
+      </div>
+      <!-- Mensajes -->
+      <div id="mensajesSection" style="margin-top:4px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:8px">Mensajes 💬</div>
+        <div id="mensajesLista" style="max-height:160px;overflow-y:auto;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="mensajeAutor" placeholder="Tu nombre" style="width:35%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none">
+          <input type="text" id="mensajeTxt" placeholder="Deja un mensaje..." style="flex:1;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none">
+          <button onclick="enviarMensaje()" style="padding:10px 14px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">✉️</button>
+        </div>
       </div>
     </div>
     <div class="modal-footer" id="modalFooter"></div>
@@ -305,7 +323,10 @@ fetch('/api/admin?action=getData')
         comentario: String(r[23]||'').trim(),
         foto:       String(r[27]||'').trim(),
         angelito:   String(r[28]||'').trim().toLowerCase()==='si',
-        email:      String(r[11]||'').trim()
+        email:      String(r[11]||'').trim(),
+        actividades:String(r[18]||'').trim(),
+        especial:   String(r[23]||'').trim(),
+        raza:       String(r[6] ||'').trim()
       };
     }).filter(function(p){return p.nombre;});
 
@@ -470,6 +491,29 @@ function openModal(idx){
   comentarioEl.style.display=p.comentario?'block':'none';
   document.getElementById('modalComentarioText').textContent=p.comentario||'';
 
+  // Actividades
+  var actEl=document.getElementById('modalActividades');
+  if(actEl){
+    if(p.actividades){
+      var acts=p.actividades.split(',').map(function(a){return a.trim();}).filter(Boolean);
+      actEl.innerHTML=acts.map(function(a){return '<span style="display:inline-block;background:#e0f7f7;color:#007a7a;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;margin:2px">'+a+'</span>';}).join('');
+      actEl.parentElement.style.display='block';
+    } else {
+      actEl.parentElement.style.display='none';
+    }
+  }
+
+  // Especial
+  var espEl=document.getElementById('modalEspecial');
+  if(espEl){
+    espEl.style.display=p.especial?'block':'none';
+    var espTxt=document.getElementById('modalEspecialText');
+    if(espTxt)espTxt.textContent=p.especial||'';
+  }
+
+  // Mensajes
+  cargarMensajes(p.uid);
+
   // Botones
   renderModalFooter(p);
   document.getElementById('modalOverlay').classList.add('open');
@@ -618,6 +662,61 @@ function mostrarMsgLogin(texto,tipo){
 document.getElementById('loginEmail').addEventListener('keydown',function(e){
   if(e.key==='Enter')verificarEmail();
 });
+
+// ── Mensajes ──────────────────────────────────────────────────
+var currentMascotaUID = null;
+
+function cargarMensajes(uid){
+  currentMascotaUID = uid;
+  var lista = document.getElementById('mensajesLista');
+  lista.innerHTML = '<div style="text-align:center;padding:12px;color:#bbb;font-size:13px">Cargando...</div>';
+
+  fetch('/api/admin?action=getMensajes&uid='+encodeURIComponent(uid))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var msgs = d.mensajes||[];
+      if(msgs.length===0){
+        lista.innerHTML='<div style="text-align:center;padding:12px;color:#bbb;font-size:13px">Sé el primero en dejar un mensaje 🐾</div>';
+        return;
+      }
+      lista.innerHTML = msgs.map(function(m){
+        var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-GT') : '';
+        return '<div style="background:#f8f8f8;border-radius:10px;padding:10px 12px;margin-bottom:6px">'
+          +'<div style="font-size:12px;font-weight:700;color:#333">'+m.autor+'<span style="font-size:10px;color:#bbb;font-weight:400;margin-left:8px">'+fecha+'</span></div>'
+          +'<div style="font-size:13px;color:#555;margin-top:3px;line-height:1.5">'+m.mensaje+'</div></div>';
+      }).join('');
+      lista.scrollTop = lista.scrollHeight;
+    })
+    .catch(function(){
+      lista.innerHTML='<div style="text-align:center;padding:8px;color:#bbb;font-size:13px">No se pudieron cargar los mensajes</div>';
+    });
+}
+
+function enviarMensaje(){
+  var autor   = document.getElementById('mensajeAutor').value.trim();
+  var mensaje = document.getElementById('mensajeTxt').value.trim();
+  if(!autor||!mensaje){
+    alert('Por favor ingresa tu nombre y un mensaje');return;
+  }
+  if(!currentMascotaUID)return;
+
+  fetch('/api/admin?action=updateRow',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      action:'addMensaje',
+      uid:currentMascotaUID,
+      autor:autor,
+      mensaje:mensaje
+    })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      document.getElementById('mensajeTxt').value='';
+      cargarMensajes(currentMascotaUID);
+    }
+  }).catch(function(){alert('Error al enviar. Intenta de nuevo.');});
+}
 </script>
 </body>
 </html>
