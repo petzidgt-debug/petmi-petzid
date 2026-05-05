@@ -58,6 +58,14 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
 .error-box{background:#fbeaf0;border:1px solid #f4c0d1;border-radius:12px;padding:14px;font-size:14px;color:#993556;margin-bottom:16px;display:none}
+.btn-danger{width:100%;padding:14px;background:#fff0f0;color:#c0392b;border:1.5px solid #fcc;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:700;display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-overlay.open{display:flex}
+.confirm-box{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center}
+.confirm-icon{font-size:44px;margin-bottom:12px}
+.confirm-title{font-size:18px;font-weight:900;color:#222;margin-bottom:8px}
+.confirm-sub{font-size:13px;color:#888;margin-bottom:24px;line-height:1.5}
+.confirm-btns{display:flex;gap:10px}
 </style>
 </head>
 <body>
@@ -78,6 +86,18 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 
 <div class="toast" id="toast"></div>
 <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="onFotoChange(event)">
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title">¿Eliminar cuenta?</div>
+    <div class="confirm-sub">Se eliminarán <strong>todas tus mascotas</strong> registradas. Esta acción no se puede deshacer.</div>
+    <div class="confirm-btns">
+      <button onclick="confirmarEliminar()" style="flex:1;padding:13px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Sí, eliminar</button>
+      <button onclick="document.getElementById('confirmOverlay').classList.remove('open')" style="flex:1;padding:13px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 var CLOUD_NAME    = 'dh5wgqgmk';
@@ -249,6 +269,7 @@ function renderForm(){
 
     <button class="btn-guardar" id="btnGuardar" onclick="guardar()">💾 Guardar cambios</button>
     <button class="btn-cancelar" onclick="window.location.href='/galeria.html'">Cancelar</button>
+    <button class="btn-danger" onclick="document.getElementById('confirmOverlay').classList.add('open')">🗑️ Eliminar mi cuenta</button>
     <div style="height:20px"></div>
   `;
 }
@@ -356,6 +377,27 @@ async function guardar(){
 
 function mostrarError(msg){var el=document.getElementById('errorBox');if(el){el.textContent=msg;el.style.display='block';}}
 function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+
+function confirmarEliminar(){
+  document.getElementById('confirmOverlay').classList.remove('open');
+  fetch('/api/admin?action=updateRow',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'deleteAccount',email:sessionEmail})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      localStorage.removeItem('petzid_email');
+      localStorage.removeItem('petzid_dueno');
+      mostrarToast('Cuenta eliminada');
+      setTimeout(function(){window.location.href='/index.html';},1500);
+    } else {
+      mostrarError('Error al eliminar. Intenta de nuevo.');
+    }
+  }).catch(function(){
+    mostrarError('Error de conexión. Intenta de nuevo.');
+  });
+}
 </script>
 </body>
 </html>
