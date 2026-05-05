@@ -223,9 +223,9 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
         <div><div class="modal-field-lbl">Especie</div><div class="modal-field-val" id="modalEspecie">-</div></div>
         <div><div class="modal-field-lbl">Sexo</div><div class="modal-field-val" id="modalSexo">-</div></div>
       </div>
-      <div id="modalComentario" style="display:none;background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #00B4B4">
-        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Sobre mi</div>
-        <div id="modalComentarioText" style="font-size:13px;color:#555;line-height:1.6"></div>
+      <!-- Sobre mi eliminado - mismo contenido que Algo especial -->
+      <div id="modalComentario" style="display:none">
+        <div id="modalComentarioText"></div>
       </div>
       <div id="actividadesWrap" style="display:none;margin-bottom:10px">
         <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Le gustaba / Le gusta</div>
@@ -356,7 +356,7 @@ fetch('/api/admin?action=getBasic')
           if(pet){
             pet.actividades  = String(r[18]||'').trim();
             pet.especial     = String(r[23]||'').trim();
-            pet.comentario   = String(r[23]||'').trim();
+            pet.comentario   = '';
             pet.alimento     = String(r[16]||'').trim();
             pet.zona         = String(r[9] ||'').trim();
             pet.notifMensajes= String(r[30]||'').trim();
@@ -386,7 +386,7 @@ fetch('/api/admin?action=getBasic')
             fechaAngelito:String(r[29]||'').trim(),
             actividades:  String(r[18]||'').trim(),
             especial:     String(r[23]||'').trim(),
-            comentario:   String(r[23]||'').trim(),
+            comentario:   '',
             alimento:     String(r[16]||'').trim(),
             zona:         String(r[9] ||'').trim(),
             notifMensajes:String(r[30]||'').trim()
