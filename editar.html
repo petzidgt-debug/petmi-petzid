@@ -94,7 +94,7 @@ var nuevaFotoMime   = null;
   var uid    = params.get('uid');
   if(!uid){ window.location.href='/galeria.html'; return; }
 
-  fetch('/api/admin?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d.found){ window.location.href='/galeria.html'; return; }
