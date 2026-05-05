@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<link rel="icon" href="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" type="image/png">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
 <title>PetzID — PetMi</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -117,28 +117,36 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 
 <!-- TARJETA OCULTA PARA PNG -->
 <div id="pngCard" style="position:fixed;left:-9999px;top:0;width:580px;font-family:Arial,sans-serif;overflow:hidden;background:#fff">
-  <div style="background:#00B4B4;display:flex;align-items:stretch">
-    <div id="pngPhoto" style="width:170px;height:210px;flex-shrink:0;background:#b2e0e0;display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden">🐾</div>
-    <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:16px 20px 14px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.7);margin-bottom:4px">NOMBRE</div>
-      <div id="pngNombre" style="font-size:28px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;letter-spacing:2px;color:#fff;line-height:1">"NOMBRE"</div>
-      <div id="pngApodo" style="margin-top:8px;display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;align-self:flex-start">Apodo</div>
+  <!-- Franja superior teal: foto + nombre -->
+  <div style="background:#00B4B4;display:flex;align-items:stretch;min-height:210px">
+    <div id="pngPhoto" style="width:170px;min-height:210px;flex-shrink:0;background:#b2e0e0;display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden;position:relative">🐾</div>
+    <div style="flex:1;display:flex;flex-direction:column;padding:14px 18px">
+      <!-- Especie como icono arriba a la derecha -->
+      <div style="display:flex;justify-content:flex-end;margin-bottom:auto">
+        <div id="pngEspecieIcon" style="font-size:28px">🐶</div>
+      </div>
+      <!-- Fecha arriba del nombre -->
+      <div>
+        <div id="pngFechaLbl" style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.6);text-transform:uppercase;margin-bottom:2px">Nacimiento</div>
+        <div id="pngFecha" style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:10px">-</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.6);margin-bottom:3px">NOMBRE</div>
+        <div id="pngNombre" style="font-size:26px;font-weight:900;font-family:Arial Black,Arial,sans-serif;letter-spacing:1px;color:#fff;line-height:1">"NOMBRE"</div>
+        <div id="pngApodo" style="margin-top:6px;display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">Apodo</div>
+      </div>
     </div>
   </div>
-  <div style="background:#fff;padding:16px 20px">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;margin-bottom:12px">
-      <div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Especie</div><div id="pngEspecie" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
-      <div style="text-align:right"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Sexo</div><div id="pngSexo" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
+  <!-- Cuerpo blanco -->
+  <div style="background:#fff;padding:14px 18px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:10px">
+      <div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Sexo</div><div id="pngSexo" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
+      <div style="text-align:right"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Veterinario</div><div id="pngVet" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0;margin-bottom:12px">
-      <div><div id="pngFechaLbl" style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Nacimiento</div><div id="pngFecha" style="font-size:16px;font-weight:900;color:#222">-</div></div>
-      <div style="text-align:right"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Zona</div><div id="pngZona" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px">
-      <div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Responsable</div><div id="pngDueno" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
-      <div style="text-align:right"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:4px">Veterinario</div><div id="pngVet" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
+    <div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Responsable</div>
+      <div id="pngDueno" style="font-size:16px;font-weight:900;color:#222;text-transform:uppercase">-</div>
     </div>
   </div>
+  <!-- Footer amarillo -->
   <div style="background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:10px 16px">
     <div style="width:36px;height:36px;background:#E05090;border-radius:8px 8px 8px 0;display:flex;align-items:center;justify-content:center;font-size:16px">🐾</div>
     <div style="font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#1a1a1a;letter-spacing:-1px">petz<span style="color:#E05090">ID</span></div>
@@ -180,7 +188,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
     </div>
     <div class="card-mini-body">
       <div><div class="mflbl">Responsable</div><div class="mfval" id="cDueno">-</div></div>
-      <div><div class="mflbl">Zona</div><div class="mfval" id="cZona">-</div></div>
+      <div><div class="mflbl">Fecha</div><div class="mfval" id="cFecha">-</div></div>
       <div><div class="mflbl">Vet</div><div class="mfval" id="cVet">-</div></div>
     </div>
     <div class="card-mini-footer">
@@ -287,23 +295,14 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
           <div class="chip" onclick="selectChip('chipsConvive',this)">Con ambos</div>
         </div>
       </div>
-      <label>Instagram (opcional)</label>
-      <input type="text" id="inInsta" placeholder="@usuario">
     </div>
 
     <!-- STEP 3 -->
     <div class="screen" id="step3">
       <div class="stitle">Sus gustos</div>
-      <div class="ssub">Comida, actividades y preferencias</div>
+      <div class="ssub">Comida, actividades e info de contacto</div>
       <label>Alimento que consume</label>
       <input type="text" id="inAlimento" placeholder="Marca y tipo de comida">
-      <label>Tipo de alimentacion</label>
-      <div class="chips" id="chipsTipoComida">
-        <div class="chip" onclick="toggleChip(this)">Croquetas</div>
-        <div class="chip" onclick="toggleChip(this)">Comida humeda</div>
-        <div class="chip" onclick="toggleChip(this)">BARF / natural</div>
-        <div class="chip" onclick="toggleChip(this)">Mixta</div>
-      </div>
       <label>Actividades favoritas</label>
       <div class="chips" id="chipsActividad">
         <div class="chip" onclick="toggleChip(this)">Paseos</div>
@@ -315,33 +314,20 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
         <div class="chip" onclick="toggleChip(this)">Dog park</div>
         <div class="chip" onclick="toggleChip(this)">Grooming / spa</div>
       </div>
-      <label>Personalidad</label>
-      <div class="chips" id="chipsPersonalidad">
-        <div class="chip" onclick="toggleChip(this)">Jugueton</div>
-        <div class="chip" onclick="toggleChip(this)">Tranquilo</div>
-        <div class="chip" onclick="toggleChip(this)">Protector</div>
-        <div class="chip" onclick="toggleChip(this)">Curioso</div>
-        <div class="chip" onclick="toggleChip(this)">Sociable</div>
-        <div class="chip" onclick="toggleChip(this)">Carinoso</div>
-        <div class="chip" onclick="toggleChip(this)">Independiente</div>
-      </div>
+      <label>Instagram (opcional)</label>
+      <input type="text" id="inInsta" placeholder="@usuario">
+      <label>Algo especial sobre tu mascota</label>
+      <textarea id="inEspecial" placeholder="Un dato curioso, su historia..."></textarea>
       <div style="margin-top:18px;background:#fafafa;border-radius:12px;padding:14px 16px;border:1px solid #eee">
-        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Comunicaciones</div>
-        <div class="toggle-row">
-          <span class="toggle-lbl">Recibir ofertas y promos</span>
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Comunicaciones</div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:12px">¿Quieres recibir ofertas, actividades pet-friendly y novedades de la comunidad PetMi?</div>
+        <div class="toggle-row" style="border:none">
+          <span class="toggle-lbl" style="font-weight:700;color:#333">Sí, quiero recibir información</span>
           <label class="toggle"><input type="checkbox" id="togOfertas" checked><span class="tog-slider"></span></label>
         </div>
-        <div class="toggle-row">
-          <span class="toggle-lbl">Info de actividades pet-friendly</span>
-          <label class="toggle"><input type="checkbox" id="togActividades" checked><span class="tog-slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-lbl">Novedades de la comunidad Petmi</span>
-          <label class="toggle"><input type="checkbox" id="togComunidad" checked><span class="tog-slider"></span></label>
-        </div>
+        <input type="hidden" id="togActividades" value="on">
+        <input type="hidden" id="togComunidad" value="on">
       </div>
-      <label>Algo especial</label>
-      <textarea id="inEspecial" placeholder="Un dato curioso, su historia..."></textarea>
       <div class="error-msg" id="errorMsg">Hubo un problema. Por favor intenta de nuevo.</div>
     </div>
 
@@ -375,6 +361,116 @@ var SCRIPT_URL='/api/submit';
 var cur=1,siblings=[],dateMode='nac',isSibling=false,familyData=null;
 var photoBase64=null,photoMime=null,photoFilename=null;
 var uid=genId();
+
+// Cloudinary
+var CLOUD_NAME='dh5wgqgmk';
+var UPLOAD_PRESET='petzid';
+
+// Modo edición
+var modoEdicion=false;
+var editUID=null;
+var editEmail=null;
+
+// Detectar ?editar=uid o ?agregar=1
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var uidParam=params.get('editar');
+  var agregar=params.get('agregar');
+  if(uidParam){
+    modoEdicion=true;
+    editUID=uidParam;
+    // Cargar datos del uid
+    var emailGuardado=localStorage.getItem('petzid_email');
+    if(!emailGuardado){window.location.href='/galeria.html';return;}
+    editEmail=emailGuardado;
+    fetch('/api/admin?action=checkEmail&email='+encodeURIComponent(emailGuardado))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.found)return;
+        var mascota=d.mascotas.find(function(m){return m.uid===uidParam;});
+        if(!mascota)return;
+        precargarDatos(mascota);
+      });
+  } else if(agregar) {
+    // Solo precargar datos del dueño
+    var emailGuardado=localStorage.getItem('petzid_email');
+    if(emailGuardado){
+      fetch('/api/admin?action=checkEmail&email='+encodeURIComponent(emailGuardado))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(!d.found||!d.mascotas.length)return;
+          var m=d.mascotas[0];
+          isSibling=true;
+          familyData={dueno:m.dueno,email:m.email,whatsapp:m.whatsapp,zona:m.zona,vet:m.veterinario};
+          document.getElementById('familyBlock').style.display='none';
+          document.getElementById('siblingFamilyInfo').style.display='block';
+        });
+    }
+  }
+})();
+
+function precargarDatos(m){
+  // Titulo
+  var titulo=document.querySelector('.hero-title');
+  if(titulo)titulo.textContent='Actualizar datos de '+m.nombre;
+  // Step 1
+  setTimeout(function(){
+    var inNombre=document.getElementById('inNombre');
+    var inApodo=document.getElementById('inApodo');
+    var inRaza=document.getElementById('inRaza');
+    if(inNombre)inNombre.value=m.nombre||'';
+    if(inApodo)inApodo.value=m.apodo||'';
+    if(inRaza)inRaza.value=m.raza||'';
+    // Especie
+    document.querySelectorAll('#chipsEspecie .chip').forEach(function(c){
+      if(c.textContent.trim().toLowerCase()===m.especie.toLowerCase())c.classList.add('sel');
+      else c.classList.remove('sel');
+    });
+    // Sexo
+    document.querySelectorAll('#chipsSexo .chip').forEach(function(c){
+      if(c.textContent.trim().toLowerCase()===m.sexo.toLowerCase())c.classList.add('sel');
+      else c.classList.remove('sel');
+    });
+    // Fecha
+    if(m.fecha){
+      var inFecha=document.getElementById('inFecha');
+      if(inFecha){
+        // Convertir dd/mm/yyyy a yyyy-mm-dd
+        var partes=String(m.fecha).split('/');
+        if(partes.length===3)inFecha.value=partes[2]+'-'+partes[1]+'-'+partes[0];
+        else inFecha.value=m.fecha;
+      }
+    }
+    // Foto actual
+    if(m.foto&&m.foto.indexOf('http')>=0){
+      var img=document.getElementById('petPhoto');
+      if(img){img.src=m.foto;img.style.display='block';}
+      document.getElementById('phIcon').style.display='none';
+      document.getElementById('phTxt').style.display='none';
+    }
+    // Step 2
+    isSibling=false;
+    familyData={dueno:m.dueno,email:m.email,whatsapp:m.whatsapp,zona:m.zona,vet:m.veterinario};
+    var inDueno=document.getElementById('inDueno');
+    var inEmail=document.getElementById('inEmail');
+    var inWA=document.getElementById('inWhatsapp');
+    var inZona=document.getElementById('inZona');
+    var inVet=document.getElementById('inVet');
+    if(inDueno)inDueno.value=m.dueno||'';
+    if(inEmail){inEmail.value=m.email||'';inEmail.readOnly=true;inEmail.style.background='#f5f5f5';}
+    if(inWA)inWA.value=(m.whatsapp||'').replace('+502','');
+    if(inZona)inZona.value=m.zona||'';
+    if(inVet)inVet.value=m.veterinario||'';
+    // Step 3
+    var inInsta=document.getElementById('inInsta');
+    var inAlimento=document.getElementById('inAlimento');
+    var inEspecial=document.getElementById('inEspecial');
+    if(inInsta)inInsta.value=m.instagram||'';
+    if(inAlimento)inAlimento.value=m.alimento||'';
+    if(inEspecial)inEspecial.value=m.especial||'';
+    syncCard();
+  }, 300);
+}
 
 function genId(){
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){
@@ -419,7 +515,7 @@ function syncCard(){
   document.getElementById('cNombre').textContent='"'+n+'"';
   document.getElementById('cApodo').textContent=a;
   document.getElementById('cEspecieSexo').textContent=getChip('chipsEspecie')+' - '+getChip('chipsSexo');
-  document.getElementById('cZona').textContent=String(fd&&fd.zona?fd.zona:'-').toUpperCase();
+  document.getElementById('cFecha').textContent=fmtDate(document.getElementById('inFecha').value)||'-';
   document.getElementById('cDueno').textContent=String(fd&&fd.dueno?fd.dueno:'-').toUpperCase();
   document.getElementById('cVet').textContent=String(fd&&fd.vet?fd.vet:'-').toUpperCase();
   var img=document.getElementById('petPhoto');
@@ -513,7 +609,7 @@ function updatePngCard(){
   var img=document.getElementById('petPhoto');
   var pngPhoto=document.getElementById('pngPhoto');
   if(img.src&&img.style.display!=='none'){
-    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:170px;height:210px;object-fit:cover">';
+    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:170px;height:210px;object-fit:cover;object-position:center">';
   }
   var fd=isSibling?familyData:{
     dueno:(document.getElementById('inDueno')?document.getElementById('inDueno').value:''),
@@ -522,11 +618,12 @@ function updatePngCard(){
   };
   document.getElementById('pngNombre').textContent='"'+(document.getElementById('inNombre').value||'NOMBRE').toUpperCase()+'"';
   document.getElementById('pngApodo').textContent=(document.getElementById('inApodo').value||'').toUpperCase();
-  document.getElementById('pngEspecie').textContent=getChip('chipsEspecie');
+  var esp=getChip('chipsEspecie');
+  var especieIcon=document.getElementById('pngEspecieIcon');
+  if(especieIcon)especieIcon.textContent=esp.toLowerCase().indexOf('gato')>=0?'🐱':'🐶';
   document.getElementById('pngSexo').textContent=getChip('chipsSexo');
   document.getElementById('pngFechaLbl').textContent=dateMode==='llegada'?'LLEGO A CASA':'NACIMIENTO';
   document.getElementById('pngFecha').textContent=fmtDate(document.getElementById('inFecha').value);
-  document.getElementById('pngZona').textContent=String(fd&&fd.zona?fd.zona:'-').toUpperCase();
   document.getElementById('pngDueno').textContent=String(fd&&fd.dueno?fd.dueno:'-').toUpperCase();
   document.getElementById('pngVet').textContent=String(fd&&fd.vet?fd.vet:'-').toUpperCase();
 }
@@ -539,6 +636,23 @@ async function generatePNGBase64(){
     backgroundColor:'#ffffff',logging:false
   });
   return canvas.toDataURL('image/png').split(',')[1];
+}
+
+async function uploadToCloudinary(base64, mime){
+  try {
+    var formData=new FormData();
+    formData.append('file','data:'+mime+';base64,'+base64);
+    formData.append('upload_preset',UPLOAD_PRESET);
+    formData.append('folder','petzid');
+    var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{
+      method:'POST',body:formData
+    });
+    var data=await res.json();
+    return data.secure_url||null;
+  } catch(e){
+    console.log('Cloudinary error:',e);
+    return null;
+  }
 }
 
 async function submitPetzID(){
@@ -579,34 +693,47 @@ async function submitPetzID(){
     conviveCon:  getChip('chipsConvive'),
     instagram:   document.getElementById('inInsta').value.trim(),
     alimento:    document.getElementById('inAlimento').value.trim(),
-    tipoAlimento:getChips('chipsTipoComida'),
+    tipoAlimento:[],
     actividades: getChips('chipsActividad'),
-    personalidad:getChips('chipsPersonalidad'),
+    personalidad:[],
     recibeOfertas:    document.getElementById('togOfertas').checked,
-    recibeActividades:document.getElementById('togActividades').checked,
-    recibeComunidad:  document.getElementById('togComunidad').checked,
+    recibeActividades:document.getElementById('togOfertas').checked,
+    recibeComunidad:  document.getElementById('togOfertas').checked,
     especial:    document.getElementById('inEspecial').value.trim(),
     pngBase64:   pngBase64
   };
 
-  fetch('/api/submit',{
+  // Subir foto nueva a Cloudinary si hay
+  if(photoBase64){
+    btn.textContent='Subiendo foto...';
+    var fotoUrl=await uploadToCloudinary(photoBase64, photoMime||'image/jpeg');
+    if(fotoUrl)payload.foto=fotoUrl;
+  }
+
+  // Si es edicion, usar updateRow en vez de submit
+  var apiUrl='/api/submit';
+  var apiBody=payload;
+  if(modoEdicion&&editUID){
+    apiUrl='/api/admin?action=updateRow';
+    apiBody={action:'updateRow',uid:editUID,data:payload};
+  }
+
+  fetch(apiUrl,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(payload)
+    body:JSON.stringify(apiBody)
   }).then(function(r){return r.json();})
   .then(function(){
-    // Guardar sesion en localStorage
     if(payload.email){
-      localStorage.setItem('petzid_email', payload.email);
-      localStorage.setItem('petzid_dueno', payload.dueno||'');
+      localStorage.setItem('petzid_email',payload.email);
+      localStorage.setItem('petzid_dueno',payload.dueno||'');
     }
     document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
     cur=4;showStep(4);updateProgress();
   }).catch(function(){
-    // Guardar sesion en localStorage aunque haya error de red
     if(payload.email){
-      localStorage.setItem('petzid_email', payload.email);
-      localStorage.setItem('petzid_dueno', payload.dueno||'');
+      localStorage.setItem('petzid_email',payload.email);
+      localStorage.setItem('petzid_dueno',payload.dueno||'');
     }
     document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
     cur=4;showStep(4);updateProgress();
@@ -656,7 +783,7 @@ function addSibling(){
   document.getElementById('phIcon').style.display='block';
   document.getElementById('phTxt').style.display='block';
   document.getElementById('cPhoto').innerHTML='🐾';
-  document.querySelectorAll('#chipsTipoComida .chip,#chipsActividad .chip,#chipsPersonalidad .chip').forEach(function(c){c.classList.remove('sel');});
+  document.querySelectorAll('#chipsActividad .chip').forEach(function(c){c.classList.remove('sel');});
   selectChip('chipsEspecie',document.querySelector('#chipsEspecie .chip'));
   selectChip('chipsSexo',document.querySelector('#chipsSexo .chip'));
   var btn=document.getElementById('btnNext');
