@@ -416,14 +416,11 @@ function renderCumpleaneros(){
   var mesActual=new Date().getMonth();
   document.getElementById('mesActualNombre').textContent=MESES[mesActual];
 
-  console.log('Mes actual:', mesActual, '| Total mascotas:', allPets.length);
   var cumpleMes=allPets.filter(function(p){
     if(!p.fecha||p.angelito)return false;
     var mes=getMesFecha(p.fecha);
-    if(mes===mesActual) console.log('Cumpleañero:', p.nombre, '| fecha:', p.fecha, '| mes:', mes);
     return mes!==null&&mes===mesActual;
   });
-  console.log('Total cumpleañeros:', cumpleMes.length);
 
   if(cumpleMes.length===0)return;
 
@@ -633,8 +630,9 @@ function renderModalFooter(p){
       '<button class="btn-danger btn-secondary" onclick="confirmarEliminarCuenta()">🗑️ Eliminar cuenta</button>'+
       '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
   } else if(sessionEmail){
+    var btnAmigo = getBtnAmigo(p.uid);
     footer.innerHTML=
-      '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\'' + p.uid + '\')">🐾 Agregar amigo</button>'+
+      btnAmigo+
       '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
   } else {
     var esAngelitoSinSesion = p.angelito;
@@ -895,6 +893,31 @@ document.getElementById('loginEmail').addEventListener('keydown',function(e){
 });
 
 // ── Solicitud de amistad (próximamente) ──────────────────────
+function getBtnAmigo(uid){
+  var estado = misAmigosCache.find(function(a){ return a.uid===uid; });
+  if(!estado) return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(''+uid+'')">🐾 Agregar amigo</button>';
+  if(estado.tipo==='amigo') return '<button class="btn-primary" style="background:#aaa;cursor:default">✅ Ya son amigos</button>';
+  if(estado.tipo==='pendiente_enviado') return '<button class="btn-primary" style="background:#aaa;cursor:default">⏳ Solicitud enviada</button>';
+  if(estado.tipo==='pendiente_recibido') return '<button class="btn-primary btn-pink" onclick="aceptarDesdeModal(''+uid+'')">✅ Aceptar solicitud</button>';
+  return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(''+uid+'')">🐾 Agregar amigo</button>';
+}
+
+function aceptarDesdeModal(uid){
+  var sol = misAmigosCache.find(function(a){ return a.uid===uid && a.tipo==='pendiente_recibido'; });
+  if(!sol) return;
+  fetch('/api/galeria?action=responderSolicitud',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:sol.id, estado:'aceptado'})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      sol.tipo='amigo';
+      renderModalFooter(currentModalPet);
+      mostrarToastG('✅ Ahora son amigos!');
+    }
+  });
+}
+
 function enviarSolicitudAmistad(uid){
   if(!sessionEmail){
     openLoginModal();
@@ -922,8 +945,9 @@ function enviarSolicitudAmistad(uid){
   }).then(function(r){ return r.json(); })
   .then(function(d){
     if(d.ok){
+      misAmigosCache.push({uid:uid, tipo:'pendiente_enviado', id:null});
       mostrarToastG('🐾 Solicitud enviada a '+receptor.nombre+'!');
-      closeModal();
+      renderModalFooter(currentModalPet);
     } else {
       mostrarToastG('Error al enviar solicitud');
     }
@@ -936,6 +960,35 @@ function mostrarToastG(msg){
   el.textContent=msg; el.classList.add('show');
   setTimeout(function(){el.classList.remove('show');},2500);
 }
+
+// ── Cache de amigos ──────────────────────────────────────────
+function cargarCacheAmigos(){
+  if(!sessionEmail) return;
+  var miMascota=allPets.find(function(p){
+    return p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();
+  });
+  if(!miMascota) return;
+
+  fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(miMascota.uid))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      misAmigosCache=[];
+      (d.amigos||[]).forEach(function(a){
+        var uidAmigo=a.uid_solicitante===miMascota.uid?a.uid_receptor:a.uid_solicitante;
+        misAmigosCache.push({uid:uidAmigo, tipo:'amigo', id:a.id});
+      });
+      (d.pendientes||[]).forEach(function(a){
+        if(a.uid_solicitante===miMascota.uid){
+          misAmigosCache.push({uid:a.uid_receptor, tipo:'pendiente_enviado', id:a.id});
+        } else {
+          misAmigosCache.push({uid:a.uid_solicitante, tipo:'pendiente_recibido', id:a.id});
+        }
+      });
+    }).catch(function(){});
+}
+
+// Cargar cache al inicio si hay sesión
+if(sessionEmail) setTimeout(cargarCacheAmigos, 2000);
 
 // ── Mensajes ──────────────────────────────────────────────────
 var currentMascotaUID = null;
