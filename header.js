@@ -11,6 +11,13 @@
       '.site-header .header-nav{display:flex;align-items:center;gap:4px;margin:0 auto;padding:0 20px}' +
       '.site-header .nav-link{padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600;color:#555;text-decoration:none;border:1.5px solid transparent;white-space:nowrap;transition:all .2s}' +
       '.site-header .nav-link:hover{background:#f0f0ee;color:#00B4B4}' +
+      '.site-header .nav-dropdown-wrap{position:relative;display:inline-block}' +
+      '.site-header .nav-dropdown-btn{border:none;cursor:pointer;background:none;font-family:Arial,sans-serif}' +
+      '.site-header .nav-dropdown{position:absolute;top:calc(100% + 8px);left:0;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:160px;overflow:hidden;display:none;z-index:500}' +
+      '.site-header .nav-dropdown.open{display:block}' +
+      '.site-header .nav-dropdown-item{display:block;padding:11px 16px;font-size:13px;font-weight:600;color:#333;text-decoration:none;border-bottom:1px solid #f5f5f5}' +
+      '.site-header .nav-dropdown-item:last-child{border-bottom:none}' +
+      '.site-header .nav-dropdown-item:hover{background:#f8f8f8}' +
       '.site-header .nav-link.active{color:#00B4B4;font-weight:700}' +
       '.site-header .header-right{display:flex;align-items:center;gap:8px;flex-shrink:0}' +
       '.site-header .user-badge{background:#e0f7f7;color:#007a7a;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis}' +
@@ -32,9 +39,14 @@
       '<a href="https://www.revistapetmi.com/" target="_blank" class="nav-link">Blog</a>' +
       '<a href="https://www.revistapetmi.com/category/all-products" target="_blank" class="nav-link">Tienda</a>' +
       '<a href="/galeria.html" class="nav-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">PetzID</a>' +
-      '<a href="/eventos.html" class="nav-link' + (currentPath.indexOf('eventos') >= 0 ? ' active' : '') + '">Eventos</a>' +
-      '<a href="/lugares.html" class="nav-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">Lugares</a>' +
-      '<a href="/galeria.html" class="nav-link' + (currentPath.indexOf('amigos') >= 0 ? ' active' : '') + '">Amigos PetMi</a>';
+      '<div class="nav-dropdown-wrap">' +
+        '<button class="nav-link nav-dropdown-btn" onclick="petmiTogglePetFriendly()">Pet Friendly &#x25BE;</button>' +
+        '<div class="nav-dropdown" id="petFriendlyMenu">' +
+          '<a href="/eventos.html" class="nav-dropdown-item">&#x1F389; Eventos</a>' +
+          '<a href="/lugares.html" class="nav-dropdown-item">&#x1F4CD; Lugares</a>' +
+        '</div>' +
+      '</div>' +
+      '<a href="/amigos.html" class="nav-link' + (currentPath.indexOf('amigos') >= 0 ? ' active' : '') + '">Amigos PetMi</a>';
 
     // Lado derecho según sesión
     var rightHTML = sessionEmail
@@ -70,6 +82,11 @@
       }
     });
   }
+
+  window.petmiTogglePetFriendly = function(){
+    var d=document.getElementById('petFriendlyMenu');
+    if(d) d.classList.toggle('open');
+  };
 
   window.petmiToggleMenu = function(){
     var d = document.getElementById('petmiMenuDropdown');
