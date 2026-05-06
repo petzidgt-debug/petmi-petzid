@@ -418,13 +418,8 @@ function renderCumpleaneros(){
 
   var cumpleMes=allPets.filter(function(p){
     if(!p.fecha||p.angelito)return false;
-    var d=new Date(p.fecha);
-    if(isNaN(d.getTime())){
-      // intentar parsear dd/mm/yyyy
-      var partes=String(p.fecha).split('/');
-      if(partes.length===3){d=new Date(partes[2]+'-'+partes[1]+'-'+partes[0]);}
-    }
-    return !isNaN(d.getTime())&&d.getMonth()===mesActual;
+    var mes=getMesFecha(p.fecha);
+    return mes!==null&&mes===mesActual;
   });
 
   if(cumpleMes.length===0)return;
@@ -602,8 +597,8 @@ function openModal(idx){
   var mesActual=new Date().getMonth();
   var esCumple=false;
   if(p.fecha){
-    var df=new Date(p.fecha.indexOf('/')>=0?p.fecha.split('/')[2]+'-'+p.fecha.split('/')[1]+'-'+p.fecha.split('/')[0]:p.fecha);
-    esCumple=!isNaN(df.getTime())&&df.getMonth()===mesActual;
+    var mesFecha=getMesFecha(p.fecha);
+    esCumple=mesFecha!==null&&mesFecha===mesActual;
   }
   var msgSection=document.getElementById('mensajesSection');
   if(msgSection){
@@ -712,8 +707,8 @@ function openModalDirect(p){
   var mesActual=new Date().getMonth();
   var esCumple=false;
   if(p.fecha){
-    var df=new Date(p.fecha.indexOf('/')>=0?p.fecha.split('/')[2]+'-'+p.fecha.split('/')[1]+'-'+p.fecha.split('/')[0]:p.fecha);
-    esCumple=!isNaN(df.getTime())&&df.getMonth()===mesActual;
+    var mesFecha=getMesFecha(p.fecha);
+    esCumple=mesFecha!==null&&mesFecha===mesActual;
   }
   var msgSection=document.getElementById('mensajesSection');
   if(msgSection){
@@ -868,6 +863,19 @@ function mostrarMsgLogin(texto,tipo){
 }
 
 // ── Formato de fecha ─────────────────────────────────────────
+// Parsear mes de fecha sin problema de timezone
+function getMesFecha(val){
+  if(!val||val==='-')return null;
+  var s=String(val).trim();
+  // formato ISO: 2024-02-28
+  var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return parseInt(m[2],10)-1; // 0-based
+  // formato dd/mm/yyyy
+  var m2=s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if(m2)return parseInt(m2[2],10)-1;
+  return null;
+}
+
 function formatFecha(val){
   if(!val||val==='-')return'-';
   var d;
@@ -885,7 +893,45 @@ document.getElementById('loginEmail').addEventListener('keydown',function(e){
 
 // ── Solicitud de amistad (próximamente) ──────────────────────
 function enviarSolicitudAmistad(uid){
-  alert('🐾 Función de amigos próximamente disponible!');
+  if(!sessionEmail){
+    openLoginModal();
+    return;
+  }
+  var mia = allPets.find(function(p){
+    return p.email && p.email.trim().toLowerCase() === sessionEmail.trim().toLowerCase();
+  });
+  if(!mia){
+    mostrarToastG('Primero registra tu mascota para agregar amigos');
+    return;
+  }
+  var receptor = allPets.find(function(p){ return p.uid === uid; });
+  if(!receptor) return;
+
+  fetch('/api/galeria?action=enviarSolicitud', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      uid_solicitante:   mia.uid,
+      uid_receptor:      receptor.uid,
+      email_solicitante: sessionEmail,
+      email_receptor:    receptor.email
+    })
+  }).then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.ok){
+      mostrarToastG('🐾 Solicitud enviada a '+receptor.nombre+'!');
+      closeModal();
+    } else {
+      mostrarToastG('Error al enviar solicitud');
+    }
+  }).catch(function(){ mostrarToastG('Error de conexión'); });
+}
+
+function mostrarToastG(msg){
+  var el=document.getElementById('toast');
+  if(!el){ el=document.createElement('div'); el.id='toast'; el.className='toast'; document.body.appendChild(el); }
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2500);
 }
 
 // ── Mensajes ──────────────────────────────────────────────────
