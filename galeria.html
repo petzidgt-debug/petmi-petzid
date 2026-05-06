@@ -619,38 +619,35 @@ function renderModalFooter(p){
   var footer=document.getElementById('modalFooter');
   var esMia=sessionEmail&&p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();
 
-  // Si no es mi mascota, consultar estado real desde Supabase
+  // Si no es mi mascota, consultar estado directo en Supabase
   if(!esMia&&sessionEmail){
-    var _miUid=null;
     footer.innerHTML='<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
-    // Buscar mi mascota via checkEmail
-    fetch('/api/galeria?action=checkEmail',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'checkEmail',email:sessionEmail})
+    var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
+    var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+    // Buscar en tabla amigos si existe relación con esta mascota
+    var uidReceptor=p.uid;
+    fetch(SUPA_URL+'/rest/v1/amigos?or=(and(uid_solicitante.eq.'+encodeURIComponent(uidReceptor)+',email_receptor.eq.'+encodeURIComponent(sessionEmail)+'),and(uid_receptor.eq.'+encodeURIComponent(uidReceptor)+',email_solicitante.eq.'+encodeURIComponent(sessionEmail)+'))&select=*',{
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
     }).then(function(r){return r.json();})
-    .then(function(d){
-      if(!d.found||!d.mascotas.length) return;
-      _miUid=d.mascotas[0].uid;
-      // Consultar amigos directo
-      return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(_miUid));
-    }).then(function(r){return r&&r.json();})
-    .then(function(da){
-      if(!da||!currentModalPet||currentModalPet.uid!==p.uid) return;
-      // Actualizar cache usando miUid correcto de la respuesta
-      misAmigosCache=[];
-      (da.amigos||[]).forEach(function(a){
-        // El amigo es el otro, no yo
-        var uidAmigo=a.uid_solicitante===_miUid?a.uid_receptor:a.uid_solicitante;
-        misAmigosCache.push({uid:uidAmigo,tipo:'amigo',id:a.id});
-      });
-      (da.pendientes||[]).forEach(function(a){
-        var uidOtro=a.uid_solicitante===_miUid?a.uid_receptor:a.uid_solicitante;
-        var tipo=a.uid_solicitante===_miUid?'pendiente_enviado':'pendiente_recibido';
-        misAmigosCache.push({uid:uidOtro,tipo:tipo,id:a.id});
-      });
-      var btnAmigo=getBtnAmigo(p.uid);
-      footer.innerHTML=btnAmigo+'<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
-    }).catch(function(){});
+    .then(function(rows){
+      if(!currentModalPet||currentModalPet.uid!==p.uid) return;
+      var btn;
+      if(!rows||!rows.length){
+        btn='<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\''+p.uid+'\')">🐾 Agregar amigo</button>';
+      } else {
+        var rel=rows[0];
+        if(rel.estado==='aceptado'){
+          btn='<button class="btn-primary" style="background:#e0f7f7;color:#007a7a;cursor:default">🐾 Amigos</button>';
+        } else if(rel.email_solicitante.toLowerCase()===sessionEmail.toLowerCase()){
+          btn='<button class="btn-primary" style="background:#f0f0ee;color:#888;cursor:default">Solicitud enviada</button>';
+        } else {
+          btn='<button class="btn-primary btn-pink" onclick="aceptarDesdeModal(\''+rel.id+'\')">Aceptar solicitud</button>';
+        }
+      }
+      footer.innerHTML=btn+'<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+    }).catch(function(){
+      footer.innerHTML='<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\''+p.uid+'\')">🐾 Agregar amigo</button><button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+    });
     return;
   }
 
