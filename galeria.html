@@ -416,11 +416,14 @@ function renderCumpleaneros(){
   var mesActual=new Date().getMonth();
   document.getElementById('mesActualNombre').textContent=MESES[mesActual];
 
+  console.log('Mes actual:', mesActual, '| Total mascotas:', allPets.length);
   var cumpleMes=allPets.filter(function(p){
     if(!p.fecha||p.angelito)return false;
     var mes=getMesFecha(p.fecha);
+    if(mes===mesActual) console.log('Cumpleañero:', p.nombre, '| fecha:', p.fecha, '| mes:', mes);
     return mes!==null&&mes===mesActual;
   });
+  console.log('Total cumpleañeros:', cumpleMes.length);
 
   if(cumpleMes.length===0)return;
 
