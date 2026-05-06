@@ -37,9 +37,9 @@
     // Lado derecho según sesión
     var rightHTML = sessionEmail
       ? '<span class="user-badge">&#x1F43E; ' + (sessionDueno || sessionEmail) + '</span>' +
+        '<a href="/amigos.html" id="petmiNotifBadge" style="display:none;background:#E05090;color:#fff;font-size:11px;font-weight:700;padding:6px 10px;border-radius:20px;text-decoration:none;white-space:nowrap">1 solicitud</a>' +
         '<div class="header-menu">' +
           '<button class="menu-btn" onclick="petmiToggleMenu()">Mi cuenta &#x25BE;</button>' +
-        '<a href="/amigos.html" id="petmiNotifBadge" style="display:none;background:#E05090;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-left:4px;text-decoration:none">0 solicitudes</a>' +
           '<div class="menu-dropdown" id="petmiMenuDropdown">' +
             '<a href="/familia.html" class="menu-item">&#x1F3E0; Mi familia</a>' +
             '<a href="/index.html?agregar=1" class="menu-item">&#x2795; Agregar mascota</a>' +
@@ -104,10 +104,10 @@
     }).then(function(r){return r&&r.json();})
     .then(function(d){
       if(!d) return;
-      // Contar solicitudes pendientes recibidas
-      var miEmail = sessionEmail.toLowerCase();
+      // Contar solicitudes pendientes recibidas (donde soy el receptor)
+      var miUid = uid;
       var pendientes = (d.pendientes||[]).filter(function(a){
-        return a.email_receptor && a.email_receptor.toLowerCase()===miEmail;
+        return a.uid_receptor === miUid;
       });
       var badge = document.getElementById('petmiNotifBadge');
       if(badge && pendientes.length > 0){
