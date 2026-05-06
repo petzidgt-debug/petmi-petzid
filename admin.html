@@ -87,6 +87,9 @@ tbody tr:last-child td{border-bottom:none}
 .btn-cancel{padding:10px 24px;background:#f0f0ee;color:#666;border:none;border-radius:8px;font-size:14px;cursor:pointer}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
 .loading{text-align:center;padding:60px;color:#888}
+.foto-drop{border:2px dashed #ddd;border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:border .2s;margin:12px 0}
+.foto-drop:hover{border-color:#00B4B4}
+.foto-preview{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px;display:none}
 .spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .screen{display:none}
@@ -353,7 +356,7 @@ function renderTable(){
     var estB=est==='Si'?'<span class="badge badge-si">Enviado</span>':est.indexOf('migraci')>=0?'<span class="badge badge-pending">Migracion</span>':'<span class="badge badge-no">Pendiente</span>';
     var fecha=r[0]?new Date(r[0]).toLocaleDateString('es-GT'):'-';
     var foto=r[5]&&String(r[5]).indexOf('http')>=0?'<img src="'+r[5]+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.style.display=\'none\'">':'<div style="width:40px;height:40px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px">🐾</div>';
-    return '<tr><td>'+foto+'</td><td><strong>'+String(r[2]||'-')+'</strong><br><span style="font-size:11px;color:#888">'+String(r[3]||'')+'</span></td><td>'+esp+'</td><td style="font-size:12px">'+String(r[9]||'-')+'</td><td style="font-size:12px">'+String(r[10]||'-')+'</td><td style="font-size:11px;color:#534AB7">'+String(r[11]||'-')+'</td><td style="font-size:12px">'+String(r[16]||'-')+'</td><td style="font-size:11px;color:#888">'+fecha+'</td><td>'+estB+'</td><td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button></td></tr>';
+    return '<tr><td>'+foto+'</td><td><strong>'+String(r[2]||'-')+'</strong><br><span style="font-size:11px;color:#888">'+String(r[3]||'')+'</span></td><td>'+esp+'</td><td style="font-size:12px">'+String(r[9]||'-')+'</td><td style="font-size:12px">'+String(r[10]||'-')+'</td><td style="font-size:11px;color:#534AB7">'+String(r[11]||'-')+'</td><td style="font-size:12px">'+String(r[16]||'-')+'</td><td style="font-size:11px;color:#888">'+fecha+'</td><td>'+estB+'</td><td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
   }).join('');
   document.getElementById('tableBody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
 }
@@ -446,6 +449,114 @@ function renderCampanas(){
   document.getElementById('campanaBody').innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:#888">Sin campanas</td></tr>';
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ── Subir foto admin ─────────────────────────────────────────
+var adminFotoBase64 = null;
+var adminFotoUID    = null;
+var CLOUD_NAME      = 'dh5wgqgmk';
+var UPLOAD_PRESET   = 'petzid';
+
+function abrirSubirFoto(idx){
+  var r = filtered[idx];
+  if(!r) return;
+  adminFotoUID = String(r[1]||'').trim();
+  adminFotoBase64 = null;
+  document.getElementById('fotoMascotaInfo').textContent = String(r[2]||'') + ' — ' + String(r[11]||'');
+  document.getElementById('fotoPreviewImg').style.display = 'none';
+  document.getElementById('btnSubirFoto').disabled = true;
+  document.getElementById('modalFoto').classList.add('open');
+}
+
+function onAdminFotoChange(e){
+  var file = e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var dataUrl = ev.target.result;
+    var preview = document.getElementById('fotoPreviewImg');
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+    // Comprimir
+    var canvas = document.createElement('canvas');
+    var img    = new Image();
+    img.onload = function(){
+      var MAX=800, w=img.width, h=img.height;
+      if(w>MAX){h=h*(MAX/w);w=MAX;}
+      if(h>MAX){w=w*(MAX/h);h=MAX;}
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      adminFotoBase64 = canvas.toDataURL('image/jpeg',0.85).split(',')[1];
+      document.getElementById('btnSubirFoto').disabled = false;
+    };
+    img.src = dataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function subirFotoAdmin(){
+  if(!adminFotoBase64 || !adminFotoUID){ alert('Selecciona una foto'); return; }
+  var btn = document.getElementById('btnSubirFoto');
+  btn.disabled = true; btn.textContent = 'Subiendo...';
+
+  // Subir a Cloudinary
+  var fd = new FormData();
+  fd.append('file', 'data:image/jpeg;base64,' + adminFotoBase64);
+  fd.append('upload_preset', UPLOAD_PRESET);
+  fd.append('folder', 'petzid');
+
+  try {
+    var res  = await fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {method:'POST', body:fd});
+    var data = await res.json();
+    var url  = data.secure_url;
+    if(!url) throw new Error('Sin URL');
+
+    // Guardar URL en Apps Script + Supabase
+    var resp = await fetch('/api/admin?action=updateRow', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'updateRow', uid:adminFotoUID, data:{foto:url}})
+    });
+    var result = await resp.json();
+    if(result.ok){
+      alert('✅ Foto subida y guardada!');
+      document.getElementById('modalFoto').classList.remove('open');
+      // Actualizar en allData
+      allData.forEach(function(r){ if(String(r[1]).trim()===adminFotoUID) r[27]=url; });
+      filtered = allData.slice();
+      renderTable();
+    } else {
+      alert('Error al guardar la URL');
+    }
+  } catch(err) {
+    alert('Error: ' + err.message);
+  }
+  btn.disabled = false; btn.textContent = 'Subir foto';
+}
+
+// ── Eliminar mascota admin ────────────────────────────────────
+function eliminarMascota(idx){
+  var r = filtered[idx];
+  if(!r) return;
+  var nombre = String(r[2]||'');
+  var uid    = String(r[1]||'').trim();
+  if(!confirm('¿Eliminar a ' + nombre + '? Esta acción no se puede deshacer.')) return;
+
+  fetch('/api/admin?action=updateRow', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action:'deleteMascota', uid:uid})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      allData = allData.filter(function(r){ return String(r[1]).trim()!==uid; });
+      filtered = filtered.filter(function(r){ return String(r[1]).trim()!==uid; });
+      renderTable();
+      alert('✅ Mascota eliminada');
+    } else {
+      alert('Error al eliminar');
+    }
+  }).catch(function(){ alert('Error de conexión'); });
+}
 </script>
 </body>
 </html>
