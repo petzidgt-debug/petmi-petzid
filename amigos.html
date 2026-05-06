@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Amigos PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+
+.wrap{max-width:600px;margin:0 auto;padding:20px 16px 40px}
+
+/* HERO */
+.amigos-hero{background:linear-gradient(135deg,#00B4B4,#007a7a);border-radius:16px;padding:24px;margin-bottom:20px;text-align:center;color:#fff}
+.amigos-hero h1{font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;margin-bottom:6px}
+.amigos-hero p{font-size:13px;color:rgba(255,255,255,.75)}
+.amigos-stats{display:flex;justify-content:center;gap:32px;margin-top:16px}
+.astat{text-align:center}
+.astat-num{font-size:24px;font-weight:900}
+.astat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.7)}
+
+/* SECCIONES */
+.seccion{background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.sec-titulo{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#00B4B4;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.sec-titulo .badge{background:#E05090;color:#fff;font-size:10px;padding:2px 8px;border-radius:20px}
+
+/* CARDS DE MASCOTAS */
+.mascotas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.mascota-mini{background:#f8f8f8;border-radius:12px;overflow:hidden;text-align:center;cursor:pointer;transition:transform .15s;border:1.5px solid #eee}
+.mascota-mini:hover{transform:translateY(-2px)}
+.mascota-mini-foto{width:100%;aspect-ratio:1;object-fit:cover;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:32px}
+.mascota-mini-foto img{width:100%;aspect-ratio:1;object-fit:cover}
+.mascota-mini-info{padding:8px}
+.mascota-mini-nombre{font-size:13px;font-weight:700;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mascota-mini-especie{font-size:11px;color:#aaa}
+
+/* SOLICITUDES */
+.solicitud-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f5f5f5}
+.solicitud-item:last-child{border-bottom:none}
+.sol-foto{width:48px;height:48px;border-radius:10px;overflow:hidden;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.sol-foto img{width:100%;height:100%;object-fit:cover}
+.sol-info{flex:1;min-width:0}
+.sol-nombre{font-size:14px;font-weight:700;color:#222}
+.sol-sub{font-size:12px;color:#aaa}
+.sol-btns{display:flex;gap:6px}
+.btn-aceptar{padding:7px 12px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-rechazar{padding:7px 12px;background:#f0f0ee;color:#888;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer}
+
+/* NO SESIÓN */
+.no-session{text-align:center;padding:40px 20px}
+.no-session-icon{font-size:48px;margin-bottom:16px}
+.btn-ingresar{padding:13px 28px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:28px;color:#bbb}
+.empty-icon{font-size:36px;margin-bottom:8px}
+.empty-txt{font-size:13px}
+
+/* LOADING */
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:20px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* LOGIN MODAL */
+.login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.login-overlay.open{display:flex}
+.login-modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px}
+.login-title{font-size:20px;font-weight:900;color:#222;margin-bottom:6px}
+.login-sub{font-size:13px;color:#888;margin-bottom:20px}
+.login-input{width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;outline:none;margin-bottom:12px}
+.login-input:focus{border-color:#00B4B4}
+.btn-login-ok{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.btn-login-ok:disabled{background:#aaa}
+.btn-login-cancel{width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer}
+.login-msg{font-size:13px;text-align:center;padding:8px;border-radius:8px;margin-bottom:10px;display:none}
+.login-msg.error{background:#fbeaf0;color:#993556}
+.login-msg.success{background:#e0f7f7;color:#007a7a}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="mainWrap">
+  <div style="text-align:center;padding:60px 0"><div class="spinner"></div></div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-modal">
+    <button onclick="closeLogin()" style="float:right;background:none;border:none;font-size:18px;cursor:pointer;margin-top:-8px">×</button>
+    <div class="login-title">Ingresa a tu cuenta</div>
+    <div class="login-sub">Escribe tu correo para ver tus amigos</div>
+    <div class="login-msg" id="loginMsg"></div>
+    <input type="email" class="login-input" id="loginEmail" placeholder="tu@correo.com" inputmode="email">
+    <button class="btn-login-ok" id="btnLoginOk" onclick="verificarEmail()">Ingresar</button>
+    <button class="btn-login-cancel" onclick="closeLogin()">Cancelar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var sessionEmail = localStorage.getItem('petzid_email') || '';
+var sessionDueno = localStorage.getItem('petzid_dueno') || '';
+var misMascotas  = [];
+var datosAmigos  = null;
+
+// Init
+if(sessionEmail){
+  cargarTodo();
+} else {
+  renderNoSession();
+}
+
+function renderNoSession(){
+  document.getElementById('mainWrap').innerHTML =
+    '<div class="no-session">' +
+    '<div class="no-session-icon">🐾</div>' +
+    '<div style="font-size:20px;font-weight:900;color:#222;margin-bottom:8px">Amigos PetMi</div>' +
+    '<div style="font-size:14px;color:#888;margin-bottom:24px">Ingresa para ver y agregar amigos de tu mascota</div>' +
+    '<button class="btn-ingresar" onclick="openLogin()">Ingresar</button>' +
+    '<div style="margin-top:16px"><a href="/galeria.html" style="font-size:13px;color:#00B4B4;font-weight:600">← Ver galería</a></div>' +
+    '</div>';
+}
+
+function cargarTodo(){
+  // 1. Cargar mis mascotas
+  fetch('/api/galeria?action=checkEmail', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'checkEmail', email:sessionEmail})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.found || !d.mascotas.length){
+      renderNoSession();
+      return;
+    }
+    misMascotas = d.mascotas;
+    // 2. Cargar amigos de la primera mascota
+    return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(misMascotas[0].uid));
+  }).then(function(r){return r&&r.json();})
+  .then(function(d){
+    if(!d) return;
+    datosAmigos = d;
+    renderPagina();
+  }).catch(function(){
+    document.getElementById('mainWrap').innerHTML =
+      '<div style="text-align:center;padding:60px;color:#888">Error al cargar. <a href="/galeria.html" style="color:#00B4B4">Volver</a></div>';
+  });
+}
+
+function renderPagina(){
+  var totalAmigos    = (datosAmigos.amigos||[]).length;
+  var totalPendientes = (datosAmigos.pendientes||[]).filter(function(a){ return a.uid_receptor===misMascotas[0].uid; }).length;
+  var mascotasPrincipal = misMascotas[0];
+
+  var html = '';
+
+  // Hero
+  html += '<div class="amigos-hero">';
+  html += '<h1>🐾 Amigos PetMi</h1>';
+  html += '<p>La red social de mascotas de la comunidad</p>';
+  html += '<div class="amigos-stats">';
+  html += '<div class="astat"><div class="astat-num">'+totalAmigos+'</div><div class="astat-lbl">Amigos</div></div>';
+  html += '<div class="astat"><div class="astat-num">'+totalPendientes+'</div><div class="astat-lbl">Solicitudes</div></div>';
+  html += '<div class="astat"><div class="astat-num">'+misMascotas.length+'</div><div class="astat-lbl">Mis mascotas</div></div>';
+  html += '</div></div>';
+
+  // Solicitudes pendientes recibidas
+  var pendientesRecibidas = (datosAmigos.pendientes||[]).filter(function(a){ return a.uid_receptor===mascotasPrincipal.uid; });
+  if(pendientesRecibidas.length > 0){
+    html += '<div class="seccion">';
+    html += '<div class="sec-titulo">Solicitudes pendientes <span class="badge">'+pendientesRecibidas.length+'</span></div>';
+    pendientesRecibidas.forEach(function(sol){
+      // Buscar la mascota solicitante en mascotasAmigos
+      var mascSol = (datosAmigos.mascotasAmigos||[]).find(function(m){ return m.uid===sol.uid_solicitante; });
+      var esGato  = mascSol && mascSol.especie && mascSol.especie.toLowerCase().indexOf('gato')>=0;
+      var fotoHTML = mascSol && mascSol.foto && mascSol.foto.indexOf('http')>=0
+        ? '<img src="'+mascSol.foto+'">'
+        : (esGato?'🐱':'🐶');
+      html += '<div class="solicitud-item">';
+      html += '<div class="sol-foto">'+fotoHTML+'</div>';
+      html += '<div class="sol-info">';
+      html += '<div class="sol-nombre">'+(mascSol?mascSol.nombre:sol.uid_solicitante)+'</div>';
+      html += '<div class="sol-sub">Quiere ser amigo</div>';
+      html += '</div>';
+      html += '<div class="sol-btns">';
+      html += '<button class="btn-aceptar" onclick="responderSolicitud(\''+sol.id+'\',\'aceptado\')">✓</button>';
+      html += '<button class="btn-rechazar" onclick="responderSolicitud(\''+sol.id+'\',\'rechazado\')">✗</button>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  // Mis amigos
+  html += '<div class="seccion">';
+  html += '<div class="sec-titulo">Mis amigos</div>';
+  if(!datosAmigos.mascotasAmigos || !datosAmigos.mascotasAmigos.length){
+    html += '<div class="empty-state"><div class="empty-icon">🐾</div><div class="empty-txt">Aún no tienes amigos.<br>Explora la galería y agrega mascotas.</div></div>';
+  } else {
+    html += '<div class="mascotas-grid">';
+    datosAmigos.mascotasAmigos.forEach(function(m){
+      var esGato = m.especie && m.especie.toLowerCase().indexOf('gato')>=0;
+      var emoji  = esGato ? '🐱' : '🐶';
+      var fotoHTML = m.foto && m.foto.indexOf('http')>=0
+        ? '<img src="'+m.foto+'">'
+        : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:32px;background:#e0f7f7">'+emoji+'</div>';
+      html += '<div class="mascota-mini" onclick="window.location.href=\'/perfil.html?uid='+m.uid+'\'">';
+      html += '<div class="mascota-mini-foto">'+fotoHTML+'</div>';
+      html += '<div class="mascota-mini-info">';
+      html += '<div class="mascota-mini-nombre">'+m.nombre+'</div>';
+      html += '<div class="mascota-mini-especie">'+(m.especie||'')+'</div>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Botón ir a galería
+  html += '<div style="text-align:center;margin-top:8px">';
+  html += '<a href="/galeria.html" style="display:inline-block;padding:13px 28px;background:#00B4B4;color:#fff;border-radius:24px;font-size:14px;font-weight:700;text-decoration:none">🌟 Explorar galería y agregar amigos</a>';
+  html += '</div>';
+
+  document.getElementById('mainWrap').innerHTML = html;
+}
+
+function responderSolicitud(id, estado){
+  fetch('/api/galeria?action=responderSolicitud',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:id, estado:estado})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      mostrarToast(estado==='aceptado'?'✅ Solicitud aceptada':'Solicitud rechazada');
+      setTimeout(function(){cargarTodo();},1000);
+    }
+  }).catch(function(){mostrarToast('Error al responder');});
+}
+
+function mostrarToast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2500);
+}
+
+// ── Login ────────────────────────────────────────────────────
+function openLogin(){ document.getElementById('loginOverlay').classList.add('open'); }
+function closeLogin(){ document.getElementById('loginOverlay').classList.remove('open'); }
+
+function verificarEmail(){
+  var email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  if(!email||email.indexOf('@')<0){mostrarMsg('Ingresa un correo válido','error');return;}
+  var btn=document.getElementById('btnLoginOk');
+  btn.disabled=true;btn.textContent='Verificando...';
+
+  fetch('/api/galeria?action=checkEmail',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'checkEmail',email:email})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.found&&d.mascotas&&d.mascotas.length>0){
+      sessionEmail=email;
+      sessionDueno=d.mascotas[0].dueno||'';
+      localStorage.setItem('petzid_email',sessionEmail);
+      localStorage.setItem('petzid_dueno',sessionDueno);
+      mostrarMsg('Bienvenido/a!','success');
+      setTimeout(function(){closeLogin();cargarTodo();},1000);
+    } else {
+      mostrarMsg('No encontramos ese correo','error');
+      btn.disabled=false;btn.textContent='Ingresar';
+    }
+  }).catch(function(){
+    mostrarMsg('Error de conexión','error');
+    btn.disabled=false;btn.textContent='Ingresar';
+  });
+}
+
+function mostrarMsg(txt,tipo){
+  var el=document.getElementById('loginMsg');
+  el.textContent=txt;el.className='login-msg '+tipo;el.style.display='block';
+}
+
+document.getElementById('loginEmail').addEventListener('keydown',function(e){
+  if(e.key==='Enter')verificarEmail();
+});
+</script>
+
+<script src="/header.js"></script>
+</body>
+</html>
