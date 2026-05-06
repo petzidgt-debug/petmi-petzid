@@ -148,6 +148,81 @@ export default async function handler(req, res) {
       return res.status(200).json({ mensajes });
     }
 
+    // ── enviarSolicitud ──────────────────────────────────────
+    if (action === 'enviarSolicitud' && req.method === 'POST') {
+      const { uid_solicitante, uid_receptor, email_solicitante, email_receptor } = req.body;
+      const response = await fetch(
+        SUPABASE_URL + '/rest/v1/amigos?on_conflict=uid_solicitante,uid_receptor',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'apikey':        SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Prefer':        'resolution=merge-duplicates,return=minimal'
+          },
+          body: JSON.stringify({ uid_solicitante, uid_receptor, email_solicitante, email_receptor, estado: 'pendiente' })
+        }
+      );
+      return res.status(200).json({ ok: response.ok });
+    }
+
+    // ── responderSolicitud ────────────────────────────────────
+    if (action === 'responderSolicitud' && req.method === 'POST') {
+      const { id, estado } = req.body; // estado: aceptado | rechazado
+      const response = await fetch(
+        SUPABASE_URL + '/rest/v1/amigos?id=eq.' + encodeURIComponent(id),
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type':  'application/json',
+            'apikey':        SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Prefer':        'return=minimal'
+          },
+          body: JSON.stringify({ estado, updated_at: new Date().toISOString() })
+        }
+      );
+      return res.status(200).json({ ok: response.ok });
+    }
+
+    // ── getAmigos ─────────────────────────────────────────────
+    // Devuelve amigos aceptados y solicitudes pendientes de un uid
+    if (action === 'getAmigos') {
+      const uid = req.query.uid || '';
+      if (!uid) return res.status(200).json({ amigos: [], pendientes: [] });
+
+      // Buscar donde es solicitante O receptor
+      const [r1, r2] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(uid) + '&select=*', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        }),
+        fetch(SUPABASE_URL + '/rest/v1/amigos?uid_receptor=eq.' + encodeURIComponent(uid) + '&select=*', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        })
+      ]);
+
+      const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
+      const todas = [...(d1||[]), ...(d2||[])];
+
+      const amigos    = todas.filter(a => a.estado === 'aceptado');
+      const pendientes = todas.filter(a => a.estado === 'pendiente');
+
+      // Obtener UIDs de amigos para cargar sus mascotas
+      const uidsAmigos = amigos.map(a => a.uid_solicitante === uid ? a.uid_receptor : a.uid_solicitante);
+
+      let mascotasAmigos = [];
+      if (uidsAmigos.length > 0) {
+        const r3 = await fetch(
+          SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uidsAmigos.map(u => '"'+u+'"').join(',') + ')&select=uid,nombre,apodo,especie,foto,angelito',
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+        );
+        mascotasAmigos = await r3.json();
+      }
+
+      return res.status(200).json({ amigos, pendientes, mascotasAmigos });
+    }
+
     return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
