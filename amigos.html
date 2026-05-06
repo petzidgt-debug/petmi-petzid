@@ -142,12 +142,20 @@ function cargarTodo(){
       return;
     }
     misMascotas = d.mascotas;
-    // 2. Cargar amigos de la primera mascota
-    return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(misMascotas[0].uid));
-  }).then(function(r){return r&&r.json();})
-  .then(function(d){
-    if(!d) return;
-    datosAmigos = d;
+    // 2. Cargar amigos + todas las mascotas para mostrar nombres
+    var uidPrincipal = misMascotas[0].uid;
+    return Promise.all([
+      fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(uidPrincipal)).then(function(r){return r.json();}),
+      fetch('/api/galeria?action=getBasic').then(function(r){return r.json();})
+    ]);
+  }).then(function(resultados){
+    if(!resultados) return;
+    datosAmigos = resultados[0];
+    // Mapear mascotas básicas para mostrar nombres y fotos
+    var basicRows = (resultados[1]&&resultados[1].rows)||[];
+    datosAmigos.todasMascotas = basicRows.map(function(r){
+      return {uid:r[0],nombre:r[1],apodo:r[2],especie:r[3],foto:r[9]};
+    });
     renderPagina();
   }).catch(function(){
     document.getElementById('mainWrap').innerHTML =
@@ -178,17 +186,17 @@ function renderPagina(){
     html += '<div class="seccion">';
     html += '<div class="sec-titulo">Solicitudes pendientes <span class="badge">'+pendientesRecibidas.length+'</span></div>';
     pendientesRecibidas.forEach(function(sol){
-      // Buscar la mascota solicitante en mascotasAmigos
-      var mascSol = (datosAmigos.mascotasAmigos||[]).find(function(m){ return m.uid===sol.uid_solicitante; });
+      // Buscar en allMascotas (cargadas al inicio)
+      var mascSol = (datosAmigos.todasMascotas||[]).find(function(m){ return m.uid===sol.uid_solicitante; });
       var esGato  = mascSol && mascSol.especie && mascSol.especie.toLowerCase().indexOf('gato')>=0;
       var fotoHTML = mascSol && mascSol.foto && mascSol.foto.indexOf('http')>=0
         ? '<img src="'+mascSol.foto+'">'
-        : (esGato?'🐱':'🐶');
+        : '<span style="font-size:24px">'+(esGato?'🐱':'🐶')+'</span>';
       html += '<div class="solicitud-item">';
       html += '<div class="sol-foto">'+fotoHTML+'</div>';
       html += '<div class="sol-info">';
-      html += '<div class="sol-nombre">'+(mascSol?mascSol.nombre:sol.uid_solicitante)+'</div>';
-      html += '<div class="sol-sub">Quiere ser amigo</div>';
+      html += '<div class="sol-nombre">'+(mascSol?mascSol.nombre:'Mascota')+'</div>';
+      html += '<div class="sol-sub">'+(mascSol?mascSol.especie:'')+'</div>';
       html += '</div>';
       html += '<div class="sol-btns">';
       html += '<button class="btn-aceptar" onclick="responderSolicitud(\''+sol.id+'\',\'aceptado\')">✓</button>';
