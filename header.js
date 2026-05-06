@@ -32,7 +32,7 @@
       '<a href="https://www.revistapetmi.com/" target="_blank" class="nav-link">Blog</a>' +
       '<a href="https://www.revistapetmi.com/category/all-products" target="_blank" class="nav-link">Tienda</a>' +
       '<a href="/galeria.html" class="nav-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">PetzID</a>' +
-      '<a href="/amigos.html" class="nav-link' + (currentPath.indexOf('amigos') >= 0 ? ' active' : '') + '">Amigos PetMi</a>';
+      '<a href="/galeria.html" class="nav-link' + (currentPath.indexOf('amigos') >= 0 ? ' active' : '') + '">Amigos PetMi</a>';
 
     // Lado derecho según sesión
     var rightHTML = sessionEmail
@@ -42,7 +42,7 @@
           '<div class="menu-dropdown" id="petmiMenuDropdown">' +
             '<a href="/familia.html" class="menu-item">&#x1F3E0; Mi familia</a>' +
             '<a href="/index.html?agregar=1" class="menu-item">&#x2795; Agregar mascota</a>' +
-            '<a href="/amigos.html" class="menu-item">&#x1F43E; Amigos PetMi</a>' +
+            '<a href="/galeria.html" class="menu-item">&#x1F43E; Amigos PetMi</a>' +
             '<button class="menu-item danger" onclick="petmiCerrarSesion()">&#x1F6AA; Cerrar sesi&oacute;n</button>' +
           '</div>' +
         '</div>'
