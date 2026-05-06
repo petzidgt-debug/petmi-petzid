@@ -38,7 +38,7 @@
     var rightHTML = sessionEmail
       ? '<span class="user-badge">&#x1F43E; ' + (sessionDueno || sessionEmail) + '</span>' +
         '<div class="header-menu">' +
-          '<button class="menu-btn" onclick="petmiToggleMenu()">Mi cuenta &#x25BE;</button>' +
+          '<button class="menu-btn" onclick="petmiToggleMenu()">Mi cuenta &#x25BE; <span id="petmiNotifBadge" style="display:none;background:#E05090;color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px">0</span></button>' +
           '<div class="menu-dropdown" id="petmiMenuDropdown">' +
             '<a href="/familia.html" class="menu-item">&#x1F3E0; Mi familia</a>' +
             '<a href="/index.html?agregar=1" class="menu-item">&#x2795; Agregar mascota</a>' +
@@ -79,8 +79,45 @@
   };
 
   if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', initHeader);
+    document.addEventListener('DOMContentLoaded', function(){
+      initHeader();
+      cargarNotifHeader();
+    });
   } else {
     initHeader();
+    cargarNotifHeader();
   }
+
+  function cargarNotifHeader(){
+    if(!sessionEmail) return;
+    // Cargar solicitudes pendientes recibidas
+    fetch('/api/galeria?action=checkEmail', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'checkEmail', email:sessionEmail})
+    }).then(function(r){return r.json();})
+    .then(function(d){
+      if(!d.found||!d.mascotas.length) return;
+      var uid = d.mascotas[0].uid;
+      return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(uid));
+    }).then(function(r){return r&&r.json();})
+    .then(function(d){
+      if(!d) return;
+      // Contar solicitudes pendientes recibidas
+      var miEmail = sessionEmail.toLowerCase();
+      var pendientes = (d.pendientes||[]).filter(function(a){
+        return a.email_receptor && a.email_receptor.toLowerCase()===miEmail;
+      });
+      var badge = document.getElementById('petmiNotifBadge');
+      if(badge && pendientes.length > 0){
+        badge.textContent = pendientes.length;
+        badge.style.display = 'inline-block';
+      }
+    }).catch(function(){});
+  }
+
+  window.petmiLimpiarNotif = function(){
+    var badge = document.getElementById('petmiNotifBadge');
+    if(badge) badge.style.display = 'none';
+  };
 })();
