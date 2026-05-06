@@ -619,13 +619,41 @@ function renderModalFooter(p){
   var footer=document.getElementById('modalFooter');
   var esMia=sessionEmail&&p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();
 
-  // Si no es mi mascota, refrescar cache antes de mostrar botón
+  // Si no es mi mascota, consultar estado real desde Supabase
   if(!esMia&&sessionEmail){
-    cargarCacheAmigos().then(function(){
+    footer.innerHTML='<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+    // Buscar mi mascota via checkEmail
+    fetch('/api/galeria?action=checkEmail',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'checkEmail',email:sessionEmail})
+    }).then(function(r){return r.json();})
+    .then(function(d){
+      if(!d.found||!d.mascotas.length) return;
+      var miUid=d.mascotas[0].uid;
+      // Consultar amigos directo
+      return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(miUid));
+    }).then(function(r){return r&&r.json();})
+    .then(function(da){
+      if(!da||!currentModalPet||currentModalPet.uid!==p.uid) return;
+      var miUid=da.amigos&&da.amigos[0]?
+        (da.amigos[0].uid_solicitante===p.uid?da.amigos[0].uid_receptor:da.amigos[0].uid_solicitante)
+        :null;
+      // Actualizar cache
+      misAmigosCache=[];
+      (da.amigos||[]).forEach(function(a){
+        var uidA=a.uid_solicitante===p.uid?a.uid_receptor:a.uid_solicitante;
+        misAmigosCache.push({uid:uidA,tipo:'amigo',id:a.id});
+      });
+      (da.pendientes||[]).forEach(function(a){
+        if(a.email_solicitante&&a.email_solicitante.toLowerCase()===sessionEmail.toLowerCase()){
+          misAmigosCache.push({uid:a.uid_receptor,tipo:'pendiente_enviado',id:a.id});
+        } else {
+          misAmigosCache.push({uid:a.uid_solicitante,tipo:'pendiente_recibido',id:a.id});
+        }
+      });
       var btnAmigo=getBtnAmigo(p.uid);
       footer.innerHTML=btnAmigo+'<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
-    });
-    footer.innerHTML='<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+    }).catch(function(){});
     return;
   }
 
