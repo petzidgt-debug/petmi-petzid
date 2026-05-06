@@ -287,6 +287,75 @@ export default async function handler(req, res) {
       return res.status(200).json({ count });
     }
 
+    // ── EVENTOS ──────────────────────────────────────────────
+    if (action === 'getEventos') {
+      const tipo = req.query.tipo || '';
+      let url = SUPABASE_URL + '/rest/v1/eventos?activo=eq.true&order=fecha.asc';
+      if (tipo) url += '&tipo=eq.' + encodeURIComponent(tipo);
+      const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+      return res.status(200).json({ eventos: await r.json() });
+    }
+
+    if (action === 'asistirEvento' && req.method === 'POST') {
+      const { evento_id, uid_mascota, email } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/evento_asistentes?on_conflict=evento_id,uid_mascota', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ evento_id, uid_mascota, email })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    if (action === 'cancelarAsistencia' && req.method === 'POST') {
+      const { evento_id, uid_mascota } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/evento_asistentes?evento_id=eq.' + evento_id + '&uid_mascota=eq.' + encodeURIComponent(uid_mascota), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    if (action === 'getAsistentes') {
+      const evento_id = req.query.evento_id || '';
+      const r = await fetch(SUPABASE_URL + '/rest/v1/evento_asistentes?evento_id=eq.' + encodeURIComponent(evento_id) + '&select=uid_mascota,email', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ asistentes: await r.json() });
+    }
+
+    // ── LUGARES ───────────────────────────────────────────────
+    if (action === 'getLugares') {
+      const tipo = req.query.tipo || '';
+      const zona = req.query.zona || '';
+      let url = SUPABASE_URL + '/rest/v1/lugares?activo=eq.true&order=nombre.asc';
+      if (tipo) url += '&tipo=eq.' + encodeURIComponent(tipo);
+      if (zona) url += '&zona=eq.' + encodeURIComponent(zona);
+      const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+      return res.status(200).json({ lugares: await r.json() });
+    }
+
+    if (action === 'ratingLugar' && req.method === 'POST') {
+      const { lugar_id, email, rating, comentario } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/lugar_ratings?on_conflict=lugar_id,email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ lugar_id, email, rating, comentario })
+      });
+      // Actualizar rating promedio
+      if (r.ok) {
+        const ratings = await fetch(SUPABASE_URL + '/rest/v1/lugar_ratings?lugar_id=eq.' + lugar_id + '&select=rating', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        }).then(x => x.json());
+        const avg = ratings.reduce((s, x) => s + x.rating, 0) / ratings.length;
+        await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + lugar_id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ rating: Math.round(avg * 10) / 10 })
+        });
+      }
+      return res.status(200).json({ ok: r.ok });
+    }
+
     return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
