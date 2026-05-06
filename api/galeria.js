@@ -223,6 +223,70 @@ export default async function handler(req, res) {
       return res.status(200).json({ amigos, pendientes, mascotasAmigos });
     }
 
+    // ── getConversacion ──────────────────────────────────────
+    if (action === 'getConversacion') {
+      const uid1 = req.query.uid1 || '';
+      const uid2 = req.query.uid2 || '';
+      if (!uid1 || !uid2) return res.status(200).json({ mensajes: [] });
+
+      const response = await fetch(
+        SUPABASE_URL + '/rest/v1/conversaciones?or=(and(uid_emisor.eq.' + encodeURIComponent(uid1) + ',uid_receptor.eq.' + encodeURIComponent(uid2) + '),and(uid_emisor.eq.' + encodeURIComponent(uid2) + ',uid_receptor.eq.' + encodeURIComponent(uid1) + '))&order=created_at.asc',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+      );
+      const data = await response.json();
+      return res.status(200).json({ mensajes: data || [] });
+    }
+
+    // ── enviarMensajePrivado ──────────────────────────────────
+    if (action === 'enviarMensajePrivado' && req.method === 'POST') {
+      const { uid_emisor, uid_receptor, mensaje } = req.body;
+      const response = await fetch(
+        SUPABASE_URL + '/rest/v1/conversaciones',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'apikey':        SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Prefer':        'return=minimal'
+          },
+          body: JSON.stringify({ uid_emisor, uid_receptor, mensaje })
+        }
+      );
+      return res.status(200).json({ ok: response.ok });
+    }
+
+    // ── marcarLeidos ─────────────────────────────────────────
+    if (action === 'marcarLeidos' && req.method === 'POST') {
+      const { uid_emisor, uid_receptor } = req.body;
+      await fetch(
+        SUPABASE_URL + '/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(uid_emisor) + '&uid_receptor=eq.' + encodeURIComponent(uid_receptor),
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type':  'application/json',
+            'apikey':        SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Prefer':        'return=minimal'
+          },
+          body: JSON.stringify({ leido: true })
+        }
+      );
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── getMensajesNoLeidos ───────────────────────────────────
+    if (action === 'getMensajesNoLeidos') {
+      const uid = req.query.uid || '';
+      if (!uid) return res.status(200).json({ count: 0 });
+      const response = await fetch(
+        SUPABASE_URL + '/rest/v1/conversaciones?uid_receptor=eq.' + encodeURIComponent(uid) + '&leido=eq.false&select=id',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact' } }
+      );
+      const count = parseInt(response.headers.get('content-range')?.split('/')[1] || '0');
+      return res.status(200).json({ count });
+    }
+
     return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
