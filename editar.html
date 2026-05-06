@@ -267,6 +267,22 @@ function renderForm(){
       </div>
     </div>
 
+    <!-- Angelito -->
+    <div id="angelitoSection" style="margin-top:8px;border-radius:14px;padding:16px 18px;border:1.5px solid #e0e0e0;background:#fafafa">
+      <div style="font-size:10px;font-weight:700;color:#764ba2;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🐾 Estado especial</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#333" id="angelitoLabel">Ya es un angelito</div>
+          <div style="font-size:12px;color:#aaa" id="angelitoSub">Aparecerá en la sección especial de ángeles</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="togAngelito" onchange="onAngelitoChange()" '+( m.angelito&&m.angelito.toLowerCase()==="si"?"checked":"")+'><span class="tog-slider"></span></label>
+      </div>
+      <div id="fechaAngelWrap" style="display:'+( m.angelito&&m.angelito.toLowerCase()==="si"?"block":"none")+';margin-top:12px">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Fecha en que nos dejó</div>
+        <input type="date" id="eFechaAngel" value="'+( m.angelito&&m.fechaAngel?m.fechaAngel:"")+'" style="width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:15px;outline:none">
+      </div>
+    </div>
+
     <button class="btn-guardar" id="btnGuardar" onclick="guardar()">💾 Guardar cambios</button>
     <button class="btn-cancelar" onclick="window.location.href='/galeria.html'">Cancelar</button>
     <button class="btn-danger" onclick="document.getElementById('confirmOverlay').classList.add('open')">🗑️ Eliminar esta mascota</button>
@@ -364,15 +380,38 @@ async function guardar(){
   if(fotoUrl)payload.data.foto=fotoUrl;
 
   btn.textContent='Guardando...';
+  var esAngelito = document.getElementById('togAngelito').checked;
+  var fechaAngel = document.getElementById('eFechaAngel').value||'';
+
+  // Guardar datos principales
   fetch('/api/admin?action=updateRow',{
     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
   }).then(function(r){return r.json();})
   .then(function(d){
-    if(d.ok){mostrarToast('✅ Cambios guardados!');setTimeout(function(){window.location.href='/galeria.html';},1500);}
-    else{mostrarError('Error al guardar. Intenta de nuevo.');btn.disabled=false;btn.textContent='💾 Guardar cambios';}
+    if(!d.ok){mostrarError('Error al guardar. Intenta de nuevo.');btn.disabled=false;btn.textContent='💾 Guardar cambios';return;}
+    // Luego actualizar estado angelito
+    return fetch('/api/admin?action=updateRow',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'markAngel',uid:mascota.uid,esAngel:esAngelito,fechaAngelito:fechaAngel})
+    });
+  }).then(function(r){
+    if(r) return r.json();
+  }).then(function(){
+    mostrarToast('✅ Cambios guardados!');
+    setTimeout(function(){window.location.href='/familia.html';},1500);
   }).catch(function(){
     mostrarError('Error de conexión. Intenta de nuevo.');btn.disabled=false;btn.textContent='💾 Guardar cambios';
   });
+}
+
+function onAngelitoChange(){
+  var checked=document.getElementById('togAngelito').checked;
+  var wrap=document.getElementById('fechaAngelWrap');
+  if(wrap) wrap.style.display=checked?'block':'none';
+  if(checked){
+    var today=new Date().toISOString().split('T')[0];
+    document.getElementById('eFechaAngel').value=today;
+  }
 }
 
 function mostrarError(msg){var el=document.getElementById('errorBox');if(el){el.textContent=msg;el.style.display='block';}}
