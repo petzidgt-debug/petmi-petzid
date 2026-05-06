@@ -42,6 +42,7 @@
           '<button class="menu-btn" onclick="petmiToggleMenu()">Mi cuenta &#x25BE;</button>' +
           '<div class="menu-dropdown" id="petmiMenuDropdown">' +
             '<a href="/familia.html" class="menu-item">&#x1F3E0; Mi familia</a>' +
+            '<a href="/amigos.html" class="menu-item">&#x1F43E; Mis amigos</a>' +
             '<a href="/index.html?agregar=1" class="menu-item">&#x2795; Agregar mascota</a>' +
             '<a href="/galeria.html" class="menu-item">&#x1F43E; Amigos PetMi</a>' +
             '<button class="menu-item danger" onclick="petmiCerrarSesion()">&#x1F6AA; Cerrar sesi&oacute;n</button>' +
