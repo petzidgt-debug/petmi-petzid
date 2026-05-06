@@ -619,6 +619,16 @@ function renderModalFooter(p){
   var footer=document.getElementById('modalFooter');
   var esMia=sessionEmail&&p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();
 
+  // Si no es mi mascota, refrescar cache antes de mostrar botón
+  if(!esMia&&sessionEmail){
+    cargarCacheAmigos().then(function(){
+      var btnAmigo=getBtnAmigo(p.uid);
+      footer.innerHTML=btnAmigo+'<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+    });
+    footer.innerHTML='<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+    return;
+  }
+
   if(esMia){
     var angelBtn=p.angelito
       ?'<button class="btn-primary btn-purple" onclick="toggleAngel(false)">🐾🌈 Ya no es angelito</button>'
