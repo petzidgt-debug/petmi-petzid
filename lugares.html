@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Lugares Pet-Friendly — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.wrap{max-width:700px;margin:0 auto;padding:20px 16px 40px}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#E05090,#c0392b);border-radius:16px;padding:24px;margin-bottom:20px;color:#fff;text-align:center}
+.hero h1{font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;margin-bottom:6px}
+.hero p{font-size:13px;color:rgba(255,255,255,.75)}
+.hero-stats{display:flex;justify-content:center;gap:28px;margin-top:14px}
+.hstat{text-align:center}
+.hstat-num{font-size:22px;font-weight:900}
+.hstat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.7)}
+
+/* FILTROS */
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.filtro-btn{padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:600;color:#888;background:#fff;cursor:pointer;transition:all .2s}
+.filtro-btn.active{border-color:#E05090;background:#fce4ec;color:#c0392b}
+
+/* BUSQUEDA */
+.search-wrap{position:relative;margin-bottom:16px}
+.search-input{width:100%;padding:12px 16px 12px 40px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:15px;outline:none;background:#fff}
+.search-input:focus{border-color:#E05090}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:#aaa}
+
+/* LUGAR CARD */
+.lugar-card{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex}
+.lugar-foto{width:110px;flex-shrink:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:36px}
+.lugar-foto img{width:110px;height:100%;object-fit:cover}
+.lugar-body{flex:1;padding:14px;min-width:0}
+.lugar-tipo-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;margin-bottom:6px;background:#f0f0ee;color:#888}
+.lugar-nombre{font-size:15px;font-weight:900;color:#222;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lugar-zona{font-size:12px;color:#aaa;margin-bottom:6px}
+.lugar-desc{font-size:12px;color:#666;line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lugar-footer{display:flex;align-items:center;gap:8px}
+.stars{color:#F5C842;font-size:13px}
+.rating-num{font-size:12px;color:#888}
+.btn-maps{padding:5px 12px;background:#E05090;color:#fff;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+.btn-rating{padding:5px 10px;background:#f0f0ee;color:#555;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer}
+
+/* MODAL RATING */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px}
+.modal-titulo{font-size:18px;font-weight:900;color:#222;margin-bottom:16px}
+.stars-input{display:flex;gap:8px;font-size:32px;margin-bottom:16px;cursor:pointer}
+.star-opt{opacity:.3;transition:opacity .15s}
+.star-opt.selected{opacity:1}
+.rating-textarea{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;resize:none;height:80px;outline:none;margin-bottom:12px}
+.rating-textarea:focus{border-color:#E05090}
+.btn-enviar-rating{width:100%;padding:13px;background:#E05090;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
+.btn-cerrar-modal{width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer;margin-top:8px}
+
+/* EMPTY / LOADING */
+.empty{text-align:center;padding:48px 20px;color:#bbb}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#E05090;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>📍 Lugares Pet-Friendly</h1>
+    <p>Restaurantes, parques, hoteles y más que dan la bienvenida a tu mascota</p>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-num" id="statTotal">-</div><div class="hstat-lbl">Lugares</div></div>
+      <div class="hstat"><div class="hstat-num" id="statZonas">-</div><div class="hstat-lbl">Zonas</div></div>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" class="search-input" id="searchInput" placeholder="Buscar lugar..." oninput="filtrarLugares()">
+  </div>
+
+  <div class="filtros">
+    <button class="filtro-btn active" onclick="setFiltro('',this)">Todos</button>
+    <button class="filtro-btn" onclick="setFiltro('restaurante',this)">🍽️ Restaurantes</button>
+    <button class="filtro-btn" onclick="setFiltro('parque',this)">🌳 Parques</button>
+    <button class="filtro-btn" onclick="setFiltro('cafe',this)">☕ Cafés</button>
+    <button class="filtro-btn" onclick="setFiltro('hotel',this)">🏨 Hoteles</button>
+    <button class="filtro-btn" onclick="setFiltro('tienda',this)">🛍️ Tiendas</button>
+    <button class="filtro-btn" onclick="setFiltro('veterinaria',this)">🏥 Veterinarias</button>
+  </div>
+
+  <div id="lugaresWrap">
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<!-- Modal rating -->
+<div class="modal-overlay" id="modalRating">
+  <div class="modal-box">
+    <div class="modal-titulo" id="ratingLugarNombre">Calificar lugar</div>
+    <div class="stars-input" id="starsInput">
+      <span class="star-opt" onclick="setRating(1)">⭐</span>
+      <span class="star-opt" onclick="setRating(2)">⭐</span>
+      <span class="star-opt" onclick="setRating(3)">⭐</span>
+      <span class="star-opt" onclick="setRating(4)">⭐</span>
+      <span class="star-opt" onclick="setRating(5)">⭐</span>
+    </div>
+    <textarea class="rating-textarea" id="ratingComentario" placeholder="Cuéntanos tu experiencia (opcional)"></textarea>
+    <button class="btn-enviar-rating" onclick="enviarRating()">Enviar calificación</button>
+    <button class="btn-cerrar-modal" onclick="closeRating()">Cancelar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var sessionEmail  = localStorage.getItem('petzid_email') || '';
+var filtroActual  = '';
+var lugaresData   = [];
+var lugaresFiltr  = [];
+var ratingLugarId = null;
+var ratingVal     = 0;
+
+var TIPO_EMOJIS = {restaurante:'🍽️',parque:'🌳',cafe:'☕',hotel:'🏨',tienda:'🛍️',veterinaria:'🏥'};
+
+cargarLugares();
+
+function cargarLugares(){
+  document.getElementById('lugaresWrap').innerHTML='<div class="spinner"></div>';
+  fetch('/api/galeria?action=getLugares')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      lugaresData  = d.lugares||[];
+      lugaresFiltr = lugaresData;
+      // Stats
+      document.getElementById('statTotal').textContent=lugaresData.length;
+      var zonas={};lugaresData.forEach(function(l){if(l.zona)zonas[l.zona]=1;});
+      document.getElementById('statZonas').textContent=Object.keys(zonas).length;
+      renderLugares();
+    }).catch(function(){
+      document.getElementById('lugaresWrap').innerHTML='<div class="empty"><div class="empty-icon">😕</div><p>Error al cargar lugares</p></div>';
+    });
+}
+
+function setFiltro(tipo, btn){
+  filtroActual=tipo;
+  document.querySelectorAll('.filtro-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  filtrarLugares();
+}
+
+function filtrarLugares(){
+  var busq=document.getElementById('searchInput').value.toLowerCase();
+  lugaresFiltr=lugaresData.filter(function(l){
+    if(filtroActual&&l.tipo!==filtroActual)return false;
+    if(busq&&l.nombre.toLowerCase().indexOf(busq)<0&&(!l.direccion||l.direccion.toLowerCase().indexOf(busq)<0))return false;
+    return true;
+  });
+  renderLugares();
+}
+
+function renderLugares(){
+  var wrap=document.getElementById('lugaresWrap');
+  if(!lugaresFiltr.length){
+    wrap.innerHTML='<div class="empty"><div class="empty-icon">📍</div><p>No se encontraron lugares</p></div>';
+    return;
+  }
+
+  var html='';
+  lugaresFiltr.forEach(function(l){
+    var emoji=TIPO_EMOJIS[l.tipo]||'📍';
+    var stars=renderStars(l.rating||0);
+    var fotoHTML=l.imagen&&l.imagen.indexOf('http')>=0
+      ?'<img src="'+l.imagen+'">'
+      :'<div style="font-size:36px">'+emoji+'</div>';
+
+    html+='<div class="lugar-card">';
+    html+='<div class="lugar-foto">'+fotoHTML+'</div>';
+    html+='<div class="lugar-body">';
+    html+='<span class="lugar-tipo-badge">'+emoji+' '+(l.tipo||'Lugar')+'</span>';
+    html+='<div class="lugar-nombre">'+l.nombre+'</div>';
+    if(l.zona) html+='<div class="lugar-zona">📍 Zona '+l.zona+(l.direccion?' · '+l.direccion:'')+'</div>';
+    if(l.descripcion) html+='<div class="lugar-desc">'+l.descripcion+'</div>';
+    html+='<div class="lugar-footer">';
+    html+='<span class="stars">'+stars+'</span>';
+    html+='<span class="rating-num">'+(l.rating?l.rating.toFixed(1):'Sin calificar')+'</span>';
+    if(l.google_maps) html+='<a href="'+l.google_maps+'" target="_blank" class="btn-maps">Maps</a>';
+    if(sessionEmail) html+='<button class="btn-rating" onclick="openRating(\''+l.id+'\',\''+l.nombre.replace(/'/g,'')+'\')">⭐ Calificar</button>';
+    html+='</div></div></div>';
+  });
+  wrap.innerHTML=html;
+}
+
+function renderStars(rating){
+  var full=Math.floor(rating);
+  var half=rating-full>=0.5;
+  var s='';
+  for(var i=0;i<full;i++) s+='⭐';
+  if(half) s+='✨';
+  return s||'☆☆☆☆☆';
+}
+
+// Rating
+function openRating(id, nombre){
+  if(!sessionEmail){mostrarToast('Inicia sesión para calificar');return;}
+  ratingLugarId=id;
+  ratingVal=0;
+  document.getElementById('ratingLugarNombre').textContent='Calificar: '+nombre;
+  document.getElementById('ratingComentario').value='';
+  document.querySelectorAll('.star-opt').forEach(function(s){s.classList.remove('selected');});
+  document.getElementById('modalRating').classList.add('open');
+}
+
+function closeRating(){ document.getElementById('modalRating').classList.remove('open'); }
+
+function setRating(val){
+  ratingVal=val;
+  document.querySelectorAll('.star-opt').forEach(function(s,i){
+    s.classList.toggle('selected',i<val);
+  });
+}
+
+function enviarRating(){
+  if(!ratingVal){mostrarToast('Selecciona una calificación');return;}
+  var comentario=document.getElementById('ratingComentario').value.trim();
+  fetch('/api/galeria?action=ratingLugar',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({lugar_id:ratingLugarId,email:sessionEmail,rating:ratingVal,comentario:comentario})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      mostrarToast('✅ Calificación enviada!');
+      closeRating();
+      setTimeout(cargarLugares,1000);
+    }
+  });
+}
+
+function mostrarToast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2500);
+}
+</script>
+
+<script src="/header.js"></script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Eventos Pet-Friendly — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.wrap{max-width:700px;margin:0 auto;padding:20px 16px 40px}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#00B4B4,#007a7a);border-radius:16px;padding:24px;margin-bottom:20px;color:#fff;text-align:center}
+.hero h1{font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;margin-bottom:6px}
+.hero p{font-size:13px;color:rgba(255,255,255,.75)}
+
+/* FILTROS */
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.filtro-btn{padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:600;color:#888;background:#fff;cursor:pointer;transition:all .2s}
+.filtro-btn.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
+
+/* EVENTO CARD */
+.evento-card{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.evento-img{width:100%;height:180px;object-fit:cover;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:48px}
+.evento-img img{width:100%;height:180px;object-fit:cover}
+.evento-body{padding:16px}
+.evento-tipo{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:8px}
+.tipo-evento{background:#e0f7f7;color:#007a7a}
+.tipo-paseo{background:#fff3cd;color:#856404}
+.tipo-exposicion{background:#f3e8ff;color:#6f42c1}
+.tipo-adopcion{background:#fce4ec;color:#c0392b}
+.evento-titulo{font-size:18px;font-weight:900;color:#222;margin-bottom:6px}
+.evento-fecha{font-size:13px;color:#00B4B4;font-weight:700;margin-bottom:4px}
+.evento-lugar{font-size:13px;color:#888;margin-bottom:10px}
+.evento-desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:14px}
+.evento-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid #f5f5f5}
+.asistentes-count{font-size:12px;color:#aaa}
+.btn-asistir{padding:9px 20px;background:#00B4B4;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-asistir.asistiendo{background:#e0f7f7;color:#007a7a}
+.btn-asistir:disabled{background:#ddd;color:#aaa;cursor:not-allowed}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px 20px;color:#bbb}
+.empty-icon{font-size:48px;margin-bottom:12px}
+
+/* SPINNER */
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>🎉 Eventos Pet-Friendly</h1>
+    <p>Actividades, paseos y eventos para ti y tu mascota en Guatemala</p>
+  </div>
+
+  <div class="filtros">
+    <button class="filtro-btn active" onclick="setFiltro('',this)">Todos</button>
+    <button class="filtro-btn" onclick="setFiltro('evento',this)">🎪 Eventos</button>
+    <button class="filtro-btn" onclick="setFiltro('paseo',this)">🚶 Paseos</button>
+    <button class="filtro-btn" onclick="setFiltro('exposicion',this)">🏆 Exposiciones</button>
+    <button class="filtro-btn" onclick="setFiltro('adopcion',this)">🐾 Adopción</button>
+  </div>
+
+  <div id="eventosWrap">
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var sessionEmail = localStorage.getItem('petzid_email') || '';
+var miMascotaUID = null;
+var filtroActual = '';
+var eventosData  = [];
+var misAsistencias = {};
+
+// Cargar mascota del usuario
+if(sessionEmail){
+  fetch('/api/galeria?action=checkEmail',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'checkEmail',email:sessionEmail})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.found&&d.mascotas.length) miMascotaUID=d.mascotas[0].uid;
+  });
+}
+
+// Cargar eventos
+cargarEventos();
+
+function cargarEventos(){
+  document.getElementById('eventosWrap').innerHTML='<div class="spinner"></div>';
+  var url='/api/galeria?action=getEventos';
+  if(filtroActual) url+='&tipo='+encodeURIComponent(filtroActual);
+
+  fetch(url).then(function(r){return r.json();})
+  .then(function(d){
+    eventosData = d.eventos||[];
+    renderEventos();
+  }).catch(function(){
+    document.getElementById('eventosWrap').innerHTML='<div class="empty"><div class="empty-icon">😕</div><p>Error al cargar eventos</p></div>';
+  });
+}
+
+function setFiltro(tipo, btn){
+  filtroActual = tipo;
+  document.querySelectorAll('.filtro-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  cargarEventos();
+}
+
+function renderEventos(){
+  var wrap = document.getElementById('eventosWrap');
+  if(!eventosData.length){
+    wrap.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>No hay eventos próximos</p><p style="font-size:12px;margin-top:8px">Próximamente más eventos</p></div>';
+    return;
+  }
+
+  var html = '';
+  eventosData.forEach(function(e){
+    var tipoClass = 'tipo-'+(e.tipo||'evento');
+    var tipoLabel = {evento:'🎪 Evento',paseo:'🚶 Paseo',exposicion:'🏆 Exposición',adopcion:'🐾 Adopción'}[e.tipo]||(e.tipo||'Evento');
+    var fecha = e.fecha ? new Date(e.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) : '';
+    var fotoHTML = e.imagen&&e.imagen.indexOf('http')>=0
+      ? '<img src="'+e.imagen+'">'
+      : '<div class="evento-img">'+({evento:'🎪',paseo:'🌳',exposicion:'🏆',adopcion:'🐾'}[e.tipo]||'🎉')+'</div>';
+
+    html += '<div class="evento-card" id="evento-'+e.id+'">';
+    html += '<div class="evento-img">'+fotoHTML+'</div>';
+    html += '<div class="evento-body">';
+    html += '<span class="evento-tipo '+tipoClass+'">'+tipoLabel+'</span>';
+    html += '<div class="evento-titulo">'+e.titulo+'</div>';
+    html += '<div class="evento-fecha">📅 '+fecha+(e.hora?' · ⏰ '+e.hora:'')+'</div>';
+    if(e.lugar) html += '<div class="evento-lugar">📍 '+e.lugar+(e.direccion?', '+e.direccion:'')+'</div>';
+    if(e.descripcion) html += '<div class="evento-desc">'+e.descripcion+'</div>';
+    html += '<div class="evento-footer">';
+    html += '<span class="asistentes-count" id="count-'+e.id+'">Cargando asistentes...</span>';
+    if(sessionEmail){
+      html += '<button class="btn-asistir" id="btn-'+e.id+'" onclick="toggleAsistencia(\''+e.id+'\')">Voy a ir 🐾</button>';
+    } else if(e.link){
+      html += '<a href="'+e.link+'" target="_blank" style="padding:9px 20px;background:#00B4B4;color:#fff;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none">Ver más</a>';
+    }
+    html += '</div></div></div>';
+  });
+
+  wrap.innerHTML = html;
+
+  // Cargar asistentes para cada evento
+  eventosData.forEach(function(e){ cargarAsistentes(e.id); });
+}
+
+function cargarAsistentes(eventoId){
+  fetch('/api/galeria?action=getAsistentes&evento_id='+encodeURIComponent(eventoId))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var asistentes = d.asistentes||[];
+      var countEl = document.getElementById('count-'+eventoId);
+      if(countEl) countEl.textContent = asistentes.length + (asistentes.length===1?' mascota va':' mascotas van');
+
+      // Verificar si yo asisto
+      if(miMascotaUID){
+        var yoAsisto = asistentes.some(function(a){ return a.uid_mascota===miMascotaUID; });
+        misAsistencias[eventoId] = yoAsisto;
+        var btn = document.getElementById('btn-'+eventoId);
+        if(btn){
+          btn.textContent = yoAsisto ? '✅ Voy a ir' : 'Voy a ir 🐾';
+          btn.className = 'btn-asistir' + (yoAsisto?' asistiendo':'');
+        }
+      }
+    });
+}
+
+function toggleAsistencia(eventoId){
+  if(!sessionEmail){ mostrarToast('Inicia sesión para confirmar asistencia'); return; }
+  if(!miMascotaUID){ mostrarToast('Necesitas registrar tu mascota primero'); return; }
+
+  var asistiendo = misAsistencias[eventoId];
+  var action     = asistiendo ? 'cancelarAsistencia' : 'asistirEvento';
+  var btn        = document.getElementById('btn-'+eventoId);
+  btn.disabled   = true;
+
+  fetch('/api/galeria?action='+action, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({evento_id:eventoId, uid_mascota:miMascotaUID, email:sessionEmail})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      misAsistencias[eventoId] = !asistiendo;
+      mostrarToast(asistiendo?'Asistencia cancelada':'🐾 Confirmado! Nos vemos ahí');
+      cargarAsistentes(eventoId);
+    }
+    btn.disabled=false;
+  }).catch(function(){ btn.disabled=false; });
+}
+
+function mostrarToast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2500);
+}
+</script>
+
+<script src="/header.js"></script>
+</body>
+</html>
