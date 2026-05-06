@@ -948,6 +948,17 @@ function enviarSolicitudAmistad(uid){
       misAmigosCache.push({uid:uid, tipo:'pendiente_enviado', id:null});
       mostrarToastG('🐾 Solicitud enviada a '+receptor.nombre+'!');
       renderModalFooter(currentModalPet);
+      // Notificar por email al receptor
+      fetch('/api/admin?action=updateRow',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          action:'notificarSolicitud',
+          emailReceptor:  receptor.email,
+          nombreReceptor: receptor.nombre,
+          nombreSolicit:  mia.nombre,
+          uidReceptor:    receptor.uid
+        })
+      });
     } else {
       mostrarToastG('Error al enviar solicitud');
     }
