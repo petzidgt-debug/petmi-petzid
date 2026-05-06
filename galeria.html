@@ -302,12 +302,33 @@ function renderHeader(){
   if(sessionEmail){
     el.innerHTML=
       '<span class="user-badge">🐾 '+(sessionDueno||sessionEmail)+'</span>'+
-      '<a href="/familia.html" style="padding:6px 12px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;background:#fff;text-decoration:none;white-space:nowrap">Mi perfil</a>'+
-      '<button class="btn-salir" onclick="cerrarSesion()">Salir</button>';
+      '<div class="header-menu">'+
+        '<button class="menu-btn" onclick="toggleMenu()">Mi cuenta ▾</button>'+
+        '<div class="menu-dropdown" id="headerMenuDropdown">'+
+          '<a href="/familia.html" class="menu-item">🐾 Mi familia</a>'+
+          '<a href="/index.html?agregar=1" class="menu-item">➕ Agregar mascota</a>'+
+          '<a href="/galeria.html" class="menu-item">🌟 Ver galería</a>'+
+          '<button class="menu-item danger" onclick="cerrarSesion()">🚪 Cerrar sesión</button>'+
+        '</div>'+
+      '</div>';
   } else {
-    el.innerHTML='<a href="/index.html" class="btn-registro">Registra tu mascota</a>';
+    el.innerHTML=
+      '<a href="/index.html" class="btn-registro">Registra tu mascota</a>'+
+      '<button class="menu-btn" onclick="openLoginModal()" style="margin-left:8px">Ingresar</button>';
   }
 }
+
+function toggleMenu(){
+  var d=document.getElementById('headerMenuDropdown');
+  if(d)d.classList.toggle('open');
+}
+// Cerrar menú al hacer click fuera
+document.addEventListener('click',function(e){
+  var menu=document.getElementById('headerMenuDropdown');
+  if(menu&&menu.classList.contains('open')){
+    if(!e.target.closest('.header-menu'))menu.classList.remove('open');
+  }
+});
 
 function cerrarSesion(){
   localStorage.removeItem('petzid_email');
