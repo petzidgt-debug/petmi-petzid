@@ -127,6 +127,9 @@ function renderNoSession(){
 }
 
 function cargarTodo(){
+  // Limpiar badge de notificaciones
+  if(window.petmiLimpiarNotif) petmiLimpiarNotif();
+
   // 1. Cargar mis mascotas
   fetch('/api/galeria?action=checkEmail', {
     method:'POST',
@@ -196,8 +199,9 @@ function renderPagina(){
   }
 
   // Mis amigos
+  var totalAmigosLista=(datosAmigos.mascotasAmigos||[]).length;
   html += '<div class="seccion">';
-  html += '<div class="sec-titulo">Mis amigos</div>';
+  html += '<div class="sec-titulo">Mis amigos <span style="color:#aaa;font-weight:400;font-size:11px;text-transform:none;letter-spacing:0">('+totalAmigosLista+')</span></div>';
   if(!datosAmigos.mascotasAmigos || !datosAmigos.mascotasAmigos.length){
     html += '<div class="empty-state"><div class="empty-icon">🐾</div><div class="empty-txt">Aún no tienes amigos.<br>Explora la galería y agrega mascotas.</div></div>';
   } else {
@@ -213,11 +217,27 @@ function renderPagina(){
       html += '<div class="mascota-mini-info">';
       html += '<div class="mascota-mini-nombre">'+m.nombre+'</div>';
       html += '<div class="mascota-mini-especie">'+(m.especie||'')+'</div>';
+      html += '<div style="font-size:10px;color:#00B4B4;font-weight:700;margin-top:3px">Ver perfil →</div>';
       html += '</div></div>';
     });
     html += '</div>';
   }
   html += '</div>';
+
+  // Solicitudes enviadas pendientes
+  var pendEnviadas=(datosAmigos.pendientes||[]).filter(function(a){return a.uid_solicitante===mascotasPrincipal.uid;});
+  if(pendEnviadas.length>0){
+    html += '<div class="seccion">';
+    html += '<div class="sec-titulo" style="color:#aaa">Solicitudes enviadas ('+pendEnviadas.length+')</div>';
+    pendEnviadas.forEach(function(sol){
+      html += '<div class="solicitud-item">';
+      html += '<div class="sol-foto">🐾</div>';
+      html += '<div class="sol-info"><div class="sol-nombre">Solicitud pendiente</div>';
+      html += '<div class="sol-sub" style="color:#F5C842">Esperando respuesta</div></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
 
   // Botón ir a galería
   html += '<div style="text-align:center;margin-top:8px">';
