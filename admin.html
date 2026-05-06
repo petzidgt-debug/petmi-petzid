@@ -462,18 +462,48 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 // ── Subir foto admin ─────────────────────────────────────────
 var adminFotoBase64 = null;
 var adminFotoUID    = null;
+var adminFotoTab    = 'upload';
 var CLOUD_NAME      = 'dh5wgqgmk';
 var UPLOAD_PRESET   = 'petzid';
 
 function abrirSubirFoto(idx){
   var r = filtered[idx];
   if(!r) return;
-  adminFotoUID = String(r[1]||'').trim();
+  adminFotoUID    = String(r[1]||'').trim();
   adminFotoBase64 = null;
   document.getElementById('fotoMascotaInfo').textContent = String(r[2]||'') + ' — ' + String(r[11]||'');
   document.getElementById('fotoPreviewImg').style.display = 'none';
+  document.getElementById('fotoLinkInput').value = '';
+  document.getElementById('fotoLinkPreview').style.display = 'none';
   document.getElementById('btnSubirFoto').disabled = true;
+  switchFotoTab('upload');
   document.getElementById('modalFoto').classList.add('open');
+}
+
+function switchFotoTab(tab){
+  adminFotoTab = tab;
+  adminFotoBase64 = null;
+  document.getElementById('panelUpload').style.display = tab==='upload' ? 'block' : 'none';
+  document.getElementById('panelLink').style.display   = tab==='link'   ? 'block' : 'none';
+  document.getElementById('tabUpload').style.cssText = tab==='upload'
+    ? 'flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)'
+    : 'flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer';
+  document.getElementById('tabLink').style.cssText = tab==='link'
+    ? 'flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)'
+    : 'flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer';
+  document.getElementById('btnSubirFoto').disabled = true;
+}
+
+function onLinkChange(){
+  var url = document.getElementById('fotoLinkInput').value.trim();
+  var preview = document.getElementById('fotoLinkPreview');
+  if(url.indexOf('http')===0){
+    preview.src = url;
+    document.getElementById('btnSubirFoto').disabled = false;
+  } else {
+    preview.style.display = 'none';
+    document.getElementById('btnSubirFoto').disabled = true;
+  }
 }
 
 function onAdminFotoChange(e){
@@ -485,7 +515,6 @@ function onAdminFotoChange(e){
     var preview = document.getElementById('fotoPreviewImg');
     preview.src = dataUrl;
     preview.style.display = 'block';
-    // Comprimir
     var canvas = document.createElement('canvas');
     var img    = new Image();
     img.onload = function(){
@@ -503,23 +532,37 @@ function onAdminFotoChange(e){
 }
 
 async function subirFotoAdmin(){
-  if(!adminFotoBase64 || !adminFotoUID){ alert('Selecciona una foto'); return; }
   var btn = document.getElementById('btnSubirFoto');
-  btn.disabled = true; btn.textContent = 'Subiendo...';
+  btn.disabled = true;
+  var url = null;
 
-  // Subir a Cloudinary
-  var fd = new FormData();
-  fd.append('file', 'data:image/jpeg;base64,' + adminFotoBase64);
-  fd.append('upload_preset', UPLOAD_PRESET);
-  fd.append('folder', 'petzid');
+  if(adminFotoTab === 'link'){
+    // Usar URL directamente
+    url = document.getElementById('fotoLinkInput').value.trim();
+    if(!url){ alert('Ingresa un link válido'); btn.disabled=false; return; }
+  } else {
+    // Subir a Cloudinary
+    if(!adminFotoBase64){ alert('Selecciona una foto'); btn.disabled=false; return; }
+    btn.textContent = 'Subiendo...';
+    var fd = new FormData();
+    fd.append('file', 'data:image/jpeg;base64,' + adminFotoBase64);
+    fd.append('upload_preset', UPLOAD_PRESET);
+    fd.append('folder', 'petzid');
+    try {
+      var res  = await fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {method:'POST', body:fd});
+      var data = await res.json();
+      url = data.secure_url;
+      if(!url) throw new Error('Sin URL de Cloudinary');
+    } catch(err) {
+      alert('Error subiendo foto: ' + err.message);
+      btn.disabled=false; btn.textContent='Guardar foto';
+      return;
+    }
+  }
 
+  // Guardar URL en Apps Script + Supabase
+  btn.textContent = 'Guardando...';
   try {
-    var res  = await fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {method:'POST', body:fd});
-    var data = await res.json();
-    var url  = data.secure_url;
-    if(!url) throw new Error('Sin URL');
-
-    // Guardar URL en Apps Script + Supabase
     var resp = await fetch('/api/admin?action=updateRow', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -527,19 +570,24 @@ async function subirFotoAdmin(){
     });
     var result = await resp.json();
     if(result.ok){
-      alert('✅ Foto subida y guardada!');
+      alert('✅ Foto guardada!');
       document.getElementById('modalFoto').classList.remove('open');
-      // Actualizar en allData
       allData.forEach(function(r){ if(String(r[1]).trim()===adminFotoUID) r[27]=url; });
-      filtered = allData.slice();
+      filtered = allData.filter(function(r){
+        var tieneFoto=String(r[27]||'').indexOf('http')>=0;
+        var ft=document.getElementById('filterFoto').value;
+        if(ft==='sin_foto'&&tieneFoto)return false;
+        if(ft==='con_foto'&&!tieneFoto)return false;
+        return true;
+      });
       renderTable();
     } else {
-      alert('Error al guardar la URL');
+      alert('Error al guardar');
     }
   } catch(err) {
     alert('Error: ' + err.message);
   }
-  btn.disabled = false; btn.textContent = 'Subir foto';
+  btn.disabled=false; btn.textContent='Guardar foto';
 }
 
 // ── Eliminar mascota admin ────────────────────────────────────
@@ -569,22 +617,40 @@ function eliminarMascota(idx){
 </script>
 <!-- Modal subir foto -->
 <div class="modal-overlay" id="modalFoto">
-  <div class="modal" style="max-width:420px">
+  <div class="modal" style="max-width:440px">
     <div class="modal-title">
-      📷 Subir foto
+      📷 Agregar foto
       <button class="modal-close" onclick="document.getElementById('modalFoto').classList.remove('open')">×</button>
     </div>
-    <div id="fotoMascotaInfo" style="font-size:14px;color:#555;margin-bottom:12px"></div>
-    <div class="foto-drop" onclick="document.getElementById('fotoFileInput').click()">
-      <div style="font-size:28px;margin-bottom:8px">📸</div>
-      <div style="font-size:13px;color:#aaa">Haz clic para seleccionar una foto</div>
-      <img id="fotoPreviewImg" class="foto-preview">
+    <div id="fotoMascotaInfo" style="font-size:14px;font-weight:700;color:#333;margin-bottom:16px"></div>
+
+    <!-- Tabs -->
+    <div style="display:flex;background:#f0f0ee;border-radius:10px;padding:3px;margin-bottom:16px">
+      <div id="tabUpload" style="flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)" onclick="switchFotoTab('upload')">📤 Subir archivo</div>
+      <div id="tabLink" style="flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer" onclick="switchFotoTab('link')">🔗 Por link</div>
     </div>
-    <input type="file" id="fotoFileInput" accept="image/*" style="display:none" onchange="onAdminFotoChange(event)">
-    <div style="font-size:12px;color:#aaa;margin-bottom:12px">Se comprimirá a 800px y se subirá a Cloudinary</div>
+
+    <!-- Upload -->
+    <div id="panelUpload">
+      <div class="foto-drop" onclick="document.getElementById('fotoFileInput').click()">
+        <div style="font-size:28px;margin-bottom:8px">📸</div>
+        <div style="font-size:13px;color:#aaa">Haz clic para seleccionar una foto</div>
+        <img id="fotoPreviewImg" class="foto-preview">
+      </div>
+      <input type="file" id="fotoFileInput" accept="image/*" style="display:none" onchange="onAdminFotoChange(event)">
+      <div style="font-size:12px;color:#aaa;margin-bottom:4px">Se comprimirá a 800px y se subirá a Cloudinary</div>
+    </div>
+
+    <!-- Link -->
+    <div id="panelLink" style="display:none">
+      <div style="font-size:12px;color:#888;margin-bottom:8px">Pega el URL directo de la imagen (Wix, Cloudinary, Drive, etc.)</div>
+      <input type="text" id="fotoLinkInput" placeholder="https://..." style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none;margin-bottom:10px" oninput="onLinkChange()">
+      <img id="fotoLinkPreview" src="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;display:none" onerror="this.style.display='none'" onload="this.style.display='block'">
+    </div>
+
     <div class="modal-footer">
       <button class="btn-cancel" onclick="document.getElementById('modalFoto').classList.remove('open')">Cancelar</button>
-      <button class="btn-save" id="btnSubirFoto" onclick="subirFotoAdmin()" disabled>Subir foto</button>
+      <button class="btn-save" id="btnSubirFoto" onclick="subirFotoAdmin()" disabled>Guardar foto</button>
     </div>
   </div>
 </div>
