@@ -745,6 +745,9 @@ var editingEventoId = null;
 var editingLugarId  = null;
 
 // EVENTOS
+function cerrarModalEvento(){var m=document.getElementById("modalEvento");if(m)m.remove();}
+function cerrarModalLugar(){var m=document.getElementById("modalLugar");if(m)m.remove();}
+
 function cargarEventosAdmin(){
   fetch(SB_URL+'/rest/v1/eventos?select=*&order=fecha.asc',{
     headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
@@ -779,7 +782,7 @@ function abrirModalEvento(e){
   d.className = 'modal-overlay open';
   d.style.zIndex = '700';
   d.innerHTML = '<div class="modal" style="max-width:500px;max-height:90vh;overflow-y:auto">'
-    +'<div class="modal-title">'+(e?'Editar':'Nuevo')+' Evento<button class="modal-close" onclick="document.getElementById('modalEvento').remove()">×</button></div>'
+    +'<div class="modal-title">'+(e?'Editar':'Nuevo')+' Evento<button class="modal-close" onclick="cerrarModalEvento()">×</button></div>'
     +'<label>Título *</label><input type="text" id="evTitulo" class="edit-input" value="'+(e?e.titulo:'')+'" placeholder="Nombre del evento">'
     +'<label>Tipo</label><select id="evTipo" class="edit-input"><option value="evento" '+(e&&e.tipo==='evento'?'selected':'')+'>Evento</option><option value="paseo" '+(e&&e.tipo==='paseo'?'selected':'')+'>Paseo</option><option value="exposicion" '+(e&&e.tipo==='exposicion'?'selected':'')+'>Exposición</option><option value="adopcion" '+(e&&e.tipo==='adopcion'?'selected':'')+'>Adopción</option></select>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div><label>Fecha *</label><input type="date" id="evFecha" class="edit-input" value="'+(e?e.fecha:'')+'"></div><div><label>Hora</label><input type="text" id="evHora" class="edit-input" value="'+(e&&e.hora?e.hora:'')+'" placeholder="10:00 AM"></div></div>'
@@ -789,7 +792,7 @@ function abrirModalEvento(e){
     +'<label>Imagen URL</label><input type="text" id="evImagen" class="edit-input" value="'+(e&&e.imagen?e.imagen:'')+'" placeholder="https://...">'
     +'<label>Link externo</label><input type="text" id="evLink" class="edit-input" value="'+(e&&e.link?e.link:'')+'" placeholder="https://...">'
     +'<label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="evActivo" '+(e?e.activo?'checked':'':'checked')+'> Activo</label>'
-    +'<div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById('modalEvento').remove()">Cancelar</button><button class="btn-save" onclick="guardarEvento()">Guardar</button></div>'
+    +'<div class="modal-footer"><button class="btn-cancel" onclick="cerrarModalEvento()">Cancelar</button><button class="btn-save" onclick="guardarEvento()">Guardar</button></div>'
     +'</div>';
   document.body.appendChild(d);
 }
@@ -838,7 +841,7 @@ function abrirModalLugar(l){
   var d=document.createElement('div');
   d.id='modalLugar';d.className='modal-overlay open';d.style.zIndex='700';
   d.innerHTML='<div class="modal" style="max-width:500px;max-height:90vh;overflow-y:auto">'
-    +'<div class="modal-title">'+(l?'Editar':'Nuevo')+' Lugar<button class="modal-close" onclick="document.getElementById('modalLugar').remove()">×</button></div>'
+    +'<div class="modal-title">'+(l?'Editar':'Nuevo')+' Lugar<button class="modal-close" onclick="cerrarModalLugar()">×</button></div>'
     +'<label>Nombre *</label><input type="text" id="luNombre" class="edit-input" value="'+(l?l.nombre:'')+'">'
     +'<label>Tipo</label><select id="luTipo" class="edit-input"><option value="restaurante" '+(l&&l.tipo==="restaurante"?"selected":"")+'>Restaurante</option><option value="parque" '+(l&&l.tipo==="parque"?"selected":"")+'>Parque</option><option value="cafe" '+(l&&l.tipo==="cafe"?"selected":"")+'>Café</option><option value="hotel" '+(l&&l.tipo==="hotel"?"selected":"")+'>Hotel</option><option value="tienda" '+(l&&l.tipo==="tienda"?"selected":"")+'>Tienda</option><option value="veterinaria" '+(l&&l.tipo==="veterinaria"?"selected":"")+'>Veterinaria</option></select>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div><label>Zona</label><input type="text" id="luZona" class="edit-input" value="'+(l&&l.zona?l.zona:'')+'" placeholder="10"></div><div><label>Teléfono</label><input type="text" id="luTel" class="edit-input" value="'+(l&&l.telefono?l.telefono:'')+'" placeholder="2234-5678"></div></div>'
@@ -848,7 +851,7 @@ function abrirModalLugar(l){
     +'<label>Google Maps URL</label><input type="text" id="luMaps" class="edit-input" value="'+(l&&l.google_maps?l.google_maps:'')+'">'
     +'<label>Instagram</label><input type="text" id="luInsta" class="edit-input" value="'+(l&&l.instagram?l.instagram:'')+'" placeholder="@usuario">'
     +'<label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="luActivo" '+(l?l.activo?"checked":"":"checked")+'>  Activo</label>'
-    +'<div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById('modalLugar').remove()">Cancelar</button><button class="btn-save" onclick="guardarLugar()">Guardar</button></div>'
+    +'<div class="modal-footer"><button class="btn-cancel" onclick="cerrarModalLugar()">Cancelar</button><button class="btn-save" onclick="guardarLugar()">Guardar</button></div>'
     +'</div>';
   document.body.appendChild(d);
 }
