@@ -895,11 +895,11 @@ document.getElementById('loginEmail').addEventListener('keydown',function(e){
 // ── Solicitud de amistad (próximamente) ──────────────────────
 function getBtnAmigo(uid){
   var estado = misAmigosCache.find(function(a){ return a.uid===uid; });
-  if(!estado) return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(''+uid+'')">🐾 Agregar amigo</button>';
+  if(!estado) return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\'' + uid + '\')">🐾 Agregar amigo</button>';
   if(estado.tipo==='amigo') return '<button class="btn-primary" style="background:#aaa;cursor:default">✅ Ya son amigos</button>';
   if(estado.tipo==='pendiente_enviado') return '<button class="btn-primary" style="background:#aaa;cursor:default">⏳ Solicitud enviada</button>';
-  if(estado.tipo==='pendiente_recibido') return '<button class="btn-primary btn-pink" onclick="aceptarDesdeModal(''+uid+'')">✅ Aceptar solicitud</button>';
-  return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(''+uid+'')">🐾 Agregar amigo</button>';
+  if(estado.tipo==='pendiente_recibido') return '<button class="btn-primary btn-pink" onclick="aceptarDesdeModal(\'' + uid + '\')">✅ Aceptar solicitud</button>';
+  return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\'' + uid + '\')">🐾 Agregar amigo</button>';
 }
 
 function aceptarDesdeModal(uid){
