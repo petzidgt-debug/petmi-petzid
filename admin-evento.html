@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evento — Admin PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px}
+.card{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:560px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.back-btn{padding:8px 14px;background:#f0f0ee;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;color:#555;text-decoration:none}
+.titulo-pag{font-size:20px;font-weight:900;color:#222}
+label{display:block;font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;margin-top:14px}
+input,select,textarea{width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;outline:none;font-family:Arial,sans-serif}
+input:focus,select:focus,textarea:focus{border-color:#00B4B4}
+textarea{resize:vertical;min-height:90px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.toggle-wrap{display:flex;align-items:center;gap:10px;margin-top:14px}
+.toggle-wrap label{margin:0;font-size:14px;font-weight:600;color:#333;text-transform:none;letter-spacing:0}
+.foto-preview{width:100%;height:180px;object-fit:cover;border-radius:10px;margin-top:8px;display:none}
+.foto-drop{border:2px dashed #ddd;border-radius:10px;padding:20px;text-align:center;cursor:pointer;margin-top:8px}
+.foto-drop:hover{border-color:#00B4B4}
+.btn-row{display:flex;gap:10px;margin-top:24px}
+.btn-save{flex:1;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer}
+.btn-save:disabled{background:#aaa;cursor:not-allowed}
+.btn-cancel{padding:14px 20px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer}
+.msg{padding:12px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none}
+.msg.ok{background:#e0f7f7;color:#007a7a}
+.msg.err{background:#fbeaf0;color:#c0392b}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <a href="/admin.html" class="back-btn">← Admin</a>
+    <div class="titulo-pag" id="tituloPag">Nuevo Evento</div>
+  </div>
+
+  <label>Título *</label>
+  <input type="text" id="evTitulo" placeholder="Nombre del evento">
+
+  <label>Tipo</label>
+  <select id="evTipo">
+    <option value="evento">🎪 Evento</option>
+    <option value="paseo">🚶 Paseo</option>
+    <option value="exposicion">🏆 Exposición</option>
+    <option value="adopcion">🐾 Adopción</option>
+  </select>
+
+  <div class="grid2">
+    <div>
+      <label>Fecha *</label>
+      <input type="date" id="evFecha">
+    </div>
+    <div>
+      <label>Hora</label>
+      <input type="text" id="evHora" placeholder="10:00 AM">
+    </div>
+  </div>
+
+  <label>Lugar</label>
+  <input type="text" id="evLugar" placeholder="Nombre del lugar">
+
+  <label>Dirección</label>
+  <input type="text" id="evDireccion" placeholder="Dirección completa">
+
+  <label>Descripción</label>
+  <textarea id="evDesc" placeholder="Descripción del evento..."></textarea>
+
+  <label>Foto</label>
+  <div class="foto-drop" onclick="document.getElementById('evFotoFile').click()">
+    <div style="font-size:24px;margin-bottom:6px">📸</div>
+    <div style="font-size:12px;color:#aaa">Haz clic para subir una foto</div>
+  </div>
+  <input type="file" id="evFotoFile" accept="image/*" style="display:none" onchange="onFotoChange(event)">
+  <img id="evFotoPreview" class="foto-preview">
+
+  <label>O pega un URL de imagen</label>
+  <input type="text" id="evImagen" placeholder="https://..." oninput="onUrlChange()">
+
+  <label>Link externo (Facebook, Eventbrite, etc.)</label>
+  <input type="text" id="evLink" placeholder="https://...">
+
+  <div class="toggle-wrap">
+    <input type="checkbox" id="evActivo" checked style="width:auto">
+    <label for="evActivo">Evento activo (visible en la app)</label>
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <div class="btn-row">
+    <button class="btn-cancel" onclick="window.location.href='/admin.html'">Cancelar</button>
+    <button class="btn-save" id="btnSave" onclick="guardar()">Guardar evento</button>
+  </div>
+</div>
+
+<script>
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+var CLOUD_NAME = 'dh5wgqgmk';
+var UPLOAD_PRESET = 'petzid';
+
+var eventoId  = null;
+var fotoBase64 = null;
+
+var params = new URLSearchParams(window.location.search);
+var editId = params.get('id');
+if(editId) cargarEvento(editId);
+
+function cargarEvento(id){
+  fetch(SUPA_URL+'/rest/v1/eventos?id=eq.'+id+'&select=*',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(data){
+    if(!data.length) return;
+    var e = data[0];
+    eventoId = e.id;
+    document.getElementById('tituloPag').textContent = 'Editar Evento';
+    document.getElementById('evTitulo').value    = e.titulo||'';
+    document.getElementById('evTipo').value      = e.tipo||'evento';
+    document.getElementById('evFecha').value     = e.fecha||'';
+    document.getElementById('evHora').value      = e.hora||'';
+    document.getElementById('evLugar').value     = e.lugar||'';
+    document.getElementById('evDireccion').value = e.direccion||'';
+    document.getElementById('evDesc').value      = e.descripcion||'';
+    document.getElementById('evImagen').value    = e.imagen||'';
+    document.getElementById('evLink').value      = e.link||'';
+    document.getElementById('evActivo').checked  = e.activo!==false;
+    if(e.imagen&&e.imagen.indexOf('http')>=0){
+      var prev = document.getElementById('evFotoPreview');
+      prev.src=e.imagen; prev.style.display='block';
+    }
+  });
+}
+
+function onFotoChange(ev){
+  var file = ev.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement('canvas');
+      var MAX=1200, w=img.width, h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      fotoBase64 = canvas.toDataURL('image/jpeg',0.85).split(',')[1];
+      var prev = document.getElementById('evFotoPreview');
+      prev.src=canvas.toDataURL('image/jpeg',0.85); prev.style.display='block';
+      document.getElementById('evImagen').value='';
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function onUrlChange(){
+  var url=document.getElementById('evImagen').value.trim();
+  var prev=document.getElementById('evFotoPreview');
+  if(url.indexOf('http')>=0){ prev.src=url; prev.style.display='block'; fotoBase64=null; }
+  else { prev.style.display='none'; }
+}
+
+async function guardar(){
+  var titulo=document.getElementById('evTitulo').value.trim();
+  var fecha=document.getElementById('evFecha').value;
+  if(!titulo||!fecha){ mostrarMsg('Título y fecha son obligatorios','err'); return; }
+
+  var btn=document.getElementById('btnSave');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Guardando...';
+
+  var imagenUrl=document.getElementById('evImagen').value.trim();
+
+  if(fotoBase64){
+    btn.innerHTML='<span class="spinner"></span>Subiendo foto...';
+    try{
+      var fd=new FormData();
+      fd.append('file','data:image/jpeg;base64,'+fotoBase64);
+      fd.append('upload_preset',UPLOAD_PRESET);
+      fd.append('folder','petzid/eventos');
+      var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
+      var data=await res.json();
+      imagenUrl=data.secure_url||imagenUrl;
+    }catch(e){ console.log('Cloudinary:',e); }
+  }
+
+  var payload={
+    titulo,
+    tipo:        document.getElementById('evTipo').value,
+    fecha,
+    hora:        document.getElementById('evHora').value.trim()||null,
+    lugar:       document.getElementById('evLugar').value.trim()||null,
+    direccion:   document.getElementById('evDireccion').value.trim()||null,
+    descripcion: document.getElementById('evDesc').value.trim()||null,
+    imagen:      imagenUrl||null,
+    link:        document.getElementById('evLink').value.trim()||null,
+    activo:      document.getElementById('evActivo').checked
+  };
+
+  var url=SUPA_URL+'/rest/v1/eventos';
+  var method='POST';
+  if(eventoId){ url+='?id=eq.'+eventoId; method='PATCH'; }
+
+  var r=await fetch(url,{
+    method,
+    headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},
+    body:JSON.stringify(payload)
+  });
+
+  if(r.ok){
+    mostrarMsg('Evento guardado!','ok');
+    setTimeout(function(){window.location.href='/admin.html';},1200);
+  } else {
+    mostrarMsg('Error al guardar','err');
+    btn.disabled=false; btn.textContent='Guardar evento';
+  }
+}
+
+function mostrarMsg(txt,tipo){
+  var el=document.getElementById('msg');
+  el.textContent=txt; el.className='msg '+tipo; el.style.display='block';
+}
+</script>
+</body>
+</html>
