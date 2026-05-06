@@ -302,48 +302,9 @@ var currentModalPet=null;
 var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 // ── Header ────────────────────────────────────────────────────
-function renderHeader(){
-  var el=document.getElementById('headerUser');
-  if(sessionEmail){
-    el.innerHTML=
-      '<span class="user-badge">🐾 '+(sessionDueno||sessionEmail)+'</span>'+
-      '<div class="header-menu">'+
-        '<button class="menu-btn" onclick="toggleMenu()">Mi cuenta ▾</button>'+
-        '<div class="menu-dropdown" id="headerMenuDropdown">'+
-          '<a href="/familia.html" class="menu-item">🐾 Mi familia</a>'+
-          '<a href="/index.html?agregar=1" class="menu-item">➕ Agregar mascota</a>'+
-          '<a href="/galeria.html" class="menu-item">🌟 Ver galería</a>'+
-          '<button class="menu-item danger" onclick="cerrarSesion()">🚪 Cerrar sesión</button>'+
-        '</div>'+
-      '</div>';
-  } else {
-    el.innerHTML=
-      '<a href="/index.html" class="btn-registro">Registra tu mascota</a>'+
-      '<button class="menu-btn" onclick="openLoginModal()" style="margin-left:8px">Ingresar</button>';
-  }
-}
 
-function toggleMenu(){
-  var d=document.getElementById('headerMenuDropdown');
-  if(d)d.classList.toggle('open');
-}
-// Cerrar menú al hacer click fuera
-document.addEventListener('click',function(e){
-  var menu=document.getElementById('headerMenuDropdown');
-  if(menu&&menu.classList.contains('open')){
-    if(!e.target.closest('.header-menu'))menu.classList.remove('open');
-  }
-});
+function cerrarSesion(){ petmiCerrarSesion(); }
 
-function cerrarSesion(){
-  localStorage.removeItem('petzid_email');
-  localStorage.removeItem('petzid_dueno');
-  sessionEmail=''; sessionDueno='';
-  renderHeader();
-  applyFilter();
-}
-
-renderHeader();
 
 // ── Cargar datos ──────────────────────────────────────────────
 // ── Carga progresiva ─────────────────────────────────────────
@@ -386,7 +347,6 @@ fetch('/api/galeria?action=getBasic')
     renderCumpleaneros();
     renderAngeles();
     applyFilter();
-    renderHeader(); // actualizar header con link correcto una vez cargados los datos
 
     // Fase 2: cargar detalle en background (no bloquea UI)
     fetch('/api/galeria?action=getData')
@@ -445,7 +405,6 @@ fetch('/api/galeria?action=getBasic')
         renderCumpleaneros();
         renderAngeles();
         applyFilter();
-        renderHeader();
       })
       .catch(function(){
         document.getElementById('galleryGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:#888">Error cargando mascotas. Intenta de nuevo.</div>';
@@ -884,8 +843,7 @@ function verificarEmail(){
         mostrarMsgLogin('¡Bienvenido/a '+(sessionDueno||'')+'! '+d.mascotas.length+' mascota(s) encontrada(s).','success');
         setTimeout(function(){
           closeLoginModal();
-          renderHeader();
-          shown=0;applyFilter();
+            shown=0;applyFilter();
           // Reabrir modal si había uno abierto
           if(currentModalPet){
             renderModalFooter(currentModalPet);
