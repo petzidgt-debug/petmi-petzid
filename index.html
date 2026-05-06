@@ -118,7 +118,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 <!-- TARJETA OCULTA PARA PNG -->
 <div id="pngCard" style="position:fixed;left:-9999px;top:0;width:580px;font-family:Arial,sans-serif;overflow:hidden;background:#fff">
   <div style="background:#00B4B4;display:flex;align-items:stretch">
-    <div id="pngPhoto" style="width:180px;height:240px;flex-shrink:0;background:#b2e0e0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:48px">🐾</div>
+    <div id="pngPhoto" style="width:220px;height:220px;flex-shrink:0;background:#b2e0e0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:48px">🐾</div>
     <div style="flex:1;display:flex;flex-direction:column;padding:14px 18px;gap:4px">
       <div id="pngEspecieIcon" style="font-size:32px;line-height:1">🐶</div>
       <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.6);margin-top:auto">NOMBRE</div>
@@ -632,7 +632,7 @@ function updatePngCard(){
   var img=document.getElementById('petPhoto');
   var pngPhoto=document.getElementById('pngPhoto');
   if(img.src&&img.style.display!=='none'){
-    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:180px;height:240px;object-fit:cover;object-position:center center">';
+    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:220px;height:220px;object-fit:cover;object-position:center center">';
   }
   var fd=isSibling?familyData:{
     dueno:(document.getElementById('inDueno')?document.getElementById('inDueno').value:''),
