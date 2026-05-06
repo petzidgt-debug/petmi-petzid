@@ -38,7 +38,8 @@
     var rightHTML = sessionEmail
       ? '<span class="user-badge">&#x1F43E; ' + (sessionDueno || sessionEmail) + '</span>' +
         '<div class="header-menu">' +
-          '<button class="menu-btn" onclick="petmiToggleMenu()">Mi cuenta &#x25BE; <span id="petmiNotifBadge" style="display:none;background:#E05090;color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px">0</span></button>' +
+          '<button class="menu-btn" onclick="petmiToggleMenu()">Mi cuenta &#x25BE;</button>' +
+        '<a href="/amigos.html" id="petmiNotifBadge" style="display:none;background:#E05090;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-left:4px;text-decoration:none">0 solicitudes</a>' +
           '<div class="menu-dropdown" id="petmiMenuDropdown">' +
             '<a href="/familia.html" class="menu-item">&#x1F3E0; Mi familia</a>' +
             '<a href="/index.html?agregar=1" class="menu-item">&#x2795; Agregar mascota</a>' +
@@ -110,7 +111,7 @@
       });
       var badge = document.getElementById('petmiNotifBadge');
       if(badge && pendientes.length > 0){
-        badge.textContent = pendientes.length;
+        badge.textContent = pendientes.length + (pendientes.length===1?' solicitud':' solicitudes');
         badge.style.display = 'inline-block';
       }
     }).catch(function(){});
