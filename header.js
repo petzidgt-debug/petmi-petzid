@@ -104,17 +104,20 @@
     }).then(function(r){return r&&r.json();})
     .then(function(d){
       if(!d) return;
-      // Contar solicitudes pendientes recibidas (donde soy el receptor)
+      console.log('[Badge] getAmigos response:', JSON.stringify(d));
       var miUid = uid;
+      console.log('[Badge] miUid:', miUid);
       var pendientes = (d.pendientes||[]).filter(function(a){
         return a.uid_receptor === miUid;
       });
+      console.log('[Badge] pendientes recibidas:', pendientes.length);
       var badge = document.getElementById('petmiNotifBadge');
+      console.log('[Badge] badge element:', badge);
       if(badge && pendientes.length > 0){
         badge.textContent = pendientes.length + (pendientes.length===1?' solicitud':' solicitudes');
         badge.style.display = 'inline-block';
       }
-    }).catch(function(){});
+    }).catch(function(e){ console.log('[Badge] error:', e); });
   }
 
   window.petmiLimpiarNotif = function(){
