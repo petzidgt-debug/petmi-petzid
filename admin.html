@@ -773,7 +773,7 @@ function cargarEventosAdmin(){
   });
 }
 
-function editEvento(i){ abrirModalEvento(window._eventosData[i]); }
+function editEvento(i){ window.location.href='/admin-evento.html?id='+window._eventosData[i].id; }
 
 function abrirModalEvento(e){
   editingEventoId = e ? e.id : null;
@@ -834,7 +834,7 @@ function cargarLugaresAdmin(){
   });
 }
 
-function editLugar(i){abrirModalLugar(window._lugaresData[i]);}
+function editLugar(i){ window.location.href='/admin-lugar.html?id='+window._lugaresData[i].id; }
 
 function abrirModalLugar(l){
   editingLugarId=l?l.id:null;
@@ -877,7 +877,7 @@ async function eliminarLugar(id){
     <div class="screen" id="screenEventos" style="display:none">
       <div class="page-header">
         <div><div class="page-title">Eventos Pet-Friendly</div><div class="page-sub" id="subEventos">Cargando...</div></div>
-        <button class="btn-primary" onclick="abrirModalEvento(null)">+ Nuevo Evento</button>
+        <button class="btn-primary" onclick="window.location.href='/admin-evento.html'">+ Nuevo Evento</button>
       </div>
       <div class="table-card"><div id="eventosAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
     </div>
@@ -886,7 +886,7 @@ async function eliminarLugar(id){
     <div class="screen" id="screenLugares" style="display:none">
       <div class="page-header">
         <div><div class="page-title">Lugares Pet-Friendly</div><div class="page-sub" id="subLugares">Cargando...</div></div>
-        <button class="btn-primary" onclick="abrirModalLugar(null)">+ Nuevo Lugar</button>
+        <button class="btn-primary" onclick="window.location.href='/admin-lugar.html'">+ Nuevo Lugar</button>
       </div>
       <div class="table-card"><div id="lugaresAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
     </div>
