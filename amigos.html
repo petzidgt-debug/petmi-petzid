@@ -143,14 +143,47 @@ function cargarTodo(){
     }
     misMascotas = d.mascotas;
     // 2. Cargar amigos + todas las mascotas para mostrar nombres
-    var uidPrincipal = misMascotas[0].uid;
+    // Buscar amigos para TODAS mis mascotas
+    var fetchAmigos = misMascotas.map(function(m){
+      return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(m.uid))
+        .then(function(r){return r.json();});
+    });
     return Promise.all([
-      fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(uidPrincipal)).then(function(r){return r.json();}),
+      Promise.all(fetchAmigos),
       fetch('/api/galeria?action=getBasic').then(function(r){return r.json();})
     ]);
   }).then(function(resultados){
     if(!resultados) return;
-    datosAmigos = resultados[0];
+
+    // Combinar amigos de todas las mascotas
+    var todosAmigos = [], todasPendientes = [], todasMascotasAmigos = [];
+    var uidsVistos = {};
+    resultados[0].forEach(function(da, i){
+      if(!da) return;
+      var miUid = misMascotas[i].uid;
+      (da.amigos||[]).forEach(function(a){
+        var key = a.uid_solicitante+'_'+a.uid_receptor;
+        if(!uidsVistos[key]){ uidsVistos[key]=1; todosAmigos.push(a); }
+      });
+      (da.pendientes||[]).forEach(function(a){
+        var key = a.id;
+        if(!uidsVistos[key]){ uidsVistos[key]=1; todasPendientes.push(a); }
+        // Incluir mascotasAmigos de pendientes también
+        if(da.mascotasAmigos) da.mascotasAmigos.forEach(function(m){
+          if(!uidsVistos['m_'+m.uid]){uidsVistos['m_'+m.uid]=1;todasMascotasAmigos.push(m);}
+        });
+      });
+      if(da.mascotasAmigos) da.mascotasAmigos.forEach(function(m){
+        if(!uidsVistos['m_'+m.uid]){uidsVistos['m_'+m.uid]=1;todasMascotasAmigos.push(m);}
+      });
+    });
+
+    datosAmigos = {
+      amigos:         todosAmigos,
+      pendientes:     todasPendientes,
+      mascotasAmigos: todasMascotasAmigos
+    };
+
     // Mapear mascotas básicas para mostrar nombres y fotos
     var basicRows = (resultados[1]&&resultados[1].rows)||[];
     datosAmigos.todasMascotas = basicRows.map(function(r){
@@ -181,7 +214,11 @@ function renderPagina(){
   html += '</div></div>';
 
   // Solicitudes pendientes recibidas
-  var pendientesRecibidas = (datosAmigos.pendientes||[]).filter(function(a){ return a.uid_receptor===mascotasPrincipal.uid; });
+  // Solicitudes recibidas para CUALQUIERA de mis mascotas
+  var misUids = misMascotas.map(function(m){return m.uid;});
+  var pendientesRecibidas = (datosAmigos.pendientes||[]).filter(function(a){ 
+    return misUids.indexOf(a.uid_receptor) >= 0; 
+  });
   if(pendientesRecibidas.length > 0){
     html += '<div class="seccion">';
     html += '<div class="sec-titulo">Solicitudes pendientes <span class="badge">'+pendientesRecibidas.length+'</span></div>';
