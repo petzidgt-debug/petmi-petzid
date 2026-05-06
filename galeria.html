@@ -661,6 +661,8 @@ function openModalByUID(uid){
 
 function openModalDirect(p){
   currentModalPet = p;
+  // Refrescar cache de amigos si hay sesión
+  if(sessionEmail) cargarCacheAmigos();
   var esGato = p.especie.toLowerCase().indexOf('gato')>=0;
   var emoji  = esGato?'🐱':'🐶';
   var photoEl = document.getElementById('modalPhoto');
@@ -896,9 +898,9 @@ document.getElementById('loginEmail').addEventListener('keydown',function(e){
 function getBtnAmigo(uid){
   var estado = misAmigosCache.find(function(a){ return a.uid===uid; });
   if(!estado) return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\'' + uid + '\')">🐾 Agregar amigo</button>';
-  if(estado.tipo==='amigo') return '<button class="btn-primary" style="background:#aaa;cursor:default">✅ Ya son amigos</button>';
-  if(estado.tipo==='pendiente_enviado') return '<button class="btn-primary" style="background:#aaa;cursor:default">⏳ Solicitud enviada</button>';
-  if(estado.tipo==='pendiente_recibido') return '<button class="btn-primary btn-pink" onclick="aceptarDesdeModal(\'' + uid + '\')">✅ Aceptar solicitud</button>';
+  if(estado.tipo==='amigo') return '<button class="btn-primary" style="background:#e0f7f7;color:#007a7a;cursor:default">🐾 Amigos</button>';
+  if(estado.tipo==='pendiente_enviado') return '<button class="btn-primary" style="background:#f0f0ee;color:#888;cursor:default">Solicitud enviada</button>';
+  if(estado.tipo==='pendiente_recibido') return '<button class="btn-primary btn-pink" onclick="aceptarDesdeModal(\'' + uid + '\')">Aceptar solicitud</button>';
   return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\'' + uid + '\')">🐾 Agregar amigo</button>';
 }
 
@@ -974,7 +976,8 @@ function mostrarToastG(msg){
 
 // ── Cache de amigos ──────────────────────────────────────────
 function cargarCacheAmigos(){
-  if(!sessionEmail) return;
+  if(!sessionEmail) return Promise.resolve();
+  return new Promise(function(resolve){
   var miMascota=allPets.find(function(p){
     return p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();
   });
@@ -995,7 +998,8 @@ function cargarCacheAmigos(){
           misAmigosCache.push({uid:a.uid_solicitante, tipo:'pendiente_recibido', id:a.id});
         }
       });
-    }).catch(function(){});
+    }).catch(function(){}).finally(function(){resolve();});
+  });
 }
 
 // Cargar cache al inicio si hay sesión
