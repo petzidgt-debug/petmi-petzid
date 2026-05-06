@@ -32,6 +32,8 @@
       '<a href="https://www.revistapetmi.com/" target="_blank" class="nav-link">Blog</a>' +
       '<a href="https://www.revistapetmi.com/category/all-products" target="_blank" class="nav-link">Tienda</a>' +
       '<a href="/galeria.html" class="nav-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">PetzID</a>' +
+      '<a href="/eventos.html" class="nav-link' + (currentPath.indexOf('eventos') >= 0 ? ' active' : '') + '">Eventos</a>' +
+      '<a href="/lugares.html" class="nav-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">Lugares</a>' +
       '<a href="/galeria.html" class="nav-link' + (currentPath.indexOf('amigos') >= 0 ? ' active' : '') + '">Amigos PetMi</a>';
 
     // Lado derecho según sesión
