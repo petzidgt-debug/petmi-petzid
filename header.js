@@ -91,33 +91,37 @@
 
   function cargarNotifHeader(){
     if(!sessionEmail) return;
-    // Cargar solicitudes pendientes recibidas
+    var _uid = null;
     fetch('/api/galeria?action=checkEmail', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'checkEmail', email:sessionEmail})
     }).then(function(r){return r.json();})
     .then(function(d){
-      if(!d.found||!d.mascotas.length) return;
-      var uid = d.mascotas[0].uid;
-      return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(uid));
-    }).then(function(r){return r&&r.json();})
-    .then(function(d){
-      if(!d) return;
-      console.log('[Badge] getAmigos response:', JSON.stringify(d));
-      var miUid = uid;
-      console.log('[Badge] miUid:', miUid);
-      var pendientes = (d.pendientes||[]).filter(function(a){
-        return a.uid_receptor === miUid;
+      if(!d.found||!d.mascotas.length) return null;
+      // Buscar solicitudes para TODAS las mascotas del usuario
+      var promesas = d.mascotas.map(function(m){
+        return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(m.uid))
+          .then(function(r){return r.json();})
+          .then(function(da){ return {uid:m.uid, data:da}; });
       });
-      console.log('[Badge] pendientes recibidas:', pendientes.length);
+      return Promise.all(promesas);
+    }).then(function(resultados){
+      if(!resultados) return;
+      var totalPendientes = 0;
+      resultados.forEach(function(res){
+        if(!res||!res.data) return;
+        var pend = (res.data.pendientes||[]).filter(function(a){
+          return a.uid_receptor === res.uid;
+        });
+        totalPendientes += pend.length;
+      });
       var badge = document.getElementById('petmiNotifBadge');
-      console.log('[Badge] badge element:', badge);
-      if(badge && pendientes.length > 0){
-        badge.textContent = pendientes.length + (pendientes.length===1?' solicitud':' solicitudes');
+      if(badge && totalPendientes > 0){
+        badge.textContent = totalPendientes + (totalPendientes===1?' solicitud':' solicitudes');
         badge.style.display = 'inline-block';
       }
-    }).catch(function(e){ console.log('[Badge] error:', e); });
+    }).catch(function(){});
   }
 
   window.petmiLimpiarNotif = function(){
