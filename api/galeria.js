@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
-const SUPABASE_KEY = 'eyJhbG...';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
