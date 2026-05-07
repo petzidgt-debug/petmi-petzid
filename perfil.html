@@ -354,6 +354,7 @@ function verificarAmistad(){
     if(!d.found||!d.mascotas.length) return;
     var miMascota = d.mascotas[0];
     miMascotaUID  = miMascota.uid;
+    console.log('MI uid:', miMascota.uid, '| PERFIL uid:', mascota.uid);
     if(miMascota.uid === mascota.uid) return; // es mi propio perfil
 
     // Verificar si son amigos - consulta directa Supabase
@@ -366,6 +367,7 @@ function verificarAmistad(){
       fetch(q2,{headers:{'apikey':sbKey,'Authorization':'Bearer '+sbKey}}).then(function(r){return r.json();})
     ]).then(function(results){
       var da = (results[0]||[]).concat(results[1]||[]);
+      console.log('Amigos query result:', da, 'sonAmigos:', da && da.length > 0);
         var sonAmigos = da && da.length > 0;
         if(sonAmigos){
           document.getElementById('convSection').style.display='block';
