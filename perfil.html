@@ -365,11 +365,11 @@ function verificarAmistad(){
           var sonAmigos = da && da.length > 0;
         if(sonAmigos){
           document.getElementById('convSection').style.display='block';
-          cargarConversacion(miMascota.uid, mascota.uid);
+          cargarConversacion(miMascotaUID, mascota.uid);
           // Marcar como leídos
           fetch('/api/galeria?action=marcarLeidos',{
             method:'POST', headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({uid_emisor:mascota.uid, uid_receptor:miMascota.uid})
+            body:JSON.stringify({uid_emisor:miMascotaUID, uid_receptor:mascota.uid})
           });
         }
       });
