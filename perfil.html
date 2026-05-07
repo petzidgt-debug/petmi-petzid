@@ -404,6 +404,7 @@ function enviarMensajePrivado(){
   var input   = document.getElementById('convInput');
   var mensaje = input.value.trim();
   if(!mensaje||!miMascotaUID||!mascota) return;
+  input.value = '';
 
   fetch('/api/galeria?action=enviarMensajePrivado',{
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -411,8 +412,20 @@ function enviarMensajePrivado(){
   }).then(function(r){return r.json();})
   .then(function(d){
     if(d.ok){
-      input.value='';
       cargarConversacion(miMascotaUID, mascota.uid);
+      // Notificar por email
+      if(mascota.email){
+        fetch('/api/admin?action=updateRow',{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            action:'notificarMensaje',
+            emailReceptor:  mascota.email,
+            nombreEmisor:   'Tu amigo',
+            nombreReceptor: mascota.nombre,
+            preview:        mensaje.substring(0,100)
+          })
+        });
+      }
     }
   });
 }
