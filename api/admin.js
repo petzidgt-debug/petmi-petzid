@@ -1,37 +1,26 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw3i6fZ-V_pAyOwVuj7KDMlFbYnWFWKqXvifUr4PSsaafUyUQgaqWkzSFzwx6-wS3JM/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqhIJrdYFuP61Q49Qu2X4yveMCNR1s7feOXumcN3xaWbC9hrghYrf-yAZyFr4PfcGt/exec';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  const action = req.query.action || '';
+
   try {
-    if (req.method === 'GET') {
-      const response = await fetch(SCRIPT_URL + '?action=' + action);
-      const text = await response.text();
-      try {
-        return res.status(200).json(JSON.parse(text));
-      } catch(e) {
-        return res.status(200).json({ ok: true });
-      }
-    }
+    let response;
     if (req.method === 'POST') {
-      let body = {};
-      try { body = req.body || {}; } catch(e) {}
-      const response = await fetch(SCRIPT_URL + '?action=' + action, {
+      response = await fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(body)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
       });
-      const text = await response.text();
-      try {
-        return res.status(200).json(JSON.parse(text));
-      } catch(e) {
-        return res.status(200).json({ ok: true });
-      }
+    } else {
+      const params = new URLSearchParams(req.query).toString();
+      response = await fetch(SCRIPT_URL + (params ? '?' + params : ''));
     }
-  } catch(err) {
+    const data = await response.json();
+    return res.status(200).json(data);
+  } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });
   }
 }
