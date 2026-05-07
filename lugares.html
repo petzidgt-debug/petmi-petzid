@@ -179,10 +179,10 @@ function renderLugares(){
     var stars=renderStars(l.rating||0);
     var fotoHTML=l.imagen&&l.imagen.indexOf('http')>=0
       ?'<img src="'+l.imagen+'">'
-      :'<div style="font-size:36px">'+emoji+'</div>';
+      :'';
 
     html+='<div class="lugar-card">';
-    html+='<div class="lugar-foto">'+fotoHTML+'</div>';
+    if(fotoHTML) html+='<div class="lugar-foto">'+fotoHTML+'</div>';
     html+='<div class="lugar-body">';
     html+='<span class="lugar-tipo-badge">'+emoji+' '+(l.tipo||'Lugar')+'</span>';
     html+='<div class="lugar-nombre">'+l.nombre+'</div>';
