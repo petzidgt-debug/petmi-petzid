@@ -39,7 +39,7 @@
     var navHTML =
       '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">Blog</a>' +
       '<a href="https://www.revistapetmi.com/category/all-products" target="_blank" class="h-link">Tienda</a>' +
-      '<a href="/galeria.html" class="h-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">PetzID</a>' +
+      '<a href="/index.html" class="h-link' + (currentPath.indexOf('index') >= 0 ? ' active' : '') + '">PetzID</a>' +
       '<div class="h-drop">' +
         '<button class="h-link" id="pfBtn" onclick="petmiTogglePF(event)">Pet Friendly ▾</button>' +
         '<div class="h-drop-menu" id="pfMenu">' +
