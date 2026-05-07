@@ -377,28 +377,35 @@ function verificarAmistad(){
 }
 
 function cargarConversacion(uid1, uid2){
-  fetch('/api/galeria?action=getConversacion&uid1='+encodeURIComponent(uid1)+'&uid2='+encodeURIComponent(uid2))
-    .then(function(r){return r.json();})
-    .then(function(d){
-      var msgs = d.mensajes||[];
-      var lista = document.getElementById('convLista');
-      if(!lista) return;
-      if(!msgs.length){
-        lista.innerHTML='<div style="text-align:center;color:#bbb;font-size:13px;padding:16px">Envía el primer mensaje 🐾</div>';
-        return;
-      }
-      lista.innerHTML = msgs.map(function(m){
-        var esMio = m.uid_emisor === miMascotaUID;
-        var fecha = m.created_at ? new Date(m.created_at).toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'}) : '';
-        return '<div style="display:flex;justify-content:'+(esMio?'flex-end':'flex-start')+';margin-bottom:8px">'
-          +'<div style="max-width:75%;background:'+(esMio?'#00B4B4':'#f0f0ee')+';color:'+(esMio?'#fff':'#333')+';padding:8px 12px;border-radius:'+(esMio?'14px 14px 4px 14px':'14px 14px 14px 4px')+';font-size:13px;line-height:1.5">'
-          +m.mensaje
-          +'<div style="font-size:10px;color:'+(esMio?'rgba(255,255,255,.6)':'#bbb')+';margin-top:3px;text-align:right">'+fecha+'</div>'
-          +'</div></div>';
-      }).join('');
-      lista.scrollTop = lista.scrollHeight;
-    });
+  var sb='https://ilcreewilnkchvozicyp.supabase.co';
+  var sk='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+  var base=sb+'/rest/v1/conversaciones?order=created_at.asc';
+  var h={'apikey':sk,'Authorization':'Bearer '+sk};
+  Promise.all([
+    fetch(base+'&uid_emisor=eq.'+encodeURIComponent(uid1)+'&uid_receptor=eq.'+encodeURIComponent(uid2),{headers:h}).then(function(r){return r.json();}),
+    fetch(base+'&uid_emisor=eq.'+encodeURIComponent(uid2)+'&uid_receptor=eq.'+encodeURIComponent(uid1),{headers:h}).then(function(r){return r.json();})
+  ]).then(function(results){
+    var msgs = (results[0]||[]).concat(results[1]||[]);
+    msgs.sort(function(a,b){return new Date(a.created_at)-new Date(b.created_at);});
+    var lista = document.getElementById('convLista');
+    if(!lista) return;
+    if(!msgs.length){
+      lista.innerHTML='<div style="text-align:center;color:#bbb;font-size:13px;padding:16px">Envia el primer mensaje</div>';
+      return;
+    }
+    lista.innerHTML = msgs.map(function(m){
+      var esMio = m.uid_emisor === miMascotaUID;
+      var hora = m.created_at ? new Date(m.created_at).toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'}) : '';
+      return '<div style="display:flex;justify-content:'+(esMio?'flex-end':'flex-start')+';margin-bottom:8px">'
+        +'<div style="max-width:75%;background:'+(esMio?'#00B4B4':'#f0f0ee')+';color:'+(esMio?'#fff':'#333')+';padding:8px 12px;border-radius:'+(esMio?'14px 14px 4px 14px':'14px 14px 14px 4px')+';font-size:13px;line-height:1.5">'
+        +m.mensaje
+        +'<div style="font-size:10px;color:'+(esMio?'rgba(255,255,255,.6)':'#bbb')+';margin-top:3px;text-align:right">'+hora+'</div>'
+        +'</div></div>';
+    }).join('');
+    lista.scrollTop = lista.scrollHeight;
+  }).catch(function(e){ console.log('Error conv:', e); });
 }
+
 
 function enviarMensajePrivado(){
   var input   = document.getElementById('convInput');
