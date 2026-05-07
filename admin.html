@@ -241,7 +241,11 @@ tbody tr:last-child td{border-bottom:none}
     <div class="screen" id="screenEventos">
       <div class="page-header">
         <div><div class="page-title">Eventos Pet-Friendly</div><div class="page-sub" id="subEventos">-</div></div>
-        <button class="btn-primary" onclick="window.location.href='/admin-evento.html'">+ Nuevo Evento</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-primary" style="background:#f0a500" onclick="filtrarEventosPendientes()">⏳ Por aprobar</button>
+          <button class="btn-primary" onclick="cargarEventosAdmin()">Todos</button>
+          <button class="btn-primary" onclick="window.location.href='/admin-evento.html'">+ Nuevo</button>
+        </div>
       </div>
       <div class="table-card"><div id="eventosAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
     </div>
@@ -810,6 +814,37 @@ function eliminarLugar(i){
   if(!confirm('Eliminar?'))return;
   var id=(window._lugaresData[i]||{}).id;
   fetch(SB_URL+'/rest/v1/lugares?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}).then(function(){cargarLugaresAdmin();});
+}
+
+function filtrarEventosPendientes(){
+  fetch(SB_URL+'/rest/v1/eventos?activo=eq.false&select=*&order=created_at.desc',{
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(data){
+    document.getElementById('subEventos').textContent=data.length+' pendientes de aprobacion';
+    if(!data.length){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay eventos pendientes</div>';return;}
+    window._eventosData=data;
+    var html='<div class="table-wrap"><table><thead><tr><th>Titulo</th><th>Tipo</th><th>Fecha</th><th>Enviado por</th><th>Acciones</th></tr></thead><tbody>';
+    data.forEach(function(e,i){
+      html+='<tr><td style="font-weight:700">'+e.titulo+'</td><td>'+e.tipo+'</td><td>'+(e.fecha||'-')+'</td><td style="font-size:12px;color:#888">'+(e.creado_por||'-')+'</td>';
+      html+='<td style="display:flex;gap:6px">';
+      html+='<button class="btn-sm" style="background:#e0f7f7;color:#007a7a" onclick="aprobarEvento('+i+')">✓ Aprobar</button>';
+      html+='<button class="btn-sm btn-edit" onclick="editarEvento('+i+')">Editar</button>';
+      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarEvento('+i+')">🗑️</button>';
+      html+='</td></tr>';
+    });
+    html+='</tbody></table></div>';
+    document.getElementById('eventosAdminWrap').innerHTML=html;
+  });
+}
+
+function aprobarEvento(i){
+  var id=(window._eventosData[i]||{}).id;
+  fetch(SB_URL+'/rest/v1/eventos?id=eq.'+id,{
+    method:'PATCH',
+    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'},
+    body:JSON.stringify({activo:true})
+  }).then(function(){filtrarEventosPendientes();});
 }
 
 function cargarEventosAdmin(){
