@@ -352,22 +352,30 @@ function verificarAmistad(){
   }).then(function(r){return r.json();})
   .then(function(d){
     if(!d.found||!d.mascotas.length) return;
-    var miMascota = d.mascotas[0];
-    miMascotaUID  = miMascota.uid;
-    console.log('MI uid:', miMascota.uid, '| PERFIL uid:', mascota.uid);
-    if(miMascota.uid === mascota.uid) return; // es mi propio perfil
-
-    // Verificar si son amigos - consulta directa Supabase
+    // Buscar amistad para TODAS las mascotas del usuario
+    var misMascotas = d.mascotas;
+    var miUidPrincipal = d.mascotas[0].uid;
+    miMascotaUID = miUidPrincipal;
+    
+    // Verificar si alguna de mis mascotas es amiga del perfil
     var sbUrl='https://ilcreewilnkchvozicyp.supabase.co';
     var sbKey='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-    var q1=sbUrl+'/rest/v1/amigos?uid_solicitante=eq.'+encodeURIComponent(miMascota.uid)+'&uid_receptor=eq.'+encodeURIComponent(mascota.uid)+'&estado=eq.aceptado&select=id';
-    var q2=sbUrl+'/rest/v1/amigos?uid_solicitante=eq.'+encodeURIComponent(mascota.uid)+'&uid_receptor=eq.'+encodeURIComponent(miMascota.uid)+'&estado=eq.aceptado&select=id';
-    Promise.all([
-      fetch(q1,{headers:{'apikey':sbKey,'Authorization':'Bearer '+sbKey}}).then(function(r){return r.json();}),
-      fetch(q2,{headers:{'apikey':sbKey,'Authorization':'Bearer '+sbKey}}).then(function(r){return r.json();})
-    ]).then(function(results){
-      var da = (results[0]||[]).concat(results[1]||[]);
-      console.log('Amigos query result:', da, 'sonAmigos:', da && da.length > 0);
+    
+    var queries = [];
+    misMascotas.forEach(function(mm){
+      if(mm.uid === mascota.uid) return;
+      queries.push(fetch(sbUrl+'/rest/v1/amigos?uid_solicitante=eq.'+encodeURIComponent(mm.uid)+'&uid_receptor=eq.'+encodeURIComponent(mascota.uid)+'&estado=eq.aceptado&select=id',{headers:{'apikey':sbKey,'Authorization':'Bearer '+sbKey}}).then(function(r){return r.json();}).then(function(r){return {rows:r,uid:mm.uid};}));
+      queries.push(fetch(sbUrl+'/rest/v1/amigos?uid_solicitante=eq.'+encodeURIComponent(mascota.uid)+'&uid_receptor=eq.'+encodeURIComponent(mm.uid)+'&estado=eq.aceptado&select=id',{headers:{'apikey':sbKey,'Authorization':'Bearer '+sbKey}}).then(function(r){return r.json();}).then(function(r){return {rows:r,uid:mm.uid};}));
+    });
+
+    Promise.all(queries).then(function(results){
+      var encontrado = null;
+      results.forEach(function(res){
+        if(res.rows && res.rows.length > 0) encontrado = res.uid;
+      });
+      if(encontrado) miMascotaUID = encontrado;
+      var da = encontrado ? [1] : [];
+      console.log('Amigos encontrado con uid:', encontrado);
         var sonAmigos = da && da.length > 0;
         if(sonAmigos){
           document.getElementById('convSection').style.display='block';
