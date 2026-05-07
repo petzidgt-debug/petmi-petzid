@@ -320,6 +320,22 @@ function enviarMensaje(){
   }).catch(function(){alert('Error al enviar.');});
 }
 
+function testEmail(){
+  fetch('/api/admin?action=updateRow',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      action:'notificarMensaje',
+      emailReceptor: mascota.email,
+      nombreEmisor: sessionEmail||'test',
+      nombreReceptor: mascota.nombre,
+      mensaje: 'Mensaje de prueba',
+      urlPerfil: 'https://petmi-petzid.vercel.app/perfil.html?uid='+miMascotaUID
+    })
+  }).then(function(r){return r.json();})
+  .then(function(d){alert('Respuesta: '+JSON.stringify(d));})
+  .catch(function(e){alert('Error: '+e.message);});
+}
+
 function mostrarToast(msg){
   var el=document.getElementById('toast');
   el.textContent=msg;el.classList.add('show');
