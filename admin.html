@@ -127,6 +127,10 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('familias',this)"><span class="nav-icon">🏠</span>Familias</div>
       <div class="nav-item" onclick="showScreen('eventos',this)"><span class="nav-icon">🎉</span>Eventos</div>
       <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
+      <div class="nav-item" onclick="showScreen('eventos',this)"><span class="nav-icon">🎉</span>Eventos</div>
+      <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
+      <div class="nav-item" onclick="showScreen('eventos',this)"><span class="nav-icon">🎉</span>Eventos</div>
+      <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
       <div class="nav-item" onclick="showScreen('campanas',this)"><span class="nav-icon">📧</span>Campanas</div>
     </nav>
     <div class="sidebar-footer">
@@ -237,6 +241,24 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
 
+    <!-- Screen Eventos -->
+    <div class="screen" id="screenEventos">
+      <div class="page-header">
+        <div><div class="page-title">Eventos Pet-Friendly</div><div class="page-sub" id="subEventos">Cargando...</div></div>
+        <button class="btn-primary" onclick="window.location.href='/admin-evento.html'">+ Nuevo Evento</button>
+      </div>
+      <div class="table-card"><div id="eventosAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>
+
+    <!-- Screen Lugares -->
+    <div class="screen" id="screenLugares">
+      <div class="page-header">
+        <div><div class="page-title">Lugares Pet-Friendly</div><div class="page-sub" id="subLugares">Cargando...</div></div>
+        <button class="btn-primary" onclick="window.location.href='/admin-lugar.html'">+ Nuevo Lugar</button>
+      </div>
+      <div class="table-card"><div id="lugaresAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>
+
   </div>
 </div>
 
@@ -276,6 +298,10 @@ tbody tr:last-child td{border-bottom:none}
 <script>
 var SCRIPT_URL='/api/admin';
 var PASSWORD='petmi2024';
+var SB_URL='https://ilcreewilnkchvozicyp.supabase.co';
+var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+var editingEventoId=null;
+var editingLugarId=null;
 var allData=[],filtered=[],familias={},campanas=[];
 var page=1,perPage=25,editIdx=null;
 
@@ -901,7 +927,7 @@ async function eliminarLugar(id){
     </div>
 
     <!-- Screen Eventos -->
-    <div class="screen" id="screenEventos">
+    <div class="screen" id="screenEventos" style="display:none">
       <div class="page-header">
         <div><div class="page-title">Eventos Pet-Friendly</div><div class="page-sub" id="subEventos">Cargando...</div></div>
         <button class="btn-primary" onclick="window.location.href='/admin-evento.html'">+ Nuevo Evento</button>
@@ -910,7 +936,7 @@ async function eliminarLugar(id){
     </div>
 
     <!-- Screen Lugares -->
-    <div class="screen" id="screenLugares">
+    <div class="screen" id="screenLugares" style="display:none">
       <div class="page-header">
         <div><div class="page-title">Lugares Pet-Friendly</div><div class="page-sub" id="subLugares">Cargando...</div></div>
         <button class="btn-primary" onclick="window.location.href='/admin-lugar.html'">+ Nuevo Lugar</button>
