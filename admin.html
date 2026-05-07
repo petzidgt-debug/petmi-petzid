@@ -244,7 +244,7 @@ tbody tr:last-child td{border-bottom:none}
     <!-- Screen Eventos -->
     <div class="screen" id="screenEventos">
       <div class="page-header">
-        <div><div class="page-title">Eventos Pet-Friendly</div><div class="page-sub" id="subEventos">Cargando...</div></div>
+        <div><div class="page-title">Eventos Pet-Friendly</div><div class="page-sub" id="subEventos">-</div></div>
         <button class="btn-primary" onclick="window.location.href='/admin-evento.html'">+ Nuevo Evento</button>
       </div>
       <div class="table-card"><div id="eventosAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
@@ -253,7 +253,7 @@ tbody tr:last-child td{border-bottom:none}
     <!-- Screen Lugares -->
     <div class="screen" id="screenLugares">
       <div class="page-header">
-        <div><div class="page-title">Lugares Pet-Friendly</div><div class="page-sub" id="subLugares">Cargando...</div></div>
+        <div><div class="page-title">Lugares Pet-Friendly</div><div class="page-sub" id="subLugares">-</div></div>
         <button class="btn-primary" onclick="window.location.href='/admin-lugar.html'">+ Nuevo Lugar</button>
       </div>
       <div class="table-card"><div id="lugaresAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
@@ -298,10 +298,6 @@ tbody tr:last-child td{border-bottom:none}
 <script>
 var SCRIPT_URL='/api/admin';
 var PASSWORD='petmi2024';
-var SB_URL='https://ilcreewilnkchvozicyp.supabase.co';
-var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
-var editingEventoId=null;
-var editingLugarId=null;
 var allData=[],filtered=[],familias={},campanas=[];
 var page=1,perPage=25,editIdx=null;
 
@@ -787,128 +783,62 @@ var editingLugarId  = null;
 function cerrarModalEvento(){var m=document.getElementById("modalEvento");if(m)m.remove();}
 function cerrarModalLugar(){var m=document.getElementById("modalLugar");if(m)m.remove();}
 
-function cargarEventosAdmin(){
-  fetch(SB_URL+'/rest/v1/eventos?select=*&order=fecha.asc',{
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
-  }).then(function(r){return r.json();})
-  .then(function(data){
-    document.getElementById('subEventos').textContent=data.length+' eventos';
-    if(!data.length){ document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay eventos. Crea el primero.</div>'; return; }
-    var html='<div class="table-wrap"><table><thead><tr><th>Título</th><th>Tipo</th><th>Fecha</th><th>Lugar</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
-    data.forEach(function(e,i){
-      var eJson = JSON.stringify(e);
-      html+='<tr>';
-      html+='<td style="font-weight:700">'+e.titulo+'</td>';
-      html+='<td>'+e.tipo+'</td>';
-      html+='<td>'+(e.fecha||'-')+'</td>';
-      html+='<td>'+(e.lugar||'-')+'</td>';
-      html+='<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(e.activo?'#e0f7f7':'#fbeaf0')+';color:'+(e.activo?'#007a7a':'#c0392b')+'">'+(e.activo?'Activo':'Inactivo')+'</span></td>';
-      html+='<td><button class="btn-sm btn-edit" onclick="editEvento('+i+')">Editar</button> <button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarEvento(\''+e.id+'\')">🗑️</button></td>';
-      html+='</tr>';
-    });
-    html+='</tbody></table></div>';
-    document.getElementById('eventosAdminWrap').innerHTML=html;
-    window._eventosData = data;
-  });
+
+function editarEvento(i){location.href='/admin-evento.html?id='+(window._eventosData[i]||{}).id;}
+function eliminarEvento(i){
+  if(!confirm('Eliminar?'))return;
+  var id=(window._eventosData[i]||{}).id;
+  fetch(SB_URL+'/rest/v1/eventos?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}).then(function(){cargarEventosAdmin();});
 }
 
-function editEvento(i){ window.location.href='/admin-evento.html?id='+window._eventosData[i].id; }
-
-function abrirModalEvento(e){
-  editingEventoId = e ? e.id : null;
-  var d = document.createElement('div');
-  d.id = 'modalEvento';
-  d.className = 'modal-overlay open';
-  d.style.zIndex = '700';
-  d.innerHTML = '<div class="modal" style="max-width:500px;max-height:90vh;overflow-y:auto">'
-    +'<div class="modal-title">'+(e?'Editar':'Nuevo')+' Evento<button class="modal-close" onclick="cerrarModalEvento()">×</button></div>'
-    +'<label>Título *</label><input type="text" id="evTitulo" class="edit-input" value="'+(e?e.titulo:'')+'" placeholder="Nombre del evento">'
-    +'<label>Tipo</label><select id="evTipo" class="edit-input"><option value="evento" '+(e&&e.tipo==='evento'?'selected':'')+'>Evento</option><option value="paseo" '+(e&&e.tipo==='paseo'?'selected':'')+'>Paseo</option><option value="exposicion" '+(e&&e.tipo==='exposicion'?'selected':'')+'>Exposición</option><option value="adopcion" '+(e&&e.tipo==='adopcion'?'selected':'')+'>Adopción</option></select>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div><label>Fecha *</label><input type="date" id="evFecha" class="edit-input" value="'+(e?e.fecha:'')+'"></div><div><label>Hora</label><input type="text" id="evHora" class="edit-input" value="'+(e&&e.hora?e.hora:'')+'" placeholder="10:00 AM"></div></div>'
-    +'<label>Lugar</label><input type="text" id="evLugar" class="edit-input" value="'+(e&&e.lugar?e.lugar:'')+'">'
-    +'<label>Dirección</label><input type="text" id="evDireccion" class="edit-input" value="'+(e&&e.direccion?e.direccion:'')+'">'
-    +'<label>Descripción</label><textarea id="evDesc" class="edit-input" style="height:70px;resize:none">'+(e&&e.descripcion?e.descripcion:'')+'</textarea>'
-    +'<label>Imagen URL</label><input type="text" id="evImagen" class="edit-input" value="'+(e&&e.imagen?e.imagen:'')+'" placeholder="https://...">'
-    +'<label>Link externo</label><input type="text" id="evLink" class="edit-input" value="'+(e&&e.link?e.link:'')+'" placeholder="https://...">'
-    +'<label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="evActivo" '+(e?e.activo?'checked':'':'checked')+'> Activo</label>'
-    +'<div class="modal-footer"><button class="btn-cancel" onclick="cerrarModalEvento()">Cancelar</button><button class="btn-save" onclick="guardarEvento()">Guardar</button></div>'
-    +'</div>';
-  document.body.appendChild(d);
-}
-
-async function guardarEvento(){
-  var titulo=document.getElementById('evTitulo').value.trim();
-  var fecha=document.getElementById('evFecha').value;
-  if(!titulo||!fecha){alert('Título y fecha son obligatorios');return;}
-  var payload={titulo,tipo:document.getElementById('evTipo').value,fecha,hora:document.getElementById('evHora').value.trim(),lugar:document.getElementById('evLugar').value.trim(),direccion:document.getElementById('evDireccion').value.trim(),descripcion:document.getElementById('evDesc').value.trim(),imagen:document.getElementById('evImagen').value.trim(),link:document.getElementById('evLink').value.trim(),activo:document.getElementById('evActivo').checked};
-  var url=SB_URL+'/rest/v1/eventos'+(editingEventoId?'?id=eq.'+editingEventoId:'');
-  var res=await fetch(url,{method:editingEventoId?'PATCH':'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'},body:JSON.stringify(payload)});
-  if(res.ok){document.getElementById('modalEvento').remove();cargarEventosAdmin();alert('✅ Evento guardado!');}
-  else{alert('Error al guardar');}
-}
-
-async function eliminarEvento(id){
-  if(!confirm('¿Eliminar este evento?'))return;
-  await fetch(SB_URL+'/rest/v1/eventos?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-  cargarEventosAdmin();
-}
-
-// LUGARES
 function cargarLugaresAdmin(){
-  fetch(SB_URL+'/rest/v1/lugares?select=*&order=nombre.asc',{
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
-  }).then(function(r){return r.json();})
+  fetch(SB_URL+'/rest/v1/lugares?select=*&order=nombre.asc',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}})
+  .then(function(r){return r.json();})
   .then(function(data){
     document.getElementById('subLugares').textContent=data.length+' lugares';
-    if(!data.length){document.getElementById('lugaresAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay lugares. Crea el primero.</div>';return;}
+    if(!data.length){document.getElementById('lugaresAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay lugares. <a href="/admin-lugar.html" style="color:#E05090;font-weight:700">Crear el primero</a></div>';return;}
+    window._lugaresData=data;
     var html='<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Zona</th><th>Rating</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
-    data.forEach(function(l,i){
-      html+='<tr><td style="font-weight:700">'+l.nombre+'</td><td>'+l.tipo+'</td><td>'+(l.zona?'Z.'+l.zona:'-')+'</td><td>'+(l.rating?'⭐'+l.rating:'-')+'</td>';
+    data.forEach(function(l){
+      html+='<tr><td style="font-weight:700">'+l.nombre+'</td><td>'+l.tipo+'</td><td>'+(l.zona?'Z.'+l.zona:'-')+'</td><td>'+(l.rating||'-')+'</td>';
       html+='<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(l.activo?'#e0f7f7':'#fbeaf0')+';color:'+(l.activo?'#007a7a':'#c0392b')+'">'+(l.activo?'Activo':'Inactivo')+'</span></td>';
-      html+='<td><button class="btn-sm btn-edit" onclick="editLugar('+i+')">Editar</button> <button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarLugar(\''+l.id+'\')">🗑️</button></td></tr>';
+      html+='<td><button class="btn-sm btn-edit" onclick="editarLugar(i)">Editar</button> ';
+      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarLugar(i)">Eliminar</button></td></tr>';
     });
     html+='</tbody></table></div>';
     document.getElementById('lugaresAdminWrap').innerHTML=html;
-    window._lugaresData=data;
-  });
+  }).catch(function(e){document.getElementById('lugaresAdminWrap').innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
+}
+function editarLugar(i){location.href='/admin-lugar.html?id='+(window._lugaresData[i]||{}).id;}
+function eliminarLugar(i){
+  if(!confirm('Eliminar?'))return;
+  var id=(window._lugaresData[i]||{}).id;
+  fetch(SB_URL+'/rest/v1/lugares?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}).then(function(){cargarLugaresAdmin();});
 }
 
-function editLugar(i){ window.location.href='/admin-lugar.html?id='+window._lugaresData[i].id; }
-
-function abrirModalLugar(l){
-  editingLugarId=l?l.id:null;
-  var d=document.createElement('div');
-  d.id='modalLugar';d.className='modal-overlay open';d.style.zIndex='700';
-  d.innerHTML='<div class="modal" style="max-width:500px;max-height:90vh;overflow-y:auto">'
-    +'<div class="modal-title">'+(l?'Editar':'Nuevo')+' Lugar<button class="modal-close" onclick="cerrarModalLugar()">×</button></div>'
-    +'<label>Nombre *</label><input type="text" id="luNombre" class="edit-input" value="'+(l?l.nombre:'')+'">'
-    +'<label>Tipo</label><select id="luTipo" class="edit-input"><option value="restaurante" '+(l&&l.tipo==="restaurante"?"selected":"")+'>Restaurante</option><option value="parque" '+(l&&l.tipo==="parque"?"selected":"")+'>Parque</option><option value="cafe" '+(l&&l.tipo==="cafe"?"selected":"")+'>Café</option><option value="hotel" '+(l&&l.tipo==="hotel"?"selected":"")+'>Hotel</option><option value="tienda" '+(l&&l.tipo==="tienda"?"selected":"")+'>Tienda</option><option value="veterinaria" '+(l&&l.tipo==="veterinaria"?"selected":"")+'>Veterinaria</option></select>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div><label>Zona</label><input type="text" id="luZona" class="edit-input" value="'+(l&&l.zona?l.zona:'')+'" placeholder="10"></div><div><label>Teléfono</label><input type="text" id="luTel" class="edit-input" value="'+(l&&l.telefono?l.telefono:'')+'" placeholder="2234-5678"></div></div>'
-    +'<label>Dirección</label><input type="text" id="luDir" class="edit-input" value="'+(l&&l.direccion?l.direccion:'')+'">'
-    +'<label>Descripción</label><textarea id="luDesc" class="edit-input" style="height:70px;resize:none">'+(l&&l.descripcion?l.descripcion:'')+'</textarea>'
-    +'<label>Imagen URL</label><input type="text" id="luImagen" class="edit-input" value="'+(l&&l.imagen?l.imagen:'')+'" placeholder="https://...">'
-    +'<label>Google Maps URL</label><input type="text" id="luMaps" class="edit-input" value="'+(l&&l.google_maps?l.google_maps:'')+'">'
-    +'<label>Instagram</label><input type="text" id="luInsta" class="edit-input" value="'+(l&&l.instagram?l.instagram:'')+'" placeholder="@usuario">'
-    +'<label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="luActivo" '+(l?l.activo?"checked":"":"checked")+'>  Activo</label>'
-    +'<div class="modal-footer"><button class="btn-cancel" onclick="cerrarModalLugar()">Cancelar</button><button class="btn-save" onclick="guardarLugar()">Guardar</button></div>'
-    +'</div>';
-  document.body.appendChild(d);
+function cargarEventosAdmin(){
+  fetch(SB_URL+'/rest/v1/eventos?select=*&order=fecha.asc',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}})
+  .then(function(r){return r.json();})
+  .then(function(data){
+    document.getElementById('subEventos').textContent=data.length+' eventos';
+    if(!data.length){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay eventos. <a href="/admin-evento.html" style="color:#00B4B4;font-weight:700">Crear el primero</a></div>';return;}
+    window._eventosData=data;
+    var html='<div class="table-wrap"><table><thead><tr><th>Titulo</th><th>Tipo</th><th>Fecha</th><th>Lugar</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
+    data.forEach(function(e,i){
+      html+='<tr><td style="font-weight:700">'+e.titulo+'</td><td>'+e.tipo+'</td><td>'+(e.fecha||'-')+'</td><td>'+(e.lugar||'-')+'</td>';
+      html+='<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(e.activo?'#e0f7f7':'#fbeaf0')+';color:'+(e.activo?'#007a7a':'#c0392b')+'">'+(e.activo?'Activo':'Inactivo')+'</span></td>';
+      html+='<td><button class="btn-sm btn-edit" onclick="editarEvento('+i+')">Editar</button> ';
+      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarEvento('+i+')">Eliminar</button></td></tr>';
+    });
+    html+='</tbody></table></div>';
+    document.getElementById('eventosAdminWrap').innerHTML=html;
+  }).catch(function(e){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
 }
-
-async function guardarLugar(){
-  var nombre=document.getElementById('luNombre').value.trim();
-  if(!nombre){alert('El nombre es obligatorio');return;}
-  var payload={nombre,tipo:document.getElementById('luTipo').value,zona:document.getElementById('luZona').value.trim(),telefono:document.getElementById('luTel').value.trim(),direccion:document.getElementById('luDir').value.trim(),descripcion:document.getElementById('luDesc').value.trim(),imagen:document.getElementById('luImagen').value.trim(),google_maps:document.getElementById('luMaps').value.trim(),instagram:document.getElementById('luInsta').value.trim(),activo:document.getElementById('luActivo').checked};
-  var url=SB_URL+'/rest/v1/lugares'+(editingLugarId?'?id=eq.'+editingLugarId:'');
-  var res=await fetch(url,{method:editingLugarId?'PATCH':'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'},body:JSON.stringify(payload)});
-  if(res.ok){document.getElementById('modalLugar').remove();cargarLugaresAdmin();alert('✅ Lugar guardado!');}
-  else{alert('Error al guardar');}
-}
-
-async function eliminarLugar(id){
-  if(!confirm('¿Eliminar este lugar?'))return;
-  await fetch(SB_URL+'/rest/v1/lugares?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-  cargarLugaresAdmin();
+function editarEvento(i){location.href='/admin-evento.html?id='+(window._eventosData[i]||{}).id;}
+function eliminarEvento(i){
+  if(!confirm('Eliminar?'))return;
+  var id=(window._eventosData[i]||{}).id;
+  fetch(SB_URL+'/rest/v1/eventos?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}).then(function(){cargarEventosAdmin();});
 }
 </script>
 
