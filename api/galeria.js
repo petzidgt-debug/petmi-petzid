@@ -356,6 +356,30 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
 
+    // ── Enviar evento a revisión (usuarios) ─────────────────────
+    if (action === 'enviarEvento' && req.method === 'POST') {
+      const { titulo, tipo, fecha, hora, lugar, direccion, descripcion, imagen, link, email } = req.body;
+      if (!titulo || !fecha) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ titulo, tipo: tipo||'evento', fecha, hora, lugar, direccion, descripcion, imagen, link, creado_por: email, activo: false })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── Enviar lugar a revisión (usuarios) ───────────────────────
+    if (action === 'enviarLugar' && req.method === 'POST') {
+      const { nombre, tipo, zona, direccion, descripcion, imagen, google_maps, instagram, telefono, email } = req.body;
+      if (!nombre) return res.status(200).json({ ok: false, error: 'Falta el nombre' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ nombre, tipo: tipo||'restaurante', zona, direccion, descripcion, imagen, google_maps, instagram, telefono, activo: false })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
     return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
