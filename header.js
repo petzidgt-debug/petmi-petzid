@@ -52,10 +52,12 @@
     // Lado derecho
     var rightHTML = sessionEmail
       ? '<a href="/amigos.html" id="petmiNotifBadge" class="h-badge">1 solicitud</a>' +
+        '<a href="/mensajes.html" id="petmiMsgBadge" class="h-badge" style="background:#00B4B4;display:none">1 mensaje</a>' +
         '<div class="h-drop">' +
           '<button class="h-btn" onclick="petmiToggleMenu(event)">🐾 ' + (sessionDueno ? sessionDueno.split(' ')[0] : sessionEmail.split('@')[0]) + ' ▾</button>' +
           '<div class="h-drop-menu" id="petmiMenuDropdown" style="left:auto;right:0;transform:none">' +
             '<a href="/familia.html" class="h-drop-item">🏠 Mi familia</a>' +
+            '<a href="/mensajes.html" class="h-drop-item">💬 Mensajes</a>' +
             '<a href="/amigos.html" class="h-drop-item">🐾 Mis amigos</a>' +
             '<a href="/index.html?agregar=1" class="h-drop-item">➕ Agregar mascota</a>' +
             '<a href="/galeria.html" class="h-drop-item">🌟 Ver galería</a>' +
@@ -76,6 +78,7 @@
       (sessionEmail
         ? '<span class="h-mob-sec">Mi cuenta</span>' +
           '<a href="/familia.html">🏠 Mi familia</a>' +
+          '<a href="/mensajes.html">💬 Mensajes</a>' +
           '<a href="/amigos.html">🐾 Mis amigos</a>' +
           '<a href="/index.html?agregar=1">➕ Agregar mascota</a>' +
           '<button onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>'
@@ -132,6 +135,24 @@
       var badge = document.getElementById('petmiNotifBadge');
       if(badge && total > 0){
         badge.textContent = total + (total===1?' solicitud':' solicitudes');
+        badge.style.display = 'inline-block';
+      }
+    }).catch(function(){});
+
+    // Mensajes no leídos
+    fetch('/api/galeria?action=checkEmail',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'checkEmail', email:sessionEmail})
+    }).then(function(r){return r.json();})
+    .then(function(d){
+      if(!d.found||!d.mascotas.length) return;
+      return fetch('/api/galeria?action=getMensajesNoLeidos&uid='+encodeURIComponent(d.mascotas[0].uid));
+    }).then(function(r){return r&&r.json();})
+    .then(function(d){
+      if(!d||!d.count) return;
+      var badge = document.getElementById('petmiMsgBadge');
+      if(badge && d.count > 0){
+        badge.textContent = d.count + (d.count===1?' mensaje':' mensajes');
         badge.style.display = 'inline-block';
       }
     }).catch(function(){});
