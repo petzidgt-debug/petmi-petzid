@@ -99,48 +99,52 @@ var uid          = new URLSearchParams(window.location.search).get('uid');
 
 if (!uid) window.location.href = '/galeria.html';
 
-// Cargar datos
-fetch('/api/galeria?action=getData')
+// Cargar datos desde Supabase
+fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=*', {
+    headers: {
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'
+    }
+  })
   .then(function(r){ return r.json(); })
-  .then(function(d){
-    var rows = d.rows || [];
-    var row  = rows.find(function(r){ return String(r[1]||'').trim() === uid; });
-    if (!row){ document.getElementById('mainContent').innerHTML = '<div style="text-align:center;padding:60px;color:#888">Perfil no encontrado</div>'; return; }
-
+  .then(function(data){
+    if(!data||!data.length){
+      document.getElementById('mainContent').innerHTML = '<div style="text-align:center;padding:60px;color:#888">Perfil no encontrado</div>';
+      return;
+    }
+    var m = data[0];
     mascota = {
-      uid:         String(row[1] ||'').trim(),
-      nombre:      String(row[2] ||'').trim(),
-      apodo:       String(row[3] ||'').trim(),
-      especie:     String(row[4] ||'').trim(),
-      sexo:        String(row[5] ||'').trim(),
-      raza:        String(row[6] ||'').trim(),
-      tipoFecha:   String(row[7] ||'').trim(),
-      fecha:       String(row[8] ||'').trim(),
-      zona:        String(row[9] ||'').trim(),
-      dueno:       String(row[10]||'').trim(),
-      email:       String(row[11]||'').trim(),
-      veterinario: String(row[13]||'').trim(),
-      instagram:   String(row[15]||'').trim(),
-      alimento:    String(row[16]||'').trim(),
-      actividades: String(row[18]||'').trim(),
-      especial:    String(row[23]||'').trim(),
-      foto:        String(row[27]||'').trim(),
-      angelito:    String(row[28]||'').trim().toLowerCase() === 'si',
-      fechaAngel:  String(row[29]||'').trim()
+      uid:         m.uid||'',
+      nombre:      m.nombre||'',
+      apodo:       m.apodo||'',
+      especie:     m.especie||'',
+      sexo:        m.sexo||'',
+      raza:        m.raza||'',
+      tipoFecha:   m.tipo_fecha||'',
+      fecha:       m.fecha||'',
+      zona:        m.zona||'',
+      dueno:       m.dueno||'',
+      email:       m.email||'',
+      veterinario: m.veterinario||'',
+      instagram:   m.instagram||'',
+      alimento:    m.alimento||'',
+      actividades: m.actividades||'',
+      especial:    m.especial||'',
+      foto:        m.foto||'',
+      angelito:    m.angelito===true,
+      fechaAngel:  m.fecha_angelito||''
     };
 
     renderPerfil();
     cargarMensajes();
-  }).catch(function(e){ console.log('Error fetch:', e); document.getElementById('mainContent').innerHTML='<div style="text-align:center;padding:60px;color:red">Error: '+e.message+'</div>'; });
 
     // Mostrar botón editar si es el dueño
-    if (sessionEmail && mascota.email.toLowerCase() === sessionEmail.toLowerCase()) {
+    if (sessionEmail && mascota.email && mascota.email.toLowerCase() === sessionEmail.toLowerCase()) {
       var btnEditar = document.getElementById('btnEditar');
-      btnEditar.style.display = 'block';
-      btnEditar.href = '/editar.html?uid=' + uid;
+      if(btnEditar){ btnEditar.style.display = 'block'; btnEditar.href = '/editar.html?uid=' + uid; }
     }
   })
-  .catch(function(){
+  .catch(function(e){
     document.getElementById('mainContent').innerHTML = '<div style="text-align:center;padding:60px;color:#888">Error al cargar el perfil</div>';
   });
 
