@@ -290,7 +290,7 @@ export default async function handler(req, res) {
     // ── EVENTOS ──────────────────────────────────────────────
     if (action === 'getEventos') {
       const tipo = req.query.tipo || '';
-      let url = SUPABASE_URL + '/rest/v1/eventos?activo=eq.true&order=fecha.asc';
+      let url = SUPABASE_URL + '/rest/v1/eventos?or=(activo.eq.true,activo.is.null)&order=fecha.asc';
       if (tipo) url += '&tipo=eq.' + encodeURIComponent(tipo);
       const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
       return res.status(200).json({ eventos: await r.json() });
