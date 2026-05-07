@@ -127,10 +127,6 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('familias',this)"><span class="nav-icon">🏠</span>Familias</div>
       <div class="nav-item" onclick="showScreen('eventos',this)"><span class="nav-icon">🎉</span>Eventos</div>
       <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
-      <div class="nav-item" onclick="showScreen('eventos',this)"><span class="nav-icon">🎉</span>Eventos</div>
-      <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
-      <div class="nav-item" onclick="showScreen('eventos',this)"><span class="nav-icon">🎉</span>Eventos</div>
-      <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
       <div class="nav-item" onclick="showScreen('campanas',this)"><span class="nav-icon">📧</span>Campanas</div>
     </nav>
     <div class="sidebar-footer">
@@ -855,64 +851,3 @@ function eliminarEvento(i){
         <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Este mes</div><div id="statEsteMes" style="font-size:28px;font-weight:900;color:#F5C842">-</div></div>
       </div>
     </div>
-
-    <!-- Screen Eventos -->
-    <div class="screen" id="screenEventos" style="display:none">
-      <div class="page-header">
-        <div><div class="page-title">Eventos Pet-Friendly</div><div class="page-sub" id="subEventos">Cargando...</div></div>
-        <button class="btn-primary" onclick="window.location.href='/admin-evento.html'">+ Nuevo Evento</button>
-      </div>
-      <div class="table-card"><div id="eventosAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
-    </div>
-
-    <!-- Screen Lugares -->
-    <div class="screen" id="screenLugares" style="display:none">
-      <div class="page-header">
-        <div><div class="page-title">Lugares Pet-Friendly</div><div class="page-sub" id="subLugares">Cargando...</div></div>
-        <button class="btn-primary" onclick="window.location.href='/admin-lugar.html'">+ Nuevo Lugar</button>
-      </div>
-      <div class="table-card"><div id="lugaresAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
-    </div>
-
-<!-- Modal subir foto -->
-<div class="modal-overlay" id="modalFoto">
-  <div class="modal" style="max-width:440px">
-    <div class="modal-title">
-      📷 Agregar foto
-      <button class="modal-close" onclick="document.getElementById('modalFoto').classList.remove('open')">×</button>
-    </div>
-    <div id="fotoMascotaInfo" style="font-size:14px;font-weight:700;color:#333;margin-bottom:16px"></div>
-
-    <!-- Tabs -->
-    <div style="display:flex;background:#f0f0ee;border-radius:10px;padding:3px;margin-bottom:16px">
-      <div id="tabUpload" style="flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)" onclick="switchFotoTab('upload')">📤 Subir archivo</div>
-      <div id="tabLink" style="flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer" onclick="switchFotoTab('link')">🔗 Por link</div>
-    </div>
-
-    <!-- Upload -->
-    <div id="panelUpload">
-      <div class="foto-drop" onclick="document.getElementById('fotoFileInput').click()">
-        <div style="font-size:28px;margin-bottom:8px">📸</div>
-        <div style="font-size:13px;color:#aaa">Haz clic para seleccionar una foto</div>
-        <img id="fotoPreviewImg" class="foto-preview">
-      </div>
-      <input type="file" id="fotoFileInput" accept="image/*" style="display:none" onchange="onAdminFotoChange(event)">
-      <div style="font-size:12px;color:#aaa;margin-bottom:4px">Se comprimirá a 800px y se subirá a Cloudinary</div>
-    </div>
-
-    <!-- Link -->
-    <div id="panelLink" style="display:none">
-      <div style="font-size:12px;color:#888;margin-bottom:8px">Pega el URL directo de la imagen (Wix, Cloudinary, Drive, etc.)</div>
-      <input type="text" id="fotoLinkInput" placeholder="https://..." style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none;margin-bottom:10px" oninput="onLinkChange()">
-      <img id="fotoLinkPreview" src="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;display:none" onerror="this.style.display='none'" onload="this.style.display='block'">
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="document.getElementById('modalFoto').classList.remove('open')">Cancelar</button>
-      <button class="btn-save" id="btnSubirFoto" onclick="subirFotoAdmin()" disabled>Guardar foto</button>
-    </div>
-  </div>
-</div>
-
-</body>
-</html>
