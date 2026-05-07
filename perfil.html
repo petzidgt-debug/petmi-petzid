@@ -210,21 +210,12 @@ function renderPerfil(){
   html += '<div class="stat-card"><div class="stat-lbl">'+(m.tipoFecha==='llegada'?'Llegó a casa':'Nacimiento')+'</div><div class="stat-val" style="font-size:12px">'+formatFecha(m.fecha)+'</div></div>';
   html += '</div>';
 
-  html += '<div class="seccion"><div class="sec-titulo">🏠 Datos</div><div class="campos-grid">';
-  html += '<div><div class="campo-lbl">Raza</div><div class="campo-val">'+(m.raza||'-')+'</div></div>';
-  html += '<div><div class="campo-lbl">Responsable</div><div class="campo-val">'+(m.dueno||'-')+'</div></div>';
-  if(m.veterinario) html += '<div><div class="campo-lbl">Veterinario</div><div class="campo-val">'+m.veterinario+'</div></div>';
-  if(m.zona) html += '<div><div class="campo-lbl">Zona</div><div class="campo-val">'+m.zona+'</div></div>';
-  html += '</div></div>';
 
   if(m.actividades){
     html += '<div class="seccion"><div class="sec-titulo">🎾 Le gusta</div>';
     html += actividadesHTML+'</div>';
   }
-  if(m.alimento){
-    html += '<div class="seccion"><div class="sec-titulo">🍖 Alimento</div>';
-    html += '<div style="font-size:14px;color:#333">'+m.alimento+'</div></div>';
-  }
+
   if(m.especial){
     html += '<div class="seccion" style="border-left:4px solid #F5C842"><div class="sec-titulo">✨ Algo especial</div>';
     html += '<div style="font-size:14px;color:#555;line-height:1.6">'+m.especial+'</div></div>';
