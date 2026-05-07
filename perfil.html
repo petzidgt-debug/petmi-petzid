@@ -131,6 +131,7 @@ fetch('/api/galeria?action=getData')
 
     renderPerfil();
     cargarMensajes();
+  }).catch(function(e){ console.log('Error fetch:', e); document.getElementById('mainContent').innerHTML='<div style="text-align:center;padding:60px;color:red">Error: '+e.message+'</div>'; });
 
     // Mostrar botón editar si es el dueño
     if (sessionEmail && mascota.email.toLowerCase() === sessionEmail.toLowerCase()) {
