@@ -274,7 +274,7 @@ function renderForm(){
       </div>
       <div id="fechaAngelWrap" style="display:'+( m.angelito&&m.angelito.toLowerCase()==="si"?"block":"none")+';margin-top:12px">
         <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Fecha en que nos dejó</div>
-        <input type="date" id="eFechaAngel" value="'+( m.angelito&&m.fechaAngel?m.fechaAngel:"")+'" style="width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:15px;outline:none">
+        <input type="date" id="eFechaAngel" value="${m.fechaAngel?m.fechaAngel.substring(0,10):''}" style="width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:15px;outline:none">
       </div>
     </div>
 
