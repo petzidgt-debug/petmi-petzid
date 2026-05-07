@@ -30,7 +30,14 @@
       '.site-header .menu-item:hover{background:#f8f8f8}' +
       '.site-header .menu-item.danger{color:#c0392b}' +
       '.site-header .btn-registro{padding:7px 14px;border:none;border-radius:20px;font-size:12px;font-weight:700;color:#fff;background:#00B4B4;cursor:pointer;text-decoration:none;white-space:nowrap}' +
-      '@media(max-width:600px){.site-header .header-nav{gap:0;padding:0 4px}.site-header .nav-link{padding:5px 8px;font-size:11px}}';
+      '@media(max-width:600px){.site-header .header-nav{display:none}.site-header .hamburger{display:flex!important}}' +
+      '.site-header .hamburger{display:none;flex-direction:column;gap:4px;cursor:pointer;padding:6px;background:none;border:none}' +
+      '.site-header .hamburger span{display:block;width:22px;height:2px;background:#555;border-radius:2px}' +
+      '.site-header .mobile-menu{display:none;position:fixed;top:60px;left:0;right:0;background:#fff;border-bottom:1px solid #eee;z-index:400;padding:8px 0;box-shadow:0 4px 12px rgba(0,0,0,.1)}' +
+      '.site-header .mobile-menu.open{display:block}' +
+      '.site-header .mobile-menu a,.site-header .mobile-menu button{display:block;width:100%;padding:12px 20px;font-size:14px;font-weight:600;color:#333;text-decoration:none;text-align:left;border:none;background:none;cursor:pointer;border-bottom:1px solid #f5f5f5}' +
+      '.site-header .mobile-menu a:last-child,.site-header .mobile-menu button:last-child{border-bottom:none}' +
+      '.site-header .mobile-menu .mob-section{font-size:10px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;padding:10px 20px 4px}';
     document.head.appendChild(style);
 
     // Nav links — orden: Blog, Tienda, PetzID, Amigos PetMi
@@ -70,6 +77,25 @@
         '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="38" onerror="this.style.display=\'none\'">' +
       '</a>' +
       '<nav class="header-nav">' + navHTML + '</nav>' +
+      '<button class="hamburger" onclick="petmiToggleHamburger()" aria-label="Menu">' +
+        '<span></span><span></span><span></span>' +
+      '</button>' +
+      '<div class="mobile-menu" id="petmiMobileMenu">' +
+        '<div class="mob-section">Navegación</div>' +
+        '<a href="https://www.revistapetmi.com/" target="_blank">Blog</a>' +
+        '<a href="https://www.revistapetmi.com/category/all-products" target="_blank">Tienda</a>' +
+        '<a href="/galeria.html">PetzID</a>' +
+        '<a href="/eventos.html">Eventos</a>' +
+        '<a href="/lugares.html">Lugares</a>' +
+        '<a href="/galeria.html">Amigos PetMi</a>' +
+        (sessionEmail ?
+          '<div class="mob-section">Mi cuenta</div>' +
+          '<a href="/familia.html">Mi familia</a>' +
+          '<a href="/amigos.html">Mis amigos</a>' +
+          '<a href="/index.html?agregar=1">Agregar mascota</a>' +
+          '<button onclick="petmiCerrarSesion()">Cerrar sesión</button>'
+        : '<a href="/index.html">Registra tu mascota</a>') +
+      '</div>' +
       '<div class="header-right">' + rightHTML + '</div>';
 
     document.body.insertBefore(header, document.body.firstChild);
@@ -81,6 +107,11 @@
       }
     });
   }
+
+  window.petmiToggleHamburger = function(){
+    var m = document.getElementById('petmiMobileMenu');
+    if(m) m.classList.toggle('open');
+  };
 
   window.petmiTogglePetFriendly = function(){
     var d=document.getElementById('petFriendlyMenu');
