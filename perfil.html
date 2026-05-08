@@ -430,7 +430,7 @@ function enviarMensajePrivado(){
             nombreEmisor:   sessionEmail||'Un amigo',
             nombreReceptor: mascota.nombre,
             mensaje:        mensaje.substring(0,200),
-            urlPerfil:      'https://petmi-petzid.vercel.app/perfil.html?uid='+miMascotaUID
+            urlPerfil:      'https://petmi-petzid.vercel.app/perfil.html?uid='+mascota.uid
           })
         });
       }
