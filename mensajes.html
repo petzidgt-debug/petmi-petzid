@@ -98,6 +98,7 @@ if(!sessionEmail){
 }
 
 function cargarTodo(){
+  // Cargar mis mascotas
   fetch('/api/galeria?action=checkEmail',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'checkEmail', email:sessionEmail})
@@ -109,6 +110,7 @@ function cargarTodo(){
     }
     misMascotas = d.mascotas;
     miMascota   = d.mascotas[0];
+    // Cargar amigos
     return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(miMascota.uid));
   }).then(function(r){return r&&r.json();})
   .then(function(da){
@@ -127,6 +129,7 @@ function cargarTodo(){
 }
 
 function renderConversaciones(){
+  // Cargar preview de cada conversación
   var promesas = amigosData.map(function(amigo){
     return fetch('/api/galeria?action=getConversacion&uid1='+encodeURIComponent(miMascota.uid)+'&uid2='+encodeURIComponent(amigo.uid))
       .then(function(r){return r.json();})
@@ -134,6 +137,7 @@ function renderConversaciones(){
   });
 
   Promise.all(promesas).then(function(convs){
+    // Ordenar por último mensaje
     convs.sort(function(a,b){
       var ma = a.mensajes[a.mensajes.length-1];
       var mb = b.mensajes[b.mensajes.length-1];
@@ -151,7 +155,7 @@ function renderConversaciones(){
 
     var html = '';
     convs.forEach(function(c){
-      if(!c.mensajes.length) return;
+      if(!c.mensajes.length) return; // ocultar convs vacías
       var amigo  = c.amigo;
       var msgs   = c.mensajes;
       var ultimo = msgs[msgs.length-1];
@@ -184,6 +188,7 @@ function abrirChat(uid){
   var amigo = amigosData.find(function(a){return a.uid===uid;});
   if(!amigo) return;
 
+  // Actualizar header del chat
   var esGato = amigo.especie && amigo.especie.toLowerCase().indexOf('gato')>=0;
   var fotoEl = document.getElementById('chatFoto');
   if(amigo.foto && amigo.foto.indexOf('http')>=0){
@@ -195,12 +200,14 @@ function abrirChat(uid){
   document.getElementById('chatEspecie').textContent = amigo.especie||'';
   document.getElementById('chatPerfilLink').href = '/perfil.html?uid='+uid;
 
+  // Mostrar chat
   document.getElementById('mainView').style.display = 'none';
   var cv = document.getElementById('chatView');
   cv.style.display = 'flex';
 
   cargarMensajesChat(uid);
 
+  // Marcar como leídos
   fetch('/api/galeria?action=marcarLeidos',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body:JSON.stringify({uid_emisor:uid, uid_receptor:miMascota.uid})
@@ -235,34 +242,12 @@ function enviarMensaje(){
   if(!mensaje || !chatActivo || !miMascota) return;
   input.value = '';
 
-  // 1. Guardar mensaje en la base de datos
   fetch('/api/galeria?action=enviarMensajePrivado',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body:JSON.stringify({uid_emisor:miMascota.uid, uid_receptor:chatActivo, mensaje:mensaje})
   }).then(function(r){return r.json();})
   .then(function(d){
-    if(!d.ok) return;
-
-    // 2. Refrescar mensajes en pantalla
-    cargarMensajesChat(chatActivo);
-
-    // 3. Enviar notificación por email al receptor (fire & forget)
-    var amigoActivo = amigosData.find(function(a){return a.uid===chatActivo;});
-    if(amigoActivo && amigoActivo.email){
-      var preview = mensaje.length > 80 ? mensaje.substring(0,80)+'...' : mensaje;
-      fetch('/api/notificar',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          tipo:            'mensaje',
-          para_email:      amigoActivo.email,
-          de_nombre:       miMascota.nombre,
-          mascota_nombre:  amigoActivo.nombre,
-          mensaje_preview: preview
-        })
-      }).catch(function(err){
-        console.warn('Notificación email falló (no crítico):', err);
-      });
-    }
+    if(d.ok) cargarMensajesChat(chatActivo);
   });
 }
 
@@ -270,7 +255,7 @@ function volverALista(){
   chatActivo = null;
   document.getElementById('chatView').style.display = 'none';
   document.getElementById('mainView').style.display = 'block';
-  renderConversaciones();
+  renderConversaciones(); // refrescar lista
 }
 
 // Enter para enviar

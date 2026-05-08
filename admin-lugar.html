@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lugar — Admin PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px}
+.card{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:560px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.back-btn{padding:8px 14px;background:#f0f0ee;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;color:#555;text-decoration:none}
+.titulo-pag{font-size:20px;font-weight:900;color:#222}
+label{display:block;font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;margin-top:14px}
+input,select,textarea{width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;outline:none;font-family:Arial,sans-serif}
+input:focus,select:focus,textarea:focus{border-color:#E05090}
+textarea{resize:vertical;min-height:90px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.toggle-wrap{display:flex;align-items:center;gap:10px;margin-top:14px}
+.toggle-wrap label{margin:0;font-size:14px;font-weight:600;color:#333;text-transform:none;letter-spacing:0}
+.foto-preview{width:100%;height:180px;object-fit:cover;border-radius:10px;margin-top:8px;display:none}
+.foto-drop{border:2px dashed #ddd;border-radius:10px;padding:20px;text-align:center;cursor:pointer;margin-top:8px}
+.foto-drop:hover{border-color:#E05090}
+.btn-row{display:flex;gap:10px;margin-top:24px}
+.btn-save{flex:1;padding:14px;background:#E05090;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer}
+.btn-save:disabled{background:#aaa;cursor:not-allowed}
+.btn-cancel{padding:14px 20px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer}
+.msg{padding:12px;border-radius:10px;font-size:13px;font-weight:600;margin-top:12px;display:none}
+.msg.ok{background:#e0f7f7;color:#007a7a}
+.msg.err{background:#fbeaf0;color:#c0392b}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <a href="/admin.html" class="back-btn">← Admin</a>
+    <div class="titulo-pag" id="tituloPag">Nuevo Lugar</div>
+  </div>
+
+  <label>Nombre *</label>
+  <input type="text" id="luNombre" placeholder="Nombre del lugar">
+
+  <label>Tipo</label>
+  <select id="luTipo">
+    <option value="restaurante">🍽️ Restaurante</option>
+    <option value="parque">🌳 Parque</option>
+    <option value="cafe">☕ Café</option>
+    <option value="hotel">🏨 Hotel</option>
+    <option value="tienda">🛍️ Tienda</option>
+    <option value="veterinaria">🏥 Veterinaria</option>
+  </select>
+
+  <div class="grid2">
+    <div>
+      <label>Zona</label>
+      <input type="text" id="luZona" placeholder="10">
+    </div>
+    <div>
+      <label>Teléfono</label>
+      <input type="text" id="luTel" placeholder="2234-5678">
+    </div>
+  </div>
+
+  <label>Dirección</label>
+  <input type="text" id="luDir" placeholder="Dirección completa">
+
+  <label>Descripción</label>
+  <textarea id="luDesc" placeholder="Describe el lugar y por qué es pet-friendly..."></textarea>
+
+  <label>Foto</label>
+  <div class="foto-drop" onclick="document.getElementById('luFotoFile').click()">
+    <div style="font-size:24px;margin-bottom:6px">📸</div>
+    <div style="font-size:12px;color:#aaa">Haz clic para subir una foto</div>
+  </div>
+  <input type="file" id="luFotoFile" accept="image/*" style="display:none" onchange="onFotoChange(event)">
+  <img id="luFotoPreview" class="foto-preview">
+
+  <label>O pega un URL de imagen</label>
+  <input type="text" id="luImagen" placeholder="https://..." oninput="onUrlChange()">
+
+  <label>Google Maps URL</label>
+  <input type="text" id="luMaps" placeholder="https://maps.google.com/...">
+
+  <label>Instagram</label>
+  <input type="text" id="luInsta" placeholder="@usuario">
+
+  <div class="toggle-wrap">
+    <input type="checkbox" id="luActivo" checked style="width:auto">
+    <label for="luActivo">Lugar activo (visible en la app)</label>
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <div class="btn-row">
+    <button class="btn-cancel" onclick="window.location.href='/admin.html'">Cancelar</button>
+    <button class="btn-save" id="btnSave" onclick="guardar()">Guardar lugar</button>
+  </div>
+</div>
+
+<script>
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+var CLOUD_NAME = 'dh5wgqgmk';
+var UPLOAD_PRESET = 'petzid';
+
+var lugarId   = null;
+var fotoBase64 = null;
+
+var params = new URLSearchParams(window.location.search);
+var editId = params.get('id');
+if(editId) cargarLugar(editId);
+
+function cargarLugar(id){
+  fetch(SUPA_URL+'/rest/v1/lugares?id=eq.'+id+'&select=*',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(data){
+    if(!data.length) return;
+    var l=data[0];
+    lugarId=l.id;
+    document.getElementById('tituloPag').textContent='Editar Lugar';
+    document.getElementById('luNombre').value = l.nombre||'';
+    document.getElementById('luTipo').value   = l.tipo||'restaurante';
+    document.getElementById('luZona').value   = l.zona||'';
+    document.getElementById('luTel').value    = l.telefono||'';
+    document.getElementById('luDir').value    = l.direccion||'';
+    document.getElementById('luDesc').value   = l.descripcion||'';
+    document.getElementById('luImagen').value = l.imagen||'';
+    document.getElementById('luMaps').value   = l.google_maps||'';
+    document.getElementById('luInsta').value  = l.instagram||'';
+    document.getElementById('luActivo').checked = l.activo!==false;
+    if(l.imagen&&l.imagen.indexOf('http')>=0){
+      var prev=document.getElementById('luFotoPreview');
+      prev.src=l.imagen; prev.style.display='block';
+    }
+  });
+}
+
+function onFotoChange(ev){
+  var file=ev.target.files[0];
+  if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var canvas=document.createElement('canvas');
+      var MAX=1200,w=img.width,h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      fotoBase64=canvas.toDataURL('image/jpeg',0.85).split(',')[1];
+      var prev=document.getElementById('luFotoPreview');
+      prev.src=canvas.toDataURL('image/jpeg',0.85);prev.style.display='block';
+      document.getElementById('luImagen').value='';
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function onUrlChange(){
+  var url=document.getElementById('luImagen').value.trim();
+  var prev=document.getElementById('luFotoPreview');
+  if(url.indexOf('http')>=0){prev.src=url;prev.style.display='block';fotoBase64=null;}
+  else{prev.style.display='none';}
+}
+
+async function guardar(){
+  var nombre=document.getElementById('luNombre').value.trim();
+  if(!nombre){mostrarMsg('El nombre es obligatorio','err');return;}
+
+  var btn=document.getElementById('btnSave');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Guardando...';
+
+  var imagenUrl=document.getElementById('luImagen').value.trim();
+
+  if(fotoBase64){
+    btn.innerHTML='<span class="spinner"></span>Subiendo foto...';
+    try{
+      var fd=new FormData();
+      fd.append('file','data:image/jpeg;base64,'+fotoBase64);
+      fd.append('upload_preset',UPLOAD_PRESET);
+      fd.append('folder','petzid/lugares');
+      var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
+      var data=await res.json();
+      imagenUrl=data.secure_url||imagenUrl;
+    }catch(e){console.log('Cloudinary:',e);}
+  }
+
+  var payload={
+    nombre,
+    tipo:        document.getElementById('luTipo').value,
+    zona:        document.getElementById('luZona').value.trim()||null,
+    telefono:    document.getElementById('luTel').value.trim()||null,
+    direccion:   document.getElementById('luDir').value.trim()||null,
+    descripcion: document.getElementById('luDesc').value.trim()||null,
+    imagen:      imagenUrl||null,
+    google_maps: document.getElementById('luMaps').value.trim()||null,
+    instagram:   document.getElementById('luInsta').value.trim()||null,
+    activo:      document.getElementById('luActivo').checked
+  };
+
+  var url=SUPA_URL+'/rest/v1/lugares';
+  var method='POST';
+  if(lugarId){url+='?id=eq.'+lugarId;method='PATCH';}
+
+  var r=await fetch(url,{
+    method,
+    headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},
+    body:JSON.stringify(payload)
+  });
+
+  if(r.ok){
+    mostrarMsg('Lugar guardado!','ok');
+    setTimeout(function(){window.location.href='/admin.html';},1200);
+  }else{
+    mostrarMsg('Error al guardar','err');
+    btn.disabled=false;btn.textContent='Guardar lugar';
+  }
+}
+
+function mostrarMsg(txt,tipo){
+  var el=document.getElementById('msg');
+  el.textContent=txt;el.className='msg '+tipo;el.style.display='block';
+}
+</script>
+</body>
+</html>
