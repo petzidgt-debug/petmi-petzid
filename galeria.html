@@ -446,17 +446,14 @@ function loadMore() {
 
 // ── Verificar amistad para modal ──────────────────────────────
 function verificarAmistadModal(uidOtro, callback) {
-  // Obtener mis mascotas
   sbFetch('/rest/v1/mascotas?email=eq.' + encodeURIComponent(sessionEmail) + '&select=uid')
     .then(function(r) { return r.json(); })
     .then(function(misMascotas) {
       if (!Array.isArray(misMascotas) || !misMascotas.length) return callback(false);
       var queries = [];
       misMascotas.forEach(function(mm) {
-        queries.push(
-          sbFetch('/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(mm.uid) + '&uid_receptor=eq.' + encodeURIComponent(uidOtro) + '&estado=eq.aceptado&select=id').then(function(r) { return r.json(); }),
-          sbFetch('/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(uidOtro) + '&uid_receptor=eq.' + encodeURIComponent(mm.uid) + '&estado=eq.aceptado&select=id').then(function(r) { return r.json(); })
-        );
+        queries.push(sbFetch('/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(mm.uid) + '&uid_receptor=eq.' + encodeURIComponent(uidOtro) + '&estado=eq.aceptado&select=id').then(function(r) { return r.json(); }));
+        queries.push(sbFetch('/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(uidOtro) + '&uid_receptor=eq.' + encodeURIComponent(mm.uid) + '&estado=eq.aceptado&select=id').then(function(r) { return r.json(); }));
       });
       return Promise.all(queries);
     })
