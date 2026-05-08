@@ -10,6 +10,8 @@
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .wrap{max-width:600px;margin:0 auto;padding:20px 16px 40px}
 .page-title{font-size:22px;font-weight:900;color:#222;margin-bottom:16px}
+
+/* CONVERSACIONES LIST */
 .conv-item{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.06);transition:transform .15s}
 .conv-item:hover{transform:translateY(-1px)}
 .conv-item.unread{border-left:3px solid #00B4B4}
@@ -21,13 +23,15 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .conv-meta{text-align:right;flex-shrink:0}
 .conv-time{font-size:11px;color:#bbb}
 .conv-badge{background:#00B4B4;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:4px;display:inline-block}
+
+/* CHAT VIEW */
 .chat-wrap{display:none;flex-direction:column;height:calc(100vh - 80px)}
 .chat-header{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-radius:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .chat-back{background:none;border:none;font-size:20px;cursor:pointer;color:#555;padding:4px}
 .chat-foto{width:40px;height:40px;border-radius:10px;overflow:hidden;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .chat-foto img{width:100%;height:100%;object-fit:cover}
 .chat-nombre{font-size:15px;font-weight:700;color:#222}
-.chat-sub{font-size:12px;color:#aaa}
+.chat-especie{font-size:12px;color:#aaa}
 .chat-msgs{flex:1;overflow-y:auto;padding:8px 0;display:flex;flex-direction:column;gap:8px;min-height:300px;max-height:calc(100vh - 260px)}
 .msg-burbuja{max-width:75%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.5}
 .msg-burbuja.mio{background:#00B4B4;color:#fff;border-radius:18px 18px 4px 18px;align-self:flex-end}
@@ -37,16 +41,21 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .chat-input{flex:1;padding:12px 16px;border:1.5px solid #e0e0e0;border-radius:24px;font-size:15px;outline:none;background:#fff}
 .chat-input:focus{border-color:#00B4B4}
 .chat-send{padding:12px 18px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer}
+
+/* EMPTY */
 .empty{text-align:center;padding:48px 20px;color:#bbb}
 .empty-icon{font-size:48px;margin-bottom:12px}
+
+/* SPINNER */
 .spinner{width:32px;height:32px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* NO SESION */
 .no-session{text-align:center;padding:60px 20px}
-.btn-ir{padding:13px 28px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer}
+.btn-ingresar{padding:13px 28px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer}
 </style>
 </head>
 <body>
-
 <div class="wrap">
   <div id="mainView">
     <div class="page-title">💬 Mensajes</div>
@@ -59,7 +68,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <div class="chat-foto" id="chatFoto">🐾</div>
       <div>
         <div class="chat-nombre" id="chatNombre">-</div>
-        <div class="chat-sub" id="chatSub">-</div>
+        <div class="chat-especie" id="chatEspecie">-</div>
       </div>
       <a id="chatPerfilLink" href="#" style="margin-left:auto;font-size:12px;color:#00B4B4;font-weight:700;text-decoration:none">Ver perfil →</a>
     </div>
@@ -72,117 +81,97 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </div>
 
 <script>
-var SB_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
-var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-var SB_H   = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
-
 var sessionEmail = localStorage.getItem('petzid_email') || '';
 var misMascotas  = [];
 var miMascota    = null;
 var amigosData   = [];
-var chatActivo   = null;
+var chatActivo   = null; // uid de la mascota con quien chateamos
 
-function sbFetch(path, opts) {
-  return fetch(SB_URL + path, Object.assign({ headers: SB_H }, opts || {}));
-}
-
-if (!sessionEmail) {
+if(!sessionEmail){
   document.getElementById('mainView').innerHTML =
-    '<div class="no-session"><div style="font-size:48px;margin-bottom:16px">💬</div>'
-    + '<div style="font-size:18px;font-weight:900;color:#222;margin-bottom:8px">Mensajes PetMi</div>'
-    + '<div style="font-size:14px;color:#888;margin-bottom:24px">Inicia sesión para ver tus mensajes</div>'
-    + '<button class="btn-ir" onclick="window.location.href=\'/galeria.html\'">Ir a la galería</button></div>';
+    '<div class="no-session"><div style="font-size:48px;margin-bottom:16px">💬</div>' +
+    '<div style="font-size:18px;font-weight:900;color:#222;margin-bottom:8px">Mensajes PetMi</div>' +
+    '<div style="font-size:14px;color:#888;margin-bottom:24px">Inicia sesión para ver tus mensajes</div>' +
+    '<button class="btn-ingresar" onclick="window.location.href=\'/galeria.html\'">Ir a la galería</button></div>';
 } else {
   cargarTodo();
 }
 
-function cargarTodo() {
-  sbFetch('/rest/v1/mascotas?email=eq.' + encodeURIComponent(sessionEmail) + '&select=uid,nombre,especie,foto,email')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (!Array.isArray(data) || !data.length) {
-        document.getElementById('convListWrap').innerHTML = '<div class="empty"><div class="empty-icon">🐾</div><p>Registra una mascota para enviar mensajes</p></div>';
-        return;
-      }
-      misMascotas = data;
-      miMascota   = data[0];
-      // Cargar amigos confirmados
-      return Promise.all([
-        sbFetch('/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(miMascota.uid) + '&estado=eq.aceptado&select=uid_receptor').then(function(r) { return r.json(); }),
-        sbFetch('/rest/v1/amigos?uid_receptor=eq.' + encodeURIComponent(miMascota.uid) + '&estado=eq.aceptado&select=uid_solicitante').then(function(r) { return r.json(); })
-      ]);
-    })
-    .then(function(results) {
-      if (!results) return;
-      var uids = [];
-      (results[0] || []).forEach(function(r) { if (r.uid_receptor) uids.push(r.uid_receptor); });
-      (results[1] || []).forEach(function(r) { if (r.uid_solicitante) uids.push(r.uid_solicitante); });
-      if (!uids.length) {
-        document.getElementById('convListWrap').innerHTML =
-          '<div class="empty"><div class="empty-icon">🐾</div><p>Aún no tienes amigos.<br>¡Agrega mascotas desde la galería!</p>'
-          + '<div style="margin-top:16px"><a href="/galeria.html" style="color:#00B4B4;font-weight:700">Explorar galería →</a></div></div>';
-        return;
-      }
-      // Cargar datos de mascotas amigas
-      return sbFetch('/rest/v1/mascotas?uid=in.(' + uids.map(encodeURIComponent).join(',') + ')&select=uid,nombre,especie,foto,email,dueno')
-        .then(function(r) { return r.json(); });
-    })
-    .then(function(mascotas) {
-      if (!mascotas) return;
-      amigosData = mascotas;
-      renderConversaciones();
-    })
-    .catch(function() {
-      document.getElementById('convListWrap').innerHTML = '<div class="empty"><div class="empty-icon">😕</div><p>Error al cargar</p></div>';
-    });
+function cargarTodo(){
+  fetch('/api/galeria?action=checkEmail',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'checkEmail', email:sessionEmail})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.found||!d.mascotas.length){
+      document.getElementById('convListWrap').innerHTML = '<div class="empty"><div class="empty-icon">🐾</div><p>Registra una mascota para enviar mensajes</p></div>';
+      return;
+    }
+    misMascotas = d.mascotas;
+    miMascota   = d.mascotas[0];
+    return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(miMascota.uid));
+  }).then(function(r){return r&&r.json();})
+  .then(function(da){
+    if(!da) return;
+    amigosData = da.mascotasAmigos || [];
+    if(!amigosData.length){
+      document.getElementById('convListWrap').innerHTML =
+        '<div class="empty"><div class="empty-icon">🐾</div><p>Aún no tienes amigos.<br>¡Agrega mascotas desde la galería!</p>' +
+        '<div style="margin-top:16px"><a href="/galeria.html" style="color:#00B4B4;font-weight:700">Explorar galería →</a></div></div>';
+      return;
+    }
+    renderConversaciones();
+  }).catch(function(){
+    document.getElementById('convListWrap').innerHTML = '<div class="empty"><div class="empty-icon">😕</div><p>Error al cargar</p></div>';
+  });
 }
 
-function renderConversaciones() {
-  if (!amigosData.length) {
-    document.getElementById('convListWrap').innerHTML = '<div class="empty"><div class="empty-icon">🐾</div><p>Aún no tienes amigos.</p></div>';
-    return;
-  }
-  // Cargar último mensaje de cada conversación
-  var promesas = amigosData.map(function(amigo) {
-    return Promise.all([
-      sbFetch('/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(miMascota.uid) + '&uid_receptor=eq.' + encodeURIComponent(amigo.uid) + '&order=created_at.desc&limit=1').then(function(r) { return r.json(); }),
-      sbFetch('/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(amigo.uid) + '&uid_receptor=eq.' + encodeURIComponent(miMascota.uid) + '&order=created_at.desc&limit=1').then(function(r) { return r.json(); }),
-      sbFetch('/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(amigo.uid) + '&uid_receptor=eq.' + encodeURIComponent(miMascota.uid) + '&leido=eq.false&select=id').then(function(r) { return r.json(); })
-    ]).then(function(res) {
-      var msgs = ((res[0] || []).concat(res[1] || []));
-      msgs.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
-      return { amigo: amigo, ultimo: msgs[0] || null, noLeidos: (res[2] || []).length };
-    });
+function renderConversaciones(){
+  var promesas = amigosData.map(function(amigo){
+    return fetch('/api/galeria?action=getConversacion&uid1='+encodeURIComponent(miMascota.uid)+'&uid2='+encodeURIComponent(amigo.uid))
+      .then(function(r){return r.json();})
+      .then(function(d){return {amigo:amigo, mensajes:d.mensajes||[]};});
   });
 
-  Promise.all(promesas).then(function(convs) {
-    // Ordenar por último mensaje más reciente
-    convs.sort(function(a, b) {
-      if (!a.ultimo && !b.ultimo) return 0;
-      if (!a.ultimo) return 1;
-      if (!b.ultimo) return -1;
-      return new Date(b.ultimo.created_at) - new Date(a.ultimo.created_at);
+  Promise.all(promesas).then(function(convs){
+    convs.sort(function(a,b){
+      var ma = a.mensajes[a.mensajes.length-1];
+      var mb = b.mensajes[b.mensajes.length-1];
+      if(!ma && !mb) return 0;
+      if(!ma) return 1;
+      if(!mb) return -1;
+      return new Date(mb.created_at) - new Date(ma.created_at);
     });
 
-    var html = '';
-    convs.forEach(function(c) {
-      var amigo = c.amigo;
-      var esGato = (amigo.especie || '').toLowerCase().indexOf('gato') >= 0;
-      var fotoHTML = amigo.foto && amigo.foto.indexOf('http') >= 0
-        ? '<img src="' + amigo.foto + '">'
-        : (esGato ? '🐱' : '🐶');
-      var preview = c.ultimo ? c.ultimo.mensaje : 'Sin mensajes aún';
-      var hora = c.ultimo ? new Date(c.ultimo.created_at).toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' }) : '';
+    if(convs.every(function(c){return c.mensajes.length===0;})){
+      document.getElementById('convListWrap').innerHTML =
+        '<div class="empty"><div class="empty-icon">💬</div><p>No hay mensajes aún.<br>Visita el perfil de un amigo para escribirle.</p></div>';
+      return;
+    }
 
-      html += '<div class="conv-item' + (c.noLeidos ? ' unread' : '') + '" onclick="abrirChat(\'' + amigo.uid + '\')">';
-      html += '<div class="conv-foto">' + fotoHTML + '</div>';
+    var html = '';
+    convs.forEach(function(c){
+      if(!c.mensajes.length) return;
+      var amigo  = c.amigo;
+      var msgs   = c.mensajes;
+      var ultimo = msgs[msgs.length-1];
+      var noLeidos = msgs.filter(function(m){ return m.uid_emisor===amigo.uid && !m.leido; }).length;
+      var esGato = amigo.especie && amigo.especie.toLowerCase().indexOf('gato')>=0;
+      var fotoHTML = amigo.foto && amigo.foto.indexOf('http')>=0
+        ? '<img src="'+amigo.foto+'">'
+        : (esGato?'🐱':'🐶');
+      var preview = ultimo ? ultimo.mensaje : '';
+      var hora = ultimo ? new Date(ultimo.created_at).toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'}) : '';
+
+      html += '<div class="conv-item'+(noLeidos?' unread':'')+'" onclick="abrirChat(\''+amigo.uid+'\')">';
+      html += '<div class="conv-foto">'+fotoHTML+'</div>';
       html += '<div class="conv-info">';
-      html += '<div class="conv-nombre">' + amigo.nombre + '</div>';
-      html += '<div class="conv-preview">' + (preview.length > 44 ? preview.substring(0, 44) + '...' : preview) + '</div>';
+      html += '<div class="conv-nombre">'+amigo.nombre+'</div>';
+      html += '<div class="conv-preview">'+(preview.length>40?preview.substring(0,40)+'...':preview)+'</div>';
       html += '</div>';
       html += '<div class="conv-meta">';
-      html += '<div class="conv-time">' + hora + '</div>';
-      if (c.noLeidos) html += '<div class="conv-badge">' + c.noLeidos + '</div>';
+      html += '<div class="conv-time">'+hora+'</div>';
+      if(noLeidos) html += '<div class="conv-badge">'+noLeidos+'</div>';
       html += '</div></div>';
     });
 
@@ -190,21 +179,21 @@ function renderConversaciones() {
   });
 }
 
-function abrirChat(uid) {
+function abrirChat(uid){
   chatActivo = uid;
-  var amigo  = amigosData.find(function(a) { return a.uid === uid; });
-  if (!amigo) return;
+  var amigo = amigosData.find(function(a){return a.uid===uid;});
+  if(!amigo) return;
 
-  var esGato = (amigo.especie || '').toLowerCase().indexOf('gato') >= 0;
+  var esGato = amigo.especie && amigo.especie.toLowerCase().indexOf('gato')>=0;
   var fotoEl = document.getElementById('chatFoto');
-  if (amigo.foto && amigo.foto.indexOf('http') >= 0) {
-    fotoEl.innerHTML = '<img src="' + amigo.foto + '">';
+  if(amigo.foto && amigo.foto.indexOf('http')>=0){
+    fotoEl.innerHTML = '<img src="'+amigo.foto+'">';
   } else {
-    fotoEl.textContent = esGato ? '🐱' : '🐶';
+    fotoEl.textContent = esGato?'🐱':'🐶';
   }
-  document.getElementById('chatNombre').textContent  = amigo.nombre;
-  document.getElementById('chatSub').textContent     = amigo.especie || '';
-  document.getElementById('chatPerfilLink').href      = '/perfil.html?uid=' + uid;
+  document.getElementById('chatNombre').textContent = amigo.nombre;
+  document.getElementById('chatEspecie').textContent = amigo.especie||'';
+  document.getElementById('chatPerfilLink').href = '/perfil.html?uid='+uid;
 
   document.getElementById('mainView').style.display = 'none';
   var cv = document.getElementById('chatView');
@@ -212,83 +201,84 @@ function abrirChat(uid) {
 
   cargarMensajesChat(uid);
 
-  // Marcar como leídos
-  sbFetch('/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(uid) + '&uid_receptor=eq.' + encodeURIComponent(miMascota.uid) + '&leido=eq.false', {
-    method: 'PATCH',
-    body: JSON.stringify({ leido: true })
+  fetch('/api/galeria?action=marcarLeidos',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid_emisor:uid, uid_receptor:miMascota.uid})
   });
 }
 
-function cargarMensajesChat(uid) {
-  Promise.all([
-    sbFetch('/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(miMascota.uid) + '&uid_receptor=eq.' + encodeURIComponent(uid) + '&order=created_at.asc').then(function(r) { return r.json(); }),
-    sbFetch('/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(uid) + '&uid_receptor=eq.' + encodeURIComponent(miMascota.uid) + '&order=created_at.asc').then(function(r) { return r.json(); })
-  ]).then(function(results) {
-    var msgs = ((results[0] || []).concat(results[1] || []));
-    msgs.sort(function(a, b) { return new Date(a.created_at) - new Date(b.created_at); });
-    var el = document.getElementById('chatMsgs');
-    if (!msgs.length) {
-      el.innerHTML = '<div style="text-align:center;color:#bbb;font-size:13px;padding:24px">Sé el primero en escribir 🐾</div>';
-      return;
-    }
-    el.innerHTML = msgs.map(function(m) {
-      var esMio = m.uid_emisor === miMascota.uid;
-      var hora  = new Date(m.created_at).toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' });
-      return '<div class="msg-burbuja ' + (esMio ? 'mio' : 'suyo') + '">'
-        + m.mensaje
-        + '<div class="msg-time">' + hora + '</div>'
-        + '</div>';
-    }).join('');
-    el.scrollTop = el.scrollHeight;
-  });
+function cargarMensajesChat(uid){
+  fetch('/api/galeria?action=getConversacion&uid1='+encodeURIComponent(miMascota.uid)+'&uid2='+encodeURIComponent(uid))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var msgs = d.mensajes||[];
+      var el = document.getElementById('chatMsgs');
+      if(!msgs.length){
+        el.innerHTML = '<div style="text-align:center;color:#bbb;font-size:13px;padding:24px">Sé el primero en escribir 🐾</div>';
+        return;
+      }
+      el.innerHTML = msgs.map(function(m){
+        var esMio = m.uid_emisor === miMascota.uid;
+        var hora  = new Date(m.created_at).toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'});
+        return '<div class="msg-burbuja '+(esMio?'mio':'suyo')+'">' +
+          m.mensaje +
+          '<div class="msg-time">'+hora+'</div>' +
+          '</div>';
+      }).join('');
+      el.scrollTop = el.scrollHeight;
+    });
 }
 
-function enviarMensaje() {
+function enviarMensaje(){
   var input   = document.getElementById('chatInput');
   var mensaje = input.value.trim();
-  if (!mensaje || !chatActivo || !miMascota) return;
+  if(!mensaje || !chatActivo || !miMascota) return;
   input.value = '';
 
-  sbFetch('/rest/v1/conversaciones', {
-    method: 'POST',
-    body: JSON.stringify({
-      uid_emisor:   miMascota.uid,
-      uid_receptor: chatActivo,
-      mensaje:      mensaje,
-      leido:        false
-    })
-  }).then(function() {
+  // 1. Guardar mensaje en la base de datos
+  fetch('/api/galeria?action=enviarMensajePrivado',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid_emisor:miMascota.uid, uid_receptor:chatActivo, mensaje:mensaje})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.ok) return;
+
+    // 2. Refrescar mensajes en pantalla
     cargarMensajesChat(chatActivo);
-    // Push + Email al responsable
-    var amigo = amigosData.find(function(a) { return a.uid === chatActivo; });
-    if (amigo && amigo.email) {
-      fetch('/api/notificar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+
+    // 3. Enviar notificación por email al receptor (fire & forget)
+    var amigoActivo = amigosData.find(function(a){return a.uid===chatActivo;});
+    if(amigoActivo && amigoActivo.email){
+      var preview = mensaje.length > 80 ? mensaje.substring(0,80)+'...' : mensaje;
+      fetch('/api/notificar',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
           tipo:            'mensaje',
-          para_email:      amigo.email,
-          para_nombre:     amigo.dueno || amigo.nombre,
-          mascota_nombre:  amigo.nombre,
+          para_email:      amigoActivo.email,
           de_nombre:       miMascota.nombre,
-          mensaje_preview: mensaje.substring(0, 120)
+          mascota_nombre:  amigoActivo.nombre,
+          mensaje_preview: preview
         })
-      }).catch(function() {});
+      }).catch(function(err){
+        console.warn('Notificación email falló (no crítico):', err);
+      });
     }
   });
 }
 
-function volverALista() {
+function volverALista(){
   chatActivo = null;
-  document.getElementById('chatView').style.display  = 'none';
-  document.getElementById('mainView').style.display  = 'block';
+  document.getElementById('chatView').style.display = 'none';
+  document.getElementById('mainView').style.display = 'block';
   renderConversaciones();
 }
 
-document.getElementById('chatInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') enviarMensaje();
+// Enter para enviar
+document.addEventListener('keydown', function(e){
+  if(e.key==='Enter' && chatActivo) enviarMensaje();
 });
 </script>
+
 <script src="/header.js"></script>
 </body>
 </html>
