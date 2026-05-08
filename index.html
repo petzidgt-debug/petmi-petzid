@@ -261,7 +261,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
         <input type="text" id="inVet" placeholder="Nombre o clinica" oninput="syncCard()">
       </div>
       <div id="siblingFamilyInfo" style="display:none">
-        <div class="info-box">Los datos del dueno, zona y veterinario se comparten con el hermano registrado.</div>
+        <div class="info-box">Bienvenido/a de vuelta, <span class="sib-name"></span>. Tus datos de contacto ya estan guardados.</div>
       </div>
       <div id="conviveBlock">
         <label>Vive con otras mascotas?</label>
@@ -348,49 +348,16 @@ var modoEdicion=false;
 var editUID=null;
 var editEmail=null;
 
-// Pre-llenar datos de familia si hay sesión activa
-(function(){
-  var emailSesion=localStorage.getItem('petzid_email')||'';  var params=new URLSearchParams(window.location.search);
-  var agregar=params.get('agregar');
-  if(emailSesion&&agregar==='1'){
-    fetch('/api/galeria?action=checkEmail',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'checkEmail',email:emailSesion})
-    }).then(function(r){return r.json();})
-    .then(function(d){
-      if(!d.found||!d.mascotas.length)return;
-      var m=d.mascotas[0];
-      isSibling=true;
-      familyData={
-        dueno:   m.dueno    ||''  ,
-        email:   m.email    ||''  ,
-        whatsapp:m.whatsapp ||''  ,
-        zona:    m.zona     ||''  ,
-        vet:     m.veterinario||''
-      };
-      var fb=document.getElementById('familyBlock');
-      var si=document.getElementById('siblingFamilyInfo');
-      if(fb)fb.style.display='none';
-      if(si){
-        si.style.display='block';
-        var nd=si.querySelector('.sib-name');
-        if(nd)nd.textContent=m.dueno||'';
-      }
-    }).catch(function(){});
-  }
-})();
-
-// Detectar ?editar=uid o ?agregar=1
+// Inicialización: detectar sesión activa, ?editar=uid y ?agregar=1
 (function(){
   var params=new URLSearchParams(window.location.search);
   var uidParam=params.get('editar');
-  var agregar=params.get('agregar');
+  var emailGuardado=localStorage.getItem('petzid_email')||'';
+
+  // ── CASO 1: modo edición (?editar=uid) ─────────────────────────
   if(uidParam){
     modoEdicion=true;
     editUID=uidParam;
-    // Cargar datos del uid
-    var emailGuardado=localStorage.getItem('petzid_email');
     if(!emailGuardado){window.location.href='/galeria.html';return;}
     editEmail=emailGuardado;
     fetch('/api/admin?action=checkEmail&email='+encodeURIComponent(emailGuardado))
@@ -401,21 +368,46 @@ var editEmail=null;
         if(!mascota)return;
         precargarDatos(mascota);
       });
-  } else if(agregar) {
-    // Solo precargar datos del dueño
-    var emailGuardado=localStorage.getItem('petzid_email');
-    if(emailGuardado){
-      fetch('/api/admin?action=checkEmail&email='+encodeURIComponent(emailGuardado))
-        .then(function(r){return r.json();})
-        .then(function(d){
-          if(!d.found||!d.mascotas.length)return;
-          var m=d.mascotas[0];
-          isSibling=true;
-          familyData={dueno:m.dueno,email:m.email,whatsapp:m.whatsapp,zona:m.zona,vet:m.veterinario};
-          document.getElementById('familyBlock').style.display='none';
-          document.getElementById('siblingFamilyInfo').style.display='block';
-        });
-    }
+    return; // no seguir con la lógica de sesión
+  }
+
+  // ── CASO 2: usuario ya registrado (email en localStorage) ──────
+  // Aplica tanto con ?agregar=1 como sin ningún parámetro
+  if(emailGuardado){
+    fetch('/api/admin?action=checkEmail&email='+encodeURIComponent(emailGuardado))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.found||!d.mascotas||!d.mascotas.length)return;
+        var m=d.mascotas[0];
+        // Ocultar bloque de familia y "convive con" — ya los tenemos
+        isSibling=true;
+        familyData={
+          dueno:    m.dueno         ||'',
+          email:    m.email         ||'',
+          whatsapp: m.whatsapp      ||'',
+          zona:     m.zona          ||'',
+          vet:      m.veterinario   ||''
+        };
+        var fb=document.getElementById('familyBlock');
+        var cb=document.getElementById('conviveBlock');
+        var si=document.getElementById('siblingFamilyInfo');
+        if(fb)fb.style.display='none';
+        if(cb)cb.style.display='none';
+        if(si){
+          si.style.display='block';
+          // Mostrar nombre del dueño en el mensaje informativo
+          var nd=si.querySelector('.sib-name');
+          if(nd)nd.textContent=m.dueno||'';
+          // Actualizar texto para reflejar que es usuario existente (no solo hermano)
+          var infoBox=si.querySelector('.info-box');
+          if(infoBox)infoBox.textContent='Bienvenido/a de vuelta, '+(m.dueno||'')+'. Tus datos de contacto ya están guardados.';
+        }
+        syncCard();
+      }).catch(function(){
+        // Si falla la consulta, mostrar formulario normal (fail-safe)
+        isSibling=false;
+        familyData=null;
+      });
   }
 })();
 
