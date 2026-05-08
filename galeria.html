@@ -1,77 +1,678 @@
-/* ══════════════════════════════════════════════
-   BUSCAR en galeria.html con Ctrl+F: "zona"
-   Aparece en 3 lugares:
-   1. Modal de detalle de mascota
-   2. Función renderCard() o buildCard()
-   3. Función openModal() o showPet()
-   ══════════════════════════════════════════════ */
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galeria — PetMi</title>
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.header{background:#fff;border-bottom:1px solid #eee;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.header-logo img{height:38px;display:block}
+.header-logo-fallback{font-size:20px;font-weight:900;color:#00B4B4;font-family:'Arial Black',Arial,sans-serif}
+.header-logo-fallback span{color:#E05090}
+.btn-registro{padding:8px 18px;background:#00B4B4;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
+.header-user{display:flex;align-items:center;gap:10px}
+.user-badge{font-size:12px;color:#007a7a;font-weight:600;background:#e0f7f7;padding:6px 12px;border-radius:20px}
+.btn-salir{font-size:12px;color:#aaa;background:none;border:none;cursor:pointer;padding:4px 8px}
+.hero{background:#00B4B4;padding:40px 20px;text-align:center}
+.hero h1{font-size:28px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:8px}
+.hero h1 span{color:#F5C842}
+.hero p{font-size:15px;color:rgba(255,255,255,.85);margin-bottom:20px}
+.hero-stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
+.hero-stat{text-align:center}
+.hero-stat-num{font-size:28px;font-weight:900;color:#fff}
+.hero-stat-lbl{font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1px}
+.seccion-cumple{background:linear-gradient(135deg,#F5C842,#ffaa00);padding:24px 20px}
+.seccion-titulo{font-size:18px;font-weight:900;color:#1a1a1a;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.seccion-sub{font-size:13px;color:rgba(0,0,0,.6);margin-bottom:16px}
+.cumple-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;-ms-overflow-style:none;scrollbar-width:none}
+.cumple-scroll::-webkit-scrollbar{display:none}
+.cumple-card{background:#fff;border-radius:14px;overflow:hidden;min-width:130px;max-width:130px;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-shrink:0;position:relative;cursor:pointer;transition:transform .2s}
+.cumple-foto{width:130px;height:130px;object-fit:cover;background:#fff3cd;display:flex;align-items:center;justify-content:center;font-size:36px}
+.cumple-foto img{width:130px;height:130px;object-fit:cover}
+.cumple-info{padding:8px 10px}
+.cumple-nombre{font-size:13px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cumple-fecha{font-size:11px;color:#888}
+.cumple-badge{position:absolute;top:6px;right:6px;font-size:16px}
+.seccion-angeles{background:linear-gradient(135deg,#667eea,#764ba2);padding:24px 20px}
+.seccion-angeles .seccion-titulo{color:#fff}
+.seccion-angeles .seccion-sub{color:rgba(255,255,255,.7)}
+.angel-card{background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.3);border-radius:14px;overflow:hidden;min-width:130px;max-width:130px;flex-shrink:0;position:relative;cursor:pointer;transition:transform .2s}
+.angel-foto{width:130px;height:130px;object-fit:cover;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:36px;position:relative}
+.angel-foto img{width:130px;height:130px;object-fit:cover;filter:grayscale(30%)}
+.angel-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(102,126,234,.2)}
+.angel-emoji{position:absolute;top:6px;right:6px;font-size:20px}
+.angel-info{padding:8px 10px}
+.angel-nombre{font-size:13px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.angel-fecha{font-size:11px;color:rgba(255,255,255,.6)}
+.filters{background:#fff;border-bottom:1px solid #eee;padding:12px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:60px;z-index:90}
+.filter-btn{padding:8px 16px;border-radius:24px;border:1.5px solid #ddd;font-size:13px;font-weight:600;color:#888;cursor:pointer;background:#fff;transition:all .15s;white-space:nowrap}
+.filter-btn.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
+.search-input{flex:1;min-width:180px;padding:8px 14px;border:1.5px solid #e0e0e0;border-radius:24px;font-size:13px;outline:none}
+.search-input:focus{border-color:#00B4B4}
+.results-count{font-size:13px;color:#888;margin-left:auto;white-space:nowrap}
+.gallery-wrap{padding:20px;max-width:1200px;margin:0 auto}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.pet-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative}
+.pet-card:hover{transform:translateY(-4px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.pet-photo{width:100%;aspect-ratio:1;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+.pet-photo img{width:100%;aspect-ratio:1;object-fit:cover}
+.angel-icon{position:absolute;top:6px;right:6px;font-size:22px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.pet-info{padding:10px 12px}
+.pet-name{font-size:14px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+.pet-especie{font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px}
+.pet-especie.perro{background:#e0f7f7;color:#007a7a}
+.pet-especie.gato{background:#fbeaf0;color:#993556}
+.load-more-wrap{text-align:center;padding:24px}
+.btn-load{padding:12px 32px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 12px 48px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+.modal-photo{width:100%;height:280px;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:80px;position:relative}
+.modal-photo img{width:100%;height:280px;object-fit:cover}
+.modal-angel-badge{position:absolute;top:12px;right:12px;font-size:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+.modal-body{padding:20px}
+.modal-name{font-size:24px;font-weight:900;color:#222;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.modal-apodo{display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:14px}
+.modal-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.modal-field-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:3px}
+.modal-field-val{font-size:14px;font-weight:700;color:#222}
+.modal-footer{display:flex;gap:8px;padding:0 20px 20px;flex-wrap:wrap}
+.btn-primary{flex:1;padding:11px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;min-width:100px}
+.btn-secondary{flex:1;padding:11px;background:#f0f0ee;color:#555;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;min-width:80px}
+.btn-pink{background:#E05090;color:#fff}
+.btn-purple{background:#764ba2;color:#fff}
+.btn-danger{background:#fff0f0;color:#c0392b;border:1px solid #fcc}
+.btn-cerrar{padding:11px 16px;background:#f0f0ee;color:#666;border:none;border-radius:10px;font-size:13px;cursor:pointer}
+.login-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.login-modal-overlay.open{display:flex}
+.login-modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;box-shadow:0 12px 48px rgba(0,0,0,.2)}
+.login-title{font-size:20px;font-weight:900;color:#222;margin-bottom:6px}
+.login-sub{font-size:13px;color:#888;margin-bottom:20px;line-height:1.5}
+.login-input{width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;color:#222;outline:none;transition:border .2s;margin-bottom:12px}
+.login-input:focus{border-color:#00B4B4}
+.btn-login{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.btn-login:disabled{background:#aaa;cursor:not-allowed}
+.btn-login-cancel{width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer}
+.login-msg{font-size:13px;text-align:center;padding:8px;border-radius:8px;margin-bottom:10px;display:none}
+.login-msg.error{background:#fbeaf0;color:#993556}
+.login-msg.success{background:#e0f7f7;color:#007a7a}
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:700;display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-overlay.open{display:flex}
+.confirm-modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center}
+.confirm-icon{font-size:48px;margin-bottom:12px}
+.confirm-title{font-size:18px;font-weight:900;color:#222;margin-bottom:8px}
+.confirm-sub{font-size:13px;color:#888;margin-bottom:24px;line-height:1.5}
+.confirm-btns{display:flex;gap:10px}
+.empty{text-align:center;padding:60px 20px;color:#aaa}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.loading{text-align:center;padding:60px}
+.spinner{width:40px;height:40px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.footer{background:#1a1a2e;padding:24px;text-align:center;margin-top:40px}
+.footer-brand{font-size:18px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;margin-bottom:8px}
+.footer-brand span{color:#F5C842}
+.footer-sub{font-size:12px;color:rgba(255,255,255,.4)}
+.header-nav{display:flex;align-items:center;gap:6px;margin-right:8px}
+.nav-link{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#555;text-decoration:none;transition:all .2s;white-space:nowrap;border:1.5px solid transparent}
+.nav-link:hover{background:#f0f0ee;color:#00B4B4}
+.header-menu{position:relative;display:inline-block}
+.menu-btn{padding:7px 14px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;background:#fff;cursor:pointer;white-space:nowrap}
+.menu-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.15);min-width:180px;overflow:hidden;display:none;z-index:500}
+.menu-dropdown.open{display:block}
+.menu-item{display:block;padding:12px 16px;font-size:14px;font-weight:600;color:#333;text-decoration:none;border:none;background:none;width:100%;text-align:left;border-bottom:1px solid #f5f5f5;cursor:pointer;box-sizing:border-box}
+.menu-item:last-child{border-bottom:none}
+.menu-item:hover{background:#f8f8f8}
+.menu-item.danger{color:#c0392b}
+@media(max-width:480px){
+.gallery-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.hero h1{font-size:22px}
+.hero-stats{gap:20px}
+.modal-footer{flex-direction:column}
+.header-nav{display:none}
+}
+</style>
+</head>
+<body>
 
+<script src="/header.js"></script>
 
-/* ── LUGAR 1 · Modal de detalle ─────────────── */
-/* Buscar: zona  (dentro del HTML del modal)     */
-
-// ANTES (algo similar a):
-<div class="modal-field">
-  <span class="field-label">Zona</span>
-  <span class="field-value" id="modalZona">-</span>
+<!-- HERO -->
+<div class="hero">
+  <h1>La comunidad <span>PetzID</span></h1>
+  <p>Conoce a todas las mascotas de la familia PetMi</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-num" id="statTotal">-</div><div class="hero-stat-lbl">Mascotas</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statPerros">-</div><div class="hero-stat-lbl">Perros</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statGatos">-</div><div class="hero-stat-lbl">Gatos</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statAngeles">-</div><div class="hero-stat-lbl">Angelitos 🐾</div></div>
+  </div>
 </div>
 
-// DESPUÉS: eliminar esas 4 líneas completas
+<!-- CUMPLEAÑEROS -->
+<div class="seccion-cumple" id="seccionCumple" style="display:none">
+  <div class="seccion-titulo">🎂 Cumpleañeros de <span id="mesActualNombre"></span></div>
+  <div class="seccion-sub">Mascotas que cumplen años o llegaron a casa este mes</div>
+  <div class="cumple-scroll" id="cumpleScroll"></div>
+</div>
 
+<!-- ÁNGELES -->
+<div class="seccion-angeles" id="seccionAngeles" style="display:none">
+  <div class="seccion-titulo">🐾 Ángeles de 4 Patas</div>
+  <div class="seccion-sub" style="color:rgba(255,255,255,.7)">Siempre en nuestros corazones 🌈</div>
+  <div class="cumple-scroll" id="angelesScroll"></div>
+</div>
 
-/* ── LUGAR 2 · Función que llena el modal ───── */
-/* Buscar: modalZona  o  m.zona  o  pet.zona     */
+<!-- FILTROS -->
+<div class="filters">
+  <button class="filter-btn active" onclick="setFilter('todos',this)">Todos</button>
+  <button class="filter-btn" onclick="setFilter('perro',this)">🐶 Perros</button>
+  <button class="filter-btn" onclick="setFilter('gato',this)">🐱 Gatos</button>
+  <button class="filter-btn" onclick="setFilter('angelito',this)">🐾🌈 Angelitos</button>
+  <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre..." oninput="applyFilter()">
+  <span class="results-count" id="resultsCount"></span>
+</div>
 
-// ANTES:
-document.getElementById('modalZona').textContent = m.zona || '-';
+<!-- GALERÍA -->
+<div class="gallery-wrap">
+  <div class="gallery-grid" id="galleryGrid">
+    <div style="grid-column:1/-1" id="skeletonWrap">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px" id="skeletonGrid"></div>
+    </div>
+  </div>
+  <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+    <button class="btn-load" onclick="loadMore()">Ver mas mascotas</button>
+  </div>
+</div>
 
-// DESPUÉS: eliminar esa línea
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-brand">petz<span>ID</span></div>
+  <div class="footer-sub">PetMi Guatemala — Comunidad de mascotas</div>
+</div>
 
+<!-- MODAL DETALLE MASCOTA -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-photo" id="modalPhoto"><span id="modalPhotoIcon">🐾</span></div>
+    <div class="modal-body">
+      <div class="modal-name" id="modalName">-</div>
+      <div class="modal-apodo" id="modalApodo" style="display:none"></div>
+      <div class="modal-fields">
+        <div>
+          <div class="modal-field-lbl">Especie</div>
+          <div class="modal-field-val" id="modalEspecie">-</div>
+        </div>
+        <div>
+          <div class="modal-field-lbl">Sexo</div>
+          <div class="modal-field-val" id="modalSexo">-</div>
+        </div>
+        <div>
+          <div class="modal-field-lbl">Fecha</div>
+          <div class="modal-field-val" id="modalFecha">-</div>
+        </div>
+        <div>
+          <div class="modal-field-lbl">Responsable</div>
+          <div class="modal-field-val" id="modalResponsable">-</div>
+        </div>
+      </div>
+      <div id="modalGustosWrap" style="margin-bottom:14px;display:none">
+        <div class="modal-field-lbl" style="margin-bottom:6px">Le gustaba / Le gusta</div>
+        <div id="modalGustos" style="font-size:13px;color:#555;line-height:1.6"></div>
+      </div>
+      <div id="modalEspecialWrap" style="margin-bottom:14px;display:none">
+        <div class="modal-field-lbl" style="margin-bottom:4px">Algo especial</div>
+        <div id="modalEspecial" style="font-size:13px;color:#555;line-height:1.6"></div>
+      </div>
+      <!-- Mensajes — solo visible si hay sesión y es otro usuario -->
+      <div id="modalMensajesWrap" style="display:none;margin-bottom:14px">
+        <div class="modal-field-lbl" style="margin-bottom:6px">Mensajes 💬</div>
+        <div id="modalMensajesList" style="font-size:13px;color:#555"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="text" id="modalMensajeInput" placeholder="Escribe un mensaje..." style="flex:1;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none">
+          <button onclick="enviarMensaje()" style="padding:9px 14px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">✉️</button>
+        </div>
+      </div>
+    </div>
+    <!-- Acciones modal — propietario logueado -->
+    <div class="modal-footer" id="modalFooterOwner" style="display:none">
+      <button class="btn-primary btn-pink" onclick="editarMascota()">Editar</button>
+      <button class="btn-secondary btn-danger" onclick="confirmarEliminar()">Eliminar</button>
+      <button class="btn-cerrar" onclick="closeModal()">×</button>
+    </div>
+    <!-- Acciones modal — visitante -->
+    <div class="modal-footer" id="modalFooterVisitor">
+      <button class="btn-cerrar" style="flex:1" onclick="closeModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
 
-/* ── LUGAR 3 · Card pública en la galería ───── */
-/* Buscar: zona  dentro de la función que        */
-/* construye las cards (renderPets / buildCard)  */
+<!-- MODAL LOGIN -->
+<div class="login-modal-overlay" id="loginOverlay">
+  <div class="login-modal">
+    <div class="login-title">¿Ya tienes PetzID?</div>
+    <div class="login-sub">Ingresa tu correo registrado para ver y editar tus mascotas.</div>
+    <div class="login-msg" id="loginMsg"></div>
+    <input type="email" class="login-input" id="loginEmail" placeholder="tucorreo@email.com" inputmode="email">
+    <button class="btn-login" id="btnLogin" onclick="doLogin()">Ingresar</button>
+    <button class="btn-login-cancel" onclick="closeLogin()">Cancelar</button>
+  </div>
+</div>
 
-// ANTES (algo similar a):
-'<div class="pet-zona">' + (m.zona||'') + '</div>'
+<!-- MODAL CONFIRMAR ELIMINAR -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-modal">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title">¿Estás seguro?</div>
+    <div class="confirm-sub">Esta acción no se puede deshacer.</div>
+    <div class="confirm-btns">
+      <button class="btn-secondary" style="flex:1" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn-primary btn-danger" style="flex:1" onclick="eliminarMascota()">Confirmar</button>
+    </div>
+  </div>
+</div>
 
-// DESPUÉS: eliminar esa línea
+<script>
+var SUPABASE_URL = 'https://jjwlvdqbobwvmtahnxoo.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqd2x2ZHFib2J3dm10YWhuZm9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ2NTQ1MDMsImV4cCI6MjA1MDIzMDUwM30.placeholder';
 
+var PAGE_SIZE = 24;
+var allPets = [];
+var filtered = [];
+var shown = 0;
+var currentFilter = 'todos';
+var currentPet = null;
+var sessionEmail = localStorage.getItem('petzid_email') || '';
+var sessionNombre = localStorage.getItem('petzid_dueno') || '';
 
-/* ══════════════════════════════════════════════
-   BUSCAR en galeria.html con Ctrl+F: "dueño" o "dueno"
-   Aparece en el modal y en las cards
-   ══════════════════════════════════════════════ */
+// ── Skeletons ──────────────────────────────────────────
+function renderSkeletons(n) {
+  var g = document.getElementById('skeletonGrid');
+  g.innerHTML = '';
+  for (var i = 0; i < n; i++) {
+    g.innerHTML += '<div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)"><div style="width:100%;aspect-ratio:1;background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div><div style="padding:10px 12px"><div style="height:14px;background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:4px;margin-bottom:6px"></div><div style="height:10px;width:60%;background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:4px"></div></div></div>';
+  }
+}
 
-/* ── LUGAR 4 · Modal — label "Dueño" ────────── */
+// ── Cargar mascotas desde Supabase ─────────────────────
+async function loadPets() {
+  renderSkeletons(12);
+  try {
+    var res = await fetch(SUPABASE_URL + '/rest/v1/mascotas?select=*&order=created_at.desc', {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY
+      }
+    });
+    var data = await res.json();
+    if (!Array.isArray(data)) data = [];
+    allPets = data;
+    processStats();
+    processSections();
+    applyFilter();
+  } catch(e) {
+    document.getElementById('skeletonWrap').innerHTML = '<div class="empty"><div class="empty-icon">🐾</div><p>No se pudo cargar la galería</p></div>';
+  }
+}
 
-// ANTES:
-<span class="field-label">Dueño</span>
-// o
-<span class="field-label">Dueno</span>
+function processStats() {
+  var vivos = allPets.filter(function(m){ return !m.esAngelito; });
+  var perros = vivos.filter(function(m){ return (m.especie||'').toLowerCase()==='perro'; });
+  var gatos = vivos.filter(function(m){ return (m.especie||'').toLowerCase()==='gato'; });
+  var angeles = allPets.filter(function(m){ return m.esAngelito; });
+  document.getElementById('statTotal').textContent = vivos.length;
+  document.getElementById('statPerros').textContent = perros.length;
+  document.getElementById('statGatos').textContent = gatos.length;
+  document.getElementById('statAngeles').textContent = angeles.length;
+}
 
-// DESPUÉS:
-<span class="field-label">Responsable</span>
+function processSections() {
+  var now = new Date();
+  var mes = now.getMonth() + 1;
+  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('mesActualNombre').textContent = meses[mes-1];
 
+  var cumples = allPets.filter(function(m){
+    if (!m.fecha) return false;
+    var parts = String(m.fecha).split('/');
+    if (parts.length === 3) return parseInt(parts[1]) === mes;
+    return false;
+  });
+  if (cumples.length > 0) {
+    document.getElementById('seccionCumple').style.display = 'block';
+    var scroll = document.getElementById('cumpleScroll');
+    scroll.innerHTML = '';
+    cumples.forEach(function(m) {
+      var card = document.createElement('div');
+      card.className = 'cumple-card';
+      card.onclick = function(){ openModal(m); };
+      card.innerHTML = '<div class="cumple-foto">' + (m.foto ? '<img src="'+m.foto+'" loading="lazy">' : (m.especie&&m.especie.toLowerCase()==='gato'?'🐱':'🐶')) + '</div><div class="cumple-info"><div class="cumple-nombre">' + (m.nombre||'') + '</div><div class="cumple-fecha">' + (m.fecha||'') + '</div></div><div class="cumple-badge">🎂</div>';
+      scroll.appendChild(card);
+    });
+  }
 
-/* ── LUGAR 5 · JS que asigna el nombre ──────── */
+  var angeles = allPets.filter(function(m){ return m.esAngelito; });
+  if (angeles.length > 0) {
+    document.getElementById('seccionAngeles').style.display = 'block';
+    var scroll2 = document.getElementById('angelesScroll');
+    scroll2.innerHTML = '';
+    angeles.forEach(function(m) {
+      var card = document.createElement('div');
+      card.className = 'angel-card';
+      card.onclick = function(){ openModal(m); };
+      card.innerHTML = '<div class="angel-foto">' + (m.foto ? '<img src="'+m.foto+'" loading="lazy"><div class="angel-overlay"></div>' : '🌈') + '<div class="angel-emoji">🌈</div></div><div class="angel-info"><div class="angel-nombre">' + (m.nombre||'') + '</div><div class="angel-fecha">' + (m.fecha||'') + '</div></div>';
+      scroll2.appendChild(card);
+    });
+  }
+}
 
-// ANTES:
-document.getElementById('modalDueno').textContent = m.dueno || '-';
+// ── Filtros ────────────────────────────────────────────
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  shown = 0;
+  applyFilter();
+}
 
-// DESPUÉS: igual, solo cambia el label visible — este JS no cambia
+function applyFilter() {
+  var q = (document.getElementById('searchInput').value || '').toLowerCase();
+  filtered = allPets.filter(function(m) {
+    var esp = (m.especie||'').toLowerCase();
+    var esAngel = !!m.esAngelito;
+    if (currentFilter === 'perro' && esp !== 'perro') return false;
+    if (currentFilter === 'gato' && esp !== 'gato') return false;
+    if (currentFilter === 'angelito' && !esAngel) return false;
+    if (currentFilter === 'todos' && esAngel) return false;
+    if (q && !(m.nombre||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  shown = 0;
+  renderGrid();
+}
 
+function renderGrid() {
+  var grid = document.getElementById('galleryGrid');
+  document.getElementById('skeletonWrap').style.display = 'none';
+  grid.innerHTML = '';
 
-/* ══════════════════════════════════════════════
-   RESUMEN — qué buscar con Ctrl+F en galeria.html
-   ══════════════════════════════════════════════ */
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">🐾</div><p>No encontramos mascotas con ese filtro</p></div>';
+    document.getElementById('loadMoreWrap').style.display = 'none';
+    document.getElementById('resultsCount').textContent = '0 mascotas';
+    return;
+  }
 
-// 🔍 "zona"    → eliminar todas las referencias visuales
-// 🔍 "dueño"   → reemplazar por "Responsable"
-// 🔍 "dueno"   → reemplazar por "Responsable"
-// 🔍 "m.zona"  → eliminar líneas de render
-// 🔍 "Zona"    → verificar labels en el modal
+  var batch = filtered.slice(0, shown + PAGE_SIZE);
+  shown = batch.length;
 
-/* La columna zona en Supabase y el dato en      */
-/* el objeto JS se conservan intactos —          */
-/* solo se oculta en el render visual público.   */
+  batch.forEach(function(m) {
+    var card = document.createElement('div');
+    card.className = 'pet-card';
+    card.onclick = function(){ openModal(m); };
+    var esp = (m.especie||'').toLowerCase();
+    var isAngel = !!m.esAngelito;
+    var foto = m.foto ? '<img src="'+m.foto+'" loading="lazy" alt="'+m.nombre+'">' : (esp==='gato'?'🐱':'🐶');
+    card.innerHTML = '<div class="pet-photo">'+foto+(isAngel?'<div class="angel-icon">🌈</div>':'')+'</div><div class="pet-info"><div class="pet-name">'+(m.nombre||'')+'</div><span class="pet-especie '+(esp==='gato'?'gato':'perro')+'">'+(m.especie||'')+'</span></div>';
+    grid.appendChild(card);
+  });
+
+  document.getElementById('resultsCount').textContent = filtered.length + ' mascotas';
+  document.getElementById('loadMoreWrap').style.display = shown < filtered.length ? 'block' : 'none';
+}
+
+function loadMore() {
+  var batch = filtered.slice(shown, shown + PAGE_SIZE);
+  shown += batch.length;
+  var grid = document.getElementById('galleryGrid');
+  batch.forEach(function(m) {
+    var card = document.createElement('div');
+    card.className = 'pet-card';
+    card.onclick = function(){ openModal(m); };
+    var esp = (m.especie||'').toLowerCase();
+    var isAngel = !!m.esAngelito;
+    var foto = m.foto ? '<img src="'+m.foto+'" loading="lazy" alt="'+m.nombre+'">' : (esp==='gato'?'🐱':'🐶');
+    card.innerHTML = '<div class="pet-photo">'+foto+(isAngel?'<div class="angel-icon">🌈</div>':'')+'</div><div class="pet-info"><div class="pet-name">'+(m.nombre||'')+'</div><span class="pet-especie '+(esp==='gato'?'gato':'perro')+'">'+(m.especie||'')+'</span></div>';
+    grid.appendChild(card);
+  });
+  document.getElementById('loadMoreWrap').style.display = shown < filtered.length ? 'block' : 'none';
+}
+
+// ── Modal ──────────────────────────────────────────────
+function openModal(m) {
+  currentPet = m;
+  var overlay = document.getElementById('modalOverlay');
+
+  // Foto
+  var photoEl = document.getElementById('modalPhoto');
+  if (m.foto) {
+    photoEl.innerHTML = '<img src="'+m.foto+'" alt="'+m.nombre+'">';
+  } else {
+    var esp = (m.especie||'').toLowerCase();
+    document.getElementById('modalPhotoIcon').textContent = esp==='gato'?'🐱':'🐶';
+    photoEl.innerHTML = '<span id="modalPhotoIcon">'+(esp==='gato'?'🐱':'🐶')+'</span>';
+  }
+  if (m.esAngelito) {
+    photoEl.innerHTML += '<div class="modal-angel-badge">🌈</div>';
+  }
+
+  // Datos básicos — SIN zona (privada)
+  document.getElementById('modalName').textContent = m.nombre || '-';
+
+  var apodoEl = document.getElementById('modalApodo');
+  if (m.apodo) { apodoEl.textContent = m.apodo; apodoEl.style.display = 'inline-block'; }
+  else { apodoEl.style.display = 'none'; }
+
+  document.getElementById('modalEspecie').textContent = m.especie || '-';
+  document.getElementById('modalSexo').textContent = m.sexo || '-';
+  document.getElementById('modalFecha').textContent = m.fecha || '-';
+
+  // Responsable — solo nombre, sin zona
+  document.getElementById('modalResponsable').textContent = m.dueno || '-';
+
+  // Gustos
+  var gustos = [];
+  if (m.actividades && m.actividades.length) gustos = gustos.concat(m.actividades);
+  if (m.alimento) gustos.push('Come: ' + m.alimento);
+  var gustosWrap = document.getElementById('modalGustosWrap');
+  if (gustos.length > 0) {
+    document.getElementById('modalGustos').textContent = gustos.join(' · ');
+    gustosWrap.style.display = 'block';
+  } else {
+    gustosWrap.style.display = 'none';
+  }
+
+  // Especial
+  var especWrap = document.getElementById('modalEspecialWrap');
+  if (m.especial) {
+    document.getElementById('modalEspecial').textContent = m.especial;
+    especWrap.style.display = 'block';
+  } else {
+    especWrap.style.display = 'none';
+  }
+
+  // Botones según sesión
+  var isOwner = sessionEmail && m.email && sessionEmail.toLowerCase() === m.email.toLowerCase();
+  document.getElementById('modalFooterOwner').style.display = isOwner ? 'flex' : 'none';
+  document.getElementById('modalFooterVisitor').style.display = isOwner ? 'none' : 'flex';
+
+  // Mensajes — visible para usuarios logueados que NO son el propietario
+  var msgWrap = document.getElementById('modalMensajesWrap');
+  if (sessionEmail && !isOwner) {
+    msgWrap.style.display = 'block';
+    cargarMensajes(m.uid);
+  } else {
+    msgWrap.style.display = 'none';
+  }
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modalOverlay')) return;
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  currentPet = null;
+}
+
+// ── Mensajes entre responsables ────────────────────────
+async function cargarMensajes(uid) {
+  var list = document.getElementById('modalMensajesList');
+  list.innerHTML = '<span style="color:#bbb;font-size:12px">Cargando...</span>';
+  try {
+    var res = await fetch(SUPABASE_URL + '/rest/v1/mensajes?mascota_uid=eq.' + uid + '&order=created_at.asc', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    var msgs = await res.json();
+    if (!Array.isArray(msgs) || msgs.length === 0) {
+      list.innerHTML = '<span style="color:#bbb;font-size:12px">Sin mensajes aún. ¡Sé el primero!</span>';
+      return;
+    }
+    list.innerHTML = msgs.map(function(msg) {
+      var isMine = (msg.de_email||'').toLowerCase() === sessionEmail.toLowerCase();
+      return '<div style="margin-bottom:8px;text-align:'+(isMine?'right':'left')+'"><div style="display:inline-block;max-width:80%;padding:7px 11px;border-radius:12px;font-size:13px;background:'+(isMine?'#e0f7f7':'#f5f5f5')+';color:#333">'+escapeHtml(msg.mensaje||'')+'</div><div style="font-size:10px;color:#bbb;margin-top:2px">'+escapeHtml(msg.de_nombre||'')+'</div></div>';
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<span style="color:#bbb;font-size:12px">No se pudieron cargar mensajes</span>';
+  }
+}
+
+async function enviarMensaje() {
+  if (!sessionEmail) { openLogin(); return; }
+  var input = document.getElementById('modalMensajeInput');
+  var texto = (input.value||'').trim();
+  if (!texto || !currentPet) return;
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/mensajes', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        mascota_uid: currentPet.uid,
+        de_email: sessionEmail,
+        de_nombre: sessionNombre || sessionEmail,
+        para_email: currentPet.email,
+        mensaje: texto
+      })
+    });
+    input.value = '';
+    cargarMensajes(currentPet.uid);
+    // Push notification al responsable de la mascota
+    notificarMensaje(currentPet);
+  } catch(e) {}
+}
+
+function notificarMensaje(mascota) {
+  fetch('/api/notificar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      tipo: 'mensaje',
+      para_email: mascota.email,
+      para_nombre: mascota.dueno,
+      mascota_nombre: mascota.nombre,
+      de_nombre: sessionNombre || sessionEmail
+    })
+  }).catch(function(){});
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Acciones del propietario ───────────────────────────
+function editarMascota() {
+  if (!currentPet) return;
+  window.location.href = '/?editar=' + currentPet.uid;
+}
+
+function confirmarEliminar() {
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('open');
+}
+
+async function eliminarMascota() {
+  if (!currentPet) return;
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + currentPet.uid, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    closeConfirm();
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+    allPets = allPets.filter(function(m){ return m.uid !== currentPet.uid; });
+    processStats();
+    applyFilter();
+    currentPet = null;
+  } catch(e) {}
+}
+
+// ── Login ──────────────────────────────────────────────
+function openLogin() {
+  document.getElementById('loginOverlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('loginEmail').focus(); }, 100);
+}
+
+function closeLogin() {
+  document.getElementById('loginOverlay').classList.remove('open');
+}
+
+async function doLogin() {
+  var email = (document.getElementById('loginEmail').value||'').trim().toLowerCase();
+  if (!email || email.indexOf('@') < 0) {
+    showLoginMsg('Ingresa un correo válido', 'error');
+    return;
+  }
+  var btn = document.getElementById('btnLogin');
+  btn.disabled = true;
+  btn.textContent = 'Buscando...';
+  try {
+    var res = await fetch(SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email) + '&limit=1', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    var data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      sessionEmail = email;
+      sessionNombre = data[0].dueno || '';
+      localStorage.setItem('petzid_email', email);
+      localStorage.setItem('petzid_dueno', sessionNombre);
+      showLoginMsg('¡Bienvenido de vuelta!', 'success');
+      setTimeout(function(){
+        closeLogin();
+        // Recargar header si existe
+        if (typeof renderHeader === 'function') renderHeader();
+      }, 800);
+    } else {
+      showLoginMsg('No encontramos ese correo. ¿Ya registraste tu mascota?', 'error');
+    }
+  } catch(e) {
+    showLoginMsg('Error de conexión. Intenta de nuevo.', 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Ingresar';
+}
+
+function showLoginMsg(msg, type) {
+  var el = document.getElementById('loginMsg');
+  el.textContent = msg;
+  el.className = 'login-msg ' + type;
+  el.style.display = 'block';
+}
+
+// ── Init ───────────────────────────────────────────────
+loadPets();
+</script>
+
+</body>
+</html>
