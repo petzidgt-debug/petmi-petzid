@@ -245,7 +245,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     </div>
     <!-- Acciones modal — visitante -->
     <div class="modal-footer" id="modalFooterVisitor">
-      <button class="btn-cerrar" style="flex:1" onclick="closeModal()">Cerrar</button>
+      <button class="btn-cerrar" style="flex:1" onclick="closeModal()">Cerrar ×</button>
     </div>
   </div>
 </div>
@@ -444,6 +444,29 @@ function loadMore() {
   document.getElementById('loadMoreWrap').style.display = shown < filtered.length ? 'block' : 'none';
 }
 
+// ── Verificar amistad para modal ──────────────────────────────
+function verificarAmistadModal(uidOtro, callback) {
+  // Obtener mis mascotas
+  sbFetch('/rest/v1/mascotas?email=eq.' + encodeURIComponent(sessionEmail) + '&select=uid')
+    .then(function(r) { return r.json(); })
+    .then(function(misMascotas) {
+      if (!Array.isArray(misMascotas) || !misMascotas.length) return callback(false);
+      var queries = [];
+      misMascotas.forEach(function(mm) {
+        queries.push(
+          sbFetch('/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(mm.uid) + '&uid_receptor=eq.' + encodeURIComponent(uidOtro) + '&estado=eq.aceptado&select=id').then(function(r) { return r.json(); }),
+          sbFetch('/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(uidOtro) + '&uid_receptor=eq.' + encodeURIComponent(mm.uid) + '&estado=eq.aceptado&select=id').then(function(r) { return r.json(); })
+        );
+      });
+      return Promise.all(queries);
+    })
+    .then(function(results) {
+      var found = results && results.some(function(r) { return Array.isArray(r) && r.length > 0; });
+      callback(found);
+    })
+    .catch(function() { callback(false); });
+}
+
 // ── Modal ──────────────────────────────────────────────
 function openModal(m) {
   currentPet = m;
@@ -502,11 +525,18 @@ function openModal(m) {
   document.getElementById('modalFooterOwner').style.display = isOwner ? 'flex' : 'none';
   document.getElementById('modalFooterVisitor').style.display = isOwner ? 'none' : 'flex';
 
-  // Mensajes — visible para usuarios logueados que NO son el propietario
+  // Mensajes — solo visible si hay sesión, no es el propietario, y son amigos
   var msgWrap = document.getElementById('modalMensajesWrap');
   if (sessionEmail && !isOwner) {
-    msgWrap.style.display = 'block';
-    cargarMensajes(m.uid);
+    // Verificar amistad antes de mostrar chat
+    verificarAmistadModal(m.uid, function(sonAmigos) {
+      if (sonAmigos) {
+        msgWrap.style.display = 'block';
+        cargarMensajes(m.uid);
+      } else {
+        msgWrap.style.display = 'none';
+      }
+    });
   } else {
     msgWrap.style.display = 'none';
   }
