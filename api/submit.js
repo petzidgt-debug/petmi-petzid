@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWm-enyhSrS5X3zJQxLouq7fnX-1bfbs9tGcsbdu6W1a1R2J-ZN7Fwf6roOM8h3qNi/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTEqhRv-ydEmd8ifdnS_anTdgBQ6JAZbQJmLRaPbQTQqMVSWTXZdwsFg8n2rkDfRan/exec';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,7 +20,8 @@ export default async function handler(req, res) {
     const response = await fetch(SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      redirect: 'follow'
     });
 
     const text = await response.text();
