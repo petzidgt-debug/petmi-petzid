@@ -276,8 +276,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </div>
 
 <script>
-var SUPABASE_URL = 'https://jjwlvdqbobwvmtahnxoo.supabase.co';
-var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqd2x2ZHFib2J3dm10YWhuZm9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ2NTQ1MDMsImV4cCI6MjA1MDIzMDUwM30.placeholder';
+var SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 
 var PAGE_SIZE = 24;
 var allPets = [];
@@ -301,7 +301,7 @@ function renderSkeletons(n) {
 async function loadPets() {
   renderSkeletons(12);
   try {
-    var res = await fetch(SUPABASE_URL + '/rest/v1/mascotas?select=*&order=created_at.desc', {
+    var res = await fetch(SUPABASE_URL + '/rest/v1/mascotas?select=*&nombre=neq.&order=created_at.desc', {
       headers: {
         'apikey': SUPABASE_KEY,
         'Authorization': 'Bearer ' + SUPABASE_KEY
@@ -319,10 +319,10 @@ async function loadPets() {
 }
 
 function processStats() {
-  var vivos = allPets.filter(function(m){ return !m.esAngelito; });
+  var vivos = allPets.filter(function(m){ return !m.angelito && m.nombre; });
   var perros = vivos.filter(function(m){ return (m.especie||'').toLowerCase()==='perro'; });
   var gatos = vivos.filter(function(m){ return (m.especie||'').toLowerCase()==='gato'; });
-  var angeles = allPets.filter(function(m){ return m.esAngelito; });
+  var angeles = allPets.filter(function(m){ return m.angelito && m.nombre; });
   document.getElementById('statTotal').textContent = vivos.length;
   document.getElementById('statPerros').textContent = perros.length;
   document.getElementById('statGatos').textContent = gatos.length;
@@ -336,8 +336,8 @@ function processSections() {
   document.getElementById('mesActualNombre').textContent = meses[mes-1];
 
   var cumples = allPets.filter(function(m){
-    if (!m.fecha) return false;
-    var parts = String(m.fecha).split('/');
+    if (!m.fecha || !m.nombre) return false;
+    var parts = String(m.fecha).split('-');
     if (parts.length === 3) return parseInt(parts[1]) === mes;
     return false;
   });
@@ -349,12 +349,13 @@ function processSections() {
       var card = document.createElement('div');
       card.className = 'cumple-card';
       card.onclick = function(){ openModal(m); };
-      card.innerHTML = '<div class="cumple-foto">' + (m.foto ? '<img src="'+m.foto+'" loading="lazy">' : (m.especie&&m.especie.toLowerCase()==='gato'?'🐱':'🐶')) + '</div><div class="cumple-info"><div class="cumple-nombre">' + (m.nombre||'') + '</div><div class="cumple-fecha">' + (m.fecha||'') + '</div></div><div class="cumple-badge">🎂</div>';
+      var fmtFecha = m.fecha ? m.fecha.split('-').reverse().join('/') : '';
+      card.innerHTML = '<div class="cumple-foto">' + (m.foto ? '<img src="'+m.foto+'" loading="lazy">' : (m.especie&&m.especie.toLowerCase()==='gato'?'🐱':'🐶')) + '</div><div class="cumple-info"><div class="cumple-nombre">' + (m.nombre||'') + '</div><div class="cumple-fecha">' + fmtFecha + '</div></div><div class="cumple-badge">🎂</div>';
       scroll.appendChild(card);
     });
   }
 
-  var angeles = allPets.filter(function(m){ return m.esAngelito; });
+  var angeles = allPets.filter(function(m){ return m.angelito && m.nombre; });
   if (angeles.length > 0) {
     document.getElementById('seccionAngeles').style.display = 'block';
     var scroll2 = document.getElementById('angelesScroll');
@@ -381,8 +382,9 @@ function setFilter(f, btn) {
 function applyFilter() {
   var q = (document.getElementById('searchInput').value || '').toLowerCase();
   filtered = allPets.filter(function(m) {
+    if (!m.nombre) return false;
     var esp = (m.especie||'').toLowerCase();
-    var esAngel = !!m.esAngelito;
+    var esAngel = !!m.angelito;
     if (currentFilter === 'perro' && esp !== 'perro') return false;
     if (currentFilter === 'gato' && esp !== 'gato') return false;
     if (currentFilter === 'angelito' && !esAngel) return false;
