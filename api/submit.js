@@ -9,14 +9,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ ok: false });
 
   try {
-    // Leer el body como texto para evitar truncamiento
-    const chunks = [];
-    for await (const chunk of req) {
-      chunks.push(chunk);
-    }
-    const rawBody = Buffer.concat(chunks).toString('utf8');
-    const body = JSON.parse(rawBody);
-
+    const body = req.body;
     const response = await fetch(SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
@@ -35,7 +28,7 @@ export default async function handler(req, res) {
 
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: true,
     sizeLimit: '10mb'
   }
 };
