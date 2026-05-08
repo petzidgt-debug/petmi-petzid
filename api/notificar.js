@@ -2,7 +2,7 @@
 // Proxy hacia Google Apps Script para envío de emails
 // Vercel → GAS (que ya tiene los templates y GmailApp)
 
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbxTEqhRv-ydEmd8ifdnS_anTdgBQ6JAZbQJmLRaPbQTQqMVSWTXZdwsFg8n2rkDfRan/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbzuBevjWzfX021aM7n29nB2feFAk3s3gbSW4MmstS0VPaaK24UcYitHcaEDtZzUDcWh/exec';
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
