@@ -66,7 +66,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <div class="toast" id="toast"></div>
 
 <script>
-var GAS_URL  = 'https://script.google.com/macros/s/AKfycbyoRNxvYMCyPDGcDQMzRo8TIWT8Nc85x9WQpXM-rSK0NdLcrstyCblW7FyhCYmgbMWr/exec';
+var GAS_URL  = 'https://script.google.com/macros/s/AKfycbz-SEM4SNamXFzMWRC7nbtVyXmaf1bvitbDqaL6Ja5F08l62CAZQr-XCxQBhNYu7yXm/exec';
 var SB_URL   = 'https://ilcreewilnkchvozicyp.supabase.co';
 var SB_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 var SB_H     = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
@@ -253,14 +253,14 @@ function enviarMensaje(){
     document.getElementById('msgTxt').value='';
     mostrarToast('Mensaje enviado 🐾');
     cargarMensajes();
-    // Notificar al responsable via GAS
+    // Notificar al responsable via GAS con GET
     if(mascota&&mascota.email){
-      fetch(GAS_URL,{
-        method:'POST',
-        mode:'no-cors',
-        headers:{'Content-Type':'text/plain'},
-        body:JSON.stringify({action:'addMensaje',uid:uid,autor:autor,mensaje:mensaje,nombreMascota:mascota.nombre})
-      });
+      var params='?action=addMensaje'
+        +'&uid='+encodeURIComponent(uid)
+        +'&autor='+encodeURIComponent(autor)
+        +'&mensaje='+encodeURIComponent(mensaje)
+        +'&nombreMascota='+encodeURIComponent(mascota.nombre);
+      fetch(GAS_URL+params).catch(function(){});
     }
   }).catch(function(){alert('Error al enviar.');});
 }
@@ -341,20 +341,14 @@ function enviarMensajePrivado(){
     body:JSON.stringify({uid_emisor:miMascotaUID,uid_receptor:mascota.uid,mensaje:mensaje,leido:false})
   }).then(function(){
     cargarConversacion();
-    // Notificar via GAS (no-cors para evitar CORS error)
+    // Notificar via GAS con GET (sin problemas de CORS)
     if(mascota.email){
-      fetch(GAS_URL,{
-        method:'POST',
-        mode:'no-cors',
-        headers:{'Content-Type':'text/plain'},
-        body:JSON.stringify({
-          action:         'notificarMensaje',
-          emailReceptor:  mascota.email,
-          nombreEmisor:   sessionEmail||'Un amigo',
-          nombreReceptor: mascota.nombre,
-          preview:        mensaje.substring(0,200)
-        })
-      });
+      var params = '?action=notificarMensaje'
+        +'&emailReceptor='+encodeURIComponent(mascota.email)
+        +'&nombreEmisor='+encodeURIComponent(sessionEmail||'Un amigo')
+        +'&nombreReceptor='+encodeURIComponent(mascota.nombre)
+        +'&preview='+encodeURIComponent(mensaje.substring(0,200));
+      fetch(GAS_URL+params).catch(function(){});
     }
   }).catch(function(){mostrarToast('Error al enviar');});
 }
