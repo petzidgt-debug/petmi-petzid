@@ -8,11 +8,15 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+
+/* HEADER */
 .site-header{background:#fff;border-bottom:1px solid #eee;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.07)}
 .header-logo img{height:38px;display:block}
 .header-btns{display:flex;gap:8px;align-items:center}
 .btn-volver{padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;font-size:13px;font-weight:600;color:#888;background:#fff;cursor:pointer;text-decoration:none}
 .btn-editar{padding:7px 14px;border:none;border-radius:20px;font-size:13px;font-weight:700;color:#fff;background:#00B4B4;cursor:pointer;text-decoration:none;display:none}
+
+/* HERO */
 .perfil-hero{position:relative;background:#00B4B4;overflow:hidden}
 .perfil-hero.angelito{background:linear-gradient(135deg,#667eea,#764ba2)}
 .perfil-foto-wrap{position:relative;width:100%;max-height:380px;overflow:hidden}
@@ -22,20 +26,31 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .perfil-nombre{font-size:28px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;letter-spacing:1px}
 .perfil-apodo{display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;margin-top:6px}
 .angel-badge-hero{position:absolute;top:16px;right:16px;font-size:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+
+/* CONTENIDO */
 .wrap{max-width:560px;margin:0 auto;padding:16px}
+
+/* STATS */
 .stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
 .stat-card{background:#fff;border-radius:12px;padding:12px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .stat-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:4px}
 .stat-val{font-size:15px;font-weight:900;color:#222}
+
+/* SECCIONES */
 .seccion{background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .sec-titulo{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#00B4B4;margin-bottom:12px}
 .sec-titulo.purple{color:#764ba2}
+
+/* CAMPOS */
+.campos-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.campo-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:3px}
+.campo-val{font-size:14px;font-weight:700;color:#222}
+
+/* CHIPS */
 .chips-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .chip-tag{display:inline-block;background:#e0f7f7;color:#007a7a;font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px}
-.resp-row{display:flex;align-items:center;gap:8px;font-size:13px;color:#555}
-.resp-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:3px}
-.resp-val{font-size:14px;font-weight:700;color:#222}
-/* MENSAJES PUBLICOS */
+
+/* MENSAJES */
 .mensaje-item{background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:8px}
 .mensaje-autor{font-size:12px;font-weight:700;color:#333}
 .mensaje-fecha{font-size:10px;color:#bbb;margin-left:8px}
@@ -47,16 +62,17 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .input-txt{flex:1;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none}
 .input-txt:focus{border-color:#00B4B4}
 .btn-enviar{padding:10px 14px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
-/* CHAT PRIVADO */
-.conv-burbuja{max-width:75%;padding:9px 13px;border-radius:18px;font-size:13px;line-height:1.5;margin-bottom:6px}
-.conv-burbuja.mio{background:#00B4B4;color:#fff;border-radius:18px 18px 4px 18px;align-self:flex-end;margin-left:auto}
-.conv-burbuja.suyo{background:#f0f0ee;color:#333;border-radius:18px 18px 18px 4px}
-.conv-time{font-size:10px;opacity:.6;margin-top:3px;text-align:right}
+
+/* LOADING */
 .loading-wrap{text-align:center;padding:80px 20px}
 .spinner{width:40px;height:40px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
+
+/* FOOTER */
 .footer{background:#1a1a2e;padding:20px;text-align:center;margin-top:20px}
 .footer-brand{font-size:16px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff}
 .footer-brand span{color:#F5C842}
@@ -64,6 +80,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </style>
 </head>
 <body>
+
+
 
 <div id="mainContent">
   <div class="loading-wrap">
@@ -75,341 +93,349 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <div class="toast" id="toast"></div>
 
 <script>
-var SB_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
-var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-var SB_H   = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
-
 var sessionEmail = localStorage.getItem('petzid_email') || '';
 var mascota      = null;
-var miMascotaUID = null;
 var uid          = new URLSearchParams(window.location.search).get('uid');
 
 if (!uid) window.location.href = '/galeria.html';
 
-function sbFetch(path, opts) {
-  return fetch(SB_URL + path, Object.assign({ headers: SB_H }, opts || {}));
-}
-
-// Cargar mascota
-sbFetch('/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=*')
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (!data || !data.length) {
+// Cargar datos desde Supabase
+fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=*', {
+    headers: {
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'
+    }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if(!data||!data.length){
       document.getElementById('mainContent').innerHTML = '<div style="text-align:center;padding:60px;color:#888">Perfil no encontrado</div>';
       return;
     }
     var m = data[0];
     mascota = {
-      uid:        m.uid || '',
-      nombre:     m.nombre || '',
-      apodo:      m.apodo || '',
-      especie:    m.especie || '',
-      sexo:       m.sexo || '',
-      raza:       m.raza || '',
-      tipoFecha:  m.tipo_fecha || '',
-      fecha:      m.fecha || '',
-      dueno:      m.dueno || '',      // guardado en BD, visible solo en card/admin
-      email:      m.email || '',
-      veterinario:m.veterinario || '',
-      instagram:  m.instagram || '',
-      alimento:   m.alimento || '',
-      actividades:m.actividades || '',
-      especial:   m.especial || '',
-      foto:       m.foto || '',
-      angelito:   m.angelito === true,
-      fechaAngel: m.fecha_angelito || ''
+      uid:         m.uid||'',
+      nombre:      m.nombre||'',
+      apodo:       m.apodo||'',
+      especie:     m.especie||'',
+      sexo:        m.sexo||'',
+      raza:        m.raza||'',
+      tipoFecha:   m.tipo_fecha||'',
+      fecha:       m.fecha||'',
+      zona:        m.zona||'',
+      dueno:       m.dueno||'',
+      email:       m.email||'',
+      veterinario: m.veterinario||'',
+      instagram:   m.instagram||'',
+      alimento:    m.alimento||'',
+      actividades: m.actividades||'',
+      especial:    m.especial||'',
+      foto:        m.foto||'',
+      angelito:    m.angelito===true,
+      fechaAngel:  m.fecha_angelito||''
     };
+
     renderPerfil();
-    cargarMensajesPublicos();
-    // Botón editar si es el responsable
+    cargarMensajes();
+
+    // Mostrar botón editar si es el dueño
     if (sessionEmail && mascota.email && mascota.email.toLowerCase() === sessionEmail.toLowerCase()) {
-      var btn = document.getElementById('btnEditar');
-      if (btn) { btn.style.display = 'block'; btn.href = '/?editar=' + uid; }
+      var btnEditar = document.getElementById('btnEditar');
+      if(btnEditar){ btnEditar.style.display = 'block'; btnEditar.href = '/editar.html?uid=' + uid; }
     }
-    verificarAmistad();
   })
-  .catch(function() {
+  .catch(function(e){
     document.getElementById('mainContent').innerHTML = '<div style="text-align:center;padding:60px;color:#888">Error al cargar el perfil</div>';
   });
 
-function renderPerfil() {
-  var m = mascota;
-  var esGato = m.especie.toLowerCase().indexOf('gato') >= 0;
-  var emoji  = esGato ? '🐱' : '🐶';
+function renderPerfil(){
+  var m       = mascota;
+  var esGato  = m.especie.toLowerCase().indexOf('gato') >= 0;
+  var emoji   = esGato ? '🐱' : '🐶';
   var heroClass = m.angelito ? 'perfil-hero angelito' : 'perfil-hero';
 
+  // Calcular años angelito
   var aniosAngel = '';
   if (m.angelito && m.fecha && m.fechaAngel) {
-    var ny = new Date(m.fecha).getFullYear();
+    var ny = new Date(m.fecha.indexOf('/')>=0 ? m.fecha.split('/')[2]+'-'+m.fecha.split('/')[1]+'-'+m.fecha.split('/')[0] : m.fecha).getFullYear();
     var ay = new Date(m.fechaAngel).getFullYear();
-    if (!isNaN(ny) && !isNaN(ay)) aniosAngel = ny + ' – ' + ay;
+    if (!isNaN(ny) && !isNaN(ay)) aniosAngel = ny + ' - ' + ay;
   }
 
+  // Mes cumpleaños
   var mesActual = new Date().getMonth();
   var esCumple  = false;
   if (m.fecha) {
-    var df = new Date(m.fecha);
+    var df = new Date(m.fecha.indexOf('/')>=0 ? m.fecha.split('/')[2]+'-'+m.fecha.split('/')[1]+'-'+m.fecha.split('/')[0] : m.fecha);
     esCumple = !isNaN(df.getTime()) && df.getMonth() === mesActual;
   }
 
   var fotoHTML = m.foto && m.foto.indexOf('http') >= 0
-    ? '<img src="' + m.foto + '" class="perfil-foto"' + (m.angelito ? ' style="filter:grayscale(20%)"' : '') + '>'
+    ? '<img src="' + m.foto + '" class="perfil-foto" style="' + (m.angelito ? 'filter:grayscale(20%)' : '') + '">'
     : '<div class="perfil-foto-placeholder">' + emoji + '</div>';
 
   var actividadesHTML = '';
   if (m.actividades) {
-    var acts = m.actividades.split(',').map(function(a) { return a.trim(); }).filter(Boolean);
-    if (acts.length) {
-      actividadesHTML = '<div class="chips-wrap">' + acts.map(function(a) {
-        return '<span class="chip-tag">' + a + '</span>';
-      }).join('') + '</div>';
-    }
+    var acts = m.actividades.split(',').map(function(a){ return a.trim(); }).filter(Boolean);
+    actividadesHTML = '<div class="chips-wrap">' + acts.map(function(a){
+      return '<span class="chip-tag">'+a+'</span>';
+    }).join('') + '</div>';
   }
 
   var cumpleBanner = esCumple && !m.angelito
     ? '<div style="background:#F5C842;border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><div style="font-size:24px">🎂</div><div style="font-size:14px;font-weight:700;color:#1a1a1a">Este mes cumple años o llegó a casa</div></div>'
     : '';
 
-  var mostrarMsgPublicos = m.angelito || esCumple;
-  var secTituloClass     = m.angelito ? 'purple' : '';
+  var mostrarMensajes = m.angelito || esCumple;
+  var secTituloClass  = m.angelito ? 'purple' : '';
 
   var html = '';
-  html += '<div class="' + heroClass + '">';
-  html += '<div class="perfil-foto-wrap">' + fotoHTML;
+  html += '<div class="'+heroClass+'">';
+  html += '<div class="perfil-foto-wrap">';
+  html += fotoHTML;
   html += '<div class="perfil-overlay">';
-  html += '<div class="perfil-nombre">"' + m.nombre.toUpperCase() + '"</div>';
-  if (m.apodo) html += '<div class="perfil-apodo">' + m.apodo + '</div>';
-  if (aniosAngel) html += '<div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:6px">' + aniosAngel + '</div>';
+  html += '<div class="perfil-nombre">"'+m.nombre.toUpperCase()+'"</div>';
+  if(m.apodo) html += '<div class="perfil-apodo">'+m.apodo+'</div>';
+  if(aniosAngel) html += '<div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:6px">'+aniosAngel+'</div>';
   html += '</div>';
-  if (m.angelito) html += '<div class="angel-badge-hero">🐾</div>';
+  if(m.angelito) html += '<div class="angel-badge-hero">🐾</div>';
   html += '</div></div>';
 
   html += '<div class="wrap">';
   html += cumpleBanner;
 
-  // Stats — SIN zona
   html += '<div class="stats-row">';
-  html += '<div class="stat-card"><div class="stat-lbl">Especie</div><div class="stat-val">' + emoji + ' ' + (m.especie || '-') + '</div></div>';
-  html += '<div class="stat-card"><div class="stat-lbl">Sexo</div><div class="stat-val">' + (m.sexo || '-') + '</div></div>';
-  html += '<div class="stat-card"><div class="stat-lbl">' + (m.tipoFecha === 'llegada' ? 'Llegó a casa' : 'Nacimiento') + '</div><div class="stat-val" style="font-size:12px">' + formatFecha(m.fecha) + '</div></div>';
+  html += '<div class="stat-card"><div class="stat-lbl">Especie</div><div class="stat-val">'+emoji+' '+(m.especie||'-')+'</div></div>';
+  html += '<div class="stat-card"><div class="stat-lbl">Sexo</div><div class="stat-val">'+(m.sexo||'-')+'</div></div>';
+  html += '<div class="stat-card"><div class="stat-lbl">'+(m.tipoFecha==='llegada'?'Llegó a casa':'Nacimiento')+'</div><div class="stat-val" style="font-size:12px">'+formatFecha(m.fecha)+'</div></div>';
   html += '</div>';
 
-  // Responsable — solo nombre, sin zona ni email
-  if (m.dueno) {
-    html += '<div class="seccion">';
-    html += '<div class="sec-titulo">👤 Responsable</div>';
-    html += '<div class="resp-val">' + m.dueno + '</div>';
-    html += '</div>';
+
+  if(m.actividades){
+    html += '<div class="seccion"><div class="sec-titulo">🎾 Le gusta</div>';
+    html += actividadesHTML+'</div>';
   }
 
-  if (m.actividades && actividadesHTML) {
-    html += '<div class="seccion"><div class="sec-titulo">🎾 Le gusta</div>' + actividadesHTML + '</div>';
-  }
-
-  if (m.especial) {
+  if(m.especial){
     html += '<div class="seccion" style="border-left:4px solid #F5C842"><div class="sec-titulo">✨ Algo especial</div>';
-    html += '<div style="font-size:14px;color:#555;line-height:1.6">' + m.especial + '</div></div>';
+    html += '<div style="font-size:14px;color:#555;line-height:1.6">'+m.especial+'</div></div>';
   }
-
-  if (m.instagram) {
+  if(m.instagram){
     html += '<div class="seccion"><div class="sec-titulo">📸 Instagram</div>';
-    html += '<a href="https://instagram.com/' + m.instagram.replace('@', '') + '" target="_blank" style="font-size:14px;color:#00B4B4;font-weight:700">' + m.instagram + '</a></div>';
+    html += '<a href="https://instagram.com/'+m.instagram.replace('@','')+'" target="_blank" style="font-size:14px;color:#00B4B4;font-weight:700">'+m.instagram+'</a></div>';
   }
 
-  // Mensajes públicos (solo ángeles o cumpleañeros)
-  if (mostrarMsgPublicos) {
-    html += '<div class="seccion" id="mensajesSeccion">';
-    html += '<div class="sec-titulo ' + secTituloClass + '">💬 Mensajes</div>';
-    html += '<div id="mensajesLista"><div class="mensaje-empty">Cargando...</div></div>';
-    html += '<div class="input-mensaje">';
-    html += '<input type="text" class="input-autor" id="msgAutor" placeholder="Tu nombre">';
-    html += '<input type="text" class="input-txt" id="msgTxt" placeholder="Deja un mensaje...">';
-    html += '<button class="btn-enviar" onclick="enviarMensajePublico()">✉️</button>';
-    html += '</div></div>';
-  }
+  html += '<div class="seccion" id="mensajesSeccion" style="'+(mostrarMensajes?'':'display:none')+'">';
+  html += '<div class="sec-titulo '+secTituloClass+'">💬 Mensajes</div>';
+  html += '<div id="mensajesLista"><div class="mensaje-empty">Cargando...</div></div>';
+  html += '<div class="input-mensaje">';
+  html += '<input type="text" class="input-autor" id="msgAutor" placeholder="Tu nombre">';
+  html += '<input type="text" class="input-txt" id="msgTxt" placeholder="Deja un mensaje...">';
+  html += '<button class="btn-enviar" onclick="enviarMensaje()">✉️</button>';
+  html += '</div></div>';
 
-  // Chat privado (solo si son amigos — se inyecta después)
+  html += '</div>';
+  // Sección de conversación privada (solo si son amigos)
   html += '<div id="convSection" style="display:none">';
   html += '<div class="seccion" style="border-left:4px solid #00B4B4">';
   html += '<div class="sec-titulo">💬 Mensaje privado</div>';
-  html += '<div id="convLista" style="display:flex;flex-direction:column;max-height:300px;overflow-y:auto;margin-bottom:12px"></div>';
+  html += '<div id="convLista" style="max-height:300px;overflow-y:auto;margin-bottom:12px"></div>';
   html += '<div style="display:flex;gap:8px">';
-  html += '<input type="text" id="convInput" placeholder="Escribe un mensaje..." onkeydown="if(event.key===\'Enter\')enviarMensajePrivado()" style="flex:1;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none">';
+  html += '<input type="text" id="convInput" placeholder="Escribe un mensaje..." style="flex:1;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none">';
   html += '<button onclick="enviarMensajePrivado()" style="padding:10px 14px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">✉️</button>';
   html += '</div></div></div>';
 
   html += '<div class="footer"><div class="footer-brand">petz<span>ID</span></div>';
   html += '<div class="footer-sub">PetMi Guatemala — Comunidad de mascotas</div></div>';
-  html += '</div>';
 
   document.getElementById('mainContent').innerHTML = html;
+
+  // Verificar amistad y cargar conversación
+  verificarAmistad();
 }
 
-function formatFecha(val) {
-  if (!val || val === '-') return '-';
-  var d = new Date(val);
-  if (isNaN(d.getTime())) return String(val);
-  return d.toLocaleDateString('es-GT', { year: 'numeric', month: 'short', day: 'numeric' });
+function formatFecha(val){
+  if(!val||val==='-')return'-';
+  var d, p=String(val).split('/');
+  if(p.length===3) d=new Date(p[2]+'-'+p[1]+'-'+p[0]);
+  else d=new Date(val);
+  if(isNaN(d.getTime()))return String(val);
+  return d.toLocaleDateString('es-GT',{year:'numeric',month:'short',day:'numeric'});
 }
 
-// ── Mensajes públicos (ángeles / cumpleañeros) ─────────────────
-function cargarMensajesPublicos() {
-  if (!mascota || (!mascota.angelito)) {
-    var mesActual = new Date().getMonth();
-    var esCumple  = false;
-    if (mascota && mascota.fecha) {
-      var df = new Date(mascota.fecha);
-      esCumple = !isNaN(df.getTime()) && df.getMonth() === mesActual;
+function cargarMensajes(){
+  if(!mascota||(!mascota.angelito)){
+    // Verificar si es cumpleañero
+    var mesActual=new Date().getMonth();
+    var esCumple=false;
+    if(mascota&&mascota.fecha){
+      var df=new Date(mascota.fecha.indexOf('/')>=0?mascota.fecha.split('/')[2]+'-'+mascota.fecha.split('/')[1]+'-'+mascota.fecha.split('/')[0]:mascota.fecha);
+      esCumple=!isNaN(df.getTime())&&df.getMonth()===mesActual;
     }
-    if (!esCumple) return;
+    if(!esCumple) return;
   }
-  sbFetch('/rest/v1/mensajes?mascota_uid=eq.' + encodeURIComponent(uid) + '&tipo=eq.publico&order=created_at.asc')
-    .then(function(r) { return r.json(); })
-    .then(function(msgs) {
+
+  fetch('/api/galeria?action=getMensajes&uid='+encodeURIComponent(uid))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var msgs = d.mensajes||[];
       var lista = document.getElementById('mensajesLista');
-      if (!lista) return;
-      if (!Array.isArray(msgs) || !msgs.length) {
-        lista.innerHTML = '<div class="mensaje-empty">Sé el primero en dejar un mensaje 🐾</div>';
+      if(!lista) return;
+      if(msgs.length===0){
+        lista.innerHTML='<div class="mensaje-empty">Sé el primero en dejar un mensaje 🐾</div>';
         return;
       }
-      lista.innerHTML = msgs.map(function(m) {
+      lista.innerHTML = msgs.map(function(m){
+        var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-GT') : '';
         return '<div class="mensaje-item">'
-          + '<span class="mensaje-autor">' + (m.de_nombre || 'Anónimo') + '</span>'
-          + '<span class="mensaje-fecha">' + formatFecha(m.created_at) + '</span>'
-          + '<div class="mensaje-txt">' + (m.mensaje || '') + '</div>'
-          + '</div>';
+          +'<span class="mensaje-autor">'+m.autor+'</span>'
+          +'<span class="mensaje-fecha">'+fecha+'</span>'
+          +'<div class="mensaje-txt">'+m.mensaje+'</div></div>';
       }).join('');
-    }).catch(function() {});
+    }).catch(function(){});
 }
 
-function enviarMensajePublico() {
-  var autor   = (document.getElementById('msgAutor') || {}).value || '';
-  var mensaje = (document.getElementById('msgTxt') || {}).value || '';
-  autor = autor.trim(); mensaje = mensaje.trim();
-  if (!autor || !mensaje) { alert('Por favor ingresa tu nombre y un mensaje'); return; }
+function enviarMensaje(){
+  var autor   = document.getElementById('msgAutor').value.trim();
+  var mensaje = document.getElementById('msgTxt').value.trim();
+  if(!autor||!mensaje){ alert('Por favor ingresa tu nombre y un mensaje'); return; }
 
-  sbFetch('/rest/v1/mensajes', {
-    method: 'POST',
-    body: JSON.stringify({
-      mascota_uid: uid,
-      de_email:    '',
-      de_nombre:   autor,
-      para_email:  mascota ? mascota.email : '',
-      mensaje:     mensaje,
-      tipo:        'publico'
+  fetch('/api/admin?action=updateRow',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      action:'addMensaje',
+      uid:uid,
+      autor:autor,
+      mensaje:mensaje,
+      nombreMascota:mascota?mascota.nombre:''
     })
-  }).then(function() {
-    if (document.getElementById('msgTxt')) document.getElementById('msgTxt').value = '';
-    mostrarToast('Mensaje enviado 🐾');
-    cargarMensajesPublicos();
-  }).catch(function() { alert('Error al enviar.'); });
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      document.getElementById('msgTxt').value='';
+      mostrarToast('Mensaje enviado 🐾');
+      cargarMensajes();
+    }
+  }).catch(function(){alert('Error al enviar.');});
 }
 
-// ── Chat privado ──────────────────────────────────────────────
-function verificarAmistad() {
-  if (!sessionEmail || !mascota) return;
-  // Obtener mis mascotas
-  sbFetch('/rest/v1/mascotas?email=eq.' + encodeURIComponent(sessionEmail) + '&select=uid,nombre,especie,foto')
-    .then(function(r) { return r.json(); })
-    .then(function(misMascotas) {
-      if (!Array.isArray(misMascotas) || !misMascotas.length) return;
-      var queries = [];
-      misMascotas.forEach(function(mm) {
-        if (mm.uid === mascota.uid) return;
-        queries.push(
-          sbFetch('/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(mm.uid) + '&uid_receptor=eq.' + encodeURIComponent(mascota.uid) + '&estado=eq.aceptado&select=id')
-            .then(function(r) { return r.json(); }).then(function(r) { return { rows: r, uid: mm.uid }; })
-        );
-        queries.push(
-          sbFetch('/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(mascota.uid) + '&uid_receptor=eq.' + encodeURIComponent(mm.uid) + '&estado=eq.aceptado&select=id')
-            .then(function(r) { return r.json(); }).then(function(r) { return { rows: r, uid: mm.uid }; })
-        );
-      });
-      return Promise.all(queries);
-    })
-    .then(function(results) {
-      if (!results) return;
+function mostrarToast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2500);
+}
+
+// ── Conversaciones privadas ───────────────────────────────────
+var miMascotaUID = null;
+
+function verificarAmistad(){
+  var sessionEmail = localStorage.getItem('petzid_email')||'';
+  if(!sessionEmail||!mascota) return;
+
+  fetch('/api/galeria?action=checkEmail',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'checkEmail',email:sessionEmail})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.found||!d.mascotas.length) return;
+    // Buscar amistad para TODAS las mascotas del usuario
+    var misMascotas = d.mascotas;
+    var miUidPrincipal = d.mascotas[0].uid;
+    miMascotaUID = miUidPrincipal;
+    
+    // Verificar si alguna de mis mascotas es amiga del perfil
+    var sbUrl='https://ilcreewilnkchvozicyp.supabase.co';
+    var sbKey='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+    
+    var queries = [];
+    misMascotas.forEach(function(mm){
+      if(mm.uid === mascota.uid) return;
+      queries.push(fetch(sbUrl+'/rest/v1/amigos?uid_solicitante=eq.'+encodeURIComponent(mm.uid)+'&uid_receptor=eq.'+encodeURIComponent(mascota.uid)+'&estado=eq.aceptado&select=id',{headers:{'apikey':sbKey,'Authorization':'Bearer '+sbKey}}).then(function(r){return r.json();}).then(function(r){return {rows:r,uid:mm.uid};}));
+      queries.push(fetch(sbUrl+'/rest/v1/amigos?uid_solicitante=eq.'+encodeURIComponent(mascota.uid)+'&uid_receptor=eq.'+encodeURIComponent(mm.uid)+'&estado=eq.aceptado&select=id',{headers:{'apikey':sbKey,'Authorization':'Bearer '+sbKey}}).then(function(r){return r.json();}).then(function(r){return {rows:r,uid:mm.uid};}));
+    });
+
+    Promise.all(queries).then(function(results){
       var encontrado = null;
-      results.forEach(function(res) {
-        if (res && res.rows && res.rows.length > 0) encontrado = res.uid;
+      results.forEach(function(res){
+        if(res.rows && res.rows.length > 0) encontrado = res.uid;
       });
-      if (!encontrado) return;
-      miMascotaUID = encontrado;
-      document.getElementById('convSection').style.display = 'block';
-      cargarConversacion();
-      // Marcar leídos
-      sbFetch('/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(mascota.uid) + '&uid_receptor=eq.' + encodeURIComponent(miMascotaUID) + '&leido=eq.false', {
-        method: 'PATCH',
-        body: JSON.stringify({ leido: true })
+      if(encontrado) miMascotaUID = encontrado;
+      var da = encontrado ? [1] : [];
+          var sonAmigos = da && da.length > 0;
+        if(sonAmigos){
+          document.getElementById('convSection').style.display='block';
+          cargarConversacion(miMascotaUID, mascota.uid);
+          // Marcar como leídos
+          fetch('/api/galeria?action=marcarLeidos',{
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({uid_emisor:miMascotaUID, uid_receptor:mascota.uid})
+          });
+        }
       });
-    }).catch(function() {});
+  });
 }
 
-function cargarConversacion() {
-  if (!miMascotaUID || !mascota) return;
+function cargarConversacion(uid1, uid2){
+  var sb='https://ilcreewilnkchvozicyp.supabase.co';
+  var sk='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+  var base=sb+'/rest/v1/conversaciones?order=created_at.asc';
+  var h={'apikey':sk,'Authorization':'Bearer '+sk};
   Promise.all([
-    sbFetch('/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(miMascotaUID) + '&uid_receptor=eq.' + encodeURIComponent(mascota.uid) + '&order=created_at.asc').then(function(r) { return r.json(); }),
-    sbFetch('/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(mascota.uid) + '&uid_receptor=eq.' + encodeURIComponent(miMascotaUID) + '&order=created_at.asc').then(function(r) { return r.json(); })
-  ]).then(function(results) {
-    var msgs = ((results[0] || []).concat(results[1] || []));
-    msgs.sort(function(a, b) { return new Date(a.created_at) - new Date(b.created_at); });
+    fetch(base+'&uid_emisor=eq.'+encodeURIComponent(uid1)+'&uid_receptor=eq.'+encodeURIComponent(uid2),{headers:h}).then(function(r){return r.json();}),
+    fetch(base+'&uid_emisor=eq.'+encodeURIComponent(uid2)+'&uid_receptor=eq.'+encodeURIComponent(uid1),{headers:h}).then(function(r){return r.json();})
+  ]).then(function(results){
+    var msgs = (results[0]||[]).concat(results[1]||[]);
+    msgs.sort(function(a,b){return new Date(a.created_at)-new Date(b.created_at);});
     var lista = document.getElementById('convLista');
-    if (!lista) return;
-    if (!msgs.length) {
-      lista.innerHTML = '<div style="text-align:center;color:#bbb;font-size:13px;padding:16px">Envía el primer mensaje 🐾</div>';
+    if(!lista) return;
+    if(!msgs.length){
+      lista.innerHTML='<div style="text-align:center;color:#bbb;font-size:13px;padding:16px">Envia el primer mensaje</div>';
       return;
     }
-    lista.innerHTML = msgs.map(function(m) {
+    lista.innerHTML = msgs.map(function(m){
       var esMio = m.uid_emisor === miMascotaUID;
-      var hora  = m.created_at ? new Date(m.created_at).toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' }) : '';
-      return '<div class="conv-burbuja ' + (esMio ? 'mio' : 'suyo') + '">'
-        + m.mensaje
-        + '<div class="conv-time">' + hora + '</div>'
-        + '</div>';
+      var hora = m.created_at ? new Date(m.created_at).toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'}) : '';
+      return '<div style="display:flex;justify-content:'+(esMio?'flex-end':'flex-start')+';margin-bottom:8px">'
+        +'<div style="max-width:75%;background:'+(esMio?'#00B4B4':'#f0f0ee')+';color:'+(esMio?'#fff':'#333')+';padding:8px 12px;border-radius:'+(esMio?'14px 14px 4px 14px':'14px 14px 14px 4px')+';font-size:13px;line-height:1.5">'
+        +m.mensaje
+        +'<div style="font-size:10px;color:'+(esMio?'rgba(255,255,255,.6)':'#bbb')+';margin-top:3px;text-align:right">'+hora+'</div>'
+        +'</div></div>';
     }).join('');
     lista.scrollTop = lista.scrollHeight;
-  }).catch(function() {});
+  }).catch(function(e){ console.log('Error conv:', e); });
 }
 
-function enviarMensajePrivado() {
+
+function enviarMensajePrivado(){
   var input   = document.getElementById('convInput');
-  var mensaje = (input ? input.value : '').trim();
-  if (!mensaje || !miMascotaUID || !mascota) return;
-  if (input) input.value = '';
+  var mensaje = input.value.trim();
+  if(!mensaje||!miMascotaUID||!mascota) return;
+  input.value = '';
 
-  sbFetch('/rest/v1/conversaciones', {
-    method: 'POST',
-    body: JSON.stringify({
-      uid_emisor:   miMascotaUID,
-      uid_receptor: mascota.uid,
-      mensaje:      mensaje,
-      leido:        false
-    })
-  }).then(function() {
-    cargarConversacion();
-    // Notificación email al responsable de la mascota
-    if (mascota.email) {
-      fetch('/api/notificar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tipo:           'mensaje',
-          para_email:     mascota.email,
-          para_nombre:    mascota.dueno,
-          mascota_nombre: mascota.nombre,
-          de_nombre:      sessionEmail,
-          mensaje_preview: mensaje.substring(0, 120)
-        })
-      }).catch(function() {});
+  fetch('/api/galeria?action=enviarMensajePrivado',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid_emisor:miMascotaUID, uid_receptor:mascota.uid, mensaje:mensaje})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      cargarConversacion(miMascotaUID, mascota.uid);
+      // Notificar por email
+      if(mascota.email){
+        fetch('/api/admin?action=updateRow',{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            action:'notificarMensaje',
+            emailReceptor:  mascota.email,
+            nombreEmisor:   sessionEmail||'Un amigo',
+            nombreReceptor: mascota.nombre,
+            mensaje:        mensaje.substring(0,200),
+            urlPerfil:      'https://petmi-petzid.vercel.app/perfil.html?uid='+miMascotaUID
+          })
+        });
+      }
     }
-  }).catch(function() {});
-}
-
-function mostrarToast(msg) {
-  var el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(function() { el.classList.remove('show'); }, 2500);
+  });
 }
 </script>
 <script src="/header.js"></script>
