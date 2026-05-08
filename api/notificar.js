@@ -2,8 +2,7 @@
 // Proxy hacia Google Apps Script para envío de emails
 // Vercel → GAS (que ya tiene los templates y GmailApp)
 
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec';
-// ↑ Reemplaza con tu URL de despliegue del GAS (Implementar > Nueva implementación > URL)
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbz-SEM4SNamXFzMWRC7nbtVyXmaf1bvitbDqaL6Ja5F08l62CAZQr-XCxQBhNYu7yXm/exec';
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -17,12 +16,9 @@ module.exports = async function handler(req, res) {
     var body = req.body;
     var tipo = body.tipo || '';
 
-    // Mapear tipo → action del GAS
-    var action = '';
     var payload = {};
 
     if (tipo === 'mensaje') {
-      action = 'notificarMensaje';
       payload = {
         action:         'notificarMensaje',
         emailReceptor:  body.para_email      || '',
@@ -31,34 +27,40 @@ module.exports = async function handler(req, res) {
         preview:        body.mensaje_preview || ''
       };
     } else if (tipo === 'solicitud_amistad') {
-      action = 'notificarSolicitud';
       payload = {
-        action:          'notificarSolicitud',
-        emailReceptor:   body.para_email     || '',
-        nombreReceptor:  body.para_nombre    || '',
-        nombreSolicit:   body.de_nombre      || '',
-        uidReceptor:     body.uid_receptor   || ''
+        action:         'notificarSolicitud',
+        emailReceptor:  body.para_email    || '',
+        nombreReceptor: body.para_nombre   || '',
+        nombreSolicit:  body.de_nombre     || '',
+        uidReceptor:    body.uid_receptor  || ''
       };
     } else if (tipo === 'amistad_aceptada') {
-      action = 'notificarAceptado';
       payload = {
-        action:         'notificarAceptado',
-        emailSolicit:   body.para_email      || '',
-        nombreSolicit:  body.para_nombre     || '',
-        nombreAceptor:  body.de_nombre       || ''
+        action:        'notificarAceptado',
+        emailSolicit:  body.para_email  || '',
+        nombreSolicit: body.para_nombre || '',
+        nombreAceptor: body.de_nombre  || ''
       };
     } else {
       return res.status(400).json({ error: 'tipo no reconocido: ' + tipo });
     }
 
-    // Enviar al GAS
+    // Enviar al GAS via POST
     var gasRes = await fetch(GAS_URL, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload)
+      body:    JSON.stringify(payload),
+      redirect: 'follow'
     });
 
-    var gasData = await gasRes.json().catch(function() { return { ok: true }; });
+    var gasText = await gasRes.text();
+    var gasData;
+    try {
+      gasData = JSON.parse(gasText);
+    } catch(e) {
+      gasData = { raw: gasText };
+    }
+
     return res.status(200).json({ ok: true, gas: gasData });
 
   } catch (err) {
