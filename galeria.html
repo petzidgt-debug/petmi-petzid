@@ -1108,14 +1108,10 @@ function enviarMensaje(){
       mensaje: mensaje,
       nombre_mascota: currentModalPet?currentModalPet.nombre:''
     })
-  }).then(function(r){
-    if(r.ok||r.status===201){
-      document.getElementById('mensajeTxt').value='';
-      cargarMensajes(currentMascotaUID);
-    } else {
-      alert('Error al enviar. Intenta de nuevo.');
-    }
-  }).catch(function(e){ alert('Error: '+e.message); });
+  }).then(function(){
+    document.getElementById('mensajeTxt').value='';
+    setTimeout(function(){ cargarMensajes(currentMascotaUID); }, 300);
+  }).catch(function(e){ console.log('Error:', e); });
 }
 </script>
 <script src="/header.js"></script>
