@@ -22,6 +22,7 @@ export default async function handler(req, res) {
         }
       );
       const data = await response.json();
+      // Convertir al formato que espera la galería
       const rows = data.map(m => [
         m.uid,           // 0
         m.nombre,        // 1
@@ -168,7 +169,7 @@ export default async function handler(req, res) {
 
     // ── responderSolicitud ────────────────────────────────────
     if (action === 'responderSolicitud' && req.method === 'POST') {
-      const { id, estado } = req.body;
+      const { id, estado } = req.body; // estado: aceptado | rechazado
       const response = await fetch(
         SUPABASE_URL + '/rest/v1/amigos?id=eq.' + encodeURIComponent(id),
         {
@@ -186,10 +187,12 @@ export default async function handler(req, res) {
     }
 
     // ── getAmigos ─────────────────────────────────────────────
+    // Devuelve amigos aceptados y solicitudes pendientes de un uid
     if (action === 'getAmigos') {
       const uid = req.query.uid || '';
       if (!uid) return res.status(200).json({ amigos: [], pendientes: [] });
 
+      // Buscar donde es solicitante O receptor
       const [r1, r2] = await Promise.all([
         fetch(SUPABASE_URL + '/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(uid) + '&select=*', {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
@@ -202,16 +205,16 @@ export default async function handler(req, res) {
       const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
       const todas = [...(d1||[]), ...(d2||[])];
 
-      const amigos     = todas.filter(a => a.estado === 'aceptado');
+      const amigos    = todas.filter(a => a.estado === 'aceptado');
       const pendientes = todas.filter(a => a.estado === 'pendiente');
 
+      // Obtener UIDs de amigos para cargar sus mascotas
       const uidsAmigos = amigos.map(a => a.uid_solicitante === uid ? a.uid_receptor : a.uid_solicitante);
 
       let mascotasAmigos = [];
       if (uidsAmigos.length > 0) {
         const r3 = await fetch(
-          // ✅ FIX: agregado "email" al select para que las notificaciones funcionen
-          SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uidsAmigos.map(u => '"'+u+'"').join(',') + ')&select=uid,nombre,apodo,especie,foto,angelito,email',
+          SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uidsAmigos.map(u => '"'+u+'"').join(',') + ')&select=uid,nombre,apodo,especie,foto,angelito',
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
         );
         mascotasAmigos = await r3.json();
@@ -227,7 +230,7 @@ export default async function handler(req, res) {
       if (!uid1 || !uid2) return res.status(200).json({ mensajes: [] });
 
       const response = await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones?or=(and(uid_emisor.eq.' + encodeURIComponent(uid1) + ',uid_receptor.eq.' + encodeURIComponent(uid2) + '),and(uid_emisor.eq.' + encodeURIComponent(uid2) + ',uid_receptor.eq.' + encodeURIComponent(uid1) + '))&order=created_at.asc',
+        SUPABASE_URL + '/rest/v1/conversaciones?or=(and(uid_emisor.eq.' + encodeURIComponent(uid1) + ',uid_receptor.eq.' + encodeURIComponent(uid2) + '),and(uid_emisor.eq.' + encodeURIComponent(uid2) + ',uid_receptor.eq.' + encodeURIComponent(uid1) + '))&order=created_at.desc&limit=50',
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
       );
       const data = await response.json();
@@ -338,6 +341,7 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify({ lugar_id, email, rating, comentario })
       });
+      // Actualizar rating promedio
       if (r.ok) {
         const ratings = await fetch(SUPABASE_URL + '/rest/v1/lugar_ratings?lugar_id=eq.' + lugar_id + '&select=rating', {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
@@ -352,6 +356,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
 
+    // ── Enviar evento a revisión (usuarios) ─────────────────────
     if (action === 'enviarEvento' && req.method === 'POST') {
       const { titulo, tipo, fecha, hora, lugar, direccion, descripcion, imagen, link, email } = req.body;
       if (!titulo || !fecha) return res.status(200).json({ ok: false, error: 'Faltan campos' });
@@ -363,6 +368,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
 
+    // ── Enviar lugar a revisión (usuarios) ───────────────────────
     if (action === 'enviarLugar' && req.method === 'POST') {
       const { nombre, tipo, zona, direccion, descripcion, imagen, google_maps, instagram, telefono, email } = req.body;
       if (!nombre) return res.status(200).json({ ok: false, error: 'Falta el nombre' });
