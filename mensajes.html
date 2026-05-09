@@ -135,10 +135,16 @@ function cargarTodo(){
       renderConversaciones();
       // Abrir conversación automáticamente si viene con ?uid=
       if(autoOpenUID){
-        setTimeout(function(){
-          var amigo = amigosData.find(function(a){return a.uid===autoOpenUID;});
-          if(amigo) abrirChat(autoOpenUID);
-        }, 500);
+        var amigo = amigosData.find(function(a){return a.uid===autoOpenUID;});
+        if(amigo){
+          abrirChat(autoOpenUID);
+        } else {
+          // Si no está en amigos, esperar un poco más
+          setTimeout(function(){
+            var amigo2 = amigosData.find(function(a){return a.uid===autoOpenUID;});
+            if(amigo2) abrirChat(autoOpenUID);
+          }, 1000);
+        }
       }
     });
   }).catch(function(){
