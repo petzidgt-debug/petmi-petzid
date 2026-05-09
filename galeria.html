@@ -605,6 +605,13 @@ function openModal(idx){
     if(p.angelito||esCumple){
       msgSection.style.display='block';
       cargarMensajes(p.uid);
+      // Pre-llenar nombre del autor si hay sesión
+      var autorInput = document.getElementById('mensajeAutor');
+      if(autorInput){
+        var dueno = localStorage.getItem('petzid_dueno')||'';
+        var email = localStorage.getItem('petzid_email')||'';
+        autorInput.value = dueno || (email?email.split('@')[0]:'');
+      }
     } else {
       msgSection.style.display='none';
     }
@@ -750,6 +757,13 @@ function openModalDirect(p){
     if(p.angelito||esCumple){
       msgSection.style.display='block';
       cargarMensajes(p.uid);
+      // Pre-llenar nombre del autor si hay sesión
+      var autorInput = document.getElementById('mensajeAutor');
+      if(autorInput){
+        var dueno = localStorage.getItem('petzid_dueno')||'';
+        var email = localStorage.getItem('petzid_email')||'';
+        autorInput.value = dueno || (email?email.split('@')[0]:'');
+      }
     } else {
       msgSection.style.display='none';
     }
@@ -1071,8 +1085,13 @@ function cargarMensajes(uid){
 function enviarMensaje(){
   var autor   = document.getElementById('mensajeAutor').value.trim();
   var mensaje = document.getElementById('mensajeTxt').value.trim();
-  if(!autor||!mensaje){
-    alert('Por favor ingresa tu nombre y un mensaje');return;
+  if(!autor){
+    var dueno = localStorage.getItem('petzid_dueno')||'';
+    var email = localStorage.getItem('petzid_email')||'';
+    autor = dueno || (email?email.split('@')[0]:'Anónimo');
+  }
+  if(!mensaje){
+    alert('Escribe un mensaje');return;
   }
   if(!currentMascotaUID)return;
 
