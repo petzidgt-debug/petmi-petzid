@@ -1045,16 +1045,18 @@ function cargarMensajes(uid){
   var lista = document.getElementById('mensajesLista');
   lista.innerHTML = '<div style="text-align:center;padding:12px;color:#bbb;font-size:13px">Cargando...</div>';
 
-  fetch('/api/galeria?action=getMensajes&uid='+encodeURIComponent(uid))
-    .then(function(r){return r.json();})
-    .then(function(d){
-      var msgs = d.mensajes||[];
-      if(msgs.length===0){
+  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/mensajes?uid_mascota=eq.'+encodeURIComponent(uid)+'&order=created_at.asc',{
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}
+  }).then(function(r){return r.json();})
+  .then(function(msgs){
+      if(!msgs||msgs.length===0){
         lista.innerHTML='<div style="text-align:center;padding:12px;color:#bbb;font-size:13px">Sé el primero en dejar un mensaje 🐾</div>';
         return;
       }
+      // Convertir formato Supabase al formato esperado
+      var d = {mensajes: msgs.map(function(m){ return {autor:m.autor, mensaje:m.mensaje, fecha:m.created_at}; })};
       lista.innerHTML = msgs.map(function(m){
-        var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-GT') : '';
+        var fecha = (m.created_at||m.fecha) ? new Date(m.created_at||m.fecha).toLocaleDateString('es-GT') : '';
         return '<div style="background:#f8f8f8;border-radius:10px;padding:10px 12px;margin-bottom:6px">'
           +'<div style="font-size:12px;font-weight:700;color:#333">'+m.autor+'<span style="font-size:10px;color:#bbb;font-weight:400;margin-left:8px">'+fecha+'</span></div>'
           +'<div style="font-size:13px;color:#555;margin-top:3px;line-height:1.5">'+m.mensaje+'</div></div>';
