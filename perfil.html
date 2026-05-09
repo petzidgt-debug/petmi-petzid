@@ -427,7 +427,7 @@ function enviarMensajePrivado(){
           body:JSON.stringify({
             action:'notificarMensaje',
             emailReceptor:  mascota.email,
-            nombreEmisor:   sessionEmail||'Un amigo',
+            nombreEmisor:   (misMascotas.find(function(m){return m.uid===miMascotaUID;})||{nombre:sessionEmail}).nombre||sessionEmail,
             nombreReceptor: mascota.nombre,
             mensaje:        mensaje.substring(0,200),
             urlPerfil:      'https://petmi-petzid.vercel.app/perfil.html?uid='+mascota.uid
