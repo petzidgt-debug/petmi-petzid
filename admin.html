@@ -444,7 +444,7 @@ function renderTable(){
     var esp=String(r[4]).toLowerCase().indexOf('gato')>=0?'<span class="badge badge-gato">Gato</span>':'<span class="badge badge-perro">Perro</span>';
     var est=String(r[24]);
     var estB=est==='Si'?'<span class="badge badge-si">Enviado</span>':est.indexOf('migraci')>=0?'<span class="badge badge-pending">Migracion</span>':'<span class="badge badge-no">Pendiente</span>';
-    var fecha=r[0]?new Date(r[0]).toLocaleDateString('es-GT'):'-';
+    var fecha=r[0]?new Date(r[0]).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'-';
     var foto=r[5]&&String(r[5]).indexOf('http')>=0?'<img src="'+r[5]+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.style.display=\'none\'">':'<div style="width:40px;height:40px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px">🐾</div>';
     return '<tr><td>'+foto+'</td><td><strong>'+String(r[2]||'-')+'</strong><br><span style="font-size:11px;color:#888">'+String(r[3]||'')+'</span></td><td>'+esp+'</td><td style="font-size:12px">'+String(r[9]||'-')+'</td><td style="font-size:12px">'+String(r[10]||'-')+'</td><td style="font-size:11px;color:#534AB7">'+String(r[11]||'-')+'</td><td style="font-size:12px">'+String(r[16]||'-')+'</td><td style="font-size:11px;color:#888">'+fecha+'</td><td>'+estB+'</td><td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
   }).join('');
@@ -533,7 +533,7 @@ function reenviarID(idx){
 }
 function renderCampanas(){
   var html=campanas.map(function(c){
-    var f=c[0]?new Date(c[0]).toLocaleDateString('es-GT'):'-';
+    var f=c[0]?new Date(c[0]).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'-';
     return '<tr><td>'+f+'</td><td><span style="background:#e0f7f7;padding:2px 8px;border-radius:4px;font-size:12px">'+String(c[1]||'TODOS')+'</span></td><td>'+String(c[2]||'-')+'</td><td><strong style="color:#155724">'+String(c[3]||0)+'</strong></td><td style="color:#721c24">'+String(c[4]||0)+'</td></tr>';
   }).join('');
   document.getElementById('campanaBody').innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:#888">Sin campanas</td></tr>';
@@ -795,7 +795,11 @@ function editarEvento(i){location.href='/admin-evento.html?id='+(window._eventos
 function eliminarEvento(i){
   if(!confirm('Eliminar?'))return;
   var id=(window._eventosData[i]||{}).id;
-  fetch(SB_URL+'/rest/v1/eventos?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}).then(function(){cargarEventosAdmin();});
+  // Primero eliminar asistentes, luego el evento
+  fetch(SB_URL+'/rest/v1/evento_asistentes?evento_id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}})
+  .then(function(){
+    return fetch(SB_URL+'/rest/v1/eventos?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+  }).then(function(){cargarEventosAdmin();});
 }
 
 function cargarLugaresAdmin(){
@@ -894,7 +898,11 @@ function editarEvento(i){location.href='/admin-evento.html?id='+(window._eventos
 function eliminarEvento(i){
   if(!confirm('Eliminar?'))return;
   var id=(window._eventosData[i]||{}).id;
-  fetch(SB_URL+'/rest/v1/eventos?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}).then(function(){cargarEventosAdmin();});
+  // Primero eliminar asistentes, luego el evento
+  fetch(SB_URL+'/rest/v1/evento_asistentes?evento_id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}})
+  .then(function(){
+    return fetch(SB_URL+'/rest/v1/eventos?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+  }).then(function(){cargarEventosAdmin();});
 }
 </script>
 
