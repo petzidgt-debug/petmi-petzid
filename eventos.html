@@ -463,17 +463,18 @@ function enviarSugerenciaEvento(){
 }
 
 function mostrarMsg(id,txt,bg,color){
-  var el=document.getElementById(id);
   if(bg==='#e0f7f7'){
+    cerrarFormEvento();
     var foto=JEFE_IMGS[Math.floor(Math.random()*JEFE_IMGS.length)];
-    el.innerHTML='<div style="text-align:center;padding:8px 0">'
-      +'<img src="'+foto+'" style="width:160px;border-radius:12px;margin-bottom:10px" onerror="this.style.display=\'none\'">'
-      +'<div style="font-size:15px;font-weight:700;color:#007a7a;margin-bottom:4px">Gracias por tu sugerencia! 🐾</div>'
+    document.getElementById('modalGraciasEventoContent').innerHTML=
+      '<div style="text-align:center;padding:8px 0">'
+      +'<img src="'+foto+'" style="width:180px;border-radius:12px;margin-bottom:14px" onerror="this.style.display=\'none\'">'
+      +'<div style="font-size:17px;font-weight:700;color:#007a7a;margin-bottom:6px">Gracias por tu sugerencia! 🐾</div>'
       +'<div style="font-size:13px;color:#555">El jefe revisara tu sugerencia y pronto aparecera en la lista.</div>'
       +'</div>';
-    el.style.background=bg;el.style.display='block';
+    document.getElementById('modalGraciasEvento').classList.add('open');
   } else {
-    el.textContent=txt;el.style.background=bg;el.style.color=color;el.style.display='block';
+    mostrarToast(txt);
   }
 }
 
