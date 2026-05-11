@@ -152,7 +152,18 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Descripción</label>
     <textarea id="sgLDesc" placeholder="¿Por qué lo recomiendas?" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;resize:none;height:70px;outline:none"></textarea>
     <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Link Google Maps (opcional)</label>
-    <input type="text" id="sgLMaps" placeholder="https://maps.google.com/..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 16px;outline:none">
+    <input type="text" id="sgLMaps" placeholder="https://maps.google.com/..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Foto del lugar (opcional)</label>
+    <div style="margin:4px 0 16px">
+      <label for="sgLFoto" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px dashed #ddd;border-radius:10px;cursor:pointer;font-size:13px;color:#888;background:#fafafa">
+        <span style="font-size:20px">📷</span>
+        <span id="sgLFotoLabel">Seleccionar foto</span>
+      </label>
+      <input type="file" id="sgLFoto" accept="image/*" style="display:none" onchange="previsualizarFoto(this)">
+      <div id="sgLFotoPreview" style="margin-top:8px;display:none">
+        <img id="sgLFotoImg" style="width:100%;height:120px;object-fit:cover;border-radius:10px">
+      </div>
+    </div>
     <button onclick="enviarSugerenciaLugar()" id="sgLBtn" style="width:100%;padding:13px;background:#E05090;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Enviar sugerencia</button>
   </div>
 </div>
@@ -282,6 +293,24 @@ function enviarRating(){
   });
 }
 
+var sgLFotoBase64 = null;
+var sgLFotoMime   = null;
+
+function previsualizarFoto(input){
+  var file = input.files[0];
+  if(!file) return;
+  sgLFotoMime = file.type;
+  document.getElementById('sgLFotoLabel').textContent = file.name;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    sgLFotoBase64 = e.target.result.split(',')[1];
+    var preview = document.getElementById('sgLFotoPreview');
+    document.getElementById('sgLFotoImg').src = e.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
 function abrirFormLugar(){
   document.getElementById('modalSugerirLugar').style.display='flex';
   document.getElementById('modalSugerirLugar').classList.add('open');
@@ -289,36 +318,67 @@ function abrirFormLugar(){
 function cerrarFormLugar(){
   document.getElementById('modalSugerirLugar').classList.remove('open');
   document.getElementById('modalSugerirLugar').style.display='none';
+  // Reset form
+  document.getElementById('sgLNombre').value='';
+  document.getElementById('sgLZona').value='';
+  document.getElementById('sgLTelefono').value='';
+  document.getElementById('sgLDireccion').value='';
+  document.getElementById('sgLDesc').value='';
+  document.getElementById('sgLMaps').value='';
+  document.getElementById('sgLFotoLabel').textContent='Seleccionar foto';
+  document.getElementById('sgLFotoPreview').style.display='none';
+  document.getElementById('sgLugarMsg').style.display='none';
+  var btn=document.getElementById('sgLBtn');
+  btn.disabled=false;btn.textContent='Enviar sugerencia';
+  sgLFotoBase64=null;sgLFotoMime=null;
 }
 function enviarSugerenciaLugar(){
   var nombre=document.getElementById('sgLNombre').value.trim();
   if(!nombre){mostrarMsgLugar('El nombre es obligatorio','#fbeaf0','#c0392b');return;}
   var btn=document.getElementById('sgLBtn');
   btn.disabled=true;btn.textContent='Enviando...';
-  fetch('/api/galeria?action=enviarLugar',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      nombre:nombre,
-      tipo:document.getElementById('sgLTipo').value,
-      ubicacion:document.getElementById('sgLZona').value.trim(),
-      telefono:document.getElementById('sgLTelefono').value.trim(),
-      direccion:document.getElementById('sgLDireccion').value.trim(),
-      descripcion:document.getElementById('sgLDesc').value.trim(),
-      google_maps:document.getElementById('sgLMaps').value.trim(),
-      email:sessionEmail||''
-    })
-  }).then(function(r){return r.json();})
-  .then(function(d){
-    if(d.ok){
-      mostrarMsgLugar('Sugerencia enviada! La revisaremos pronto.','#e0f7f7','#007a7a');
+
+  var fotoPromise = sgLFotoBase64
+    ? (function(){
+        var fd=new FormData();
+        fd.append('file','data:'+(sgLFotoMime||'image/jpeg')+';base64,'+sgLFotoBase64);
+        fd.append('upload_preset','petzid');
+        return fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd})
+          .then(function(r){return r.json();})
+          .then(function(d){return d.secure_url||'';});
+      })()
+    : Promise.resolve('');
+
+  fotoPromise.then(function(fotoUrl){
+    return fetch('/api/galeria?action=enviarLugar',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        nombre:nombre,
+        tipo:document.getElementById('sgLTipo').value,
+        ubicacion:document.getElementById('sgLZona').value.trim(),
+        telefono:document.getElementById('sgLTelefono').value.trim(),
+        direccion:document.getElementById('sgLDireccion').value.trim(),
+        descripcion:document.getElementById('sgLDesc').value.trim(),
+        google_maps:document.getElementById('sgLMaps').value.trim(),
+        imagen:fotoUrl,
+        email:sessionEmail||''
+      })
+    }).then(function(r){return r.json();});
+  }).then(function(d){
+    if(d&&d.ok){
+      mostrarMsgLugar('ok','#e0f7f7','#007a7a');
       btn.textContent='Enviado!';
-      setTimeout(cerrarFormLugar,2000);
+      btn.disabled=true;
     } else {
       mostrarMsgLugar('Error al enviar','#fbeaf0','#c0392b');
       btn.disabled=false;btn.textContent='Enviar sugerencia';
     }
+  }).catch(function(){
+    mostrarMsgLugar('Error al enviar','#fbeaf0','#c0392b');
+    btn.disabled=false;btn.textContent='Enviar sugerencia';
   });
 }
+
 function mostrarMsgLugar(txt,bg,color){
   var el=document.getElementById('sgLugarMsg');
   if(bg==='#e0f7f7'){
