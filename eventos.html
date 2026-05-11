@@ -9,18 +9,12 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .wrap{max-width:700px;margin:0 auto;padding:20px 16px 40px}
-
-/* HERO */
 .hero{background:linear-gradient(135deg,#00B4B4,#007a7a);border-radius:16px;padding:24px;margin-bottom:20px;color:#fff;text-align:center}
 .hero h1{font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;margin-bottom:6px}
 .hero p{font-size:13px;color:rgba(255,255,255,.75)}
-
-/* FILTROS */
 .filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
 .filtro-btn{padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:600;color:#888;background:#fff;cursor:pointer;transition:all .2s}
 .filtro-btn.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
-
-/* EVENTO CARD */
 .evento-card{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .evento-img{width:100%;height:180px;object-fit:cover;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:48px}
 .evento-img img{width:100%;height:180px;object-fit:cover}
@@ -34,23 +28,25 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .evento-fecha{font-size:13px;color:#00B4B4;font-weight:700;margin-bottom:4px}
 .evento-lugar{font-size:13px;color:#888;margin-bottom:10px}
 .evento-desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:14px}
-.evento-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid #f5f5f5}
+.evento-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid #f5f5f5}
 .asistentes-count{font-size:12px;color:#aaa}
 .btn-asistir{padding:9px 20px;background:#00B4B4;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer}
 .btn-asistir.asistiendo{background:#e0f7f7;color:#007a7a}
 .btn-asistir:disabled{background:#ddd;color:#aaa;cursor:not-allowed}
-
-/* EMPTY */
+.btns-share{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.btn-share{padding:7px 12px;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer}
+.btn-invitar{background:#f0f0ee;color:#555}
+.btn-whatsapp{background:#25D366;color:#fff}
+.btn-copiar{background:#f0f0ee;color:#555}
 .empty{text-align:center;padding:48px 20px;color:#bbb}
 .empty-icon{font-size:48px;margin-bottom:12px}
-
-/* SPINNER */
 .spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
 </style>
 </head>
 <body>
@@ -62,43 +58,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <button onclick="abrirFormEvento()" style="margin-top:14px;padding:9px 20px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.6);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ Sugerir un evento</button>
   </div>
 
-  <!-- Modal sugerir evento -->
-  <div id="modalSugerirEvento" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;padding:16px">
-    <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
-      <div style="font-size:18px;font-weight:900;margin-bottom:16px">🎉 Sugerir un evento
-        <button onclick="cerrarFormEvento()" style="float:right;background:none;border:none;font-size:20px;cursor:pointer">×</button>
-      </div>
-      <div style="font-size:12px;color:#aaa;margin-bottom:14px">Tu sugerencia será revisada antes de publicarse</div>
-      <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Título *</label>
-      <input type="text" id="sgTitulo" placeholder="Nombre del evento" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-      <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Tipo</label>
-      <select id="sgTipo" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-        <option value="evento">🎪 Evento</option>
-        <option value="paseo">🚶 Paseo</option>
-        <option value="exposicion">🏆 Exposición</option>
-        <option value="adopcion">🐾 Adopción</option>
-      </select>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Fecha *</label>
-          <input type="date" id="sgFecha" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Hora</label>
-          <input type="text" id="sgHora" placeholder="10:00 AM" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-        </div>
-      </div>
-      <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Lugar</label>
-      <input type="text" id="sgLugar" placeholder="Nombre del lugar" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-      <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Descripción</label>
-      <textarea id="sgDesc" placeholder="Cuéntanos más..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;resize:none;height:80px;outline:none"></textarea>
-      <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Link (opcional)</label>
-      <input type="text" id="sgLink" placeholder="https://..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 16px;outline:none">
-      <div id="sgMsg" style="display:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:12px"></div>
-      <button onclick="enviarSugerenciaEvento()" id="sgBtn" style="width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Enviar sugerencia</button>
-    </div>
-  </div>
-
   <div class="filtros">
     <button class="filtro-btn active" onclick="setFiltro('',this)">Todos</button>
     <button class="filtro-btn" onclick="setFiltro('evento',this)">🎪 Eventos</button>
@@ -107,146 +66,302 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <button class="filtro-btn" onclick="setFiltro('adopcion',this)">🐾 Adopción</button>
   </div>
 
-  <div id="eventosWrap">
-    <div class="spinner"></div>
+  <div id="eventosWrap"><div class="spinner"></div></div>
+</div>
+
+<!-- Modal sugerir evento -->
+<div id="modalSugerirEvento" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
+    <div style="font-size:18px;font-weight:900;margin-bottom:16px">🎉 Sugerir un evento
+      <button onclick="cerrarFormEvento()" style="float:right;background:none;border:none;font-size:20px;cursor:pointer">×</button>
+    </div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:14px">Tu sugerencia será revisada antes de publicarse</div>
+    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Título *</label>
+    <input type="text" id="sgTitulo" placeholder="Nombre del evento" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Tipo</label>
+    <select id="sgTipo" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+      <option value="evento">🎪 Evento</option>
+      <option value="paseo">🚶 Paseo</option>
+      <option value="exposicion">🏆 Exposición</option>
+      <option value="adopcion">🐾 Adopción</option>
+    </select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Fecha *</label>
+        <input type="date" id="sgFecha" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Hora</label>
+        <input type="text" id="sgHora" placeholder="10:00 AM" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+      </div>
+    </div>
+    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Lugar</label>
+    <input type="text" id="sgLugar" placeholder="Nombre del lugar" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Descripción</label>
+    <textarea id="sgDesc" placeholder="Cuéntanos más..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;resize:none;height:80px;outline:none"></textarea>
+    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Link (opcional)</label>
+    <input type="text" id="sgLink" placeholder="https://..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 16px;outline:none">
+    <div id="sgMsg" style="display:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:12px"></div>
+    <button onclick="enviarSugerenciaEvento()" id="sgBtn" style="width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Enviar sugerencia</button>
+  </div>
+</div>
+
+<!-- Modal invitar amigos -->
+<div class="modal-overlay" id="modalInvitar">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div style="font-size:17px;font-weight:900;color:#222">👥 Invitar amigos</div>
+      <button onclick="cerrarInvitar()" style="background:none;border:none;font-size:20px;cursor:pointer">×</button>
+    </div>
+    <div id="invitarSubtitulo" style="font-size:12px;color:#aaa;margin-bottom:16px"></div>
+    <button onclick="invitarTodos()" style="width:100%;padding:11px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:14px">🐾 Invitar a todos mis amigos</button>
+    <div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">O invita uno por uno</div>
+    <div id="listaAmigosInvitar"><div class="spinner" style="margin:20px auto"></div></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-var sessionEmail = localStorage.getItem('petzid_email') || '';
-var miMascotaUID = null;
+var sessionEmail = localStorage.getItem('petzid_email')||'';
+var miMascota    = null;
+var misMascotas  = [];
+var amigosCache  = [];
 var filtroActual = '';
 var eventosData  = [];
 var misAsistencias = {};
+var eventoInvitarActual = null;
+var invitadosEnviados = {};
 
-// Cargar mascota del usuario
+var JEFE_IMGS=['https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'];
+
+// Cargar datos del usuario
 if(sessionEmail){
   fetch('/api/galeria?action=checkEmail',{
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'checkEmail',email:sessionEmail})
   }).then(function(r){return r.json();})
   .then(function(d){
-    if(d.found&&d.mascotas.length) miMascotaUID=d.mascotas[0].uid;
+    if(d.found&&d.mascotas.length){
+      misMascotas=d.mascotas;
+      miMascota=d.mascotas[0];
+      // Precargar amigos
+      cargarAmigos();
+    }
   });
 }
 
-// Cargar eventos
+function cargarAmigos(){
+  var SB='https://ilcreewilnkchvozicyp.supabase.co';
+  var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+  var h={'apikey':SK,'Authorization':'Bearer '+SK};
+  var queries=misMascotas.map(function(mm){
+    return fetch(SB+'/rest/v1/amigos?or=(and(uid_solicitante.eq.'+encodeURIComponent(mm.uid)+',estado.eq.aceptado),and(uid_receptor.eq.'+encodeURIComponent(mm.uid)+',estado.eq.aceptado))&select=uid_solicitante,uid_receptor',{headers:h})
+      .then(function(r){return r.json();})
+      .then(function(rows){
+        return (rows||[]).map(function(row){return row.uid_solicitante===mm.uid?row.uid_receptor:row.uid_solicitante;});
+      });
+  });
+  Promise.all(queries).then(function(results){
+    var seen={}, uids=[];
+    results.forEach(function(list){list.forEach(function(uid){if(!seen[uid]){seen[uid]=1;uids.push(uid);}});});
+    if(!uids.length)return;
+    var infoQ=uids.map(function(uid){
+      return fetch(SB+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid)+'&select=uid,nombre,especie,foto,email',{headers:h})
+        .then(function(r){return r.json();})
+        .then(function(d){return d[0]||null;});
+    });
+    Promise.all(infoQ).then(function(infos){
+      amigosCache=infos.filter(Boolean);
+    });
+  });
+}
+
 cargarEventos();
 
 function cargarEventos(){
   document.getElementById('eventosWrap').innerHTML='<div class="spinner"></div>';
   var url='/api/galeria?action=getEventos';
   if(filtroActual) url+='&tipo='+encodeURIComponent(filtroActual);
-
   fetch(url).then(function(r){return r.json();})
   .then(function(d){
-    eventosData = d.eventos||[];
+    eventosData=d.eventos||[];
     renderEventos();
   }).catch(function(){
     document.getElementById('eventosWrap').innerHTML='<div class="empty"><div class="empty-icon">😕</div><p>Error al cargar eventos</p></div>';
   });
 }
 
-function setFiltro(tipo, btn){
-  filtroActual = tipo;
+function setFiltro(tipo,btn){
+  filtroActual=tipo;
   document.querySelectorAll('.filtro-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   cargarEventos();
 }
 
 function renderEventos(){
-  var wrap = document.getElementById('eventosWrap');
+  var wrap=document.getElementById('eventosWrap');
   if(!eventosData.length){
-    wrap.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>No hay eventos próximos</p><p style="font-size:12px;margin-top:8px">Próximamente más eventos</p></div>';
+    wrap.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>No hay eventos próximos</p></div>';
     return;
   }
-
-  var html = '';
+  var html='';
   eventosData.forEach(function(e){
-    var tipoClass = 'tipo-'+(e.tipo||'evento');
-    var tipoLabel = {evento:'🎪 Evento',paseo:'🚶 Paseo',exposicion:'🏆 Exposición',adopcion:'🐾 Adopción'}[e.tipo]||(e.tipo||'Evento');
-    var fecha = e.fecha ? new Date(e.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) : '';
-    var fotoHTML = e.imagen&&e.imagen.indexOf('http')>=0
-      ? '<img src="'+e.imagen+'">'
-      : '';
+    var tipoClass='tipo-'+(e.tipo||'evento');
+    var tipoLabel={evento:'🎪 Evento',paseo:'🚶 Paseo',exposicion:'🏆 Exposición',adopcion:'🐾 Adopción'}[e.tipo]||(e.tipo||'Evento');
+    var fecha=e.fecha?new Date(e.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):'';
+    var fotoHTML=e.imagen&&e.imagen.indexOf('http')>=0?'<img src="'+e.imagen+'">':'';
+    var shareUrl=encodeURIComponent('https://petmi-petzid.vercel.app/eventos.html');
+    var shareText=encodeURIComponent('🎉 '+e.titulo+' - '+fecha+' en PetMi Guatemala!');
 
-    html += '<div class="evento-card" id="evento-'+e.id+'">';
-    if(fotoHTML) html += '<div class="evento-img">'+fotoHTML+'</div>';
-    html += '<div class="evento-body">';
-    html += '<span class="evento-tipo '+tipoClass+'">'+tipoLabel+'</span>';
-    html += '<div class="evento-titulo">'+e.titulo+'</div>';
-    html += '<div class="evento-fecha">📅 '+fecha+(e.hora?' · ⏰ '+e.hora:'')+'</div>';
-    if(e.lugar) html += '<div class="evento-lugar">📍 '+e.lugar+(e.direccion?', '+e.direccion:'')+'</div>';
-    if(e.descripcion) html += '<div class="evento-desc">'+e.descripcion+'</div>';
-    html += '<div class="evento-footer">';
-    html += '<span class="asistentes-count" id="count-'+e.id+'">Cargando asistentes...</span>';
+    html+='<div class="evento-card" id="evento-'+e.id+'">';
+    if(fotoHTML) html+='<div class="evento-img">'+fotoHTML+'</div>';
+    html+='<div class="evento-body">';
+    html+='<span class="evento-tipo '+tipoClass+'">'+tipoLabel+'</span>';
+    html+='<div class="evento-titulo">'+e.titulo+'</div>';
+    html+='<div class="evento-fecha">📅 '+fecha+(e.hora?' · ⏰ '+e.hora:'')+'</div>';
+    if(e.lugar) html+='<div class="evento-lugar">📍 '+e.lugar+(e.direccion?', '+e.direccion:'')+'</div>';
+    if(e.descripcion) html+='<div class="evento-desc">'+e.descripcion+'</div>';
+    html+='<div class="evento-footer">';
+    html+='<span class="asistentes-count" id="count-'+e.id+'">Cargando...</span>';
+    html+='<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">';
     if(sessionEmail){
-      html += '<button class="btn-asistir" id="btn-'+e.id+'" onclick="toggleAsistencia(\''+e.id+'\')">Voy a ir 🐾</button>';
-    } else if(e.link){
-      html += '<a href="'+e.link+'" target="_blank" style="padding:9px 20px;background:#00B4B4;color:#fff;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none">Ver más</a>';
+      html+='<button class="btn-asistir" id="btn-'+e.id+'" onclick="toggleAsistencia(\''+e.id+'\')">Voy a ir 🐾</button>';
     }
-    html += '</div></div></div>';
+    html+='<div class="btns-share">';
+    if(sessionEmail) html+='<button class="btn-share btn-invitar" onclick="abrirInvitar(\''+e.id+'\',\''+e.titulo.replace(/'/g,'')+'\')">👥 Invitar</button>';
+    html+='<a class="btn-share btn-whatsapp" href="https://wa.me/?text='+shareText+'%20'+shareUrl+'" target="_blank">WhatsApp</a>';
+    html+='<button class="btn-share btn-copiar" onclick="copiarLink(\''+e.id+'\')">🔗 Copiar</button>';
+    html+='</div></div></div></div></div>';
   });
-
-  wrap.innerHTML = html;
-
-  // Cargar asistentes para cada evento
-  eventosData.forEach(function(e){ cargarAsistentes(e.id); });
+  wrap.innerHTML=html;
+  eventosData.forEach(function(e){cargarAsistentes(e.id);});
 }
 
 function cargarAsistentes(eventoId){
   fetch('/api/galeria?action=getAsistentes&evento_id='+encodeURIComponent(eventoId))
     .then(function(r){return r.json();})
     .then(function(d){
-      var asistentes = d.asistentes||[];
-      var countEl = document.getElementById('count-'+eventoId);
-      if(countEl) countEl.textContent = asistentes.length + (asistentes.length===1?' mascota va':' mascotas van');
-
-      // Verificar si yo asisto
-      if(miMascotaUID){
-        var yoAsisto = asistentes.some(function(a){ return a.uid_mascota===miMascotaUID; });
-        misAsistencias[eventoId] = yoAsisto;
-        var btn = document.getElementById('btn-'+eventoId);
-        if(btn){
-          btn.textContent = yoAsisto ? '✅ Voy a ir' : 'Voy a ir 🐾';
-          btn.className = 'btn-asistir' + (yoAsisto?' asistiendo':'');
-        }
+      var asistentes=d.asistentes||[];
+      var countEl=document.getElementById('count-'+eventoId);
+      if(countEl) countEl.textContent=asistentes.length+(asistentes.length===1?' mascota va':' mascotas van');
+      if(miMascota){
+        var yoAsisto=asistentes.some(function(a){return a.uid_mascota===miMascota.uid;});
+        misAsistencias[eventoId]=yoAsisto;
+        var btn=document.getElementById('btn-'+eventoId);
+        if(btn){btn.textContent=yoAsisto?'✅ Voy a ir':'Voy a ir 🐾';btn.className='btn-asistir'+(yoAsisto?' asistiendo':'');}
       }
     });
 }
 
 function toggleAsistencia(eventoId){
-  if(!sessionEmail){ mostrarToast('Inicia sesión para confirmar asistencia'); return; }
-  if(!miMascotaUID){ mostrarToast('Necesitas registrar tu mascota primero'); return; }
-
-  var asistiendo = misAsistencias[eventoId];
-  var action     = asistiendo ? 'cancelarAsistencia' : 'asistirEvento';
-  var btn        = document.getElementById('btn-'+eventoId);
-  btn.disabled   = true;
-
-  fetch('/api/galeria?action='+action, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({evento_id:eventoId, uid_mascota:miMascotaUID, email:sessionEmail})
+  if(!sessionEmail){mostrarToast('Inicia sesión para confirmar asistencia');return;}
+  if(!miMascota){mostrarToast('Necesitas registrar tu mascota primero');return;}
+  var asistiendo=misAsistencias[eventoId];
+  var action=asistiendo?'cancelarAsistencia':'asistirEvento';
+  var btn=document.getElementById('btn-'+eventoId);
+  btn.disabled=true;
+  fetch('/api/galeria?action='+action,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({evento_id:eventoId,uid_mascota:miMascota.uid,email:sessionEmail})
   }).then(function(r){return r.json();})
   .then(function(d){
-    if(d.ok){
-      misAsistencias[eventoId] = !asistiendo;
-      mostrarToast(asistiendo?'Asistencia cancelada':'🐾 Confirmado! Nos vemos ahí');
-      cargarAsistentes(eventoId);
-    }
+    if(d.ok){misAsistencias[eventoId]=!asistiendo;mostrarToast(asistiendo?'Asistencia cancelada':'🐾 Confirmado! Nos vemos ahí');cargarAsistentes(eventoId);}
     btn.disabled=false;
-  }).catch(function(){ btn.disabled=false; });
+  }).catch(function(){btn.disabled=false;});
 }
 
-function abrirFormEvento(){
-  var m=document.getElementById('modalSugerirEvento');
-  m.style.display='flex';
+// ── INVITAR AMIGOS ─────────────────────────────────────────
+function abrirInvitar(eventoId, eventoTitulo){
+  eventoInvitarActual=eventoId;
+  invitadosEnviados={};
+  document.getElementById('invitarSubtitulo').textContent=eventoTitulo;
+  document.getElementById('modalInvitar').classList.add('open');
+  renderListaAmigosInvitar();
 }
-function cerrarFormEvento(){
-  document.getElementById('modalSugerirEvento').style.display='none';
+
+function cerrarInvitar(){
+  document.getElementById('modalInvitar').classList.remove('open');
+  eventoInvitarActual=null;
 }
+
+function renderListaAmigosInvitar(){
+  var lista=document.getElementById('listaAmigosInvitar');
+  if(!amigosCache.length){
+    lista.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">No tienes amigos aún.<br>¡Agrega desde la galería!</div>';
+    return;
+  }
+  var html='';
+  amigosCache.forEach(function(a){
+    var esGato=a.especie&&a.especie.toLowerCase().indexOf('gato')>=0;
+    var fotoHTML=a.foto&&a.foto.indexOf('http')>=0?'<img src="'+a.foto+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover">':(esGato?'🐱':'🐶');
+    var invitado=invitadosEnviados[a.uid];
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8f8f8;border-radius:10px;margin-bottom:8px">';
+    html+='<div style="width:36px;height:36px;border-radius:8px;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;flex-shrink:0">'+fotoHTML+'</div>';
+    html+='<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#222">'+a.nombre+'</div>';
+    html+='<div style="font-size:11px;color:#aaa">'+(a.especie||'')+'</div></div>';
+    html+='<button onclick="invitarAmigo(\''+a.uid+'\',\''+a.email+'\')" id="inv-'+a.uid+'" style="padding:6px 12px;background:'+(invitado?'#e0f7f7':'#00B4B4')+';color:'+(invitado?'#007a7a':'#fff')+';border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">'+(invitado?'✓ Invitado':'Invitar')+'</button>';
+    html+='</div>';
+  });
+  lista.innerHTML=html;
+}
+
+function invitarAmigo(uid, email){
+  if(!eventoInvitarActual||!email||invitadosEnviados[uid])return;
+  var evento=eventosData.find(function(e){return e.id===eventoInvitarActual;});
+  if(!evento)return;
+  invitadosEnviados[uid]=true;
+  enviarInvitacion(email, evento);
+  renderListaAmigosInvitar();
+  mostrarToast('Invitación enviada!');
+}
+
+function invitarTodos(){
+  if(!amigosCache.length){mostrarToast('No tienes amigos aún');return;}
+  var evento=eventosData.find(function(e){return e.id===eventoInvitarActual;});
+  if(!evento)return;
+  var nuevos=0;
+  amigosCache.forEach(function(a){
+    if(!invitadosEnviados[a.uid]&&a.email){
+      invitadosEnviados[a.uid]=true;
+      enviarInvitacion(a.email,evento);
+      nuevos++;
+    }
+  });
+  renderListaAmigosInvitar();
+  mostrarToast(nuevos>0?'Invitaciones enviadas a '+nuevos+' amigos!':'Ya invitaste a todos');
+}
+
+function enviarInvitacion(emailAmigo, evento){
+  var fecha=evento.fecha?new Date(evento.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'long',month:'long',day:'numeric'}):'';
+  fetch('/api/admin',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      action:'notificarInvitacion',
+      emailReceptor:emailAmigo,
+      nombreEvento:evento.titulo,
+      fechaEvento:fecha,
+      lugarEvento:evento.lugar||'',
+      nombreEmisor:miMascota?miMascota.nombre:(sessionEmail.split('@')[0]),
+      urlEventos:'https://petmi-petzid.vercel.app/eventos.html'
+    })
+  });
+}
+
+// ── COMPARTIR ──────────────────────────────────────────────
+function copiarLink(eventoId){
+  var url='https://petmi-petzid.vercel.app/eventos.html';
+  navigator.clipboard.writeText(url).then(function(){
+    mostrarToast('Link copiado!');
+  }).catch(function(){
+    mostrarToast('URL: petmi-petzid.vercel.app/eventos.html');
+  });
+}
+
+// ── SUGERIR EVENTO ─────────────────────────────────────────
+function abrirFormEvento(){document.getElementById('modalSugerirEvento').style.display='flex';}
+function cerrarFormEvento(){document.getElementById('modalSugerirEvento').style.display='none';}
+
 function enviarSugerenciaEvento(){
   var titulo=document.getElementById('sgTitulo').value.trim();
   var fecha=document.getElementById('sgFecha').value;
@@ -256,8 +371,8 @@ function enviarSugerenciaEvento(){
   fetch('/api/galeria?action=enviarEvento',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
-      titulo,tipo:document.getElementById('sgTipo').value,
-      fecha,hora:document.getElementById('sgHora').value.trim(),
+      titulo:titulo,tipo:document.getElementById('sgTipo').value,
+      fecha:fecha,hora:document.getElementById('sgHora').value.trim(),
       lugar:document.getElementById('sgLugar').value.trim(),
       descripcion:document.getElementById('sgDesc').value.trim(),
       link:document.getElementById('sgLink').value.trim(),
@@ -266,23 +381,22 @@ function enviarSugerenciaEvento(){
   }).then(function(r){return r.json();})
   .then(function(d){
     if(d.ok){
-      mostrarMsg('sgMsg','Sugerencia enviada. La revisaremos pronto!','#e0f7f7','#007a7a');
+      mostrarMsg('sgMsg','ok','#e0f7f7','#007a7a');
       btn.textContent='Enviado!';
-      setTimeout(cerrarFormEvento,2000);
+      setTimeout(cerrarFormEvento,3000);
     } else {
       mostrarMsg('sgMsg','Error al enviar','#fbeaf0','#c0392b');
       btn.disabled=false;btn.textContent='Enviar sugerencia';
     }
   });
 }
-var JEFE_IMGS=['https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'];
 
 function mostrarMsg(id,txt,bg,color){
   var el=document.getElementById(id);
   if(bg==='#e0f7f7'){
     var foto=JEFE_IMGS[Math.floor(Math.random()*JEFE_IMGS.length)];
     el.innerHTML='<div style="text-align:center;padding:8px 0">'
-      +'<img src="'+foto+'" style="width:160px;border-radius:12px;margin-bottom:10px" onerror="this.style.display='none'">'
+      +'<img src="'+foto+'" style="width:160px;border-radius:12px;margin-bottom:10px" onerror="this.style.display=\'none\'">'
       +'<div style="font-size:15px;font-weight:700;color:#007a7a;margin-bottom:4px">Gracias por tu sugerencia! 🐾</div>'
       +'<div style="font-size:13px;color:#555">El jefe revisara tu sugerencia y pronto aparecera en la lista.</div>'
       +'</div>';
