@@ -75,6 +75,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <div class="hero">
     <h1>📍 Lugares Pet-Friendly</h1>
     <p>Restaurantes, parques, hoteles y más que dan la bienvenida a tu mascota</p>
+    <button onclick="abrirFormLugar()" style="margin-top:14px;padding:9px 20px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.6);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ Sugerir un lugar</button>
     <div class="hero-stats">
       <div class="hstat"><div class="hstat-num" id="statTotal">-</div><div class="hstat-lbl">Lugares</div></div>
       <div class="hstat"><div class="hstat-num" id="statZonas">-</div><div class="hstat-lbl">Zonas</div></div>
@@ -115,6 +116,44 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <textarea class="rating-textarea" id="ratingComentario" placeholder="Cuéntanos tu experiencia (opcional)"></textarea>
     <button class="btn-enviar-rating" onclick="enviarRating()">Enviar calificación</button>
     <button class="btn-cerrar-modal" onclick="closeRating()">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal sugerir lugar -->
+<div class="modal-overlay" id="modalSugerirLugar">
+  <div class="modal-box">
+    <button onclick="cerrarFormLugar()" style="float:right;background:none;border:none;font-size:20px;cursor:pointer;margin-top:-8px">×</button>
+    <div class="modal-titulo">📍 Sugerir un lugar</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:14px">Tu sugerencia será revisada antes de publicarse</div>
+    <div id="sgLugarMsg" style="display:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:12px"></div>
+    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Nombre *</label>
+    <input type="text" id="sgLNombre" placeholder="Nombre del lugar" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Tipo</label>
+    <select id="sgLTipo" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+      <option value="restaurante">🍽️ Restaurante</option>
+      <option value="parque">🌳 Parque</option>
+      <option value="cafe">☕ Café</option>
+      <option value="hotel">🏨 Hotel</option>
+      <option value="tienda">🛍️ Tienda</option>
+      <option value="veterinaria">🏥 Veterinaria</option>
+    </select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Zona</label>
+        <input type="text" id="sgLZona" placeholder="Ej: 10" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Teléfono</label>
+        <input type="text" id="sgLTelefono" placeholder="Opcional" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+      </div>
+    </div>
+    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Dirección</label>
+    <input type="text" id="sgLDireccion" placeholder="Dirección del lugar" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Descripción</label>
+    <textarea id="sgLDesc" placeholder="¿Por qué lo recomiendas?" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;resize:none;height:70px;outline:none"></textarea>
+    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Link Google Maps (opcional)</label>
+    <input type="text" id="sgLMaps" placeholder="https://maps.google.com/..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 16px;outline:none">
+    <button onclick="enviarSugerenciaLugar()" id="sgLBtn" style="width:100%;padding:13px;background:#E05090;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Enviar sugerencia</button>
   </div>
 </div>
 
@@ -241,6 +280,48 @@ function enviarRating(){
       setTimeout(cargarLugares,1000);
     }
   });
+}
+
+function abrirFormLugar(){
+  document.getElementById('modalSugerirLugar').style.display='flex';
+  document.getElementById('modalSugerirLugar').classList.add('open');
+}
+function cerrarFormLugar(){
+  document.getElementById('modalSugerirLugar').classList.remove('open');
+  document.getElementById('modalSugerirLugar').style.display='none';
+}
+function enviarSugerenciaLugar(){
+  var nombre=document.getElementById('sgLNombre').value.trim();
+  if(!nombre){mostrarMsgLugar('El nombre es obligatorio','#fbeaf0','#c0392b');return;}
+  var btn=document.getElementById('sgLBtn');
+  btn.disabled=true;btn.textContent='Enviando...';
+  fetch('/api/galeria?action=enviarLugar',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      nombre:nombre,
+      tipo:document.getElementById('sgLTipo').value,
+      zona:document.getElementById('sgLZona').value.trim(),
+      telefono:document.getElementById('sgLTelefono').value.trim(),
+      direccion:document.getElementById('sgLDireccion').value.trim(),
+      descripcion:document.getElementById('sgLDesc').value.trim(),
+      google_maps:document.getElementById('sgLMaps').value.trim(),
+      email:sessionEmail||''
+    })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      mostrarMsgLugar('Sugerencia enviada! La revisaremos pronto.','#e0f7f7','#007a7a');
+      btn.textContent='Enviado!';
+      setTimeout(cerrarFormLugar,2000);
+    } else {
+      mostrarMsgLugar('Error al enviar','#fbeaf0','#c0392b');
+      btn.disabled=false;btn.textContent='Enviar sugerencia';
+    }
+  });
+}
+function mostrarMsgLugar(txt,bg,color){
+  var el=document.getElementById('sgLugarMsg');
+  el.textContent=txt;el.style.background=bg;el.style.color=color;el.style.display='block';
 }
 
 function mostrarToast(msg){
