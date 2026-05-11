@@ -139,8 +139,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     </select>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div>
-        <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Zona</label>
-        <input type="text" id="sgLZona" placeholder="Ej: 10" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
+        <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Ubicación</label>
+        <input type="text" id="sgLZona" placeholder="Ej: Zona 10, Antigua Guatemala..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
       </div>
       <div>
         <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Teléfono</label>
@@ -300,7 +300,7 @@ function enviarSugerenciaLugar(){
     body:JSON.stringify({
       nombre:nombre,
       tipo:document.getElementById('sgLTipo').value,
-      zona:document.getElementById('sgLZona').value.trim(),
+      ubicacion:document.getElementById('sgLZona').value.trim(),
       telefono:document.getElementById('sgLTelefono').value.trim(),
       direccion:document.getElementById('sgLDireccion').value.trim(),
       descripcion:document.getElementById('sgLDesc').value.trim(),
@@ -321,7 +321,17 @@ function enviarSugerenciaLugar(){
 }
 function mostrarMsgLugar(txt,bg,color){
   var el=document.getElementById('sgLugarMsg');
-  el.textContent=txt;el.style.background=bg;el.style.color=color;el.style.display='block';
+  if(bg==='#e0f7f7'){
+    el.innerHTML='<div style="text-align:center;padding:8px 0">'
+      +'<img src="' + ['https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'][Math.floor(Math.random()*3)] + '" '
+      +'style="width:180px;border-radius:12px;margin-bottom:10px" onerror="this.style.display='none'">'
+      +'<div style="font-size:15px;font-weight:700;color:#007a7a;margin-bottom:4px">Gracias por tu sugerencia! 🐾</div>'
+      +'<div style="font-size:13px;color:#555">El jefe revisara tu sugerencia y pronto aparecera en la lista.</div>'
+      +'</div>';
+    el.style.background=bg;el.style.display='block';
+  } else {
+    el.textContent=txt;el.style.background=bg;el.style.color=color;el.style.display='block';
+  }
 }
 
 function mostrarToast(msg){
