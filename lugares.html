@@ -324,7 +324,6 @@ function previsualizarFoto(input){
 }
 
 function abrirFormLugar(){
-  document.getElementById('sgLugarMsg').style.display='none';
   document.getElementById('modalSugerirLugar').style.display='flex';
   document.getElementById('modalSugerirLugar').classList.add('open');
 }
@@ -340,7 +339,6 @@ function cerrarFormLugar(){
   document.getElementById('sgLMaps').value='';
   document.getElementById('sgLFotoLabel').textContent='Seleccionar foto';
   document.getElementById('sgLFotoPreview').style.display='none';
-  document.getElementById('sgLugarMsg').style.display='none';
   var btn=document.getElementById('sgLBtn');
   btn.disabled=false;btn.textContent='Enviar sugerencia';
   sgLFotoBase64=null;sgLFotoMime=null;
