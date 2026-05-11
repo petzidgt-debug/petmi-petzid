@@ -381,6 +381,77 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
 
+    // ── getActividades ───────────────────────────────────────
+    if (action === 'getActividades') {
+      const tipo = req.query.tipo || '';
+      const ahora = new Date().toISOString();
+      let url = SUPABASE_URL + '/rest/v1/actividades?activo=eq.true&or=(expires_at.is.null,expires_at.gte.' + ahora + ')&order=created_at.desc&limit=50';
+      if (tipo) url += '&tipo=eq.' + encodeURIComponent(tipo);
+      const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
+      return res.status(200).json({ actividades: await r.json() });
+    }
+
+    // ── publicarActividad ─────────────────────────────────────
+    if (action === 'publicarActividad' && req.method === 'POST') {
+      const { uid_creador, nombre_creador, foto_creador, tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen } = req.body;
+      if (!titulo || !uid_creador) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      // Calcular expiración: planes expiran en la fecha del plan, anuncios en 7 días
+      let expires_at = null;
+      if (tipo === 'plan' && fecha) {
+        expires_at = new Date(fecha + 'T23:59:59').toISOString();
+      } else if (tipo !== 'plan') {
+        const d = new Date(); d.setDate(d.getDate() + 7);
+        expires_at = d.toISOString();
+      }
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
+        body: JSON.stringify({ uid_creador, nombre_creador, foto_creador, tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, activo: true, expires_at })
+      });
+      const data = await r.json();
+      return res.status(200).json({ ok: r.ok, id: data[0]?.id });
+    }
+
+    // ── apuntarse ─────────────────────────────────────────────
+    if (action === 'apuntarse' && req.method === 'POST') {
+      const { actividad_id, uid_mascota, nombre_mascota, foto_mascota } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividad_apuntes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ actividad_id, uid_mascota, nombre_mascota, foto_mascota })
+      });
+      return res.status(200).json({ ok: r.ok || r.status === 409 });
+    }
+
+    // ── desapuntarse ──────────────────────────────────────────
+    if (action === 'desapuntarse' && req.method === 'POST') {
+      const { actividad_id, uid_mascota } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividad_apuntes?actividad_id=eq.' + encodeURIComponent(actividad_id) + '&uid_mascota=eq.' + encodeURIComponent(uid_mascota), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getApuntes ────────────────────────────────────────────
+    if (action === 'getApuntes') {
+      const actividad_id = req.query.actividad_id || '';
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividad_apuntes?actividad_id=eq.' + encodeURIComponent(actividad_id) + '&select=*', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ apuntes: await r.json() });
+    }
+
+    // ── eliminarActividad ─────────────────────────────────────
+    if (action === 'eliminarActividad' && req.method === 'POST') {
+      const { actividad_id, uid_creador } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id) + '&uid_creador=eq.' + encodeURIComponent(uid_creador), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
     return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
