@@ -275,9 +275,21 @@ function enviarSugerenciaEvento(){
     }
   });
 }
+var JEFE_IMGS=['https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'];
+
 function mostrarMsg(id,txt,bg,color){
   var el=document.getElementById(id);
-  el.textContent=txt;el.style.background=bg;el.style.color=color;el.style.display='block';
+  if(bg==='#e0f7f7'){
+    var foto=JEFE_IMGS[Math.floor(Math.random()*JEFE_IMGS.length)];
+    el.innerHTML='<div style="text-align:center;padding:8px 0">'
+      +'<img src="'+foto+'" style="width:160px;border-radius:12px;margin-bottom:10px" onerror="this.style.display='none'">'
+      +'<div style="font-size:15px;font-weight:700;color:#007a7a;margin-bottom:4px">Gracias por tu sugerencia! 🐾</div>'
+      +'<div style="font-size:13px;color:#555">El jefe revisara tu sugerencia y pronto aparecera en la lista.</div>'
+      +'</div>';
+    el.style.background=bg;el.style.display='block';
+  } else {
+    el.textContent=txt;el.style.background=bg;el.style.color=color;el.style.display='block';
+  }
 }
 
 function mostrarToast(msg){
