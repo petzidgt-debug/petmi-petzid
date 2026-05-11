@@ -1013,6 +1013,25 @@ function enviarSolicitudAmistad(uid){
   }).catch(function(){ mostrarToastG('Error de conexión'); });
 }
 
+function cargarActividadesPreview(){
+  fetch('/api/galeria?action=getActividades')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var acts=(d.actividades||[]).slice(0,2);
+      if(!acts.length)return;
+      document.getElementById('seccionActividades').style.display='block';
+      var html='';
+      acts.forEach(function(a){
+        html+='<a href="/actividades.html" style="display:block;background:rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;margin-bottom:6px;text-decoration:none">';
+        html+='<div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px">'+a.titulo+'</div>';
+        html+='<div style="font-size:11px;color:rgba(255,255,255,.75)">'+(a.fecha?'📅 '+new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit'}):'')+(a.ubicacion?' · 📍 '+a.ubicacion:'')+'</div>';
+        html+='</a>';
+      });
+      document.getElementById('actividadesPreview').innerHTML=html;
+    });
+}
+cargarActividadesPreview();
+
 function mostrarToastG(msg){
   var el=document.getElementById('toast');
   if(!el){ el=document.createElement('div'); el.id='toast'; el.className='toast'; document.body.appendChild(el); }

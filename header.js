@@ -62,6 +62,7 @@
           '<a href="/lugares.html" class="h-drop-item">📍 Lugares</a>' +
         '</div>' +
       '</div>' +
+      '<a href="/actividades.html" class="h-link'+(currentPath.indexOf('actividades')>=0?' active':'')+'">🐾 ¿Quién se apunta?</a>' +
       '<a href="/galeria.html" class="h-link">Amigos PetMi</a>';
 
     // Lado derecho
@@ -90,7 +91,8 @@
       '<a href="/index.html">PetzID</a>' +
       '<a href="/eventos.html">🎉 Eventos</a>' +
       '<a href="/lugares.html">📍 Lugares</a>' +
-      '<a href="/galeria.html">Amigos PetMi</a>' +
+      '<a href="/actividades.html">🐾 ¿Quién se apunta?</a>' +
+          '<a href="/galeria.html">Amigos PetMi</a>' +
       (sessionEmail
         ? '<span class="h-mob-sec">Mi cuenta</span>' +
           '<a href="/familia.html">🏠 Mi familia</a>' +

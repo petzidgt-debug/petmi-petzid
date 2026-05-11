@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>¿Quién se apunta? — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.wrap{max-width:600px;margin:0 auto;padding:20px 16px 40px}
+.hero{background:linear-gradient(135deg,#764ba2,#E05090);border-radius:16px;padding:24px;margin-bottom:20px;color:#fff;text-align:center}
+.hero h1{font-size:22px;font-weight:900;margin-bottom:6px}
+.hero p{font-size:13px;color:rgba(255,255,255,.75)}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.filtro-btn{padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:600;color:#888;background:#fff;cursor:pointer}
+.filtro-btn.active{border-color:#764ba2;background:#f3e8ff;color:#6f42c1}
+.act-card{background:#fff;border-radius:16px;border:1px solid #eee;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.act-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.act-avatar{width:40px;height:40px;border-radius:10px;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0}
+.act-avatar img{width:100%;height:100%;object-fit:cover}
+.act-nombre{font-size:13px;font-weight:700;color:#222}
+.act-tiempo{font-size:11px;color:#aaa}
+.act-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:auto;white-space:nowrap}
+.badge-plan{background:#e8f4fd;color:#1565c0}
+.badge-regalo{background:#fce4ec;color:#c0392b}
+.badge-vendo{background:#fff3cd;color:#856404}
+.badge-busco{background:#e8f5e9;color:#2e7d32}
+.badge-perdido{background:#ffebee;color:#b71c1c}
+.act-titulo{font-size:15px;font-weight:900;color:#222;margin-bottom:4px}
+.act-meta{font-size:12px;color:#aaa;margin-bottom:8px}
+.act-desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:12px}
+.act-img{width:100%;border-radius:10px;margin-bottom:12px;max-height:200px;object-fit:cover}
+.act-footer{display:flex;align-items:center;gap:8px;padding-top:10px;border-top:1px solid #f5f5f5;flex-wrap:wrap}
+.act-apuntes{display:flex;align-items:center;gap:6px;flex:1}
+.apunte-avatar{width:24px;height:24px;border-radius:6px;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:13px;border:1.5px solid #fff;margin-left:-4px}
+.apunte-avatar:first-child{margin-left:0}
+.apunte-avatar img{width:100%;height:100%;object-fit:cover}
+.act-count{font-size:12px;color:#aaa;margin-left:4px}
+.btn-apuntar{padding:7px 14px;background:#764ba2;color:#fff;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-apuntado{background:#f3e8ff;color:#6f42c1}
+.btn-interes{padding:7px 14px;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-wa{padding:7px 12px;background:#25D366;color:#fff;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer}
+.btn-eliminar{padding:7px 12px;background:#fbeaf0;color:#c0392b;border:none;border-radius:20px;font-size:11px;cursor:pointer;margin-left:auto}
+.empty{text-align:center;padding:48px 20px;color:#bbb}
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#764ba2;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+.modal-handle{width:40px;height:4px;background:#ddd;border-radius:4px;margin:0 auto 16px}
+label.field-lbl{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px}
+.field-input{width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;margin-bottom:12px}
+.field-input:focus{border-color:#764ba2}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>🐾 ¿Quién se apunta?</h1>
+    <p>Planes, anuncios y comunidad PetMi</p>
+    <button onclick="abrirPublicar()" style="margin-top:12px;padding:9px 20px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.6);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ Publicar</button>
+  </div>
+
+  <div class="filtros">
+    <button class="filtro-btn active" onclick="setFiltro('',this)">Todos</button>
+    <button class="filtro-btn" onclick="setFiltro('plan',this)">🐾 Planes</button>
+    <button class="filtro-btn" onclick="setFiltro('regalo',this)">🎁 Regalo</button>
+    <button class="filtro-btn" onclick="setFiltro('vendo',this)">🛍️ Vendo</button>
+    <button class="filtro-btn" onclick="setFiltro('busco',this)">🔍 Busco</button>
+    <button class="filtro-btn" onclick="setFiltro('perdido',this)">🚨 Perdido</button>
+  </div>
+
+  <div id="actividadesWrap"><div class="spinner"></div></div>
+</div>
+
+<!-- Modal publicar -->
+<div class="modal-overlay" id="modalPublicar">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:17px;font-weight:900;color:#222">📢 Publicar</div>
+      <button onclick="cerrarPublicar()" style="background:none;border:none;font-size:20px;cursor:pointer">×</button>
+    </div>
+    <label class="field-lbl">Tipo</label>
+    <select id="pubTipo" class="field-input" onchange="toggleFecha()">
+      <option value="plan">🐾 Plan (paseo, café, parque...)</option>
+      <option value="regalo">🎁 Regalo</option>
+      <option value="vendo">🛍️ Vendo</option>
+      <option value="busco">🔍 Busco</option>
+      <option value="perdido">🚨 Perdido</option>
+    </select>
+    <label class="field-lbl">Título *</label>
+    <input type="text" id="pubTitulo" class="field-input" placeholder="Ej: Mañana voy al parque Kaminaljuyú">
+    <label class="field-lbl">Descripción</label>
+    <textarea id="pubDesc" class="field-input" style="height:80px;resize:none" placeholder="Cuéntanos más..."></textarea>
+    <div id="seccionFecha">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="field-lbl">Fecha</label>
+          <input type="date" id="pubFecha" class="field-input">
+        </div>
+        <div>
+          <label class="field-lbl">Hora</label>
+          <input type="text" id="pubHora" class="field-input" placeholder="9:00 AM">
+        </div>
+      </div>
+    </div>
+    <label class="field-lbl">Ubicación</label>
+    <input type="text" id="pubUbicacion" class="field-input" placeholder="Zona 10, Antigua Guatemala...">
+    <label class="field-lbl">Foto (opcional)</label>
+    <div style="margin-bottom:12px">
+      <label for="pubFoto" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px dashed #ddd;border-radius:10px;cursor:pointer;font-size:13px;color:#888;background:#fafafa">
+        <span style="font-size:20px">📷</span>
+        <span id="pubFotoLabel">Seleccionar foto</span>
+      </label>
+      <input type="file" id="pubFoto" accept="image/*" style="display:none" onchange="previsualizarFotoPub(this)">
+      <div id="pubFotoPreview" style="margin-top:8px;display:none">
+        <img id="pubFotoImg" style="width:100%;height:120px;object-fit:cover;border-radius:10px">
+      </div>
+    </div>
+    <button onclick="publicar()" id="pubBtn" style="width:100%;padding:13px;background:#764ba2;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Publicar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var SB='https://ilcreewilnkchvozicyp.supabase.co';
+var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var SBH={'apikey':SK,'Authorization':'Bearer '+SK};
+
+var sessionEmail=localStorage.getItem('petzid_email')||'';
+var miMascota=null;
+var filtroActual='';
+var actividadesData=[];
+var misApuntes={};
+var pubFotoBase64=null, pubFotoMime=null;
+
+var TIPOS={plan:{label:'🐾 Plan',cls:'badge-plan'},regalo:{label:'🎁 Regalo',cls:'badge-regalo'},vendo:{label:'🛍️ Vendo',cls:'badge-vendo'},busco:{label:'🔍 Busco',cls:'badge-busco'},perdido:{label:'🚨 Perdido',cls:'badge-perdido'}};
+
+if(sessionEmail){
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
+    .then(function(r){return r.json();})
+    .then(function(d){if(d.found&&d.mascotas.length)miMascota=d.mascotas[0];});
+}
+
+cargarActividades();
+
+function cargarActividades(){
+  document.getElementById('actividadesWrap').innerHTML='<div class="spinner"></div>';
+  var url='/api/galeria?action=getActividades';
+  if(filtroActual) url+='&tipo='+encodeURIComponent(filtroActual);
+  fetch(url).then(function(r){return r.json();})
+  .then(function(d){
+    actividadesData=d.actividades||[];
+    renderActividades();
+  }).catch(function(){
+    document.getElementById('actividadesWrap').innerHTML='<div class="empty"><p>Error al cargar</p></div>';
+  });
+}
+
+function setFiltro(tipo,btn){
+  filtroActual=tipo;
+  document.querySelectorAll('.filtro-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  cargarActividades();
+}
+
+function tiempoRelativo(fecha){
+  var diff=Math.floor((Date.now()-new Date(fecha).getTime())/1000);
+  if(diff<60)return 'hace un momento';
+  if(diff<3600)return 'hace '+Math.floor(diff/60)+' min';
+  if(diff<86400)return 'hace '+Math.floor(diff/3600)+' h';
+  return 'hace '+Math.floor(diff/86400)+' días';
+}
+
+function expiracion(exp){
+  if(!exp)return '';
+  var diff=Math.floor((new Date(exp).getTime()-Date.now())/1000);
+  if(diff<0)return 'expirado';
+  if(diff<3600)return 'expira en '+Math.floor(diff/60)+' min';
+  if(diff<86400)return 'expira en '+Math.floor(diff/3600)+' h';
+  return 'expira en '+Math.floor(diff/86400)+' días';
+}
+
+function renderActividades(){
+  var wrap=document.getElementById('actividadesWrap');
+  if(!actividadesData.length){
+    wrap.innerHTML='<div class="empty"><div style="font-size:48px;margin-bottom:12px">🐾</div><p>No hay publicaciones aún.<br>¡Sé el primero en publicar!</p></div>';
+    return;
+  }
+
+  var html='';
+  actividadesData.forEach(function(a,i){
+    var t=TIPOS[a.tipo]||{label:a.tipo,cls:'badge-plan'};
+    var esCreador=miMascota&&miMascota.uid===a.uid_creador;
+    var shareText=encodeURIComponent('🐾 '+a.titulo+' - PetMi Guatemala!');
+    var shareUrl=encodeURIComponent('https://petmi-petzid.vercel.app/actividades.html');
+    var fotoAvatar=a.foto_creador&&a.foto_creador.indexOf('http')>=0
+      ?'<img src="'+a.foto_creador+'">'
+      :'🐾';
+    var expInfo=expiracion(a.expires_at);
+
+    html+='<div class="act-card">';
+    html+='<div class="act-header">';
+    html+='<div class="act-avatar">'+fotoAvatar+'</div>';
+    html+='<div><div class="act-nombre">'+a.nombre_creador+'</div>';
+    html+='<div class="act-tiempo">'+tiempoRelativo(a.created_at)+(expInfo?' · '+expInfo:'')+'</div></div>';
+    html+='<span class="act-badge '+t.cls+'">'+t.label+'</span>';
+    html+='</div>';
+    if(a.imagen&&a.imagen.indexOf('http')>=0) html+='<img src="'+a.imagen+'" class="act-img">';
+    html+='<div class="act-titulo">'+a.titulo+'</div>';
+    if(a.fecha||a.hora||a.ubicacion){
+      html+='<div class="act-meta">'+(a.fecha?'📅 '+new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'')+(a.hora?' · ⏰ '+a.hora:'')+(a.ubicacion?' · 📍 '+a.ubicacion:'')+'</div>';
+    }
+    if(a.descripcion) html+='<div class="act-desc">'+a.descripcion+'</div>';
+    html+='<div class="act-footer">';
+    if(a.tipo==='plan'){
+      html+='<div class="act-apuntes" id="apuntes-'+a.id+'"><span class="act-count">Cargando...</span></div>';
+      if(sessionEmail){
+        var yaApuntado=misApuntes[a.id];
+        html+='<button class="btn-apuntar'+(yaApuntado?' btn-apuntado':'')+'" id="btn-apuntar-'+a.id+'" onclick="toggleApuntar(\''+a.id+'\','+i+')">'+( yaApuntado?'✓ Apuntado':'Me apunto 🐾')+'</button>';
+      }
+    } else {
+      if(sessionEmail){
+        var interesColor={regalo:'background:#fce4ec;color:#c0392b',vendo:'background:#fff3cd;color:#856404',busco:'background:#e8f5e9;color:#2e7d32',perdido:'background:#ffebee;color:#b71c1c'}[a.tipo]||'background:#f0f0ee;color:#555';
+        html+='<button class="btn-interes" style="'+interesColor+'" onclick="mostrarInteres(\''+a.id+'\',\''+a.uid_creador+'\')">💬 Me interesa</button>';
+      }
+    }
+    html+='<button class="btn-wa" onclick="window.open(\'https://wa.me/?text='+shareText+'%20'+shareUrl+'\',\'_blank\')">WA</button>';
+    if(esCreador) html+='<button class="btn-eliminar" onclick="eliminarActividad(\''+a.id+'\')">🗑️</button>';
+    html+='</div></div>';
+  });
+
+  wrap.innerHTML=html;
+
+  // Cargar apuntes para planes
+  actividadesData.forEach(function(a){
+    if(a.tipo==='plan') cargarApuntes(a.id);
+  });
+}
+
+function cargarApuntes(id){
+  fetch('/api/galeria?action=getApuntes&actividad_id='+encodeURIComponent(id))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var apuntes=d.apuntes||[];
+      var el=document.getElementById('apuntes-'+id);
+      if(!el)return;
+      if(!apuntes.length){el.innerHTML='<span class="act-count">Sé el primero</span>';return;}
+      var html='';
+      apuntes.slice(0,5).forEach(function(ap){
+        var f=ap.foto_mascota&&ap.foto_mascota.indexOf('http')>=0?'<img src="'+ap.foto_mascota+'">':'🐾';
+        html+='<div class="apunte-avatar">'+f+'</div>';
+      });
+      html+='<span class="act-count">'+apuntes.length+' se apuntan</span>';
+      el.innerHTML=html;
+      // Verificar si yo estoy
+      if(miMascota){
+        var yo=apuntes.some(function(ap){return ap.uid_mascota===miMascota.uid;});
+        misApuntes[id]=yo;
+        var btn=document.getElementById('btn-apuntar-'+id);
+        if(btn){btn.textContent=yo?'✓ Apuntado':'Me apunto 🐾';btn.className='btn-apuntar'+(yo?' btn-apuntado':'');}
+      }
+    });
+}
+
+function toggleApuntar(id,i){
+  if(!sessionEmail){mostrarToast('Inicia sesión para apuntarte');return;}
+  if(!miMascota){mostrarToast('Necesitas registrar una mascota');return;}
+  var apuntado=misApuntes[id];
+  var action=apuntado?'desapuntarse':'apuntarse';
+  fetch('/api/galeria?action='+action,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({actividad_id:id,uid_mascota:miMascota.uid,nombre_mascota:miMascota.nombre,foto_mascota:miMascota.foto||''})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      misApuntes[id]=!apuntado;
+      mostrarToast(apuntado?'Te has desapuntado':'🐾 Te has apuntado!');
+      cargarApuntes(id);
+    }
+  });
+}
+
+function mostrarInteres(actividadId, uidCreador){
+  mostrarToast('Mensaje enviado al dueño 🐾');
+}
+
+function eliminarActividad(id){
+  if(!confirm('¿Eliminar esta publicación?'))return;
+  fetch('/api/galeria?action=eliminarActividad',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({actividad_id:id,uid_creador:miMascota?miMascota.uid:''})
+  }).then(function(){cargarActividades();});
+}
+
+// ── PUBLICAR ───────────────────────────────────────────────
+function abrirPublicar(){
+  if(!sessionEmail){mostrarToast('Inicia sesión para publicar');return;}
+  document.getElementById('modalPublicar').classList.add('open');
+}
+function cerrarPublicar(){
+  document.getElementById('modalPublicar').classList.remove('open');
+  document.getElementById('pubTitulo').value='';
+  document.getElementById('pubDesc').value='';
+  document.getElementById('pubFecha').value='';
+  document.getElementById('pubHora').value='';
+  document.getElementById('pubUbicacion').value='';
+  document.getElementById('pubFotoLabel').textContent='Seleccionar foto';
+  document.getElementById('pubFotoPreview').style.display='none';
+  var btn=document.getElementById('pubBtn');
+  btn.disabled=false;btn.textContent='Publicar';
+  pubFotoBase64=null;pubFotoMime=null;
+}
+function toggleFecha(){
+  var tipo=document.getElementById('pubTipo').value;
+  document.getElementById('seccionFecha').style.display=tipo==='plan'?'block':'none';
+}
+function previsualizarFotoPub(input){
+  var file=input.files[0];if(!file)return;
+  pubFotoMime=file.type;
+  document.getElementById('pubFotoLabel').textContent=file.name;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    pubFotoBase64=e.target.result.split(',')[1];
+    document.getElementById('pubFotoImg').src=e.target.result;
+    document.getElementById('pubFotoPreview').style.display='block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function publicar(){
+  if(!miMascota){mostrarToast('Necesitas registrar una mascota');return;}
+  var titulo=document.getElementById('pubTitulo').value.trim();
+  if(!titulo){mostrarToast('El título es obligatorio');return;}
+  var btn=document.getElementById('pubBtn');
+  btn.disabled=true;btn.textContent='Publicando...';
+
+  var fotoP=pubFotoBase64
+    ?(function(){
+        var fd=new FormData();
+        fd.append('file','data:'+(pubFotoMime||'image/jpeg')+';base64,'+pubFotoBase64);
+        fd.append('upload_preset','petzid');
+        return fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd})
+          .then(function(r){return r.json();}).then(function(d){return d.secure_url||'';});
+      })()
+    :Promise.resolve('');
+
+  fotoP.then(function(fotoUrl){
+    return fetch('/api/galeria?action=publicarActividad',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        uid_creador:miMascota.uid,
+        nombre_creador:miMascota.nombre,
+        foto_creador:miMascota.foto||'',
+        tipo:document.getElementById('pubTipo').value,
+        titulo:titulo,
+        descripcion:document.getElementById('pubDesc').value.trim(),
+        fecha:document.getElementById('pubFecha').value||null,
+        hora:document.getElementById('pubHora').value.trim(),
+        ubicacion:document.getElementById('pubUbicacion').value.trim(),
+        imagen:fotoUrl
+      })
+    }).then(function(r){return r.json();});
+  }).then(function(d){
+    if(d&&d.ok){
+      cerrarPublicar();
+      mostrarToast('Publicado! 🐾');
+      cargarActividades();
+    } else {
+      btn.disabled=false;btn.textContent='Publicar';
+      mostrarToast('Error al publicar');
+    }
+  }).catch(function(){
+    btn.disabled=false;btn.textContent='Publicar';
+    mostrarToast('Error al publicar');
+  });
+}
+
+// Swipe to close
+function addSwipe(id, fn){
+  var el=document.getElementById(id);if(!el)return;
+  var sy=0;
+  el.addEventListener('touchstart',function(e){sy=e.touches[0].clientY;});
+  el.addEventListener('touchmove',function(e){var dy=e.touches[0].clientY-sy;if(dy>0)el.style.transform='translateY('+dy+'px)';});
+  el.addEventListener('touchend',function(e){var dy=e.changedTouches[0].clientY-sy;if(dy>80){el.style.transform='';fn();}else el.style.transform='';});
+}
+addSwipe('modalPublicar',cerrarPublicar);
+
+function mostrarToast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2500);
+}
+</script>
+<script src="/header.js"></script>
+</body>
+</html>
