@@ -124,12 +124,11 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <!-- Modal sugerir lugar -->
 <div class="modal-overlay" id="modalSugerirLugar">
-  <div class="modal-box modal-sheet" id="lugarSheet">
+  <div class="modal-box modal-sheet" id="lugarSheet" style="max-height:85vh;overflow-y:auto">
     <div class="modal-handle"></div>
     <button onclick="cerrarFormLugar()" style="float:right;background:none;border:none;font-size:20px;cursor:pointer;margin-top:-8px">×</button>
     <div class="modal-titulo">📍 Sugerir un lugar</div>
     <div style="font-size:12px;color:#aaa;margin-bottom:14px">Tu sugerencia será revisada antes de publicarse</div>
-    <div id="sgLugarMsg" style="display:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:12px"></div>
     <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Nombre *</label>
     <input type="text" id="sgLNombre" placeholder="Nombre del lugar" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
     <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Tipo</label>
@@ -169,6 +168,15 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       </div>
     </div>
     <button onclick="enviarSugerenciaLugar()" id="sgLBtn" style="width:100%;padding:13px;background:#E05090;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Enviar sugerencia</button>
+  </div>
+</div>
+
+<!-- Modal gracias -->
+<div class="modal-overlay" id="modalGracias" style="z-index:600">
+  <div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center">
+    <div class="modal-handle" style="margin-bottom:20px"></div>
+    <div id="modalGraciasContent"></div>
+    <button onclick="document.getElementById('modalGracias').classList.remove('open')" style="margin-top:16px;width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cerrar</button>
   </div>
 </div>
 
@@ -385,17 +393,19 @@ function enviarSugerenciaLugar(){
 }
 
 function mostrarMsgLugar(txt,bg,color){
-  var el=document.getElementById('sgLugarMsg');
   if(bg==='#e0f7f7'){
-    el.innerHTML='<div style="text-align:center;padding:8px 0">'
+    // Cerrar modal del formulario
+    cerrarFormLugar();
+    // Mostrar modal de gracias
+    document.getElementById('modalGracias').classList.add('open');
+    document.getElementById('modalGraciasContent').innerHTML='<div style="text-align:center;padding:8px 0">'
       +'<img src="' + ['https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'][Math.floor(Math.random()*3)] + '" '
       +'style="width:180px;border-radius:12px;margin-bottom:10px" style="opacity:1">'
       +'<div style="font-size:15px;font-weight:700;color:#007a7a;margin-bottom:4px">Gracias por tu sugerencia! 🐾</div>'
       +'<div style="font-size:13px;color:#555">El jefe revisara tu sugerencia y pronto aparecera en la lista.</div>'
       +'</div>';
-    el.style.background=bg;el.style.display='block';
   } else {
-    el.textContent=txt;el.style.background=bg;el.style.color=color;el.style.display='block';
+    mostrarToast(txt);
   }
 }
 
