@@ -399,7 +399,6 @@ function copiarLink(eventoId){
 
 // ── SUGERIR EVENTO ─────────────────────────────────────────
 function abrirFormEvento(){
-  document.getElementById('sgMsg').style.display='none';
   document.getElementById('modalSugerirEvento').style.display='flex';
 }
 function cerrarFormEvento(){
@@ -412,7 +411,6 @@ function cerrarFormEvento(){
   document.getElementById('sgLink').value='';
   document.getElementById('sgFotoLabel').textContent='Seleccionar foto';
   document.getElementById('sgFotoPreview').style.display='none';
-  document.getElementById('sgMsg').style.display='none';
   var btn=document.getElementById('sgBtn');
   btn.disabled=false;btn.textContent='Enviar sugerencia';
   sgFotoBase64=null;sgFotoMime=null;
