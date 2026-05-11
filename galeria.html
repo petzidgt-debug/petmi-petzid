@@ -933,7 +933,7 @@ function formatFecha(val){
   if(p.length===3)d=new Date(p[2]+'-'+p[1]+'-'+p[0]);
   else d=new Date(val);
   if(isNaN(d.getTime()))return String(val);
-  return d.toLocaleDateString('es-GT',{year:'numeric',month:'short',day:'numeric'});
+  return d.toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
 
 document.getElementById('loginEmail').addEventListener('keydown',function(e){
@@ -1070,7 +1070,7 @@ function cargarMensajes(uid){
       // Convertir formato Supabase al formato esperado
       var d = {mensajes: msgs.map(function(m){ return {autor:m.autor, mensaje:m.mensaje, fecha:m.created_at}; })};
       lista.innerHTML = msgs.map(function(m){
-        var fecha = (m.created_at||m.fecha) ? new Date(m.created_at||m.fecha).toLocaleDateString('es-GT') : '';
+        var fecha = (m.created_at||m.fecha) ? new Date(m.created_at||m.fecha).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
         return '<div style="background:#f8f8f8;border-radius:10px;padding:10px 12px;margin-bottom:6px">'
           +'<div style="font-size:12px;font-weight:700;color:#333">'+m.autor+'<span style="font-size:10px;color:#bbb;font-weight:400;margin-left:8px">'+fecha+'</span></div>'
           +'<div style="font-size:13px;color:#555;margin-top:3px;line-height:1.5">'+m.mensaje+'</div></div>';

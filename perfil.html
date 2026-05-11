@@ -260,7 +260,7 @@ function formatFecha(val){
   if(p.length===3) d=new Date(p[2]+'-'+p[1]+'-'+p[0]);
   else d=new Date(val);
   if(isNaN(d.getTime()))return String(val);
-  return d.toLocaleDateString('es-GT',{year:'numeric',month:'short',day:'numeric'});
+  return d.toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
 }
 
 function cargarMensajes(){
@@ -286,7 +286,7 @@ function cargarMensajes(){
         return;
       }
       lista.innerHTML = msgs.map(function(m){
-        var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-GT') : '';
+        var fecha = m.fecha ? new Date(m.fecha).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
         return '<div class="mensaje-item">'
           +'<span class="mensaje-autor">'+m.autor+'</span>'
           +'<span class="mensaje-fecha">'+fecha+'</span>'

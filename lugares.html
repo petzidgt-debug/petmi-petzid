@@ -67,9 +67,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 /* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
-.modal-sheet{transition:transform .3s ease;transform:translateY(0)}
-.modal-sheet.closing{transform:translateY(100%)}
-.modal-handle{width:40px;height:4px;background:#ddd;border-radius:4px;margin:0 auto 16px;cursor:grab}
 </style>
 </head>
 <body>
@@ -107,7 +104,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <!-- Modal rating -->
 <div class="modal-overlay" id="modalRating">
-  <div class="modal-box modal-sheet" id="ratingSheet"><div class="modal-handle"></div>
+  <div class="modal-box">
     <div class="modal-titulo" id="ratingLugarNombre">Calificar lugar</div>
     <div class="stars-input" id="starsInput">
       <span class="star-opt" onclick="setRating(1)">⭐</span>
@@ -124,11 +121,11 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <!-- Modal sugerir lugar -->
 <div class="modal-overlay" id="modalSugerirLugar">
-  <div class="modal-box modal-sheet" id="lugarSheet" style="max-height:85vh;overflow-y:auto">
-    <div class="modal-handle"></div>
+  <div class="modal-box">
     <button onclick="cerrarFormLugar()" style="float:right;background:none;border:none;font-size:20px;cursor:pointer;margin-top:-8px">×</button>
     <div class="modal-titulo">📍 Sugerir un lugar</div>
     <div style="font-size:12px;color:#aaa;margin-bottom:14px">Tu sugerencia será revisada antes de publicarse</div>
+    <div id="sgLugarMsg" style="display:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:12px"></div>
     <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Nombre *</label>
     <input type="text" id="sgLNombre" placeholder="Nombre del lugar" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
     <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Tipo</label>
@@ -155,28 +152,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Descripción</label>
     <textarea id="sgLDesc" placeholder="¿Por qué lo recomiendas?" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;resize:none;height:70px;outline:none"></textarea>
     <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Link Google Maps (opcional)</label>
-    <input type="text" id="sgLMaps" placeholder="https://maps.google.com/..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Foto del lugar (opcional)</label>
-    <div style="margin:4px 0 16px">
-      <label for="sgLFoto" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px dashed #ddd;border-radius:10px;cursor:pointer;font-size:13px;color:#888;background:#fafafa">
-        <span style="font-size:20px">📷</span>
-        <span id="sgLFotoLabel">Seleccionar foto</span>
-      </label>
-      <input type="file" id="sgLFoto" accept="image/*" style="display:none" onchange="previsualizarFoto(this)">
-      <div id="sgLFotoPreview" style="margin-top:8px;display:none">
-        <img id="sgLFotoImg" style="width:100%;height:120px;object-fit:cover;border-radius:10px">
-      </div>
-    </div>
+    <input type="text" id="sgLMaps" placeholder="https://maps.google.com/..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 16px;outline:none">
     <button onclick="enviarSugerenciaLugar()" id="sgLBtn" style="width:100%;padding:13px;background:#E05090;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Enviar sugerencia</button>
-  </div>
-</div>
-
-<!-- Modal gracias -->
-<div class="modal-overlay" id="modalGracias" style="z-index:600">
-  <div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center">
-    <div class="modal-handle" style="margin-bottom:20px"></div>
-    <div id="modalGraciasContent"></div>
-    <button onclick="document.getElementById('modalGracias').classList.remove('open')" style="margin-top:16px;width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cerrar</button>
   </div>
 </div>
 
@@ -305,24 +282,6 @@ function enviarRating(){
   });
 }
 
-var sgLFotoBase64 = null;
-var sgLFotoMime   = null;
-
-function previsualizarFoto(input){
-  var file = input.files[0];
-  if(!file) return;
-  sgLFotoMime = file.type;
-  document.getElementById('sgLFotoLabel').textContent = file.name;
-  var reader = new FileReader();
-  reader.onload = function(e){
-    sgLFotoBase64 = e.target.result.split(',')[1];
-    var preview = document.getElementById('sgLFotoPreview');
-    document.getElementById('sgLFotoImg').src = e.target.result;
-    preview.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
-
 function abrirFormLugar(){
   document.getElementById('modalSugerirLugar').style.display='flex';
   document.getElementById('modalSugerirLugar').classList.add('open');
@@ -330,103 +289,50 @@ function abrirFormLugar(){
 function cerrarFormLugar(){
   document.getElementById('modalSugerirLugar').classList.remove('open');
   document.getElementById('modalSugerirLugar').style.display='none';
-  // Reset form
-  document.getElementById('sgLNombre').value='';
-  document.getElementById('sgLZona').value='';
-  document.getElementById('sgLTelefono').value='';
-  document.getElementById('sgLDireccion').value='';
-  document.getElementById('sgLDesc').value='';
-  document.getElementById('sgLMaps').value='';
-  document.getElementById('sgLFotoLabel').textContent='Seleccionar foto';
-  document.getElementById('sgLFotoPreview').style.display='none';
-  var btn=document.getElementById('sgLBtn');
-  btn.disabled=false;btn.textContent='Enviar sugerencia';
-  sgLFotoBase64=null;sgLFotoMime=null;
 }
 function enviarSugerenciaLugar(){
   var nombre=document.getElementById('sgLNombre').value.trim();
   if(!nombre){mostrarMsgLugar('El nombre es obligatorio','#fbeaf0','#c0392b');return;}
   var btn=document.getElementById('sgLBtn');
   btn.disabled=true;btn.textContent='Enviando...';
-
-  var fotoPromise = sgLFotoBase64
-    ? (function(){
-        var fd=new FormData();
-        fd.append('file','data:'+(sgLFotoMime||'image/jpeg')+';base64,'+sgLFotoBase64);
-        fd.append('upload_preset','petzid');
-        return fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd})
-          .then(function(r){return r.json();})
-          .then(function(d){return d.secure_url||'';});
-      })()
-    : Promise.resolve('');
-
-  fotoPromise.then(function(fotoUrl){
-    return fetch('/api/galeria?action=enviarLugar',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        nombre:nombre,
-        tipo:document.getElementById('sgLTipo').value,
-        ubicacion:document.getElementById('sgLZona').value.trim(),
-        telefono:document.getElementById('sgLTelefono').value.trim(),
-        direccion:document.getElementById('sgLDireccion').value.trim(),
-        descripcion:document.getElementById('sgLDesc').value.trim(),
-        google_maps:document.getElementById('sgLMaps').value.trim(),
-        imagen:fotoUrl,
-        email:sessionEmail||''
-      })
-    }).then(function(r){return r.json();});
-  }).then(function(d){
-    if(d&&d.ok){
-      mostrarMsgLugar('ok','#e0f7f7','#007a7a');
+  fetch('/api/galeria?action=enviarLugar',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      nombre:nombre,
+      tipo:document.getElementById('sgLTipo').value,
+      ubicacion:document.getElementById('sgLZona').value.trim(),
+      telefono:document.getElementById('sgLTelefono').value.trim(),
+      direccion:document.getElementById('sgLDireccion').value.trim(),
+      descripcion:document.getElementById('sgLDesc').value.trim(),
+      google_maps:document.getElementById('sgLMaps').value.trim(),
+      email:sessionEmail||''
+    })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      mostrarMsgLugar('Sugerencia enviada! La revisaremos pronto.','#e0f7f7','#007a7a');
       btn.textContent='Enviado!';
-      btn.disabled=true;
+      setTimeout(cerrarFormLugar,2000);
     } else {
       mostrarMsgLugar('Error al enviar','#fbeaf0','#c0392b');
       btn.disabled=false;btn.textContent='Enviar sugerencia';
     }
-  }).catch(function(){
-    mostrarMsgLugar('Error al enviar','#fbeaf0','#c0392b');
-    btn.disabled=false;btn.textContent='Enviar sugerencia';
   });
 }
-
 function mostrarMsgLugar(txt,bg,color){
+  var el=document.getElementById('sgLugarMsg');
   if(bg==='#e0f7f7'){
-    // Cerrar modal del formulario
-    cerrarFormLugar();
-    // Mostrar modal de gracias
-    document.getElementById('modalGracias').classList.add('open');
-    document.getElementById('modalGraciasContent').innerHTML='<div style="text-align:center;padding:8px 0">'
+    el.innerHTML='<div style="text-align:center;padding:8px 0">'
       +'<img src="' + ['https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'][Math.floor(Math.random()*3)] + '" '
-      +'style="width:180px;border-radius:12px;margin-bottom:10px" style="opacity:1">'
+      +'style="width:180px;border-radius:12px;margin-bottom:10px" onerror="this.style.display='none'">'
       +'<div style="font-size:15px;font-weight:700;color:#007a7a;margin-bottom:4px">Gracias por tu sugerencia! 🐾</div>'
       +'<div style="font-size:13px;color:#555">El jefe revisara tu sugerencia y pronto aparecera en la lista.</div>'
       +'</div>';
+    el.style.background=bg;el.style.display='block';
   } else {
-    mostrarToast(txt);
+    el.textContent=txt;el.style.background=bg;el.style.color=color;el.style.display='block';
   }
 }
-
-// ── Swipe to close ────────────────────────────────────────
-function addSwipeClose(sheetId, closeFn){
-  var el=document.getElementById(sheetId);
-  if(!el)return;
-  var startY=0,isDragging=false;
-  el.addEventListener('touchstart',function(e){startY=e.touches[0].clientY;isDragging=true;});
-  el.addEventListener('touchmove',function(e){
-    if(!isDragging)return;
-    var dy=e.touches[0].clientY-startY;
-    if(dy>0) el.style.transform='translateY('+dy+'px)';
-  });
-  el.addEventListener('touchend',function(e){
-    var dy=e.changedTouches[0].clientY-startY;
-    if(dy>80){closeFn();}
-    else{el.style.transform='translateY(0)';}
-    isDragging=false;
-  });
-}
-addSwipeClose('lugarSheet', cerrarFormLugar);
-addSwipeClose('ratingSheet', closeRating);
 
 function mostrarToast(msg){
   var el=document.getElementById('toast');
