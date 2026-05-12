@@ -633,7 +633,7 @@ async function publicarPerdidoEnActividades(p,ubicacion,telefono,mensaje,fecha,r
     imagenURL=data.secure_url||'';
   }catch(e){console.log('Cloudinary:',e);}
 
-  await fetch('/api/galeria',{
+  await fetch('/api/galeria?action=publicarActividad',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       action:'publicarActividad',
