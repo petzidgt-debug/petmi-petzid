@@ -681,7 +681,20 @@ function toggleAngel(esAngel){
     mostrarConfirm('💔 Quitar de angelitos','¿Quitar a '+p.nombre+' de la sección de angelitos?',function(){
       fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:false})
-      }).then(function(){closeModal();closeConfirm();setTimeout(function(){location.reload();},500);})
+      }).then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.ok){alert('Error.');closeConfirm();return;}
+        // Actualizar en memoria
+        p.angelito=false;
+        p.fechaAngelito='';
+        var inAll=allPets.find(function(x){return x.uid===p.uid;});
+        if(inAll){inAll.angelito=false;inAll.fechaAngelito='';}
+        renderAngeles();
+        applyFilter();
+        closeConfirm();
+        _renderModal(p);
+        mostrarToastG('💔 '+p.nombre+' quitado de angelitos');
+      })
       .catch(function(){alert('Error.');closeConfirm();});
     });
     return;
@@ -712,7 +725,23 @@ function confirmarAngel(){
   fetch('/api/submit',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:true,fechaAngelito:fecha})
-  }).then(function(){closeModal();setTimeout(function(){location.reload();},500);})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.ok){alert('Error al actualizar.');return;}
+    // Actualizar en memoria sin recargar página
+    p.angelito=true;
+    p.fechaAngelito=fecha;
+    // Actualizar en allPets
+    var inAll=allPets.find(function(x){return x.uid===p.uid;});
+    if(inAll){inAll.angelito=true;inAll.fechaAngelito=fecha;}
+    // Re-renderizar secciones y modal
+    renderAngeles();
+    applyFilter();
+    closeConfirm();
+    // Reabrir modal con datos actualizados
+    _renderModal(p);
+    mostrarToastG('🐾 '+p.nombre+' ya es un angelito');
+  })
   .catch(function(){alert('Error al actualizar.');});
 }
 
