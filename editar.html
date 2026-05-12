@@ -70,8 +70,6 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 </head>
 <body>
 
-
-
 <div class="wrap" id="mainWrap">
   <div class="loading-wrap" id="loadingWrap">
     <div class="spinner"></div>
@@ -116,12 +114,8 @@ var nuevaFotoMime   = null;
       var uidLower=uid.trim().toLowerCase();
       mascota = d.mascotas.find(function(m){ return m.uid.trim().toLowerCase()===uidLower; });
       if(!mascota){
-        // Si no encuentra por uid exacto, tomar la primera mascota del dueño
-        if(d.mascotas.length>0){
-          mascota=d.mascotas[0];
-        } else {
-          window.location.href='/galeria.html'; return;
-        }
+        if(d.mascotas.length>0){ mascota=d.mascotas[0]; }
+        else { window.location.href='/galeria.html'; return; }
       }
       renderForm();
     })
@@ -161,6 +155,8 @@ function renderForm(){
       </div>
     </div>` : '';
 
+  var actividadesOpts = ['Paseos','Agility','Natacion','Socializacion','Juegos en casa','Obediencia','Dog park','Grooming / spa'];
+
   document.getElementById('mainWrap').innerHTML = `
     <div class="${heroClass}">
       <div class="edit-foto-wrap">
@@ -176,7 +172,6 @@ function renderForm(){
     ${angelBanner}
     <div class="error-box" id="errorBox"></div>
 
-    <!-- Datos principales -->
     <div class="seccion">
       <div class="seccion-titulo">🐾 Datos de la mascota</div>
       <label>Nombre *</label>
@@ -209,7 +204,6 @@ function renderForm(){
       <input type="date" id="eFecha" value="${fechaInput}" style="margin-top:8px">
     </div>
 
-    <!-- Familia -->
     <div class="seccion">
       <div class="seccion-titulo">🏠 Datos del responsable</div>
       <label>Tu nombre</label>
@@ -227,12 +221,11 @@ function renderForm(){
       <input type="text" id="eVet" value="${m.veterinario||''}" placeholder="Nombre o clínica">
     </div>
 
-    <!-- Gustos -->
     <div class="seccion">
       <div class="seccion-titulo">🎾 Gustos y preferencias</div>
       <label>Actividades favoritas</label>
       <div class="chips" id="chipsActividad">
-        ${['Paseos','Agility','Natacion','Socializacion','Juegos en casa','Obediencia','Dog park','Grooming / spa'].map(function(a){
+        ${actividadesOpts.map(function(a){
           var sel=m.actividades&&m.actividades.toLowerCase().indexOf(a.toLowerCase())>=0?'sel':'';
           return '<div class="chip '+sel+'" onclick="toggleChip(this)">'+a+'</div>';
         }).join('')}
@@ -248,31 +241,29 @@ function renderForm(){
         <div style="font-size:12px;color:#aaa;margin-bottom:10px">¿Quieres recibir ofertas, actividades y novedades de PetMi?</div>
         <div class="toggle-row">
           <span class="toggle-lbl">Sí, quiero recibir información</span>
-          <label class="toggle"><input type="checkbox" id="togOfertas" \${m.ofertas!=='No'?'checked':''}><span class="tog-slider"></span></label>
+          <label class="toggle"><input type="checkbox" id="togOfertas" ${m.ofertas!=='No'?'checked':''}><span class="tog-slider"></span></label>
         </div>
       </div>
-
       <div id="notificaciones" style="margin-top:12px;background:#fafafa;border-radius:12px;padding:14px 16px;border:1px solid #eee">
         <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Notificaciones de mensajes</div>
         <div style="font-size:12px;color:#aaa;margin-bottom:10px">Recibir un email cuando alguien deje un mensaje en el perfil de tu mascota</div>
         <div class="toggle-row">
           <span class="toggle-lbl">Recibir notificaciones de mensajes</span>
-          <label class="toggle"><input type="checkbox" id="togNotifMensajes" \${m.notifMensajes!=='No'?'checked':''}><span class="tog-slider"></span></label>
+          <label class="toggle"><input type="checkbox" id="togNotifMensajes" ${m.notifMensajes!=='No'?'checked':''}><span class="tog-slider"></span></label>
         </div>
       </div>
     </div>
 
-    <!-- Angelito -->
     <div id="angelitoSection" style="margin-top:8px;border-radius:14px;padding:16px 18px;border:1.5px solid #e0e0e0;background:#fafafa">
       <div style="font-size:10px;font-weight:700;color:#764ba2;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🐾 Estado especial</div>
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div>
-          <div style="font-size:14px;font-weight:700;color:#333" id="angelitoLabel">Ya es un angelito</div>
-          <div style="font-size:12px;color:#aaa" id="angelitoSub">Aparecerá en la sección especial de ángeles</div>
+          <div style="font-size:14px;font-weight:700;color:#333">Ya es un angelito</div>
+          <div style="font-size:12px;color:#aaa">Aparecerá en la sección especial de ángeles</div>
         </div>
-        <label class="toggle"><input type="checkbox" id="togAngelito" onchange="onAngelitoChange()" '+( m.angelito&&m.angelito.toLowerCase()==="si"?"checked":"")+'><span class="tog-slider"></span></label>
+        <label class="toggle"><input type="checkbox" id="togAngelito" onchange="onAngelitoChange()" ${m.angelito&&m.angelito.toLowerCase()==='si'?'checked':''}><span class="tog-slider"></span></label>
       </div>
-      <div id="fechaAngelWrap" style="display:'+( m.angelito&&m.angelito.toLowerCase()==="si"?"block":"none")+';margin-top:12px">
+      <div id="fechaAngelWrap" style="display:${m.angelito&&m.angelito.toLowerCase()==='si'?'block':'none'};margin-top:12px">
         <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Fecha en que nos dejó</div>
         <input type="date" id="eFechaAngel" value="${m.fechaAngel?m.fechaAngel.substring(0,10):''}" style="width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:15px;outline:none">
       </div>
@@ -378,14 +369,12 @@ async function guardar(){
   var esAngelito = document.getElementById('togAngelito').checked;
   var fechaAngel = document.getElementById('eFechaAngel').value||'';
 
-  // Guardar datos principales
-  fetch('/api/admin?action=updateRow',{
+  fetch('/api/submit',{
     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
   }).then(function(r){return r.json();})
   .then(function(d){
     if(!d.ok){mostrarError('Error al guardar. Intenta de nuevo.');btn.disabled=false;btn.textContent='💾 Guardar cambios';return;}
-    // Luego actualizar estado angelito
-    return fetch('/api/admin?action=updateRow',{
+    return fetch('/api/submit',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'markAngel',uid:mascota.uid,esAngel:esAngelito,fechaAngelito:fechaAngel})
     });
@@ -412,11 +401,14 @@ function onAngelitoChange(){
 function mostrarError(msg){var el=document.getElementById('errorBox');if(el){el.textContent=msg;el.style.display='block';}}
 function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
 
+// ── Eliminar mascota ──────────────────────────────────────────
+// Usa /api/submit (que apunta al Apps Script correcto)
+// Solo borra la mascota por uid — NO deleteAccount
 function confirmarEliminar(){
   document.getElementById('confirmOverlay').classList.remove('open');
   if(!mascota||!mascota.uid){mostrarError('No se pudo identificar la mascota.');return;}
 
-  fetch('/api/admin?action=updateRow',{
+  fetch('/api/submit',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'deleteMascota',uid:mascota.uid})
