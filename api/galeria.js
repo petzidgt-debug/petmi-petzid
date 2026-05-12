@@ -406,7 +406,7 @@ export default async function handler(req, res) {
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
-        body: JSON.stringify({ uid_creador, nombre_creador, foto_creador, tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, activo: true, expires_at })
+        body: JSON.stringify({ uid_creador, nombre_creador, foto_creador, email_creador: req.body.email_creador||'', tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, activo: true, expires_at })
       });
       const data = await r.json();
       return res.status(200).json({ ok: r.ok, id: data[0]?.id });
