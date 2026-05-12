@@ -44,6 +44,17 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .cumple-badge{position:absolute;top:6px;right:6px;font-size:16px}
 
 /* SECCION ANGELES */
+.seccion-actividades{background:linear-gradient(135deg,#764ba2,#E05090);padding:24px 20px}
+.act-prev-card{background:#fff;border-radius:14px;overflow:hidden;min-width:160px;max-width:160px;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-shrink:0;cursor:pointer;transition:transform .2s}
+.act-prev-card:hover{transform:translateY(-2px)}
+.act-prev-emoji{width:160px;height:90px;display:flex;align-items:center;justify-content:center;font-size:36px}
+.act-prev-body{padding:8px 10px}
+.act-prev-tipo{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.act-prev-titulo{font-size:12px;font-weight:900;color:#222;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act-prev-meta{font-size:10px;color:#aaa}
+.seccion-actividades .seccion-titulo{color:#fff}
+.seccion-actividades .seccion-sub{color:rgba(255,255,255,.7)}
+.seccion-actividades .ver-todas{font-size:12px;color:rgba(255,255,255,.8);text-decoration:none;font-weight:600}
 .seccion-angeles{background:linear-gradient(135deg,#667eea,#764ba2);padding:24px 20px}
 .seccion-angeles .seccion-titulo{color:#fff}
 .seccion-angeles .seccion-sub{color:rgba(255,255,255,.7)}
@@ -183,6 +194,16 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <div class="seccion-titulo">🎂 Cumpleañeros de <span id="mesActualNombre"></span></div>
   <div class="seccion-sub">Mascotas que cumplen años o llegaron a casa este mes</div>
   <div class="cumple-scroll" id="cumpleScroll"></div>
+</div>
+
+<!-- QUIEN SE APUNTA -->
+<div class="seccion-actividades" id="seccionActividades" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+    <div class="seccion-titulo">🐾 ¿Quién se apunta?</div>
+    <a href="/actividades.html" class="ver-todas" style="margin-top:4px">Ver todas →</a>
+  </div>
+  <div class="seccion-sub">Planes y anuncios de la comunidad</div>
+  <div class="cumple-scroll" id="actividadesScroll"></div>
 </div>
 
 <!-- ANGELES DE 4 PATAS -->
@@ -441,7 +462,12 @@ function renderCumpleaneros(){
 
 // ── Ángeles de 4 patas ────────────────────────────────────────
 function renderAngeles(){
-  var angeles=allPets.filter(function(p){return p.angelito;});
+  var hace30=new Date(Date.now()-30*24*60*60*1000);
+  var angeles=allPets.filter(function(p){
+    if(!p.angelito)return false;
+    if(!p.fechaAngel)return true; // si no tiene fecha, mostrar siempre
+    return new Date(p.fechaAngel)>=hace30;
+  });
   if(angeles.length===0)return;
   document.getElementById('seccionAngeles').style.display='block';
   var html=angeles.map(function(p){
@@ -1017,17 +1043,35 @@ function cargarActividadesPreview(){
   fetch('/api/galeria?action=getActividades')
     .then(function(r){return r.json();})
     .then(function(d){
-      var acts=(d.actividades||[]).slice(0,2);
+      var acts=(d.actividades||[]).slice(0,6);
       if(!acts.length)return;
       document.getElementById('seccionActividades').style.display='block';
+      var TIPO_EMOJIS={plan:'🐾',regalo:'🎁',vendo:'🛍️',busco:'🔍',perdido:'🚨'};
+      var TIPO_COLORS={plan:{bg:'#f3e8ff',color:'#6f42c1'},regalo:{bg:'#fce4ec',color:'#c0392b'},vendo:{bg:'#fff3cd',color:'#856404'},busco:{bg:'#e8f5e9',color:'#2e7d32'},perdido:{bg:'#ffebee',color:'#b71c1c'}};
       var html='';
       acts.forEach(function(a){
-        html+='<a href="/actividades.html" style="display:block;background:rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;margin-bottom:6px;text-decoration:none">';
-        html+='<div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:2px">'+a.titulo+'</div>';
-        html+='<div style="font-size:11px;color:rgba(255,255,255,.75)">'+(a.fecha?'📅 '+new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit'}):'')+(a.ubicacion?' · 📍 '+a.ubicacion:'')+'</div>';
-        html+='</a>';
+        var emoji=TIPO_EMOJIS[a.tipo]||'🐾';
+        var col=TIPO_COLORS[a.tipo]||{bg:'#f0f0ee',color:'#555'};
+        var fotoAvatar=a.foto_creador&&a.foto_creador.indexOf('http')>=0
+          ?'<img src="'+a.foto_creador+'" style="width:22px;height:22px;border-radius:4px;object-fit:cover">'
+          :'<span style="font-size:14px">'+emoji+'</span>';
+        var meta=(a.fecha?'📅 '+new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit'}):'')
+          +(a.hora?' '+a.hora:'')
+          +(a.ubicacion?' · 📍 '+a.ubicacion:'');
+        if(!meta&&a.expires_at){
+          var dias=Math.floor((new Date(a.expires_at)-Date.now())/86400000);
+          if(dias>=0) meta='expira en '+dias+' día'+(dias!==1?'s':'');
+        }
+        html+='<div class="act-prev-card" onclick="window.location.href='/actividades.html'">';
+        html+='<div class="act-prev-emoji" style="background:'+col.bg+'">'+emoji+'</div>';
+        html+='<div class="act-prev-body">';
+        html+='<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">'+fotoAvatar+'<span style="font-size:11px;font-weight:700;color:#333">'+a.nombre_creador+'</span>';
+        html+='<span style="font-size:9px;font-weight:700;background:'+col.bg+';color:'+col.color+';padding:2px 6px;border-radius:20px;margin-left:auto">'+emoji+' '+(a.tipo||'plan')+'</span></div>';
+        html+='<div class="act-prev-titulo">'+a.titulo+'</div>';
+        if(meta) html+='<div class="act-prev-meta">'+meta+'</div>';
+        html+='</div></div>';
       });
-      document.getElementById('actividadesPreview').innerHTML=html;
+      document.getElementById('actividadesScroll').innerHTML=html;
     });
 }
 cargarActividadesPreview();
