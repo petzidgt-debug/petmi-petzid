@@ -654,7 +654,7 @@ function renderModalFooter(p){
       '<button class="btn-primary btn-pink" onclick="actualizarMascota(\''+p.uid+'\')">✏️ Actualizar información</button>'+
       '<button class="btn-primary" onclick="agregarOtra()">🐾 Agregar mascota</button>'+
       angelBtn+
-      // ── FIX: texto corregido a "Eliminar mascota", acción deleteMascota por uid ──
+      '<button class="btn-primary" style="background:#c0392b;color:#fff" onclick="abrirModalPerdido()">🚨 Me perdí</button>'+
       '<button class="btn-danger btn-secondary" onclick="confirmarEliminarMascota()">🗑️ Eliminar mascota</button>'+
       '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
   } else if(sessionEmail){
@@ -995,6 +995,444 @@ function mostrarToastG(msg){
   setTimeout(function(){el.style.opacity='0';},2500);
 }
 </script>
+<!-- ══════════════════════════════════════════════════════════
+     MODAL ME PERDÍ
+═══════════════════════════════════════════════════════════ -->
+<div id="modalPerdido" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:800;align-items:center;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 16px 60px rgba(0,0,0,.3);margin:auto">
+
+    <!-- Header rojo -->
+    <div style="background:#c0392b;padding:18px 20px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:18px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif">🚨 ME PERDÍ — Generar Póster</div>
+      <button onclick="cerrarModalPerdido()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+    </div>
+
+    <!-- Formulario -->
+    <div style="padding:20px" id="perdidoFormWrap">
+      <div style="font-size:12px;color:#888;margin-bottom:16px;line-height:1.5">Completa los datos para generar el póster y publicarlo automáticamente en la comunidad.</div>
+
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Última vez visto / descripción</div>
+        <textarea id="perdidoMensaje" placeholder="Ej: Se escapó del parque Central, lleva collar azul con cascabel..." style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;resize:none;height:80px;font-family:Arial,sans-serif"></textarea>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Última ubicación conocida</div>
+        <input type="text" id="perdidoUbicacion" placeholder="Ej: Zona 10, Cayalá, Miraflores..." style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Fecha que se perdió</div>
+          <input type="date" id="perdidoFecha" style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none">
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Teléfono de contacto</div>
+          <input type="tel" id="perdidoTelefono" placeholder="+502 ####-####" inputmode="tel" style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none">
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">¿Hay recompensa?</div>
+        <div style="display:flex;gap:8px">
+          <div id="recompensaNo" onclick="selRecompensa(false)" style="flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #00B4B4;background:#e0f7f7;color:#007a7a;font-size:13px;font-weight:700;cursor:pointer">No por ahora</div>
+          <div id="recompensaSi" onclick="selRecompensa(true)"  style="flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:13px;font-weight:700;cursor:pointer">Sí, hay recompensa</div>
+        </div>
+        <input type="text" id="perdidoRecompensa" placeholder="Ej: Q500 de recompensa" style="display:none;width:100%;padding:12px 14px;border:1.5px solid #F5C842;border-radius:12px;font-size:14px;outline:none;margin-top:8px">
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button onclick="cerrarModalPerdido()" style="flex:1;padding:13px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cancelar</button>
+        <button onclick="generarPosterPerdido()" id="btnGenerarPoster" style="flex:2;padding:13px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">🚨 Generar póster y publicar</button>
+      </div>
+    </div>
+
+    <!-- Preview del poster generado -->
+    <div id="perdidoPosterWrap" style="display:none;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:#155724;background:#d4edda;border-radius:10px;padding:10px 14px;margin-bottom:16px;text-align:center">✅ Póster generado y publicado en la comunidad</div>
+
+      <!-- Canvas donde se renderiza el poster -->
+      <canvas id="posterCanvas" style="width:100%;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.15)"></canvas>
+
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button onclick="descargarPoster()" style="flex:1;padding:13px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">⬇️ Descargar</button>
+        <button onclick="compartirPoster()" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">📲 Compartir</button>
+        <button onclick="cerrarModalPerdido()" style="padding:13px 16px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cerrar</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── ME PERDÍ — Estado ─────────────────────────────────────────
+var perdidoConRecompensa = false;
+var posterDataURL = null;
+
+function abrirModalPerdido(){
+  if(!currentModalPet) return;
+  // Resetear formulario
+  document.getElementById('perdidoMensaje').value = '';
+  document.getElementById('perdidoUbicacion').value = '';
+  document.getElementById('perdidoFecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('perdidoTelefono').value = currentModalPet.whatsapp || '';
+  document.getElementById('perdidoRecompensa').value = '';
+  document.getElementById('perdidoRecompensa').style.display = 'none';
+  document.getElementById('perdidoFormWrap').style.display = 'block';
+  document.getElementById('perdidoPosterWrap').style.display = 'none';
+  selRecompensa(false);
+  posterDataURL = null;
+  var m = document.getElementById('modalPerdido');
+  m.style.display = 'flex';
+}
+
+function cerrarModalPerdido(){
+  document.getElementById('modalPerdido').style.display = 'none';
+}
+
+function selRecompensa(tiene){
+  perdidoConRecompensa = tiene;
+  var elNo = document.getElementById('recompensaNo');
+  var elSi = document.getElementById('recompensaSi');
+  var elTxt = document.getElementById('perdidoRecompensa');
+  if(tiene){
+    elSi.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #F5C842;background:#fff8e0;color:#856404;font-size:13px;font-weight:700;cursor:pointer';
+    elNo.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:13px;font-weight:700;cursor:pointer';
+    elTxt.style.display = 'block';
+  } else {
+    elNo.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #00B4B4;background:#e0f7f7;color:#007a7a;font-size:13px;font-weight:700;cursor:pointer';
+    elSi.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:13px;font-weight:700;cursor:pointer';
+    elTxt.style.display = 'none';
+  }
+}
+
+// ── Generar poster en Canvas ──────────────────────────────────
+async function generarPosterPerdido(){
+  var p = currentModalPet;
+  if(!p) return;
+
+  var ubicacion = document.getElementById('perdidoUbicacion').value.trim();
+  var telefono  = document.getElementById('perdidoTelefono').value.trim();
+  var mensaje   = document.getElementById('perdidoMensaje').value.trim();
+  var fechaStr  = document.getElementById('perdidoFecha').value;
+  var recompensa = perdidoConRecompensa ? document.getElementById('perdidoRecompensa').value.trim() : '';
+
+  if(!ubicacion){ alert('Ingresa la última ubicación conocida'); return; }
+  if(!telefono) { alert('Ingresa un teléfono de contacto'); return; }
+
+  var btn = document.getElementById('btnGenerarPoster');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generando...';
+
+  // Formatear fecha
+  var fechaDisplay = '-';
+  if(fechaStr){
+    var fd = new Date(fechaStr+'T12:00:00');
+    fechaDisplay = fd.toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+
+  // Dimensiones del poster: 800 x 1100
+  var W = 800, H = 1100;
+  var canvas = document.getElementById('posterCanvas');
+  canvas.width  = W;
+  canvas.height = H;
+  var ctx = canvas.getContext('2d');
+
+  // ── Fondo blanco ──
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Header rojo ──
+  ctx.fillStyle = '#c0392b';
+  ctx.fillRect(0, 0, W, 120);
+
+  // Ícono sirena
+  ctx.font = 'bold 52px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('🚨', 70, 78);
+
+  // Texto ME PERDÍ
+  ctx.font = 'bold 52px Arial Black, Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+  ctx.fillText('ME  PERDÍ', 110, 82);
+
+  // Subtítulo
+  ctx.font = '22px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText('¿Me has visto? Por favor comunícate', 110, 108);
+
+  // ── Foto de la mascota ──
+  var fotoY = 130, fotoH = 440;
+  ctx.fillStyle = '#f0f0ee';
+  ctx.fillRect(0, fotoY, W, fotoH);
+
+  if(p.foto && p.foto.indexOf('http') >= 0){
+    try {
+      var imgEl = await cargarImagen(p.foto);
+      // Crop centrado
+      var sx=0,sy=0,sw=imgEl.width,sh=imgEl.height;
+      var ratio = imgEl.width/imgEl.height;
+      var targetRatio = W/fotoH;
+      if(ratio > targetRatio){ sw = imgEl.height*targetRatio; sx=(imgEl.width-sw)/2; }
+      else { sh = imgEl.width/targetRatio; sy=(imgEl.height-sh)/2; }
+      ctx.drawImage(imgEl, sx, sy, sw, sh, 0, fotoY, W, fotoH);
+    } catch(e) {
+      // Si falla la imagen, poner emoji
+      var esGato = p.especie.toLowerCase().indexOf('gato')>=0;
+      ctx.font = '160px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#aaa';
+      ctx.fillText(esGato?'🐱':'🐶', W/2, fotoY + fotoH/2 + 50);
+    }
+  } else {
+    var esGato2 = p.especie.toLowerCase().indexOf('gato')>=0;
+    ctx.font = '160px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#aaa';
+    ctx.fillText(esGato2?'🐱':'🐶', W/2, fotoY + fotoH/2 + 50);
+  }
+
+  // Overlay degradado sobre la foto (abajo)
+  var grad = ctx.createLinearGradient(0, fotoY+fotoH-120, 0, fotoY+fotoH);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.65)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, fotoY+fotoH-120, W, 120);
+
+  // Nombre sobre la foto
+  ctx.font = 'bold 64px Arial Black, Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.fillText(p.nombre.toUpperCase(), W/2, fotoY+fotoH-30);
+
+  // ── Sección blanca — datos ──
+  var dataY = fotoY + fotoH;
+
+  // Especie / Sexo / Raza
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, dataY, W, 100);
+
+  var cols = [
+    {lbl:'ESPECIE', val:p.especie||'-'},
+    {lbl:'SEXO',    val:p.sexo||'-'},
+    {lbl:'RAZA',    val:(p.raza||'-').substring(0,14)}
+  ];
+  cols.forEach(function(c,i){
+    var cx = 40 + i*(W/3);
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#aaaaaa';
+    ctx.textAlign = 'left';
+    ctx.fillText(c.lbl, cx, dataY+30);
+    ctx.font = 'bold 24px Arial';
+    ctx.fillStyle = '#222222';
+    ctx.fillText(c.val.toUpperCase(), cx, dataY+62);
+  });
+
+  // Separador
+  ctx.fillStyle = '#f0f0ee';
+  ctx.fillRect(0, dataY+100, W, 3);
+
+  // ── Franja amarilla — última vez visto ──
+  var amarY = dataY + 103;
+  ctx.fillStyle = '#F5C842';
+  ctx.fillRect(0, amarY, W, 220);
+
+  ctx.font = 'bold 18px Arial';
+  ctx.fillStyle = '#1a1a1a';
+  ctx.textAlign = 'left';
+  ctx.fillText('ÚLTIMA VEZ VISTO', 30, amarY + 32);
+
+  // Mensaje (wrap manual)
+  ctx.font = '20px Arial';
+  ctx.fillStyle = '#333333';
+  var msgLines = wrapText(ctx, mensaje||'Sin descripción', W-60, 20);
+  msgLines.slice(0,3).forEach(function(line,i){
+    ctx.fillText(line, 30, amarY + 58 + i*26);
+  });
+
+  // Ubicación
+  ctx.font = 'bold 20px Arial';
+  ctx.fillStyle = '#c0392b';
+  ctx.fillText('📍 ' + (ubicacion||'-'), 30, amarY + 140);
+
+  // Fecha y teléfono
+  ctx.font = '18px Arial';
+  ctx.fillStyle = '#555555';
+  ctx.fillText('📅 Fecha: ' + fechaDisplay, 30, amarY + 172);
+  ctx.fillText('📞 Contacto: ' + telefono, 30, amarY + 196);
+
+  // Recompensa badge
+  if(recompensa){
+    ctx.fillStyle = '#c0392b';
+    roundRect(ctx, W-220, amarY+140, 190, 52, 10);
+    ctx.fill();
+    ctx.font = 'bold 17px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏆 ' + recompensa, W-125, amarY+172);
+  }
+
+  // ── Footer — PetzID branding ──
+  var footY = amarY + 223;
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(0, footY, W, H-footY);
+
+  ctx.font = 'bold 28px Arial Black, Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.fillText('petz', W/2 - 22, footY + 46);
+  ctx.fillStyle = '#E05090';
+  ctx.fillText('ID', W/2 + 34, footY + 46);
+
+  ctx.font = '16px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText('PetMi Guatemala — Comunidad de mascotas', W/2, footY + 72);
+
+  // PetzID del animal
+  if(p.uid){
+    ctx.font = '13px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillText('ID: ' + p.uid.substring(0,18).toUpperCase(), W/2, footY + 95);
+  }
+
+  // Guardar dataURL
+  posterDataURL = canvas.toDataURL('image/png');
+
+  // ── Publicar en actividades ───────────────────────────────
+  btn.textContent = '⏳ Publicando...';
+  try {
+    await publicarPerdidoEnActividades(p, ubicacion, telefono, mensaje, fechaStr, recompensa, posterDataURL);
+  } catch(e){
+    console.log('Error publicando actividad:', e);
+  }
+
+  // Mostrar resultado
+  document.getElementById('perdidoFormWrap').style.display = 'none';
+  document.getElementById('perdidoPosterWrap').style.display = 'block';
+  btn.disabled = false;
+  btn.textContent = '🚨 Generar póster y publicar';
+}
+
+// ── Publicar en actividades como tipo "perdido" ───────────────
+async function publicarPerdidoEnActividades(p, ubicacion, telefono, mensaje, fecha, recompensa, posterURL){
+  var titulo = '🚨 SE PERDIÓ ' + p.nombre.toUpperCase();
+  var descripcion = (mensaje ? mensaje + '\n' : '')
+    + '📍 ' + ubicacion
+    + (recompensa ? '\n🏆 ' + recompensa : '')
+    + '\n📞 ' + telefono;
+
+  // Subir imagen del poster a Cloudinary
+  var imagenURL = '';
+  try {
+    var fd = new FormData();
+    fd.append('file', posterURL);
+    fd.append('upload_preset', 'petzid');
+    fd.append('folder', 'petzid_perdidos');
+    var res = await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload', {method:'POST', body:fd});
+    var data = await res.json();
+    imagenURL = data.secure_url || '';
+  } catch(e){ console.log('Cloudinary poster:', e); }
+
+  await fetch('/api/galeria?action=publicarActividad', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      action:        'publicarActividad',
+      uid_creador:   p.uid,
+      nombre_creador: p.nombre,
+      foto_creador:  p.foto || '',
+      email_creador: p.email || sessionEmail,
+      tipo:          'perdido',
+      titulo:        titulo,
+      descripcion:   descripcion,
+      fecha:         fecha,
+      hora:          '',
+      ubicacion:     ubicacion,
+      imagen:        imagenURL
+    })
+  });
+}
+
+// ── Descargar poster ──────────────────────────────────────────
+function descargarPoster(){
+  if(!posterDataURL || !currentModalPet) return;
+  var a = document.createElement('a');
+  a.download = 'MePerdí_' + currentModalPet.nombre + '.png';
+  a.href = posterDataURL;
+  a.click();
+}
+
+// ── Compartir poster (Web Share API o fallback) ───────────────
+async function compartirPoster(){
+  if(!posterDataURL || !currentModalPet) return;
+  var nombre = currentModalPet.nombre;
+  // Intentar Web Share API con archivo
+  if(navigator.share){
+    try {
+      var blob = await (await fetch(posterDataURL)).blob();
+      var file = new File([blob], 'MePerdí_'+nombre+'.png', {type:'image/png'});
+      await navigator.share({
+        title: '🚨 SE PERDIÓ ' + nombre.toUpperCase(),
+        text:  '¿Lo has visto? Por favor comunícate. Publicado en PetzID.',
+        files: [file]
+      });
+      return;
+    } catch(e){ console.log('Share API:', e); }
+  }
+  // Fallback: descargar
+  descargarPoster();
+  mostrarToastG('📲 Guarda la imagen y compártela por WhatsApp o redes sociales');
+}
+
+// ── Helpers canvas ────────────────────────────────────────────
+function cargarImagen(url){
+  return new Promise(function(resolve, reject){
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = function(){ resolve(img); };
+    img.onerror = function(){ reject(new Error('No se pudo cargar la imagen')); };
+    // Usar proxy si es necesario para CORS
+    img.src = url;
+  });
+}
+
+function wrapText(ctx, text, maxWidth, fontSize){
+  if(!text) return [''];
+  var words = text.split(' ');
+  var lines = [], current = '';
+  words.forEach(function(word){
+    var test = current ? current+' '+word : word;
+    if(ctx.measureText(test).width > maxWidth && current){
+      lines.push(current);
+      current = word;
+    } else { current = test; }
+  });
+  if(current) lines.push(current);
+  return lines;
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+// Cerrar modal con Escape
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') cerrarModalPerdido();
+});
+</script>
+
 <script src="/header.js"></script>
 </body>
 </html>
