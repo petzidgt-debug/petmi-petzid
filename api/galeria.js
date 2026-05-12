@@ -383,12 +383,30 @@ export default async function handler(req, res) {
 
     // ── getActividades ───────────────────────────────────────
     if (action === 'getActividades') {
-      const tipo = req.query.tipo || '';
+      const tipo  = req.query.tipo || '';
       const ahora = new Date().toISOString();
-      let url = SUPABASE_URL + '/rest/v1/actividades?activo=eq.true&or=(expires_at.is.null,expires_at.gte.' + ahora + ')&order=created_at.desc&limit=50';
+
+      // FIX: separar el or() de expiración del filtro de tipo
+      // para que Supabase los combine correctamente como AND implícito
+      let url = SUPABASE_URL + '/rest/v1/actividades'
+        + '?activo=eq.true'
+        + '&or=(expires_at.is.null,expires_at.gte.' + ahora + ')'
+        + '&order=created_at.desc'
+        + '&limit=100';
       if (tipo) url += '&tipo=eq.' + encodeURIComponent(tipo);
+
       const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
-      return res.status(200).json({ actividades: await r.json() });
+      const data = await r.json();
+
+      // Doble filtro en servidor por seguridad
+      const ahora2 = Date.now();
+      const actividades = Array.isArray(data) ? data.filter(a => {
+        if (!a.activo) return false;
+        if (a.expires_at && new Date(a.expires_at).getTime() < ahora2) return false;
+        return true;
+      }) : [];
+
+      return res.status(200).json({ actividades });
     }
 
     // ── publicarActividad ─────────────────────────────────────
@@ -446,6 +464,84 @@ export default async function handler(req, res) {
     if (action === 'eliminarActividad' && req.method === 'POST') {
       const { actividad_id, uid_creador } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id) + '&uid_creador=eq.' + encodeURIComponent(uid_creador), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── syncMascotas (admin) ─────────────────────────────────
+    if (action === 'syncMascotas' && req.method === 'POST') {
+      const { mascotas } = req.body;
+      if (!mascotas || !mascotas.length) return res.status(200).json({ ok: true, count: 0 });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?on_conflict=uid', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(mascotas)
+      });
+      return res.status(200).json({ ok: r.ok, count: mascotas.length });
+    }
+
+    // ── getEventosAdmin ───────────────────────────────────────
+    if (action === 'getEventosAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ eventos: await r.json() });
+    }
+
+    // ── getEventosPendientes ──────────────────────────────────
+    if (action === 'getEventosPendientes') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?activo=eq.false&order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ eventos: await r.json() });
+    }
+
+    // ── toggleEvento ──────────────────────────────────────────
+    if (action === 'toggleEvento' && req.method === 'POST') {
+      const { id, activo } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ activo })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── eliminarEvento ────────────────────────────────────────
+    if (action === 'eliminarEvento' && req.method === 'POST') {
+      const { id } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getLugaresAdmin ───────────────────────────────────────
+    if (action === 'getLugaresAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?order=nombre.asc', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ lugares: await r.json() });
+    }
+
+    // ── toggleLugar ───────────────────────────────────────────
+    if (action === 'toggleLugar' && req.method === 'POST') {
+      const { id, activo } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ activo })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── eliminarLugar ─────────────────────────────────────────
+    if (action === 'eliminarLugar' && req.method === 'POST') {
+      const { id } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + encodeURIComponent(id), {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
