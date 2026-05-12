@@ -282,12 +282,37 @@ function toggleApuntar(id,i){
       misApuntes[id]=!apuntado;
       mostrarToast(apuntado?'Te has desapuntado':'🐾 Te has apuntado!');
       cargarApuntes(id);
+      if(!apuntado){
+        var act=actividadesData[i];
+        if(act&&act.email_creador&&act.email_creador!==sessionEmail){
+          fetch('/api/admin',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({action:'notificarApunte',emailCreador:act.email_creador,nombrePlan:act.titulo,nombreMascota:miMascota.nombre})
+          });
+        }
+      }
     }
   });
 }
 
 function mostrarInteres(actividadId, uidCreador){
-  mostrarToast('Mensaje enviado al dueño 🐾');
+  if(!sessionEmail){mostrarToast('Inicia sesión para contactar');return;}
+  if(!miMascota){mostrarToast('Necesitas registrar una mascota');return;}
+  var act=actividadesData.find(function(a){return a.id===actividadId;});
+  if(!act||!act.email_creador){mostrarToast('No se pudo contactar al dueño');return;}
+  if(act.email_creador===sessionEmail){mostrarToast('Esta es tu publicación');return;}
+  fetch('/api/admin',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      action:'notificarInteres',
+      emailCreador:act.email_creador,
+      tituloAnuncio:act.titulo,
+      nombreMascota:miMascota.nombre,
+      emailInteresado:sessionEmail
+    })
+  }).then(function(){
+    mostrarToast('✅ Notificación enviada al dueño!');
+  });
 }
 
 function eliminarActividad(id){
@@ -363,7 +388,8 @@ function publicar(){
         fecha:document.getElementById('pubFecha').value||null,
         hora:document.getElementById('pubHora').value.trim(),
         ubicacion:document.getElementById('pubUbicacion').value.trim(),
-        imagen:fotoUrl
+        imagen:fotoUrl,
+        email_creador:sessionEmail||''
       })
     }).then(function(r){return r.json();});
   }).then(function(d){
