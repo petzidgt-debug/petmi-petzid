@@ -155,8 +155,6 @@ tbody tr:last-child td{border-bottom:none}
         <div class="chart-card"><div class="chart-title">Top Alimentos</div><div id="chartAlimentos"><div class="loading"><div class="spinner"></div></div></div></div>
         <div class="chart-card"><div class="chart-title">Estado envios</div><div id="chartEnvios"><div class="loading"><div class="spinner"></div></div></div></div>
       </div>
-
-      <!-- Charts adicionales -->
       <div class="charts-grid" style="grid-template-columns:1fr 1fr 1fr">
         <div class="chart-card"><div class="chart-title">🐕 Top Razas</div><div id="chartRazas"></div></div>
         <div class="chart-card"><div class="chart-title">📷 Estado fotos</div><div id="chartFotos"></div></div>
@@ -237,7 +235,6 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
 
-    <!-- Screen Eventos -->
     <div class="screen" id="screenEventos">
       <div class="page-header">
         <div><div class="page-title">Eventos Pet-Friendly</div><div class="page-sub" id="subEventos">-</div></div>
@@ -250,7 +247,6 @@ tbody tr:last-child td{border-bottom:none}
       <div class="table-card"><div id="eventosAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
     </div>
 
-    <!-- Screen Lugares -->
     <div class="screen" id="screenLugares">
       <div class="page-header">
         <div><div class="page-title">Lugares Pet-Friendly</div><div class="page-sub" id="subLugares">-</div></div>
@@ -295,14 +291,54 @@ tbody tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<script>
-var SCRIPT_URL='/api/admin';
-var PASSWORD='petmi2024';
-var allData=[],filtered=[],familias={},campanas=[];
-var page=1,perPage=25,editIdx=null;
+<!-- MODAL FOTO -->
+<div class="modal-overlay" id="modalFoto">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">
+      <span>📷 Cambiar foto</span>
+      <button class="modal-close" onclick="closeModal('modalFoto')">✕</button>
+    </div>
+    <p id="fotoMascotaInfo" style="font-size:13px;color:#888;margin-bottom:16px"></p>
+    <div style="display:flex;gap:6px;background:#f0f0ee;border-radius:10px;padding:4px;margin-bottom:16px">
+      <div id="tabUpload" onclick="switchFotoTab('upload')" style="flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)">Subir foto</div>
+      <div id="tabLink"   onclick="switchFotoTab('link')"   style="flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer">Link URL</div>
+    </div>
+    <div id="panelUpload">
+      <div class="foto-drop" onclick="document.getElementById('adminFileInput').click()">
+        <div style="font-size:28px;margin-bottom:8px">📸</div>
+        <div style="font-size:13px;color:#888">Toca para seleccionar una imagen</div>
+      </div>
+      <input type="file" id="adminFileInput" accept="image/*" style="display:none" onchange="onAdminFotoChange(event)">
+      <img id="fotoPreviewImg" style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px">
+    </div>
+    <div id="panelLink" style="display:none">
+      <label style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">URL de la foto</label>
+      <input type="text" id="fotoLinkInput" placeholder="https://..." oninput="onLinkChange()" style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none">
+      <img id="fotoLinkPreview" style="display:none;width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-top:10px" onload="this.style.display='block'">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalFoto')">Cancelar</button>
+      <button class="btn-save" id="btnSubirFoto" onclick="subirFotoAdmin()" disabled>Guardar foto</button>
+    </div>
+  </div>
+</div>
 
+<script>
+// ── Configuración ─────────────────────────────────────────────
+// Las llamadas a Supabase van siempre a través de /api/galeria (servidor)
+// NUNCA incluir service_role key en el cliente
+var PASSWORD    = 'petmi2024';
+var CLOUD_NAME  = 'dh5wgqgmk';
+var UPLOAD_PRESET = 'petzid';
+
+var allData = [], filtered = [], familias = {}, campanas = [];
+var page = 1, perPage = 25, editIdx = null;
+var adminFotoBase64 = null, adminFotoUID = null, adminFotoTab = 'upload';
+var editingEventoId = null, editingLugarId = null;
+
+// ── Auth ──────────────────────────────────────────────────────
 function doLogin(){
-  if(document.getElementById('loginPass').value===PASSWORD){
+  if(document.getElementById('loginPass').value === PASSWORD){
     document.getElementById('loginWrap').style.display='none';
     document.getElementById('appWrap').style.display='flex';
     loadData();
@@ -315,32 +351,39 @@ function doLogout(){
   document.getElementById('appWrap').style.display='none';
   document.getElementById('loginPass').value='';
 }
+
+// ── Navegación ────────────────────────────────────────────────
 function showScreen(name,el){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
-  if(el)el.classList.add('active');
+  if(el) el.classList.add('active');
   if(name==='eventos') cargarEventosAdmin();
   if(name==='lugares') cargarLugaresAdmin();
 }
+
+// ── Carga de datos ────────────────────────────────────────────
 function loadData(){
   fetch('/api/admin?action=getData')
   .then(function(r){return r.json();})
   .then(function(d){
-    allData=d.rows||[];campanas=d.campanas||[];
+    allData=d.rows||[]; campanas=d.campanas||[];
     filtered=allData.slice();
-    buildFamilias();renderDashboard();renderTable();renderFamilias();renderCampanas();
+    buildFamilias(); renderDashboard(); renderTable(); renderFamilias(); renderCampanas();
   }).catch(function(e){console.log('Error:',e);});
 }
+
 function buildFamilias(){
   familias={};
   allData.forEach(function(r){
     var email=String(r[11]||'').trim().toLowerCase();
-    if(!email)return;
+    if(!email) return;
     if(!familias[email]){familias[email]={dueno:String(r[10]||'').trim(),email:email,whatsapp:String(r[12]||'').trim(),zona:String(r[9]||'').trim(),mascotas:[]};}
     familias[email].mascotas.push({nombre:String(r[2]||'').trim(),apodo:String(r[3]||'').trim(),especie:String(r[4]||'').trim(),sexo:String(r[5]||'').trim(),uid:String(r[1]||'').trim(),row:r});
   });
 }
+
+// ── Dashboard ─────────────────────────────────────────────────
 function renderDashboard(){
   var total=allData.length;
   var perros=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('perro')>=0;}).length;
@@ -350,6 +393,7 @@ function renderDashboard(){
   document.getElementById('statPerros').textContent=perros;
   document.getElementById('statGatos').textContent=gatos;
   document.getElementById('statEnviados').textContent=enviados;
+
   var zonas={};allData.forEach(function(r){var z=String(r[9]||'Sin zona').toUpperCase();zonas[z]=(zonas[z]||0)+1;});
   renderBars('chartZonas',zonas,6,'#00B4B4');
   var mn=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -359,46 +403,33 @@ function renderDashboard(){
   renderBars('chartAlimentos',alimentos,6,'#534AB7');
   renderBars('chartEnvios',{'Enviado':enviados,'Pendiente':total-enviados},2,'#3B6D11');
 
-  // ── Nuevas estadísticas ─────────────────────────────────────
-  // Razas
-  var razas={};allData.forEach(function(r){
-    var raza=String(r[6]||'Sin registrar').trim()||'Sin registrar';
-    razas[raza]=(razas[raza]||0)+1;
-  });
+  var razas={};allData.forEach(function(r){var raza=String(r[6]||'Sin registrar').trim()||'Sin registrar';razas[raza]=(razas[raza]||0)+1;});
   renderBars('chartRazas',razas,8,'#00B4B4');
-
-  // Estado fotos
   var conFoto=allData.filter(function(r){return String(r[27]||'').indexOf('http')>=0;}).length;
-  var sinFoto=total-conFoto;
-  renderBars('chartFotos',{'Con foto':conFoto,'Sin foto':sinFoto},2,'#E05090');
+  renderBars('chartFotos',{'Con foto':conFoto,'Sin foto':total-conFoto},2,'#E05090');
 
-  // Cumpleaños por mes
-  var mn2=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  var cumples={};
-  mn2.forEach(function(m){cumples[m]=0;});
+  var cumples={};mn.forEach(function(m){cumples[m]=0;});
   allData.forEach(function(r){
-    var fecha=String(r[8]||'').trim();
-    if(!fecha)return;
+    var fecha=String(r[8]||'').trim();if(!fecha)return;
     var mes=null;
     var m=fecha.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if(m)mes=parseInt(m[2],10)-1;
     else{var p=fecha.split('/');if(p.length===3)mes=parseInt(p[1],10)-1;}
-    if(mes!==null&&mes>=0&&mes<=11)cumples[mn2[mes]]=(cumples[mn2[mes]]||0)+1;
+    if(mes!==null&&mes>=0&&mes<=11)cumples[mn[mes]]=(cumples[mn[mes]]||0)+1;
   });
   renderBars('chartCumples',cumples,12,'#F5C842');
 
-  // Stats extra
-  document.getElementById('statSinFoto').textContent=sinFoto;
+  document.getElementById('statSinFoto').textContent=total-conFoto;
   document.getElementById('statAngelitos').textContent=allData.filter(function(r){return String(r[28]||'').toLowerCase()==='si';}).length;
   var emails={};allData.forEach(function(r){var e=String(r[11]||'').trim().toLowerCase();if(e)emails[e]=1;});
   document.getElementById('statFamilias').textContent=Object.keys(emails).length;
   var mesActual=new Date().getMonth();
-  var esteMes=allData.filter(function(r){
+  document.getElementById('statEsteMes').textContent=allData.filter(function(r){
     if(!r[0])return false;
     return new Date(r[0]).getMonth()===mesActual&&new Date(r[0]).getFullYear()===new Date().getFullYear();
   }).length;
-  document.getElementById('statEsteMes').textContent=esteMes;
 }
+
 function renderBars(id,obj,top,color){
   var keys=Object.keys(obj).sort(function(a,b){return obj[b]-obj[a];}).slice(0,top);
   var max=obj[keys[0]]||1;
@@ -407,6 +438,8 @@ function renderBars(id,obj,top,color){
     return '<div class="bar-row"><div class="bar-label" title="'+k+'">'+k+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+color+'">'+obj[k]+'</div></div></div>';
   }).join('')||'<p style="color:#888;font-size:13px">Sin datos</p>';
 }
+
+// ── Filtros y tabla ───────────────────────────────────────────
 function applyFilters(){
   var n=document.getElementById('searchNombre').value.toLowerCase();
   var du=document.getElementById('searchDueno').value.toLowerCase();
@@ -425,31 +458,38 @@ function applyFilters(){
     if(ft==='con_foto'&&!tieneFoto)return false;
     return true;
   });
-  page=1;renderTable();
+  page=1; renderTable();
 }
 function clearFilters(){
   ['searchNombre','searchDueno','filterZona'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('filterEspecie').value='';document.getElementById('filterEnviado').value='';document.getElementById('filterFoto').value='';
-  filtered=allData.slice();page=1;renderTable();
+  document.getElementById('filterEspecie').value='';
+  document.getElementById('filterEnviado').value='';
+  document.getElementById('filterFoto').value='';
+  filtered=allData.slice(); page=1; renderTable();
 }
 function changePage(dir){var max=Math.ceil(filtered.length/perPage);page=Math.max(1,Math.min(max,page+dir));renderTable();}
+
 function renderTable(){
-  var start=(page-1)*perPage;var rows=filtered.slice(start,start+perPage);
+  var start=(page-1)*perPage; var rows=filtered.slice(start,start+perPage);
   var max=Math.ceil(filtered.length/perPage);
   document.getElementById('tableInfo').textContent=filtered.length+' mascotas';
   document.getElementById('pageInfo').textContent='Pag '+page+'/'+max+' ('+filtered.length+' total)';
-  document.getElementById('btnPrev').disabled=page<=1;document.getElementById('btnNext').disabled=page>=max;
+  document.getElementById('btnPrev').disabled=page<=1;
+  document.getElementById('btnNext').disabled=page>=max;
   var html=rows.map(function(r,i){
     var idx=start+i;
     var esp=String(r[4]).toLowerCase().indexOf('gato')>=0?'<span class="badge badge-gato">Gato</span>':'<span class="badge badge-perro">Perro</span>';
     var est=String(r[24]);
     var estB=est==='Si'?'<span class="badge badge-si">Enviado</span>':est.indexOf('migraci')>=0?'<span class="badge badge-pending">Migracion</span>':'<span class="badge badge-no">Pendiente</span>';
     var fecha=r[0]?new Date(r[0]).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'-';
-    var foto=r[5]&&String(r[5]).indexOf('http')>=0?'<img src="'+r[5]+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.style.display=\'none\'">':'<div style="width:40px;height:40px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px">🐾</div>';
+    var fotoSrc=String(r[27]||'');
+    var foto=fotoSrc.indexOf('http')>=0?'<img src="'+fotoSrc+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.style.display=\'none\'">':'<div style="width:40px;height:40px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px">🐾</div>';
     return '<tr><td>'+foto+'</td><td><strong>'+String(r[2]||'-')+'</strong><br><span style="font-size:11px;color:#888">'+String(r[3]||'')+'</span></td><td>'+esp+'</td><td style="font-size:12px">'+String(r[9]||'-')+'</td><td style="font-size:12px">'+String(r[10]||'-')+'</td><td style="font-size:11px;color:#534AB7">'+String(r[11]||'-')+'</td><td style="font-size:12px">'+String(r[16]||'-')+'</td><td style="font-size:11px;color:#888">'+fecha+'</td><td>'+estB+'</td><td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
   }).join('');
   document.getElementById('tableBody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
 }
+
+// ── Familias ──────────────────────────────────────────────────
 function renderFamilias(){
   var buscar=(document.getElementById('searchFamilia')?document.getElementById('searchFamilia').value||'':'').toLowerCase();
   var keys=Object.keys(familias).filter(function(k){var f=familias[k];return !buscar||f.dueno.toLowerCase().indexOf(buscar)>=0||k.indexOf(buscar)>=0;}).sort(function(a,b){return familias[b].mascotas.length-familias[a].mascotas.length;});
@@ -470,9 +510,11 @@ function viewFamilia(email){
   document.getElementById('modalFamiliaBody').innerHTML=html;
   document.getElementById('modalFamilia').classList.add('open');
 }
+
+// ── Ver ID ────────────────────────────────────────────────────
 function viewID(idx){
   var r=filtered[idx];
-  var foto=r[5]&&String(r[5]).indexOf('http')>=0?'<img src="'+r[5]+'" style="width:140px;height:175px;object-fit:cover">':'<div style="width:140px;height:175px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">🐾</div>';
+  var foto=String(r[27]||'').indexOf('http')>=0?'<img src="'+r[27]+'" style="width:140px;height:175px;object-fit:cover">':'<div style="width:140px;height:175px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">🐾</div>';
   var html='<div id="pngPreview" style="font-family:Arial,sans-serif;border-radius:12px;overflow:hidden">'
     +'<div style="background:#00B4B4;display:flex;align-items:stretch"><div style="flex-shrink:0;overflow:hidden">'+foto+'</div>'
     +'<div style="flex:1;padding:16px 20px 14px;display:flex;flex-direction:column;justify-content:flex-end"><div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.7);margin-bottom:4px">NOMBRE</div>'
@@ -499,8 +541,10 @@ function downloadID(){
     var a=document.createElement('a');a.download='PetzID.png';a.href=canvas.toDataURL('image/png');a.click();
   });
 }
+
+// ── Editar mascota ────────────────────────────────────────────
 function openEdit(idx){
-  editIdx=idx;var r=filtered[idx];
+  editIdx=idx; var r=filtered[idx];
   document.getElementById('modalEditTitle').textContent='Editar: '+String(r[2]||'');
   document.getElementById('modalEditBody').innerHTML=
     '<div class="two-col"><div><label>Nombre</label><input id="eNombre" value="'+String(r[2]||'')+'"></div><div><label>Apodo</label><input id="eApodo" value="'+String(r[3]||'')+'"></div></div>'
@@ -514,23 +558,54 @@ function openEdit(idx){
   document.getElementById('modalEdit').classList.add('open');
 }
 function saveEdit(){
-  if(editIdx===null)return;
+  if(editIdx===null) return;
   var r=filtered[editIdx];
-  r[2]=document.getElementById('eNombre').value;r[3]=document.getElementById('eApodo').value;
-  r[4]=document.getElementById('eEspecie').value;r[5]=document.getElementById('eSexo').value;
-  r[9]=document.getElementById('eZona').value;r[10]=document.getElementById('eDueno').value;
-  r[11]=document.getElementById('eEmail').value;r[12]=document.getElementById('eWA').value;
-  r[13]=document.getElementById('eVet').value;r[16]=document.getElementById('eAlimento').value;
+  r[2]=document.getElementById('eNombre').value; r[3]=document.getElementById('eApodo').value;
+  r[4]=document.getElementById('eEspecie').value; r[5]=document.getElementById('eSexo').value;
+  r[9]=document.getElementById('eZona').value; r[10]=document.getElementById('eDueno').value;
+  r[11]=document.getElementById('eEmail').value; r[12]=document.getElementById('eWA').value;
+  r[13]=document.getElementById('eVet').value; r[16]=document.getElementById('eAlimento').value;
   fetch('/api/admin?action=updateRow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:r[1],data:r})})
   .then(function(){buildFamilias();renderTable();renderFamilias();closeModal('modalEdit');alert('Guardado!');})
   .catch(function(){buildFamilias();renderTable();renderFamilias();closeModal('modalEdit');});
 }
+
 function reenviarID(idx){
   var r=filtered[idx];
-  if(!confirm('Reenviar PetzID a '+String(r[11])+'?'))return;
+  if(!confirm('Reenviar PetzID a '+String(r[11])+'?')) return;
   fetch('/api/admin?action=reenviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:r[1],email:r[11],nombre:r[2]})})
   .then(function(){alert('Reenviado a '+String(r[11]));}).catch(function(){alert('Error al reenviar');});
 }
+
+// ── Eliminar mascota ──────────────────────────────────────────
+// Corregido: usa /api/submit (proxy al Apps Script)
+// action: 'deleteMascota' borra UNA sola mascota por uid
+function eliminarMascota(idx){
+  var r=filtered[idx];
+  if(!r) return;
+  var nombre=String(r[2]||'');
+  var uid=String(r[1]||'').trim();
+  if(!uid){alert('UID no encontrado');return;}
+  if(!confirm('¿Eliminar a '+nombre+'? Esta acción no se puede deshacer.')) return;
+
+  fetch('/api/submit',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'deleteMascota',uid:uid})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      allData=allData.filter(function(r){return String(r[1]).trim()!==uid;});
+      filtered=filtered.filter(function(r){return String(r[1]).trim()!==uid;});
+      renderTable();
+      alert('✅ Mascota eliminada');
+    } else {
+      alert('Error al eliminar');
+    }
+  }).catch(function(){alert('Error de conexión');});
+}
+
+// ── Campañas ──────────────────────────────────────────────────
 function renderCampanas(){
   var html=campanas.map(function(c){
     var f=c[0]?new Date(c[0]).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'-';
@@ -538,309 +613,186 @@ function renderCampanas(){
   }).join('');
   document.getElementById('campanaBody').innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:#888">Sin campanas</td></tr>';
 }
-function closeModal(id){document.getElementById(id).classList.remove('open');}
 
-// ── Subir foto admin ─────────────────────────────────────────
-var adminFotoBase64 = null;
-var adminFotoUID    = null;
-var adminFotoTab    = 'upload';
-var CLOUD_NAME      = 'dh5wgqgmk';
-var UPLOAD_PRESET   = 'petzid';
-
+// ── Modal foto ────────────────────────────────────────────────
 function abrirSubirFoto(idx){
-  var r = filtered[idx];
-  if(!r) return;
-  adminFotoUID    = String(r[1]||'').trim();
-  adminFotoBase64 = null;
-  document.getElementById('fotoMascotaInfo').textContent = String(r[2]||'') + ' — ' + String(r[11]||'');
-  document.getElementById('fotoPreviewImg').style.display = 'none';
-  document.getElementById('fotoLinkInput').value = '';
-  document.getElementById('fotoLinkPreview').style.display = 'none';
-  document.getElementById('btnSubirFoto').disabled = true;
+  var r=filtered[idx]; if(!r) return;
+  adminFotoUID=String(r[1]||'').trim();
+  adminFotoBase64=null;
+  document.getElementById('fotoMascotaInfo').textContent=String(r[2]||'')+' — '+String(r[11]||'');
+  document.getElementById('fotoPreviewImg').style.display='none';
+  document.getElementById('fotoLinkInput').value='';
+  document.getElementById('fotoLinkPreview').style.display='none';
+  document.getElementById('btnSubirFoto').disabled=true;
   switchFotoTab('upload');
   document.getElementById('modalFoto').classList.add('open');
 }
-
 function switchFotoTab(tab){
-  adminFotoTab = tab;
-  adminFotoBase64 = null;
-  document.getElementById('panelUpload').style.display = tab==='upload' ? 'block' : 'none';
-  document.getElementById('panelLink').style.display   = tab==='link'   ? 'block' : 'none';
-  document.getElementById('tabUpload').style.cssText = tab==='upload'
-    ? 'flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)'
-    : 'flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer';
-  document.getElementById('tabLink').style.cssText = tab==='link'
-    ? 'flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)'
-    : 'flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer';
-  document.getElementById('btnSubirFoto').disabled = true;
+  adminFotoTab=tab; adminFotoBase64=null;
+  document.getElementById('panelUpload').style.display=tab==='upload'?'block':'none';
+  document.getElementById('panelLink').style.display=tab==='link'?'block':'none';
+  document.getElementById('tabUpload').style.cssText=tab==='upload'
+    ?'flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)'
+    :'flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer';
+  document.getElementById('tabLink').style.cssText=tab==='link'
+    ?'flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)'
+    :'flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer';
+  document.getElementById('btnSubirFoto').disabled=true;
 }
-
 function onLinkChange(){
-  var url = document.getElementById('fotoLinkInput').value.trim();
-  var preview = document.getElementById('fotoLinkPreview');
+  var url=document.getElementById('fotoLinkInput').value.trim();
+  var preview=document.getElementById('fotoLinkPreview');
   if(url.indexOf('http')===0){
-    preview.src = url;
-    document.getElementById('btnSubirFoto').disabled = false;
+    preview.src=url;
+    document.getElementById('btnSubirFoto').disabled=false;
   } else {
-    preview.style.display = 'none';
-    document.getElementById('btnSubirFoto').disabled = true;
+    preview.style.display='none';
+    document.getElementById('btnSubirFoto').disabled=true;
   }
 }
-
 function onAdminFotoChange(e){
-  var file = e.target.files[0];
-  if(!file) return;
-  var reader = new FileReader();
-  reader.onload = function(ev){
-    var dataUrl = ev.target.result;
-    var preview = document.getElementById('fotoPreviewImg');
-    preview.src = dataUrl;
-    preview.style.display = 'block';
-    var canvas = document.createElement('canvas');
-    var img    = new Image();
-    img.onload = function(){
-      var MAX=800, w=img.width, h=img.height;
+  var file=e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var dataUrl=ev.target.result;
+    var preview=document.getElementById('fotoPreviewImg');
+    preview.src=dataUrl; preview.style.display='block';
+    var canvas=document.createElement('canvas'), img=new Image();
+    img.onload=function(){
+      var MAX=800,w=img.width,h=img.height;
       if(w>MAX){h=h*(MAX/w);w=MAX;}
       if(h>MAX){w=w*(MAX/h);h=MAX;}
       canvas.width=w; canvas.height=h;
       canvas.getContext('2d').drawImage(img,0,0,w,h);
-      adminFotoBase64 = canvas.toDataURL('image/jpeg',0.85).split(',')[1];
-      document.getElementById('btnSubirFoto').disabled = false;
+      adminFotoBase64=canvas.toDataURL('image/jpeg',0.85).split(',')[1];
+      document.getElementById('btnSubirFoto').disabled=false;
     };
-    img.src = dataUrl;
+    img.src=dataUrl;
   };
   reader.readAsDataURL(file);
 }
-
 async function subirFotoAdmin(){
-  var btn = document.getElementById('btnSubirFoto');
-  btn.disabled = true;
-  var url = null;
-
-  if(adminFotoTab === 'link'){
-    // Usar URL directamente
-    url = document.getElementById('fotoLinkInput').value.trim();
-    if(!url){ alert('Ingresa un link válido'); btn.disabled=false; return; }
+  var btn=document.getElementById('btnSubirFoto');
+  btn.disabled=true;
+  var url=null;
+  if(adminFotoTab==='link'){
+    url=document.getElementById('fotoLinkInput').value.trim();
+    if(!url){alert('Ingresa un link válido');btn.disabled=false;return;}
   } else {
-    // Subir a Cloudinary
-    if(!adminFotoBase64){ alert('Selecciona una foto'); btn.disabled=false; return; }
-    btn.textContent = 'Subiendo...';
-    var fd = new FormData();
-    fd.append('file', 'data:image/jpeg;base64,' + adminFotoBase64);
-    fd.append('upload_preset', UPLOAD_PRESET);
-    fd.append('folder', 'petzid');
-    try {
-      var res  = await fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', {method:'POST', body:fd});
-      var data = await res.json();
-      url = data.secure_url;
+    if(!adminFotoBase64){alert('Selecciona una foto');btn.disabled=false;return;}
+    btn.textContent='Subiendo...';
+    var fd=new FormData();
+    fd.append('file','data:image/jpeg;base64,'+adminFotoBase64);
+    fd.append('upload_preset',UPLOAD_PRESET);
+    fd.append('folder','petzid');
+    try{
+      var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
+      var data=await res.json();
+      url=data.secure_url;
       if(!url) throw new Error('Sin URL de Cloudinary');
-    } catch(err) {
-      alert('Error subiendo foto: ' + err.message);
-      btn.disabled=false; btn.textContent='Guardar foto';
-      return;
-    }
+    }catch(err){alert('Error subiendo foto: '+err.message);btn.disabled=false;btn.textContent='Guardar foto';return;}
   }
-
-  // Guardar URL en Apps Script + Supabase
-  btn.textContent = 'Guardando...';
-  try {
-    var resp = await fetch('/api/admin?action=updateRow', {
+  btn.textContent='Guardando...';
+  try{
+    var resp=await fetch('/api/submit',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({action:'updateRow', uid:adminFotoUID, data:{foto:url}})
+      body:JSON.stringify({action:'updateRow',uid:adminFotoUID,data:{foto:url}})
     });
-    var result = await resp.json();
+    var result=await resp.json();
     if(result.ok){
       alert('✅ Foto guardada!');
-      document.getElementById('modalFoto').classList.remove('open');
-      allData.forEach(function(r){ if(String(r[1]).trim()===adminFotoUID) r[27]=url; });
-      filtered = allData.filter(function(r){
-        var tieneFoto=String(r[27]||'').indexOf('http')>=0;
-        var ft=document.getElementById('filterFoto').value;
-        if(ft==='sin_foto'&&tieneFoto)return false;
-        if(ft==='con_foto'&&!tieneFoto)return false;
-        return true;
-      });
+      closeModal('modalFoto');
+      allData.forEach(function(r){if(String(r[1]).trim()===adminFotoUID)r[27]=url;});
       renderTable();
     } else {
       alert('Error al guardar');
     }
-  } catch(err) {
-    alert('Error: ' + err.message);
-  }
+  }catch(err){alert('Error: '+err.message);}
   btn.disabled=false; btn.textContent='Guardar foto';
 }
 
-// ── Sync Supabase ────────────────────────────────────────────
+// ── Sync Supabase ─────────────────────────────────────────────
+// Usa /api/galeria para no exponer la service_role key en el cliente
 async function syncSupabase(){
-  var btn = document.getElementById('btnSync');
-  var status = document.getElementById('syncStatus');
-  btn.disabled = true;
-  btn.textContent = '⏳ Sincronizando...';
-  status.style.display = 'block';
-  status.textContent = 'Preparando datos...';
+  var btn=document.getElementById('btnSync');
+  var status=document.getElementById('syncStatus');
+  btn.disabled=true; btn.textContent='⏳ Sincronizando...';
+  status.style.display='block'; status.textContent='Preparando datos...';
 
-  var SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
-  var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
-
-  // Tomar los datos actuales de allData
-  var payloads = [];
+  var payloads=[];
   allData.forEach(function(r){
-    var uid    = String(r[1]||'').trim();
-    var nombre = String(r[2]||'').trim();
-    if(!uid || !nombre) return;
+    var uid=String(r[1]||'').trim(), nombre=String(r[2]||'').trim();
+    if(!uid||!nombre) return;
     payloads.push({
-      uid:           uid,
-      nombre:        nombre,
-      apodo:         String(r[3] ||'').trim(),
-      especie:       String(r[4] ||'').trim(),
-      sexo:          String(r[5] ||'').trim(),
-      raza:          String(r[6] ||'').trim(),
-      tipo_fecha:    String(r[7] ||'').trim(),
-      fecha:         String(r[8] ||'').trim(),
-      zona:          String(r[9] ||'').trim(),
-      dueno:         String(r[10]||'').trim(),
-      email:         String(r[11]||'').trim().toLowerCase(),
-      whatsapp:      String(r[12]||'').trim(),
-      veterinario:   String(r[13]||'').trim(),
-      instagram:     String(r[15]||'').trim(),
-      alimento:      String(r[16]||'').trim(),
-      actividades:   String(r[18]||'').trim(),
-      especial:      String(r[23]||'').trim(),
-      foto:          String(r[27]||'').trim(),
-      angelito:      String(r[28]||'').trim().toLowerCase()==='si',
+      uid:uid, nombre:nombre, apodo:String(r[3]||'').trim(),
+      especie:String(r[4]||'').trim(), sexo:String(r[5]||'').trim(),
+      raza:String(r[6]||'').trim(), tipo_fecha:String(r[7]||'').trim(),
+      fecha:String(r[8]||'').trim(), zona:String(r[9]||'').trim(),
+      dueno:String(r[10]||'').trim(), email:String(r[11]||'').trim().toLowerCase(),
+      whatsapp:String(r[12]||'').trim(), veterinario:String(r[13]||'').trim(),
+      instagram:String(r[15]||'').trim(), alimento:String(r[16]||'').trim(),
+      actividades:String(r[18]||'').trim(), especial:String(r[23]||'').trim(),
+      foto:String(r[27]||'').trim(),
+      angelito:String(r[28]||'').trim().toLowerCase()==='si',
       fecha_angelito:String(r[29]||'').trim(),
       notif_mensajes:String(r[30]||'').trim()!=='No',
-      ofertas:       String(r[20]||'').trim()!=='No',
+      ofertas:String(r[20]||'').trim()!=='No',
       correo_enviado:String(r[24]||'').trim()
     });
   });
 
-  var LOTE = 50;
-  var migradas = 0, errores = 0;
-  var total = payloads.length;
-
-  for(var i = 0; i < payloads.length; i += LOTE){
-    var lote = payloads.slice(i, i + LOTE);
-    status.textContent = 'Sincronizando ' + Math.min(i+LOTE, total) + ' de ' + total + '...';
-    try {
-      var res = await fetch(SUPABASE_URL + '/rest/v1/mascotas?on_conflict=uid', {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'apikey':        SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Prefer':        'resolution=merge-duplicates,return=minimal'
-        },
-        body: JSON.stringify(lote)
+  // Enviar en lotes a través del servidor (sin exponer keys)
+  var LOTE=50, migradas=0, errores=0, total=payloads.length;
+  for(var i=0;i<payloads.length;i+=LOTE){
+    var lote=payloads.slice(i,i+LOTE);
+    status.textContent='Sincronizando '+Math.min(i+LOTE,total)+' de '+total+'...';
+    try{
+      var res=await fetch('/api/galeria',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'syncMascotas',mascotas:lote})
       });
-      if(res.ok || res.status===204){ migradas += lote.length; }
-      else { errores += lote.length; }
-    } catch(e) { errores += lote.length; }
+      var d=await res.json();
+      if(d.ok){migradas+=lote.length;}else{errores+=lote.length;}
+    }catch(e){errores+=lote.length;}
   }
-
-  btn.disabled = false;
-  btn.textContent = '🔄 Sync Supabase';
-  status.style.background = errores > 0 ? '#fbeaf0' : '#e0f7f7';
-  status.style.borderColor = errores > 0 ? '#f4c0d1' : '#00B4B4';
-  status.style.color = errores > 0 ? '#993556' : '#007a7a';
-  status.textContent = '✅ Sync completado — ' + migradas + ' actualizadas, ' + errores + ' errores';
-  setTimeout(function(){ status.style.display='none'; }, 5000);
+  btn.disabled=false; btn.textContent='🔄 Sync Supabase';
+  status.style.background=errores>0?'#fbeaf0':'#e0f7f7';
+  status.style.borderColor=errores>0?'#f4c0d1':'#00B4B4';
+  status.style.color=errores>0?'#993556':'#007a7a';
+  status.textContent='✅ Sync completado — '+migradas+' actualizadas, '+errores+' errores';
+  setTimeout(function(){status.style.display='none';},5000);
 }
 
-// ── Eliminar mascota admin ────────────────────────────────────
-function eliminarMascota(idx){
-  var r = filtered[idx];
-  if(!r) return;
-  var nombre = String(r[2]||'');
-  var uid    = String(r[1]||'').trim();
-  if(!confirm('¿Eliminar a ' + nombre + '? Esta acción no se puede deshacer.')) return;
-
-  fetch('/api/admin?action=updateRow', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({action:'deleteMascota', uid:uid})
-  }).then(function(r){return r.json();})
-  .then(function(d){
-    if(d.ok){
-      allData = allData.filter(function(r){ return String(r[1]).trim()!==uid; });
-      filtered = filtered.filter(function(r){ return String(r[1]).trim()!==uid; });
-      renderTable();
-      alert('✅ Mascota eliminada');
-    } else {
-      alert('Error al eliminar');
-    }
-  }).catch(function(){ alert('Error de conexión'); });
-}
-
-// ── Supabase Admin ────────────────────────────────────────────
-var SB_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
-var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
-var editingEventoId = null;
-var editingLugarId  = null;
-
-// EVENTOS
-function cerrarModalEvento(){var m=document.getElementById("modalEvento");if(m)m.remove();}
-function cerrarModalLugar(){var m=document.getElementById("modalLugar");if(m)m.remove();}
-
-
-function toggleActivoEvento(i){
-  var e=window._eventosData[i]; if(!e)return;
-  fetch(SB_URL+'/rest/v1/eventos?id=eq.'+e.id,{
-    method:'PATCH',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'},
-    body:JSON.stringify({activo:!e.activo})
-  }).then(function(){cargarEventosAdmin();});
-}
-function editarEvento(i){location.href='/admin-evento.html?id='+(window._eventosData[i]||{}).id;}
-function eliminarEvento(i){
-  if(!confirm('Eliminar?'))return;
-  var id=(window._eventosData[i]||{}).id;
-  // Primero eliminar asistentes, luego el evento
-  fetch(SB_URL+'/rest/v1/evento_asistentes?evento_id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}})
-  .then(function(){
-    return fetch(SB_URL+'/rest/v1/eventos?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-  }).then(function(){cargarEventosAdmin();});
-}
-
-function cargarLugaresAdmin(){
-  fetch(SB_URL+'/rest/v1/lugares?select=*&order=nombre.asc',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}})
+// ── Eventos y Lugares (vía /api/galeria, sin keys en cliente) ─
+function cargarEventosAdmin(){
+  fetch('/api/galeria?action=getEventosAdmin')
   .then(function(r){return r.json();})
   .then(function(data){
-    document.getElementById('subLugares').textContent=data.length+' lugares';
-    if(!data.length){document.getElementById('lugaresAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay lugares. <a href="/admin-lugar.html" style="color:#E05090;font-weight:700">Crear el primero</a></div>';return;}
-    window._lugaresData=data;
-    var html='<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Zona</th><th>Rating</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
-    data.forEach(function(l,i){
-      html+='<tr><td style="font-weight:700">'+l.nombre+'</td><td>'+l.tipo+'</td><td>'+(l.zona?'Z.'+l.zona:'-')+'</td><td>'+(l.rating||'-')+'</td>';
-      html+='<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(l.activo?'#e0f7f7':'#fbeaf0')+';color:'+(l.activo?'#007a7a':'#c0392b')+'">'+(l.activo?'Activo':'Inactivo')+'</span></td>';
+    data=data.eventos||data||[];
+    document.getElementById('subEventos').textContent=data.length+' eventos';
+    if(!data.length){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay eventos. <a href="/admin-evento.html" style="color:#00B4B4;font-weight:700">Crear el primero</a></div>';return;}
+    window._eventosData=data;
+    var html='<div class="table-wrap"><table><thead><tr><th>Titulo</th><th>Tipo</th><th>Fecha</th><th>Lugar</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
+    data.forEach(function(e,i){
+      html+='<tr><td style="font-weight:700">'+e.titulo+'</td><td>'+e.tipo+'</td><td>'+(e.fecha||'-')+'</td><td>'+(e.lugar||'-')+'</td>';
+      html+='<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(e.activo?'#e0f7f7':'#fbeaf0')+';color:'+(e.activo?'#007a7a':'#c0392b')+'">'+(e.activo?'Activo':'Inactivo')+'</span></td>';
       html+='<td style="display:flex;gap:4px">';
-      html+='<button class="btn-sm" style="background:'+(l.activo?'#fbeaf0':'#e0f7f7')+';color:'+(l.activo?'#c0392b':'#007a7a')+'" onclick="toggleActivoLugar('+i+')">'+( l.activo?'Desactivar':'Activar')+'</button>';
-      html+='<button class="btn-sm btn-edit" onclick="editarLugar('+i+')">Editar</button> ';
-      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarLugar('+i+')">Eliminar</button></td></tr>';
+      html+='<button class="btn-sm" style="background:'+(e.activo?'#fbeaf0':'#e0f7f7')+';color:'+(e.activo?'#c0392b':'#007a7a')+'" onclick="toggleActivoEvento('+i+')">'+(e.activo?'Desactivar':'Activar')+'</button>';
+      html+='<button class="btn-sm btn-edit" onclick="editarEvento('+i+')">Editar</button>';
+      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarEvento('+i+')">Eliminar</button></td></tr>';
     });
     html+='</tbody></table></div>';
-    document.getElementById('lugaresAdminWrap').innerHTML=html;
-  }).catch(function(e){document.getElementById('lugaresAdminWrap').innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
-}
-function toggleActivoLugar(i){
-  var l=window._lugaresData[i]; if(!l)return;
-  fetch(SB_URL+'/rest/v1/lugares?id=eq.'+l.id,{
-    method:'PATCH',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'},
-    body:JSON.stringify({activo:!l.activo})
-  }).then(function(){cargarLugaresAdmin();});
-}
-function editarLugar(i){location.href='/admin-lugar.html?id='+(window._lugaresData[i]||{}).id;}
-function eliminarLugar(i){
-  if(!confirm('Eliminar?'))return;
-  var id=(window._lugaresData[i]||{}).id;
-  fetch(SB_URL+'/rest/v1/lugares?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}).then(function(){cargarLugaresAdmin();});
+    document.getElementById('eventosAdminWrap').innerHTML=html;
+  }).catch(function(e){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
 }
 
 function filtrarEventosPendientes(){
-  fetch(SB_URL+'/rest/v1/eventos?activo=eq.false&select=*&order=created_at.desc',{
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
-  }).then(function(r){return r.json();})
+  fetch('/api/galeria?action=getEventosPendientes')
+  .then(function(r){return r.json();})
   .then(function(data){
+    data=data.eventos||data||[];
     document.getElementById('subEventos').textContent=data.length+' pendientes de aprobacion';
     if(!data.length){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay eventos pendientes</div>';return;}
     window._eventosData=data;
@@ -858,64 +810,64 @@ function filtrarEventosPendientes(){
   });
 }
 
-function aprobarEvento(i){
-  var id=(window._eventosData[i]||{}).id;
-  fetch(SB_URL+'/rest/v1/eventos?id=eq.'+id,{
-    method:'PATCH',
-    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'},
-    body:JSON.stringify({activo:true})
-  }).then(function(){filtrarEventosPendientes();});
-}
-
-function cargarEventosAdmin(){
-  fetch(SB_URL+'/rest/v1/eventos?select=*&order=fecha.asc',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}})
-  .then(function(r){return r.json();})
-  .then(function(data){
-    document.getElementById('subEventos').textContent=data.length+' eventos';
-    if(!data.length){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay eventos. <a href="/admin-evento.html" style="color:#00B4B4;font-weight:700">Crear el primero</a></div>';return;}
-    window._eventosData=data;
-    var html='<div class="table-wrap"><table><thead><tr><th>Titulo</th><th>Tipo</th><th>Fecha</th><th>Lugar</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
-    data.forEach(function(e,i){
-      html+='<tr><td style="font-weight:700">'+e.titulo+'</td><td>'+e.tipo+'</td><td>'+(e.fecha||'-')+'</td><td>'+(e.lugar||'-')+'</td>';
-      html+='<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(e.activo?'#e0f7f7':'#fbeaf0')+';color:'+(e.activo?'#007a7a':'#c0392b')+'">'+(e.activo?'Activo':'Inactivo')+'</span></td>';
-      html+='<td style="display:flex;gap:4px">';
-      html+='<button class="btn-sm" style="background:'+(e.activo?'#fbeaf0':'#e0f7f7')+';color:'+(e.activo?'#c0392b':'#007a7a')+'" onclick="toggleActivoEvento('+i+')">'+( e.activo?'Desactivar':'Activar')+'</button>';
-      html+='<button class="btn-sm btn-edit" onclick="editarEvento('+i+')">Editar</button> ';
-      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarEvento('+i+')">Eliminar</button></td></tr>';
-    });
-    html+='</tbody></table></div>';
-    document.getElementById('eventosAdminWrap').innerHTML=html;
-  }).catch(function(e){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
-}
 function toggleActivoEvento(i){
-  var e=window._eventosData[i]; if(!e)return;
-  fetch(SB_URL+'/rest/v1/eventos?id=eq.'+e.id,{
-    method:'PATCH',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=minimal'},
-    body:JSON.stringify({activo:!e.activo})
+  var e=window._eventosData[i]; if(!e) return;
+  fetch('/api/galeria',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'toggleEvento',id:e.id,activo:!e.activo})
   }).then(function(){cargarEventosAdmin();});
+}
+function aprobarEvento(i){
+  var e=window._eventosData[i]; if(!e) return;
+  fetch('/api/galeria',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'toggleEvento',id:e.id,activo:true})
+  }).then(function(){filtrarEventosPendientes();});
 }
 function editarEvento(i){location.href='/admin-evento.html?id='+(window._eventosData[i]||{}).id;}
 function eliminarEvento(i){
-  if(!confirm('Eliminar?'))return;
+  if(!confirm('Eliminar?')) return;
   var id=(window._eventosData[i]||{}).id;
-  // Primero eliminar asistentes, luego el evento
-  fetch(SB_URL+'/rest/v1/evento_asistentes?evento_id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}})
-  .then(function(){
-    return fetch(SB_URL+'/rest/v1/eventos?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+  fetch('/api/galeria',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'eliminarEvento',id:id})
   }).then(function(){cargarEventosAdmin();});
 }
-</script>
 
-      <!-- Gráficas adicionales -->
-      <div class="charts-grid" style="grid-template-columns:1fr 1fr 1fr">
-        <div class="chart-card"><div class="chart-title">🐕 Top Razas</div><div id="chartRazas"></div></div>
-        <div class="chart-card"><div class="chart-title">📷 Estado fotos</div><div id="chartFotos"></div></div>
-        <div class="chart-card"><div class="chart-title">🎂 Cumpleaños por mes</div><div id="chartCumples"></div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
-        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Sin foto</div><div id="statSinFoto" style="font-size:28px;font-weight:900;color:#E05090">-</div></div>
-        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Angelitos</div><div id="statAngelitos" style="font-size:28px;font-weight:900;color:#764ba2">-</div></div>
-        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Familias únicas</div><div id="statFamilias" style="font-size:28px;font-weight:900;color:#00B4B4">-</div></div>
-        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Este mes</div><div id="statEsteMes" style="font-size:28px;font-weight:900;color:#F5C842">-</div></div>
-      </div>
-    </div>
+function cargarLugaresAdmin(){
+  fetch('/api/galeria?action=getLugaresAdmin')
+  .then(function(r){return r.json();})
+  .then(function(data){
+    data=data.lugares||data||[];
+    document.getElementById('subLugares').textContent=data.length+' lugares';
+    if(!data.length){document.getElementById('lugaresAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay lugares. <a href="/admin-lugar.html" style="color:#E05090;font-weight:700">Crear el primero</a></div>';return;}
+    window._lugaresData=data;
+    var html='<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Zona</th><th>Rating</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
+    data.forEach(function(l,i){
+      html+='<tr><td style="font-weight:700">'+l.nombre+'</td><td>'+l.tipo+'</td><td>'+(l.zona?'Z.'+l.zona:'-')+'</td><td>'+(l.rating||'-')+'</td>';
+      html+='<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(l.activo?'#e0f7f7':'#fbeaf0')+';color:'+(l.activo?'#007a7a':'#c0392b')+'">'+(l.activo?'Activo':'Inactivo')+'</span></td>';
+      html+='<td style="display:flex;gap:4px">';
+      html+='<button class="btn-sm" style="background:'+(l.activo?'#fbeaf0':'#e0f7f7')+';color:'+(l.activo?'#c0392b':'#007a7a')+'" onclick="toggleActivoLugar('+i+')">'+(l.activo?'Desactivar':'Activar')+'</button>';
+      html+='<button class="btn-sm btn-edit" onclick="editarLugar('+i+')">Editar</button>';
+      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarLugar('+i+')">Eliminar</button></td></tr>';
+    });
+    html+='</tbody></table></div>';
+    document.getElementById('lugaresAdminWrap').innerHTML=html;
+  }).catch(function(e){document.getElementById('lugaresAdminWrap').innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
+}
+function toggleActivoLugar(i){
+  var l=window._lugaresData[i]; if(!l) return;
+  fetch('/api/galeria',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'toggleLugar',id:l.id,activo:!l.activo})
+  }).then(function(){cargarLugaresAdmin();});
+}
+function editarLugar(i){location.href='/admin-lugar.html?id='+(window._lugaresData[i]||{}).id;}
+function eliminarLugar(i){
+  if(!confirm('Eliminar?')) return;
+  var id=(window._lugaresData[i]||{}).id;
+  fetch('/api/galeria',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'eliminarLugar',id:id})
+  }).then(function(){cargarLugaresAdmin();});
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+</script>
+</body>
+</html>
