@@ -562,12 +562,17 @@ export default async function handler(req, res) {
       });
       return res.status(200).json({ ok: r.ok });
     }
-    fetch('/api/galeria?action=marcarAparecio', {
-  method: 'POST',
-  headers: {'Content-Type': 'application/json'},
-  body: JSON.stringify({actividad_id: '27cdcd2c-65e8-4951-aca2-094330802df7'})
+    
 }).then(function(r){ return r.json(); }).then(function(d){ console.log(d); });
-
+if (action === 'marcarAparecio' && req.method === 'POST') {
+      const { actividad_id } = req.body;
+      if (!actividad_id) return res.status(200).json({ ok: false, error: 'id requerido' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
     return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
