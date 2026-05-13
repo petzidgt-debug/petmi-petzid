@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Promos PetzID — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+
+.hero{background:linear-gradient(135deg,#764ba2,#E05090);padding:36px 20px;text-align:center}
+.hero h1{font-size:24px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:6px}
+.hero h1 span{color:#F5C842}
+.hero p{font-size:13px;color:rgba(255,255,255,.8);line-height:1.6;max-width:400px;margin:0 auto}
+
+/* Tabs basico/premium */
+.tabs-wrap{background:#fff;border-bottom:1px solid #eee;padding:12px 16px;display:flex;gap:8px;position:sticky;top:0;z-index:90}
+.tab-btn{flex:1;padding:10px;border-radius:10px;border:1.5px solid #ddd;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:#888;transition:all .2s;text-align:center}
+.tab-btn.active-basic{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
+.tab-btn.active-premium{border-color:#764ba2;background:#f3e8ff;color:#5a3d8a}
+
+/* Sesion banner */
+.session-banner{background:#fff3cd;border-bottom:1px solid #ffc107;padding:10px 16px;display:flex;align-items:center;gap:10px;font-size:13px;color:#856404}
+.session-banner.premium{background:#f3e8ff;border-color:#764ba2;color:#5a3d8a}
+.session-banner.loggedin{background:#e0f7f7;border-color:#00B4B4;color:#007a7a}
+
+/* Grid promos */
+.wrap{max-width:600px;margin:0 auto;padding:16px}
+.promos-grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:480px){.promos-grid{grid-template-columns:1fr 1fr}}
+
+/* Promo card */
+.promo-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);position:relative}
+.promo-card.premium-card{border:2px solid #764ba2}
+.promo-badge-premium{position:absolute;top:10px;right:10px;background:#764ba2;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;z-index:2}
+.promo-img{width:100%;height:140px;object-fit:cover;background:linear-gradient(135deg,#e0f7f7,#f3e8ff);display:flex;align-items:center;justify-content:center;font-size:48px}
+.promo-img img{width:100%;height:140px;object-fit:cover}
+.promo-body{padding:14px}
+.promo-aliado{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.promo-titulo{font-size:15px;font-weight:900;color:#222;margin-bottom:6px;line-height:1.3}
+.promo-desc{font-size:12px;color:#777;line-height:1.6;margin-bottom:12px}
+.promo-descuento{display:inline-block;background:#fff0e8;color:#c0392b;font-size:14px;font-weight:900;padding:4px 10px;border-radius:8px;margin-bottom:10px}
+.promo-especie{display:inline-block;background:#e0f7f7;color:#007a7a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px}
+.promo-vence{font-size:11px;color:#aaa;margin-bottom:10px}
+
+/* Codigo de descuento */
+.codigo-wrap{background:#f8f8f8;border-radius:10px;padding:12px;display:flex;align-items:center;gap:8px;margin-top:4px}
+.codigo-lbl{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.codigo-val{font-size:18px;font-weight:900;color:#222;font-family:monospace;letter-spacing:2px}
+.btn-copiar{padding:6px 12px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.btn-copiar.copiado{background:#2e7d32}
+
+/* Codigo bloqueado */
+.codigo-lock{background:#f0f0ee;border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;margin-top:4px;cursor:pointer}
+.lock-icon{font-size:20px}
+.lock-txt{font-size:12px;color:#888;line-height:1.4}
+.lock-txt strong{color:#764ba2}
+
+/* Empty */
+.empty{text-align:center;padding:60px 20px;color:#bbb}
+.empty-icon{font-size:48px;margin-bottom:12px}
+
+/* Spinner */
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#764ba2;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* Login modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px}
+
+/* Premium CTA */
+.premium-cta{background:linear-gradient(135deg,#764ba2,#E05090);border-radius:16px;padding:24px;text-align:center;margin:20px 0}
+.premium-cta h3{font-size:18px;font-weight:900;color:#fff;margin-bottom:6px}
+.premium-cta p{font-size:13px;color:rgba(255,255,255,.8);margin-bottom:16px;line-height:1.5}
+.btn-premium{display:inline-block;padding:11px 24px;background:#F5C842;color:#1a1a1a;border-radius:24px;font-size:14px;font-weight:900;border:none;cursor:pointer;text-decoration:none}
+
+.footer{background:#1a1a2e;padding:20px;text-align:center;margin-top:24px}
+.footer-brand{font-size:15px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff}
+.footer-brand span{color:#F5C842}
+.footer-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Promos <span>PetzID</span></h1>
+  <p>Beneficios exclusivos para la comunidad pet lover de Guatemala</p>
+</div>
+
+<div class="tabs-wrap">
+  <button class="tab-btn active-basic" id="tabBasico" onclick="setTab('basico')">🐾 Para todos</button>
+  <button class="tab-btn" id="tabPremium" onclick="setTab('premium')">⭐ Premium</button>
+</div>
+
+<div id="sessionBanner"></div>
+
+<div class="wrap">
+  <div id="promosWrap"><div class="spinner"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Modal login -->
+<div class="modal-overlay" id="loginOverlay">
+  <div class="modal-box">
+    <div style="position:relative">
+      <button onclick="closeLogin()" style="position:absolute;top:-8px;right:-8px;width:28px;height:28px;background:#f0f0ee;border:none;border-radius:50%;font-size:16px;cursor:pointer">×</button>
+    </div>
+    <div style="font-size:20px;font-weight:900;color:#222;margin-bottom:6px">Ingresa para ver tu código</div>
+    <div style="font-size:13px;color:#888;margin-bottom:20px">Usa el correo con el que registraste a tu mascota</div>
+    <div id="loginMsg" style="font-size:13px;text-align:center;padding:8px;border-radius:8px;margin-bottom:10px;display:none"></div>
+    <input type="email" id="loginEmail" placeholder="tu@correo.com" inputmode="email"
+      style="width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;outline:none;margin-bottom:12px">
+    <button onclick="verificarEmail()" id="btnLogin"
+      style="width:100%;padding:14px;background:#764ba2;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">
+      Ingresar
+    </button>
+    <button onclick="closeLogin()"
+      style="width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">
+      Cancelar
+    </button>
+  </div>
+</div>
+
+<script>
+var sessionEmail  = localStorage.getItem('petzid_email') || '';
+var esPremium     = false;
+var tabActual     = 'basico';
+var promosPendingCodigo = null; // promo que espera login para mostrar codigo
+
+// Verificar si es premium
+if(sessionEmail){
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.found&&d.mascotas&&d.mascotas.length){
+        var m=d.mascotas[0];
+        esPremium=m.premium===true||m.premium==='true';
+        renderBanner();
+        cargarPromos();
+      } else {
+        renderBanner();
+        cargarPromos();
+      }
+    });
+} else {
+  renderBanner();
+  cargarPromos();
+}
+
+function renderBanner(){
+  var b=document.getElementById('sessionBanner');
+  if(!sessionEmail){
+    b.className='session-banner';
+    b.innerHTML='<span style="font-size:16px">🔑</span><span><strong>Inicia sesión</strong> para ver los códigos de descuento · <button onclick="openLogin()" style="background:none;border:none;color:#856404;font-weight:700;cursor:pointer;text-decoration:underline">Ingresar</button></span>';
+  } else if(esPremium){
+    b.className='session-banner premium';
+    b.innerHTML='<span style="font-size:16px">⭐</span><span>Eres <strong>Premium</strong> — tienes acceso a todas las promos</span>';
+  } else {
+    b.className='session-banner loggedin';
+    b.innerHTML='<span style="font-size:16px">🐾</span><span>Hola! Tienes acceso a las promos básicas · <button onclick="setTab(\'premium\')" style="background:none;border:none;color:#007a7a;font-weight:700;cursor:pointer;text-decoration:underline">Ver Premium →</button></span>';
+  }
+}
+
+var todasPromos=[];
+function setTab(tab){
+  tabActual=tab;
+  document.getElementById('tabBasico').className='tab-btn'+(tab==='basico'?' active-basic':'');
+  document.getElementById('tabPremium').className='tab-btn'+(tab==='premium'?' active-premium':'');
+  if(todasPromos.length) renderPromos(filtrarPromos(todasPromos));
+  else cargarPromos();
+}
+function filtrarPromos(promos){
+  if(tabActual==='basico') return promos.filter(function(p){return p.nivel==='basico';});
+  return promos; // tab premium muestra todas
+}
+
+function cargarPromos(){
+  document.getElementById('promosWrap').innerHTML='<div class="spinner"></div>';
+  fetch('/api/galeria?action=getPromos&nivel=todos')
+    .then(function(r){return r.json();})
+    .then(function(d){renderPromos(d.promos||[]);})
+    .catch(function(){document.getElementById('promosWrap').innerHTML='<div class="empty"><div class="empty-icon">😕</div><p>Error al cargar promos</p></div>';});
+}
+
+function renderPromos(promos){
+  var wrap=document.getElementById('promosWrap');
+
+  if(!promos.length){
+    wrap.innerHTML='<div class="empty"><div class="empty-icon">🎁</div><p style="font-size:14px;font-weight:700;color:#555">Promos próximamente</p><p style="font-size:13px;color:#aaa;margin-top:6px">Estamos cerrando alianzas para ti</p></div>';
+    return;
+  }
+
+  var html='<div class="promos-grid">';
+  promos.forEach(function(p,i){ html+=renderCard(p,i); });
+  html+='</div>';
+
+  // CTA premium solo en tab premium para usuarios no premium
+  if(tabActual==='premium' && !esPremium){
+    html+='<div class="premium-cta" style="margin-top:20px">'
+      +'<h3>⭐ Activa Premium para canjear</h3>'
+      +'<p>Q100 al año — desbloquea todos los códigos y Q10 van al fondo de castraciones guas y miaus</p>'
+      +'<a class="btn-premium" href="/familia.html">Activar Premium</a>'
+      +'</div>';
+  }
+  wrap.innerHTML=html;
+}
+
+function renderCard(p, i){
+  var esPremiumCard=p.nivel==='premium';
+  var vence=p.fecha_fin?'Válido hasta '+new Date(p.fecha_fin).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'Sin fecha de vencimiento';
+  var especieBadge=p.especie&&p.especie!=='todos'?'<span class="promo-especie">'+(p.especie==='perro'?'🐶 Perros':p.especie==='gato'?'🐱 Gatos':'🐾 Todos')+'</span>':'';
+  var imgHTML=p.imagen&&p.imagen.indexOf('http')>=0?'<img src="'+p.imagen+'">':'<div class="promo-img" style="height:140px;display:flex;align-items:center;justify-content:center;font-size:48px">🎁</div>';
+
+  // Mostrar codigo solo si está logueado
+  var codigoHTML='';
+  if(sessionEmail){
+    codigoHTML='<div class="codigo-wrap">'
+      +'<div style="flex:1"><div class="codigo-lbl">Código de descuento</div><div class="codigo-val">'+p.codigo+'</div></div>'
+      +'<button class="btn-copiar" id="btn-copy-'+i+'" onclick="copiarCodigo(\''+p.codigo+'\','+i+')">Copiar</button>'
+      +'</div>';
+  } else {
+    codigoHTML='<div class="codigo-lock" onclick="openLoginPara('+i+')">'
+      +'<div class="lock-icon">🔒</div>'
+      +'<div class="lock-txt"><strong>Inicia sesión</strong> para ver el código de descuento</div>'
+      +'</div>';
+  }
+
+  return '<div class="promo-card'+(esPremiumCard?' premium-card':'')+'">'
+    +(esPremiumCard?'<div class="promo-badge-premium">⭐ Premium</div>':'')
+    +'<div class="promo-img">'+imgHTML+'</div>'
+    +'<div class="promo-body">'
+    +'<div class="promo-aliado">'+p.aliado+'</div>'
+    +'<div class="promo-titulo">'+p.titulo+'</div>'
+    +'<div class="promo-desc">'+p.descripcion+'</div>'
+    +'<div><span class="promo-descuento">'+p.descuento+'</span>'+especieBadge+'</div>'
+    +'<div class="promo-vence">📅 '+vence+'</div>'
+    +codigoHTML
+    +'</div></div>';
+}
+
+
+
+function copiarCodigo(codigo, i){
+  navigator.clipboard.writeText(codigo).then(function(){
+    var btn=document.getElementById('btn-copy-'+i);
+    if(btn){btn.textContent='✓ Copiado';btn.className='btn-copiar copiado';}
+    mostrarToast('✅ Código copiado: '+codigo);
+    setTimeout(function(){if(btn){btn.textContent='Copiar';btn.className='btn-copiar';}},2500);
+  }).catch(function(){mostrarToast('Código: '+codigo);});
+}
+
+// Login
+var promoIdxPendiente=null;
+function openLoginPara(idx){promoIdxPendiente=idx;openLogin();}
+function openLogin(){
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginMsg').style.display='none';
+  document.getElementById('btnLogin').disabled=false;
+  document.getElementById('btnLogin').textContent='Ingresar';
+  document.getElementById('loginOverlay').classList.add('open');
+}
+function closeLogin(){document.getElementById('loginOverlay').classList.remove('open');}
+
+function verificarEmail(){
+  var email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  if(!email||email.indexOf('@')<0){mostrarLoginMsg('Ingresa un correo válido','error');return;}
+  var btn=document.getElementById('btnLogin');
+  btn.disabled=true;btn.textContent='Verificando...';
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.found&&d.mascotas&&d.mascotas.length){
+        sessionEmail=email;
+        esPremium=d.mascotas[0].premium===true||d.mascotas[0].premium==='true';
+        localStorage.setItem('petzid_email',email);
+        localStorage.setItem('petzid_dueno',d.mascotas[0].dueno||'');
+        mostrarLoginMsg('¡Bienvenido/a!','success');
+        setTimeout(function(){closeLogin();renderBanner();cargarPromos();},1200);
+      } else {
+        mostrarLoginMsg('Correo no encontrado','error');
+        btn.disabled=false;btn.textContent='Ingresar';
+      }
+    }).catch(function(){
+      mostrarLoginMsg('Error de conexión','error');
+      btn.disabled=false;btn.textContent='Ingresar';
+    });
+}
+
+function mostrarLoginMsg(txt,tipo){
+  var el=document.getElementById('loginMsg');
+  el.textContent=txt;
+  el.style.display='block';
+  el.style.background=tipo==='error'?'#fbeaf0':'#e0f7f7';
+  el.style.color=tipo==='error'?'#993556':'#007a7a';
+}
+
+document.getElementById('loginEmail').addEventListener('keydown',function(e){if(e.key==='Enter')verificarEmail();});
+
+function mostrarToast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2500);
+}
+</script>
+<script src="/header.js"></script>
+</body>
+</html>
