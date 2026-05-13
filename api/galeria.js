@@ -563,7 +563,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
     
-}).then(function(r){ return r.json(); }).then(function(d){ console.log(d); });
 if (action === 'marcarAparecio' && req.method === 'POST') {
       const { actividad_id } = req.body;
       if (!actividad_id) return res.status(200).json({ ok: false, error: 'id requerido' });
