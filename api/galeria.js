@@ -562,16 +562,7 @@ export default async function handler(req, res) {
       });
       return res.status(200).json({ ok: r.ok });
     }
-    
-if (action === 'marcarAparecio' && req.method === 'POST') {
-      const { actividad_id } = req.body;
-      if (!actividad_id) return res.status(200).json({ ok: false, error: 'id requerido' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
+
     return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
