@@ -210,6 +210,11 @@ function renderFamilia(){
   html += '</div>';
 
   document.getElementById('mainContent').innerHTML = html;
+  // Event delegation para botones apareció (evita problema de comillas en onclick)
+  document.getElementById('mainContent').addEventListener('click', function(e){
+    var btn = e.target.closest('.btn-aparecio-fam');
+    if(btn) marcarAparecioFamilia(btn.dataset.actid, btn.dataset.nombre);
+  });
 }
 
 function renderCard(m){
@@ -237,7 +242,7 @@ function renderCard(m){
   html += '<a href="/editar.html?uid='+m.uid+'" class="btn-editar">✏️ Editar</a>';
   html += '</div>';
   if(esPerdida){
-    html += '<button onclick="marcarAparecioFamilia(''+actId+'',''+m.nombre+'')" '
+    html += '<button class="btn-aparecio-fam" data-actid="'+actId+'" data-nombre="'+m.nombre+'" '
       + 'style="width:100%;margin-top:8px;padding:8px;background:#1a7a1a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">'
       + '🎉 ¡Apareció!</button>';
   }
