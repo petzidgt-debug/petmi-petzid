@@ -1,1 +1,332 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Mi familia — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+
+.site-header{background:#fff;border-bottom:1px solid #eee;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.header-logo img{height:38px;display:block}
+.btn-volver{padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;font-size:13px;font-weight:600;color:#888;background:#fff;cursor:pointer;text-decoration:none}
+
+/* HERO */
+.familia-hero{background:#00B4B4;padding:28px 20px;text-align:center}
+.familia-avatar{width:72px;height:72px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 12px}
+.familia-nombre{font-size:22px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.familia-sub{font-size:13px;color:rgba(255,255,255,.7)}
+.familia-stats{display:flex;justify-content:center;gap:24px;margin-top:16px}
+.fstat{text-align:center}
+.fstat-num{font-size:22px;font-weight:900;color:#fff}
+.fstat-lbl{font-size:10px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1px}
+
+/* GRID */
+.wrap{max-width:600px;margin:0 auto;padding:20px 16px}
+.sec-titulo{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:14px}
+.mascotas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+
+/* CARD */
+.mascota-card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);position:relative}
+.mascota-card.angelito{opacity:.85}
+.card-foto{width:100%;aspect-ratio:1;object-fit:cover;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+.card-foto img{width:100%;aspect-ratio:1;object-fit:cover}
+.card-angel-badge{position:absolute;top:6px;right:6px;font-size:18px}
+.card-body{padding:12px}
+.card-nombre{font-size:14px;font-weight:900;color:#222;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-meta{font-size:11px;color:#aaa;margin-bottom:10px}
+.card-btns{display:flex;gap:6px}
+.btn-ver{flex:1;padding:7px;background:#e0f7f7;color:#007a7a;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
+.btn-editar{flex:1;padding:7px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
+
+/* AGREGAR */
+.btn-agregar-wrap{text-align:center;padding:8px 0 20px}
+.btn-agregar{padding:14px 32px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+
+/* LOADING */
+.loading-wrap{text-align:center;padding:60px 20px}
+.spinner{width:40px;height:40px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* NO SESSION */
+.no-session{text-align:center;padding:60px 20px}
+.no-session-icon{font-size:48px;margin-bottom:16px}
+.no-session-title{font-size:20px;font-weight:900;color:#222;margin-bottom:8px}
+.no-session-sub{font-size:14px;color:#888;margin-bottom:24px}
+.btn-login{padding:14px 32px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer}
+
+/* LOGIN MODAL */
+.login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.login-overlay.open{display:flex}
+.login-modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px}
+.login-title{font-size:20px;font-weight:900;color:#222;margin-bottom:6px}
+.login-sub{font-size:13px;color:#888;margin-bottom:20px}
+.login-input{width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;outline:none;margin-bottom:12px}
+.login-input:focus{border-color:#00B4B4}
+.btn-login-ok{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.btn-login-ok:disabled{background:#aaa}
+.btn-login-cancel{width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer}
+.login-msg{font-size:13px;text-align:center;padding:8px;border-radius:8px;margin-bottom:10px;display:none}
+.login-msg.error{background:#fbeaf0;color:#993556}
+.login-msg.success{background:#e0f7f7;color:#007a7a}
+
+.card-perdido-badge{position:absolute;top:6px;left:6px;background:#c0392b;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;z-index:2}
+.mascota-card.perdida{border:2px solid #e53935}
+.footer{background:#1a1a2e;padding:20px;text-align:center;margin-top:20px}
+.footer-brand{font-size:16px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff}
+.footer-brand span{color:#F5C842}
+.footer-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px}
+</style>
+</head>
+<body>
+
+
+
+<div id="mainContent">
+  <div class="loading-wrap">
+    <div class="spinner"></div>
+    <p style="color:#888;font-size:14px">Cargando...</p>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-modal">
+    <div style="position:relative">
+      <button onclick="closeLogin()" style="position:absolute;top:-8px;right:-8px;width:28px;height:28px;background:#f0f0ee;border:none;border-radius:50%;font-size:16px;cursor:pointer">×</button>
+    </div>
+    <div class="login-title">Ingresa a tu cuenta</div>
+    <div class="login-sub">Escribe el correo con el que registraste a tu mascota</div>
+    <div class="login-msg" id="loginMsg"></div>
+    <input type="email" class="login-input" id="loginEmail" placeholder="tu@correo.com" inputmode="email">
+    <button class="btn-login-ok" id="btnLoginOk" onclick="verificarEmail()">Ingresar</button>
+    <button class="btn-login-cancel" onclick="closeLogin()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+var sessionEmail = localStorage.getItem('petzid_email') || '';
+var sessionDueno = localStorage.getItem('petzid_dueno') || '';
+var misMascotas  = [];
+var mascotasPerdidas = {};
+
+// Init
+if (sessionEmail) {
+  cargarFamilia(sessionEmail);
+} else {
+  mostrarNoSession();
+}
+
+function mostrarNoSession(){
+  document.getElementById('mainContent').innerHTML =
+    '<div class="no-session">'
+    +'<div class="no-session-icon">🐾</div>'
+    +'<div class="no-session-title">¿Ya tienes PetzID?</div>'
+    +'<div class="no-session-sub">Ingresa con tu correo para ver tu familia de mascotas</div>'
+    +'<button class="btn-login" onclick="openLogin()">Ingresar</button>'
+    +'<div style="margin-top:16px"><a href="/index.html" style="font-size:13px;color:#00B4B4;font-weight:600">Registra tu primera mascota →</a></div>'
+    +'</div>';
+}
+
+function cargarFamilia(email){
+  Promise.all([
+    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})}).then(function(r){return r.json();}),
+    fetch('/api/galeria?action=getActividades&tipo=perdido').then(function(r){return r.json();})
+  ]).then(function(results){
+    var d    = results[0];
+    var acts = (results[1].actividades)||[];
+    if(!d.found||d.mascotas.length===0){ mostrarNoSession(); return; }
+    misMascotas = d.mascotas;
+    mascotasPerdidas = {};
+    acts.forEach(function(a){ mascotasPerdidas[a.uid_creador] = a.id; });
+    renderFamilia();
+  }).catch(function(){
+    document.getElementById('mainContent').innerHTML =
+      '<div style="text-align:center;padding:60px;color:#888">Error al cargar. <a href="/galeria.html" style="color:#00B4B4">Volver</a></div>';
+  });
+}
+function renderFamilia(){
+  var mascotas = misMascotas;
+  var dueno    = mascotas[0].dueno || sessionDueno || '';
+  var perros   = mascotas.filter(function(m){ return m.especie.toLowerCase().indexOf('perro') >= 0 && !m.angelito; }).length;
+  var gatos    = mascotas.filter(function(m){ return m.especie.toLowerCase().indexOf('gato')  >= 0 && m.angelito!=='Si'; }).length;
+  var angeles  = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() === 'si'; }).length;
+  var activos  = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() !== 'si'; }).length;
+
+  var html = '';
+
+  // Hero
+  html += '<div class="familia-hero">';
+  html += '<div class="familia-avatar">🏠</div>';
+  html += '<div class="familia-nombre">Familia ' + (dueno ? dueno.split(' ')[0] : '') + '</div>';
+  html += '<div class="familia-sub">' + sessionEmail + '</div>';
+  html += '<div class="familia-stats">';
+  html += '<div class="fstat"><div class="fstat-num">'+mascotas.length+'</div><div class="fstat-lbl">Mascotas</div></div>';
+  html += '<div class="fstat"><div class="fstat-num">'+perros+'</div><div class="fstat-lbl">Perros</div></div>';
+  html += '<div class="fstat"><div class="fstat-num">'+gatos+'</div><div class="fstat-lbl">Gatos</div></div>';
+  if(angeles > 0) html += '<div class="fstat"><div class="fstat-num">'+angeles+'</div><div class="fstat-lbl">Angelitos</div></div>';
+  html += '</div></div>';
+
+  html += '<div class="wrap">';
+
+  // Mascotas activas
+  var activas = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() !== 'si'; });
+  if(activas.length > 0){
+    html += '<div class="sec-titulo">🐾 Mis mascotas</div>';
+    html += '<div class="mascotas-grid">';
+    activas.forEach(function(m){
+      html += renderCard(m);
+    });
+    html += '</div>';
+  }
+
+  // Angelitos
+  var angelitos = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() === 'si'; });
+  if(angelitos.length > 0){
+    html += '<div class="sec-titulo" style="color:#764ba2">🐾 Mis angelitos</div>';
+    html += '<div class="mascotas-grid">';
+    angelitos.forEach(function(m){
+      html += renderCard(m);
+    });
+    html += '</div>';
+  }
+
+  // Botón agregar
+  html += '<div class="btn-agregar-wrap">';
+  html += '<a href="/index.html?agregar=1" class="btn-agregar">➕ Agregar mascota</a>';
+  html += '</div>';
+
+  html += '</div>';
+
+  // Footer
+  html += '<div class="footer"><div class="footer-brand">petz<span>ID</span></div>';
+  html += '<div class="footer-sub">PetMi Guatemala</div></div>';
+
+  // Botón salir
+  html += '<div style="text-align:center;padding:16px 0 32px">';
+  html += '<button onclick="cerrarSesion()" style="background:none;border:none;color:#bbb;font-size:13px;cursor:pointer">Cerrar sesión</button>';
+  html += '</div>';
+
+  document.getElementById('mainContent').innerHTML = html;
+  // Event delegation para botones apareció (evita problema de comillas en onclick)
+  document.getElementById('mainContent').addEventListener('click', function(e){
+    var btn = e.target.closest('.btn-aparecio-fam');
+    if(btn) marcarAparecioFamilia(btn.dataset.actid, btn.dataset.nombre);
+  });
+}
+
+function renderCard(m){
+  var esGato    = m.especie.toLowerCase().indexOf('gato') >= 0;
+  var emoji     = esGato ? '🐱' : '🐶';
+  var esAngel   = String(m.angelito).toLowerCase() === 'si';
+  var esPerdida = !!mascotasPerdidas[m.uid];
+  var actId     = mascotasPerdidas[m.uid] || '';
+  var fotoStyle = 'width:100%;aspect-ratio:1;object-fit:cover' + (esAngel?';filter:grayscale(30%)':'');
+  var fotoHTML  = m.foto && m.foto.indexOf('http') >= 0
+    ? '<img src="'+m.foto+'" style="'+fotoStyle+'" onerror="this.style.display=\'none\'">'
+    : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:'+(esPerdida?'#ffebee':'#e0f7f7')+'">'+emoji+'</div>';
+
+  var cardClass = 'mascota-card' + (esAngel?' angelito':'') + (esPerdida?' perdida':'');
+  var html = '<div class="'+cardClass+'">';
+  html += '<div class="card-foto" style="position:relative">'+fotoHTML;
+  if(esAngel)   html += '<div class="card-angel-badge">🐾</div>';
+  if(esPerdida) html += '<div class="card-perdido-badge">🚨 PERDIDO</div>';
+  html += '</div>';
+  html += '<div class="card-body">';
+  html += '<div class="card-nombre">'+m.nombre+'</div>';
+  html += '<div class="card-meta">'+(m.apodo?'"'+m.apodo+'" · ':'')+(m.especie||'')+'</div>';
+  html += '<div class="card-btns">';
+  html += '<a href="/perfil.html?uid='+m.uid+'" class="btn-ver">Ver</a>';
+  html += '<a href="/editar.html?uid='+m.uid+'" class="btn-editar">✏️ Editar</a>';
+  html += '</div>';
+  if(esPerdida){
+    html += '<button class="btn-aparecio-fam" data-actid="'+actId+'" data-nombre="'+m.nombre+'" '
+      + 'style="width:100%;margin-top:8px;padding:8px;background:#1a7a1a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">'
+      + '🎉 ¡Apareció!</button>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function marcarAparecioFamilia(actId, nombre){
+  if(!confirm('🎉 ¿Confirmar que '+nombre+' ya apareció?')) return;
+  fetch('/api/galeria?action=eliminarActividad',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({actividad_id: actId, uid_creador: misMascotas.length ? misMascotas[0].uid : ''})
+  }).then(function(){
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px';
+    overlay.innerHTML = '<div style="font-size:80px">🎉</div>'
+      + '<div style="font-size:22px;font-weight:900;color:#fff;text-align:center">¡'+nombre+' apareció!<br><span style="font-size:15px;font-weight:400;opacity:.8">Gracias a todos los que ayudaron 🐾</span></div>';
+    document.body.appendChild(overlay);
+    setTimeout(function(){
+      document.body.removeChild(overlay);
+      cargarFamilia(sessionEmail);
+    }, 2500);
+  }).catch(function(){ alert('Error. Intenta de nuevo.'); });
+}
+
+
+function cerrarSesion(){
+  localStorage.removeItem('petzid_email');
+  localStorage.removeItem('petzid_dueno');
+  sessionEmail = '';
+  window.location.href = '/galeria.html';
+}
+
+// ── Login ─────────────────────────────────────────────────────
+function openLogin(){
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginMsg').style.display='none';
+  document.getElementById('btnLoginOk').disabled=false;
+  document.getElementById('btnLoginOk').textContent='Ingresar';
+  document.getElementById('loginOverlay').classList.add('open');
+}
+function closeLogin(){
+  document.getElementById('loginOverlay').classList.remove('open');
+}
+
+function verificarEmail(){
+  var email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  if(!email||email.indexOf('@')<0){ mostrarMsg('Ingresa un correo válido','error'); return; }
+  var btn = document.getElementById('btnLoginOk');
+  btn.disabled=true; btn.textContent='Verificando...';
+
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.found && d.mascotas && d.mascotas.length > 0){
+        sessionEmail = email;
+        sessionDueno = d.mascotas[0].dueno || '';
+        localStorage.setItem('petzid_email', sessionEmail);
+        localStorage.setItem('petzid_dueno', sessionDueno);
+        mostrarMsg('¡Bienvenido/a ' + sessionDueno + '!', 'success');
+        setTimeout(function(){
+          closeLogin();
+          cargarFamilia(sessionEmail);
+        }, 1200);
+      } else {
+        mostrarMsg('No encontramos ese correo', 'error');
+        btn.disabled=false; btn.textContent='Ingresar';
+      }
+    }).catch(function(){
+      mostrarMsg('Error de conexión', 'error');
+      btn.disabled=false; btn.textContent='Ingresar';
+    });
+}
+
+function mostrarMsg(txt, tipo){
+  var el = document.getElementById('loginMsg');
+  el.textContent=txt; el.className='login-msg '+tipo; el.style.display='block';
+}
+
+document.getElementById('loginEmail').addEventListener('keydown', function(e){
+  if(e.key==='Enter') verificarEmail();
+});
+</script>
+<script src="/header.js"></script>
+</body>
+</html>
