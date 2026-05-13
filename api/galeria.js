@@ -421,10 +421,12 @@ export default async function handler(req, res) {
         const d = new Date(); d.setDate(d.getDate() + 7);
         expires_at = d.toISOString();
       }
+      // adopcion entra con activo:false esperando aprobacion del admin
+      const activo = req.body.activo_override !== undefined ? req.body.activo_override : true;
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
-        body: JSON.stringify({ uid_creador, nombre_creador, foto_creador, email_creador: req.body.email_creador||'', tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, activo: true, expires_at })
+        body: JSON.stringify({ uid_creador, nombre_creador, foto_creador, email_creador: req.body.email_creador||'', tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, activo, expires_at })
       });
       const data = await r.json();
       return res.status(200).json({ ok: r.ok, id: data[0]?.id });
@@ -557,6 +559,101 @@ export default async function handler(req, res) {
     if (action === 'eliminarLugar' && req.method === 'POST') {
       const { id } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getImpacto ────────────────────────────────────────────
+    if (action === 'getImpacto') {
+      const [rMascotas, rAdopciones, rPerdidos, rRecuperados] = await Promise.all([
+        // Total mascotas registradas
+        fetch(SUPABASE_URL + '/rest/v1/mascotas?select=uid', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
+        }),
+        // Adopciones publicadas (activas)
+        fetch(SUPABASE_URL + '/rest/v1/actividades?tipo=eq.adopcion&select=id', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
+        }),
+        // Mascotas perdidas activas
+        fetch(SUPABASE_URL + '/rest/v1/actividades?tipo=eq.perdido&activo=eq.true&select=id', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
+        }),
+        // Mascotas recuperadas (perdidas eliminadas = aparecieron)
+        fetch(SUPABASE_URL + '/rest/v1/actividades?tipo=eq.perdido&activo=eq.false&select=id', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
+        })
+      ]);
+
+      const parseCount = (r) => {
+        const cr = r.headers.get('content-range');
+        return cr ? parseInt(cr.split('/')[1] || '0') : 0;
+      };
+
+      // Donaciones — valor manual controlado desde admin
+      const rDonaciones = await fetch(SUPABASE_URL + '/rest/v1/config?clave=eq.donaciones_total&select=valor', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const donData = await rDonaciones.json();
+      const donaciones = donData && donData[0] ? donData[0].valor : '0';
+
+      return res.status(200).json({
+        mascotas:    parseCount(rMascotas),
+        adopciones:  parseCount(rAdopciones),
+        perdidos:    parseCount(rPerdidos),
+        recuperados: parseCount(rRecuperados),
+        donaciones:  donaciones
+      });
+    }
+
+    // ── getPromos ─────────────────────────────────────────────
+    if (action === 'getPromos') {
+      const nivel = req.query.nivel || 'basico'; // basico | premium
+      // Traer promos activas y no expiradas
+      const ahora = new Date().toISOString();
+      let url = SUPABASE_URL + '/rest/v1/promos?activo=eq.true'
+        + '&or=(fecha_fin.is.null,fecha_fin.gte.' + ahora + ')'
+        + '&order=nivel.asc,created_at.desc';
+      const r = await fetch(url, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const data = await r.json();
+      // Si es basico, filtrar solo basicas. Si es premium, devolver todas
+      // Devolver todas — el frontend filtra por tab y controla el canje
+      const promos = Array.isArray(data) ? data : [];
+      return res.status(200).json({ promos });
+    }
+
+    // ── createPromo (admin) ───────────────────────────────────
+    if (action === 'createPromo' && req.method === 'POST') {
+      const { titulo, descripcion, aliado, nivel, codigo, descuento, imagen, fecha_fin, especie, zona } = req.body;
+      if (!titulo || !aliado) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/promos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
+        body: JSON.stringify({ titulo, descripcion, aliado, nivel: nivel||'basico', codigo, descuento, imagen, fecha_fin: fecha_fin||null, especie: especie||'todos', zona: zona||'todos', activo: true })
+      });
+      const data = await r.json();
+      return res.status(200).json({ ok: r.ok, id: data[0]?.id });
+    }
+
+    // ── updatePromo (admin) ───────────────────────────────────
+    if (action === 'updatePromo' && req.method === 'POST') {
+      const { id, ...fields } = req.body;
+      if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/promos?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(fields)
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── deletePromo (admin) ───────────────────────────────────
+    if (action === 'deletePromo' && req.method === 'POST') {
+      const { id } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/promos?id=eq.' + encodeURIComponent(id), {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
