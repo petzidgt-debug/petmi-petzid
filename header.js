@@ -63,7 +63,8 @@
         '</div>' +
       '</div>' +
       '<a href="/actividades.html" class="h-link'+(currentPath.indexOf('actividades')>=0?' active':'')+'">🐾 ¿Quién se apunta?</a>' +
-      '<a href="/galeria.html" class="h-link">Amigos PetMi</a>';
+      '<a href="/galeria.html" class="h-link">Amigos PetMi</a>' +
+      '<a href="/promos.html" class="h-link' + (currentPath.indexOf('promos') >= 0 ? ' active' : '') + '" style="color:#764ba2;font-weight:700">🎁 Promos</a>';
 
     // Lado derecho
     var rightHTML = sessionEmail
@@ -77,6 +78,7 @@
             '<a href="/amigos.html" class="h-drop-item">🐾 Mis amigos</a>' +
             '<a href="/index.html?agregar=1" class="h-drop-item">➕ Agregar mascota</a>' +
             '<a href="/galeria.html" class="h-drop-item">🌟 Ver galería</a>' +
+            '<a href="/promos.html" class="h-drop-item">🎁 Promos</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
         '</div>'
@@ -93,15 +95,17 @@
       '<a href="/lugares.html">📍 Lugares</a>' +
       '<a href="/actividades.html">🐾 ¿Quién se apunta?</a>' +
           '<a href="/galeria.html">Amigos PetMi</a>' +
+      '<a href="/promos.html" style="color:#764ba2;font-weight:700">🎁 Promos</a>' +
       (sessionEmail
         ? '<span class="h-mob-sec">Mi cuenta</span>' +
           '<a href="/familia.html">🏠 Mi familia</a>' +
           '<a href="/mensajes.html">💬 Mensajes</a>' +
           '<a href="/amigos.html">🐾 Mis amigos</a>' +
+          '<a href="/index.html">🐾 Registrar mascota</a>' +
           '<a href="/index.html?agregar=1">➕ Agregar mascota</a>' +
           '<button onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>'
         : '<span class="h-mob-sec">Cuenta</span>' +
-          '<a href="/index.html">Registra tu mascota</a>' +
+          '<a href="/index.html" style="background:#00B4B4;color:#fff;font-weight:700">🐾 Registra tu mascota</a>' +
           '<button onclick="petmiAbrirLogin()">Ingresar</button>');
 
     // Login modal
@@ -220,6 +224,17 @@
   window.petmiAbrirLogin = function(){
     var o = document.getElementById('petmiLoginOverlay');
     if(o) o.classList.add('open');
+    // Resetear boton de registro
+    var regBtn = document.getElementById('petmiLoginRegBtn');
+    if(regBtn) regBtn.style.display = 'none';
+    // Limpiar mensaje
+    var msg = document.getElementById('petmiLoginMsg');
+    if(msg) { msg.style.display='none'; msg.textContent=''; }
+    // Limpiar email
+    var inp = document.getElementById('petmiLoginEmail');
+    if(inp) inp.value = '';
+    var btn = document.getElementById('petmiLoginBtn');
+    if(btn) { btn.disabled=false; btn.textContent='Ingresar'; }
   };
   window.petmiCerrarLogin = function(){
     var o = document.getElementById('petmiLoginOverlay');
@@ -244,6 +259,18 @@
       } else {
         petmiLoginMsg('No encontramos ese correo. ¿Ya tienes una mascota registrada?','error');
         btn.disabled = false; btn.textContent = 'Ingresar';
+        // Mostrar boton de registrar mascota
+        var regBtn = document.getElementById('petmiLoginRegBtn');
+        if(!regBtn){
+          regBtn = document.createElement('a');
+          regBtn.id = 'petmiLoginRegBtn';
+          regBtn.href = '/index.html';
+          regBtn.style.cssText = 'display:block;width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;text-align:center;text-decoration:none;box-sizing:border-box;font-family:Arial,sans-serif';
+          regBtn.textContent = '🐾 Registrar mi mascota';
+          var cancelBtn = document.querySelector('.h-login-cancel');
+          if(cancelBtn) cancelBtn.parentNode.insertBefore(regBtn, cancelBtn);
+        }
+        regBtn.style.display = 'block';
       }
     }).catch(function(){
       petmiLoginMsg('Error de conexión','error');
