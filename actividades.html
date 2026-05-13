@@ -505,9 +505,9 @@ function marcarAparecio(id, nombre){
   document.body.appendChild(overlay);
 
   // Eliminar la actividad
-  fetch('/api/galeria?action=eliminarActividad',{
+  fetch('/api/galeria?action=marcarAparecio',{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({actividad_id: id, uid_creador: miMascota ? miMascota.uid : ''})
+    body: JSON.stringify({actividad_id: id})
   }).then(function(){
     setTimeout(function(){
       document.body.removeChild(overlay);
