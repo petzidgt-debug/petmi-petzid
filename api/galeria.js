@@ -463,7 +463,22 @@ export default async function handler(req, res) {
     // ── eliminarActividad ─────────────────────────────────────
     if (action === 'eliminarActividad' && req.method === 'POST') {
       const { actividad_id, uid_creador } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id) + '&uid_creador=eq.' + encodeURIComponent(uid_creador), {
+      // Eliminar solo por id (RLS de Supabase protege el acceso)
+      // No filtrar por uid_creador para que "apareció" funcione desde familia.html
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── marcarAparecio ────────────────────────────────────────
+    // Elimina la actividad perdido por id sin validar uid_creador
+    // Se llama desde familia.html y actividades.html cuando el dueño confirma que apareció
+    if (action === 'marcarAparecio' && req.method === 'POST') {
+      const { actividad_id } = req.body;
+      if (!actividad_id) return res.status(200).json({ ok: false, error: 'actividad_id requerido' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id), {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
