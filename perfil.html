@@ -375,16 +375,33 @@ document.addEventListener('keydown', function(e){
 });
 
 function enviarMensaje(){
-  var autor  =document.getElementById('msgAutor').value.trim();
-  var mensaje=document.getElementById('msgTxt').value.trim();
-  if(!autor||!mensaje){alert('Por favor ingresa tu nombre y un mensaje');return;}
-  fetch('/api/submit',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'addMensaje',uid:uid,autor:autor,mensaje:mensaje,nombreMascota:mascota?mascota.nombre:''})
-  }).then(function(r){return r.json();})
+  var autor  = document.getElementById('msgAutor').value.trim();
+  var mensaje = document.getElementById('msgTxt').value.trim();
+  if(!autor||!mensaje){ mostrarToast('Escribe tu nombre y un mensaje'); return; }
+
+  // Deshabilitar boton para evitar duplicados
+  var btn = document.querySelector('.btn-enviar');
+  if(btn){ btn.disabled=true; btn.textContent='...'; }
+
+  // Guardar en Supabase directamente via galeria API
+  fetch('/api/galeria?action=addMensajePublico',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid:uid, autor:autor, mensaje:mensaje, nombreMascota:mascota?mascota.nombre:''})
+  }).then(function(r){ return r.json(); })
   .then(function(d){
-    if(d.ok){document.getElementById('msgTxt').value='';mostrarToast('Mensaje enviado 🐾');cargarMensajes();}
-  }).catch(function(){alert('Error al enviar.');});
+    if(btn){ btn.disabled=false; btn.textContent='✉️'; }
+    document.getElementById('msgTxt').value='';
+    mostrarToast('Mensaje enviado 🐾');
+    cargarMensajes();
+    // Notificar al dueno via Apps Script en background (no bloqueante)
+    fetch('/api/submit',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'addMensaje',uid:uid,autor:autor,mensaje:mensaje,nombreMascota:mascota?mascota.nombre:''})
+    }).catch(function(){});
+  }).catch(function(){
+    if(btn){ btn.disabled=false; btn.textContent='✉️'; }
+    mostrarToast('Error al enviar. Intenta de nuevo.');
+  });
 }
 
 function mostrarToast(msg){
