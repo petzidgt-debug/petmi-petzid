@@ -226,8 +226,12 @@ function renderPerfil(){
   }
 
   var fotoHTML=m.foto&&m.foto.indexOf('http')>=0
-    ?'<div class="perfil-foto-bg" style="background-image:url(\'' + m.foto + '\''+(m.angelito?';filter:blur(20px) brightness(.25) grayscale(30%)':'')+'"></div>'
-     +'<img src="'+m.foto+'" class="perfil-foto" style="'+(m.angelito?'filter:grayscale(20%)':'')+'">'
+    ?(function(){
+        var bgFilter = m.angelito ? 'filter:blur(20px) brightness(.25) grayscale(30%);' : 'filter:blur(20px) brightness(.4);';
+        var fgFilter = m.angelito ? 'filter:grayscale(20%)' : '';
+        return '<div class="perfil-foto-bg" style="background-image:url(' + m.foto + ');' + bgFilter + '"></div>'
+             + '<img src="' + m.foto + '" class="perfil-foto" style="' + fgFilter + '">';
+      })()
     :'<div class="perfil-foto-placeholder">'+emoji+'</div>';
 
   var actividadesHTML='';
