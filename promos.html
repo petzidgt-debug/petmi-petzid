@@ -218,17 +218,27 @@ function renderCard(p, i){
   var especieBadge=p.especie&&p.especie!=='todos'?'<span class="promo-especie">'+(p.especie==='perro'?'🐶 Perros':p.especie==='gato'?'🐱 Gatos':'🐾 Todos')+'</span>':'';
   var imgHTML=p.imagen&&p.imagen.indexOf('http')>=0?'<img src="'+p.imagen+'">':'<div class="promo-img" style="height:140px;display:flex;align-items:center;justify-content:center;font-size:48px">🎁</div>';
 
-  // Mostrar codigo solo si está logueado
+
+  // Logica de acceso: 3 casos
   var codigoHTML='';
-  if(sessionEmail){
+  var puedeVer = sessionEmail && (!esPremiumCard || esPremium);
+  if(puedeVer){
     codigoHTML='<div class="codigo-wrap">'
-      +'<div style="flex:1"><div class="codigo-lbl">Código de descuento</div><div class="codigo-val">'+p.codigo+'</div></div>'
+      +'<div style="flex:1"><div class="codigo-lbl">Tu código</div><div class="codigo-val">'+p.codigo+'</div></div>'
       +'<button class="btn-copiar" id="btn-copy-'+i+'" onclick="copiarCodigo(\''+p.codigo+'\','+i+')">Copiar</button>'
+      +'</div>';
+  } else if(sessionEmail && esPremiumCard && !esPremium){
+    codigoHTML='<div class="codigo-lock" onclick="irAPremium()">'
+      +'<div class="lock-icon">🔒</div>'
+      +'<div style="flex:1">'
+      +'<div class="lock-txt"><strong>Activa Premium</strong> para canjear</div>'
+      +'<div style="font-size:10px;color:#764ba2;font-weight:600;margin-top:2px">Q100/año · Toca para activar →</div>'
+      +'</div>'
       +'</div>';
   } else {
     codigoHTML='<div class="codigo-lock" onclick="openLoginPara('+i+')">'
       +'<div class="lock-icon">🔒</div>'
-      +'<div class="lock-txt"><strong>Inicia sesión</strong> para ver el código de descuento</div>'
+      +'<div class="lock-txt"><strong>Inicia sesión</strong> para ver el código</div>'
       +'</div>';
   }
 
@@ -246,6 +256,18 @@ function renderCard(p, i){
 }
 
 
+
+function irAPremium(){
+  // Si tiene sesion, ir directo a editar para activar premium
+  // Si no tiene sesion, abrir login primero
+  if(sessionEmail){
+    var uid=localStorage.getItem('petzid_uid')||'';
+    if(uid) window.location.href='/editar.html?uid='+uid;
+    else window.location.href='/familia.html';
+  } else {
+    openLogin();
+  }
+}
 
 function copiarCodigo(codigo, i){
   navigator.clipboard.writeText(codigo).then(function(){
@@ -278,14 +300,27 @@ function verificarEmail(){
     .then(function(d){
       if(d.found&&d.mascotas&&d.mascotas.length){
         sessionEmail=email;
-        esPremium=d.mascotas[0].premium===true||d.mascotas[0].premium==='true';
+        var m=d.mascotas[0];
+        esPremium=m.premium===true||m.premium==='true';
         localStorage.setItem('petzid_email',email);
-        localStorage.setItem('petzid_dueno',d.mascotas[0].dueno||'');
-        mostrarLoginMsg('¡Bienvenido/a!','success');
+        localStorage.setItem('petzid_dueno',m.dueno||'');
+        localStorage.setItem('petzid_uid',m.uid||'');
+        mostrarLoginMsg('¡Bienvenido/a, '+m.dueno+'!','success');
         setTimeout(function(){closeLogin();renderBanner();cargarPromos();},1200);
       } else {
-        mostrarLoginMsg('Correo no encontrado','error');
+        // BUG 1 FIX: mostrar boton de registro cuando no encuentra el correo
+        mostrarLoginMsg('No encontramos ese correo','error');
         btn.disabled=false;btn.textContent='Ingresar';
+        var regBtn=document.getElementById('loginRegBtn');
+        if(!regBtn){
+          regBtn=document.createElement('a');
+          regBtn.id='loginRegBtn';
+          regBtn.href='/index.html';
+          regBtn.style.cssText='display:block;width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;text-align:center;text-decoration:none;box-sizing:border-box';
+          regBtn.textContent='🐾 Registrar mi mascota';
+          btn.parentNode.insertBefore(regBtn,btn.nextSibling.nextSibling);
+        }
+        regBtn.style.display='block';
       }
     }).catch(function(){
       mostrarLoginMsg('Error de conexión','error');
