@@ -253,6 +253,7 @@ function renderPerfil(){
     ownerHTML='<div class="owner-actions">'
       +'<button class="btn-action btn-perdido" onclick="abrirModalPerdido()">🚨 Me perdí</button>'
       +'<a class="btn-action btn-editar-big" href="/editar.html?uid='+m.uid+'" style="text-decoration:none;display:flex;align-items:center;justify-content:center">✏️ Editar perfil</a>'
+      +(!esPremium?'<a class="btn-action" href="/editar.html?uid='+m.uid+'" style="text-decoration:none;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff">⭐ Upgrade Premium</a>':'<span class="btn-action" style="background:linear-gradient(135deg,#F5C842,#f0a500);color:#1a1a1a;display:flex;align-items:center;justify-content:center">⭐ Premium activo</span>')
       +'</div>';
   }
 
@@ -310,8 +311,8 @@ function renderPerfil(){
 
   html+='</div>';
 
-  // Conversación privada (amigos)
-  html+='<div id="convSection" style="display:none">';
+  // Conversación privada — ocultar para angelitos
+  html+='<div id="convSection" style="display:none"' + (m.angelito?' data-angelito="1"':'') + '>';
   html+='<div class="seccion" style="border-left:4px solid #00B4B4">';
   html+='<div class="sec-titulo">💬 Mensaje privado</div>';
   html+='<div id="convLista" style="max-height:300px;overflow-y:auto;margin-bottom:12px"></div>';
@@ -406,7 +407,7 @@ function verificarAmistad(){
         if(encontrado) miMascotaUID=encontrado;
         if(encontrado){
           var convSection=document.getElementById('convSection');
-          if(convSection) convSection.style.display='block';
+          if(convSection && !convSection.dataset.angelito) convSection.style.display='block';
           cargarConversacion(miMascotaUID,mascota.uid);
           fetch('/api/galeria?action=marcarLeidos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid_emisor:miMascotaUID,uid_receptor:mascota.uid})});
         }
