@@ -1,290 +1,343 @@
-// header.js — Header compartido PetMi v4
-(function(){
-  function initHeader(){
-    var sessionEmail = localStorage.getItem('petzid_email') || '';
-    var sessionDueno = localStorage.getItem('petzid_dueno') || '';
-    var currentPath  = window.location.pathname;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Lugares Pet-Friendly — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.hero{background:linear-gradient(135deg,#E05090,#c0392b);padding:24px 20px 20px;text-align:center}
+.hero h1{font-size:22px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.hero p{font-size:13px;color:rgba(255,255,255,.75)}
+.hero-stats{display:flex;justify-content:center;gap:24px;margin-top:14px}
+.hstat{text-align:center}
+.hstat-num{font-size:22px;font-weight:900;color:#fff}
+.hstat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.7)}
+.search-section{background:#fff;padding:12px 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:80}
+.search-row{display:flex;gap:8px;margin-bottom:8px}
+.search-wrap{position:relative;flex:1}
+.search-input{width:100%;padding:10px 14px 10px 36px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;background:#fff}
+.search-input:focus{border-color:#E05090}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;color:#aaa;pointer-events:none}
+.zone-select{padding:10px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:13px;outline:none;background:#fff;cursor:pointer;color:#555}
+.zone-select:focus{border-color:#E05090}
+.filtros-scroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.filtros-scroll::-webkit-scrollbar{display:none}
+.filtro-btn{padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:600;color:#888;background:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s}
+.filtro-btn.active{border-color:#E05090;background:#fce4ec;color:#c0392b}
+.wrap{max-width:700px;margin:0 auto;padding:16px 16px 40px}
+.sec-titulo{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#aaa;margin:16px 0 10px;display:flex;align-items:center;gap:8px}
+.sec-titulo::after{content:'';flex:1;height:1px;background:#e0e0e0}
+.lugar-card{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.lugar-card.premium-ali{border:2px solid #764ba2;box-shadow:0 4px 16px rgba(118,75,162,.15)}
+.lugar-card.destacado-ali{border:2px solid #F5C842;box-shadow:0 4px 16px rgba(245,200,66,.15)}
+.nivel-bar{height:5px}
+.badge-nivel{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-bottom:4px}
+.badge-premium-ali{background:linear-gradient(135deg,#764ba2,#E05090);color:#fff}
+.badge-destacado-ali{background:#F5C842;color:#1a1a1a}
+.badge-basico-ali{background:#e0f7f7;color:#007a7a}
+.lugar-body-horiz{display:flex}
+.lugar-foto-sq{width:100px;flex-shrink:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;min-height:90px}
+.lugar-foto-sq img{width:100%;height:100%;object-fit:cover}
+.lugar-body{flex:1;padding:12px 14px;min-width:0}
+.lugar-tipo-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:99px;margin-bottom:4px;background:#f0f0ee;color:#888}
+.lugar-nombre{font-size:14px;font-weight:900;color:#222;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lugar-zona{font-size:11px;color:#aaa;margin-bottom:5px}
+.lugar-desc{font-size:12px;color:#666;line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lugar-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.stars{font-size:11px;color:#F5C842}
+.rating-num{font-size:11px;color:#888}
+.btn-maps{padding:5px 11px;background:#E05090;color:#fff;border:none;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+.btn-rating{padding:5px 10px;background:#f0f0ee;color:#555;border:none;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer}
+.btn-wa-place{padding:5px 10px;background:#25D366;color:#fff;border:none;border-radius:99px;font-size:11px;font-weight:700;text-decoration:none;display:inline-block}
+.btn-ig-place{padding:5px 10px;background:#f0f0ee;color:#c0392b;border:none;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+.aliarte-cta{background:linear-gradient(135deg,#1a1a2e,#2d1b4e);border-radius:16px;padding:20px;text-align:center;margin-top:20px}
+.aliarte-cta h3{font-size:16px;font-weight:900;color:#fff;margin-bottom:6px}
+.aliarte-cta p{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:14px;line-height:1.6}
+.btn-aliarse{display:inline-block;padding:11px 24px;background:#E05090;color:#fff;border-radius:99px;font-size:13px;font-weight:700;text-decoration:none}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px;max-height:90vh;overflow-y:auto}
+.modal-titulo{font-size:18px;font-weight:900;color:#222;margin-bottom:16px}
+.stars-input{display:flex;gap:8px;font-size:32px;margin-bottom:16px;cursor:pointer}
+.star-opt{opacity:.3;transition:opacity .15s}
+.star-opt.selected{opacity:1}
+.rating-textarea{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;resize:none;height:80px;outline:none;margin-bottom:12px}
+.rating-textarea:focus{border-color:#E05090}
+.btn-enviar-rating{width:100%;padding:13px;background:#E05090;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
+.btn-cerrar-modal{width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer;margin-top:8px}
+.sg-input{width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:12px;outline:none}
+.sg-input:focus{border-color:#E05090}
+.sg-label{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px}
+.empty{text-align:center;padding:48px 20px;color:#bbb}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#E05090;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
 
-    var style = document.createElement('style');
-    style.textContent = [
-      '.site-header{background:#fff;border-bottom:1px solid #eee;padding:0 16px;display:flex;align-items:center;height:60px;position:sticky;top:0;z-index:300;box-shadow:0 1px 6px rgba(0,0,0,.07);gap:8px}',
-      '.site-header .h-logo img{height:36px;display:block}',
-      '.site-header .h-logo{text-decoration:none;flex-shrink:0}',
-      '.site-header .h-nav{display:flex;align-items:center;gap:2px;flex:1;justify-content:center}',
-      '.site-header .h-link{padding:6px 10px;border-radius:20px;font-size:13px;font-weight:600;color:#555;text-decoration:none;border:none;background:none;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
-      '.site-header .h-link:hover{background:#f0f0ee;color:#00B4B4}',
-      '.site-header .h-link.active{color:#00B4B4;font-weight:700}',
-      '.site-header .h-drop{position:relative;display:inline-block}',
-      '.site-header .h-drop-menu{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);min-width:160px;overflow:hidden;display:none;z-index:500}',
-      '.site-header .h-drop-menu.open{display:block}',
-      '.site-header .h-drop-item{display:block;padding:11px 16px;font-size:13px;font-weight:600;color:#333;text-decoration:none;border:none;background:none;width:100%;text-align:left;cursor:pointer;border-bottom:1px solid #f5f5f5;font-family:Arial,sans-serif}',
-      '.site-header .h-drop-item:last-child{border-bottom:none}',
-      '.site-header .h-drop-item:hover{background:#f8f8f8}',
-      '.site-header .h-drop-item.danger{color:#c0392b}',
-      '.site-header .h-right{display:flex;align-items:center;gap:6px;flex-shrink:0}',
-      '.site-header .h-badge{background:#E05090;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;text-decoration:none;white-space:nowrap;display:none}',
-      '.site-header .h-btn{padding:7px 13px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;background:#fff;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
-      '.site-header .h-btn-reg{padding:7px 13px;border:none;border-radius:20px;font-size:12px;font-weight:700;color:#fff;background:#00B4B4;cursor:pointer;text-decoration:none;white-space:nowrap;font-family:Arial,sans-serif}',
-      '.site-header .h-btn-in{padding:7px 13px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:700;color:#555;background:#fff;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
-      '.site-header .h-ham{display:none;flex-direction:column;gap:4px;cursor:pointer;padding:8px;background:none;border:none;flex-shrink:0}',
-      '.site-header .h-ham span{display:block;width:22px;height:2px;background:#555;border-radius:2px}',
-      '.site-header .h-mob{display:none;position:fixed;top:60px;left:0;right:0;background:#fff;border-bottom:1px solid #eee;z-index:400;box-shadow:0 4px 12px rgba(0,0,0,.1)}',
-      '.site-header .h-mob.open{display:block}',
-      '.site-header .h-mob a,.site-header .h-mob button{display:block;width:100%;padding:13px 20px;font-size:14px;font-weight:600;color:#333;text-decoration:none;text-align:left;border:none;background:none;cursor:pointer;border-bottom:1px solid #f5f5f5;font-family:Arial,sans-serif}',
-      '.site-header .h-mob-sec{font-size:10px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;padding:10px 20px 4px;display:block}',
-      '@media(max-width:640px){.site-header .h-nav{display:none}.site-header .h-ham{display:flex}}',
-      // Login modal
-      '.h-login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}',
-      '.h-login-overlay.open{display:flex}',
-      '.h-login-box{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px}',
-      '.h-login-title{font-size:20px;font-weight:900;color:#222;margin-bottom:6px}',
-      '.h-login-sub{font-size:13px;color:#888;margin-bottom:20px}',
-      '.h-login-input{width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;outline:none;margin-bottom:12px;box-sizing:border-box;font-family:Arial,sans-serif}',
-      '.h-login-input:focus{border-color:#00B4B4}',
-      '.h-login-ok{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:Arial,sans-serif}',
-      '.h-login-ok:disabled{background:#aaa}',
-      '.h-login-cancel{width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer;font-family:Arial,sans-serif}',
-      '.h-login-msg{font-size:13px;text-align:center;padding:8px;border-radius:8px;margin-bottom:10px;display:none}',
-      '.h-login-msg.error{background:#fbeaf0;color:#993556}',
-      '.h-login-msg.success{background:#e0f7f7;color:#007a7a}'
-    ].join('');
-    document.head.appendChild(style);
+<div class="hero">
+  <h1>📍 Lugares Pet-Friendly</h1>
+  <p>Restaurantes, parques, veterinarias y más que aman a las mascotas</p>
+  <div class="hero-stats">
+    <div class="hstat"><div class="hstat-num" id="statTotal">-</div><div class="hstat-lbl">Lugares</div></div>
+    <div class="hstat"><div class="hstat-num" id="statZonas">-</div><div class="hstat-lbl">Zonas</div></div>
+    <div class="hstat"><div class="hstat-num" id="statAliados">-</div><div class="hstat-lbl">Aliados</div></div>
+  </div>
+</div>
 
-    // Nav central
-    var navHTML =
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">Blog</a>' +
-      '<a href="https://www.revistapetmi.com/category/all-products" target="_blank" class="h-link">Tienda</a>' +
-      '<a href="https://www.revistapetmi.com/home" target="_blank" class="h-link">PetzID</a>' +
-      '<div class="h-drop">' +
-        '<button class="h-link" onclick="petmiTogglePF(event)">Pet Friendly ▾</button>' +
-        '<div class="h-drop-menu" id="pfMenu">' +
-          '<a href="/agenda.html" class="h-drop-item">🎉 Eventos</a>' +
-          '<a href="/lugares.html" class="h-drop-item">📍 Lugares</a>' +
-        '</div>' +
-      '</div>' +
-      '<a href="/agenda.html" class="h-link'+(currentPath.indexOf('actividades')>=0?' active':'')+'">🐾 ¿Quién se apunta?</a>' +
-      '<a href="/galeria.html" class="h-link">Amigos PetMi</a>' +
-      '<a href="/promos.html" class="h-link' + (currentPath.indexOf('promos') >= 0 ? ' active' : '') + '" style="color:#764ba2;font-weight:700">🎁 Promos</a>';
+<div class="search-section">
+  <div class="search-row">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre, zona o dirección..." oninput="filtrarLugares()">
+    </div>
+    <select class="zone-select" id="zonaSelect" onchange="filtrarLugares()">
+      <option value="">📍 Todas</option>
+    </select>
+  </div>
+  <div class="filtros-scroll">
+    <button class="filtro-btn active" onclick="setFiltro('',this)">Todos</button>
+    <button class="filtro-btn" onclick="setFiltro('restaurante',this)">🍽️ Restaurantes</button>
+    <button class="filtro-btn" onclick="setFiltro('veterinaria',this)">🏥 Veterinarias</button>
+    <button class="filtro-btn" onclick="setFiltro('parque',this)">🌳 Parques</button>
+    <button class="filtro-btn" onclick="setFiltro('cafe',this)">☕ Cafés</button>
+    <button class="filtro-btn" onclick="setFiltro('hotel',this)">🏨 Hoteles</button>
+    <button class="filtro-btn" onclick="setFiltro('tienda',this)">🛍️ Tiendas</button>
+    <button class="filtro-btn" onclick="setFiltro('grooming',this)">✂️ Grooming</button>
+  </div>
+</div>
 
-    // Lado derecho
-    var rightHTML = sessionEmail
-      ? '<a href="/amigos.html" id="petmiNotifBadge" class="h-badge">1 solicitud</a>' +
-        '<a href="/mensajes.html" id="petmiMsgBadge" class="h-badge" style="background:#00B4B4;display:none">1 mensaje</a>' +
-        '<div class="h-drop">' +
-          '<button class="h-btn" onclick="petmiToggleMenu(event)">🐾 ' + (sessionDueno ? sessionDueno.split(' ')[0] : sessionEmail.split('@')[0]) + ' ▾</button>' +
-          '<div class="h-drop-menu" id="petmiMenuDropdown" style="left:auto;right:0;transform:none">' +
-            '<a href="/familia.html" class="h-drop-item">🏠 Mi familia</a>' +
-            '<a href="/mensajes.html" class="h-drop-item">💬 Mensajes</a>' +
-            '<a href="/amigos.html" class="h-drop-item">🐾 Mis amigos</a>' +
-            '<a href="/index.html?agregar=1" class="h-drop-item">➕ Agregar mascota</a>' +
-            '<a href="/galeria.html" class="h-drop-item">🌟 Ver galería</a>' +
-            '<a href="/promos.html" class="h-drop-item">🎁 Promos</a>' +
-            '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
-          '</div>' +
-        '</div>'
-      : '<a href="/index.html" class="h-btn-reg">Registra tu mascota</a>' +
-        '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>';
+<div class="wrap">
+  <div id="lugaresWrap"><div class="spinner"></div></div>
+  <div class="aliarte-cta" id="aliarteWrap" style="display:none">
+    <h3>¿Tu negocio es pet-friendly?</h3>
+    <p>Únete como aliado PETzID y llega a cientos de dueños de mascotas en Guatemala. Desde Q250/mes.</p>
+    <a class="btn-aliarse" href="mailto:hola@petmi.gt?subject=Quiero ser aliado PETzID">Ser aliado →</a>
+    <div style="margin-top:10px"><button onclick="abrirFormLugar()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;text-decoration:underline">o sugiere un lugar gratis</button></div>
+  </div>
+</div>
 
-    // Mobile menu
-    var mobHTML =
-      '<span class="h-mob-sec">Navegación</span>' +
-      '<a href="https://www.revistapetmi.com/" target="_blank">Blog</a>' +
-      '<a href="https://www.revistapetmi.com/category/all-products" target="_blank">Tienda</a>' +
-      '<a href="https://www.revistapetmi.com/home" target="_blank">PetzID</a>' +
-      '<a href="/agenda.html">🎉 Eventos</a>' +
-      '<a href="/lugares.html">📍 Lugares</a>' +
-      '<a href="/agenda.html">🐾 ¿Quién se apunta?</a>' +
-          '<a href="/galeria.html">Amigos PetMi</a>' +
-      '<a href="/promos.html" style="color:#764ba2;font-weight:700">🎁 Promos</a>' +
-      (sessionEmail
-        ? '<span class="h-mob-sec">Mi cuenta</span>' +
-          '<a href="/familia.html">🏠 Mi familia</a>' +
-          '<a href="/mensajes.html">💬 Mensajes</a>' +
-          '<a href="/amigos.html">🐾 Mis amigos</a>' +
-          '<a href="/index.html">🐾 Registrar mascota</a>' +
-          '<a href="/index.html?agregar=1">➕ Agregar mascota</a>' +
-          '<button onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>'
-        : '<span class="h-mob-sec">Cuenta</span>' +
-          '<a href="/index.html" style="background:#00B4B4;color:#fff;font-weight:700">🐾 Registra tu mascota</a>' +
-          '<button onclick="petmiAbrirLogin()">Ingresar</button>');
+<!-- Modal rating -->
+<div class="modal-overlay" id="modalRating">
+  <div class="modal-box">
+    <div class="modal-titulo" id="ratingLugarNombre">Calificar lugar</div>
+    <div class="stars-input" id="starsInput">
+      <span class="star-opt" onclick="setRating(1)">⭐</span>
+      <span class="star-opt" onclick="setRating(2)">⭐</span>
+      <span class="star-opt" onclick="setRating(3)">⭐</span>
+      <span class="star-opt" onclick="setRating(4)">⭐</span>
+      <span class="star-opt" onclick="setRating(5)">⭐</span>
+    </div>
+    <textarea class="rating-textarea" id="ratingComentario" placeholder="Cuéntanos tu experiencia (opcional)"></textarea>
+    <button class="btn-enviar-rating" onclick="enviarRating()">Enviar calificación</button>
+    <button class="btn-cerrar-modal" onclick="closeRating()">Cancelar</button>
+  </div>
+</div>
 
-    // Login modal
-    var loginHTML =
-      '<div class="h-login-overlay" id="petmiLoginOverlay">' +
-        '<div class="h-login-box">' +
-          '<button onclick="petmiCerrarLogin()" style="float:right;background:none;border:none;font-size:20px;cursor:pointer;margin-top:-8px">×</button>' +
-          '<div class="h-login-title">Ingresar a PetMi</div>' +
-          '<div class="h-login-sub">Escribe tu correo para acceder a tu cuenta</div>' +
-          '<div class="h-login-msg" id="petmiLoginMsg"></div>' +
-          '<input type="email" class="h-login-input" id="petmiLoginEmail" placeholder="tu@correo.com" inputmode="email">' +
-          '<button class="h-login-ok" id="petmiLoginBtn" onclick="petmiVerificarLogin()">Ingresar</button>' +
-          '<button class="h-login-cancel" onclick="petmiCerrarLogin()">Cancelar</button>' +
-        '</div>' +
-      '</div>';
+<!-- Modal sugerir -->
+<div class="modal-overlay" id="modalSugerirLugar">
+  <div class="modal-box">
+    <button onclick="cerrarFormLugar()" style="float:right;background:none;border:none;font-size:20px;cursor:pointer">×</button>
+    <div class="modal-titulo">📍 Sugerir un lugar</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:14px">Tu sugerencia será revisada antes de publicarse</div>
+    <div id="sgLugarMsg" style="display:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:12px"></div>
+    <label class="sg-label">Nombre *</label>
+    <input type="text" id="sgLNombre" class="sg-input" placeholder="Nombre del lugar">
+    <label class="sg-label">Tipo</label>
+    <select id="sgLTipo" class="sg-input">
+      <option value="restaurante">🍽️ Restaurante</option>
+      <option value="parque">🌳 Parque</option>
+      <option value="cafe">☕ Café</option>
+      <option value="hotel">🏨 Hotel</option>
+      <option value="tienda">🛍️ Tienda</option>
+      <option value="veterinaria">🏥 Veterinaria</option>
+      <option value="grooming">✂️ Grooming</option>
+    </select>
+    <label class="sg-label">Zona / Ubicación</label>
+    <input type="text" id="sgLZona" class="sg-input" placeholder="Zona 10, Antigua...">
+    <label class="sg-label">Dirección</label>
+    <input type="text" id="sgLDireccion" class="sg-input" placeholder="Dirección exacta">
+    <label class="sg-label">Teléfono (opcional)</label>
+    <input type="text" id="sgLTelefono" class="sg-input" placeholder="+502 0000 0000">
+    <label class="sg-label">Descripción</label>
+    <textarea id="sgLDesc" class="sg-input" rows="3" style="resize:none" placeholder="¿Por qué lo recomiendas?"></textarea>
+    <label class="sg-label">Google Maps (opcional)</label>
+    <input type="text" id="sgLMaps" class="sg-input" placeholder="https://maps.google.com/...">
+    <button onclick="enviarSugerenciaLugar()" id="sgLBtn" style="width:100%;padding:13px;background:#E05090;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Enviar sugerencia</button>
+  </div>
+</div>
 
-    // Construir header
-    var header = document.createElement('header');
-    header.className = 'site-header';
-    header.innerHTML =
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-logo">' +
-        '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="36" onerror="this.style.display=\'none\'">' +
-      '</a>' +
-      '<nav class="h-nav">' + navHTML + '</nav>' +
-      '<div class="h-right">' + rightHTML + '</div>' +
-      '<button class="h-ham" onclick="petmiToggleHam()" aria-label="Menu"><span></span><span></span><span></span></button>' +
-      '<div class="h-mob" id="petmiMobMenu">' + mobHTML + '</div>';
+<div class="toast" id="toast"></div>
 
-    document.body.insertBefore(header, document.body.firstChild);
+<script>
+var sessionEmail = localStorage.getItem('petzid_email')||'';
+var filtroActual = '';
+var lugaresData  = [];
+var lugaresFiltr = [];
+var ratingLugarId= null;
+var ratingVal    = 0;
+var TIPO_EMOJIS  = {restaurante:'🍽️',parque:'🌳',cafe:'☕',hotel:'🏨',tienda:'🛍️',veterinaria:'🏥',grooming:'✂️'};
 
-    // Insertar modal de login
-    document.body.insertAdjacentHTML('beforeend', loginHTML);
+cargarLugares();
 
-    // Cerrar dropdowns al click fuera
-    document.addEventListener('click', function(e){
-      if(!e.target.closest('.h-drop')) {
-        document.querySelectorAll('.h-drop-menu.open').forEach(function(m){ m.classList.remove('open'); });
-      }
-      if(!e.target.closest('.h-ham') && !e.target.closest('.h-mob')) {
-        var mob = document.getElementById('petmiMobMenu');
-        if(mob) mob.classList.remove('open');
-      }
-    });
-
-    // Enter en el login
-    setTimeout(function(){
-      var loginInput = document.getElementById('petmiLoginEmail');
-      if(loginInput) loginInput.addEventListener('keydown', function(e){ if(e.key==='Enter') petmiVerificarLogin(); });
-    }, 500);
-
-    // Cargar notificaciones
-    if(sessionEmail) cargarNotifHeader(sessionEmail);
-  }
-
-  function cargarNotifHeader(sessionEmail){
-    // Solicitudes pendientes
-    fetch('/api/galeria?action=checkEmail',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'checkEmail', email:sessionEmail})
-    }).then(function(r){return r.json();})
+function cargarLugares(){
+  document.getElementById('lugaresWrap').innerHTML='<div class="spinner"></div>';
+  fetch('/api/galeria?action=getLugares')
+    .then(function(r){return r.json();})
     .then(function(d){
-      if(!d.found||!d.mascotas.length) return;
-      var promesas = d.mascotas.map(function(m){
-        return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(m.uid)).then(function(r){return r.json();}).then(function(da){return {uid:m.uid,data:da};});
+      lugaresData=d.lugares||[];
+      // Stats
+      document.getElementById('statTotal').textContent=lugaresData.length;
+      var zonas={};lugaresData.forEach(function(l){if(l.zona)zonas[l.zona]=1;});
+      document.getElementById('statZonas').textContent=Object.keys(zonas).length;
+      document.getElementById('statAliados').textContent=lugaresData.filter(function(l){return l.nivel&&l.nivel!=='organico';}).length;
+      // Poblar zonas
+      var zonaSel=document.getElementById('zonaSelect');
+      Object.keys(zonas).sort(function(a,b){var na=parseInt(a),nb=parseInt(b);return isNaN(na)||isNaN(nb)?a.localeCompare(b):na-nb;}).forEach(function(z){
+        var o=document.createElement('option');o.value=z;o.textContent='Zona '+z;zonaSel.appendChild(o);
       });
-      Promise.all(promesas).then(function(resultados){
-        var total = 0;
-        resultados.forEach(function(res){
-          if(!res||!res.data) return;
-          total += (res.data.pendientes||[]).filter(function(a){ return a.uid_receptor===res.uid; }).length;
-        });
-        var badge = document.getElementById('petmiNotifBadge');
-        if(badge && total > 0){
-          badge.textContent = total + (total===1?' solicitud':' solicitudes');
-          badge.style.display = 'inline-block';
-        }
-      });
-
-      // Mensajes no leídos
-      return fetch('/api/galeria?action=getMensajesNoLeidos&uid='+encodeURIComponent(d.mascotas[0].uid));
-    }).then(function(r){return r&&r.json();})
-    .then(function(d){
-      if(!d||!d.count) return;
-      var badge = document.getElementById('petmiMsgBadge');
-      if(badge && d.count > 0){
-        badge.textContent = d.count + (d.count===1?' mensaje':' mensajes');
-        badge.style.display = 'inline-block';
-      }
-    }).catch(function(){});
-  }
-
-  // Funciones globales
-  window.petmiTogglePF = function(e){
-    e.stopPropagation();
-    var m = document.getElementById('pfMenu');
-    if(m) m.classList.toggle('open');
-  };
-  window.petmiToggleMenu = function(e){
-    e.stopPropagation();
-    var m = document.getElementById('petmiMenuDropdown');
-    if(m) m.classList.toggle('open');
-  };
-  window.petmiToggleHam = function(){
-    var m = document.getElementById('petmiMobMenu');
-    if(m) m.classList.toggle('open');
-  };
-  window.petmiLimpiarNotif = function(){
-    var b = document.getElementById('petmiNotifBadge');
-    if(b) b.style.display = 'none';
-  };
-  window.petmiCerrarSesion = function(){
-    localStorage.removeItem('petzid_email');
-    localStorage.removeItem('petzid_dueno');
-    window.location.href = '/galeria.html';
-  };
-  window.petmiAbrirLogin = function(){
-    var o = document.getElementById('petmiLoginOverlay');
-    if(o) o.classList.add('open');
-    // Resetear boton de registro
-    var regBtn = document.getElementById('petmiLoginRegBtn');
-    if(regBtn) regBtn.style.display = 'none';
-    // Limpiar mensaje
-    var msg = document.getElementById('petmiLoginMsg');
-    if(msg) { msg.style.display='none'; msg.textContent=''; }
-    // Limpiar email
-    var inp = document.getElementById('petmiLoginEmail');
-    if(inp) inp.value = '';
-    var btn = document.getElementById('petmiLoginBtn');
-    if(btn) { btn.disabled=false; btn.textContent='Ingresar'; }
-  };
-  window.petmiCerrarLogin = function(){
-    var o = document.getElementById('petmiLoginOverlay');
-    if(o) o.classList.remove('open');
-  };
-  window.petmiVerificarLogin = function(){
-    var email = document.getElementById('petmiLoginEmail').value.trim().toLowerCase();
-    if(!email||email.indexOf('@')<0){ petmiLoginMsg('Ingresa un correo válido','error'); return; }
-    var btn = document.getElementById('petmiLoginBtn');
-    btn.disabled = true; btn.textContent = 'Verificando...';
-
-    fetch('/api/galeria?action=checkEmail',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'checkEmail', email:email})
-    }).then(function(r){return r.json();})
-    .then(function(d){
-      if(d.found && d.mascotas && d.mascotas.length > 0){
-        localStorage.setItem('petzid_email', email);
-        localStorage.setItem('petzid_dueno', d.mascotas[0].dueno||'');
-        petmiLoginMsg('Bienvenido/a! 🐾','success');
-        setTimeout(function(){ window.location.reload(); }, 1000);
-      } else {
-        petmiLoginMsg('No encontramos ese correo. ¿Ya tienes una mascota registrada?','error');
-        btn.disabled = false; btn.textContent = 'Ingresar';
-        // Mostrar boton de registrar mascota
-        var regBtn = document.getElementById('petmiLoginRegBtn');
-        if(!regBtn){
-          regBtn = document.createElement('a');
-          regBtn.id = 'petmiLoginRegBtn';
-          regBtn.href = '/index.html';
-          regBtn.style.cssText = 'display:block;width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;text-align:center;text-decoration:none;box-sizing:border-box;font-family:Arial,sans-serif';
-          regBtn.textContent = '🐾 Registrar mi mascota';
-          var cancelBtn = document.querySelector('.h-login-cancel');
-          if(cancelBtn) cancelBtn.parentNode.insertBefore(regBtn, cancelBtn);
-        }
-        regBtn.style.display = 'block';
-      }
+      document.getElementById('aliarteWrap').style.display='block';
+      filtrarLugares();
     }).catch(function(){
-      petmiLoginMsg('Error de conexión','error');
-      btn.disabled = false; btn.textContent = 'Ingresar';
+      document.getElementById('lugaresWrap').innerHTML='<div class="empty"><div class="empty-icon">😕</div><p>Error al cargar</p></div>';
     });
-  };
-  function petmiLoginMsg(txt, tipo){
-    var el = document.getElementById('petmiLoginMsg');
-    if(el){ el.textContent=txt; el.className='h-login-msg '+tipo; el.style.display='block'; }
+}
+
+function setFiltro(tipo,btn){
+  filtroActual=tipo;
+  document.querySelectorAll('.filtro-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  filtrarLugares();
+}
+
+function filtrarLugares(){
+  var busq=document.getElementById('searchInput').value.toLowerCase();
+  var zona=document.getElementById('zonaSelect').value;
+  lugaresFiltr=lugaresData.filter(function(l){
+    if(filtroActual&&l.tipo!==filtroActual)return false;
+    if(zona&&String(l.zona||'')!==zona)return false;
+    if(busq){
+      var ok=(l.nombre||'').toLowerCase().indexOf(busq)>=0||(l.direccion||'').toLowerCase().indexOf(busq)>=0||(l.zona||'').toLowerCase().indexOf(busq)>=0||(l.descripcion||'').toLowerCase().indexOf(busq)>=0;
+      if(!ok)return false;
+    }
+    return true;
+  });
+  renderLugares();
+}
+
+function renderLugares(){
+  var wrap=document.getElementById('lugaresWrap');
+  if(!lugaresFiltr.length){
+    wrap.innerHTML='<div class="empty"><div class="empty-icon">📍</div><p style="font-size:14px;font-weight:700;color:#555">No se encontraron lugares</p><p style="font-size:13px;color:#aaa;margin-top:6px">Intenta con otra zona o categoría</p></div>';
+    return;
+  }
+  var premium  =lugaresFiltr.filter(function(l){return l.nivel==='premium';});
+  var destacado=lugaresFiltr.filter(function(l){return l.nivel==='destacado';});
+  var basico   =lugaresFiltr.filter(function(l){return l.nivel==='basico';});
+  var organico =lugaresFiltr.filter(function(l){return !l.nivel||l.nivel==='organico';});
+  var html='';
+  if(premium.length){html+='<div class="sec-titulo">🏆 Aliados Premium</div>';premium.forEach(function(l){html+=renderCard(l,'premium');});}
+  if(destacado.length){html+='<div class="sec-titulo">⭐ Aliados Destacados</div>';destacado.forEach(function(l){html+=renderCard(l,'destacado');});}
+  if(basico.length){html+='<div class="sec-titulo">✓ Aliados Verificados</div>';basico.forEach(function(l){html+=renderCard(l,'basico');});}
+  if(organico.length){
+    if(premium.length||destacado.length||basico.length)html+='<div class="sec-titulo">📍 Más lugares</div>';
+    organico.forEach(function(l){html+=renderCard(l,'organico');});
+  }
+  wrap.innerHTML=html;
+}
+
+function renderCard(l,nivel){
+  var emoji=TIPO_EMOJIS[l.tipo]||'📍';
+  var stars=renderStars(l.rating||0);
+  var esBig=nivel==='premium'||nivel==='destacado';
+  var barColor=nivel==='premium'?'linear-gradient(90deg,#764ba2,#E05090)':nivel==='destacado'?'linear-gradient(90deg,#F5C842,#f0a500)':nivel==='basico'?'#00B4B4':'#e0e0e0';
+  var badgeHTML=nivel==='premium'?'<span class="badge-nivel badge-premium-ali">🏆 Premium</span>':nivel==='destacado'?'<span class="badge-nivel badge-destacado-ali">⭐ Destacado</span>':nivel==='basico'?'<span class="badge-nivel badge-basico-ali">✓ Verificado</span>':'<span class="lugar-tipo-badge">'+emoji+' '+(l.tipo||'Lugar')+'</span>';
+  var cardClass='lugar-card'+(nivel==='premium'?' premium-ali':nivel==='destacado'?' destacado-ali':'');
+
+  if(esBig){
+    var fotoHTML=l.imagen&&l.imagen.indexOf('http')>=0?'<img src="'+l.imagen+'" style="width:80px;height:80px;border-radius:12px;object-fit:cover;flex-shrink:0">':'<div style="width:80px;height:80px;border-radius:12px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0">'+emoji+'</div>';
+    var html='<div class="'+cardClass+'"><div class="nivel-bar" style="background:'+barColor+'"></div>';
+    html+='<div style="padding:14px"><div style="display:flex;gap:12px;align-items:flex-start">'+fotoHTML+'<div style="flex:1;min-width:0">'+badgeHTML+'<div class="lugar-nombre">'+l.nombre+'</div>';
+    html+='<div class="lugar-zona">'+emoji+' '+(l.tipo||'')+(l.zona?' · Zona '+l.zona:'')+(l.direccion?' · '+l.direccion:'')+'</div></div></div>';
+    if(l.descripcion)html+='<div style="font-size:13px;color:#555;margin:10px 0;line-height:1.6">'+l.descripcion+'</div>';
+    html+='<div class="lugar-footer">'+stars+(l.rating?'<span class="rating-num">'+l.rating.toFixed(1)+'</span>':'');
+    if(l.google_maps)html+='<a href="'+l.google_maps+'" target="_blank" class="btn-maps">📍 Maps</a>';
+    if(l.instagram)html+='<a href="https://instagram.com/'+l.instagram.replace('@','')+'" target="_blank" class="btn-ig-place">📸 IG</a>';
+    if(l.telefono)html+='<a href="https://wa.me/'+l.telefono.replace(/[^0-9]/g,'')+'" target="_blank" class="btn-wa-place">📲 WA</a>';
+    if(sessionEmail)html+='<button class="btn-rating" onclick="openRating(\''+l.id+'\',\''+l.nombre.replace(/'/g,'')+'\')">⭐ Calificar</button>';
+    html+='</div></div></div>';
+    return html;
   }
 
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', initHeader);
+  // Card horizontal para basico + organico
+  var fotoSq=l.imagen&&l.imagen.indexOf('http')>=0?'<img src="'+l.imagen+'">':emoji;
+  var html='<div class="'+cardClass+'"><div class="nivel-bar" style="background:'+barColor+'"></div>';
+  html+='<div class="lugar-body-horiz"><div class="lugar-foto-sq">'+fotoSq+'</div>';
+  html+='<div class="lugar-body">'+badgeHTML+'<div class="lugar-nombre">'+l.nombre+'</div>';
+  if(l.zona)html+='<div class="lugar-zona">📍 Zona '+l.zona+(l.direccion?' · '+l.direccion:'')+'</div>';
+  if(l.descripcion)html+='<div class="lugar-desc">'+l.descripcion+'</div>';
+  html+='<div class="lugar-footer">'+stars+(l.rating?'<span class="rating-num">'+l.rating.toFixed(1)+'</span>':'');
+  if(l.google_maps)html+='<a href="'+l.google_maps+'" target="_blank" class="btn-maps">Maps</a>';
+  if(sessionEmail)html+='<button class="btn-rating" onclick="openRating(\''+l.id+'\',\''+l.nombre.replace(/'/g,'')+'\')">⭐</button>';
+  html+='</div></div></div></div>';
+  return html;
+}
+
+function renderStars(r){
+  if(!r)return '<span style="color:#ddd;font-size:11px">☆☆☆☆☆</span>';
+  var s='';for(var i=0;i<Math.floor(r);i++)s+='⭐';return s;
+}
+
+function openRating(id,nombre){
+  if(!sessionEmail){mostrarToast('Inicia sesión para calificar');return;}
+  ratingLugarId=id;ratingVal=0;
+  document.getElementById('ratingLugarNombre').textContent='Calificar: '+nombre;
+  document.getElementById('ratingComentario').value='';
+  document.querySelectorAll('.star-opt').forEach(function(s){s.classList.remove('selected');});
+  document.getElementById('modalRating').classList.add('open');
+}
+function closeRating(){document.getElementById('modalRating').classList.remove('open');}
+function setRating(v){ratingVal=v;document.querySelectorAll('.star-opt').forEach(function(s,i){s.classList.toggle('selected',i<v);});}
+function enviarRating(){
+  if(!ratingVal){mostrarToast('Selecciona una calificación');return;}
+  fetch('/api/galeria?action=ratingLugar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lugar_id:ratingLugarId,email:sessionEmail,rating:ratingVal,comentario:document.getElementById('ratingComentario').value.trim()})})
+    .then(function(r){return r.json();}).then(function(d){if(d.ok){mostrarToast('✅ Calificación enviada!');closeRating();setTimeout(cargarLugares,1000);}});
+}
+
+function abrirFormLugar(){document.getElementById('modalSugerirLugar').classList.add('open');}
+function cerrarFormLugar(){document.getElementById('modalSugerirLugar').classList.remove('open');}
+function enviarSugerenciaLugar(){
+  var nombre=document.getElementById('sgLNombre').value.trim();
+  if(!nombre){mostrarMsgLugar('El nombre es obligatorio');return;}
+  var btn=document.getElementById('sgLBtn');btn.disabled=true;btn.textContent='Enviando...';
+  fetch('/api/galeria?action=enviarLugar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:nombre,tipo:document.getElementById('sgLTipo').value,zona:document.getElementById('sgLZona').value.trim(),telefono:document.getElementById('sgLTelefono').value.trim(),direccion:document.getElementById('sgLDireccion').value.trim(),descripcion:document.getElementById('sgLDesc').value.trim(),google_maps:document.getElementById('sgLMaps').value.trim(),email:sessionEmail||''})})
+    .then(function(r){return r.json();}).then(function(d){if(d.ok){mostrarMsgLugar('¡Gracias! La revisaremos pronto 🐾', true);btn.textContent='Enviado!';setTimeout(cerrarFormLugar,2000);}else{mostrarMsgLugar('Error al enviar');btn.disabled=false;btn.textContent='Enviar sugerencia';}});
+}
+function mostrarMsgLugar(txt, exito){
+  var el=document.getElementById('sgLugarMsg');
+  if(exito){
+    var jefe=['https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'];
+    el.innerHTML='<div style="text-align:center;padding:8px 0">'
+      +'<img src="'+jefe[Math.floor(Math.random()*3)]+'" style="width:160px;border-radius:12px;margin-bottom:10px" onerror="this.style.display=\'none\'">'
+      +'<div style="font-size:15px;font-weight:700;color:#007a7a;margin-bottom:4px">¡Gracias por tu sugerencia! 🐾</div>'
+      +'<div style="font-size:13px;color:#555">El jefe revisará tu sugerencia y pronto aparecerá en la lista.</div>'
+      +'</div>';
+    el.style.background='#e0f7f7';
   } else {
-    initHeader();
+    el.textContent=txt;
+    el.style.background='#fbeaf0';
+    el.style.color='#c0392b';
   }
-})();
+  el.style.display='block';
+}
+function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+</script>
+<script src="/header.js"></script>
+</body>
+</html>
