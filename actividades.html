@@ -31,8 +31,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .act-tiempo{font-size:11px;color:#aaa}
 .act-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:auto;white-space:nowrap}
 .badge-plan{background:#e8f4fd;color:#1565c0}
-.badge-regalo{background:#fce4ec;color:#c0392b}
-.badge-vendo{background:#fff3cd;color:#856404}
 .badge-busco{background:#e8f5e9;color:#2e7d32}
 .badge-perdido{background:#ffebee;color:#b71c1c}
 .act-titulo{font-size:15px;font-weight:900;color:#222;margin-bottom:4px}
@@ -54,6 +52,11 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 /* Botón contactar en perdido */
 .btn-contactar-perdido{padding:8px 16px;background:#c0392b;color:#fff;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer}
 .btn-aparecio{padding:8px 16px;background:#1a7a1a;color:#fff;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer}
+.badge-adopcion{background:#e8f5e9;color:#1b5e20}
+.act-card.adopcion-card{border:2px solid #2e7d32;background:#f9fff9}
+.adopcion-header-bar{background:#2e7d32;border-radius:10px 10px 0 0;margin:-16px -16px 14px;padding:10px 16px;display:flex;align-items:center;gap:8px}
+.adopcion-header-bar span{font-size:13px;font-weight:900;color:#fff;letter-spacing:.5px}
+.btn-adoptar{padding:8px 16px;background:#2e7d32;color:#fff;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer}
 
 .empty{text-align:center;padding:48px 20px;color:#bbb}
 .spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#764ba2;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
@@ -81,10 +84,9 @@ label.field-lbl{font-size:11px;font-weight:700;color:#aaa;text-transform:upperca
   <div class="filtros">
     <button class="filtro-btn active" onclick="setFiltro('',this)">Todos</button>
     <button class="filtro-btn" onclick="setFiltro('plan',this)">🐾 Planes</button>
-    <button class="filtro-btn" onclick="setFiltro('regalo',this)">🎁 Regalo</button>
-    <button class="filtro-btn" onclick="setFiltro('vendo',this)">🛍️ Vendo</button>
     <button class="filtro-btn" onclick="setFiltro('busco',this)">🔍 Busco</button>
     <button class="filtro-btn" onclick="setFiltro('perdido',this)">🚨 Perdido</button>
+    <button class="filtro-btn" onclick="setFiltro('adopcion',this)">🏠 Adopción</button>
   </div>
 
   <div id="actividadesWrap"><div class="spinner"></div></div>
@@ -101,10 +103,9 @@ label.field-lbl{font-size:11px;font-weight:700;color:#aaa;text-transform:upperca
     <label class="field-lbl">Tipo</label>
     <select id="pubTipo" class="field-input" onchange="toggleFecha()">
       <option value="plan">🐾 Plan (paseo, café, parque...)</option>
-      <option value="regalo">🎁 Regalo</option>
-      <option value="vendo">🛍️ Vendo</option>
       <option value="busco">🔍 Busco</option>
       <option value="perdido">🚨 Perdido</option>
+      <option value="adopcion">🏠 Adopción</option>
     </select>
     <label class="field-lbl">Título *</label>
     <input type="text" id="pubTitulo" class="field-input" placeholder="Ej: Mañana voy al parque Kaminaljuyú">
@@ -155,10 +156,9 @@ var pubFotoBase64 = null, pubFotoMime = null;
 
 var TIPOS = {
   plan:    {label:'🐾 Plan',    cls:'badge-plan'},
-  regalo:  {label:'🎁 Regalo',  cls:'badge-regalo'},
-  vendo:   {label:'🛍️ Vendo',   cls:'badge-vendo'},
   busco:   {label:'🔍 Busco',   cls:'badge-busco'},
-  perdido: {label:'🚨 Perdido', cls:'badge-perdido'}
+  perdido:  {label:'🚨 Perdido',   cls:'badge-perdido'},
+  adopcion: {label:'🏠 Adopción',  cls:'badge-adopcion'}
 };
 
 if(sessionEmail){
@@ -267,6 +267,35 @@ function renderActividades(){
       return;
     }
 
+    // ── Tarjeta ADOPCION con tratamiento especial ──
+    var esAdopcion = a.tipo==='adopcion';
+    if(esAdopcion){
+      html+='<div class="act-card adopcion-card">';
+      html+='<div class="adopcion-header-bar">';
+      html+='<span style="font-size:18px">🏠</span>';
+      html+='<span>EN ADOPCIÓN — '+a.titulo.replace('🏠 ','').replace('EN ADOPCIÓN ','')+'</span>';
+      if(esCreador) html+='<button class="btn-eliminar" style="margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer" onclick="eliminarActividad(''+a.id+'')">🗑️</button>';
+      html+='</div>';
+      if(a.imagen&&a.imagen.indexOf('http')>=0){
+        html+='<img src="'+a.imagen+'" class="act-img" style="max-height:260px">';
+      }
+      html+='<div class="act-header">';
+      html+='<div class="act-avatar">'+fotoAvatar+'</div>';
+      html+='<div><div class="act-nombre">'+a.nombre_creador+'</div>';
+      html+='<div class="act-tiempo">'+tiempoRelativo(a.created_at)+'</div></div>';
+      html+='</div>';
+      if(a.descripcion) html+='<div class="act-desc" style="font-size:13px;color:#333;margin-bottom:10px">'+a.descripcion+'</div>';
+      if(a.ubicacion) html+='<div style="font-size:13px;font-weight:700;color:#2e7d32;margin-bottom:6px">📍 '+a.ubicacion+'</div>';
+      html+='<div style="background:#e8f5e9;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#2e7d32;font-weight:600">🐾 Esta mascota busca un hogar lleno de amor</div>';
+      html+='<div class="act-footer">';
+      html+='<button class="btn-wa" onclick="window.open('https://wa.me/?text='+shareText+'%20'+shareUrl+'','_blank')">📲 Compartir</button>';
+      if(sessionEmail&&a.email_creador&&a.email_creador!==sessionEmail){
+        html+='<button class="btn-adoptar" onclick="contactarAdopcion(''+i+'')">🏠 Me interesa adoptar</button>';
+      }
+      html+='</div></div>';
+      return;
+    }
+
     // ── Tarjeta NORMAL ──
     html+='<div class="act-card">';
     html+='<div class="act-header">';
@@ -297,7 +326,7 @@ function renderActividades(){
       }
     } else {
       if(sessionEmail){
-        var interesColor={regalo:'background:#fce4ec;color:#c0392b',vendo:'background:#fff3cd;color:#856404',busco:'background:#e8f5e9;color:#2e7d32'}[a.tipo]||'background:#f0f0ee;color:#555';
+        var interesColor={busco:'background:#e8f5e9;color:#2e7d32'}[a.tipo]||'background:#f0f0ee;color:#555';
         html+='<button class="btn-interes" style="'+interesColor+'" onclick="mostrarInteres(\''+a.id+'\',\''+a.uid_creador+'\')">💬 Me interesa</button>';
       }
     }
@@ -381,6 +410,24 @@ function mostrarInteres(actividadId, uidCreador){
       emailInteresado:sessionEmail
     })
   }).then(function(){mostrarToast('✅ Notificación enviada al dueño!');});
+}
+
+// Botón "Me interesa adoptar"
+function contactarAdopcion(i){
+  var act=actividadesData[i];
+  if(!act||!act.email_creador){mostrarToast('No se pudo obtener el contacto');return;}
+  if(!sessionEmail){mostrarToast('Inicia sesión para contactar');return;}
+  if(!miMascota){mostrarToast('Necesitas registrar una mascota');return;}
+  fetch('/api/submit',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      action:'notificarInteres',
+      emailCreador:   act.email_creador,
+      tituloAnuncio:  act.titulo,
+      nombreMascota:  miMascota.nombre,
+      emailInteresado:sessionEmail
+    })
+  }).then(function(){mostrarToast('🏠 Mensaje enviado — ¡gracias por querer adoptar!');});
 }
 
 // Botón "Tengo info" en tarjeta perdido
