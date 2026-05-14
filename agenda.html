@@ -512,7 +512,16 @@ function publicar(){
     btn.disabled=false; btn.textContent='Publicar';
     if(d.ok){
       cerrarPublicar();
-      mostrarToast(tipoSeleccionado==='adopcion'?'🏠 Adopción enviada para revisión':'🐾 ¡Publicado!');
+      var msg = tipoSeleccionado==='adopcion'
+        ? '🏠 Adopción enviada al jefe para revisión'
+        : '🐾 ¡Publicado! Visible en la comunidad';
+      mostrarToast(msg);
+      // Mostrar imagen del jefe si es adopcion o busco
+      if(tipoSeleccionado==='adopcion'){
+        setTimeout(function(){
+          mostrarToast('El jefe revisará tu publicación pronto 🐾');
+        }, 2600);
+      }
       document.getElementById('pubTitulo').value='';
       document.getElementById('pubDesc').value='';
       document.getElementById('pubFecha').value='';
