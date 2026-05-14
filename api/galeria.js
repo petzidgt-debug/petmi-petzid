@@ -119,7 +119,9 @@ export default async function handler(req, res) {
         foto:         m.foto           || '',
         angelito:     m.angelito       ? 'Si' : 'No',
         notifMensajes:m.notif_mensajes ? 'Si' : 'No',
-        ofertas:      m.ofertas        ? 'Si' : 'No'
+        ofertas:      m.ofertas        ? 'Si' : 'No',
+        premium:      m.premium        === true,
+        premium_hasta:m.premium_hasta  || null
       }));
       return res.status(200).json({ found: mascotas.length > 0, mascotas });
     }
@@ -658,6 +660,54 @@ export default async function handler(req, res) {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
       return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── activarPremium (admin) ───────────────────────────────
+    if (action === 'activarPremium' && req.method === 'POST') {
+      const { uid, meses } = req.body;
+      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
+      const hoy = new Date();
+      hoy.setMonth(hoy.getMonth() + (meses || 12));
+      const hasta = hoy.toISOString().split('T')[0];
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ premium: true, premium_hasta: hasta })
+      });
+      return res.status(200).json({ ok: r.ok, premium_hasta: hasta });
+    }
+
+    // ── desactivarPremium (admin) ─────────────────────────────
+    if (action === 'desactivarPremium' && req.method === 'POST') {
+      const { uid } = req.body;
+      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ premium: false, premium_hasta: null })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── activarPremiumGratis — 3 meses por perfil completo ───
+    if (action === 'activarPremiumGratis' && req.method === 'POST') {
+      const { uid } = req.body;
+      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
+      // Verificar que no tenga ya premium activo
+      const check = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=premium,premium_hasta', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const data = await check.json();
+      if (data[0]?.premium) return res.status(200).json({ ok: false, error: 'ya tiene premium' });
+      const hasta = new Date();
+      hasta.setMonth(hasta.getMonth() + 3);
+      const hastaStr = hasta.toISOString().split('T')[0];
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ premium: true, premium_hasta: hastaStr })
+      });
+      return res.status(200).json({ ok: r.ok, premium_hasta: hastaStr, meses: 3 });
     }
 
     return res.status(200).json({ status: 'PetMi Supabase API activa' });
