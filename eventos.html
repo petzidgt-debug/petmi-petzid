@@ -67,6 +67,17 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .empty-txt{font-size:14px;color:#888}
 .spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
+.foto-upload-wrap{border:2px dashed #e0e0e0;border-radius:12px;padding:16px;text-align:center;cursor:pointer;margin-bottom:12px;transition:border-color .2s}
+.foto-upload-wrap:hover{border-color:#00B4B4}
+.foto-upload-wrap input{display:none}
+.foto-preview{width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:8px;display:none}
+.jefe-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.jefe-modal.open{display:flex}
+.jefe-box{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:320px;text-align:center}
+.jefe-box img{width:160px;border-radius:14px;margin-bottom:14px}
+.jefe-box h3{font-size:17px;font-weight:900;color:#222;margin-bottom:6px}
+.jefe-box p{font-size:13px;color:#888;line-height:1.6;margin-bottom:18px}
+.jefe-box button{width:100%;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
 .msg-sg{font-size:13px;padding:10px;border-radius:10px;margin-bottom:12px;display:none}
@@ -128,6 +139,12 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <textarea class="form-input" id="evDesc" rows="3" style="resize:none" placeholder="Cuéntanos más sobre el evento..."></textarea>
     <label class="form-label">Link (opcional)</label>
     <input type="text" class="form-input" id="evLink" placeholder="https://...">
+    <label class="form-label">Foto del evento (opcional)</label>
+    <div class="foto-upload-wrap" onclick="document.getElementById('evFotoInput').click()">
+      <img id="evFotoPreview" class="foto-preview">
+      <div id="evFotoLabel" style="font-size:13px;color:#aaa">📷 Toca para agregar una foto</div>
+      <input type="file" id="evFotoInput" accept="image/*" onchange="previsualizarFoto(this,'evFotoPreview','evFotoLabel')">
+    </div>
     <button class="btn-enviar-sug" id="btnSugerir" onclick="enviarSugerencia()">Enviar sugerencia</button>
     <button onclick="cerrarSugerir()" style="width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer;margin-top:8px">Cancelar</button>
   </div>
@@ -144,6 +161,14 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="jefe-modal" id="jefeModal" onclick="this.classList.remove('open')">
+  <div class="jefe-box" onclick="event.stopPropagation()">
+    <img id="jefeImg" src="" onerror="this.style.display='none'">
+    <h3 id="jefeTitulo">¡Gracias!</h3>
+    <p id="jefeMsg">El jefe revisará tu sugerencia pronto 🐾</p>
+    <button onclick="document.getElementById('jefeModal').classList.remove('open')">OK, gracias!</button>
+  </div>
+</div>
 
 <script>
 var sessionEmail = localStorage.getItem('petzid_email')||'';
@@ -158,6 +183,9 @@ var eventoInvitarActual = null;
 var invitadosEnviados = {};
 
 var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var JEFE_IMGS=['https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'];
+var jefeIdx=0;
+var evFotoBase64=null;var evFotoMime=null;
 var TIPO_EMOJIS={evento:'🎪',paseo:'🚶',exposicion:'🏆',adopcion:'🐾'};
 
 if(sessionEmail){
@@ -342,7 +370,17 @@ function enviarInvitacion(uid,nombre,email){
 function abrirSugerir(){
   document.getElementById('modalSugerir').classList.add('open');
 }
-function cerrarSugerir(){document.getElementById('modalSugerir').classList.remove('open');}
+function cerrarSugerir(){
+  document.getElementById('modalSugerir').classList.remove('open');
+  evFotoBase64=null;evFotoMime=null;
+  var prev=document.getElementById('evFotoPreview');
+  var lbl=document.getElementById('evFotoLabel');
+  if(prev)prev.style.display='none';
+  if(lbl)lbl.textContent='📷 Toca para agregar una foto';
+  var btn=document.getElementById('btnSugerir');
+  if(btn){btn.disabled=false;btn.textContent='Enviar sugerencia';}
+  document.getElementById('msgSugerir').style.display='none';
+}
 
 function enviarSugerencia(){
   var titulo=document.getElementById('evTitulo').value.trim();
@@ -352,7 +390,7 @@ function enviarSugerencia(){
   btn.disabled=true;btn.textContent='Enviando...';
   fetch('/api/galeria?action=enviarEvento',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({titulo:titulo,tipo:document.getElementById('evTipo').value,fecha:fecha,hora:document.getElementById('evHora').value||null,lugar:document.getElementById('evLugar').value.trim(),direccion:document.getElementById('evDireccion').value.trim(),descripcion:document.getElementById('evDesc').value.trim(),link:document.getElementById('evLink').value.trim(),email:sessionEmail||''})
+    body:JSON.stringify({titulo:titulo,tipo:document.getElementById('evTipo').value,fecha:fecha,hora:document.getElementById('evHora').value||null,lugar:document.getElementById('evLugar').value.trim(),direccion:document.getElementById('evDireccion').value.trim(),descripcion:document.getElementById('evDesc').value.trim(),link:document.getElementById('evLink').value.trim(),email:sessionEmail||'',fotoBase64:evFotoBase64||null,fotoMime:evFotoMime||null})
   }).then(function(r){return r.json();})
   .then(function(d){
     if(d.ok){
@@ -367,6 +405,29 @@ function enviarSugerencia(){
       mostrarToast('Error al enviar');
     }
   }).catch(function(){btn.disabled=false;btn.textContent='Enviar sugerencia';mostrarToast('Error de conexión');});
+}
+
+function previsualizarFoto(input, previewId, labelId){
+  var file=input.files[0];if(!file)return;
+  evFotoMime=file.type;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    evFotoBase64=e.target.result.split(',')[1];
+    var prev=document.getElementById(previewId);
+    var lbl=document.getElementById(labelId);
+    prev.src=e.target.result;prev.style.display='block';
+    lbl.textContent='✓ Foto seleccionada · Toca para cambiar';
+  };
+  reader.readAsDataURL(file);
+}
+
+function mostrarJefe(titulo, msg){
+  var img=JEFE_IMGS[jefeIdx%JEFE_IMGS.length];
+  jefeIdx++;
+  document.getElementById('jefeImg').src=img;
+  document.getElementById('jefeTitulo').textContent=titulo;
+  document.getElementById('jefeMsg').textContent=msg;
+  document.getElementById('jefeModal').classList.add('open');
 }
 
 function mostrarToast(msg){
