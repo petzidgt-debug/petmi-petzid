@@ -17,9 +17,10 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 .perfil-hero{position:relative;background:#00B4B4;overflow:hidden}
 .perfil-hero.angelito{background:linear-gradient(135deg,#667eea,#764ba2)}
-.perfil-foto-wrap{position:relative;width:100%;max-height:380px;overflow:hidden}
-.perfil-foto{width:100%;max-height:380px;object-fit:cover;display:block}
-.perfil-foto-placeholder{width:100%;height:280px;display:flex;align-items:center;justify-content:center;font-size:80px;background:rgba(255,255,255,.15)}
+.perfil-foto-wrap{position:relative;width:100%;height:380px;overflow:hidden;background:#111}
+.perfil-foto-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(20px) brightness(.4);transform:scale(1.2);z-index:0}
+.perfil-foto{position:relative;z-index:1;width:100%;height:380px;object-fit:contain;display:block}
+.perfil-foto-placeholder{position:relative;z-index:1;width:100%;height:380px;display:flex;align-items:center;justify-content:center;font-size:80px;background:rgba(255,255,255,.08)}
 .perfil-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.5));padding:20px}
 .perfil-nombre{font-size:28px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;letter-spacing:1px}
 .perfil-apodo{display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;margin-top:6px}
@@ -225,7 +226,8 @@ function renderPerfil(){
   }
 
   var fotoHTML=m.foto&&m.foto.indexOf('http')>=0
-    ?'<img src="'+m.foto+'" class="perfil-foto" style="'+(m.angelito?'filter:grayscale(20%)':'')+'">'
+    ?'<div class="perfil-foto-bg" style="background-image:url(\'' + m.foto + '\''+(m.angelito?';filter:blur(20px) brightness(.25) grayscale(30%)':'')+'"></div>'
+     +'<img src="'+m.foto+'" class="perfil-foto" style="'+(m.angelito?'filter:grayscale(20%)':'')+'">'
     :'<div class="perfil-foto-placeholder">'+emoji+'</div>';
 
   var actividadesHTML='';
