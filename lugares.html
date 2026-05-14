@@ -354,7 +354,7 @@ function enviarSugerenciaLugar(){
   if(!nombre){mostrarMsgLugar('El nombre es obligatorio');return;}
   var btn=document.getElementById('sgLBtn');btn.disabled=true;btn.textContent='Enviando...';
   fetch('/api/galeria?action=enviarLugar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:nombre,tipo:document.getElementById('sgLTipo').value,zona:document.getElementById('sgLZona').value.trim(),telefono:document.getElementById('sgLTelefono').value.trim(),direccion:document.getElementById('sgLDireccion').value.trim(),descripcion:document.getElementById('sgLDesc').value.trim(),google_maps:document.getElementById('sgLMaps').value.trim(),email:sessionEmail||'',fotoBase64:sgFotoBase64||null,fotoMime:sgFotoMime||null})})
-    .then(function(r){return r.json();}).then(function(d){if(d.ok){mostrarMsgLugar('¡Gracias! La revisaremos pronto 🐾', true);btn.textContent='Enviado!';setTimeout(cerrarFormLugar,2000);}else{mostrarMsgLugar('Error al enviar');btn.disabled=false;btn.textContent='Enviar sugerencia';}});
+    .then(function(r){return r.json();}).then(function(d){if(d.ok){mostrarMsgLugar('ok',true);}else{mostrarMsgLugar('Error al enviar');btn.disabled=false;btn.textContent='Enviar sugerencia';}});
 }
 function mostrarMsgLugar(txt, exito){
   if(exito){
