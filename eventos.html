@@ -2,505 +2,1477 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galeria — PetMi</title>
 <link rel="icon" href="/favico.jpg" type="image/jpeg">
-<title>Eventos Pet-Friendly — PetMi</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
-.wrap{max-width:700px;margin:0 auto;padding:20px 16px 40px}
-.hero{background:linear-gradient(135deg,#00B4B4,#007a7a);border-radius:16px;padding:24px;margin-bottom:20px;color:#fff;text-align:center}
-.hero h1{font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;margin-bottom:6px}
-.hero p{font-size:13px;color:rgba(255,255,255,.75)}
-.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.filtro-btn{padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:600;color:#888;background:#fff;cursor:pointer;transition:all .2s}
-.filtro-btn.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
-.evento-card{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.evento-img{width:100%;height:180px;object-fit:cover;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:48px}
-.evento-img img{width:100%;height:180px;object-fit:cover}
-.evento-body{padding:16px}
-.evento-tipo{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:8px}
-.tipo-evento{background:#e0f7f7;color:#007a7a}
-.tipo-paseo{background:#fff3cd;color:#856404}
-.tipo-exposicion{background:#f3e8ff;color:#6f42c1}
-.tipo-adopcion{background:#fce4ec;color:#c0392b}
-.evento-titulo{font-size:18px;font-weight:900;color:#222;margin-bottom:6px}
-.evento-fecha{font-size:13px;color:#00B4B4;font-weight:700;margin-bottom:4px}
-.evento-lugar{font-size:13px;color:#888;margin-bottom:10px}
-.evento-desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:14px}
-.evento-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid #f5f5f5}
-.asistentes-count{font-size:12px;color:#aaa}
-.btn-asistir{padding:9px 20px;background:#00B4B4;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer}
-.btn-asistir.asistiendo{background:#e0f7f7;color:#007a7a}
-.btn-asistir:disabled{background:#ddd;color:#aaa;cursor:not-allowed}
-.btns-share{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.btn-share{padding:7px 12px;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer}
-.btn-invitar{background:#f0f0ee;color:#555}
-.btn-whatsapp{background:#25D366;color:#fff}
-.btn-copiar{background:#f0f0ee;color:#555}
-.empty{text-align:center;padding:48px 20px;color:#bbb}
-.empty-icon{font-size:48px;margin-bottom:12px}
-.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
-@keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1}
-.modal-handle{width:40px;height:4px;background:#ddd;border-radius:4px;margin:0 auto 16px;cursor:grab}
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+
+/* HEADER */
+.header{background:#fff;border-bottom:1px solid #eee;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.header-logo img{height:38px;display:block}
+.header-logo-fallback{font-size:20px;font-weight:900;color:#00B4B4;font-family:'Arial Black',Arial,sans-serif}
+.header-logo-fallback span{color:#E05090}
+.btn-registro{padding:8px 18px;background:#00B4B4;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
+.header-user{display:flex;align-items:center;gap:10px}
+.user-badge{font-size:12px;color:#007a7a;font-weight:600;background:#e0f7f7;padding:6px 12px;border-radius:20px}
+.btn-salir{font-size:12px;color:#aaa;background:none;border:none;cursor:pointer;padding:4px 8px}
+
+/* HERO */
+.hero{background:#00B4B4;padding:40px 20px;text-align:center}
+.hero h1{font-size:28px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:8px}
+.hero h1 span{color:#F5C842}
+.hero p{font-size:15px;color:rgba(255,255,255,.85);margin-bottom:20px}
+.hero-stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
+.hero-stat{text-align:center}
+.hero-stat-num{font-size:28px;font-weight:900;color:#fff}
+.hero-stat-lbl{font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1px}
+
+/* SECCION CUMPLEAÑEROS */
+.seccion-cumple{background:linear-gradient(135deg,#F5C842,#ffaa00);padding:24px 20px}
+.seccion-titulo{font-size:18px;font-weight:900;color:#1a1a1a;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.seccion-sub{font-size:13px;color:rgba(0,0,0,.6);margin-bottom:16px}
+.cumple-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;-ms-overflow-style:none;scrollbar-width:none}
+.cumple-scroll::-webkit-scrollbar{display:none}
+.cumple-card{background:#fff;border-radius:14px;overflow:hidden;min-width:130px;max-width:130px;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-shrink:0;position:relative;cursor:pointer;transition:transform .2s}
+.cumple-foto{width:130px;height:130px;object-fit:cover;background:#fff3cd;display:flex;align-items:center;justify-content:center;font-size:36px}
+.cumple-foto img{width:130px;height:130px;object-fit:cover}
+.cumple-info{padding:8px 10px}
+.cumple-nombre{font-size:13px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cumple-fecha{font-size:11px;color:#888}
+.cumple-badge{position:absolute;top:6px;right:6px;font-size:16px}
+
+/* SECCION ACTIVIDADES */
+.seccion-actividades{background:linear-gradient(135deg,#764ba2,#E05090);padding:24px 20px}
+.act-prev-card{background:#fff;border-radius:14px;overflow:hidden;min-width:160px;max-width:160px;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-shrink:0;cursor:pointer;transition:transform .2s}
+.act-prev-card:hover{transform:translateY(-2px)}
+.act-prev-card .act-prev-body{padding:8px 10px}
+.act-prev-body{padding:8px 10px}
+.act-prev-titulo{font-size:12px;font-weight:900;color:#222;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act-prev-meta{font-size:10px;color:#aaa}
+
+/* SECCION ANGELES */
+.seccion-angeles{background:linear-gradient(135deg,#667eea,#764ba2);padding:24px 20px}
+.seccion-angeles .seccion-titulo{color:#fff}
+.seccion-angeles .seccion-sub{color:rgba(255,255,255,.7)}
+.angel-card{background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.3);border-radius:14px;overflow:hidden;min-width:130px;max-width:130px;flex-shrink:0;position:relative;cursor:pointer;transition:transform .2s}
+.angel-foto{width:130px;height:130px;object-fit:cover;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:36px;position:relative}
+.angel-foto img{width:130px;height:130px;object-fit:cover;filter:grayscale(30%)}
+.angel-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(102,126,234,.2)}
+.angel-emoji{position:absolute;top:6px;right:6px;font-size:20px}
+.angel-info{padding:8px 10px}
+.angel-nombre{font-size:13px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.angel-fecha{font-size:11px;color:rgba(255,255,255,.6)}
+
+/* FILTERS */
+.filters{background:#fff;border-bottom:1px solid #eee;padding:12px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:60px;z-index:90}
+.filter-btn{padding:8px 16px;border-radius:24px;border:1.5px solid #ddd;font-size:13px;font-weight:600;color:#888;cursor:pointer;background:#fff;transition:all .15s;white-space:nowrap}
+.filter-btn.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
+.search-input{flex:1;min-width:180px;padding:8px 14px;border:1.5px solid #e0e0e0;border-radius:24px;font-size:13px;outline:none}
+.search-input:focus{border-color:#00B4B4}
+.results-count{font-size:13px;color:#888;margin-left:auto;white-space:nowrap}
+
+/* GRID */
+.gallery-wrap{padding:20px;max-width:1200px;margin:0 auto}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.pet-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative}
+.pet-card:hover{transform:translateY(-4px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.pet-photo{width:100%;aspect-ratio:1;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+.pet-photo img{width:100%;aspect-ratio:1;object-fit:cover}
+.angel-icon{position:absolute;top:6px;right:6px;font-size:22px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.pet-info{padding:10px 12px}
+.pet-name{font-size:14px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+.pet-especie{font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px}
+.pet-especie.perro{background:#e0f7f7;color:#007a7a}
+.pet-especie.gato{background:#fbeaf0;color:#993556}
+
+/* LOAD MORE */
+.load-more-wrap{text-align:center;padding:24px}
+.btn-load{padding:12px 32px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer}
+
+/* MODAL */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
-.modal-box{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto}
+.modal{background:#fff;border-radius:20px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 12px 48px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+.modal-photo{width:100%;height:280px;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:80px;position:relative}
+.modal-photo img{width:100%;height:280px;object-fit:cover}
+.modal-angel-badge{position:absolute;top:12px;right:12px;font-size:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+.modal-body{padding:20px}
+.modal-name{font-size:24px;font-weight:900;color:#222;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.modal-apodo{display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:14px}
+.modal-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.modal-field-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:3px}
+.modal-field-val{font-size:14px;font-weight:700;color:#222}
+.modal-footer{display:flex;gap:8px;padding:0 20px 20px;flex-wrap:wrap}
+.btn-primary{flex:1;padding:11px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;min-width:100px}
+.btn-secondary{flex:1;padding:11px;background:#f0f0ee;color:#555;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;min-width:80px}
+.btn-pink{background:#E05090;color:#fff}
+.btn-purple{background:#764ba2;color:#fff}
+.btn-danger{background:#fff0f0;color:#c0392b;border:1px solid #fcc}
+.btn-cerrar{padding:11px 16px;background:#f0f0ee;color:#666;border:none;border-radius:10px;font-size:13px;cursor:pointer}
+
+/* LOGIN MODAL */
+.login-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.login-modal-overlay.open{display:flex}
+.login-modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;box-shadow:0 12px 48px rgba(0,0,0,.2)}
+.login-title{font-size:20px;font-weight:900;color:#222;margin-bottom:6px}
+.login-sub{font-size:13px;color:#888;margin-bottom:20px;line-height:1.5}
+.login-input{width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;color:#222;outline:none;transition:border .2s;margin-bottom:12px}
+.login-input:focus{border-color:#00B4B4}
+.btn-login{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.btn-login:disabled{background:#aaa;cursor:not-allowed}
+.btn-login-cancel{width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer}
+.login-msg{font-size:13px;text-align:center;padding:8px;border-radius:8px;margin-bottom:10px;display:none}
+.login-msg.error{background:#fbeaf0;color:#993556}
+.login-msg.success{background:#e0f7f7;color:#007a7a}
+
+/* CONFIRM MODAL */
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:700;display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-overlay.open{display:flex}
+.confirm-modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center}
+.confirm-icon{font-size:48px;margin-bottom:12px}
+.confirm-title{font-size:18px;font-weight:900;color:#222;margin-bottom:8px}
+.confirm-sub{font-size:13px;color:#888;margin-bottom:24px;line-height:1.5}
+.confirm-btns{display:flex;gap:10px}
+
+/* EMPTY / LOADING */
+.empty{text-align:center;padding:60px 20px;color:#aaa}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.loading{text-align:center;padding:60px}
+.spinner{width:40px;height:40px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* FOOTER */
+.footer{background:#1a1a2e;padding:24px;text-align:center;margin-top:40px}
+.footer-brand{font-size:18px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;margin-bottom:8px}
+.footer-brand span{color:#F5C842}
+.footer-sub{font-size:12px;color:rgba(255,255,255,.4)}
+
+@media(max-width:480px){
+  .gallery-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .hero h1{font-size:22px}
+  .hero-stats{gap:20px}
+  .modal-footer{flex-direction:column}
+}
+.header-nav{display:flex;align-items:center;gap:6px;margin-right:8px}
+.nav-link{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#555;text-decoration:none;transition:all .2s;white-space:nowrap;border:1.5px solid transparent}
+.nav-link:hover{background:#f0f0ee;color:#00B4B4}
+@media(max-width:480px){.header-nav{display:none}}
+.header-menu{position:relative;display:inline-block}
+.menu-btn{padding:7px 14px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;background:#fff;cursor:pointer;white-space:nowrap}
+.menu-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.15);min-width:180px;overflow:hidden;display:none;z-index:500}
+.menu-dropdown.open{display:block}
+.menu-item{display:block;padding:12px 16px;font-size:14px;font-weight:600;color:#333;text-decoration:none;border:none;background:none;width:100%;text-align:left;border-bottom:1px solid #f5f5f5;cursor:pointer;box-sizing:border-box}
+.menu-item:last-child{border-bottom:none}
+.menu-item:hover{background:#f8f8f8}
+.menu-item.danger{color:#c0392b}
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <div class="hero">
-    <h1>🎉 Eventos Pet-Friendly</h1>
-    <p>Actividades, paseos y eventos para ti y tu mascota en Guatemala</p>
-    <button onclick="abrirFormEvento()" style="margin-top:14px;padding:9px 20px;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.6);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">+ Sugerir un evento</button>
+<!-- HERO -->
+<div class="hero">
+  <h1>La comunidad <span>PetzID</span></h1>
+  <p>Conoce a todas las mascotas de la familia PetMi</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-num" id="statTotal">-</div><div class="hero-stat-lbl">Mascotas</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statPerros">-</div><div class="hero-stat-lbl">Perros</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statGatos">-</div><div class="hero-stat-lbl">Gatos</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statAngeles">-</div><div class="hero-stat-lbl">Angelitos 🐾</div></div>
   </div>
-
-  <div class="filtros">
-    <button class="filtro-btn active" onclick="setFiltro('',this)">Todos</button>
-    <button class="filtro-btn" onclick="setFiltro('evento',this)">🎪 Eventos</button>
-    <button class="filtro-btn" onclick="setFiltro('paseo',this)">🚶 Paseos</button>
-    <button class="filtro-btn" onclick="setFiltro('exposicion',this)">🏆 Exposiciones</button>
-    <button class="filtro-btn" onclick="setFiltro('adopcion',this)">🐾 Adopción</button>
-  </div>
-
-  <div id="eventosWrap"><div class="spinner"></div></div>
 </div>
 
-<!-- Modal sugerir evento -->
-<div id="modalSugerirEvento" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;padding:16px">
-  <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:85vh;overflow-y:scroll">
-    <div class="modal-handle"></div>
-    <div style="font-size:18px;font-weight:900;margin-bottom:16px">🎉 Sugerir un evento
-      <button onclick="cerrarFormEvento()" style="float:right;background:none;border:none;font-size:20px;cursor:pointer">×</button>
-    </div>
-    <div style="font-size:12px;color:#aaa;margin-bottom:14px">Tu sugerencia será revisada antes de publicarse</div>
-    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Título *</label>
-    <input type="text" id="sgTitulo" placeholder="Nombre del evento" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Tipo</label>
-    <select id="sgTipo" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-      <option value="evento">🎪 Evento</option>
-      <option value="paseo">🚶 Paseo</option>
-      <option value="exposicion">🏆 Exposición</option>
-      <option value="adopcion">🐾 Adopción</option>
-    </select>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div>
-        <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Fecha *</label>
-        <input type="date" id="sgFecha" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Hora</label>
-        <input type="text" id="sgHora" placeholder="10:00 AM" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-      </div>
-    </div>
-    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Lugar</label>
-    <input type="text" id="sgLugar" placeholder="Nombre del lugar" style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Descripción</label>
-    <textarea id="sgDesc" placeholder="Cuéntanos más..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;resize:none;height:80px;outline:none"></textarea>
-    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Link (opcional)</label>
-    <input type="text" id="sgLink" placeholder="https://..." style="width:100%;padding:10px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin:4px 0 12px;outline:none">
-    <label style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px">Foto del evento (opcional)</label>
-    <div style="margin:4px 0 16px">
-      <label for="sgFoto" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px dashed #ddd;border-radius:10px;cursor:pointer;font-size:13px;color:#888;background:#fafafa">
-        <span style="font-size:20px">📷</span>
-        <span id="sgFotoLabel">Seleccionar foto</span>
-      </label>
-      <input type="file" id="sgFoto" accept="image/*" style="display:none" onchange="previsualizarFotoEvento(this)">
-      <div id="sgFotoPreview" style="margin-top:8px;display:none">
-        <img id="sgFotoImg" style="width:100%;height:120px;object-fit:cover;border-radius:10px">
+<!-- CUMPLEAÑEROS DEL MES -->
+<div class="seccion-cumple" id="seccionCumple" style="display:none">
+  <div class="seccion-titulo">🎂 Cumpleañeros de <span id="mesActualNombre"></span></div>
+  <div class="seccion-sub">Mascotas que cumplen años o llegaron a casa este mes</div>
+  <div class="cumple-scroll" id="cumpleScroll"></div>
+</div>
+
+<!-- QUIEN SE APUNTA -->
+<div class="seccion-actividades" id="seccionActividades" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+    <div class="seccion-titulo" style="color:#fff">🐾 ¿Quién se apunta?</div>
+    <a href="/actividades.html" style="font-size:12px;color:rgba(255,255,255,.8);text-decoration:none;font-weight:600;margin-top:4px">Ver todas →</a>
+  </div>
+  <div class="seccion-sub" style="color:rgba(255,255,255,.7)">Planes y anuncios de la comunidad</div>
+  <div class="cumple-scroll" id="actividadesScroll"></div>
+</div>
+
+<!-- ANGELES DE 4 PATAS -->
+<div class="seccion-angeles" id="seccionAngeles" style="display:none">
+  <div class="seccion-titulo">🐾 Ángeles de 4 Patas</div>
+  <div class="seccion-sub" style="color:rgba(255,255,255,.7)">Siempre en nuestros corazones 🌈</div>
+  <div class="cumple-scroll" id="angelesScroll"></div>
+</div>
+
+<!-- FILTERS -->
+<div class="filters">
+  <button class="filter-btn active" onclick="setFilter('todos',this)">Todos</button>
+  <button class="filter-btn" onclick="setFilter('perro',this)">🐶 Perros</button>
+  <button class="filter-btn" onclick="setFilter('gato',this)">🐱 Gatos</button>
+  <button class="filter-btn" onclick="setFilter('angelito',this)">🐾🌈 Angelitos</button>
+  <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre..." oninput="applyFilter()">
+  <span class="results-count" id="resultsCount"></span>
+</div>
+
+<!-- GALLERY -->
+<div class="gallery-wrap">
+  <div class="gallery-grid" id="galleryGrid">
+    <div style="grid-column:1/-1" id="skeletonWrap">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">
+        <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)"><div style="width:100%;aspect-ratio:1;background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div><div style="padding:10px 12px"><div style="height:14px;background:#f0f0ee;border-radius:4px;margin-bottom:6px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div><div style="height:10px;width:60%;background:#f0f0ee;border-radius:4px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div></div></div>
+        <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)"><div style="width:100%;aspect-ratio:1;background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div><div style="padding:10px 12px"><div style="height:14px;background:#f0f0ee;border-radius:4px;margin-bottom:6px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div><div style="height:10px;width:60%;background:#f0f0ee;border-radius:4px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div></div></div>
+        <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)"><div style="width:100%;aspect-ratio:1;background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div><div style="padding:10px 12px"><div style="height:14px;background:#f0f0ee;border-radius:4px;margin-bottom:6px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div><div style="height:10px;width:60%;background:#f0f0ee;border-radius:4px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div></div></div>
+        <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)"><div style="width:100%;aspect-ratio:1;background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div><div style="padding:10px 12px"><div style="height:14px;background:#f0f0ee;border-radius:4px;margin-bottom:6px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div><div style="height:10px;width:60%;background:#f0f0ee;border-radius:4px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div></div></div>
       </div>
     </div>
-    <button onclick="enviarSugerenciaEvento()" id="sgBtn" style="width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Enviar sugerencia</button>
+  </div>
+  <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+    <button class="btn-load" onclick="loadMore()">Ver mas mascotas</button>
   </div>
 </div>
 
-<!-- Modal invitar amigos -->
-<div class="modal-overlay" id="modalInvitar">
-  <div class="modal-box" id="invitarSheet">
-    <div class="modal-handle"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <div style="font-size:17px;font-weight:900;color:#222">👥 Invitar amigos</div>
-      <button onclick="cerrarInvitar()" style="background:none;border:none;font-size:20px;cursor:pointer">×</button>
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-brand">petz<span>ID</span></div>
+  <div class="footer-sub">PetMi Guatemala — Comunidad de mascotas</div>
+</div>
+
+<!-- MODAL MASCOTA -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="position:relative">
+    <div id="modalPhoto" class="modal-photo">🐾</div>
+    <button onclick="closeModal()" style="position:absolute;top:10px;right:10px;width:32px;height:32px;background:rgba(0,0,0,.5);border:none;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;line-height:1">×</button>
+    <div class="modal-body">
+      <div class="modal-name" id="modalName">-</div>
+      <div class="modal-apodo" id="modalApodo">-</div>
+      <div class="modal-fields" style="grid-template-columns:1fr 1fr 1fr">
+        <div><div class="modal-field-lbl">Especie</div><div class="modal-field-val" id="modalEspecie">-</div></div>
+        <div><div class="modal-field-lbl">Sexo</div><div class="modal-field-val" id="modalSexo">-</div></div>
+        <div><div class="modal-field-lbl" id="modalFechaLbl">Fecha</div><div class="modal-field-val" id="modalFecha">-</div></div>
+      </div>
+      <div id="modalComentario" style="display:none">
+        <div id="modalComentarioText"></div>
+      </div>
+      <div id="actividadesWrap" style="display:none;margin-bottom:10px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Le gustaba / Le gusta</div>
+        <div id="modalActividades" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+      </div>
+      <div id="modalEspecial" style="display:none;background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #F5C842">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Algo especial</div>
+        <div id="modalEspecialText" style="font-size:13px;color:#555;line-height:1.6"></div>
+      </div>
+      <div id="mensajesSection" style="margin-top:4px;display:none">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:8px">Mensajes 💬</div>
+        <div id="mensajesLista" style="max-height:160px;overflow-y:auto;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="mensajeAutor" placeholder="Tu nombre" style="width:35%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none">
+          <input type="text" id="mensajeTxt" placeholder="Deja un mensaje..." style="flex:1;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none">
+          <button onclick="enviarMensaje()" style="padding:10px 14px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">✉️</button>
+        </div>
+      </div>
     </div>
-    <div id="invitarSubtitulo" style="font-size:12px;color:#aaa;margin-bottom:16px"></div>
-    <button onclick="invitarTodos()" style="width:100%;padding:11px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:14px">🐾 Invitar a todos mis amigos</button>
-    <div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">O invita uno por uno</div>
-    <div id="listaAmigosInvitar"><div class="spinner" style="margin:20px auto"></div></div>
+    <div class="modal-footer" id="modalFooter"></div>
   </div>
 </div>
 
-<!-- Modal gracias evento -->
-<div class="modal-overlay" id="modalGraciasEvento" style="z-index:600">
-  <div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center">
-    <div class="modal-handle" style="margin-bottom:20px"></div>
-    <div id="modalGraciasEventoContent"></div>
-    <button onclick="document.getElementById('modalGraciasEvento').classList.remove('open')" style="margin-top:16px;width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cerrar</button>
+<!-- MODAL LOGIN -->
+<div class="login-modal-overlay" id="loginOverlay">
+  <div class="login-modal" style="position:relative">
+    <button onclick="closeLoginModal()" style="position:absolute;top:12px;right:12px;width:28px;height:28px;background:#f0f0ee;border:none;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+    <div class="login-title">¿Ya tienes PetzID?</div>
+    <div class="login-sub">Ingresa tu correo registrado para ver y editar tus mascotas.</div>
+    <div class="login-msg" id="loginMsg"></div>
+    <input type="email" class="login-input" id="loginEmail" placeholder="tu@correo.com" inputmode="email">
+    <button class="btn-login" id="btnLogin" onclick="verificarEmail()">Ingresar</button>
+    <button class="btn-login-cancel" onclick="closeLoginModal()">Cancelar</button>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- MODAL CONFIRMAR -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-modal" style="position:relative">
+    <button onclick="closeConfirm()" style="position:absolute;top:12px;right:12px;width:28px;height:28px;background:#f0f0ee;border:none;border-radius:50%;font-size:16px;cursor:pointer">×</button>
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirmTitle">¿Estás seguro?</div>
+    <div class="confirm-sub" id="confirmSub">Esta acción no se puede deshacer.</div>
+    <div class="confirm-btns">
+      <button class="btn-primary btn-danger" style="flex:1;padding:12px" id="confirmOk">Confirmar</button>
+      <button class="btn-secondary" style="flex:1;padding:12px" onclick="closeConfirm()">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <script>
-var sessionEmail = localStorage.getItem('petzid_email')||'';
-var miMascota    = null;
-var misMascotas  = [];
-var amigosCache  = [];
-var filtroActual = '';
-var eventosData  = [];
-var misAsistencias = {};
-var eventoInvitarActual = null;
-var invitadosEnviados = {};
+// ── Estado global ─────────────────────────────────────────────
+var allPets=[], filtered=[], shown=0, perPage=40, currentFilter='todos';
+var sessionEmail=localStorage.getItem('petzid_email')||'';
+var sessionDueno=localStorage.getItem('petzid_dueno')||'';
+var currentModalPet=null;
+var misAmigosCache=[];
 
-var sgFotoBase64 = null;
-var sgFotoMime   = null;
+var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 
-function previsualizarFotoEvento(input){
-  var file=input.files[0];
-  if(!file)return;
-  sgFotoMime=file.type;
-  document.getElementById('sgFotoLabel').textContent=file.name;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    sgFotoBase64=e.target.result.split(',')[1];
-    document.getElementById('sgFotoImg').src=e.target.result;
-    document.getElementById('sgFotoPreview').style.display='block';
-  };
-  reader.readAsDataURL(file);
-}
+// ── Header ────────────────────────────────────────────────────
+function cerrarSesion(){ if(typeof petmiCerrarSesion==='function') petmiCerrarSesion(); }
 
-var JEFE_IMGS=['https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'];
-
-// Cargar datos del usuario
-if(sessionEmail){
-  fetch('/api/galeria?action=checkEmail',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'checkEmail',email:sessionEmail})
-  }).then(function(r){return r.json();})
+// ── Cargar datos ──────────────────────────────────────────────
+fetch('/api/galeria?action=getBasic')
+  .then(function(r){return r.json();})
   .then(function(d){
-    if(d.found&&d.mascotas.length){
-      misMascotas=d.mascotas;
-      miMascota=d.mascotas[0];
-      // Precargar amigos
-      cargarAmigos();
-    }
-  });
-}
+    var rows=d.rows||[];
+    allPets=rows.map(function(r){
+      return {
+        uid:          String(r[0]||'').trim(),
+        nombre:       String(r[1]||'').trim(),
+        premium:      false, // se carga desde checkEmail si hay sesion
+        apodo:        String(r[2]||'').trim(),
+        especie:      String(r[3]||'').trim(),
+        sexo:         String(r[4]||'').trim(),
+        raza:         String(r[5]||'').trim(),
+        tipoFecha:    String(r[6]||'').trim(),
+        fecha:        String(r[7]||'').trim(),
+        email:        String(r[8]||'').trim(),
+        foto:         String(r[9]||'').trim(),
+        angelito:     String(r[10]||'').trim().toLowerCase()==='si',
+        fechaAngelito:String(r[11]||'').trim(),
+        createdAt:    String(r[12]||'').trim(),
+        actividades:'', especial:'', comentario:'', alimento:'', zona:'', notifMensajes:''
+      };
+    }).filter(function(p){return p.nombre;});
 
-function cargarAmigos(){
-  var SB='https://ilcreewilnkchvozicyp.supabase.co';
-  var SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-  var h={'apikey':SK,'Authorization':'Bearer '+SK};
-  var queries=misMascotas.map(function(mm){
-    return fetch(SB+'/rest/v1/amigos?or=(and(uid_solicitante.eq.'+encodeURIComponent(mm.uid)+',estado.eq.aceptado),and(uid_receptor.eq.'+encodeURIComponent(mm.uid)+',estado.eq.aceptado))&select=uid_solicitante,uid_receptor',{headers:h})
+    var perros =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('perro')>=0;}).length;
+    var gatos  =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('gato') >=0;}).length;
+    var angeles=allPets.filter(function(p){return p.angelito;}).length;
+    document.getElementById('statTotal').textContent=allPets.length;
+    document.getElementById('statPerros').textContent=perros;
+    document.getElementById('statGatos').textContent=gatos;
+    document.getElementById('statAngeles').textContent=angeles;
+
+    renderCumpleaneros();
+    renderAngeles();
+    applyFilter();
+
+    fetch('/api/galeria?action=getData')
+      .then(function(r2){return r2.json();})
+      .then(function(d2){
+        var rows2=d2.rows||[];
+        rows2.forEach(function(r){
+          var uid=String(r[1]||'').trim();
+          var pet=allPets.find(function(p){return p.uid===uid;});
+          if(pet){
+            pet.actividades  =String(r[18]||'').trim();
+            pet.especial     =String(r[23]||'').trim();
+            pet.alimento     =String(r[16]||'').trim();
+            pet.zona         =String(r[9] ||'').trim();
+            pet.notifMensajes=String(r[30]||'').trim();
+          }
+        });
+      }).catch(function(){});
+  })
+  .catch(function(){
+    fetch('/api/galeria?action=getData')
       .then(function(r){return r.json();})
-      .then(function(rows){
-        return (rows||[]).map(function(row){return row.uid_solicitante===mm.uid?row.uid_receptor:row.uid_solicitante;});
+      .then(function(d){
+        var rows=d.rows||[];
+        allPets=rows.map(function(r){
+          return {
+            uid:          String(r[1] ||'').trim(),
+            nombre:       String(r[2] ||'').trim(),
+            apodo:        String(r[3] ||'').trim(),
+            especie:      String(r[4] ||'').trim(),
+            sexo:         String(r[5] ||'').trim(),
+            raza:         String(r[6] ||'').trim(),
+            tipoFecha:    String(r[7] ||'').trim(),
+            fecha:        String(r[8] ||'').trim(),
+            email:        String(r[11]||'').trim(),
+            foto:         String(r[27]||'').trim(),
+            angelito:     String(r[28]||'').trim().toLowerCase()==='si',
+            fechaAngelito:String(r[29]||'').trim(),
+            actividades:  String(r[18]||'').trim(),
+            especial:     String(r[23]||'').trim(),
+            comentario:   '',
+            alimento:     String(r[16]||'').trim(),
+            zona:         String(r[9] ||'').trim(),
+            notifMensajes:String(r[30]||'').trim()
+          };
+        }).filter(function(p){return p.nombre;});
+        var perros =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('perro')>=0;}).length;
+        var gatos  =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('gato') >=0;}).length;
+        var angeles=allPets.filter(function(p){return p.angelito;}).length;
+        document.getElementById('statTotal').textContent=allPets.length;
+        document.getElementById('statPerros').textContent=perros;
+        document.getElementById('statGatos').textContent=gatos;
+        document.getElementById('statAngeles').textContent=angeles;
+        renderCumpleaneros();
+        renderAngeles();
+        applyFilter();
+      })
+      .catch(function(){
+        document.getElementById('galleryGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:#888">Error cargando mascotas. Intenta de nuevo.</div>';
       });
   });
-  Promise.all(queries).then(function(results){
-    var seen={}, uids=[];
-    results.forEach(function(list){list.forEach(function(uid){if(!seen[uid]){seen[uid]=1;uids.push(uid);}});});
-    if(!uids.length)return;
-    var infoQ=uids.map(function(uid){
-      return fetch(SB+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid)+'&select=uid,nombre,especie,foto,email',{headers:h})
-        .then(function(r){return r.json();})
-        .then(function(d){return d[0]||null;});
-    });
-    Promise.all(infoQ).then(function(infos){
-      amigosCache=infos.filter(Boolean);
-    });
+
+// ── Cumpleañeros del mes ──────────────────────────────────────
+function renderCumpleaneros(){
+  var mesActual=new Date().getMonth();
+  document.getElementById('mesActualNombre').textContent=MESES[mesActual];
+  var cumpleMes=allPets.filter(function(p){
+    if(!p.fecha||p.angelito)return false;
+    var mes=getMesFecha(p.fecha);
+    return mes!==null&&mes===mesActual;
   });
+  if(cumpleMes.length===0)return;
+  document.getElementById('seccionCumple').style.display='block';
+  var html=cumpleMes.map(function(p){
+    var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
+    var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
+      ?'<img src="'+p.foto+'" onerror="this.style.display=\'none\'">'
+      :'<div style="width:130px;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px;background:#fff3cd">'+(esGato?'🐱':'🐶')+'</div>';
+    return '<div class="cumple-card" onclick="openModalByUID(\''+p.uid+'\')">'
+      +'<div class="cumple-foto">'+fotoHTML+'</div>'
+      +'<div class="cumple-badge">🎂</div>'
+      +'<div class="cumple-info"><div class="cumple-nombre">'+p.nombre+'</div>'
+      +'<div class="cumple-fecha">'+(p.tipoFecha==='llegada'?'Llegó a casa':'Cumpleaños')+'</div></div></div>';
+  }).join('');
+  document.getElementById('cumpleScroll').innerHTML=html;
 }
 
-cargarEventos();
-
-function cargarEventos(){
-  document.getElementById('eventosWrap').innerHTML='<div class="spinner"></div>';
-  var url='/api/galeria?action=getEventos';
-  if(filtroActual) url+='&tipo='+encodeURIComponent(filtroActual);
-  fetch(url).then(function(r){return r.json();})
-  .then(function(d){
-    eventosData=d.eventos||[];
-    renderEventos();
-  }).catch(function(){
-    document.getElementById('eventosWrap').innerHTML='<div class="empty"><div class="empty-icon">😕</div><p>Error al cargar eventos</p></div>';
+// ── Ángeles de 4 patas ────────────────────────────────────────
+function renderAngeles(){
+  var hace30=new Date(Date.now()-30*24*60*60*1000);
+  var angeles=allPets.filter(function(p){
+    if(!p.angelito)return false;
+    if(!p.fechaAngelito)return true;
+    return new Date(p.fechaAngelito)>=hace30;
   });
+  if(angeles.length===0)return;
+  document.getElementById('seccionAngeles').style.display='block';
+  var html=angeles.map(function(p){
+    var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
+    var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
+      ?'<img src="'+p.foto+'" onerror="this.style.display=\'none\'">'
+      :'<div style="width:130px;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px">'+(esGato?'🐱':'🐶')+'</div>';
+    return '<div class="angel-card" onclick="openModalByUID(\''+p.uid+'\')" style="cursor:pointer">'
+      +'<div class="angel-foto">'+fotoHTML+'<div class="angel-overlay"></div><div class="angel-emoji">🐾</div></div>'
+      +'<div class="angel-info"><div class="angel-nombre">'+p.nombre+'</div>'
+      +(function(){
+        var anios='';
+        if(p.fecha&&p.fechaAngelito){
+          var ny=new Date(p.fecha.indexOf('/')>=0?p.fecha.split('/')[2]+'-'+p.fecha.split('/')[1]+'-'+p.fecha.split('/')[0]:p.fecha).getFullYear();
+          var ay=new Date(p.fechaAngelito).getFullYear();
+          if(!isNaN(ny)&&!isNaN(ay))anios=ny+'-'+ay;
+        }
+        return '<div class="angel-fecha">'+(anios||'Siempre en nuestro corazón')+'</div>';
+      }())+'</div></div>';
+  }).join('');
+  document.getElementById('angelesScroll').innerHTML=html;
 }
 
-function setFiltro(tipo,btn){
-  filtroActual=tipo;
-  document.querySelectorAll('.filtro-btn').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
-  cargarEventos();
+// ── Filtros ───────────────────────────────────────────────────
+function setFilter(type,el){
+  currentFilter=type;
+  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  shown=0; applyFilter();
 }
 
-function renderEventos(){
-  var wrap=document.getElementById('eventosWrap');
-  if(!eventosData.length){
-    wrap.innerHTML='<div class="empty"><div class="empty-icon">📅</div><p>No hay eventos próximos</p></div>';
+function applyFilter(){
+  var search=document.getElementById('searchInput').value.toLowerCase();
+  filtered=allPets.filter(function(p){
+    if(currentFilter==='angelito'){
+      if(!p.angelito)return false;
+    } else {
+      if(p.angelito)return false;
+      if(currentFilter==='perro'&&p.especie.toLowerCase().indexOf('perro')<0)return false;
+      if(currentFilter==='gato' &&p.especie.toLowerCase().indexOf('gato') <0)return false;
+    }
+    if(search&&p.nombre.toLowerCase().indexOf(search)<0)return false;
+    return true;
+  });
+  shown=0; renderGallery(false);
+}
+
+function loadMore(){renderGallery(true);}
+
+// ── Galería ───────────────────────────────────────────────────
+function renderGallery(append){
+  var grid=document.getElementById('galleryGrid');
+  var toShow=filtered.slice(shown,shown+perPage);
+  shown+=toShow.length;
+  var html=toShow.map(function(p,i){
+    var idx=shown-toShow.length+i;
+    var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
+    var emoji=esGato?'🐱':'🐶';
+    var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
+      ?'<img src="'+p.foto+'" alt="'+p.nombre+'" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover" onerror="this.style.display=\'none\'">'
+      :'<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:#e0f7f7">'+emoji+'</div>';
+    var esNuevo=false;
+    if(p.createdAt){
+      var diffDias=(Date.now()-new Date(p.createdAt).getTime())/(1000*60*60*24);
+      esNuevo=diffDias<=7;
+    }
+    var badgeNuevo=esNuevo?'<div style="position:absolute;top:8px;right:8px;background:#E05090;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.5px">New</div>':'';
+    var badgePremium=p.premium?'<div style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px">⭐</div>':'';
+    return '<div class="pet-card" onclick="openModal('+idx+')">'
+      +'<div class="pet-photo" style="position:relative">'+fotoHTML+badgeNuevo+badgePremium+'</div>'
+      +'<div class="pet-info"><div class="pet-name">'+p.nombre+'</div>'
+      +'<div><span class="pet-especie '+(esGato?'gato':'perro')+'">'+(esGato?'Gato':'Perro')+'</span>'
+      +'</div></div></div>';
+  }).join('');
+  if(!append){
+    grid.innerHTML=filtered.length===0
+      ?'<div style="grid-column:1/-1"><div class="empty"><div class="empty-icon">🔍</div><p>No se encontraron mascotas</p></div></div>'
+      :html;
+  } else {
+    grid.insertAdjacentHTML('beforeend',html);
+  }
+  document.getElementById('resultsCount').textContent=filtered.length+' mascotas';
+  document.getElementById('loadMoreWrap').style.display=shown<filtered.length?'block':'none';
+}
+
+// ── Modal mascota ─────────────────────────────────────────────
+function openModal(idx){
+  var p=filtered[idx];
+  if(!p)return;
+  // Angelitos abren su pagina de perfil para mensajes publicos
+  if(p.angelito){
+    window.location.href='/perfil.html?uid='+p.uid;
     return;
   }
-  var html='';
-  eventosData.forEach(function(e){
-    var tipoClass='tipo-'+(e.tipo||'evento');
-    var tipoLabel={evento:'🎪 Evento',paseo:'🚶 Paseo',exposicion:'🏆 Exposición',adopcion:'🐾 Adopción'}[e.tipo]||(e.tipo||'Evento');
-    var fecha=e.fecha?new Date(e.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):'';
-    var fotoHTML=e.imagen&&e.imagen.indexOf('http')>=0?'<img src="'+e.imagen+'">':'';
-    var shareUrl=encodeURIComponent('https://petmi-petzid.vercel.app/eventos.html');
-    var shareText=encodeURIComponent('🎉 '+e.titulo+' - '+fecha+' en PetMi Guatemala!');
-
-    html+='<div class="evento-card" id="evento-'+e.id+'">';
-    if(fotoHTML) html+='<div class="evento-img">'+fotoHTML+'</div>';
-    html+='<div class="evento-body">';
-    html+='<span class="evento-tipo '+tipoClass+'">'+tipoLabel+'</span>';
-    html+='<div class="evento-titulo">'+e.titulo+'</div>';
-    html+='<div class="evento-fecha">📅 '+fecha+(e.hora?' · ⏰ '+e.hora:'')+'</div>';
-    if(e.lugar) html+='<div class="evento-lugar">📍 '+e.lugar+(e.direccion?', '+e.direccion:'')+'</div>';
-    if(e.descripcion) html+='<div class="evento-desc">'+e.descripcion+'</div>';
-    html+='<div class="evento-footer">';
-    html+='<span class="asistentes-count" id="count-'+e.id+'">Cargando...</span>';
-    html+='<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">';
-    if(sessionEmail){
-      html+='<button class="btn-asistir" id="btn-'+e.id+'" onclick="toggleAsistencia(\''+e.id+'\')">Voy a ir 🐾</button>';
-    }
-    html+='<div class="btns-share">';
-    if(sessionEmail) html+='<button class="btn-share btn-invitar" onclick="abrirInvitar(\''+e.id+'\',\''+e.titulo.replace(/'/g,'')+'\')">👥 Invitar</button>';
-    html+='<a class="btn-share btn-whatsapp" href="https://wa.me/?text='+shareText+'%20'+shareUrl+'" target="_blank">WhatsApp</a>';
-    html+='<button class="btn-share btn-copiar" onclick="copiarLink(\''+e.id+'\')">🔗 Copiar</button>';
-    html+='</div></div></div></div></div>';
-  });
-  wrap.innerHTML=html;
-  eventosData.forEach(function(e){cargarAsistentes(e.id);});
+  _renderModal(p);
 }
 
-function cargarAsistentes(eventoId){
-  fetch('/api/galeria?action=getAsistentes&evento_id='+encodeURIComponent(eventoId))
-    .then(function(r){return r.json();})
-    .then(function(d){
-      var asistentes=d.asistentes||[];
-      var countEl=document.getElementById('count-'+eventoId);
-      if(countEl) countEl.textContent=asistentes.length+(asistentes.length===1?' mascota va':' mascotas van');
-      if(miMascota){
-        var yoAsisto=asistentes.some(function(a){return a.uid_mascota===miMascota.uid;});
-        misAsistencias[eventoId]=yoAsisto;
-        var btn=document.getElementById('btn-'+eventoId);
-        if(btn){btn.textContent=yoAsisto?'✅ Voy a ir':'Voy a ir 🐾';btn.className='btn-asistir'+(yoAsisto?' asistiendo':'');}
+function openModalByUID(uid){
+  var p=allPets.find(function(x){return x.uid===uid;});
+  if(!p)return;
+  // Angelitos abren su pagina de perfil para mensajes publicos
+  if(p.angelito){
+    window.location.href='/perfil.html?uid='+uid;
+    return;
+  }
+  _renderModal(p);
+}
+
+function _renderModal(p){
+  currentModalPet=p;
+  var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
+  var emoji=esGato?'🐱':'🐶';
+  var photoEl=document.getElementById('modalPhoto');
+  photoEl.innerHTML='';
+  if(p.angelito){
+    var badge=document.createElement('div');
+    badge.className='modal-angel-badge';badge.textContent='🐾';
+    photoEl.appendChild(badge);
+  }
+  if(p.foto&&p.foto.indexOf('http')>=0){
+    var img=document.createElement('img');
+    img.src=p.foto;
+    img.style='width:100%;height:280px;object-fit:cover'+(p.angelito?';filter:grayscale(20%)':'');
+    img.onerror=function(){photoEl.innerHTML=emoji;};
+    photoEl.appendChild(img);
+  } else { photoEl.innerHTML=emoji; }
+
+  document.getElementById('modalName').textContent='"'+p.nombre.toUpperCase()+'"';
+  document.getElementById('modalApodo').textContent=p.apodo||p.nombre;
+  document.getElementById('modalEspecie').textContent=p.especie||'-';
+  document.getElementById('modalSexo').textContent=p.sexo||'-';
+  var fechaLbl=document.getElementById('modalFechaLbl');
+  var fechaVal=document.getElementById('modalFecha');
+  if(fechaLbl&&fechaVal){
+    fechaLbl.textContent=p.tipoFecha==='llegada'?'Llegó a casa':'Nacimiento';
+    fechaVal.textContent=formatFecha(p.fecha);
+  }
+  var comentarioEl=document.getElementById('modalComentario');
+  comentarioEl.style.display=p.comentario?'block':'none';
+  document.getElementById('modalComentarioText').textContent=p.comentario||'';
+
+  var actEl=document.getElementById('modalActividades');
+  if(actEl){
+    if(p.actividades){
+      var acts=p.actividades.split(',').map(function(a){return a.trim();}).filter(Boolean);
+      actEl.innerHTML=acts.map(function(a){return '<span style="display:inline-block;background:#e0f7f7;color:#007a7a;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;margin:2px">'+a+'</span>';}).join('');
+      actEl.parentElement.style.display='block';
+    } else { actEl.parentElement.style.display='none'; }
+  }
+  var espEl=document.getElementById('modalEspecial');
+  if(espEl){
+    espEl.style.display=p.especial?'block':'none';
+    var espTxt=document.getElementById('modalEspecialText');
+    if(espTxt)espTxt.textContent=p.especial||'';
+  }
+
+  var mesActual=new Date().getMonth();
+  var esCumple=false;
+  if(p.fecha){var mesFecha=getMesFecha(p.fecha);esCumple=mesFecha!==null&&mesFecha===mesActual;}
+  var msgSection=document.getElementById('mensajesSection');
+  if(msgSection){
+    if(p.angelito||esCumple){
+      msgSection.style.display='block';
+      cargarMensajes(p.uid);
+      var autorInput=document.getElementById('mensajeAutor');
+      if(autorInput){
+        var dueno=localStorage.getItem('petzid_dueno')||'';
+        var email=localStorage.getItem('petzid_email')||'';
+        autorInput.value=dueno||(email?email.split('@')[0]:'');
       }
-    });
+    } else { msgSection.style.display='none'; }
+  }
+  renderModalFooter(p);
+  document.getElementById('modalOverlay').classList.add('open');
 }
 
-function toggleAsistencia(eventoId){
-  if(!sessionEmail){mostrarToast('Inicia sesión para confirmar asistencia');return;}
-  if(!miMascota){mostrarToast('Necesitas registrar tu mascota primero');return;}
-  var asistiendo=misAsistencias[eventoId];
-  var action=asistiendo?'cancelarAsistencia':'asistirEvento';
-  var btn=document.getElementById('btn-'+eventoId);
-  btn.disabled=true;
-  fetch('/api/galeria?action='+action,{
+function renderModalFooter(p){
+  var footer=document.getElementById('modalFooter');
+  var esMia=sessionEmail&&p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();
+
+  if(!esMia&&sessionEmail){
+    footer.innerHTML='<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+    fetch(SUPA_URL+'/rest/v1/amigos?or=(and(uid_solicitante.eq.'+encodeURIComponent(p.uid)+',email_receptor.eq.'+encodeURIComponent(sessionEmail)+'),and(uid_receptor.eq.'+encodeURIComponent(p.uid)+',email_solicitante.eq.'+encodeURIComponent(sessionEmail)+'))&select=*',{
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+    }).then(function(r){return r.json();})
+    .then(function(rows){
+      if(!currentModalPet||currentModalPet.uid!==p.uid) return;
+      var btn;
+      if(!rows||!rows.length){
+        btn='<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\''+p.uid+'\')">🐾 Agregar amigo</button>';
+      } else {
+        var rel=rows[0];
+        if(rel.estado==='aceptado'){
+          btn='<button class="btn-primary" style="background:#e0f7f7;color:#007a7a;cursor:default">🐾 Amigos</button>';
+        } else if(rel.email_solicitante.toLowerCase()===sessionEmail.toLowerCase()){
+          btn='<button class="btn-primary" style="background:#f0f0ee;color:#888;cursor:default">Solicitud enviada</button>';
+        } else {
+          btn='<button class="btn-primary btn-pink" onclick="aceptarDesdeModal(\''+rel.id+'\')">Aceptar solicitud</button>';
+        }
+      }
+      footer.innerHTML=btn+'<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+    }).catch(function(){
+      footer.innerHTML='<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\''+p.uid+'\')">🐾 Agregar amigo</button><button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+    });
+    return;
+  }
+
+  if(esMia){
+    var angelBtn=p.angelito
+      ?'<button class="btn-primary btn-purple" onclick="toggleAngel(false)">🐾🌈 Ya no es angelito</button>'
+      :'<button class="btn-primary btn-purple" onclick="toggleAngel(true)">🐾🌈 Ya es un angelito</button>';
+    footer.innerHTML=
+      '<button class="btn-primary btn-pink" onclick="actualizarMascota(\''+p.uid+'\')">✏️ Actualizar información</button>'+
+      '<button class="btn-primary" onclick="agregarOtra()">🐾 Agregar mascota</button>'+
+      angelBtn+
+      '<button class="btn-primary" style="background:#c0392b;color:#fff" onclick="abrirModalPerdido()">🚨 Me perdí</button>'+
+      '<button class="btn-danger btn-secondary" onclick="confirmarEliminarMascota()">🗑️ Eliminar mascota</button>'+
+      '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+  } else if(sessionEmail){
+    footer.innerHTML=
+      getBtnAmigo(p.uid)+
+      '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+  } else {
+    footer.innerHTML=
+      (p.angelito?'':'<button class="btn-primary" onclick="window.location.href=\'/index.html\'">Registra tu mascota</button>')+
+      '<button class="btn-secondary" onclick="openLoginModal()">'+(p.angelito?'🔑 Soy el dueño':'¿Ya tienes PetzID?')+'</button>'+
+      '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+  }
+}
+
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+function actualizarMascota(uid){window.location.href='/editar.html?uid='+uid;}
+function agregarOtra(){window.location.href='/index.html?agregar=1';}
+
+// ── Toggle angelito ───────────────────────────────────────────
+function toggleAngel(esAngel){
+  if(!currentModalPet)return;
+  var p=currentModalPet;
+  if(!esAngel){
+    mostrarConfirm('💔 Quitar de angelitos','¿Quitar a '+p.nombre+' de la sección de angelitos?',function(){
+      fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:false})
+      }).then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.ok){alert('Error.');closeConfirm();return;}
+        // Actualizar en memoria
+        p.angelito=false;
+        p.fechaAngelito='';
+        var inAll=allPets.find(function(x){return x.uid===p.uid;});
+        if(inAll){inAll.angelito=false;inAll.fechaAngelito='';}
+        renderAngeles();
+        applyFilter();
+        closeConfirm();
+        _renderModal(p);
+        mostrarToastG('💔 '+p.nombre+' quitado de angelitos');
+      })
+      .catch(function(){alert('Error.');closeConfirm();});
+    });
+    return;
+  }
+  closeConfirm();
+  var overlay=document.getElementById('angelFechaOverlay');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='angelFechaOverlay';
+    overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:800;display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML='<div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center">'
+      +'<div style="font-size:36px;margin-bottom:10px">🐾</div>'
+      +'<div style="font-size:18px;font-weight:900;color:#222;margin-bottom:6px">Fecha en que nos dejó</div>'
+      +'<div style="font-size:13px;color:#888;margin-bottom:20px">Esta fecha aparecerá en su tarjeta como <strong>2011-2026</strong></div>'
+      +'<input type="date" id="angelFechaInput" style="width:100%;padding:13px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;outline:none;margin-bottom:16px">'
+      +'<button onclick="confirmarAngel()" style="width:100%;padding:14px;background:#764ba2;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">🐾 Confirmar</button>'
+      +'<button onclick="document.getElementById(\'angelFechaOverlay\').style.display=\'none\'" style="width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cancelar</button>'
+      +'</div>';
+    document.body.appendChild(overlay);
+  } else { overlay.style.display='flex'; }
+  document.getElementById('angelFechaInput').value=new Date().toISOString().split('T')[0];
+}
+
+function confirmarAngel(){
+  var p=currentModalPet;
+  var fecha=document.getElementById('angelFechaInput').value;
+  document.getElementById('angelFechaOverlay').style.display='none';
+  fetch('/api/submit',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({evento_id:eventoId,uid_mascota:miMascota.uid,email:sessionEmail})
+    body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:true,fechaAngelito:fecha})
   }).then(function(r){return r.json();})
   .then(function(d){
-    if(d.ok){misAsistencias[eventoId]=!asistiendo;mostrarToast(asistiendo?'Asistencia cancelada':'🐾 Confirmado! Nos vemos ahí');cargarAsistentes(eventoId);}
-    btn.disabled=false;
-  }).catch(function(){btn.disabled=false;});
+    if(!d.ok){alert('Error al actualizar.');return;}
+    // Actualizar en memoria sin recargar página
+    p.angelito=true;
+    p.fechaAngelito=fecha;
+    // Actualizar en allPets
+    var inAll=allPets.find(function(x){return x.uid===p.uid;});
+    if(inAll){inAll.angelito=true;inAll.fechaAngelito=fecha;}
+    // Re-renderizar secciones y modal
+    renderAngeles();
+    applyFilter();
+    closeConfirm();
+    // Reabrir modal con datos actualizados
+    _renderModal(p);
+    mostrarToastG('🐾 '+p.nombre+' ya es un angelito');
+  })
+  .catch(function(){alert('Error al actualizar.');});
 }
 
-// ── INVITAR AMIGOS ─────────────────────────────────────────
-function abrirInvitar(eventoId, eventoTitulo){
-  eventoInvitarActual=eventoId;
-  invitadosEnviados={};
-  document.getElementById('invitarSubtitulo').textContent=eventoTitulo;
-  document.getElementById('modalInvitar').classList.add('open');
-  renderListaAmigosInvitar();
-}
-
-function cerrarInvitar(){
-  document.getElementById('modalInvitar').classList.remove('open');
-  eventoInvitarActual=null;
-}
-
-function renderListaAmigosInvitar(){
-  var lista=document.getElementById('listaAmigosInvitar');
-  if(!amigosCache.length){
-    lista.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">No tienes amigos aún.<br>¡Agrega desde la galería!</div>';
-    return;
-  }
-  var html='';
-  amigosCache.forEach(function(a){
-    var esGato=a.especie&&a.especie.toLowerCase().indexOf('gato')>=0;
-    var fotoHTML=a.foto&&a.foto.indexOf('http')>=0?'<img src="'+a.foto+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover">':(esGato?'🐱':'🐶');
-    var invitado=invitadosEnviados[a.uid];
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8f8f8;border-radius:10px;margin-bottom:8px">';
-    html+='<div style="width:36px;height:36px;border-radius:8px;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;flex-shrink:0">'+fotoHTML+'</div>';
-    html+='<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#222">'+a.nombre+'</div>';
-    html+='<div style="font-size:11px;color:#aaa">'+(a.especie||'')+'</div></div>';
-    html+='<button onclick="invitarAmigo(\''+a.uid+'\',\''+a.email+'\')" id="inv-'+a.uid+'" style="padding:6px 12px;background:'+(invitado?'#e0f7f7':'#00B4B4')+';color:'+(invitado?'#007a7a':'#fff')+';border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">'+(invitado?'✓ Invitado':'Invitar')+'</button>';
-    html+='</div>';
-  });
-  lista.innerHTML=html;
-}
-
-function invitarAmigo(uid, email){
-  if(!eventoInvitarActual||!email||invitadosEnviados[uid])return;
-  var evento=eventosData.find(function(e){return e.id===eventoInvitarActual;});
-  if(!evento)return;
-  invitadosEnviados[uid]=true;
-  enviarInvitacion(email, evento);
-  renderListaAmigosInvitar();
-  mostrarToast('Invitación enviada!');
-}
-
-function invitarTodos(){
-  if(!amigosCache.length){mostrarToast('No tienes amigos aún');return;}
-  var evento=eventosData.find(function(e){return e.id===eventoInvitarActual;});
-  if(!evento)return;
-  var nuevos=0;
-  amigosCache.forEach(function(a){
-    if(!invitadosEnviados[a.uid]&&a.email){
-      invitadosEnviados[a.uid]=true;
-      enviarInvitacion(a.email,evento);
-      nuevos++;
+// ── Eliminar mascota (FIX) ────────────────────────────────────
+// Antes llamaba deleteAccount (borraba TODAS las mascotas del email)
+// Ahora llama deleteMascota con el uid de la mascota actual solamente
+function confirmarEliminarMascota(){
+  if(!currentModalPet) return;
+  var p=currentModalPet;
+  mostrarConfirm(
+    '🗑️ Eliminar mascota',
+    '¿Eliminar a '+p.nombre+'? Esta acción no se puede deshacer.',
+    function(){
+      fetch('/api/submit',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'deleteMascota', uid:p.uid})
+      }).then(function(r){return r.json();})
+      .then(function(d){
+        if(d.ok){
+          closeModal();
+          closeConfirm();
+          mostrarToastG('✅ Mascota eliminada');
+          setTimeout(function(){location.reload();},1500);
+        } else {
+          alert('Error al eliminar. Intenta de nuevo.');
+          closeConfirm();
+        }
+      }).catch(function(){
+        alert('Error de conexión. Intenta de nuevo.');
+        closeConfirm();
+      });
     }
-  });
-  renderListaAmigosInvitar();
-  mostrarToast(nuevos>0?'Invitaciones enviadas a '+nuevos+' amigos!':'Ya invitaste a todos');
+  );
 }
 
-function enviarInvitacion(emailAmigo, evento){
-  var fecha=evento.fecha?new Date(evento.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'long',month:'long',day:'numeric'}):'';
-  fetch('/api/admin',{
+// ── Confirm modal ─────────────────────────────────────────────
+function mostrarConfirm(titulo,sub,onOk){
+  document.getElementById('confirmTitle').textContent=titulo;
+  document.getElementById('confirmSub').textContent=sub;
+  document.getElementById('confirmOk').onclick=onOk;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm(){document.getElementById('confirmOverlay').classList.remove('open');}
+
+// ── Login modal ───────────────────────────────────────────────
+function openLoginModal(){
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginMsg').style.display='none';
+  document.getElementById('btnLogin').disabled=false;
+  document.getElementById('btnLogin').textContent='Ingresar';
+  document.getElementById('loginOverlay').classList.add('open');
+}
+function closeLoginModal(){document.getElementById('loginOverlay').classList.remove('open');}
+
+function verificarEmail(){
+  var email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  if(!email||email.indexOf('@')<0){mostrarMsgLogin('Por favor ingresa un correo valido','error');return;}
+  var btn=document.getElementById('btnLogin');
+  btn.disabled=true;btn.textContent='Verificando...';
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.found&&d.mascotas&&d.mascotas.length>0){
+        sessionEmail=email;
+        sessionDueno=d.mascotas[0].dueno||'';
+        localStorage.setItem('petzid_email',sessionEmail);
+        localStorage.setItem('petzid_dueno',sessionDueno);
+        mostrarMsgLogin('¡Bienvenido/a '+(sessionDueno||'')+'! '+d.mascotas.length+' mascota(s) encontrada(s).','success');
+        setTimeout(function(){
+          closeLoginModal();
+          shown=0;applyFilter();
+          if(currentModalPet) renderModalFooter(currentModalPet);
+          else closeModal();
+        },1500);
+      } else {
+        mostrarMsgLogin('No encontramos ese correo. ¿Quieres registrarte?','error');
+        btn.disabled=false;btn.textContent='Ingresar';
+      }
+    })
+    .catch(function(){
+      mostrarMsgLogin('Error de conexion. Intenta de nuevo.','error');
+      btn.disabled=false;btn.textContent='Ingresar';
+    });
+}
+
+function mostrarMsgLogin(texto,tipo){
+  var el=document.getElementById('loginMsg');
+  el.textContent=texto;el.className='login-msg '+tipo;el.style.display=texto?'block':'none';
+}
+
+document.getElementById('loginEmail').addEventListener('keydown',function(e){
+  if(e.key==='Enter')verificarEmail();
+});
+
+// ── Formato de fecha ──────────────────────────────────────────
+function getMesFecha(val){
+  if(!val||val==='-')return null;
+  var s=String(val).trim();
+  var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return parseInt(m[2],10)-1;
+  var m2=s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if(m2)return parseInt(m2[2],10)-1;
+  return null;
+}
+
+function formatFecha(val){
+  if(!val||val==='-')return'-';
+  var d;
+  var p=String(val).split('/');
+  if(p.length===3)d=new Date(p[2]+'-'+p[1]+'-'+p[0]);
+  else d=new Date(val);
+  if(isNaN(d.getTime()))return String(val);
+  return d.toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+// ── Solicitud de amistad ──────────────────────────────────────
+function getBtnAmigo(uid){
+  var estado=misAmigosCache.find(function(a){return a.uid===uid;});
+  if(!estado) return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\''+uid+'\')">🐾 Agregar amigo</button>';
+  if(estado.tipo==='amigo') return '<button class="btn-primary" style="background:#e0f7f7;color:#007a7a;cursor:default">🐾 Amigos</button>';
+  if(estado.tipo==='pendiente_enviado') return '<button class="btn-primary" style="background:#f0f0ee;color:#888;cursor:default">Solicitud enviada</button>';
+  if(estado.tipo==='pendiente_recibido') return '<button class="btn-primary btn-pink" onclick="aceptarDesdeModal(\''+uid+'\')">Aceptar solicitud</button>';
+  return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\''+uid+'\')">🐾 Agregar amigo</button>';
+}
+
+function aceptarDesdeModal(uid){
+  var sol=misAmigosCache.find(function(a){return a.uid===uid&&a.tipo==='pendiente_recibido';});
+  if(!sol)return;
+  fetch('/api/galeria?action=responderSolicitud',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      action:'notificarInvitacion',
-      emailReceptor:emailAmigo,
-      nombreEvento:evento.titulo,
-      fechaEvento:fecha,
-      lugarEvento:evento.lugar||'',
-      nombreEmisor:miMascota?miMascota.nombre:(sessionEmail.split('@')[0]),
-      urlEventos:'https://petmi-petzid.vercel.app/eventos.html'
+    body:JSON.stringify({id:sol.id,estado:'aceptado'})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){sol.tipo='amigo';renderModalFooter(currentModalPet);mostrarToastG('✅ Ahora son amigos!');}
+  });
+}
+
+function enviarSolicitudAmistad(uid){
+  if(!sessionEmail){openLoginModal();return;}
+  var mia=allPets.find(function(p){return p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();});
+  if(!mia){mostrarToastG('Primero registra tu mascota para agregar amigos');return;}
+  var receptor=allPets.find(function(p){return p.uid===uid;});
+  if(!receptor)return;
+  fetch('/api/galeria?action=enviarSolicitud',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid_solicitante:mia.uid,uid_receptor:receptor.uid,email_solicitante:sessionEmail,email_receptor:receptor.email})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      misAmigosCache.push({uid:uid,tipo:'pendiente_enviado',id:null});
+      mostrarToastG('🐾 Solicitud enviada a '+receptor.nombre+'!');
+      renderModalFooter(currentModalPet);
+      fetch('/api/submit',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'notificarSolicitud',emailReceptor:receptor.email,nombreReceptor:receptor.nombre,nombreSolicit:mia.nombre,uidReceptor:receptor.uid})
+      });
+    } else { mostrarToastG('Error al enviar solicitud'); }
+  }).catch(function(){mostrarToastG('Error de conexión');});
+}
+
+// ── Actividades preview ───────────────────────────────────────
+function irActividades(){location.href='/actividades.html';}
+
+function cargarActividadesPreview(){
+  fetch('/api/galeria?action=getActividades')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var acts=(d.actividades||[]).slice(0,6);
+      if(!acts.length)return;
+      document.getElementById('seccionActividades').style.display='block';
+      var TIPO_EMOJIS={plan:'🐾',busco:'🔍',perdido:'🚨',adopcion:'🏠'};
+      var TIPO_COLORS={plan:{bg:'#f3e8ff',color:'#764ba2'},busco:{bg:'#e8f5e9',color:'#2e7d32'},perdido:{bg:'#ffebee',color:'#c0392b'},adopcion:{bg:'#e8f5e9',color:'#2e7d32'}};
+      var html='';
+      acts.forEach(function(a){
+        var emoji=TIPO_EMOJIS[a.tipo]||'🐾';
+        var col=TIPO_COLORS[a.tipo]||{bg:'#f0f0ee',color:'#555'};
+        var fotoAvatar=a.foto_creador&&a.foto_creador.indexOf('http')>=0
+          ?'<img src="'+a.foto_creador+'" style="width:22px;height:22px;border-radius:4px;object-fit:cover">'
+          :'<span style="font-size:14px">'+emoji+'</span>';
+        var meta=(a.fecha?'📅 '+new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit'}):'')
+          +(a.hora?' '+a.hora:'')+(a.ubicacion?' · 📍 '+a.ubicacion:'');
+        if(!meta&&a.expires_at){
+          var dias=Math.floor((new Date(a.expires_at)-Date.now())/86400000);
+          if(dias>=0)meta='expira en '+dias+' día'+(dias!==1?'s':'');
+        }
+        var tipoLabel=a.tipo.charAt(0).toUpperCase()+a.tipo.slice(1);
+        html+='<div class="act-prev-card" onclick="irActividades()">'
+          +'<div style="height:5px;background:'+col.color+';width:100%"></div>'
+          +'<div class="act-prev-body">'
+          +'<div style="margin-bottom:5px"><span style="font-size:9px;font-weight:700;background:'+col.bg+';color:'+col.color+';padding:2px 8px;border-radius:99px">'+emoji+' '+tipoLabel+'</span></div>'
+          +'<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">'+fotoAvatar
+          +'<span style="font-size:10px;font-weight:600;color:#333">'+a.nombre_creador+'</span></div>'
+          +'<div class="act-prev-titulo">'+a.titulo+'</div>'
+          +(meta?'<div class="act-prev-meta">'+meta+'</div>':'')
+          +'</div></div>';
+      });
+      document.getElementById('actividadesScroll').innerHTML=html;
+    });
+}
+cargarActividadesPreview();
+
+// ── Cache de amigos ───────────────────────────────────────────
+function cargarCacheAmigos(){
+  if(!sessionEmail)return Promise.resolve();
+  return new Promise(function(resolve){
+    var miMascota=allPets.find(function(p){return p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();});
+    if(!miMascota)return resolve();
+    fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(miMascota.uid))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        misAmigosCache=[];
+        (d.amigos||[]).forEach(function(a){
+          var uidAmigo=a.uid_solicitante===miMascota.uid?a.uid_receptor:a.uid_solicitante;
+          misAmigosCache.push({uid:uidAmigo,tipo:'amigo',id:a.id});
+        });
+        (d.pendientes||[]).forEach(function(a){
+          if(a.uid_solicitante===miMascota.uid){
+            misAmigosCache.push({uid:a.uid_receptor,tipo:'pendiente_enviado',id:a.id});
+          } else {
+            misAmigosCache.push({uid:a.uid_solicitante,tipo:'pendiente_recibido',id:a.id});
+          }
+        });
+      }).catch(function(){}).finally(function(){resolve();});
+  });
+}
+if(sessionEmail) setTimeout(cargarCacheAmigos,2000);
+
+// ── Mensajes ──────────────────────────────────────────────────
+var currentMascotaUID=null;
+
+function cargarMensajes(uid){
+  currentMascotaUID=uid;
+  var lista=document.getElementById('mensajesLista');
+  lista.innerHTML='<div style="text-align:center;padding:12px;color:#bbb;font-size:13px">Cargando...</div>';
+  fetch(SUPA_URL+'/rest/v1/mensajes?uid_mascota=eq.'+encodeURIComponent(uid)+'&order=created_at.asc',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(msgs){
+    if(!msgs||msgs.length===0){
+      lista.innerHTML='<div style="text-align:center;padding:12px;color:#bbb;font-size:13px">Sé el primero en dejar un mensaje 🐾</div>';
+      return;
+    }
+    lista.innerHTML=msgs.map(function(m){
+      var fecha=(m.created_at||m.fecha)?new Date(m.created_at||m.fecha).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'';
+      return '<div style="background:#f8f8f8;border-radius:10px;padding:10px 12px;margin-bottom:6px">'
+        +'<div style="font-size:12px;font-weight:700;color:#333">'+m.autor+'<span style="font-size:10px;color:#bbb;font-weight:400;margin-left:8px">'+fecha+'</span></div>'
+        +'<div style="font-size:13px;color:#555;margin-top:3px;line-height:1.5">'+m.mensaje+'</div></div>';
+    }).join('');
+    lista.scrollTop=lista.scrollHeight;
+  }).catch(function(){
+    lista.innerHTML='<div style="text-align:center;padding:8px;color:#bbb;font-size:13px">No se pudieron cargar los mensajes</div>';
+  });
+}
+
+function enviarMensaje(){
+  var autor=document.getElementById('mensajeAutor').value.trim();
+  var mensaje=document.getElementById('mensajeTxt').value.trim();
+  if(!autor){
+    var dueno=localStorage.getItem('petzid_dueno')||'';
+    var email=localStorage.getItem('petzid_email')||'';
+    autor=dueno||(email?email.split('@')[0]:'Anonimo');
+  }
+  if(!mensaje){alert('Escribe un mensaje');return;}
+  if(!currentMascotaUID)return;
+  fetch(SUPA_URL+'/rest/v1/mensajes',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},
+    body:JSON.stringify({uid_mascota:currentMascotaUID,autor:autor,mensaje:mensaje,nombre_mascota:currentModalPet?currentModalPet.nombre:''})
+  }).then(function(){
+    document.getElementById('mensajeTxt').value='';
+    setTimeout(function(){cargarMensajes(currentMascotaUID);},300);
+  }).catch(function(e){console.log('Error:',e);});
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function mostrarToastG(msg){
+  var el=document.getElementById('toast');
+  if(!el){el=document.createElement('div');el.id='toast';el.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap';document.body.appendChild(el);}
+  el.textContent=msg;el.style.opacity='1';
+  setTimeout(function(){el.style.opacity='0';},2500);
+}
+</script>
+<!-- ══════════════════════════════════════════════════════════
+     MODAL ME PERDÍ
+═══════════════════════════════════════════════════════════ -->
+<div id="modalPerdido" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:800;align-items:center;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 16px 60px rgba(0,0,0,.3);margin:auto">
+
+    <!-- Header rojo -->
+    <div style="background:#c0392b;padding:18px 20px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:18px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif">🚨 ME PERDÍ — Generar Póster</div>
+      <button onclick="cerrarModalPerdido()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+    </div>
+
+    <!-- Formulario -->
+    <div style="padding:20px" id="perdidoFormWrap">
+      <div style="font-size:12px;color:#888;margin-bottom:16px;line-height:1.5">Completa los datos para generar el póster y publicarlo automáticamente en la comunidad.</div>
+
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Última vez visto / descripción</div>
+        <textarea id="perdidoMensaje" placeholder="Ej: Se escapó del parque Central, lleva collar azul con cascabel..." style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;resize:none;height:80px;font-family:Arial,sans-serif"></textarea>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Última ubicación conocida</div>
+        <input type="text" id="perdidoUbicacion" placeholder="Ej: Zona 10, Cayalá, Miraflores..." style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Fecha que se perdió</div>
+          <input type="date" id="perdidoFecha" style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none">
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Teléfono de contacto</div>
+          <input type="tel" id="perdidoTelefono" placeholder="+502 ####-####" inputmode="tel" style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none">
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">¿Hay recompensa?</div>
+        <div style="display:flex;gap:8px">
+          <div id="recompensaNo" onclick="selRecompensa(false)" style="flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #00B4B4;background:#e0f7f7;color:#007a7a;font-size:13px;font-weight:700;cursor:pointer">No por ahora</div>
+          <div id="recompensaSi" onclick="selRecompensa(true)"  style="flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:13px;font-weight:700;cursor:pointer">Sí, hay recompensa</div>
+        </div>
+        <input type="text" id="perdidoRecompensa" placeholder="Ej: Q500 de recompensa" style="display:none;width:100%;padding:12px 14px;border:1.5px solid #F5C842;border-radius:12px;font-size:14px;outline:none;margin-top:8px">
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button onclick="cerrarModalPerdido()" style="flex:1;padding:13px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cancelar</button>
+        <button onclick="generarPosterPerdido()" id="btnGenerarPoster" style="flex:2;padding:13px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">🚨 Generar póster y publicar</button>
+      </div>
+    </div>
+
+    <!-- Preview del poster generado -->
+    <div id="perdidoPosterWrap" style="display:none;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:#155724;background:#d4edda;border-radius:10px;padding:10px 14px;margin-bottom:16px;text-align:center">✅ Póster generado y publicado en la comunidad</div>
+
+      <!-- Canvas donde se renderiza el poster -->
+      <canvas id="posterCanvas" style="width:100%;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.15)"></canvas>
+
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button onclick="descargarPoster()" style="flex:1;padding:13px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">⬇️ Descargar</button>
+        <button onclick="compartirPoster()" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">📲 Compartir</button>
+        <button onclick="cerrarModalPerdido()" style="padding:13px 16px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cerrar</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── ME PERDÍ — Estado ─────────────────────────────────────────
+var perdidoConRecompensa = false;
+var posterDataURL = null;
+
+function abrirModalPerdido(){
+  if(!currentModalPet) return;
+  // Resetear formulario
+  document.getElementById('perdidoMensaje').value = '';
+  document.getElementById('perdidoUbicacion').value = '';
+  document.getElementById('perdidoFecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('perdidoTelefono').value = currentModalPet.whatsapp || '';
+  document.getElementById('perdidoRecompensa').value = '';
+  document.getElementById('perdidoRecompensa').style.display = 'none';
+  document.getElementById('perdidoFormWrap').style.display = 'block';
+  document.getElementById('perdidoPosterWrap').style.display = 'none';
+  selRecompensa(false);
+  posterDataURL = null;
+  var m = document.getElementById('modalPerdido');
+  m.style.display = 'flex';
+}
+
+function cerrarModalPerdido(){
+  document.getElementById('modalPerdido').style.display = 'none';
+}
+
+function selRecompensa(tiene){
+  perdidoConRecompensa = tiene;
+  var elNo = document.getElementById('recompensaNo');
+  var elSi = document.getElementById('recompensaSi');
+  var elTxt = document.getElementById('perdidoRecompensa');
+  if(tiene){
+    elSi.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #F5C842;background:#fff8e0;color:#856404;font-size:13px;font-weight:700;cursor:pointer';
+    elNo.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:13px;font-weight:700;cursor:pointer';
+    elTxt.style.display = 'block';
+  } else {
+    elNo.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #00B4B4;background:#e0f7f7;color:#007a7a;font-size:13px;font-weight:700;cursor:pointer';
+    elSi.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:13px;font-weight:700;cursor:pointer';
+    elTxt.style.display = 'none';
+  }
+}
+
+// ── Generar poster en Canvas ──────────────────────────────────
+async function generarPosterPerdido(){
+  var p = currentModalPet;
+  if(!p) return;
+
+  var ubicacion = document.getElementById('perdidoUbicacion').value.trim();
+  var telefono  = document.getElementById('perdidoTelefono').value.trim();
+  var mensaje   = document.getElementById('perdidoMensaje').value.trim();
+  var fechaStr  = document.getElementById('perdidoFecha').value;
+  var recompensa = perdidoConRecompensa ? document.getElementById('perdidoRecompensa').value.trim() : '';
+
+  if(!ubicacion){ alert('Ingresa la última ubicación conocida'); return; }
+  if(!telefono) { alert('Ingresa un teléfono de contacto'); return; }
+
+  var btn = document.getElementById('btnGenerarPoster');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generando...';
+
+  // Formatear fecha
+  var fechaDisplay = '-';
+  if(fechaStr){
+    var fd = new Date(fechaStr+'T12:00:00');
+    fechaDisplay = fd.toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+
+  // Dimensiones del poster: 800 x 1100
+  var W = 800, H = 1100;
+  var canvas = document.getElementById('posterCanvas');
+  canvas.width  = W;
+  canvas.height = H;
+  var ctx = canvas.getContext('2d');
+
+  // ── Fondo blanco ──
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Header rojo ──
+  ctx.fillStyle = '#c0392b';
+  ctx.fillRect(0, 0, W, 120);
+
+  // Ícono sirena
+  ctx.font = 'bold 52px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('🚨', 70, 78);
+
+  // Texto ME PERDÍ
+  ctx.font = 'bold 52px Arial Black, Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+  ctx.fillText('ME  PERDÍ', 110, 82);
+
+  // Subtítulo
+  ctx.font = '22px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText('¿Me has visto? Por favor comunícate', 110, 108);
+
+  // ── Foto de la mascota ──
+  var fotoY = 130, fotoH = 440;
+  ctx.fillStyle = '#f0f0ee';
+  ctx.fillRect(0, fotoY, W, fotoH);
+
+  if(p.foto && p.foto.indexOf('http') >= 0){
+    try {
+      var imgEl = await cargarImagen(p.foto);
+      // Crop centrado
+      var sx=0,sy=0,sw=imgEl.width,sh=imgEl.height;
+      var ratio = imgEl.width/imgEl.height;
+      var targetRatio = W/fotoH;
+      if(ratio > targetRatio){ sw = imgEl.height*targetRatio; sx=(imgEl.width-sw)/2; }
+      else { sh = imgEl.width/targetRatio; sy=(imgEl.height-sh)/2; }
+      ctx.drawImage(imgEl, sx, sy, sw, sh, 0, fotoY, W, fotoH);
+    } catch(e) {
+      // Si falla la imagen, poner emoji
+      var esGato = p.especie.toLowerCase().indexOf('gato')>=0;
+      ctx.font = '160px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#aaa';
+      ctx.fillText(esGato?'🐱':'🐶', W/2, fotoY + fotoH/2 + 50);
+    }
+  } else {
+    var esGato2 = p.especie.toLowerCase().indexOf('gato')>=0;
+    ctx.font = '160px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#aaa';
+    ctx.fillText(esGato2?'🐱':'🐶', W/2, fotoY + fotoH/2 + 50);
+  }
+
+  // Overlay degradado sobre la foto (abajo)
+  var grad = ctx.createLinearGradient(0, fotoY+fotoH-120, 0, fotoY+fotoH);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.65)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, fotoY+fotoH-120, W, 120);
+
+  // Nombre sobre la foto
+  ctx.font = 'bold 64px Arial Black, Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.fillText(p.nombre.toUpperCase(), W/2, fotoY+fotoH-30);
+
+  // ── Sección blanca — datos ──
+  var dataY = fotoY + fotoH;
+
+  // Especie / Sexo / Raza
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, dataY, W, 100);
+
+  var cols = [
+    {lbl:'ESPECIE', val:p.especie||'-'},
+    {lbl:'SEXO',    val:p.sexo||'-'},
+    {lbl:'RAZA',    val:(p.raza||'-').substring(0,14)}
+  ];
+  cols.forEach(function(c,i){
+    var cx = 40 + i*(W/3);
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#aaaaaa';
+    ctx.textAlign = 'left';
+    ctx.fillText(c.lbl, cx, dataY+30);
+    ctx.font = 'bold 24px Arial';
+    ctx.fillStyle = '#222222';
+    ctx.fillText(c.val.toUpperCase(), cx, dataY+62);
+  });
+
+  // Separador
+  ctx.fillStyle = '#f0f0ee';
+  ctx.fillRect(0, dataY+100, W, 3);
+
+  // ── Franja amarilla — última vez visto ──
+  var amarY = dataY + 103;
+  ctx.fillStyle = '#F5C842';
+  ctx.fillRect(0, amarY, W, 220);
+
+  ctx.font = 'bold 18px Arial';
+  ctx.fillStyle = '#1a1a1a';
+  ctx.textAlign = 'left';
+  ctx.fillText('ÚLTIMA VEZ VISTO', 30, amarY + 32);
+
+  // Mensaje (wrap manual)
+  ctx.font = '20px Arial';
+  ctx.fillStyle = '#333333';
+  var msgLines = wrapText(ctx, mensaje||'Sin descripción', W-60, 20);
+  msgLines.slice(0,3).forEach(function(line,i){
+    ctx.fillText(line, 30, amarY + 58 + i*26);
+  });
+
+  // Ubicación
+  ctx.font = 'bold 20px Arial';
+  ctx.fillStyle = '#c0392b';
+  ctx.fillText('📍 ' + (ubicacion||'-'), 30, amarY + 140);
+
+  // Fecha y teléfono
+  ctx.font = '18px Arial';
+  ctx.fillStyle = '#555555';
+  ctx.fillText('📅 Fecha: ' + fechaDisplay, 30, amarY + 172);
+  ctx.fillText('📞 Contacto: ' + telefono, 30, amarY + 196);
+
+  // Recompensa badge
+  if(recompensa){
+    ctx.fillStyle = '#c0392b';
+    roundRect(ctx, W-220, amarY+140, 190, 52, 10);
+    ctx.fill();
+    ctx.font = 'bold 17px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏆 ' + recompensa, W-125, amarY+172);
+  }
+
+  // ── Footer — PetzID branding ──
+  var footY = amarY + 223;
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(0, footY, W, H-footY);
+
+  ctx.font = 'bold 28px Arial Black, Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.fillText('petz', W/2 - 22, footY + 46);
+  ctx.fillStyle = '#E05090';
+  ctx.fillText('ID', W/2 + 34, footY + 46);
+
+  ctx.font = '16px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText('PetMi Guatemala — Comunidad de mascotas', W/2, footY + 72);
+
+  // PetzID del animal
+  if(p.uid){
+    ctx.font = '13px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillText('ID: ' + p.uid.substring(0,18).toUpperCase(), W/2, footY + 95);
+  }
+
+  // Guardar dataURL
+  posterDataURL = canvas.toDataURL('image/png');
+
+  // ── Publicar en actividades ───────────────────────────────
+  btn.textContent = '⏳ Publicando...';
+  try {
+    await publicarPerdidoEnActividades(p, ubicacion, telefono, mensaje, fechaStr, recompensa, posterDataURL);
+  } catch(e){
+    console.log('Error publicando actividad:', e);
+  }
+
+  // Mostrar resultado
+  document.getElementById('perdidoFormWrap').style.display = 'none';
+  document.getElementById('perdidoPosterWrap').style.display = 'block';
+  btn.disabled = false;
+  btn.textContent = '🚨 Generar póster y publicar';
+}
+
+// ── Publicar en actividades como tipo "perdido" ───────────────
+async function publicarPerdidoEnActividades(p, ubicacion, telefono, mensaje, fecha, recompensa, posterURL){
+  var titulo = '🚨 SE PERDIÓ ' + p.nombre.toUpperCase();
+  var descripcion = (mensaje ? mensaje + '\n' : '')
+    + '📍 ' + ubicacion
+    + (recompensa ? '\n🏆 ' + recompensa : '')
+    + '\n📞 ' + telefono;
+
+  // Subir imagen del poster a Cloudinary
+  var imagenURL = '';
+  try {
+    var fd = new FormData();
+    fd.append('file', posterURL);
+    fd.append('upload_preset', 'petzid');
+    fd.append('folder', 'petzid_perdidos');
+    var res = await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload', {method:'POST', body:fd});
+    var data = await res.json();
+    imagenURL = data.secure_url || '';
+  } catch(e){ console.log('Cloudinary poster:', e); }
+
+  await fetch('/api/galeria?action=publicarActividad', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      action:        'publicarActividad',
+      uid_creador:   p.uid,
+      nombre_creador: p.nombre,
+      foto_creador:  p.foto || '',
+      email_creador: p.email || sessionEmail,
+      tipo:          'perdido',
+      titulo:        titulo,
+      descripcion:   descripcion,
+      fecha:         fecha,
+      hora:          '',
+      ubicacion:     ubicacion,
+      imagen:        imagenURL
     })
   });
 }
 
-// ── COMPARTIR ──────────────────────────────────────────────
-function copiarLink(eventoId){
-  var url='https://petmi-petzid.vercel.app/eventos.html';
-  navigator.clipboard.writeText(url).then(function(){
-    mostrarToast('Link copiado!');
-  }).catch(function(){
-    mostrarToast('URL: petmi-petzid.vercel.app/eventos.html');
-  });
+// ── Descargar poster ──────────────────────────────────────────
+function descargarPoster(){
+  if(!posterDataURL || !currentModalPet) return;
+  var a = document.createElement('a');
+  a.download = 'MePerdí_' + currentModalPet.nombre + '.png';
+  a.href = posterDataURL;
+  a.click();
 }
 
-// ── SUGERIR EVENTO ─────────────────────────────────────────
-function abrirFormEvento(){
-  document.getElementById('modalSugerirEvento').style.display='flex';
-}
-function cerrarFormEvento(){
-  document.getElementById('modalSugerirEvento').style.display='none';
-  document.getElementById('sgTitulo').value='';
-  document.getElementById('sgFecha').value='';
-  document.getElementById('sgHora').value='';
-  document.getElementById('sgLugar').value='';
-  document.getElementById('sgDesc').value='';
-  document.getElementById('sgLink').value='';
-  document.getElementById('sgFotoLabel').textContent='Seleccionar foto';
-  document.getElementById('sgFotoPreview').style.display='none';
-  var btn=document.getElementById('sgBtn');
-  btn.disabled=false;btn.textContent='Enviar sugerencia';
-  sgFotoBase64=null;sgFotoMime=null;
-}
-
-function enviarSugerenciaEvento(){
-  var titulo=document.getElementById('sgTitulo').value.trim();
-  var fecha=document.getElementById('sgFecha').value;
-  if(!titulo||!fecha){mostrarMsg('sgMsg','Título y fecha son obligatorios','#fbeaf0','#c0392b');return;}
-  var btn=document.getElementById('sgBtn');
-  btn.disabled=true;btn.textContent='Enviando...';
-
-  var fotoPromise=sgFotoBase64
-    ?(function(){
-        var fd=new FormData();
-        fd.append('file','data:'+(sgFotoMime||'image/jpeg')+';base64,'+sgFotoBase64);
-        fd.append('upload_preset','petzid');
-        return fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd})
-          .then(function(r){return r.json();})
-          .then(function(d){return d.secure_url||'';});
-      })()
-    :Promise.resolve('');
-
-  fotoPromise.then(function(fotoUrl){
-    return fetch('/api/galeria?action=enviarEvento',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        titulo:titulo,tipo:document.getElementById('sgTipo').value,
-        fecha:fecha,hora:document.getElementById('sgHora').value.trim(),
-        lugar:document.getElementById('sgLugar').value.trim(),
-        descripcion:document.getElementById('sgDesc').value.trim(),
-        link:document.getElementById('sgLink').value.trim(),
-        imagen:fotoUrl,
-        email:sessionEmail||''
-      })
-    }).then(function(r){return r.json();});
-  }).then(function(d){
-    if(d&&d.ok){
-      mostrarMsg('sgMsg','ok','#e0f7f7','#007a7a');
-      btn.textContent='Enviado!';
-      btn.disabled=true;
-    } else {
-      mostrarMsg('sgMsg','Error al enviar','#fbeaf0','#c0392b');
-      btn.disabled=false;btn.textContent='Enviar sugerencia';
-    }
-  }).catch(function(){
-    mostrarMsg('sgMsg','Error al enviar','#fbeaf0','#c0392b');
-    btn.disabled=false;btn.textContent='Enviar sugerencia';
-  });
-}
-
-function mostrarMsg(id,txt,bg,color){
-  if(bg==='#e0f7f7'){
-    cerrarFormEvento();
-    var foto=JEFE_IMGS[Math.floor(Math.random()*JEFE_IMGS.length)];
-    document.getElementById('modalGraciasEventoContent').innerHTML=
-      '<div style="text-align:center;padding:8px 0">'
-      +'<img src="'+foto+'" style="width:180px;border-radius:12px;margin-bottom:14px" onerror="this.style.display=\'none\'">'
-      +'<div style="font-size:17px;font-weight:700;color:#007a7a;margin-bottom:6px">Gracias por tu sugerencia! 🐾</div>'
-      +'<div style="font-size:13px;color:#555">El jefe revisara tu sugerencia y pronto aparecera en la lista.</div>'
-      +'</div>';
-    document.getElementById('modalGraciasEvento').classList.add('open');
-  } else {
-    mostrarToast(txt);
+// ── Compartir poster (Web Share API o fallback) ───────────────
+async function compartirPoster(){
+  if(!posterDataURL || !currentModalPet) return;
+  var nombre = currentModalPet.nombre;
+  // Intentar Web Share API con archivo
+  if(navigator.share){
+    try {
+      var blob = await (await fetch(posterDataURL)).blob();
+      var file = new File([blob], 'MePerdí_'+nombre+'.png', {type:'image/png'});
+      await navigator.share({
+        title: '🚨 SE PERDIÓ ' + nombre.toUpperCase(),
+        text:  '¿Lo has visto? Por favor comunícate. Publicado en PetzID.',
+        files: [file]
+      });
+      return;
+    } catch(e){ console.log('Share API:', e); }
   }
+  // Fallback: descargar
+  descargarPoster();
+  mostrarToastG('📲 Guarda la imagen y compártela por WhatsApp o redes sociales');
 }
 
-// Swipe to close
-function addSwipeClose(sheetId, closeFn){
-  var el=document.getElementById(sheetId);
-  if(!el)return;
-  var startY=0;
-  el.addEventListener('touchstart',function(e){startY=e.touches[0].clientY;});
-  el.addEventListener('touchmove',function(e){
-    var dy=e.touches[0].clientY-startY;
-    if(dy>0) el.style.transform='translateY('+dy+'px)';
-  });
-  el.addEventListener('touchend',function(e){
-    var dy=e.changedTouches[0].clientY-startY;
-    if(dy>80){el.style.transform='';closeFn();}
-    else el.style.transform='';
+// ── Helpers canvas ────────────────────────────────────────────
+function cargarImagen(url){
+  return new Promise(function(resolve, reject){
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = function(){ resolve(img); };
+    img.onerror = function(){ reject(new Error('No se pudo cargar la imagen')); };
+    // Usar proxy si es necesario para CORS
+    img.src = url;
   });
 }
-addSwipeClose('invitarSheet', cerrarInvitar);
 
-function mostrarToast(msg){
-  var el=document.getElementById('toast');
-  el.textContent=msg;el.classList.add('show');
-  setTimeout(function(){el.classList.remove('show');},2500);
+function wrapText(ctx, text, maxWidth, fontSize){
+  if(!text) return [''];
+  var words = text.split(' ');
+  var lines = [], current = '';
+  words.forEach(function(word){
+    var test = current ? current+' '+word : word;
+    if(ctx.measureText(test).width > maxWidth && current){
+      lines.push(current);
+      current = word;
+    } else { current = test; }
+  });
+  if(current) lines.push(current);
+  return lines;
 }
+
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+// Cerrar modal con Escape
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') cerrarModalPerdido();
+});
 </script>
 
 <script src="/header.js"></script>
