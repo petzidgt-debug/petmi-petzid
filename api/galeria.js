@@ -710,6 +710,19 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok, premium_hasta: hastaStr, meses: 3 });
     }
 
+    // ── addMensajePublico ─────────────────────────────────────
+    // Guarda mensaje publico directamente en Supabase (para angelitos/cumpleanos)
+    if (action === 'addMensajePublico' && req.method === 'POST') {
+      const { uid, autor, mensaje, nombreMascota } = req.body;
+      if (!uid || !autor || !mensaje) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mensajes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ uid_mascota: uid, autor, mensaje, nombre_mascota: nombreMascota || '' })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
     return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
