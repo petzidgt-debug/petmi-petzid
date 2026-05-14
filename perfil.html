@@ -197,7 +197,7 @@ fetch(SB_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid)+'&select=*', {
   esDueno = sessionEmail && mascota.email && mascota.email.toLowerCase()===sessionEmail.toLowerCase();
 
   renderPerfil();
-  cargarMensajes();
+  setTimeout(cargarMensajes, 100); // Esperar DOM del perfil
   if(esDueno) verificarAmistad();
   else verificarAmistad();
 }).catch(function(){
@@ -338,7 +338,9 @@ function formatFecha(val){
 
 // ── Mensajes públicos ─────────────────────────────────────────
 function cargarMensajes(){
-  if(!mascota||!mascota.angelito){
+  // Cargar mensajes para angelitos y cumpleañeros
+  var esAngel = mascota && (mascota.angelito===true||String(mascota.angelito).toLowerCase()==='si');
+  if(!esAngel){
     var mesActual=new Date().getMonth();
     var esCumple=false;
     if(mascota&&mascota.fecha){
@@ -365,6 +367,13 @@ function cargarMensajes(){
 }
 
 // FIX: usa /api/submit (proxy correcto al Apps Script)
+// Permitir Enter en el input de mensaje
+document.addEventListener('keydown', function(e){
+  if(e.key==='Enter' && document.activeElement && document.activeElement.id==='msgTxt'){
+    enviarMensaje();
+  }
+});
+
 function enviarMensaje(){
   var autor  =document.getElementById('msgAutor').value.trim();
   var mensaje=document.getElementById('msgTxt').value.trim();
