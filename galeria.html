@@ -47,7 +47,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .seccion-actividades{background:linear-gradient(135deg,#764ba2,#E05090);padding:24px 20px}
 .act-prev-card{background:#fff;border-radius:14px;overflow:hidden;min-width:160px;max-width:160px;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-shrink:0;cursor:pointer;transition:transform .2s}
 .act-prev-card:hover{transform:translateY(-2px)}
-.act-prev-emoji{width:160px;height:90px;display:flex;align-items:center;justify-content:center;font-size:36px}
+.act-prev-card .act-prev-body{padding:8px 10px}
 .act-prev-body{padding:8px 10px}
 .act-prev-titulo{font-size:12px;font-weight:900;color:#222;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .act-prev-meta{font-size:10px;color:#aaa}
@@ -925,8 +925,8 @@ function cargarActividadesPreview(){
       var acts=(d.actividades||[]).slice(0,6);
       if(!acts.length)return;
       document.getElementById('seccionActividades').style.display='block';
-      var TIPO_EMOJIS={plan:'🐾',regalo:'🎁',vendo:'🛍️',busco:'🔍',perdido:'🚨'};
-      var TIPO_COLORS={plan:{bg:'#f3e8ff',color:'#6f42c1'},regalo:{bg:'#fce4ec',color:'#c0392b'},vendo:{bg:'#fff3cd',color:'#856404'},busco:{bg:'#e8f5e9',color:'#2e7d32'},perdido:{bg:'#ffebee',color:'#b71c1c'}};
+      var TIPO_EMOJIS={plan:'🐾',busco:'🔍',perdido:'🚨',adopcion:'🏠'};
+      var TIPO_COLORS={plan:{bg:'#f3e8ff',color:'#764ba2'},busco:{bg:'#e8f5e9',color:'#2e7d32'},perdido:{bg:'#ffebee',color:'#c0392b'},adopcion:{bg:'#e8f5e9',color:'#2e7d32'}};
       var html='';
       acts.forEach(function(a){
         var emoji=TIPO_EMOJIS[a.tipo]||'🐾';
@@ -940,12 +940,13 @@ function cargarActividadesPreview(){
           var dias=Math.floor((new Date(a.expires_at)-Date.now())/86400000);
           if(dias>=0)meta='expira en '+dias+' día'+(dias!==1?'s':'');
         }
+        var tipoLabel=a.tipo.charAt(0).toUpperCase()+a.tipo.slice(1);
         html+='<div class="act-prev-card" onclick="irActividades()">'
-          +'<div class="act-prev-emoji" style="background:'+col.bg+'">'+emoji+'</div>'
+          +'<div style="height:5px;background:'+col.color+';width:100%"></div>'
           +'<div class="act-prev-body">'
-          +'<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px">'+fotoAvatar
-          +'<span style="font-size:11px;font-weight:700;color:#333">'+a.nombre_creador+'</span>'
-          +'<span style="font-size:9px;font-weight:700;background:'+col.bg+';color:'+col.color+';padding:2px 6px;border-radius:20px;margin-left:auto">'+emoji+' '+a.tipo+'</span></div>'
+          +'<div style="margin-bottom:5px"><span style="font-size:9px;font-weight:700;background:'+col.bg+';color:'+col.color+';padding:2px 8px;border-radius:99px">'+emoji+' '+tipoLabel+'</span></div>'
+          +'<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">'+fotoAvatar
+          +'<span style="font-size:10px;font-weight:600;color:#333">'+a.nombre_creador+'</span></div>'
           +'<div class="act-prev-titulo">'+a.titulo+'</div>'
           +(meta?'<div class="act-prev-meta">'+meta+'</div>':'')
           +'</div></div>';
