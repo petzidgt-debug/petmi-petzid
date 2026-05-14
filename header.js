@@ -54,7 +54,7 @@
     var navHTML =
       '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">Blog</a>' +
       '<a href="https://www.revistapetmi.com/category/all-products" target="_blank" class="h-link">Tienda</a>' +
-      '<a href="/index.html" class="h-link' + (currentPath.indexOf('index') >= 0 ? ' active' : '') + '">PetzID</a>' +
+      '<a href="https://www.revistapetmi.com/home" target="_blank" class="h-link">PetzID</a>' +
       '<div class="h-drop">' +
         '<button class="h-link" onclick="petmiTogglePF(event)">Pet Friendly ▾</button>' +
         '<div class="h-drop-menu" id="pfMenu">' +
@@ -90,7 +90,7 @@
       '<span class="h-mob-sec">Navegación</span>' +
       '<a href="https://www.revistapetmi.com/" target="_blank">Blog</a>' +
       '<a href="https://www.revistapetmi.com/category/all-products" target="_blank">Tienda</a>' +
-      '<a href="/index.html">PetzID</a>' +
+      '<a href="https://www.revistapetmi.com/home" target="_blank">PetzID</a>' +
       '<a href="/eventos.html">🎉 Eventos</a>' +
       '<a href="/lugares.html">📍 Lugares</a>' +
       '<a href="/actividades.html">🐾 ¿Quién se apunta?</a>' +
@@ -126,7 +126,7 @@
     var header = document.createElement('header');
     header.className = 'site-header';
     header.innerHTML =
-      '<a href="/galeria.html" class="h-logo">' +
+      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-logo">' +
         '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="36" onerror="this.style.display=\'none\'">' +
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
