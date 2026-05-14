@@ -56,6 +56,16 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 .spinner{width:40px;height:40px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.premium-banner{background:linear-gradient(135deg,#764ba2,#E05090);border-radius:14px;padding:16px 18px;margin-bottom:16px;color:#fff}
+.premium-banner h3{font-size:15px;font-weight:900;margin-bottom:4px}
+.premium-banner p{font-size:12px;color:rgba(255,255,255,.8);margin-bottom:10px}
+.score-bar-wrap{background:rgba(255,255,255,.2);border-radius:99px;height:8px;margin-bottom:8px}
+.score-bar-fill{height:8px;border-radius:99px;background:#F5C842;transition:width .4s ease}
+.score-text{font-size:11px;color:rgba(255,255,255,.8)}
+.btn-activar-premium{width:100%;padding:11px;background:#F5C842;color:#1a1a1a;border:none;border-radius:12px;font-size:14px;font-weight:900;cursor:pointer}
+.premium-activo{background:linear-gradient(135deg,#F5C842,#f0a500);border-radius:14px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.premium-activo-txt{font-size:14px;font-weight:700;color:#1a1a1a}
+.premium-activo-sub{font-size:11px;color:rgba(0,0,0,.6)}
 .toast.show{opacity:1}
 .error-box{background:#fbeaf0;border:1px solid #f4c0d1;border-radius:12px;padding:14px;font-size:14px;color:#993556;margin-bottom:16px;display:none}
 .btn-danger{width:100%;padding:14px;background:#fff0f0;color:#c0392b;border:1.5px solid #fcc;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px}
@@ -157,7 +167,34 @@ function renderForm(){
 
   var actividadesOpts = ['Paseos','Agility','Natacion','Socializacion','Juegos en casa','Obediencia','Dog park','Grooming / spa'];
 
+  // Calcular score de perfil
+  var scoreFields=[m.foto,m.nombre,m.apodo,m.especie,m.sexo,m.raza,m.fecha,m.dueno,m.whatsapp,m.veterinario,m.alimento,m.instagram];
+  var score=scoreFields.filter(function(f){return f&&String(f).trim()&&String(f).trim()!=='-';}).length;
+  var scoreMax=12;
+  var scorePct=Math.round(score/scoreMax*100);
+  var esPremium=m.premium===true||m.premium==='true';
+  var premiumHasta=m.premium_hasta||'';
+
   document.getElementById('mainWrap').innerHTML = `
+    ${esPremium ? `
+    <div class="premium-activo">
+      <div style="font-size:28px">⭐</div>
+      <div>
+        <div class="premium-activo-txt">Cuenta Premium activa</div>
+        <div class="premium-activo-sub">Vigente hasta ${premiumHasta ? new Date(premiumHasta+'T12:00:00').toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—'}</div>
+      </div>
+    </div>` : scorePct < 100 ? `
+    <div class="premium-banner">
+      <h3>⭐ Completa tu perfil y obtén 3 meses Premium gratis</h3>
+      <p>Tienes ${score} de ${scoreMax} campos completos. Llega a ${scoreMax} y activa Premium sin costo.</p>
+      <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${scorePct}%"></div></div>
+      <div class="score-text">${scorePct}% completo · ${scoreMax-score} campo${scoreMax-score!==1?'s':''} restante${scoreMax-score!==1?'s':''}</div>
+    </div>` : `
+    <div class="premium-banner">
+      <h3>🎉 ¡Perfil completo! Activa tus 3 meses Premium gratis</h3>
+      <p>Has completado todos los campos. ¡Tu cuenta Premium está lista para activarse!</p>
+      <button class="btn-activar-premium" onclick="activarPremiumGratis()">⭐ Activar Premium gratis ahora</button>
+    </div>`}
     <div class="${heroClass}">
       <div class="edit-foto-wrap">
         <div class="edit-foto" id="editFoto" onclick="document.getElementById('fileInput').click()">${fotoHTML}</div>
@@ -404,6 +441,33 @@ function mostrarToast(msg){var el=document.getElementById('toast');el.textConten
 // ── Eliminar mascota ──────────────────────────────────────────
 // Usa /api/submit (que apunta al Apps Script correcto)
 // Solo borra la mascota por uid — NO deleteAccount
+function activarPremiumGratis(){
+  if(!mascota||!mascota.uid) return;
+  var btn=event.target;
+  btn.disabled=true; btn.textContent='Activando...';
+  fetch('/api/galeria?action=activarPremiumGratis',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid:mascota.uid})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      mascota.premium=true;
+      mascota.premium_hasta=d.premium_hasta;
+      mostrarToast('⭐ Premium activado por 3 meses!');
+      setTimeout(function(){location.reload();},1500);
+    } else if(d.error==='ya tiene premium'){
+      mostrarToast('Ya tienes Premium activo');
+    } else {
+      btn.disabled=false; btn.textContent='⭐ Activar Premium gratis ahora';
+      mostrarError('Error al activar. Intenta de nuevo.');
+    }
+  }).catch(function(){
+    btn.disabled=false; btn.textContent='⭐ Activar Premium gratis ahora';
+    mostrarError('Error de conexión.');
+  });
+}
+
 function confirmarEliminar(){
   document.getElementById('confirmOverlay').classList.remove('open');
   if(!mascota||!mascota.uid){mostrarError('No se pudo identificar la mascota.');return;}
