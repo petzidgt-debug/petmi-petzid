@@ -58,7 +58,8 @@
       '<div class="h-drop">' +
         '<button class="h-link" onclick="petmiTogglePF(event)">Pet Friendly ▾</button>' +
         '<div class="h-drop-menu" id="pfMenu">' +
-          '<a href="/agenda.html" class="h-drop-item">🗓️ Agenda</a>' +
+          '<a href="/eventos.html" class="h-drop-item">🎪 Eventos</a>' +
+          '<a href="/avisos.html" class="h-drop-item">📢 Avisos</a>' +
           '<a href="/lugares.html" class="h-drop-item">📍 Lugares</a>' +
         '</div>' +
       '</div>' +
@@ -90,7 +91,8 @@
       '<a href="https://www.revistapetmi.com/" target="_blank">Blog</a>' +
       '<a href="https://www.revistapetmi.com/category/all-products" target="_blank">Tienda</a>' +
       '<a href="https://www.revistapetmi.com/home" target="_blank">PetzID</a>' +
-      '<a href="/agenda.html">🗓️ Agenda</a>' +
+      '<a href="/eventos.html">🎪 Eventos</a>' +
+      '<a href="/avisos.html">📢 Avisos</a>' +
       '<a href="/lugares.html">📍 Lugares</a>' +
           '<a href="/galeria.html">Amigos PetMi</a>' +
       '<a href="/promos.html" style="color:#764ba2;font-weight:700">🎁 Promos</a>' +
