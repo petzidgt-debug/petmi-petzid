@@ -538,12 +538,22 @@ function renderGallery(append){
 function openModal(idx){
   var p=filtered[idx];
   if(!p)return;
+  // Angelitos abren su pagina de perfil para mensajes publicos
+  if(p.angelito){
+    window.location.href='/perfil.html?uid='+p.uid;
+    return;
+  }
   _renderModal(p);
 }
 
 function openModalByUID(uid){
   var p=allPets.find(function(x){return x.uid===uid;});
   if(!p)return;
+  // Angelitos abren su pagina de perfil para mensajes publicos
+  if(p.angelito){
+    window.location.href='/perfil.html?uid='+uid;
+    return;
+  }
   _renderModal(p);
 }
 
