@@ -285,12 +285,20 @@ function renderPerfil(){
     html+='<a href="https://instagram.com/'+m.instagram.replace('@','')+'" target="_blank" style="font-size:14px;color:#00B4B4;font-weight:700">'+m.instagram+'</a></div>';
   }
 
+  // Titulo y descripcion especial para angelitos
+  var secMsgTitulo = m.angelito
+    ? '🐾 Libro de recuerdos'
+    : '💬 Mensajes';
+  var secMsgSub = m.angelito
+    ? '<div style="font-size:12px;color:#aaa;margin-bottom:12px;line-height:1.5">Deja un mensaje de amor para '+m.nombre+'. Todos los recuerdos son bienvenidos.</div>'
+    : '';
   html+='<div class="seccion" id="mensajesSeccion" style="'+(mostrarMensajes?'':'display:none')+'">';
-  html+='<div class="sec-titulo '+secTituloClass+'">💬 Mensajes</div>';
+  html+='<div class="sec-titulo '+secTituloClass+'">'+secMsgTitulo+'</div>';
+  html+=secMsgSub;
   html+='<div id="mensajesLista"><div class="mensaje-empty">Cargando...</div></div>';
   html+='<div class="input-mensaje">';
   html+='<input type="text" class="input-autor" id="msgAutor" placeholder="Tu nombre">';
-  html+='<input type="text" class="input-txt" id="msgTxt" placeholder="Deja un mensaje...">';
+  html+='<input type="text" class="input-txt" id="msgTxt" placeholder="'+(m.angelito?'Deja un recuerdo para '+m.nombre+'...':'Deja un mensaje...')+'">';
   html+='<button class="btn-enviar" onclick="enviarMensaje()">✉️</button>';
   html+='</div></div>';
 
