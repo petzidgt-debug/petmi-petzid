@@ -163,7 +163,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <div class="toast" id="toast"></div>
 <div class="jefe-modal" id="jefeModal" onclick="this.classList.remove('open')">
   <div class="jefe-box" onclick="event.stopPropagation()">
-    <img id="jefeImg" src="" onerror="this.style.display='none'">
+    <img id="jefeImg" src="" style="width:160px;border-radius:14px;margin-bottom:14px" onerror="this.style.display='none'">
     <h3 id="jefeTitulo">¡Gracias!</h3>
     <p id="jefeMsg">El jefe revisará tu sugerencia pronto 🐾</p>
     <button onclick="document.getElementById('jefeModal').classList.remove('open')">OK, gracias!</button>
@@ -183,7 +183,7 @@ var eventoInvitarActual = null;
 var invitadosEnviados = {};
 
 var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-var JEFE_IMGS=['https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'];
+var JEFE_IMGS=['/jefe1.png','/jefe2.jpg','/jefe3.jpg'];
 var jefeIdx=0;
 var evFotoBase64=null;var evFotoMime=null;
 var TIPO_EMOJIS={evento:'🎪',paseo:'🚶',exposicion:'🏆',adopcion:'🐾'};
@@ -421,8 +421,7 @@ function previsualizarFoto(input, previewId, labelId){
 }
 
 function mostrarJefe(titulo, msg){
-  var img=JEFE_IMGS[jefeIdx%JEFE_IMGS.length];
-  jefeIdx++;
+  var img=JEFE_IMGS[Math.floor(Math.random()*JEFE_IMGS.length)];
   document.getElementById('jefeImg').src=img;
   document.getElementById('jefeTitulo').textContent=titulo;
   document.getElementById('jefeMsg').textContent=msg;
