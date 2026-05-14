@@ -394,12 +394,11 @@ function enviarSugerencia(){
   }).then(function(r){return r.json();})
   .then(function(d){
     if(d.ok){
-      var JEFE=['https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg','https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'];
-      var msg=document.getElementById('msgSugerir');
-      msg.innerHTML='<div style="text-align:center"><img src="'+JEFE[Math.floor(Math.random()*3)]+'" style="width:140px;border-radius:12px;margin-bottom:10px" onerror="this.style.display=\'none\'"><div style="font-size:15px;font-weight:700;color:#007a7a">¡Gracias por tu sugerencia!</div><div style="font-size:13px;color:#555;margin-top:4px">El jefe la revisará pronto 🐾</div></div>';
-      msg.style.background='#e0f7f7';msg.style.display='block';
       btn.textContent='Enviado!';
-      setTimeout(cerrarSugerir,3000);
+      cerrarSugerir();
+      setTimeout(function(){
+        mostrarJefe('¡Gracias por tu sugerencia!','El jefe revisará el evento pronto y lo publicará en la comunidad 🐾');
+      }, 200);
     } else {
       btn.disabled=false;btn.textContent='Enviar sugerencia';
       mostrarToast('Error al enviar');
