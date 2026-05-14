@@ -198,7 +198,7 @@ tbody tr:last-child td{border-bottom:none}
           <table>
             <thead><tr>
               <th>Foto</th><th>Mascota</th><th>Especie</th><th>Zona</th>
-              <th>Dueno</th><th>Email</th><th>Alimento</th><th>Fecha</th><th>Estado</th><th>Acciones</th>
+              <th>Dueno</th><th>Email</th><th>Alimento</th><th>Fecha</th><th>Estado</th><th>Premium</th><th>Acciones</th>
             </tr></thead>
             <tbody id="tableBody"><tr><td colspan="10"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
           </table>
@@ -484,7 +484,15 @@ function renderTable(){
     var fecha=r[0]?new Date(r[0]).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'-';
     var fotoSrc=String(r[27]||'');
     var foto=fotoSrc.indexOf('http')>=0?'<img src="'+fotoSrc+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.style.display=\'none\'">':'<div style="width:40px;height:40px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px">🐾</div>';
-    return '<tr><td>'+foto+'</td><td><strong>'+String(r[2]||'-')+'</strong><br><span style="font-size:11px;color:#888">'+String(r[3]||'')+'</span></td><td>'+esp+'</td><td style="font-size:12px">'+String(r[9]||'-')+'</td><td style="font-size:12px">'+String(r[10]||'-')+'</td><td style="font-size:11px;color:#534AB7">'+String(r[11]||'-')+'</td><td style="font-size:12px">'+String(r[16]||'-')+'</td><td style="font-size:11px;color:#888">'+fecha+'</td><td>'+estB+'</td><td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
+    return '<tr><td>'+foto+'</td><td><strong>'+String(r[2]||'-')+'</strong><br><span style="font-size:11px;color:#888">'+String(r[3]||'')+'</span></td><td>'+esp+'</td><td style="font-size:12px">'+String(r[9]||'-')+'</td><td style="font-size:12px">'+String(r[10]||'-')+'</td><td style="font-size:11px;color:#534AB7">'+String(r[11]||'-')+'</td><td style="font-size:12px">'+String(r[16]||'-')+'</td><td style="font-size:11px;color:#888">'+fecha+'</td><td>'+estB+'</td>'
+    // Premium badge + toggle
+    +'<td id="prem-'+idx+'">'
+    +'<span style="display:inline-flex;align-items:center;gap:4px">'
+    +'<span id="prem-badge-'+idx+'" style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(String(r[31]||'')===String(true)||r[31]===true?'#f3e8ff':'#f0f0ee')+';color:'+(String(r[31]||'')===String(true)||r[31]===true?'#534AB7':'#888')+'">'+(String(r[31]||'')===String(true)||r[31]===true?'⭐ Activo':'—')+'</span>'
+    +'<button class="btn-sm" style="font-size:10px" onclick="togglePremium('+idx+')">'+(String(r[31]||'')===String(true)||r[31]===true?'Quitar':'Dar')+'</button>'
+    +'</span>'
+    +'</td>'
+    +'<td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
   }).join('');
   document.getElementById('tableBody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
 }
@@ -865,6 +873,34 @@ function eliminarLugar(i){
   fetch('/api/galeria',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'eliminarLugar',id:id})
   }).then(function(){cargarLugaresAdmin();});
+}
+
+function togglePremium(idx){
+  var r=filtered[idx];
+  if(!r) return;
+  var uid=String(r[1]||'').trim();
+  var esPremium=r[31]===true||String(r[31])==='true';
+  var action=esPremium?'desactivarPremium':'activarPremium';
+  var meses=esPremium?0:12;
+  if(!confirm((esPremium?'¿Quitar Premium a ':'¿Activar Premium (12 meses) a ')+String(r[2]||'')+'?')) return;
+  fetch('/api/galeria?action='+action,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid:uid,meses:meses})
+  }).then(function(res){return res.json();})
+  .then(function(d){
+    if(d.ok){
+      r[31]=!esPremium;
+      var badge=document.getElementById('prem-badge-'+idx);
+      var btn=document.querySelector('#prem-'+idx+' button');
+      if(badge){
+        badge.textContent=!esPremium?'⭐ Activo':'—';
+        badge.style.background=!esPremium?'#f3e8ff':'#f0f0ee';
+        badge.style.color=!esPremium?'#534AB7':'#888';
+      }
+      if(btn) btn.textContent=!esPremium?'Quitar':'Dar';
+      alert(esPremium?'Premium desactivado':'⭐ Premium activado hasta '+d.premium_hasta);
+    } else { alert('Error al cambiar premium'); }
+  }).catch(function(){ alert('Error de conexión'); });
 }
 
 function closeModal(id){document.getElementById(id).classList.remove('open');}
