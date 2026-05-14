@@ -58,11 +58,11 @@
       '<div class="h-drop">' +
         '<button class="h-link" onclick="petmiTogglePF(event)">Pet Friendly ▾</button>' +
         '<div class="h-drop-menu" id="pfMenu">' +
-          '<a href="/eventos.html" class="h-drop-item">🎉 Eventos</a>' +
+          '<a href="/agenda.html" class="h-drop-item">🎉 Eventos</a>' +
           '<a href="/lugares.html" class="h-drop-item">📍 Lugares</a>' +
         '</div>' +
       '</div>' +
-      '<a href="/actividades.html" class="h-link'+(currentPath.indexOf('actividades')>=0?' active':'')+'">🐾 ¿Quién se apunta?</a>' +
+      '<a href="/agenda.html" class="h-link'+(currentPath.indexOf('actividades')>=0?' active':'')+'">🐾 ¿Quién se apunta?</a>' +
       '<a href="/galeria.html" class="h-link">Amigos PetMi</a>' +
       '<a href="/promos.html" class="h-link' + (currentPath.indexOf('promos') >= 0 ? ' active' : '') + '" style="color:#764ba2;font-weight:700">🎁 Promos</a>';
 
@@ -91,9 +91,9 @@
       '<a href="https://www.revistapetmi.com/" target="_blank">Blog</a>' +
       '<a href="https://www.revistapetmi.com/category/all-products" target="_blank">Tienda</a>' +
       '<a href="https://www.revistapetmi.com/home" target="_blank">PetzID</a>' +
-      '<a href="/eventos.html">🎉 Eventos</a>' +
+      '<a href="/agenda.html">🎉 Eventos</a>' +
       '<a href="/lugares.html">📍 Lugares</a>' +
-      '<a href="/actividades.html">🐾 ¿Quién se apunta?</a>' +
+      '<a href="/agenda.html">🐾 ¿Quién se apunta?</a>' +
           '<a href="/galeria.html">Amigos PetMi</a>' +
       '<a href="/promos.html" style="color:#764ba2;font-weight:700">🎁 Promos</a>' +
       (sessionEmail
