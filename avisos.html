@@ -37,7 +37,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .apuntes-wrap{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
 .apunte-avatar{width:24px;height:24px;border-radius:6px;object-fit:cover;border:1.5px solid #fff}
 .apuntados-count{font-size:11px;color:#aaa;margin-left:auto}
-.btn-publicar-fab{position:fixed;bottom:24px;right:20px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(118,75,162,.4);z-index:70;display:flex;align-items:center;justify-content:center;text-decoration:none;line-height:1}
+.fab-pill{position:fixed;bottom:24px;right:20px;display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:99px;color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:70;text-decoration:none}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto}
@@ -78,7 +78,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <div class="wrap" id="contenido"><div class="spinner"></div></div>
 
-<button class="btn-publicar-fab" onclick="abrirPublicar()">+</button>
+<button class="fab-pill" style="background:#764ba2" onclick="abrirPublicar()"><i class="ti ti-plus" aria-hidden="true"></i>Publicar aviso</button>
 
 <div class="modal-overlay" id="modalPublicar">
   <div class="modal-sheet">
