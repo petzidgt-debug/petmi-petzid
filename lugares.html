@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="icon" href="/favico.jpg" type="image/jpeg">
-<title>1 Lugares Pet-Friendly — PetMi</title>
+<title>Lugares Pet-Friendly — PetMi</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
@@ -193,7 +193,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <div class="toast" id="toast"></div>
 <div class="jefe-modal" id="jefeModal" onclick="this.classList.remove('open')">
   <div class="jefe-box" onclick="event.stopPropagation()">
-    <img id="jefeImg" src="" style="width:160px;border-radius:14px;margin-bottom:14px" onerror="this.style.display='none'">
+    <img id="jefeImg" style="width:160px;border-radius:14px;margin-bottom:14px;display:none">
     <h3 id="jefeTitulo">¡Gracias!</h3>
     <p id="jefeMsg">El jefe revisará tu sugerencia pronto 🐾</p>
     <button onclick="document.getElementById('jefeModal').classList.remove('open')">OK, gracias!</button>
@@ -380,8 +380,12 @@ function previsualizarFoto(input, previewId, labelId){
 }
 
 function mostrarJefe(titulo, msg){
-  var img=JEFE_IMGS[Math.floor(Math.random()*JEFE_IMGS.length)];
-  document.getElementById('jefeImg').src=img;
+  var url=JEFE_IMGS[Math.floor(Math.random()*JEFE_IMGS.length)];
+  var imgEl=document.getElementById('jefeImg');
+  imgEl.style.display='none';
+  imgEl.onload=function(){ imgEl.style.display='block'; };
+  imgEl.onerror=function(){ imgEl.style.display='none'; };
+  imgEl.src=url;
   document.getElementById('jefeTitulo').textContent=titulo;
   document.getElementById('jefeMsg').textContent=msg;
   document.getElementById('jefeModal').classList.add('open');
