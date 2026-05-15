@@ -756,7 +756,7 @@ async function syncSupabase(){
     var lote=payloads.slice(i,i+LOTE);
     status.textContent='Sincronizando '+Math.min(i+LOTE,total)+' de '+total+'...';
     try{
-      var res=await fetch('/api/galeria',{
+      var res=await fetch('/api/galeria?action=syncMascotas',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({action:'syncMascotas',mascotas:lote})
@@ -820,13 +820,13 @@ function filtrarEventosPendientes(){
 
 function toggleActivoEvento(i){
   var e=window._eventosData[i]; if(!e) return;
-  fetch('/api/galeria',{method:'POST',headers:{'Content-Type':'application/json'},
+  fetch('/api/galeria?action=toggleEvento',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'toggleEvento',id:e.id,activo:!e.activo})
   }).then(function(){cargarEventosAdmin();});
 }
 function aprobarEvento(i){
   var e=window._eventosData[i]; if(!e) return;
-  fetch('/api/galeria',{method:'POST',headers:{'Content-Type':'application/json'},
+  fetch('/api/galeria?action=toggleEvento',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'toggleEvento',id:e.id,activo:true})
   }).then(function(){filtrarEventosPendientes();});
 }
@@ -834,7 +834,7 @@ function editarEvento(i){location.href='/admin-evento.html?id='+(window._eventos
 function eliminarEvento(i){
   if(!confirm('Eliminar?')) return;
   var id=(window._eventosData[i]||{}).id;
-  fetch('/api/galeria',{method:'POST',headers:{'Content-Type':'application/json'},
+  fetch('/api/galeria?action=eliminarEvento',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'eliminarEvento',id:id})
   }).then(function(){cargarEventosAdmin();});
 }
@@ -862,7 +862,7 @@ function cargarLugaresAdmin(){
 }
 function toggleActivoLugar(i){
   var l=window._lugaresData[i]; if(!l) return;
-  fetch('/api/galeria',{method:'POST',headers:{'Content-Type':'application/json'},
+  fetch('/api/galeria?action=toggleLugar',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'toggleLugar',id:l.id,activo:!l.activo})
   }).then(function(){cargarLugaresAdmin();});
 }
@@ -870,7 +870,7 @@ function editarLugar(i){location.href='/admin-lugar.html?id='+(window._lugaresDa
 function eliminarLugar(i){
   if(!confirm('Eliminar?')) return;
   var id=(window._lugaresData[i]||{}).id;
-  fetch('/api/galeria',{method:'POST',headers:{'Content-Type':'application/json'},
+  fetch('/api/galeria?action=eliminarLugar',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'eliminarLugar',id:id})
   }).then(function(){cargarLugaresAdmin();});
 }
