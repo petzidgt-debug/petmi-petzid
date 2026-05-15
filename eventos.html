@@ -44,7 +44,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .asis-avatar{width:26px;height:26px;border-radius:7px;object-fit:cover;border:2px solid #fff}
 .asis-count{font-size:12px;color:#aaa}
 /* SUGERIR FAB */
-.fab-sugerir{position:fixed;bottom:24px;right:20px;padding:12px 20px;border-radius:24px;background:#00B4B4;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,180,180,.4);z-index:70;display:flex;align-items:center;gap:8px}
+.fab-pill{position:fixed;bottom:24px;right:20px;display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:99px;color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:70;text-decoration:none}
 /* MODAL SUGERIR */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .modal-overlay.open{display:flex}
@@ -104,7 +104,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <div class="wrap" id="contenido"><div class="spinner"></div></div>
 
-<button class="fab-sugerir" onclick="abrirSugerir()">+ Sugerir evento</button>
+<button class="fab-pill" style="background:#00B4B4" onclick="abrirSugerir()"><i class="ti ti-plus" aria-hidden="true"></i>Sugerir evento</button>
 
 <div class="modal-overlay" id="modalSugerir">
   <div class="modal-sheet">
@@ -297,8 +297,8 @@ function renderEvento(e,i){
     if(amigosCache.length>0) html+='<button class="btn-invitar" onclick="abrirInvitar(\''+e.id+'\',\''+e.titulo.replace(/'/g,'')+'\',\''+( e.fecha||'')+'\',\''+( e.lugar||'')+'\')">Invitar amigos</button>';
   }
   if(e.link) html+='<a href="'+e.link+'" target="_blank" class="btn-link">Más info</a>';
-  var sUrl=encodeURIComponent('https://petmi-petzid.vercel.app/eventos.html');
-  html+='<button class="btn-link" onclick="window.open(\'https://wa.me/?text='+encodeURIComponent('Evento: '+e.titulo)+'%20'+sUrl+'\',\'_blank\')">📲 Compartir</button>';
+  var sUrl=encodeURIComponent('https://petmi-petzid.vercel.app/share?tipo=evento&id='+e.id);
+  html+='<button class="btn-link" style="display:inline-flex;align-items:center;gap:5px" title="Compartir por WhatsApp" onclick="window.open(\'https://wa.me/?text='+encodeURIComponent(e.titulo)+'%20'+sUrl+'\',\'_blank\')">'+'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
   html+='</div></div></div>';
   return html;
 }

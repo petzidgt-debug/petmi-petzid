@@ -187,8 +187,8 @@ function renderAviso(a,i){
   if(a.tipo==='perdido'&&!esCreador&&sessionEmail) html+='<button class="btn-info" onclick="contactar(\''+a.email_creador+'\',\''+a.nombre_creador+'\',\'perdido\')">📞 Tengo info</button>';
   if(a.tipo==='perdido'&&esCreador) html+='<button class="btn-aparecio" onclick="marcarAparecio(\''+a.id+'\',\''+a.nombre_creador+'\')">🎉 ¡Apareció!</button>';
   if(esCreador&&a.tipo!=='perdido') html+='<button style="padding:8px 14px;background:#f0f0ee;color:#888;border:none;border-radius:20px;font-size:11px;cursor:pointer" onclick="eliminar(\''+a.id+'\')">🗑️</button>';
-  var sUrl=encodeURIComponent('https://petmi-petzid.vercel.app/avisos.html');
-  html+='<button class="btn-wa" onclick="window.open(\'https://wa.me/?text='+encodeURIComponent(a.titulo)+'%20'+sUrl+'\',\'_blank\')">📲</button>';
+  var sUrl=encodeURIComponent('https://petmi-petzid.vercel.app/share?tipo=aviso&id='+a.id);
+  html+='<button class="btn-wa" style="display:flex;align-items:center;gap:5px;position:relative" title="Compartir por WhatsApp" onclick="window.open(\'https://wa.me/?text='+encodeURIComponent(a.titulo)+'%20'+sUrl+'\',\'_blank\')">'+'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
   html+='</div></div></div>';
   return html;
 }
