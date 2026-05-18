@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Open Graph / WhatsApp -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PetMi Guatemala">
+<meta property="og:title" content="PetMi — Comunidad Pet Lover de Guatemala">
+<meta property="og:description" content="La comunidad pet lover mas grande de Guatemala. Eventos, avisos de mascotas perdidas, lugares pet-friendly y mucho mas.">
+<meta property="og:image" content="https://petmi-petzid.vercel.app/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://petmi-petzid.vercel.app">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PetMi Guatemala">
+<meta name="twitter:description" content="La comunidad pet lover mas grande de Guatemala">
+<meta name="twitter:image" content="https://petmi-petzid.vercel.app/og-cover.jpg">
+
+<title>PetMi Guatemala — Comunidad Pet Lover</title>
+<style>
+body{font-family:Arial,sans-serif;background:#00B4B4;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+.card{background:#fff;border-radius:20px;padding:32px;text-align:center;max-width:320px}
+.logo{font-size:28px;font-weight:900;color:#1a1a1a;margin-bottom:8px}
+.logo span{color:#E05090}
+p{color:#888;font-size:13px;margin-bottom:20px}
+.spinner{width:32px;height:32px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">petz<span>ID</span></div>
+  <p>Redirigiendo...</p>
+  <div class="spinner"></div>
+</div>
+<script>
+var p = new URLSearchParams(window.location.search);
+var tipo = p.get('tipo');
+var id   = p.get('id');
+var dest = '/galeria.html';
+if(tipo==='evento')        dest='/eventos.html';
+else if(tipo==='aviso')    dest='/avisos.html';
+else if(tipo==='lugar')    dest='/lugares.html';
+else if(tipo==='mascota' && id) dest='/perfil.html?uid='+id;
+setTimeout(function(){ window.location.replace(dest); }, 500);
+</script>
+</body>
+</html>
