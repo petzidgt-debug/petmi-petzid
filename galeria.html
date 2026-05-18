@@ -168,7 +168,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .menu-item:last-child{border-bottom:none}
 .menu-item:hover{background:#f8f8f8}
 .menu-item.danger{color:#c0392b}
-.fab-pill{position:fixed;bottom:24px;right:20px;display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:99px;color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:70;text-decoration:none}
 </style>
 </head>
 <body>
@@ -196,7 +195,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <div class="seccion-actividades" id="seccionActividades" style="display:none">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
     <div class="seccion-titulo" style="color:#fff">🐾 ¿Quién se apunta?</div>
-    <a href="/actividades.html" style="font-size:12px;color:rgba(255,255,255,.8);text-decoration:none;font-weight:600;margin-top:4px">Ver todas →</a>
+    <a href="/avisos.html" style="font-size:12px;color:rgba(255,255,255,.8);text-decoration:none;font-weight:600;margin-top:4px">Ver todas →</a>
   </div>
   <div class="seccion-sub" style="color:rgba(255,255,255,.7)">Planes y anuncios de la comunidad</div>
   <div class="cumple-scroll" id="actividadesScroll"></div>
@@ -917,7 +916,7 @@ function enviarSolicitudAmistad(uid){
 }
 
 // ── Actividades preview ───────────────────────────────────────
-function irActividades(){location.href='/actividades.html';}
+function irActividades(){location.href='/avisos.html';}
 
 function cargarActividadesPreview(){
   fetch('/api/galeria?action=getActividades')
@@ -1477,6 +1476,5 @@ document.addEventListener('keydown', function(e){
 </script>
 
 <script src="/header.js"></script>
-<a href="/index.html" class="fab-pill" style="background:#00B4B4"><i class="ti ti-plus" aria-hidden="true"></i>Crear PetzID</a>
 </body>
 </html>
