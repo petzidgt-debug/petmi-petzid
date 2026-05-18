@@ -1,5 +1,21 @@
 {
   "rewrites": [
-    { "source": "/api/submit", "destination": "/api/submit.js" }
+    { "source": "/share", "destination": "/api/share" }
+  ],
+  "headers": [
+    {
+      "source": "/api/share",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "X-Robots-Tag", "value": "all" }
+      ]
+    },
+    {
+      "source": "/share",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "X-Robots-Tag", "value": "all" }
+      ]
+    }
   ]
 }
