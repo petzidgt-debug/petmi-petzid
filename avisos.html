@@ -160,9 +160,45 @@ function renderLista(){
 }
 
 function renderAviso(a,i){
+  var esCreador=sessionEmail&&a.email_creador&&a.email_creador.toLowerCase()===sessionEmail.toLowerCase();
+  var sUrl=encodeURIComponent('https://petmi-petzid.vercel.app/share.html?tipo=aviso&id='+a.id);
+
+  // PERDIDO — diseño especial con foto a la izquierda
+  if(a.tipo==='perdido'){
+    var fotoHTML=a.imagen&&a.imagen.indexOf('http')>=0
+      ?'<img src="'+a.imagen+'" style="width:100%;height:100%;object-fit:cover;display:block">'
+      :a.foto_creador&&a.foto_creador.indexOf('http')>=0
+        ?'<img src="'+a.foto_creador+'" style="width:100%;height:100%;object-fit:cover;display:block">'
+        :'<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:44px;background:#f5f5f5">🐾</div>';
+    var fecha=a.fecha?new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'short',day:'2-digit',month:'short'}):'';
+    var html='<div class="act-card perdido-card" id="card-'+a.id+'" style="border:2px solid #c0392b;border-radius:16px;overflow:hidden;margin-bottom:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.07)">';
+    // Header rojo
+    html+='<div style="background:#c0392b;padding:7px 14px;display:flex;align-items:center;gap:8px">'
+      +'<span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;text-transform:uppercase">🚨 Perdido</span>'
+      +'<span style="font-size:11px;color:rgba(255,255,255,.7);margin-left:auto">'+tiempoRelativo(a.created_at)+'</span>'
+      +'</div>';
+    // Body: foto izq + info der
+    html+='<div style="display:flex">';
+    html+='<div style="width:130px;min-height:130px;flex-shrink:0;overflow:hidden;background:#f5f5f5">'+fotoHTML+'</div>';
+    html+='<div style="flex:1;padding:12px 14px;min-width:0">';
+    html+='<div style="font-size:18px;font-weight:900;color:#c0392b;margin-bottom:5px;line-height:1.1">'+a.titulo+'</div>';
+    if(a.ubicacion) html+='<div style="font-size:12px;color:#666;margin-bottom:4px">📍 '+a.ubicacion+'</div>';
+    if(fecha) html+='<div style="font-size:11px;color:#aaa">📅 '+fecha+'</div>';
+    html+='</div></div>';
+    // Footer botones
+    html+='<div style="border-top:0.5px solid #f0f0ee;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap">';
+    if(!esCreador&&sessionEmail) html+='<button class="btn-info" onclick="contactar(''+a.email_creador+'',''+a.nombre_creador+'','perdido')">📞 Tengo info</button>';
+    if(esCreador) html+='<button class="btn-aparecio" onclick="marcarAparecio(''+a.id+'',''+a.nombre_creador+'')">🎉 ¡Apareció!</button>';
+    html+='<button class="btn-wa" style="display:inline-flex;align-items:center;gap:5px" onclick="window.open('https://wa.me/?text='+encodeURIComponent(a.titulo)+'%20'+sUrl+'','_blank')">'
+      +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
+    html+='<button class="btn-descargar" onclick="descargarPoster(''+a.id+'')">⬇ Descargar póster</button>';
+    html+='</div></div>';
+    return html;
+  }
+
+  // OTROS TIPOS — diseño estándar
   var col=TIPO_COLORS[a.tipo]||{bg:'#f0f0ee',color:'#555',header:'#888'};
   var label=TIPO_LABELS[a.tipo]||a.tipo;
-  var esCreador=sessionEmail&&a.email_creador&&a.email_creador.toLowerCase()===sessionEmail.toLowerCase();
   var fotoAv=a.foto_creador&&a.foto_creador.indexOf('http')>=0
     ?'<img src="'+a.foto_creador+'" style="width:28px;height:28px;border-radius:8px;object-fit:cover">'
     :'<div style="width:28px;height:28px;border-radius:8px;background:'+col.bg+';display:flex;align-items:center;justify-content:center;font-size:14px">🐾</div>';
@@ -170,9 +206,8 @@ function renderAviso(a,i){
   if(a.fecha){var d=new Date(a.fecha+'T12:00:00');meta='📅 '+d.toLocaleDateString('es-GT',{weekday:'short',day:'2-digit',month:'short'});}
   if(a.hora) meta+=(meta?' ':'')+a.hora;
   if(a.ubicacion) meta+=(meta?' · ':'')+'📍 '+a.ubicacion;
-  var extraClass=a.tipo==='perdido'?' perdido-card':a.tipo==='adopcion'?' adopcion-card':'';
 
-  var html='<div class="act-card'+extraClass+'" id="card-'+a.id+'">';
+  var html='<div class="act-card" id="card-'+a.id+'">';
   html+='<div class="act-card-header" style="background:'+col.header+'"></div>';
   if(a.imagen&&a.imagen.indexOf('http')>=0) html+='<img src="'+a.imagen+'" class="act-img">';
   html+='<div class="act-card-body">';
@@ -183,17 +218,15 @@ function renderAviso(a,i){
   if(meta) html+='<div class="act-meta">'+meta+'</div>';
   html+='<div class="apuntes-wrap" id="apuntes-'+a.id+'"></div>';
   html+='<div class="act-footer">';
-  if(a.tipo==='plan'||a.tipo==='busco') html+='<button class="btn-apuntar" id="btn-ap-'+a.id+'" onclick="apuntarse(\''+a.id+'\')">🐾 Apuntarse</button>';
-  if(a.tipo==='adopcion'&&!esCreador&&sessionEmail) html+='<button class="btn-interesa" onclick="contactar(\''+a.email_creador+'\',\''+a.titulo+'\',\'adopcion\')">🏠 Me interesa</button>';
-  if(a.tipo==='perdido'&&!esCreador&&sessionEmail) html+='<button class="btn-info" onclick="contactar(\''+a.email_creador+'\',\''+a.nombre_creador+'\',\'perdido\')">📞 Tengo info</button>';
-  if(a.tipo==='perdido'&&esCreador) html+='<button class="btn-aparecio" onclick="marcarAparecio(\''+a.id+'\',\''+a.nombre_creador+'\')">🎉 ¡Apareció!</button>';
-  if(esCreador&&a.tipo!=='perdido') html+='<button style="padding:8px 14px;background:#f0f0ee;color:#888;border:none;border-radius:20px;font-size:11px;cursor:pointer" onclick="eliminar(\''+a.id+'\')">🗑️</button>';
-  var sUrl=encodeURIComponent('https://petmi-petzid.vercel.app/share.html?tipo=aviso&id='+a.id);
-  html+='<button class="btn-wa" style="display:flex;align-items:center;gap:5px;position:relative" title="Compartir por WhatsApp" onclick="window.open(\'https://wa.me/?text='+encodeURIComponent(a.titulo)+'%20'+sUrl+'\',\'_blank\')">'+'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
-  if(a.tipo==='perdido') html+='<button class="btn-descargar" onclick="descargarPoster(\''+a.id+'\')">⬇ Descargar póster</button>';
+  if(a.tipo==='plan'||a.tipo==='busco') html+='<button class="btn-apuntar" id="btn-ap-'+a.id+'" onclick="apuntarse(''+a.id+'')">🐾 Apuntarse</button>';
+  if(a.tipo==='adopcion'&&!esCreador&&sessionEmail) html+='<button class="btn-interesa" onclick="contactar(''+a.email_creador+'',''+a.titulo+'','adopcion')">🏠 Me interesa</button>';
+  if(esCreador&&a.tipo!=='perdido') html+='<button style="padding:8px 14px;background:#f0f0ee;color:#888;border:none;border-radius:20px;font-size:11px;cursor:pointer" onclick="eliminar(''+a.id+'')">🗑️</button>';
+  html+='<button class="btn-wa" style="display:inline-flex;align-items:center;gap:5px" onclick="window.open('https://wa.me/?text='+encodeURIComponent(a.titulo)+'%20'+sUrl+'','_blank')">'
+    +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
   html+='</div></div></div>';
   return html;
 }
+
 
 function cargarApuntes(actId){
   fetch('/api/galeria?action=getApuntes&actividad_id='+encodeURIComponent(actId))
@@ -313,173 +346,181 @@ function descargarPoster(id){
   if(!a){mostrarToast('Error al generar póster');return;}
   mostrarToast('Generando póster...');
 
-  var M=40;  // margen
-  var W=800; // ancho total
-  var FOTO_H=500; // foto cuadrada grande
-  var H=M+200+FOTO_H+60+90+80+90+90+100+M; // altura total calculada
+  var W=900,BRD=12,GAP=10;
+  var HEADER_H=190;
+  var chipH=72,uH=110,descH=110;
+  var INFO_H=chipH+GAP+chipH+GAP+uH+GAP+descH;
+  var FECHA_H=90,RECOMP_H=90,TEL_H=100,MSG_H=62;
+  var LOGO_H=52,LOGO_PAD=16,LOGO_BLOCK=LOGO_H+LOGO_PAD*2;
+  var FIXED_H=BRD+HEADER_H+GAP+GAP+FECHA_H+GAP+RECOMP_H+GAP+TEL_H+GAP+MSG_H+GAP+LOGO_BLOCK+BRD;
+  var FOTO_H=Math.max(INFO_H,600);
+  var H=FIXED_H+FOTO_H+GAP;
 
   var canvas=document.createElement('canvas');
-  canvas.width=W; canvas.height=H;
+  canvas.width=W;canvas.height=H;
   var ctx=canvas.getContext('2d');
 
-  function draw(fotoImg, logoImg){
-    // Fondo blanco
-    ctx.fillStyle='#f5f5f5';
-    ctx.fillRect(0,0,W,H);
+  function rr(x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  }
+  function wt(text,x,y,mw,lh,ml){
+    var words=text.split(' '),line='',lc=0;ml=ml||99;
+    for(var i=0;i<words.length;i++){
+      var t=line+words[i]+' ';
+      if(ctx.measureText(t).width>mw&&i>0){
+        if(++lc>=ml){ctx.fillText(line.trim()+'...',x,y);return;}
+        ctx.fillText(line.trim(),x,y);line=words[i]+' ';y+=lh;
+      } else line=t;
+    }
+    ctx.fillText(line.trim(),x,y);
+  }
+  function chip(label,val,x,y,w,h){
+    ctx.fillStyle='#fff';rr(x,y,w,h,10);ctx.fill();
+    ctx.strokeStyle='#e0e0e0';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='#999';ctx.font='16px Arial';ctx.textAlign='center';
+    ctx.fillText(label,x+w/2,y+24);
+    ctx.fillStyle='#222';ctx.font='bold 26px Arial';
+    ctx.fillText(val.toUpperCase(),x+w/2,y+62);
+  }
 
-    var y=0;
+  // Extraer nombre limpio del titulo
+  var _tit=(a.titulo||'');
+  var _nom=a.nombre_creador||_tit;
+  var _m=_tit.match(/se perdi/i);
+  if(_m){var _p=_tit.replace(/.*se perdi[oó]\s*/i,'');if(_p)_nom=_p;}
+  else if(_tit.length<30)_nom=_tit;
 
-    // ── HEADER ROJO ──────────────────────────────────────
-    ctx.fillStyle='#c0392b';
-    roundRect(ctx,M,M,W-M*2,200,16);
-    ctx.fill();
+  // Extraer telefono de descripcion o titulo
+  var telMatch=(a.descripcion||a.titulo||'').match(/[0-9]{8}/);
+  var tel=telMatch?telMatch[0]:'';
 
-    ctx.fillStyle='#ffffff';
-    ctx.font='bold 62px Arial';
-    ctx.textAlign='center';
-    ctx.fillText('🚨  SE BUSCA!!!!!',W/2,M+80);
+  // Extraer recompensa
+  var recompMatch=(a.descripcion||a.titulo||'').match(/[Qq]\.?\s*[\d,]+/);
+  var recomp=recompMatch?recompMatch[0].trim():'';
 
-    var _tit=(a.titulo||'');
-    var _nom=a.nombre_creador||_tit;
-    var _m=_tit.match(/se perdi/i);
-    if(_m){ var _p=_tit.replace(/.*se perdi[oó]\s*/i,''); if(_p) _nom=_p; }
-    else if(_tit.length<30) _nom=_tit;
-    ctx.fillStyle='#F5C842';
-    ctx.font='bold 78px Arial';
-    ctx.fillText(_nom.toUpperCase(),W/2,M+172);
+  function drawPoster(fi,li){
+    var IW=W-BRD*2,IX=BRD;
+    ctx.fillStyle='#a93226';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#f5f5f3';rr(BRD,BRD,IW,H-BRD*2,16);ctx.fill();
 
-    y = M+200+16;
+    var y=BRD;
 
-    // ── FOTO CUADRADA ──────────────────────────────────
-    var fotoW=W-M*2, fotoH=FOTO_H;
-    ctx.fillStyle='#dddddd';
-    roundRect(ctx,M,y,fotoW,fotoH,16);
-    ctx.fill();
+    // HEADER
+    ctx.fillStyle='#c0392b';rr(IX,y,IW,HEADER_H,16);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 60px Arial';ctx.textAlign='center';
+    ctx.fillText('🚨  SE BUSCA!!!!!',W/2,y+72);
+    ctx.fillStyle='#F5C842';ctx.font='bold 92px Arial';
+    ctx.fillText(_nom.toUpperCase(),W/2,y+172);
+    y+=HEADER_H+GAP;
 
-    if(fotoImg){
-      ctx.save();
-      roundRect(ctx,M,y,fotoW,fotoH,16);
-      ctx.clip();
-      var scale=Math.max(fotoW/fotoImg.width,fotoH/fotoImg.height);
-      var sw=fotoImg.width*scale,sh=fotoImg.height*scale;
-      ctx.drawImage(fotoImg,M+(fotoW-sw)/2,y+(fotoH-sh)/2,sw,sh);
+    // CUERPO
+    var FOTO_W=Math.floor(IW*0.62);
+    var INFO_X=IX+FOTO_W+GAP;
+    var INFO_W=IW-FOTO_W-GAP;
+    var BODY_Y=y;
+
+    // FOTO
+    ctx.fillStyle='#ccc';rr(IX,y,FOTO_W,FOTO_H,12);ctx.fill();
+    if(fi){
+      ctx.save();rr(IX,y,FOTO_W,FOTO_H,12);ctx.clip();
+      var sc=Math.max(FOTO_W/fi.width,FOTO_H/fi.height);
+      ctx.drawImage(fi,IX+(FOTO_W-fi.width*sc)/2,y+(FOTO_H-fi.height*sc)/2,fi.width*sc,fi.height*sc);
       ctx.restore();
     }
 
-    // Fecha badge sobre la foto
-    if(a.fecha){
-      var fd=new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{day:'2-digit',month:'long',year:'numeric'});
-      var fdW=ctx.measureText('Perdido: '+fd).width+40;
-      ctx.fillStyle='rgba(0,0,0,0.72)';
-      roundRect(ctx,W-M-fdW,y+16,fdW,38,19);ctx.fill();
-      ctx.fillStyle='#fff';ctx.font='bold 20px Arial';ctx.textAlign='center';
-      ctx.fillText('Perdido: '+fd,W-M-fdW/2,y+40);
+    // INFO derecha
+    var iy=y;
+    chip('RAZA',a.raza||'-',INFO_X,iy,INFO_W,chipH); iy+=chipH+GAP;
+    chip('SEXO',a.sexo||'-',INFO_X,iy,INFO_W,chipH); iy+=chipH+GAP;
+
+    ctx.fillStyle='#FFF9E6';rr(INFO_X,iy,INFO_W,uH,10);ctx.fill();
+    ctx.strokeStyle='#F5C842';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#856404';ctx.font='bold 16px Arial';ctx.textAlign='center';
+    ctx.fillText('📍  ÚLTIMA VEZ VISTO',INFO_X+INFO_W/2,iy+24);
+    ctx.fillStyle='#333';ctx.font='bold 22px Arial';
+    ctx.fillText(a.ubicacion||'-',INFO_X+INFO_W/2,iy+58);
+    ctx.fillStyle='#a08000';ctx.font='15px Arial';
+    ctx.fillText('Podría estar en cualquier lugar',INFO_X+INFO_W/2,iy+86);
+    iy+=uH+GAP;
+
+    var desc=(a.descripcion||'').replace(/[📍🏆📞📅🎁]/g,'').trim();
+    if(desc){
+      ctx.fillStyle='#fff';rr(INFO_X,iy,INFO_W,descH,10);ctx.fill();
+      ctx.strokeStyle='#eee';ctx.lineWidth=1;ctx.stroke();
+      ctx.fillStyle='#888';ctx.font='16px Arial';ctx.textAlign='center';
+      ctx.fillText('DESCRIPCIÓN',INFO_X+INFO_W/2,iy+24);
+      ctx.fillStyle='#333';ctx.font='19px Arial';ctx.textAlign='left';
+      wt(desc,INFO_X+12,iy+54,INFO_W-24,26,3);
+      iy+=descH+GAP;
     }
 
-    y+=fotoH+20;
+    var infoRest=FOTO_H-(iy-y);
+    if(infoRest>0){ctx.fillStyle='#f0f0ee';rr(INFO_X,iy,INFO_W,infoRest,10);ctx.fill();}
 
-    // ── CHIPS ESPECIE / SEXO / RAZA ────────────────────
-    // Chips con campos disponibles en actividades
-    var chips=[];
-    if(a.ubicacion) chips.push({l:'ÚLTIMA VEZ VISTO',v:a.ubicacion});
-    if(a.fecha) chips.push({l:'FECHA',v:new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{day:'2-digit',month:'short'})});
-    if(a.nombre_creador) chips.push({l:'MASCOTA',v:a.nombre_creador});
-    while(chips.length<3) chips.push({l:'',v:''});
-    chips=chips.slice(0,3);
-    var cw=(W-M*2-20)/3;
-    chips.forEach(function(c,i){
-      var cx=M+i*(cw+10);
-      ctx.fillStyle='#ffffff';
-      roundRect(ctx,cx,y,cw,80,10);ctx.fill();
-      ctx.strokeStyle='#e0e0e0';ctx.lineWidth=1;ctx.stroke();
-      ctx.fillStyle='#999';ctx.font='16px Arial';ctx.textAlign='center';
-      ctx.fillText(c.l,cx+cw/2,y+26);
-      ctx.fillStyle='#222';ctx.font='bold 24px Arial';
-      ctx.fillText(String(c.v).toUpperCase(),cx+cw/2,y+62);
-    });
-    y+=90+16;
+    y=BODY_Y+FOTO_H+GAP;
 
-    // ── ZONA ──────────────────────────────────────────
-    if(a.ubicacion){
-      ctx.fillStyle='#FFF9E6';
-      roundRect(ctx,M,y,W-M*2,72,12);ctx.fill();
-      ctx.strokeStyle='#F5C842';ctx.lineWidth=2;ctx.stroke();
-      ctx.fillStyle='#856404';ctx.font='bold 26px Arial';ctx.textAlign='left';
-      ctx.fillText('📍  '+a.ubicacion,M+20,y+30);
-      ctx.fillStyle='#b8860b';ctx.font='18px Arial';
-      ctx.fillText('Podría estar en cualquier lugar',M+20,y+58);
-      y+=72+16;
+    // FECHA
+    ctx.fillStyle='#1a1a1a';rr(IX,y,IW,FECHA_H,10);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.55)';ctx.font='17px Arial';ctx.textAlign='center';
+    ctx.fillText('📅  PERDIDO EL',W/2,y+26);
+    ctx.fillStyle='#fff';ctx.font='bold 36px Arial';
+    var fd=a.fecha?new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'-';
+    ctx.fillText(fd,W/2,y+72);
+    y+=FECHA_H+GAP;
+
+    // RECOMPENSA
+    if(recomp){
+      ctx.fillStyle='#c0392b';rr(IX,y,IW,RECOMP_H,10);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.7)';ctx.font='17px Arial';ctx.textAlign='center';
+      ctx.fillText('🏆  RECOMPENSA',W/2,y+26);
+      ctx.fillStyle='#F5C842';ctx.font='bold 52px Arial';
+      ctx.fillText(recomp,W/2,y+80);
+      y+=RECOMP_H+GAP;
     }
 
-    // ── DESCRIPCION ────────────────────────────────────
-    if(a.descripcion){
-      ctx.fillStyle='#ffffff';
-      roundRect(ctx,M,y,W-M*2,88,12);ctx.fill();
-      ctx.strokeStyle='#e0e0e0';ctx.lineWidth=1;ctx.stroke();
-      ctx.fillStyle='#444';ctx.font='20px Arial';ctx.textAlign='left';
-      wrapText(ctx,a.descripcion,M+18,y+30,W-M*2-36,28,2);
-      y+=88+16;
-    }
-
-    // ── RECOMPENSA ─────────────────────────────────────
-    ctx.fillStyle='#c0392b';
-    roundRect(ctx,M,y,W-M*2,80,12);ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='bold 26px Arial';ctx.textAlign='center';
-    ctx.fillText('🎁  Recompensa por información',W/2,y+32);
-    ctx.font='18px Arial';
-    ctx.fillText('Cualquier dato es de gran ayuda',W/2,y+62);
-    y+=80+16;
-
-    // ── FOOTER ─────────────────────────────────────────
-    ctx.fillStyle='#1a1a1a';
-    roundRect(ctx,M,y,W-M*2,100,16);ctx.fill();
-
-    // Telefono — buscar en descripcion o titulo
-    var tel='';
-    var telMatch=(a.descripcion||a.titulo||'').match(/[0-9]{8}/);
-    if(telMatch) tel=telMatch[0];
+    // TELEFONO
     if(tel){
-      ctx.fillStyle='rgba(255,255,255,0.55)';ctx.font='15px Arial';ctx.textAlign='left';
-      ctx.fillText('SI LO VES LLAMA AL',M+24,y+28);
-      ctx.fillStyle='#F5C842';ctx.font='bold 50px Arial';
-      ctx.fillText(tel,M+24,y+82);
-    } else {
-      ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='22px Arial';ctx.textAlign='left';
-      ctx.fillText('Contactar en PetMi · petmi-petzid.vercel.app',M+24,y+62);
+      ctx.fillStyle='#c0392b';rr(IX,y,IW,TEL_H,10);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.7)';ctx.font='17px Arial';ctx.textAlign='center';
+      ctx.fillText('📞  SI LO VES LLAMA AL',W/2,y+26);
+      ctx.fillStyle='#fff';ctx.font='bold 62px Arial';
+      ctx.fillText(tel,W/2,y+90);
+      y+=TEL_H+GAP;
     }
 
-    if(logoImg){
-      var lh=44,lw=logoImg.width*(lh/logoImg.height);
-      ctx.drawImage(logoImg,W-M-lw-10,y+28,lw,lh);
+    // MENSAJE
+    ctx.fillStyle='#fff';rr(IX,y,IW,MSG_H,10);ctx.fill();
+    ctx.strokeStyle='#eee';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='#c0392b';ctx.font='bold 22px Arial';ctx.textAlign='center';
+    ctx.fillText('¡Ayúdanos a compartir y que '+_nom+' regrese a casa!',W/2,y+40);
+    y+=MSG_H+GAP;
+
+    // LOGO
+    ctx.fillStyle='#1a1a1a';rr(IX,y,IW,LOGO_BLOCK,14);ctx.fill();
+    if(li){
+      var lw=li.width*(LOGO_H/li.height);
+      ctx.drawImage(li,W/2-lw/2,y+LOGO_PAD,lw,LOGO_H);
     } else {
-      ctx.fillStyle='#fff';ctx.font='bold 24px Arial';ctx.textAlign='right';
-      ctx.fillText('PETmi',W-M-16,y+72);
+      ctx.fillStyle='#fff';ctx.font='bold 28px Arial';ctx.textAlign='center';
+      ctx.fillText('PETmi',W/2,y+LOGO_BLOCK/2+10);
     }
 
     // Descargar
     var link=document.createElement('a');
-    link.download='poster-perdido-'+(a.nombre_creador||'mascota').replace(/[^a-z0-9]/gi,'-').toLowerCase()+'.png';
+    link.download='poster-perdido-'+_nom.replace(/[^a-z0-9]/gi,'-').toLowerCase()+'.png';
     link.href=canvas.toDataURL('image/png');
     link.click();
     mostrarToast('✅ Póster descargado!');
   }
 
-  // Cargar foto y logo en paralelo
-  var fotoImg=null,logoImg=null,loaded=0;
-  function check(){ if(++loaded===2) draw(fotoImg,logoImg); }
-
+  var fi=null,li=null,done=0;
+  function check(){if(++done===2)drawPoster(fi,li);}
   var urlFoto=a.imagen&&a.imagen.indexOf('http')>=0?a.imagen:(a.foto_creador&&a.foto_creador.indexOf('http')>=0?a.foto_creador:null);
-  if(urlFoto){
-    var img=new Image();img.crossOrigin='anonymous';
-    img.onload=function(){fotoImg=img;check();};
-    img.onerror=function(){check();};
-    img.src=urlFoto;
-  } else { check(); }
-
-  var logo=new Image();logo.crossOrigin='anonymous';
-  logo.onload=function(){logoImg=logo;check();};
-  logo.onerror=function(){check();};
-  logo.src=LOGO_URL;
+  if(urlFoto){var img=new Image();img.crossOrigin='anonymous';img.onload=function(){fi=img;check();};img.onerror=check;img.src=urlFoto;}else{check();}
+  var logo=new Image();logo.crossOrigin='anonymous';logo.onload=function(){li=logo;check();};logo.onerror=check;logo.src=LOGO_URL;
 }
 
 function roundRect(ctx,x,y,w,h,r){
