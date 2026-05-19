@@ -387,11 +387,7 @@ function contactar(email, titulo, tipo, telefono){
     var tel=telefono.replace(/[^0-9]/g,'');
     // Agregar prefijo Guatemala si es numero local de 8 digitos
     if(tel.length===8) tel='502'+tel;
-    var msg='Hola! Vi tu aviso en PetMi sobre *'+titulo+'*. '
-      +'Tengo información que puede ayudarte 🐾
-
-'
-      +'_Enviado desde petmi-petzid.vercel.app_';
+    var msg='Hola! Vi tu aviso en PetMi sobre *'+titulo+'*. '+'Tengo informacion que puede ayudarte '+'\n\n'+'_Enviado desde petmi-petzid.vercel.app_';
     window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg),'_blank');
     return;
   }
