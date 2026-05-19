@@ -50,6 +50,12 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .form-input:focus{border-color:#764ba2}
 .tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
 .campos-perdido{display:none;border-top:1.5px dashed #f0e0e0;padding-top:14px;margin-top:4px}
+.foto-upload-perdido{border:2px dashed #e0e0e0;border-radius:12px;padding:12px;text-align:center;cursor:pointer;margin-bottom:12px;transition:all .2s;position:relative}
+.foto-upload-perdido:hover{border-color:#c0392b;background:#fff8f8}
+.foto-upload-perdido input{display:none}
+.foto-upload-perdido img{width:100%;height:160px;object-fit:cover;border-radius:8px;display:block}
+.foto-upload-label{font-size:13px;color:#aaa;padding:16px 0;display:block}
+.foto-upload-label span{color:#c0392b;font-weight:600}
 .campos-perdido.visible{display:block}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .form-select{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:12px;background:#fff;font-family:Arial,sans-serif;cursor:pointer}
@@ -125,6 +131,14 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <!-- Campos adicionales para perdido -->
     <div class="campos-perdido" id="camposPerdido">
       <div class="perdido-tip">🚨 Para avisos de perdido necesitamos más datos para el póster</div>
+
+      <label class="form-label">Foto de la mascota</label>
+      <div class="foto-upload-perdido" id="fotoUploadWrap" onclick="document.getElementById('perdidoFotoInput').click()">
+        <img id="perdidoFotoPreview" style="display:none">
+        <div class="foto-upload-label" id="perdidoFotoLabel">📷 Toca para agregar una foto · <span>Recomendado</span></div>
+        <input type="file" id="perdidoFotoInput" accept="image/*" onchange="previsualizarFotoPerdido(this)">
+      </div>
+
       <label class="form-label">Nombre de la mascota *</label>
       <input type="text" class="form-input" id="pubNombreMascota" placeholder="Ej: Cami, Oso, Luna...">
       <div class="form-row">
@@ -468,7 +482,19 @@ function abrirFormulario(){
   }
   document.getElementById('modalPublicar').classList.add('open');
 }
-function cerrarPublicar(){document.getElementById('modalPublicar').classList.remove('open');}
+function cerrarPublicar(){
+  document.getElementById('modalPublicar').classList.remove('open');
+  // Limpiar foto
+  perdidoFotoBase64=null;perdidoFotoMime=null;
+  var prev=document.getElementById('perdidoFotoPreview');
+  var lbl=document.getElementById('perdidoFotoLabel');
+  var wrap=document.getElementById('fotoUploadWrap');
+  if(prev){prev.style.display='none';prev.src='';}
+  if(lbl) lbl.style.display='block';
+  if(wrap){wrap.style.borderColor='#e0e0e0';wrap.style.background='';}
+  var inp=document.getElementById('perdidoFotoInput');
+  if(inp) inp.value='';
+}
 
 function selTipo(tipo,el){
   tipoSel=tipo;
@@ -567,10 +593,17 @@ function publicar(){
     activo_override:activo
   }, extraData);
 
-  fetch('/api/galeria?action=publicarActividad',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(payload)
-  }).then(function(r){return r.json();})
+  // Subir foto de perdido a Cloudinary si hay una nueva
+  async function doPublicar(){
+    if(tipoSel==='perdido'&&perdidoFotoBase64){
+      btn.textContent='Subiendo foto...';
+      var fotoUrl=await uploadFotoPerdido();
+      if(fotoUrl) payload.foto_creador=fotoUrl;
+    }
+    fetch('/api/galeria?action=publicarActividad',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    }).then(function(r){return r.json();})
   .then(function(d){
     btn.disabled=false;btn.textContent='Publicar aviso';
     if(d.ok){
@@ -585,7 +618,9 @@ function publicar(){
       if(tipoSel==='adopcion') setTimeout(function(){mostrarToast('El jefe revisará tu adopción pronto 🐾');},2600);
       cargar();
     }
-  }).catch(function(){btn.disabled=false;btn.textContent='Publicar aviso';mostrarToast('Error al publicar');});
+    }).catch(function(){btn.disabled=false;btn.textContent='Publicar aviso';mostrarToast('Error al publicar');});
+  }
+  doPublicar();
 }
 
 function tiempoRelativo(ts){
@@ -595,6 +630,41 @@ function tiempoRelativo(ts){
   if(m<1)return'ahora';if(m<60)return m+'min';
   var h=Math.floor(m/60);if(h<24)return h+'h';
   return Math.floor(h/24)+'d';
+}
+
+var CLOUD_NAME    = 'dh5wgqgmk';
+var UPLOAD_PRESET = 'petzid';
+var perdidoFotoBase64 = null;
+var perdidoFotoMime   = null;
+
+function previsualizarFotoPerdido(input){
+  var file=input.files[0];if(!file)return;
+  perdidoFotoMime=file.type;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    perdidoFotoBase64=e.target.result.split(',')[1];
+    var prev=document.getElementById('perdidoFotoPreview');
+    var lbl=document.getElementById('perdidoFotoLabel');
+    prev.src=e.target.result;prev.style.display='block';
+    lbl.style.display='none';
+    document.getElementById('fotoUploadWrap').style.borderColor='#c0392b';
+    document.getElementById('fotoUploadWrap').style.background='#fff8f8';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadFotoPerdido(){
+  if(!perdidoFotoBase64) return null;
+  try{
+    var fd=new FormData();
+    var blob=await fetch('data:'+perdidoFotoMime+';base64,'+perdidoFotoBase64).then(function(r){return r.blob();});
+    fd.append('file',blob,'foto_perdido.jpg');
+    fd.append('upload_preset',UPLOAD_PRESET);
+    fd.append('folder','petzid/perdidos');
+    var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
+    var data=await res.json();
+    return data.secure_url||null;
+  }catch(e){console.log('Cloudinary perdido:',e);return null;}
 }
 
 var LOGO_URL = 'https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/logopetmi.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9nb3BldG1pLnBuZyIsImlhdCI6MTc3OTE1NDkzMiwiZXhwIjoyMDk0NTE0OTMyfQ.tN_IuOOnsgXO0atFGtWZQQ4KLRnZW4Nqelb4JTVYlwU';
