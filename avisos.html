@@ -290,7 +290,7 @@ function renderAviso(a,i){
   html+='<div style="border-top:0.5px solid #f0f0ee;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap">';
 
   if(a.tipo==='perdido'){
-    if(!esCreador&&sessionEmail) html+='<button class="btn-info" onclick="contactar(\''+a.email_creador+'\',\''+a.nombre_creador+'\',\'perdido\')">📞 Tengo info</button>';
+    if(!esCreador) html+='<button class="btn-info" onclick="contactar(\''+a.email_creador+'\',\''+a.titulo+'\',\'perdido\',\''+( a.whatsapp||'')+'\')">'+(a.whatsapp?'💬 Tengo info por WA':'📞 Tengo info')+'</button>';
     if(esCreador) html+='<button class="btn-aparecio" onclick="marcarAparecio(\''+a.id+'\',\''+a.nombre_creador+'\')">🎉 ¡Apareció!</button>';
     html+='<button class="btn-dl" onclick="descargarPoster(\''+a.id+'\')">⬇ Descargar póster</button>';
   }
@@ -367,23 +367,30 @@ function eliminar(id){
 // Variables del modal de contacto
 var _contactoEmail='', _contactoTitulo='', _contactoTipo='';
 
-function contactar(email,titulo,tipo){
+function contactar(email, titulo, tipo, telefono){
+  // Para perdidos — abrir WhatsApp directo si hay telefono
+  if(tipo==='perdido' && telefono){
+    var tel=telefono.replace(/[^0-9]/g,'');
+    // Agregar prefijo Guatemala si es numero local de 8 digitos
+    if(tel.length===8) tel='502'+tel;
+    var msg='Hola! Vi tu aviso en PetMi sobre *'+titulo+'*. '
+      +'Tengo información que puede ayudarte 🐾
+
+'
+      +'_Enviado desde petmi-petzid.vercel.app_';
+    window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg),'_blank');
+    return;
+  }
+  // Para adopcion o sin telefono — usar modal
   _contactoEmail=email;
   _contactoTitulo=titulo;
   _contactoTipo=tipo;
-  // Prellenar nombre si tiene sesion
   var nombrePre=localStorage.getItem('petzid_dueno')||'';
   document.getElementById('contactoNombre').value=nombrePre;
   document.getElementById('contactoMsg').value='';
-  if(tipo==='perdido'){
-    document.getElementById('contactoTitulo').textContent='Tengo información 📞';
-    document.getElementById('contactoSub').textContent='Cuéntanos lo que sabes sobre esta mascota perdida';
-    document.getElementById('btnEnviarContacto').textContent='📞 Enviar información';
-  } else {
-    document.getElementById('contactoTitulo').textContent='Me interesa 🏠';
-    document.getElementById('contactoSub').textContent='Escribe un mensaje al publicador de esta adopción';
-    document.getElementById('btnEnviarContacto').textContent='🏠 Enviar mensaje';
-  }
+  document.getElementById('contactoTitulo').textContent='Me interesa 🏠';
+  document.getElementById('contactoSub').textContent='Escribe un mensaje al publicador de esta adopción';
+  document.getElementById('btnEnviarContacto').textContent='🏠 Enviar mensaje';
   document.getElementById('modalContacto').classList.add('open');
 }
 
@@ -423,6 +430,42 @@ function enviarContacto(){
 
 function abrirPublicar(){
   if(!sessionEmail){mostrarToast('Inicia sesión para publicar');return;}
+  // Si miMascota aún no cargó, esperar
+  if(!miMascota){
+    mostrarToast('Cargando tu perfil...');
+    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.found&&d.mascotas.length){
+          miMascota=d.mascotas[0];
+          abrirFormulario();
+        } else {
+          mostrarToast('No encontramos tu mascota. ¿Ya registraste tu PetzID?');
+        }
+      });
+    return;
+  }
+  abrirFormulario();
+}
+
+function abrirFormulario(){
+  // Pre-llenar campos de perdido si hay datos en el perfil
+  if(miMascota){
+    var n=document.getElementById('pubNombreMascota');
+    var e=document.getElementById('pubEspecie');
+    var s=document.getElementById('pubSexo');
+    var r=document.getElementById('pubRaza');
+    var t=document.getElementById('pubTelefono');
+    if(n&&!n.value&&miMascota.nombre) n.value=miMascota.nombre;
+    if(e&&!e.value&&miMascota.especie) e.value=miMascota.especie;
+    if(s&&!s.value&&miMascota.sexo) s.value=miMascota.sexo;
+    if(r&&!r.value&&miMascota.raza) r.value=miMascota.raza;
+    if(t&&!t.value&&miMascota.whatsapp) t.value=miMascota.whatsapp;
+  }
+  // Asegurar que los campos perdido sean visibles si tipo es perdido
+  if(tipoSel==='perdido'){
+    document.getElementById('camposPerdido').classList.add('visible');
+  }
   document.getElementById('modalPublicar').classList.add('open');
 }
 function cerrarPublicar(){document.getElementById('modalPublicar').classList.remove('open');}
@@ -435,13 +478,18 @@ function selTipo(tipo,el){
   var cp=document.getElementById('camposPerdido');
   if(tipo==='perdido'){
     cp.classList.add('visible');
-    // Pre-llenar con datos del perfil si existen
+    // Pre-llenar con datos del perfil
     if(miMascota){
-      if(miMascota.nombre) document.getElementById('pubNombreMascota').value=miMascota.nombre;
-      if(miMascota.especie) document.getElementById('pubEspecie').value=miMascota.especie;
-      if(miMascota.sexo) document.getElementById('pubSexo').value=miMascota.sexo;
-      if(miMascota.raza) document.getElementById('pubRaza').value=miMascota.raza;
-      if(miMascota.whatsapp) document.getElementById('pubTelefono').value=miMascota.whatsapp;
+      var n=document.getElementById('pubNombreMascota');
+      var e=document.getElementById('pubEspecie');
+      var s=document.getElementById('pubSexo');
+      var r=document.getElementById('pubRaza');
+      var t=document.getElementById('pubTelefono');
+      if(n&&miMascota.nombre) n.value=miMascota.nombre;
+      if(e&&miMascota.especie) e.value=miMascota.especie;
+      if(s&&miMascota.sexo) s.value=miMascota.sexo;
+      if(r&&miMascota.raza) r.value=miMascota.raza;
+      if(t&&miMascota.whatsapp) t.value=miMascota.whatsapp;
     }
   } else {
     cp.classList.remove('visible');
