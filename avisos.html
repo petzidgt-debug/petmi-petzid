@@ -304,7 +304,7 @@ function renderAviso(a,i){
   html+='<div style="border-top:0.5px solid #f0f0ee;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap">';
 
   if(a.tipo==='perdido'){
-    if(!esCreador) html+='<button class="btn-info" onclick="contactar(\''+a.email_creador+'\',\''+a.titulo+'\',\'perdido\',\''+( a.whatsapp||'')+'\')">'+(a.whatsapp?'💬 Tengo info por WA':'📞 Tengo info')+'</button>';
+    if(!esCreador) html+='<button class="btn-info" onclick="contactar(\''+a.email_creador+'\',\''+a.titulo+'\',\'perdido\',\''+( a.whatsapp||'')+'\')">'+(a.whatsapp?'💬 Tengo info':'📞 Tengo info')+'</button>';
     if(esCreador) html+='<button class="btn-aparecio" onclick="marcarAparecio(\''+a.id+'\',\''+a.nombre_creador+'\')">🎉 ¡Apareció!</button>';
     html+='<button class="btn-dl" onclick="descargarPoster(\''+a.id+'\')">⬇ Descargar póster</button>';
   }
