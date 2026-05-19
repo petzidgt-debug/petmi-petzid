@@ -58,6 +58,18 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#764ba2;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.modal-contacto-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.modal-contacto-overlay.open{display:flex}
+.modal-contacto-sheet{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:600px}
+.modal-contacto-handle{width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px}
+.modal-contacto-titulo{font-size:17px;font-weight:900;color:#222;margin-bottom:4px}
+.modal-contacto-sub{font-size:13px;color:#888;margin-bottom:16px}
+.modal-contacto-input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:8px;font-family:Arial,sans-serif;resize:none}
+.modal-contacto-input:focus{border-color:#c0392b}
+.modal-contacto-nombre{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:12px;font-family:Arial,sans-serif}
+.modal-contacto-nombre:focus{border-color:#c0392b}
+.btn-enviar-contacto{width:100%;padding:14px;background:#c0392b;color:#fff;border:none;border-radius:99px;font-size:15px;font-weight:700;cursor:pointer}
+.btn-cancelar-contacto{width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:99px;font-size:14px;cursor:pointer;margin-top:8px}
 .toast.show{opacity:1}
 </style>
 </head>
@@ -105,6 +117,17 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   </div>
 </div>
 
+<div class="modal-contacto-overlay" id="modalContacto">
+  <div class="modal-contacto-sheet">
+    <div class="modal-contacto-handle"></div>
+    <div class="modal-contacto-titulo" id="contactoTitulo">Tengo información</div>
+    <div class="modal-contacto-sub" id="contactoSub">Cuéntanos lo que sabes sobre esta mascota</div>
+    <input type="text" class="modal-contacto-nombre" id="contactoNombre" placeholder="Tu nombre">
+    <textarea class="modal-contacto-input" id="contactoMsg" rows="4" placeholder="Escribe aquí la información que tienes..."></textarea>
+    <button class="btn-enviar-contacto" id="btnEnviarContacto" onclick="enviarContacto()">📞 Enviar información</button>
+    <button class="btn-cancelar-contacto" onclick="cerrarContacto()">Cancelar</button>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -299,14 +322,61 @@ function eliminar(id){
     .then(function(){cargar();mostrarToast('Aviso eliminado');});
 }
 
+// Variables del modal de contacto
+var _contactoEmail='', _contactoTitulo='', _contactoTipo='';
+
 function contactar(email,titulo,tipo){
-  if(!sessionEmail){mostrarToast('Inicia sesión para contactar');return;}
-  if(tipo==='adopcion'){
-    fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'notificarInteres',emailCreador:email,tituloAnuncio:titulo,nombreMascota:miMascota?miMascota.nombre:'Alguien',emailInteresado:sessionEmail})})
-      .then(function(){mostrarToast('🏠 Mensaje enviado al publicador');});
+  _contactoEmail=email;
+  _contactoTitulo=titulo;
+  _contactoTipo=tipo;
+  // Prellenar nombre si tiene sesion
+  var nombrePre=localStorage.getItem('petzid_dueno')||'';
+  document.getElementById('contactoNombre').value=nombrePre;
+  document.getElementById('contactoMsg').value='';
+  if(tipo==='perdido'){
+    document.getElementById('contactoTitulo').textContent='Tengo información 📞';
+    document.getElementById('contactoSub').textContent='Cuéntanos lo que sabes sobre esta mascota perdida';
+    document.getElementById('btnEnviarContacto').textContent='📞 Enviar información';
   } else {
-    window.location.href='mailto:'+email+'?subject=Información sobre '+titulo+' — PetMi';
+    document.getElementById('contactoTitulo').textContent='Me interesa 🏠';
+    document.getElementById('contactoSub').textContent='Escribe un mensaje al publicador de esta adopción';
+    document.getElementById('btnEnviarContacto').textContent='🏠 Enviar mensaje';
   }
+  document.getElementById('modalContacto').classList.add('open');
+}
+
+function cerrarContacto(){
+  document.getElementById('modalContacto').classList.remove('open');
+}
+
+function enviarContacto(){
+  var nombre=document.getElementById('contactoNombre').value.trim();
+  var msg=document.getElementById('contactoMsg').value.trim();
+  if(!nombre){mostrarToast('Escribe tu nombre');return;}
+  if(!msg){mostrarToast('Escribe un mensaje');return;}
+  var btn=document.getElementById('btnEnviarContacto');
+  btn.disabled=true;btn.textContent='Enviando...';
+  var action=_contactoTipo==='adopcion'?'notificarInteres':'notificarInfoPerdido';
+  fetch('/api/submit',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      action:action,
+      emailCreador:_contactoEmail,
+      tituloAnuncio:_contactoTitulo,
+      nombreContacto:nombre,
+      mensaje:msg,
+      emailInteresado:sessionEmail||'',
+      nombreMascota:miMascota?miMascota.nombre:'Alguien'
+    })
+  }).then(function(r){return r.json();})
+  .then(function(){
+    btn.disabled=false;
+    cerrarContacto();
+    mostrarToast(_contactoTipo==='adopcion'?'🏠 Mensaje enviado!':'📞 Información enviada al dueño!');
+  }).catch(function(){
+    btn.disabled=false;btn.textContent='Enviar';
+    mostrarToast('Error al enviar');
+  });
 }
 
 function abrirPublicar(){
