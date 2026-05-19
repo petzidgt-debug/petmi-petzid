@@ -49,6 +49,15 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .form-input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:12px;font-family:Arial,sans-serif}
 .form-input:focus{border-color:#764ba2}
 .tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.campos-perdido{display:none;border-top:1.5px dashed #f0e0e0;padding-top:14px;margin-top:4px}
+.campos-perdido.visible{display:block}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-select{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:12px;background:#fff;font-family:Arial,sans-serif;cursor:pointer}
+.form-select:focus{border-color:#c0392b}
+.campo-requerido{color:#c0392b;font-size:11px;margin-bottom:4px;display:none}
+.campo-requerido.visible{display:block}
+.form-input.error{border-color:#c0392b}
+.perdido-tip{background:#fff8f8;border-left:3px solid #c0392b;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#c0392b;margin-bottom:14px;line-height:1.5}
 .tipo-option{padding:12px;border:1.5px solid #e0e0e0;border-radius:12px;text-align:center;cursor:pointer;transition:all .2s;font-size:13px;font-weight:600;color:#555}
 .tipo-option.selected{border-color:#764ba2;background:#f3e8ff;color:#764ba2}
 .btn-publicar{width:100%;padding:14px;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
@@ -112,6 +121,39 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <input type="date" class="form-input" id="pubFecha">
     <label class="form-label">Ubicación</label>
     <input type="text" class="form-input" id="pubUbicacion" placeholder="Zona 10, Guatemala">
+
+    <!-- Campos adicionales para perdido -->
+    <div class="campos-perdido" id="camposPerdido">
+      <div class="perdido-tip">🚨 Para avisos de perdido necesitamos más datos para el póster</div>
+      <label class="form-label">Nombre de la mascota *</label>
+      <input type="text" class="form-input" id="pubNombreMascota" placeholder="Ej: Cami, Oso, Luna...">
+      <div class="form-row">
+        <div>
+          <label class="form-label">Especie *</label>
+          <select class="form-select" id="pubEspecie">
+            <option value="">Selecciona...</option>
+            <option value="Perro">Perro</option>
+            <option value="Gato">Gato</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Sexo *</label>
+          <select class="form-select" id="pubSexo">
+            <option value="">Selecciona...</option>
+            <option value="Macho">Macho</option>
+            <option value="Hembra">Hembra</option>
+          </select>
+        </div>
+      </div>
+      <label class="form-label">Raza</label>
+      <input type="text" class="form-input" id="pubRaza" placeholder="Ej: Labrador, Mestizo, Poodle...">
+      <label class="form-label">Teléfono de contacto *</label>
+      <input type="tel" class="form-input" id="pubTelefono" placeholder="Ej: 5555 1234" maxlength="15">
+      <label class="form-label">Recompensa (opcional)</label>
+      <input type="text" class="form-input" id="pubRecompensa" placeholder="Ej: Q 500">
+    </div>
+
     <button class="btn-publicar" onclick="publicar()">Publicar aviso</button>
     <button onclick="cerrarPublicar()" style="width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer;margin-top:8px">Cancelar</button>
   </div>
@@ -389,24 +431,108 @@ function selTipo(tipo,el){
   tipoSel=tipo;
   document.querySelectorAll('.tipo-option').forEach(function(o){o.classList.remove('selected');});
   el.classList.add('selected');
+  // Mostrar campos extra solo para perdido
+  var cp=document.getElementById('camposPerdido');
+  if(tipo==='perdido'){
+    cp.classList.add('visible');
+    // Pre-llenar con datos del perfil si existen
+    if(miMascota){
+      if(miMascota.nombre) document.getElementById('pubNombreMascota').value=miMascota.nombre;
+      if(miMascota.especie) document.getElementById('pubEspecie').value=miMascota.especie;
+      if(miMascota.sexo) document.getElementById('pubSexo').value=miMascota.sexo;
+      if(miMascota.raza) document.getElementById('pubRaza').value=miMascota.raza;
+      if(miMascota.whatsapp) document.getElementById('pubTelefono').value=miMascota.whatsapp;
+    }
+  } else {
+    cp.classList.remove('visible');
+  }
 }
 
 function publicar(){
   if(!sessionEmail||!miMascota){mostrarToast('Inicia sesión primero');return;}
   var titulo=document.getElementById('pubTitulo').value.trim();
   if(!titulo){mostrarToast('El título es obligatorio');return;}
+
+  // Validaciones extra para perdido
+  var extraData={};
+  if(tipoSel==='perdido'){
+    var nombre=document.getElementById('pubNombreMascota').value.trim();
+    var especie=document.getElementById('pubEspecie').value;
+    var sexo=document.getElementById('pubSexo').value;
+    var raza=document.getElementById('pubRaza').value.trim();
+    var tel=document.getElementById('pubTelefono').value.trim();
+    var recomp=document.getElementById('pubRecompensa').value.trim();
+
+    // Limpiar errores anteriores
+    ['pubNombreMascota','pubEspecie','pubSexo','pubTelefono'].forEach(function(id){
+      document.getElementById(id).classList.remove('error');
+    });
+
+    var errores=[];
+    if(!nombre){document.getElementById('pubNombreMascota').classList.add('error');errores.push('nombre');}
+    if(!especie){document.getElementById('pubEspecie').classList.add('error');errores.push('especie');}
+    if(!sexo){document.getElementById('pubSexo').classList.add('error');errores.push('sexo');}
+    if(!tel){document.getElementById('pubTelefono').classList.add('error');errores.push('teléfono');}
+    // Validar formato telefono: 8 digitos
+    else if(tel.replace(/[\s\-]/g,'').match(/[^0-9]/)){
+      document.getElementById('pubTelefono').classList.add('error');
+      mostrarToast('El teléfono solo debe tener números');return;
+    }
+
+    if(errores.length){
+      mostrarToast('Completa: '+errores.join(', '));
+      // Scroll al primer error
+      var firstErr=document.querySelector('.form-input.error,.form-select.error');
+      if(firstErr)firstErr.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+
+    extraData={
+      nombre_creador:nombre,
+      especie:especie,
+      sexo:sexo,
+      raza:raza||'-',
+      whatsapp:tel,
+      recompensa:recomp||''
+    };
+    // Auto-generar titulo si no lo cambió
+    if(titulo===''||titulo===document.getElementById('pubTitulo').placeholder){
+      titulo='🚨 SE PERDIÓ '+nombre.toUpperCase();
+      document.getElementById('pubTitulo').value=titulo;
+    }
+  }
+
   var btn=document.querySelector('.btn-publicar');
   btn.disabled=true;btn.textContent='Publicando...';
   var activo=tipoSel==='adopcion'?false:true;
+
+  var payload=Object.assign({
+    uid_creador:miMascota.uid,
+    nombre_creador:extraData.nombre_creador||miMascota.nombre,
+    foto_creador:miMascota.foto||'',
+    email_creador:sessionEmail,
+    tipo:tipoSel,
+    titulo:titulo,
+    descripcion:document.getElementById('pubDesc').value.trim(),
+    fecha:document.getElementById('pubFecha').value||null,
+    ubicacion:document.getElementById('pubUbicacion').value.trim(),
+    activo_override:activo
+  }, extraData);
+
   fetch('/api/galeria?action=publicarActividad',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({uid_creador:miMascota.uid,nombre_creador:miMascota.nombre,foto_creador:miMascota.foto||'',email_creador:sessionEmail,tipo:tipoSel,titulo:titulo,descripcion:document.getElementById('pubDesc').value.trim(),fecha:document.getElementById('pubFecha').value||null,ubicacion:document.getElementById('pubUbicacion').value.trim(),activo_override:activo})
+    body:JSON.stringify(payload)
   }).then(function(r){return r.json();})
   .then(function(d){
     btn.disabled=false;btn.textContent='Publicar aviso';
     if(d.ok){
       cerrarPublicar();
-      ['pubTitulo','pubDesc','pubFecha','pubUbicacion'].forEach(function(id){document.getElementById(id).value='';});
+      ['pubTitulo','pubDesc','pubFecha','pubUbicacion','pubNombreMascota','pubRaza','pubTelefono','pubRecompensa'].forEach(function(id){
+        var el=document.getElementById(id);if(el)el.value='';
+      });
+      ['pubEspecie','pubSexo'].forEach(function(id){
+        var el=document.getElementById(id);if(el)el.value='';
+      });
       mostrarToast(tipoSel==='adopcion'?'🏠 Enviado para revisión del jefe':'📢 ¡Aviso publicado!');
       if(tipoSel==='adopcion') setTimeout(function(){mostrarToast('El jefe revisará tu adopción pronto 🐾');},2600);
       cargar();
