@@ -33,6 +33,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .btn-aparecio{padding:8px 16px;background:#1a7a1a;color:#fff;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer}
 .btn-interesa{padding:8px 16px;background:#2e7d32;color:#fff;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer}
 .btn-wa{padding:8px 14px;background:#f0f0ee;color:#555;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-descargar{padding:8px 14px;background:#1a1a1a;color:#fff;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
 .btn-info{padding:8px 16px;background:#c0392b;color:#fff;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer}
 .apuntes-wrap{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
 .apunte-avatar{width:24px;height:24px;border-radius:6px;object-fit:cover;border:1.5px solid #fff}
@@ -189,6 +190,7 @@ function renderAviso(a,i){
   if(esCreador&&a.tipo!=='perdido') html+='<button style="padding:8px 14px;background:#f0f0ee;color:#888;border:none;border-radius:20px;font-size:11px;cursor:pointer" onclick="eliminar(\''+a.id+'\')">🗑️</button>';
   var sUrl=encodeURIComponent('https://petmi-petzid.vercel.app/share.html?tipo=aviso&id='+a.id);
   html+='<button class="btn-wa" style="display:flex;align-items:center;gap:5px;position:relative" title="Compartir por WhatsApp" onclick="window.open(\'https://wa.me/?text='+encodeURIComponent(a.titulo)+'%20'+sUrl+'\',\'_blank\')">'+'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
+  if(a.tipo==='perdido') html+='<button class="btn-descargar" onclick="descargarPoster('+JSON.stringify(a).replace(/"/g,\'&quot;\')+')">⬇ Descargar póster</button>';
   html+='</div></div></div>';
   return html;
 }
@@ -302,6 +304,207 @@ function tiempoRelativo(ts){
   if(m<1)return'ahora';if(m<60)return m+'min';
   var h=Math.floor(m/60);if(h<24)return h+'h';
   return Math.floor(h/24)+'d';
+}
+
+var LOGO_URL = 'https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/logopetmi.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9nb3BldG1pLnBuZyIsImlhdCI6MTc3OTE1NDkzMiwiZXhwIjoyMDk0NTE0OTMyfQ.tN_IuOOnsgXO0atFGtWZQQ4KLRnZW4Nqelb4JTVYlwU';
+
+function descargarPoster(a){
+  var W=800, H=1100;
+  var canvas=document.createElement('canvas');
+  canvas.width=W; canvas.height=H;
+  var ctx=canvas.getContext('2d');
+
+  // Fondo blanco
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,W,H);
+
+  // Header rojo
+  ctx.fillStyle='#c0392b';
+  ctx.fillRect(0,0,W,220);
+
+  // SE BUSCA!!!!!
+  ctx.fillStyle='#ffffff';
+  ctx.font='bold 64px Arial Black, Arial';
+  ctx.textAlign='center';
+  ctx.fillText('🚨 SE BUSCA!!!!!',W/2,100);
+
+  // Nombre mascota
+  ctx.fillStyle='#F5C842';
+  ctx.font='bold 80px Arial Black, Arial';
+  ctx.fillText((a.nombre_creador||'MASCOTA').toUpperCase(),W/2,190);
+
+  // Foto de la mascota
+  function continuarConFoto(fotoImg){
+    // Foto
+    if(fotoImg){
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0,220,W,340);
+      ctx.clip();
+      // Centrar y cubrir
+      var scale=Math.max(W/fotoImg.width,340/fotoImg.height);
+      var sw=fotoImg.width*scale, sh=fotoImg.height*scale;
+      ctx.drawImage(fotoImg,(W-sw)/2,220+(340-sh)/2,sw,sh);
+      ctx.restore();
+    } else {
+      ctx.fillStyle='#dddddd';
+      ctx.fillRect(0,220,W,340);
+      ctx.fillStyle='#aaaaaa';
+      ctx.font='80px Arial';
+      ctx.fillText('🐾',W/2,420);
+    }
+
+    // Fecha badge
+    if(a.fecha){
+      var fecha=new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{day:'2-digit',month:'long',year:'numeric'});
+      ctx.fillStyle='rgba(0,0,0,0.7)';
+      roundRect(ctx,W-220,230,210,36,18);
+      ctx.fill();
+      ctx.fillStyle='#ffffff';
+      ctx.font='22px Arial';
+      ctx.textAlign='center';
+      ctx.fillText('Perdido: '+fecha,W-115,254);
+    }
+
+    // Info chips
+    var chips=[
+      {label:'ESPECIE',val:a.especie||'-'},
+      {label:'RAZA',val:a.raza||'-'},
+      {label:'COLOR',val:a.color||'-'}
+    ];
+    chips.forEach(function(chip,i){
+      var x=20+i*(W/3), cw=W/3-20;
+      ctx.fillStyle='#f8f8f8';
+      roundRect(ctx,x,580,cw,80,10);
+      ctx.fill();
+      ctx.strokeStyle='#eeeeee';
+      ctx.lineWidth=1;
+      ctx.stroke();
+      ctx.fillStyle='#888888';
+      ctx.font='18px Arial';
+      ctx.textAlign='center';
+      ctx.fillText(chip.label,x+cw/2,610);
+      ctx.fillStyle='#222222';
+      ctx.font='bold 22px Arial';
+      ctx.fillText(chip.val,x+cw/2,644);
+    });
+
+    // Zona
+    if(a.ubicacion){
+      ctx.fillStyle='#FFF3CD';
+      roundRect(ctx,20,680,W-40,72,10);
+      ctx.fill();
+      ctx.strokeStyle='#F5C842';
+      ctx.lineWidth=1;
+      ctx.stroke();
+      ctx.fillStyle='#856404';
+      ctx.font='bold 26px Arial';
+      ctx.textAlign='left';
+      ctx.fillText('📍 '+a.ubicacion,40,722);
+      ctx.fillStyle='#a08000';
+      ctx.font='18px Arial';
+      ctx.fillText('Podría estar en cualquier lugar',40,752);
+    }
+
+    // Descripcion
+    if(a.descripcion){
+      ctx.fillStyle='#555555';
+      ctx.font='22px Arial';
+      ctx.textAlign='left';
+      wrapText(ctx,a.descripcion,30,810,W-60,30);
+    }
+
+    // Recompensa
+    ctx.fillStyle='#c0392b';
+    roundRect(ctx,20,880,W-40,72,10);
+    ctx.fill();
+    ctx.fillStyle='#ffffff';
+    ctx.font='bold 26px Arial';
+    ctx.textAlign='center';
+    ctx.fillText('🎁 Recompensa por información',W/2,910);
+    ctx.font='20px Arial';
+    ctx.fillText('Cualquier dato es de gran ayuda',W/2,942);
+
+    // Footer negro
+    ctx.fillStyle='#1a1a1a';
+    ctx.fillRect(0,972,W,128);
+
+    // Telefono
+    if(a.whatsapp||a.telefono){
+      ctx.fillStyle='rgba(255,255,255,0.6)';
+      ctx.font='16px Arial';
+      ctx.textAlign='left';
+      ctx.fillText('SI LO VES LLAMA AL',30,1000);
+      ctx.fillStyle='#F5C842';
+      ctx.font='bold 44px Arial';
+      ctx.fillText(a.whatsapp||a.telefono||'',30,1052);
+    }
+
+    // Logo PetMi
+    var logoImg=new Image();
+    logoImg.crossOrigin='anonymous';
+    logoImg.onload=function(){
+      var lh=50, lw=logoImg.width*(lh/logoImg.height);
+      ctx.drawImage(logoImg,W-lw-20,1010,lw,lh);
+      terminarDescarga();
+    };
+    logoImg.onerror=function(){
+      ctx.fillStyle='#ffffff';
+      ctx.font='bold 28px Arial';
+      ctx.textAlign='right';
+      ctx.fillText('PETmi',W-20,1050);
+      terminarDescarga();
+    };
+    logoImg.src=LOGO_URL;
+  }
+
+  function terminarDescarga(){
+    var link=document.createElement('a');
+    link.download='poster-perdido-'+(a.nombre_creador||'mascota').toLowerCase()+'.png';
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+    mostrarToast('Póster descargado!');
+  }
+
+  // Cargar foto mascota
+  var urlFoto=a.imagen&&a.imagen.indexOf('http')>=0?a.imagen:(a.foto_creador&&a.foto_creador.indexOf('http')>=0?a.foto_creador:null);
+  if(urlFoto){
+    var img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=function(){continuarConFoto(img);};
+    img.onerror=function(){continuarConFoto(null);};
+    img.src=urlFoto;
+  } else {
+    continuarConFoto(null);
+  }
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function wrapText(ctx,text,x,y,maxW,lineH){
+  var words=text.split(' ');
+  var line='';
+  for(var i=0;i<words.length;i++){
+    var test=line+words[i]+' ';
+    if(ctx.measureText(test).width>maxW&&i>0){
+      ctx.fillText(line,x,y);
+      line=words[i]+' ';
+      y+=lineH;
+    } else { line=test; }
+  }
+  ctx.fillText(line,x,y);
 }
 
 function mostrarToast(msg){
