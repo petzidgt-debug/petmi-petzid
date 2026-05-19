@@ -339,9 +339,14 @@ function descargarPoster(id){
     ctx.textAlign='center';
     ctx.fillText('🚨  SE BUSCA!!!!!',W/2,M+80);
 
+    var _tit=(a.titulo||'');
+    var _nom=a.nombre_creador||_tit;
+    var _m=_tit.match(/se perdi/i);
+    if(_m){ var _p=_tit.replace(/.*se perdi[oó]\s*/i,''); if(_p) _nom=_p; }
+    else if(_tit.length<30) _nom=_tit;
     ctx.fillStyle='#F5C842';
     ctx.font='bold 78px Arial';
-    ctx.fillText((a.titulo||a.nombre_creador||'').toUpperCase().split(' SE PERDIÓ ').pop().split('SE BUSCA ').pop(),W/2,M+172);
+    ctx.fillText(_nom.toUpperCase(),W/2,M+172);
 
     y = M+200+16;
 
@@ -374,11 +379,13 @@ function descargarPoster(id){
     y+=fotoH+20;
 
     // ── CHIPS ESPECIE / SEXO / RAZA ────────────────────
-    var chips=[
-      {l:'ESPECIE',v:a.especie||'-'},
-      {l:'SEXO',v:a.sexo||'-'},
-      {l:'RAZA',v:a.raza||'-'}
-    ];
+    // Chips con campos disponibles en actividades
+    var chips=[];
+    if(a.ubicacion) chips.push({l:'ÚLTIMA VEZ VISTO',v:a.ubicacion});
+    if(a.fecha) chips.push({l:'FECHA',v:new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{day:'2-digit',month:'short'})});
+    if(a.nombre_creador) chips.push({l:'MASCOTA',v:a.nombre_creador});
+    while(chips.length<3) chips.push({l:'',v:''});
+    chips=chips.slice(0,3);
     var cw=(W-M*2-20)/3;
     chips.forEach(function(c,i){
       var cx=M+i*(cw+10);
@@ -427,12 +434,18 @@ function descargarPoster(id){
     ctx.fillStyle='#1a1a1a';
     roundRect(ctx,M,y,W-M*2,100,16);ctx.fill();
 
-    var tel=a.whatsapp||a.telefono||'';
+    // Telefono — buscar en descripcion o titulo
+    var tel='';
+    var telMatch=(a.descripcion||a.titulo||'').match(/[0-9]{8}/);
+    if(telMatch) tel=telMatch[0];
     if(tel){
       ctx.fillStyle='rgba(255,255,255,0.55)';ctx.font='15px Arial';ctx.textAlign='left';
       ctx.fillText('SI LO VES LLAMA AL',M+24,y+28);
-      ctx.fillStyle='#F5C842';ctx.font='bold 48px Arial';
+      ctx.fillStyle='#F5C842';ctx.font='bold 50px Arial';
       ctx.fillText(tel,M+24,y+82);
+    } else {
+      ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font='22px Arial';ctx.textAlign='left';
+      ctx.fillText('Contactar en PetMi · petmi-petzid.vercel.app',M+24,y+62);
     }
 
     if(logoImg){
