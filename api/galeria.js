@@ -1,731 +1,904 @@
-const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel Admin — PetMi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#00B4B4}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.login-logo{font-size:28px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#00B4B4;text-align:center;margin-bottom:8px}
+.login-logo span{color:#E05090}
+.login-sub{text-align:center;font-size:13px;color:#888;margin-bottom:24px}
+.login-box input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:15px;margin-bottom:12px;outline:none}
+.login-box input:focus{border-color:#00B4B4}
+.login-btn{width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
+.login-err{color:#E05090;font-size:13px;text-align:center;margin-top:8px;display:none}
+.app{display:none;min-height:100vh;flex-direction:row}
+.sidebar{width:220px;background:#1a1a2e;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100}
+.sidebar-logo{padding:20px;font-size:20px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-logo span{color:#F5C842}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:12px 20px;color:rgba(255,255,255,.7);cursor:pointer;font-size:14px;font-weight:600;transition:all .15s;border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:rgba(0,180,180,.2);color:#00B4B4;border-left-color:#00B4B4}
+.nav-icon{font-size:16px;width:20px;text-align:center}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
+.logout-btn{color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;background:none;border:none}
+.content{margin-left:220px;padding:24px;min-height:100vh}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.page-title{font-size:22px;font-weight:900;color:#222}
+.page-sub{font-size:13px;color:#888;margin-top:2px}
+.btn-primary{padding:9px 18px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.stat-num{font-size:32px;font-weight:900;color:#222;margin-bottom:4px}
+.stat-lbl{font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-icon{font-size:24px;margin-bottom:8px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.chart-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.chart-title{font-size:14px;font-weight:700;color:#333;margin-bottom:16px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-label{font-size:12px;color:#555;width:80px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:#f0f0ee;border-radius:4px;height:22px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:700;color:#fff;min-width:30px}
+.search-bar{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search-bar input,.search-bar select{padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none;background:#fff}
+.search-bar input{min-width:160px}
+.search-bar input:focus,.search-bar select:focus{border-color:#00B4B4}
+.btn-search{padding:8px 14px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-clear{padding:8px 14px;background:#f0f0ee;color:#666;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+.table-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:#f8f8f8;padding:11px 12px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #eee;white-space:nowrap}
+tbody td{padding:10px 12px;border-bottom:1px solid #f5f5f5;color:#333;vertical-align:middle}
+tbody tr:hover{background:#fafafa}
+tbody tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-perro{background:#e0f7f7;color:#007a7a}
+.badge-gato{background:#fbeaf0;color:#993556}
+.badge-si{background:#d4edda;color:#155724}
+.badge-no{background:#f8d7da;color:#721c24}
+.badge-pending{background:#fff3cd;color:#856404}
+.btn-sm{padding:5px 9px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;white-space:nowrap;margin-right:3px}
+.btn-view{background:#e0f7f7;color:#007a7a}
+.btn-edit{background:#fff3cd;color:#856404}
+.btn-send{background:#d4edda;color:#155724}
+.pagination{display:flex;align-items:center;padding:12px 16px;border-top:1px solid #f0f0f0;gap:8px;flex-wrap:wrap}
+.page-info{font-size:13px;color:#888;flex:1}
+.page-btn{padding:6px 12px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;cursor:pointer;background:#fff;font-weight:600}
+.page-btn:hover{border-color:#00B4B4;color:#00B4B4}
+.page-btn:disabled{opacity:.4;cursor:not-allowed}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.modal-title{font-size:18px;font-weight:900;color:#222;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:#888}
+.modal label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;display:block;margin-bottom:4px;margin-top:12px}
+.modal input,.modal select,.modal textarea{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none}
+.modal input:focus,.modal select:focus{border-color:#00B4B4}
+.modal-footer{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.btn-save{padding:10px 24px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+.btn-cancel{padding:10px 24px;background:#f0f0ee;color:#666;border:none;border-radius:8px;font-size:14px;cursor:pointer}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.loading{text-align:center;padding:60px;color:#888}
+.foto-drop{border:2px dashed #ddd;border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:border .2s;margin:12px 0}
+.foto-drop:hover{border-color:#00B4B4}
+.foto-preview{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px;display:none}
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.screen{display:none}
+.screen.active{display:block}
+@media(max-width:768px){
+  .sidebar{width:100%;height:56px;flex-direction:row;position:fixed;bottom:0;top:auto}
+  .sidebar-logo,.sidebar-footer{display:none}
+  .sidebar-nav{display:flex;flex-direction:row;padding:0;overflow-x:auto}
+  .nav-item{flex-direction:column;gap:2px;padding:6px 12px;font-size:10px;border-left:none;border-top:3px solid transparent;min-width:60px;justify-content:center}
+  .nav-item.active{border-top-color:#00B4B4;border-left:none}
+  .content{margin-left:0;padding:14px;padding-bottom:70px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .charts-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">petz<span>ID</span></div>
+    <div class="login-sub">Panel de administracion PetMi</div>
+    <input type="password" id="loginPass" placeholder="Contrasena" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-err" id="loginErr">Contrasena incorrecta</div>
+  </div>
+</div>
 
-  const action = req.query.action || '';
+<div class="app" id="appWrap">
+  <div class="sidebar">
+    <div class="sidebar-logo">petz<span>ID</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="showScreen('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
+      <div class="nav-item" onclick="showScreen('mascotas',this)"><span class="nav-icon">🐾</span>Mascotas</div>
+      <div class="nav-item" onclick="showScreen('familias',this)"><span class="nav-icon">🏠</span>Familias</div>
+      <div class="nav-item" onclick="showScreen('eventos',this)"><span class="nav-icon">🎉</span>Eventos</div>
+      <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
+      <div class="nav-item" onclick="showScreen('campanas',this)"><span class="nav-icon">📧</span>Campanas</div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
+    </div>
+  </div>
 
-  try {
-    // ── getBasic — galería principal ─────────────────────────
-    if (action === 'getBasic') {
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?select=uid,nombre,apodo,especie,sexo,raza,tipo_fecha,fecha,email,foto,angelito,fecha_angelito,created_at&order=created_at.desc',
-        {
-          headers: {
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY
-          }
-        }
-      );
-      const data = await response.json();
-      // Convertir al formato que espera la galería
-      const rows = data.map(m => [
-        m.uid,           // 0
-        m.nombre,        // 1
-        m.apodo,         // 2
-        m.especie,       // 3
-        m.sexo,          // 4
-        m.raza,          // 5
-        m.tipo_fecha,    // 6
-        m.fecha,         // 7
-        m.email,         // 8
-        m.foto,          // 9
-        m.angelito ? 'Si' : 'No', // 10
-        m.fecha_angelito, // 11
-        m.created_at    // 12
-      ]);
-      return res.status(200).json({ rows });
-    }
+  <div class="content">
 
-    // ── getData — datos completos ─────────────────────────────
-    if (action === 'getData') {
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?select=*&order=nombre.asc',
-        {
-          headers: {
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY
-          }
-        }
-      );
-      const data = await response.json();
-      const rows = data.map(m => {
-        const r = new Array(31).fill('');
-        r[1]  = m.uid            || '';
-        r[2]  = m.nombre         || '';
-        r[3]  = m.apodo          || '';
-        r[4]  = m.especie        || '';
-        r[5]  = m.sexo           || '';
-        r[6]  = m.raza           || '';
-        r[7]  = m.tipo_fecha     || '';
-        r[8]  = m.fecha          || '';
-        r[9]  = m.zona           || '';
-        r[10] = m.dueno          || '';
-        r[11] = m.email          || '';
-        r[12] = m.whatsapp       || '';
-        r[13] = m.veterinario    || '';
-        r[15] = m.instagram      || '';
-        r[16] = m.alimento       || '';
-        r[18] = m.actividades    || '';
-        r[20] = m.ofertas        ? 'Si' : 'No';
-        r[23] = m.especial       || '';
-        r[24] = m.correo_enviado || '';
-        r[27] = m.foto           || '';
-        r[28] = m.angelito       ? 'Si' : 'No';
-        r[29] = m.fecha_angelito || '';
-        r[30] = m.notif_mensajes ? 'Si' : 'No';
-        return r;
-      });
-      return res.status(200).json({ rows });
-    }
+    <div class="screen active" id="screenDashboard">
+      <div class="page-header">
+        <div><div class="page-title">Dashboard</div><div class="page-sub">Resumen general</div></div>
+        <button class="btn-primary" onclick="loadData()">Actualizar</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🐾</div><div class="stat-num" id="statTotal">-</div><div class="stat-lbl">Total registros</div></div>
+        <div class="stat-card"><div class="stat-icon">🐶</div><div class="stat-num" id="statPerros">-</div><div class="stat-lbl">Perros</div></div>
+        <div class="stat-card"><div class="stat-icon">🐱</div><div class="stat-num" id="statGatos">-</div><div class="stat-lbl">Gatos</div></div>
+        <div class="stat-card"><div class="stat-icon">📧</div><div class="stat-num" id="statEnviados">-</div><div class="stat-lbl">IDs enviados</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><div class="chart-title">Top Zonas</div><div id="chartZonas"><div class="loading"><div class="spinner"></div></div></div></div>
+        <div class="chart-card"><div class="chart-title">Registros por mes</div><div id="chartMeses"><div class="loading"><div class="spinner"></div></div></div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><div class="chart-title">Top Alimentos</div><div id="chartAlimentos"><div class="loading"><div class="spinner"></div></div></div></div>
+        <div class="chart-card"><div class="chart-title">Estado envios</div><div id="chartEnvios"><div class="loading"><div class="spinner"></div></div></div></div>
+      </div>
+      <div class="charts-grid" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="chart-card"><div class="chart-title">🐕 Top Razas</div><div id="chartRazas"></div></div>
+        <div class="chart-card"><div class="chart-title">📷 Estado fotos</div><div id="chartFotos"></div></div>
+        <div class="chart-card"><div class="chart-title">🎂 Cumpleaños por mes</div><div id="chartCumples"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Sin foto</div><div id="statSinFoto" style="font-size:28px;font-weight:900;color:#E05090">-</div></div>
+        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Angelitos</div><div id="statAngelitos" style="font-size:28px;font-weight:900;color:#764ba2">-</div></div>
+        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Familias únicas</div><div id="statFamilias" style="font-size:28px;font-weight:900;color:#00B4B4">-</div></div>
+        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Este mes</div><div id="statEsteMes" style="font-size:28px;font-weight:900;color:#F5C842">-</div></div>
+      </div>
+    </div>
 
-    // ── checkEmail ────────────────────────────────────────────
-    if (action === 'checkEmail' || (req.method === 'POST' && req.body && req.body.action === 'checkEmail')) {
-      const email = (req.method === 'POST' ? req.body.email : req.query.email) || '';
-      if (!email) return res.status(200).json({ found: false, mascotas: [] });
+    <div class="screen" id="screenMascotas">
+      <div class="page-header">
+        <div><div class="page-title">Mascotas</div><div class="page-sub" id="tableInfo">Cargando...</div></div>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="searchNombre" placeholder="Nombre mascota...">
+        <input type="text" id="searchDueno" placeholder="Nombre dueno...">
+        <select id="filterEspecie"><option value="">Todas</option><option>Perro</option><option>Gato</option></select>
+        <input type="text" id="filterZona" placeholder="Zona...">
+        <select id="filterFoto">
+          <option value="">Todas las fotos</option>
+          <option value="sin_foto">Sin foto</option>
+          <option value="con_foto">Con foto</option>
+        </select>
+        <select id="filterEnviado">
+          <option value="">Todos los estados</option>
+          <option value="Si">Enviado</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="migraci">Migracion</option>
+        </select>
+        <button class="btn-search" onclick="applyFilters()">Buscar</button>
+        <button class="btn-clear" onclick="clearFilters()">Limpiar</button>
+        <button class="btn-primary" onclick="syncSupabase()" id="btnSync" style="background:#764ba2;margin-left:8px">🔄 Sync Supabase</button>
+      </div>
+      <div id="syncStatus" style="display:none;background:#e0f7f7;border:1px solid #00B4B4;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#007a7a"></div>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Foto</th><th>Mascota</th><th>Especie</th><th>Zona</th>
+              <th>Dueno</th><th>Email</th><th>Alimento</th><th>Fecha</th><th>Estado</th><th>Premium</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="tableBody"><tr><td colspan="10"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span class="page-info" id="pageInfo">-</span>
+          <button class="page-btn" id="btnPrev" onclick="changePage(-1)">← Anterior</button>
+          <button class="page-btn" id="btnNext" onclick="changePage(1)">Siguiente →</button>
+        </div>
+      </div>
+    </div>
 
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email.toLowerCase()) + '&select=*',
-        {
-          headers: {
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY
-          }
-        }
-      );
-      const data = await response.json();
-      const mascotas = data.map(m => ({
-        uid:          m.uid            || '',
-        nombre:       m.nombre         || '',
-        apodo:        m.apodo          || '',
-        especie:      m.especie        || '',
-        sexo:         m.sexo           || '',
-        raza:         m.raza           || '',
-        tipoFecha:    m.tipo_fecha     || '',
-        fecha:        m.fecha          || '',
-        zona:         m.zona           || '',
-        dueno:        m.dueno          || '',
-        email:        m.email          || '',
-        whatsapp:     m.whatsapp       || '',
-        veterinario:  m.veterinario    || '',
-        instagram:    m.instagram      || '',
-        alimento:     m.alimento       || '',
-        actividades:  m.actividades    || '',
-        especial:     m.especial       || '',
-        foto:         m.foto           || '',
-        angelito:     m.angelito       ? 'Si' : 'No',
-        notifMensajes:m.notif_mensajes ? 'Si' : 'No',
-        ofertas:      m.ofertas        ? 'Si' : 'No',
-        premium:      m.premium        === true,
-        premium_hasta:m.premium_hasta  || null
-      }));
-      return res.status(200).json({ found: mascotas.length > 0, mascotas });
-    }
+    <div class="screen" id="screenFamilias">
+      <div class="page-header">
+        <div><div class="page-title">Grupos Familiares</div><div class="page-sub" id="familiaInfo">Cargando...</div></div>
+        <input type="text" id="searchFamilia" placeholder="Buscar familia..." oninput="renderFamilias()" style="padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none;min-width:200px">
+      </div>
+      <div id="familiasGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
 
-    // ── getMensajes ───────────────────────────────────────────
-    if (action === 'getMensajes') {
-      const uid = req.query.uid || '';
-      if (!uid) return res.status(200).json({ mensajes: [] });
+    <div class="screen" id="screenCampanas">
+      <div class="page-header">
+        <div><div class="page-title">Campanas</div><div class="page-sub">Historial de envios</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Segmento</th><th>Asunto</th><th>Enviados</th><th>Errores</th></tr></thead>
+            <tbody id="campanaBody"><tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mensajes?uid_mascota=eq.' + encodeURIComponent(uid) + '&select=*&order=created_at.asc',
-        {
-          headers: {
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY
-          }
-        }
-      );
-      const data = await response.json();
-      const mensajes = data.map(m => ({
-        fecha:         m.created_at,
-        autor:         m.autor         || '',
-        mensaje:       m.mensaje       || '',
-        nombreMascota: m.nombre_mascota|| ''
-      }));
-      return res.status(200).json({ mensajes });
-    }
+    <div class="screen" id="screenEventos">
+      <div class="page-header">
+        <div><div class="page-title">Eventos Pet-Friendly</div><div class="page-sub" id="subEventos">-</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-primary" style="background:#f0a500" onclick="filtrarEventosPendientes()">⏳ Por aprobar</button>
+          <button class="btn-primary" onclick="cargarEventosAdmin()">Todos</button>
+          <button class="btn-primary" onclick="window.location.href='/admin-evento.html'">+ Nuevo</button>
+        </div>
+      </div>
+      <div class="table-card"><div id="eventosAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>
 
-    // ── enviarSolicitud ──────────────────────────────────────
-    if (action === 'enviarSolicitud' && req.method === 'POST') {
-      const { uid_solicitante, uid_receptor, email_solicitante, email_receptor } = req.body;
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/amigos?on_conflict=uid_solicitante,uid_receptor',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type':  'application/json',
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Prefer':        'resolution=merge-duplicates,return=minimal'
-          },
-          body: JSON.stringify({ uid_solicitante, uid_receptor, email_solicitante, email_receptor, estado: 'pendiente' })
-        }
-      );
-      return res.status(200).json({ ok: response.ok });
-    }
+    <div class="screen" id="screenLugares">
+      <div class="page-header">
+        <div><div class="page-title">Lugares Pet-Friendly</div><div class="page-sub" id="subLugares">-</div></div>
+        <button class="btn-primary" onclick="window.location.href='/admin-lugar.html'">+ Nuevo Lugar</button>
+      </div>
+      <div class="table-card"><div id="lugaresAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>
 
-    // ── responderSolicitud ────────────────────────────────────
-    if (action === 'responderSolicitud' && req.method === 'POST') {
-      const { id, estado } = req.body; // estado: aceptado | rechazado
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/amigos?id=eq.' + encodeURIComponent(id),
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type':  'application/json',
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Prefer':        'return=minimal'
-          },
-          body: JSON.stringify({ estado, updated_at: new Date().toISOString() })
-        }
-      );
-      return res.status(200).json({ ok: response.ok });
-    }
+  </div>
+</div>
 
-    // ── getAmigos ─────────────────────────────────────────────
-    // Devuelve amigos aceptados y solicitudes pendientes de un uid
-    if (action === 'getAmigos') {
-      const uid = req.query.uid || '';
-      if (!uid) return res.status(200).json({ amigos: [], pendientes: [] });
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="modalEdit">
+  <div class="modal">
+    <div class="modal-title"><span id="modalEditTitle">Editar</span><button class="modal-close" onclick="closeModal('modalEdit')">✕</button></div>
+    <div id="modalEditBody"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalEdit')">Cancelar</button>
+      <button class="btn-save" onclick="saveEdit()">Guardar</button>
+    </div>
+  </div>
+</div>
 
-      // Buscar donde es solicitante O receptor
-      const [r1, r2] = await Promise.all([
-        fetch(SUPABASE_URL + '/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(uid) + '&select=*', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-        }),
-        fetch(SUPABASE_URL + '/rest/v1/amigos?uid_receptor=eq.' + encodeURIComponent(uid) + '&select=*', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-        })
-      ]);
+<!-- MODAL VER ID -->
+<div class="modal-overlay" id="modalID">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-title"><span>PetzID</span><button class="modal-close" onclick="closeModal('modalID')">✕</button></div>
+    <div id="modalIDBody"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalID')">Cerrar</button>
+      <button class="btn-save" onclick="downloadID()">Descargar PNG</button>
+    </div>
+  </div>
+</div>
 
-      const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
-      const todas = [...(d1||[]), ...(d2||[])];
+<!-- MODAL FAMILIA -->
+<div class="modal-overlay" id="modalFamilia">
+  <div class="modal">
+    <div class="modal-title"><span id="modalFamiliaTitle">Familia</span><button class="modal-close" onclick="closeModal('modalFamilia')">✕</button></div>
+    <div id="modalFamiliaBody"></div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalFamilia')">Cerrar</button></div>
+  </div>
+</div>
 
-      const amigos    = todas.filter(a => a.estado === 'aceptado');
-      const pendientes = todas.filter(a => a.estado === 'pendiente');
+<!-- MODAL FOTO -->
+<div class="modal-overlay" id="modalFoto">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">
+      <span>📷 Cambiar foto</span>
+      <button class="modal-close" onclick="closeModal('modalFoto')">✕</button>
+    </div>
+    <p id="fotoMascotaInfo" style="font-size:13px;color:#888;margin-bottom:16px"></p>
+    <div style="display:flex;gap:6px;background:#f0f0ee;border-radius:10px;padding:4px;margin-bottom:16px">
+      <div id="tabUpload" onclick="switchFotoTab('upload')" style="flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)">Subir foto</div>
+      <div id="tabLink"   onclick="switchFotoTab('link')"   style="flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer">Link URL</div>
+    </div>
+    <div id="panelUpload">
+      <div class="foto-drop" onclick="document.getElementById('adminFileInput').click()">
+        <div style="font-size:28px;margin-bottom:8px">📸</div>
+        <div style="font-size:13px;color:#888">Toca para seleccionar una imagen</div>
+      </div>
+      <input type="file" id="adminFileInput" accept="image/*" style="display:none" onchange="onAdminFotoChange(event)">
+      <img id="fotoPreviewImg" style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px">
+    </div>
+    <div id="panelLink" style="display:none">
+      <label style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">URL de la foto</label>
+      <input type="text" id="fotoLinkInput" placeholder="https://..." oninput="onLinkChange()" style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none">
+      <img id="fotoLinkPreview" style="display:none;width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-top:10px" onload="this.style.display='block'">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalFoto')">Cancelar</button>
+      <button class="btn-save" id="btnSubirFoto" onclick="subirFotoAdmin()" disabled>Guardar foto</button>
+    </div>
+  </div>
+</div>
 
-      // Obtener UIDs de amigos para cargar sus mascotas
-      const uidsAmigos = amigos.map(a => a.uid_solicitante === uid ? a.uid_receptor : a.uid_solicitante);
+<script>
+// ── Configuración ─────────────────────────────────────────────
+// Las llamadas a Supabase van siempre a través de /api/galeria (servidor)
+// NUNCA incluir service_role key en el cliente
+var PASSWORD    = 'petmi2024';
+var CLOUD_NAME  = 'dh5wgqgmk';
+var UPLOAD_PRESET = 'petzid';
 
-      let mascotasAmigos = [];
-      if (uidsAmigos.length > 0) {
-        const r3 = await fetch(
-          SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uidsAmigos.map(u => '"'+u+'"').join(',') + ')&select=uid,nombre,apodo,especie,foto,angelito',
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-        );
-        mascotasAmigos = await r3.json();
-      }
+var allData = [], filtered = [], familias = {}, campanas = [];
+var page = 1, perPage = 25, editIdx = null;
+var adminFotoBase64 = null, adminFotoUID = null, adminFotoTab = 'upload';
+var editingEventoId = null, editingLugarId = null;
 
-      return res.status(200).json({ amigos, pendientes, mascotasAmigos });
-    }
-
-    // ── getConversacion ──────────────────────────────────────
-    if (action === 'getConversacion') {
-      const uid1 = req.query.uid1 || '';
-      const uid2 = req.query.uid2 || '';
-      if (!uid1 || !uid2) return res.status(200).json({ mensajes: [] });
-
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones?or=(and(uid_emisor.eq.' + encodeURIComponent(uid1) + ',uid_receptor.eq.' + encodeURIComponent(uid2) + '),and(uid_emisor.eq.' + encodeURIComponent(uid2) + ',uid_receptor.eq.' + encodeURIComponent(uid1) + '))&order=created_at.desc&limit=50',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-      );
-      const data = await response.json();
-      return res.status(200).json({ mensajes: data || [] });
-    }
-
-    // ── enviarMensajePrivado ──────────────────────────────────
-    if (action === 'enviarMensajePrivado' && req.method === 'POST') {
-      const { uid_emisor, uid_receptor, mensaje } = req.body;
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type':  'application/json',
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Prefer':        'return=minimal'
-          },
-          body: JSON.stringify({ uid_emisor, uid_receptor, mensaje })
-        }
-      );
-      return res.status(200).json({ ok: response.ok });
-    }
-
-    // ── marcarLeidos ─────────────────────────────────────────
-    if (action === 'marcarLeidos' && req.method === 'POST') {
-      const { uid_emisor, uid_receptor } = req.body;
-      await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(uid_emisor) + '&uid_receptor=eq.' + encodeURIComponent(uid_receptor),
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type':  'application/json',
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Prefer':        'return=minimal'
-          },
-          body: JSON.stringify({ leido: true })
-        }
-      );
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── getMensajesNoLeidos ───────────────────────────────────
-    if (action === 'getMensajesNoLeidos') {
-      const uid = req.query.uid || '';
-      if (!uid) return res.status(200).json({ count: 0 });
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones?uid_receptor=eq.' + encodeURIComponent(uid) + '&leido=eq.false&select=id',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact' } }
-      );
-      const count = parseInt(response.headers.get('content-range')?.split('/')[1] || '0');
-      return res.status(200).json({ count });
-    }
-
-    // ── EVENTOS ──────────────────────────────────────────────
-    if (action === 'getEventos') {
-      const tipo = req.query.tipo || '';
-      const hoy = new Date().toISOString().split('T')[0];
-      let url = SUPABASE_URL + '/rest/v1/eventos?or=(activo.eq.true,activo.is.null)&fecha=gte.' + hoy + '&order=fecha.asc';
-      if (tipo) url += '&tipo=eq.' + encodeURIComponent(tipo);
-      const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
-      return res.status(200).json({ eventos: await r.json() });
-    }
-
-    if (action === 'asistirEvento' && req.method === 'POST') {
-      const { evento_id, uid_mascota, email } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/evento_asistentes?on_conflict=evento_id,uid_mascota', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ evento_id, uid_mascota, email })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    if (action === 'cancelarAsistencia' && req.method === 'POST') {
-      const { evento_id, uid_mascota } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/evento_asistentes?evento_id=eq.' + evento_id + '&uid_mascota=eq.' + encodeURIComponent(uid_mascota), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    if (action === 'getAsistentes') {
-      const evento_id = req.query.evento_id || '';
-      const r = await fetch(SUPABASE_URL + '/rest/v1/evento_asistentes?evento_id=eq.' + encodeURIComponent(evento_id) + '&select=uid_mascota,email', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ asistentes: await r.json() });
-    }
-
-    // ── LUGARES ───────────────────────────────────────────────
-    if (action === 'getLugares') {
-      const tipo = req.query.tipo || '';
-      const zona = req.query.zona || '';
-      let url = SUPABASE_URL + '/rest/v1/lugares?activo=eq.true&order=nombre.asc';
-      if (tipo) url += '&tipo=eq.' + encodeURIComponent(tipo);
-      if (zona) url += '&zona=eq.' + encodeURIComponent(zona);
-      const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
-      return res.status(200).json({ lugares: await r.json() });
-    }
-
-    if (action === 'ratingLugar' && req.method === 'POST') {
-      const { lugar_id, email, rating, comentario } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/lugar_ratings?on_conflict=lugar_id,email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ lugar_id, email, rating, comentario })
-      });
-      // Actualizar rating promedio
-      if (r.ok) {
-        const ratings = await fetch(SUPABASE_URL + '/rest/v1/lugar_ratings?lugar_id=eq.' + lugar_id + '&select=rating', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-        }).then(x => x.json());
-        const avg = ratings.reduce((s, x) => s + x.rating, 0) / ratings.length;
-        await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + lugar_id, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ rating: Math.round(avg * 10) / 10 })
-        });
-      }
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── Enviar evento a revisión (usuarios) ─────────────────────
-    if (action === 'enviarEvento' && req.method === 'POST') {
-      const { titulo, tipo, fecha, hora, lugar, direccion, descripcion, imagen, link, email } = req.body;
-      if (!titulo || !fecha) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ titulo, tipo: tipo||'evento', fecha, hora, lugar, direccion, descripcion, imagen, link, creado_por: email, activo: false })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── Enviar lugar a revisión (usuarios) ───────────────────────
-    if (action === 'enviarLugar' && req.method === 'POST') {
-      const { nombre, tipo, zona, direccion, descripcion, imagen, google_maps, instagram, telefono, email } = req.body;
-      if (!nombre) return res.status(200).json({ ok: false, error: 'Falta el nombre' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ nombre, tipo: tipo||'restaurante', zona, direccion, descripcion, imagen, google_maps, instagram, telefono, activo: false })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getActividades ───────────────────────────────────────
-    if (action === 'getActividades') {
-      const tipo  = req.query.tipo || '';
-      const ahora = new Date().toISOString();
-
-      // FIX: separar el or() de expiración del filtro de tipo
-      // para que Supabase los combine correctamente como AND implícito
-      let url = SUPABASE_URL + '/rest/v1/actividades'
-        + '?activo=eq.true'
-        + '&or=(expires_at.is.null,expires_at.gte.' + ahora + ')'
-        + '&order=created_at.desc'
-        + '&limit=100';
-      if (tipo) url += '&tipo=eq.' + encodeURIComponent(tipo);
-
-      const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
-      const data = await r.json();
-
-      // Doble filtro en servidor por seguridad
-      const ahora2 = Date.now();
-      const actividades = Array.isArray(data) ? data.filter(a => {
-        if (!a.activo) return false;
-        if (a.expires_at && new Date(a.expires_at).getTime() < ahora2) return false;
-        return true;
-      }) : [];
-
-      return res.status(200).json({ actividades });
-    }
-
-    // ── publicarActividad ─────────────────────────────────────
-    if (action === 'publicarActividad' && req.method === 'POST') {
-      const { uid_creador, nombre_creador, foto_creador, tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, especie, sexo, raza, whatsapp, recompensa } = req.body;
-      if (!titulo || !uid_creador) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      // Calcular expiración: planes expiran en la fecha del plan, anuncios en 7 días
-      let expires_at = null;
-      if (tipo === 'plan' && fecha) {
-        expires_at = new Date(fecha + 'T23:59:59').toISOString();
-      } else if (tipo !== 'plan') {
-        const d = new Date(); d.setDate(d.getDate() + 7);
-        expires_at = d.toISOString();
-      }
-      // adopcion entra con activo:false esperando aprobacion del admin
-      const activo = req.body.activo_override !== undefined ? req.body.activo_override : true;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
-        body: JSON.stringify({ uid_creador, nombre_creador, foto_creador, email_creador: req.body.email_creador||'', tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, activo, expires_at, especie: especie||null, sexo: sexo||null, raza: raza||null, whatsapp: whatsapp||null, recompensa: recompensa||null })
-      });
-      const data = await r.json();
-      return res.status(200).json({ ok: r.ok, id: data[0]?.id });
-    }
-
-    // ── apuntarse ─────────────────────────────────────────────
-    if (action === 'apuntarse' && req.method === 'POST') {
-      const { actividad_id, uid_mascota, nombre_mascota, foto_mascota } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividad_apuntes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ actividad_id, uid_mascota, nombre_mascota, foto_mascota })
-      });
-      return res.status(200).json({ ok: r.ok || r.status === 409 });
-    }
-
-    // ── desapuntarse ──────────────────────────────────────────
-    if (action === 'desapuntarse' && req.method === 'POST') {
-      const { actividad_id, uid_mascota } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividad_apuntes?actividad_id=eq.' + encodeURIComponent(actividad_id) + '&uid_mascota=eq.' + encodeURIComponent(uid_mascota), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getApuntes ────────────────────────────────────────────
-    if (action === 'getApuntes') {
-      const actividad_id = req.query.actividad_id || '';
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividad_apuntes?actividad_id=eq.' + encodeURIComponent(actividad_id) + '&select=*', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ apuntes: await r.json() });
-    }
-
-    // ── eliminarActividad ─────────────────────────────────────
-    if (action === 'eliminarActividad' && req.method === 'POST') {
-      const { actividad_id, uid_creador } = req.body;
-      // Eliminar solo por id (RLS de Supabase protege el acceso)
-      // No filtrar por uid_creador para que "apareció" funcione desde familia.html
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── marcarAparecio ────────────────────────────────────────
-    // Elimina la actividad perdido por id sin validar uid_creador
-    // Se llama desde familia.html y actividades.html cuando el dueño confirma que apareció
-    if (action === 'marcarAparecio' && req.method === 'POST') {
-      const { actividad_id } = req.body;
-      if (!actividad_id) return res.status(200).json({ ok: false, error: 'actividad_id requerido' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── syncMascotas (admin) ─────────────────────────────────
-    if (action === 'syncMascotas' && req.method === 'POST') {
-      const { mascotas } = req.body;
-      if (!mascotas || !mascotas.length) return res.status(200).json({ ok: true, count: 0 });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?on_conflict=uid', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify(mascotas)
-      });
-      return res.status(200).json({ ok: r.ok, count: mascotas.length });
-    }
-
-    // ── getEventosAdmin ───────────────────────────────────────
-    if (action === 'getEventosAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?order=created_at.desc', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ eventos: await r.json() });
-    }
-
-    // ── getEventosPendientes ──────────────────────────────────
-    if (action === 'getEventosPendientes') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?activo=eq.false&order=created_at.desc', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ eventos: await r.json() });
-    }
-
-    // ── toggleEvento ──────────────────────────────────────────
-    if (action === 'toggleEvento' && req.method === 'POST') {
-      const { id, activo } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ activo })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── eliminarEvento ────────────────────────────────────────
-    if (action === 'eliminarEvento' && req.method === 'POST') {
-      const { id } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getLugaresAdmin ───────────────────────────────────────
-    if (action === 'getLugaresAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?order=nombre.asc', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ lugares: await r.json() });
-    }
-
-    // ── toggleLugar ───────────────────────────────────────────
-    if (action === 'toggleLugar' && req.method === 'POST') {
-      const { id, activo } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ activo })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── eliminarLugar ─────────────────────────────────────────
-    if (action === 'eliminarLugar' && req.method === 'POST') {
-      const { id } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getImpacto ────────────────────────────────────────────
-    if (action === 'getImpacto') {
-      const [rMascotas, rAdopciones, rPerdidos, rRecuperados] = await Promise.all([
-        // Total mascotas registradas
-        fetch(SUPABASE_URL + '/rest/v1/mascotas?select=uid', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
-        }),
-        // Adopciones publicadas (activas)
-        fetch(SUPABASE_URL + '/rest/v1/actividades?tipo=eq.adopcion&select=id', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
-        }),
-        // Mascotas perdidas activas
-        fetch(SUPABASE_URL + '/rest/v1/actividades?tipo=eq.perdido&activo=eq.true&select=id', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
-        }),
-        // Mascotas recuperadas (perdidas eliminadas = aparecieron)
-        fetch(SUPABASE_URL + '/rest/v1/actividades?tipo=eq.perdido&activo=eq.false&select=id', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
-        })
-      ]);
-
-      const parseCount = (r) => {
-        const cr = r.headers.get('content-range');
-        return cr ? parseInt(cr.split('/')[1] || '0') : 0;
-      };
-
-      // Donaciones — valor manual controlado desde admin
-      const rDonaciones = await fetch(SUPABASE_URL + '/rest/v1/config?clave=eq.donaciones_total&select=valor', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const donData = await rDonaciones.json();
-      const donaciones = donData && donData[0] ? donData[0].valor : '0';
-
-      return res.status(200).json({
-        mascotas:    parseCount(rMascotas),
-        adopciones:  parseCount(rAdopciones),
-        perdidos:    parseCount(rPerdidos),
-        recuperados: parseCount(rRecuperados),
-        donaciones:  donaciones
-      });
-    }
-
-    // ── getPromos ─────────────────────────────────────────────
-    if (action === 'getPromos') {
-      const nivel = req.query.nivel || 'basico'; // basico | premium
-      // Traer promos activas y no expiradas
-      const ahora = new Date().toISOString();
-      let url = SUPABASE_URL + '/rest/v1/promos?activo=eq.true'
-        + '&or=(fecha_fin.is.null,fecha_fin.gte.' + ahora + ')'
-        + '&order=nivel.asc,created_at.desc';
-      const r = await fetch(url, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const data = await r.json();
-      // Si es basico, filtrar solo basicas. Si es premium, devolver todas
-      // Devolver todas — el frontend filtra por tab y controla el canje
-      const promos = Array.isArray(data) ? data : [];
-      return res.status(200).json({ promos });
-    }
-
-    // ── createPromo (admin) ───────────────────────────────────
-    if (action === 'createPromo' && req.method === 'POST') {
-      const { titulo, descripcion, aliado, nivel, codigo, descuento, imagen, fecha_fin, especie, zona } = req.body;
-      if (!titulo || !aliado) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/promos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
-        body: JSON.stringify({ titulo, descripcion, aliado, nivel: nivel||'basico', codigo, descuento, imagen, fecha_fin: fecha_fin||null, especie: especie||'todos', zona: zona||'todos', activo: true })
-      });
-      const data = await r.json();
-      return res.status(200).json({ ok: r.ok, id: data[0]?.id });
-    }
-
-    // ── updatePromo (admin) ───────────────────────────────────
-    if (action === 'updatePromo' && req.method === 'POST') {
-      const { id, ...fields } = req.body;
-      if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/promos?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(fields)
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── deletePromo (admin) ───────────────────────────────────
-    if (action === 'deletePromo' && req.method === 'POST') {
-      const { id } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/promos?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── activarPremium (admin) ───────────────────────────────
-    if (action === 'activarPremium' && req.method === 'POST') {
-      const { uid, meses } = req.body;
-      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
-      const hoy = new Date();
-      hoy.setMonth(hoy.getMonth() + (meses || 12));
-      const hasta = hoy.toISOString().split('T')[0];
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ premium: true, premium_hasta: hasta })
-      });
-      return res.status(200).json({ ok: r.ok, premium_hasta: hasta });
-    }
-
-    // ── desactivarPremium (admin) ─────────────────────────────
-    if (action === 'desactivarPremium' && req.method === 'POST') {
-      const { uid } = req.body;
-      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ premium: false, premium_hasta: null })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── activarPremiumGratis — 3 meses por perfil completo ───
-    if (action === 'activarPremiumGratis' && req.method === 'POST') {
-      const { uid } = req.body;
-      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
-      // Verificar que no tenga ya premium activo
-      const check = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=premium,premium_hasta', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const data = await check.json();
-      if (data[0]?.premium) return res.status(200).json({ ok: false, error: 'ya tiene premium' });
-      const hasta = new Date();
-      hasta.setMonth(hasta.getMonth() + 3);
-      const hastaStr = hasta.toISOString().split('T')[0];
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ premium: true, premium_hasta: hastaStr })
-      });
-      return res.status(200).json({ ok: r.ok, premium_hasta: hastaStr, meses: 3 });
-    }
-
-    // ── addMensajePublico ─────────────────────────────────────
-    // Guarda mensaje publico directamente en Supabase (para angelitos/cumpleanos)
-    if (action === 'addMensajePublico' && req.method === 'POST') {
-      const { uid, autor, mensaje, nombreMascota } = req.body;
-      if (!uid || !autor || !mensaje) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mensajes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ uid_mascota: uid, autor, mensaje, nombre_mascota: nombreMascota || '' })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    return res.status(200).json({ status: 'PetMi Supabase API activa' });
-
-  } catch(err) {
-    return res.status(500).json({ ok: false, error: err.message });
+// ── Auth ──────────────────────────────────────────────────────
+function doLogin(){
+  if(document.getElementById('loginPass').value === PASSWORD){
+    document.getElementById('loginWrap').style.display='none';
+    document.getElementById('appWrap').style.display='flex';
+    loadData();
+  } else {
+    document.getElementById('loginErr').style.display='block';
   }
 }
+function doLogout(){
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('appWrap').style.display='none';
+  document.getElementById('loginPass').value='';
+}
+
+// ── Navegación ────────────────────────────────────────────────
+function showScreen(name,el){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  if(el) el.classList.add('active');
+  if(name==='eventos') cargarEventosAdmin();
+  if(name==='lugares') cargarLugaresAdmin();
+}
+
+// ── Carga de datos ────────────────────────────────────────────
+function loadData(){
+  fetch('/api/admin?action=getData')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    allData=d.rows||[]; campanas=d.campanas||[];
+    filtered=allData.slice();
+    buildFamilias(); renderDashboard(); renderTable(); renderFamilias(); renderCampanas();
+  }).catch(function(e){console.log('Error:',e);});
+}
+
+function buildFamilias(){
+  familias={};
+  allData.forEach(function(r){
+    var email=String(r[11]||'').trim().toLowerCase();
+    if(!email) return;
+    if(!familias[email]){familias[email]={dueno:String(r[10]||'').trim(),email:email,whatsapp:String(r[12]||'').trim(),zona:String(r[9]||'').trim(),mascotas:[]};}
+    familias[email].mascotas.push({nombre:String(r[2]||'').trim(),apodo:String(r[3]||'').trim(),especie:String(r[4]||'').trim(),sexo:String(r[5]||'').trim(),uid:String(r[1]||'').trim(),row:r});
+  });
+}
+
+// ── Dashboard ─────────────────────────────────────────────────
+function renderDashboard(){
+  var total=allData.length;
+  var perros=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('perro')>=0;}).length;
+  var gatos=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('gato')>=0;}).length;
+  var enviados=allData.filter(function(r){return String(r[24])==='Si';}).length;
+  document.getElementById('statTotal').textContent=total;
+  document.getElementById('statPerros').textContent=perros;
+  document.getElementById('statGatos').textContent=gatos;
+  document.getElementById('statEnviados').textContent=enviados;
+
+  var zonas={};allData.forEach(function(r){var z=String(r[9]||'Sin zona').toUpperCase();zonas[z]=(zonas[z]||0)+1;});
+  renderBars('chartZonas',zonas,6,'#00B4B4');
+  var mn=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var meses={};allData.forEach(function(r){if(!r[0])return;var d=new Date(r[0]);var k=mn[d.getMonth()]+' '+d.getFullYear();meses[k]=(meses[k]||0)+1;});
+  renderBars('chartMeses',meses,6,'#E05090');
+  var alimentos={};allData.forEach(function(r){var a=String(r[16]||'Sin registrar').trim()||'Sin registrar';alimentos[a]=(alimentos[a]||0)+1;});
+  renderBars('chartAlimentos',alimentos,6,'#534AB7');
+  renderBars('chartEnvios',{'Enviado':enviados,'Pendiente':total-enviados},2,'#3B6D11');
+
+  var razas={};allData.forEach(function(r){var raza=String(r[6]||'Sin registrar').trim()||'Sin registrar';razas[raza]=(razas[raza]||0)+1;});
+  renderBars('chartRazas',razas,8,'#00B4B4');
+  var conFoto=allData.filter(function(r){return String(r[27]||'').indexOf('http')>=0;}).length;
+  renderBars('chartFotos',{'Con foto':conFoto,'Sin foto':total-conFoto},2,'#E05090');
+
+  var cumples={};mn.forEach(function(m){cumples[m]=0;});
+  allData.forEach(function(r){
+    var fecha=String(r[8]||'').trim();if(!fecha)return;
+    var mes=null;
+    var m=fecha.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m)mes=parseInt(m[2],10)-1;
+    else{var p=fecha.split('/');if(p.length===3)mes=parseInt(p[1],10)-1;}
+    if(mes!==null&&mes>=0&&mes<=11)cumples[mn[mes]]=(cumples[mn[mes]]||0)+1;
+  });
+  renderBars('chartCumples',cumples,12,'#F5C842');
+
+  document.getElementById('statSinFoto').textContent=total-conFoto;
+  document.getElementById('statAngelitos').textContent=allData.filter(function(r){return String(r[28]||'').toLowerCase()==='si';}).length;
+  var emails={};allData.forEach(function(r){var e=String(r[11]||'').trim().toLowerCase();if(e)emails[e]=1;});
+  document.getElementById('statFamilias').textContent=Object.keys(emails).length;
+  var mesActual=new Date().getMonth();
+  document.getElementById('statEsteMes').textContent=allData.filter(function(r){
+    if(!r[0])return false;
+    return new Date(r[0]).getMonth()===mesActual&&new Date(r[0]).getFullYear()===new Date().getFullYear();
+  }).length;
+}
+
+function renderBars(id,obj,top,color){
+  var keys=Object.keys(obj).sort(function(a,b){return obj[b]-obj[a];}).slice(0,top);
+  var max=obj[keys[0]]||1;
+  document.getElementById(id).innerHTML=keys.map(function(k){
+    var pct=Math.round(obj[k]/max*100);
+    return '<div class="bar-row"><div class="bar-label" title="'+k+'">'+k+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+color+'">'+obj[k]+'</div></div></div>';
+  }).join('')||'<p style="color:#888;font-size:13px">Sin datos</p>';
+}
+
+// ── Filtros y tabla ───────────────────────────────────────────
+function applyFilters(){
+  var n=document.getElementById('searchNombre').value.toLowerCase();
+  var du=document.getElementById('searchDueno').value.toLowerCase();
+  var es=document.getElementById('filterEspecie').value.toLowerCase();
+  var zo=document.getElementById('filterZona').value.toLowerCase();
+  var en=document.getElementById('filterEnviado').value.toLowerCase();
+  var ft=document.getElementById('filterFoto').value.toLowerCase();
+  filtered=allData.filter(function(r){
+    if(n&&String(r[2]).toLowerCase().indexOf(n)<0)return false;
+    if(du&&String(r[10]).toLowerCase().indexOf(du)<0)return false;
+    if(es&&String(r[4]).toLowerCase().indexOf(es)<0)return false;
+    if(zo&&String(r[9]).toLowerCase().indexOf(zo)<0)return false;
+    if(en&&String(r[24]).toLowerCase().indexOf(en)<0)return false;
+    var tieneFoto=String(r[27]||'').indexOf('http')>=0;
+    if(ft==='sin_foto'&&tieneFoto)return false;
+    if(ft==='con_foto'&&!tieneFoto)return false;
+    return true;
+  });
+  page=1; renderTable();
+}
+function clearFilters(){
+  ['searchNombre','searchDueno','filterZona'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('filterEspecie').value='';
+  document.getElementById('filterEnviado').value='';
+  document.getElementById('filterFoto').value='';
+  filtered=allData.slice(); page=1; renderTable();
+}
+function changePage(dir){var max=Math.ceil(filtered.length/perPage);page=Math.max(1,Math.min(max,page+dir));renderTable();}
+
+function renderTable(){
+  var start=(page-1)*perPage; var rows=filtered.slice(start,start+perPage);
+  var max=Math.ceil(filtered.length/perPage);
+  document.getElementById('tableInfo').textContent=filtered.length+' mascotas';
+  document.getElementById('pageInfo').textContent='Pag '+page+'/'+max+' ('+filtered.length+' total)';
+  document.getElementById('btnPrev').disabled=page<=1;
+  document.getElementById('btnNext').disabled=page>=max;
+  var html=rows.map(function(r,i){
+    var idx=start+i;
+    var esp=String(r[4]).toLowerCase().indexOf('gato')>=0?'<span class="badge badge-gato">Gato</span>':'<span class="badge badge-perro">Perro</span>';
+    var est=String(r[24]);
+    var estB=est==='Si'?'<span class="badge badge-si">Enviado</span>':est.indexOf('migraci')>=0?'<span class="badge badge-pending">Migracion</span>':'<span class="badge badge-no">Pendiente</span>';
+    var fecha=r[0]?new Date(r[0]).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'-';
+    var fotoSrc=String(r[27]||'');
+    var foto=fotoSrc.indexOf('http')>=0?'<img src="'+fotoSrc+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.style.display=\'none\'">':'<div style="width:40px;height:40px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px">🐾</div>';
+    return '<tr><td>'+foto+'</td><td><strong>'+String(r[2]||'-')+'</strong><br><span style="font-size:11px;color:#888">'+String(r[3]||'')+'</span></td><td>'+esp+'</td><td style="font-size:12px">'+String(r[9]||'-')+'</td><td style="font-size:12px">'+String(r[10]||'-')+'</td><td style="font-size:11px;color:#534AB7">'+String(r[11]||'-')+'</td><td style="font-size:12px">'+String(r[16]||'-')+'</td><td style="font-size:11px;color:#888">'+fecha+'</td><td>'+estB+'</td>'
+    // Premium badge + toggle
+    +'<td id="prem-'+idx+'">'
+    +'<span style="display:inline-flex;align-items:center;gap:4px">'
+    +'<span id="prem-badge-'+idx+'" style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(String(r[31]||'')===String(true)||r[31]===true?'#f3e8ff':'#f0f0ee')+';color:'+(String(r[31]||'')===String(true)||r[31]===true?'#534AB7':'#888')+'">'+(String(r[31]||'')===String(true)||r[31]===true?'⭐ Activo':'—')+'</span>'
+    +'<button class="btn-sm" style="font-size:10px" onclick="togglePremium('+idx+')">'+(String(r[31]||'')===String(true)||r[31]===true?'Quitar':'Dar')+'</button>'
+    +'</span>'
+    +'</td>'
+    +'<td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
+  }).join('');
+  document.getElementById('tableBody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
+}
+
+// ── Familias ──────────────────────────────────────────────────
+function renderFamilias(){
+  var buscar=(document.getElementById('searchFamilia')?document.getElementById('searchFamilia').value||'':'').toLowerCase();
+  var keys=Object.keys(familias).filter(function(k){var f=familias[k];return !buscar||f.dueno.toLowerCase().indexOf(buscar)>=0||k.indexOf(buscar)>=0;}).sort(function(a,b){return familias[b].mascotas.length-familias[a].mascotas.length;});
+  document.getElementById('familiaInfo').textContent=keys.length+' familias registradas';
+  var html=keys.map(function(k){
+    var f=familias[k];
+    var mascotas=f.mascotas.map(function(m){return '<span style="background:#e0f7f7;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;color:#007a7a;margin-right:4px;margin-bottom:4px;display:inline-block">'+m.nombre+' ('+m.especie+')</span>';}).join('');
+    var ek=k.replace(/'/g,"\\'");
+    return '<div onclick="viewFamilia(\''+ek+'\')" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-size:15px;font-weight:700;color:#222">'+f.dueno+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+f.email+'</div></div><div style="background:#00B4B4;color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700">'+f.mascotas.length+' mascota'+(f.mascotas.length>1?'s':'')+'</div></div><div style="font-size:11px;color:#888;margin-bottom:8px">Zona: '+f.zona+'</div><div>'+mascotas+'</div></div>';
+  }).join('');
+  document.getElementById('familiasGrid').innerHTML=html||'<p style="color:#888">Sin familias</p>';
+}
+function viewFamilia(email){
+  var f=familias[email];if(!f)return;
+  document.getElementById('modalFamiliaTitle').textContent='Familia de '+f.dueno;
+  var html='<div style="margin-bottom:16px"><div style="font-size:13px;color:#555"><strong>Email:</strong> '+f.email+'</div><div style="font-size:13px;color:#555"><strong>WhatsApp:</strong> '+f.whatsapp+'</div><div style="font-size:13px;color:#555"><strong>Zona:</strong> '+f.zona+'</div></div><div style="font-size:12px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Mascotas ('+f.mascotas.length+')</div>';
+  f.mascotas.forEach(function(m){html+='<div style="background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700;color:#222">'+m.nombre+'</div><div style="font-size:12px;color:#888">'+m.especie+' · '+m.sexo+(m.apodo?' · "'+m.apodo+'"':'')+'</div></div><div style="font-size:10px;font-family:monospace;color:#bbb">'+m.uid.substring(0,16)+'...</div></div>';});
+  document.getElementById('modalFamiliaBody').innerHTML=html;
+  document.getElementById('modalFamilia').classList.add('open');
+}
+
+// ── Ver ID ────────────────────────────────────────────────────
+function viewID(idx){
+  var r=filtered[idx];
+  var esGato=String(r[4]||'').toLowerCase().indexOf('gato')>=0;
+  var fotoSrc=String(r[27]||'');
+  var foto=fotoSrc.indexOf('http')>=0
+    ?'<img src="'+fotoSrc+'" style="width:150px;height:188px;object-fit:cover" crossorigin="anonymous">'
+    :'<div style="width:150px;height:188px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">'+(esGato?'🐱':'🐶')+'</div>';
+  var apodo=String(r[3]||'').trim();
+  var apodoBadge=apodo&&apodo!=='-'?'<div style="margin-top:8px;display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;align-self:flex-start">'+apodo.toUpperCase()+'</div>':'';
+  var fl=String(r[7]||'').toLowerCase()==='llegada'?'LLEGÓ A CASA':'NACIMIENTO';
+  function fmtD(v){if(!v)return'-';var p=String(v).split('/');if(p.length===3)return p[0]+'/'+p[1]+'/'+p[2];try{var d=new Date(v);return('0'+d.getDate()).slice(-2)+'/'+(('0'+(d.getMonth()+1)).slice(-2))+'/'+d.getFullYear();}catch(e){return String(v);}}
+  function field(lbl,val,right){return '<div style="text-align:'+(right?'right':'left')+'"><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">'+lbl+'</div><div style="font-size:15px;font-weight:900;color:#222;text-transform:uppercase">'+String(val||'-')+'</div></div>';}
+  var html='<div id="pngPreview" style="font-family:Arial,sans-serif;border-radius:12px;overflow:hidden;max-width:480px">'    +'<div style="background:#00B4B4;display:flex;align-items:stretch">'    +'<div style="flex-shrink:0;overflow:hidden">'+foto+'</div>'    +'<div style="flex:1;padding:16px 18px 14px;display:flex;flex-direction:column;justify-content:flex-end">'    +'<div style="font-size:9px;font-weight:700;letter-spacing:3px;color:rgba(255,255,255,.65);margin-bottom:6px">N O M B R E</div>'    +'<div style="font-size:26px;font-weight:900;color:#fff;font-family:Arial Black,Arial,sans-serif;line-height:1.1">&ldquo;'+String(r[2]||'').toUpperCase()+'&rdquo;</div>'    +apodoBadge+'</div></div>'    +'<div style="background:#fff;padding:12px 16px">'    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:8px">'    +field('ESPECIE',r[4],false)+field('SEXO',r[5],true)+'</div>'    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:8px">'    +field('RAZA',r[6],false)+field(fl,fmtD(r[8]),true)+'</div>'    +field('RESPONSABLE',r[10],false)+'</div>'    +'<div style="background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:8px 14px">'    +'<div style="background:#E05090;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:900;color:#fff">'    +(esGato?'CAT':'DOG')+'</div>'    +'<img src="https://petmi-petzid.vercel.app/logopetmi.png" style="height:32px" crossorigin="anonymous" onerror="this.style.display=String.fromCharCode(110,111,110,101)">'    +'</div></div>';
+  document.getElementById('modalIDBody').innerHTML=html;
+  document.getElementById('modalID').classList.add('open');
+}
+
+function downloadID(){
+  var el=document.getElementById('pngPreview');
+  if(!el){alert('No hay ID para descargar');return;}
+  html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#fff'}).then(function(canvas){
+    var a=document.createElement('a');a.download='PetzID.png';a.href=canvas.toDataURL('image/png');a.click();
+  });
+}
+
+// ── Editar mascota ────────────────────────────────────────────
+function openEdit(idx){
+  editIdx=idx; var r=filtered[idx];
+  document.getElementById('modalEditTitle').textContent='Editar: '+String(r[2]||'');
+  document.getElementById('modalEditBody').innerHTML=
+    '<div class="two-col"><div><label>Nombre</label><input id="eNombre" value="'+String(r[2]||'')+'"></div><div><label>Apodo</label><input id="eApodo" value="'+String(r[3]||'')+'"></div></div>'
+    +'<div class="two-col"><div><label>Especie</label><select id="eEspecie"><option '+(String(r[4]).toLowerCase().indexOf('perro')>=0?'selected':'')+'>Perro</option><option '+(String(r[4]).toLowerCase().indexOf('gato')>=0?'selected':'')+'>Gato</option></select></div>'
+    +'<div><label>Sexo</label><select id="eSexo"><option '+(String(r[5]).toLowerCase().indexOf('hembra')>=0?'selected':'')+'>Hembra</option><option '+(String(r[5]).toLowerCase().indexOf('macho')>=0?'selected':'')+'>Macho</option></select></div></div>'
+    +'<div class="two-col"><div><label>Zona</label><input id="eZona" value="'+String(r[9]||'')+'"></div><div><label>Veterinario</label><input id="eVet" value="'+String(r[13]||'')+'"></div></div>'
+    +'<label>Dueno</label><input id="eDueno" value="'+String(r[10]||'')+'">'
+    +'<label>Email</label><input id="eEmail" value="'+String(r[11]||'')+'">'
+    +'<label>WhatsApp</label><input id="eWA" value="'+String(r[12]||'')+'">'
+    +'<label>Alimento</label><input id="eAlimento" value="'+String(r[16]||'')+'">';
+  document.getElementById('modalEdit').classList.add('open');
+}
+function saveEdit(){
+  if(editIdx===null) return;
+  var r=filtered[editIdx];
+  r[2]=document.getElementById('eNombre').value; r[3]=document.getElementById('eApodo').value;
+  r[4]=document.getElementById('eEspecie').value; r[5]=document.getElementById('eSexo').value;
+  r[9]=document.getElementById('eZona').value; r[10]=document.getElementById('eDueno').value;
+  r[11]=document.getElementById('eEmail').value; r[12]=document.getElementById('eWA').value;
+  r[13]=document.getElementById('eVet').value; r[16]=document.getElementById('eAlimento').value;
+  fetch('/api/admin?action=updateRow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:r[1],data:r})})
+  .then(function(){buildFamilias();renderTable();renderFamilias();closeModal('modalEdit');alert('Guardado!');})
+  .catch(function(){buildFamilias();renderTable();renderFamilias();closeModal('modalEdit');});
+}
+
+function reenviarID(idx){
+  var r=filtered[idx];
+  if(!confirm('Reenviar PetzID a '+String(r[11])+'?')) return;
+  fetch('/api/admin?action=reenviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:r[1],email:r[11],nombre:r[2]})})
+  .then(function(){alert('Reenviado a '+String(r[11]));}).catch(function(){alert('Error al reenviar');});
+}
+
+// ── Eliminar mascota ──────────────────────────────────────────
+// Corregido: usa /api/submit (proxy al Apps Script)
+// action: 'deleteMascota' borra UNA sola mascota por uid
+function eliminarMascota(idx){
+  var r=filtered[idx];
+  if(!r) return;
+  var nombre=String(r[2]||'');
+  var uid=String(r[1]||'').trim();
+  if(!uid){alert('UID no encontrado');return;}
+  if(!confirm('¿Eliminar a '+nombre+'? Esta acción no se puede deshacer.')) return;
+
+  fetch('/api/submit',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'deleteMascota',uid:uid})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      allData=allData.filter(function(r){return String(r[1]).trim()!==uid;});
+      filtered=filtered.filter(function(r){return String(r[1]).trim()!==uid;});
+      renderTable();
+      alert('✅ Mascota eliminada');
+    } else {
+      alert('Error al eliminar');
+    }
+  }).catch(function(){alert('Error de conexión');});
+}
+
+// ── Campañas ──────────────────────────────────────────────────
+function renderCampanas(){
+  var html=campanas.map(function(c){
+    var f=c[0]?new Date(c[0]).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'-';
+    return '<tr><td>'+f+'</td><td><span style="background:#e0f7f7;padding:2px 8px;border-radius:4px;font-size:12px">'+String(c[1]||'TODOS')+'</span></td><td>'+String(c[2]||'-')+'</td><td><strong style="color:#155724">'+String(c[3]||0)+'</strong></td><td style="color:#721c24">'+String(c[4]||0)+'</td></tr>';
+  }).join('');
+  document.getElementById('campanaBody').innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:#888">Sin campanas</td></tr>';
+}
+
+// ── Modal foto ────────────────────────────────────────────────
+function abrirSubirFoto(idx){
+  var r=filtered[idx]; if(!r) return;
+  adminFotoUID=String(r[1]||'').trim();
+  adminFotoBase64=null;
+  document.getElementById('fotoMascotaInfo').textContent=String(r[2]||'')+' — '+String(r[11]||'');
+  document.getElementById('fotoPreviewImg').style.display='none';
+  document.getElementById('fotoLinkInput').value='';
+  document.getElementById('fotoLinkPreview').style.display='none';
+  document.getElementById('btnSubirFoto').disabled=true;
+  switchFotoTab('upload');
+  document.getElementById('modalFoto').classList.add('open');
+}
+function switchFotoTab(tab){
+  adminFotoTab=tab; adminFotoBase64=null;
+  document.getElementById('panelUpload').style.display=tab==='upload'?'block':'none';
+  document.getElementById('panelLink').style.display=tab==='link'?'block':'none';
+  document.getElementById('tabUpload').style.cssText=tab==='upload'
+    ?'flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)'
+    :'flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer';
+  document.getElementById('tabLink').style.cssText=tab==='link'
+    ?'flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)'
+    :'flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer';
+  document.getElementById('btnSubirFoto').disabled=true;
+}
+function onLinkChange(){
+  var url=document.getElementById('fotoLinkInput').value.trim();
+  var preview=document.getElementById('fotoLinkPreview');
+  if(url.indexOf('http')===0){
+    preview.src=url;
+    document.getElementById('btnSubirFoto').disabled=false;
+  } else {
+    preview.style.display='none';
+    document.getElementById('btnSubirFoto').disabled=true;
+  }
+}
+function onAdminFotoChange(e){
+  var file=e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var dataUrl=ev.target.result;
+    var preview=document.getElementById('fotoPreviewImg');
+    preview.src=dataUrl; preview.style.display='block';
+    var canvas=document.createElement('canvas'), img=new Image();
+    img.onload=function(){
+      var MAX=800,w=img.width,h=img.height;
+      if(w>MAX){h=h*(MAX/w);w=MAX;}
+      if(h>MAX){w=w*(MAX/h);h=MAX;}
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      adminFotoBase64=canvas.toDataURL('image/jpeg',0.85).split(',')[1];
+      document.getElementById('btnSubirFoto').disabled=false;
+    };
+    img.src=dataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+async function subirFotoAdmin(){
+  var btn=document.getElementById('btnSubirFoto');
+  btn.disabled=true;
+  var url=null;
+  if(adminFotoTab==='link'){
+    url=document.getElementById('fotoLinkInput').value.trim();
+    if(!url){alert('Ingresa un link válido');btn.disabled=false;return;}
+  } else {
+    if(!adminFotoBase64){alert('Selecciona una foto');btn.disabled=false;return;}
+    btn.textContent='Subiendo...';
+    var fd=new FormData();
+    fd.append('file','data:image/jpeg;base64,'+adminFotoBase64);
+    fd.append('upload_preset',UPLOAD_PRESET);
+    fd.append('folder','petzid');
+    try{
+      var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
+      var data=await res.json();
+      url=data.secure_url;
+      if(!url) throw new Error('Sin URL de Cloudinary');
+    }catch(err){alert('Error subiendo foto: '+err.message);btn.disabled=false;btn.textContent='Guardar foto';return;}
+  }
+  btn.textContent='Guardando...';
+  try{
+    var resp=await fetch('/api/submit',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'updateRow',uid:adminFotoUID,data:{foto:url}})
+    });
+    var result=await resp.json();
+    if(result.ok){
+      alert('✅ Foto guardada!');
+      closeModal('modalFoto');
+      allData.forEach(function(r){if(String(r[1]).trim()===adminFotoUID)r[27]=url;});
+      renderTable();
+    } else {
+      alert('Error al guardar');
+    }
+  }catch(err){alert('Error: '+err.message);}
+  btn.disabled=false; btn.textContent='Guardar foto';
+}
+
+// ── Sync Supabase ─────────────────────────────────────────────
+// Usa /api/galeria para no exponer la service_role key en el cliente
+async function syncSupabase(){
+  var btn=document.getElementById('btnSync');
+  var status=document.getElementById('syncStatus');
+  btn.disabled=true; btn.textContent='⏳ Sincronizando...';
+  status.style.display='block'; status.textContent='Preparando datos...';
+
+  var payloads=[];
+  allData.forEach(function(r){
+    var uid=String(r[1]||'').trim(), nombre=String(r[2]||'').trim();
+    if(!uid||!nombre) return;
+    payloads.push({
+      uid:uid, nombre:nombre, apodo:String(r[3]||'').trim(),
+      especie:String(r[4]||'').trim(), sexo:String(r[5]||'').trim(),
+      raza:String(r[6]||'').trim(), tipo_fecha:String(r[7]||'').trim(),
+      fecha:String(r[8]||'').trim(), zona:String(r[9]||'').trim(),
+      dueno:String(r[10]||'').trim(), email:String(r[11]||'').trim().toLowerCase(),
+      whatsapp:String(r[12]||'').trim(), veterinario:String(r[13]||'').trim(),
+      instagram:String(r[15]||'').trim(), alimento:String(r[16]||'').trim(),
+      actividades:String(r[18]||'').trim(), especial:String(r[23]||'').trim(),
+      foto:String(r[27]||'').trim(),
+      angelito:String(r[28]||'').trim().toLowerCase()==='si',
+      fecha_angelito:String(r[29]||'').trim(),
+      notif_mensajes:String(r[30]||'').trim()!=='No',
+      ofertas:String(r[20]||'').trim()!=='No',
+      correo_enviado:String(r[24]||'').trim()
+    });
+  });
+
+  // Enviar en lotes a través del servidor (sin exponer keys)
+  var LOTE=50, migradas=0, errores=0, total=payloads.length;
+  for(var i=0;i<payloads.length;i+=LOTE){
+    var lote=payloads.slice(i,i+LOTE);
+    status.textContent='Sincronizando '+Math.min(i+LOTE,total)+' de '+total+'...';
+    try{
+      var res=await fetch('/api/galeria?action=syncMascotas',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'syncMascotas',mascotas:lote})
+      });
+      var d=await res.json();
+      if(d.ok){migradas+=lote.length;}else{errores+=lote.length;}
+    }catch(e){errores+=lote.length;}
+  }
+  btn.disabled=false; btn.textContent='🔄 Sync Supabase';
+  status.style.background=errores>0?'#fbeaf0':'#e0f7f7';
+  status.style.borderColor=errores>0?'#f4c0d1':'#00B4B4';
+  status.style.color=errores>0?'#993556':'#007a7a';
+  status.textContent='✅ Sync completado — '+migradas+' actualizadas, '+errores+' errores';
+  setTimeout(function(){status.style.display='none';},5000);
+}
+
+// ── Eventos y Lugares (vía /api/galeria, sin keys en cliente) ─
+function cargarEventosAdmin(){
+  fetch('/api/galeria?action=getEventosAdmin')
+  .then(function(r){return r.json();})
+  .then(function(data){
+    data=data.eventos||data||[];
+    document.getElementById('subEventos').textContent=data.length+' eventos';
+    if(!data.length){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay eventos. <a href="/admin-evento.html" style="color:#00B4B4;font-weight:700">Crear el primero</a></div>';return;}
+    window._eventosData=data;
+    var html='<div class="table-wrap"><table><thead><tr><th>Titulo</th><th>Tipo</th><th>Fecha</th><th>Lugar</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
+    data.forEach(function(e,i){
+      html+='<tr><td style="font-weight:700">'+e.titulo+'</td><td>'+e.tipo+'</td><td>'+(e.fecha||'-')+'</td><td>'+(e.lugar||'-')+'</td>';
+      html+='<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(e.activo?'#e0f7f7':'#fbeaf0')+';color:'+(e.activo?'#007a7a':'#c0392b')+'">'+(e.activo?'Activo':'Inactivo')+'</span></td>';
+      html+='<td style="display:flex;gap:4px">';
+      html+='<button class="btn-sm" style="background:'+(e.activo?'#fbeaf0':'#e0f7f7')+';color:'+(e.activo?'#c0392b':'#007a7a')+'" onclick="toggleActivoEvento('+i+')">'+(e.activo?'Desactivar':'Activar')+'</button>';
+      html+='<button class="btn-sm btn-edit" onclick="editarEvento('+i+')">Editar</button>';
+      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarEvento('+i+')">Eliminar</button></td></tr>';
+    });
+    html+='</tbody></table></div>';
+    document.getElementById('eventosAdminWrap').innerHTML=html;
+  }).catch(function(e){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
+}
+
+function filtrarEventosPendientes(){
+  fetch('/api/galeria?action=getEventosPendientes')
+  .then(function(r){return r.json();})
+  .then(function(data){
+    data=data.eventos||data||[];
+    document.getElementById('subEventos').textContent=data.length+' pendientes de aprobacion';
+    if(!data.length){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay eventos pendientes</div>';return;}
+    window._eventosData=data;
+    var html='<div class="table-wrap"><table><thead><tr><th>Titulo</th><th>Tipo</th><th>Fecha</th><th>Enviado por</th><th>Acciones</th></tr></thead><tbody>';
+    data.forEach(function(e,i){
+      html+='<tr><td style="font-weight:700">'+e.titulo+'</td><td>'+e.tipo+'</td><td>'+(e.fecha||'-')+'</td><td style="font-size:12px;color:#888">'+(e.creado_por||'-')+'</td>';
+      html+='<td style="display:flex;gap:6px">';
+      html+='<button class="btn-sm" style="background:#e0f7f7;color:#007a7a" onclick="aprobarEvento('+i+')">✓ Aprobar</button>';
+      html+='<button class="btn-sm btn-edit" onclick="editarEvento('+i+')">Editar</button>';
+      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarEvento('+i+')">🗑️</button>';
+      html+='</td></tr>';
+    });
+    html+='</tbody></table></div>';
+    document.getElementById('eventosAdminWrap').innerHTML=html;
+  });
+}
+
+function toggleActivoEvento(i){
+  var e=window._eventosData[i]; if(!e) return;
+  fetch('/api/galeria?action=toggleEvento',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'toggleEvento',id:e.id,activo:!e.activo})
+  }).then(function(){cargarEventosAdmin();});
+}
+function aprobarEvento(i){
+  var e=window._eventosData[i]; if(!e) return;
+  fetch('/api/galeria?action=toggleEvento',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'toggleEvento',id:e.id,activo:true})
+  }).then(function(){filtrarEventosPendientes();});
+}
+function editarEvento(i){location.href='/admin-evento.html?id='+(window._eventosData[i]||{}).id;}
+function eliminarEvento(i){
+  if(!confirm('Eliminar?')) return;
+  var id=(window._eventosData[i]||{}).id;
+  fetch('/api/galeria?action=eliminarEvento',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'eliminarEvento',id:id})
+  }).then(function(){cargarEventosAdmin();});
+}
+
+function cargarLugaresAdmin(){
+  fetch('/api/galeria?action=getLugaresAdmin')
+  .then(function(r){return r.json();})
+  .then(function(data){
+    data=data.lugares||data||[];
+    document.getElementById('subLugares').textContent=data.length+' lugares';
+    if(!data.length){document.getElementById('lugaresAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay lugares. <a href="/admin-lugar.html" style="color:#E05090;font-weight:700">Crear el primero</a></div>';return;}
+    window._lugaresData=data;
+    var html='<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Zona</th><th>Rating</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
+    data.forEach(function(l,i){
+      html+='<tr><td style="font-weight:700">'+l.nombre+'</td><td>'+l.tipo+'</td><td>'+(l.zona?'Z.'+l.zona:'-')+'</td><td>'+(l.rating||'-')+'</td>';
+      html+='<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(l.activo?'#e0f7f7':'#fbeaf0')+';color:'+(l.activo?'#007a7a':'#c0392b')+'">'+(l.activo?'Activo':'Inactivo')+'</span></td>';
+      html+='<td style="display:flex;gap:4px">';
+      html+='<button class="btn-sm" style="background:'+(l.activo?'#fbeaf0':'#e0f7f7')+';color:'+(l.activo?'#c0392b':'#007a7a')+'" onclick="toggleActivoLugar('+i+')">'+(l.activo?'Desactivar':'Activar')+'</button>';
+      html+='<button class="btn-sm btn-edit" onclick="editarLugar('+i+')">Editar</button>';
+      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarLugar('+i+')">Eliminar</button></td></tr>';
+    });
+    html+='</tbody></table></div>';
+    document.getElementById('lugaresAdminWrap').innerHTML=html;
+  }).catch(function(e){document.getElementById('lugaresAdminWrap').innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
+}
+function toggleActivoLugar(i){
+  var l=window._lugaresData[i]; if(!l) return;
+  fetch('/api/galeria?action=toggleLugar',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'toggleLugar',id:l.id,activo:!l.activo})
+  }).then(function(){cargarLugaresAdmin();});
+}
+function editarLugar(i){location.href='/admin-lugar.html?id='+(window._lugaresData[i]||{}).id;}
+function eliminarLugar(i){
+  if(!confirm('Eliminar?')) return;
+  var id=(window._lugaresData[i]||{}).id;
+  fetch('/api/galeria?action=eliminarLugar',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'eliminarLugar',id:id})
+  }).then(function(){cargarLugaresAdmin();});
+}
+
+function togglePremium(idx){
+  var r=filtered[idx];
+  if(!r) return;
+  var uid=String(r[1]||'').trim();
+  var esPremium=r[31]===true||String(r[31])==='true';
+  var action=esPremium?'desactivarPremium':'activarPremium';
+  var meses=esPremium?0:12;
+  if(!confirm((esPremium?'¿Quitar Premium a ':'¿Activar Premium (12 meses) a ')+String(r[2]||'')+'?')) return;
+  fetch('/api/galeria?action='+action,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid:uid,meses:meses})
+  }).then(function(res){return res.json();})
+  .then(function(d){
+    if(d.ok){
+      r[31]=!esPremium;
+      var badge=document.getElementById('prem-badge-'+idx);
+      var btn=document.querySelector('#prem-'+idx+' button');
+      if(badge){
+        badge.textContent=!esPremium?'⭐ Activo':'—';
+        badge.style.background=!esPremium?'#f3e8ff':'#f0f0ee';
+        badge.style.color=!esPremium?'#534AB7':'#888';
+      }
+      if(btn) btn.textContent=!esPremium?'Quitar':'Dar';
+      alert(esPremium?'Premium desactivado':'⭐ Premium activado hasta '+d.premium_hasta);
+    } else { alert('Error al cambiar premium'); }
+  }).catch(function(){ alert('Error de conexión'); });
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+</script>
+</body>
+</html>
