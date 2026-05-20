@@ -646,7 +646,12 @@ function renderModalFooter(p){
         if(rel.estado==='aceptado'){
           btn='<button class="btn-primary" style="background:#e0f7f7;color:#007a7a;cursor:default">🐾 Amigos</button>';
         } else if(rel.email_solicitante.toLowerCase()===sessionEmail.toLowerCase()){
-          btn='<button class="btn-primary" style="background:#f0f0ee;color:#888;cursor:default">Solicitud enviada</button>';
+          var diasPend=rel.created_at?Math.floor((Date.now()-new Date(rel.created_at).getTime())/86400000):0;
+          if(diasPend>=21){
+            btn='<button class="btn-primary btn-pink" onclick="reenviarSolicitud(\''+p.uid+'\',\''+rel.id+'\')">🔄 Reenviar solicitud</button>';
+          } else {
+            btn='<button class="btn-primary" style="background:#f0f0ee;color:#888;cursor:default">Solicitud enviada</button>';
+          }
         } else {
           btn='<button class="btn-primary btn-pink" onclick="aceptarDesdeModal(\''+rel.id+'\')">Aceptar solicitud</button>';
         }
@@ -892,6 +897,19 @@ function aceptarDesdeModal(uid){
   });
 }
 
+function reenviarSolicitud(uid, solicitudId){
+  if(!sessionEmail)return;
+  // Eliminar solicitud anterior y enviar nueva
+  fetch(SUPA_URL+'/rest/v1/amigos?id=eq.'+encodeURIComponent(solicitudId),{
+    method:'DELETE',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(){
+    // Actualizar cache
+    misAmigosCache=misAmigosCache.filter(function(a){return a.uid!==uid;});
+    enviarSolicitudAmistad(uid);
+  });
+}
+
 function enviarSolicitudAmistad(uid){
   if(!sessionEmail){openLoginModal();return;}
   var mia=allPets.find(function(p){return p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();});
@@ -970,9 +988,13 @@ function cargarCacheAmigos(){
           var uidAmigo=a.uid_solicitante===miMascota.uid?a.uid_receptor:a.uid_solicitante;
           misAmigosCache.push({uid:uidAmigo,tipo:'amigo',id:a.id});
         });
+        var hoy=Date.now();
         (d.pendientes||[]).forEach(function(a){
           if(a.uid_solicitante===miMascota.uid){
-            misAmigosCache.push({uid:a.uid_receptor,tipo:'pendiente_enviado',id:a.id});
+            // Verificar si expiró (>21 dias sin respuesta)
+            var diasPendiente=a.created_at?Math.floor((hoy-new Date(a.created_at).getTime())/86400000):0;
+            var tipo=diasPendiente>=21?'pendiente_expirado':'pendiente_enviado';
+            misAmigosCache.push({uid:a.uid_receptor,tipo:tipo,id:a.id,created_at:a.created_at});
           } else {
             misAmigosCache.push({uid:a.uid_solicitante,tipo:'pendiente_recibido',id:a.id});
           }
