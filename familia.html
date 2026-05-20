@@ -239,7 +239,7 @@ function renderCard(m){
   html += '<div class="card-meta">'+(m.apodo?'"'+m.apodo+'" · ':'')+(m.especie||'')+'</div>';
   // Fila 1: Ver + Editar
   html += '<div class="card-btns" style="margin-bottom:6px">';
-  html += '<a href="/perfil.html?uid='+m.uid+'" class="btn-ver">Ver perfil</a>';
+  html += '<a href="/perfil.html?uid='+(m.uid||'').toLowerCase()+'" class="btn-ver">Ver perfil</a>';
   html += '<a href="/editar.html?uid='+m.uid+'" class="btn-editar">✏️ Editar</a>';
   html += '</div>';
   // Fila 2: acciones
@@ -324,6 +324,39 @@ function verificarEmail(){
       mostrarMsg('Error de conexión', 'error');
       btn.disabled=false; btn.textContent='Ingresar';
     });
+}
+
+function abrirPerdido(uid, nombre, email){
+  if(confirm('¿Publicar aviso de mascota perdida para '+nombre+'?')){
+    localStorage.setItem('petzid_perdido_uid', uid);
+    window.location.href='/avisos.html?tipo=perdido';
+  }
+}
+
+function confirmarAngelito(uid, nombre){
+  if(confirm('¿Marcar a '+nombre+' como angelito? Esta acción no se puede deshacer.')){
+    var hoy=new Date().toISOString().split('T')[0];
+    fetch('/api/galeria?action=markAngel',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({uid:uid,esAngel:true,fechaAngelito:hoy})
+    }).then(function(){
+      alert('🌈 '+nombre+' fue marcado como angelito. Descansa en paz 🐾');
+      location.reload();
+    });
+  }
+}
+
+function confirmarEliminar(uid, nombre){
+  if(confirm('¿Eliminar a '+nombre+'? Esta acción no se puede deshacer.')){
+    fetch('/api/galeria?action=deleteMascota',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({uid:uid})
+    }).then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok){ location.reload(); }
+      else { alert('Error al eliminar'); }
+    });
+  }
 }
 
 function mostrarMsg(txt, tipo){
