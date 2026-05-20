@@ -239,8 +239,7 @@ function renderCard(m){
   html += '<div class="card-meta">'+(m.apodo?'"'+m.apodo+'" · ':'')+(m.especie||'')+'</div>';
   // Fila 1: Ver + Editar
   html += '<div class="card-btns" style="margin-bottom:6px">';
-  html += '<a href="/perfil.html?uid='+(m.uid||'').toLowerCase()+'" class="btn-ver">Ver perfil</a>';
-  html += '<a href="/editar.html?uid='+m.uid+'" class="btn-editar">✏️ Editar</a>';
+  html += '<a href="/editar.html?uid='+m.uid+'" class="btn-editar" style="flex:1">✏️ Editar</a>';
   html += '</div>';
   // Fila 2: acciones
   html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
@@ -327,10 +326,113 @@ function verificarEmail(){
 }
 
 function abrirPerdido(uid, nombre, email){
-  if(confirm('¿Publicar aviso de mascota perdida para '+nombre+'?')){
-    localStorage.setItem('petzid_perdido_uid', uid);
-    window.location.href='/avisos.html?tipo=perdido';
+  // Guardar datos de la mascota para el modal
+  var m = misMascotas ? misMascotas.find(function(x){return x.uid===uid;}) : null;
+  _perdidoMascotaActual = m || {uid:uid, nombre:nombre, email:email, foto:'', especie:'', sexo:'', raza:'', whatsapp:''};
+  abrirModalPerdidoFam();
+}
+
+var _perdidoMascotaActual = null;
+
+function abrirModalPerdidoFam(){
+  var m = _perdidoMascotaActual;
+  if(!m) return;
+  // Reset form
+  document.getElementById('perdidoMensajeFam').value='';
+  document.getElementById('perdidoUbicacionFam').value='';
+  document.getElementById('perdidoFechaFam').value=new Date().toISOString().split('T')[0];
+  document.getElementById('perdidoTelefonoFam').value=m.whatsapp||'';
+  document.getElementById('perdidoRecompensaFam').value='';
+  document.getElementById('perdidoRecompensaFam').style.display='none';
+  perdidoConRecompensaFam=false;
+  perdidoNuevaFotoBase64Fam=null;
+  // Foto
+  var prev=document.getElementById('perdidoFotoPreviewFam');
+  var lbl=document.getElementById('perdidoFotoLabelFam');
+  if(m.foto && m.foto.indexOf('http')>=0){
+    prev.src=m.foto;
+    lbl.textContent='Toca para cambiar la foto';
+  } else {
+    prev.src='';
+    lbl.textContent='Toca para agregar una foto';
   }
+  document.getElementById('modalPerdidoFam').style.display='flex';
+}
+
+function cerrarModalPerdidoFam(){
+  document.getElementById('modalPerdidoFam').style.display='none';
+}
+
+var perdidoConRecompensaFam=false;
+var perdidoNuevaFotoBase64Fam=null;
+var perdidoNuevaFotoMimeFam=null;
+
+function selRecompensaFam(tiene){
+  perdidoConRecompensaFam=tiene;
+  document.getElementById('recompensaNoFam').style.cssText=tiene
+    ?'flex:1;padding:8px;text-align:center;border-radius:10px;border:0.5px solid #ddd;background:#fff;color:#888;font-size:12px;font-weight:700;cursor:pointer'
+    :'flex:1;padding:8px;text-align:center;border-radius:10px;border:1.5px solid #00B4B4;background:#e0f7f7;color:#007a7a;font-size:12px;font-weight:700;cursor:pointer';
+  document.getElementById('recompensaSiFam').style.cssText=tiene
+    ?'flex:1;padding:8px;text-align:center;border-radius:10px;border:1.5px solid #F5C842;background:#fff8e0;color:#856404;font-size:12px;font-weight:700;cursor:pointer'
+    :'flex:1;padding:8px;text-align:center;border-radius:10px;border:0.5px solid #ddd;background:#fff;color:#888;font-size:12px;font-weight:700;cursor:pointer';
+  document.getElementById('perdidoRecompensaFam').style.display=tiene?'block':'none';
+}
+
+function previsualizarFotoFam(input){
+  var file=input.files[0];if(!file)return;
+  perdidoNuevaFotoMimeFam=file.type;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    perdidoNuevaFotoBase64Fam=e.target.result.split(',')[1];
+    document.getElementById('perdidoFotoPreviewFam').src=e.target.result;
+    document.getElementById('perdidoFotoLabelFam').textContent='Toca para cambiar la foto';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function generarPosterFam(){
+  var m=_perdidoMascotaActual;
+  if(!m)return;
+  var ubicacion=document.getElementById('perdidoUbicacionFam').value.trim();
+  var telefono=document.getElementById('perdidoTelefonoFam').value.trim();
+  var mensaje=document.getElementById('perdidoMensajeFam').value.trim();
+  var fechaStr=document.getElementById('perdidoFechaFam').value;
+  var recompensa=perdidoConRecompensaFam?document.getElementById('perdidoRecompensaFam').value.trim():'';
+  if(!ubicacion){alert('Ingresa la última ubicación conocida');return;}
+  if(!telefono){alert('Ingresa un teléfono de contacto');return;}
+  var btn=document.getElementById('btnGenerarPosterFam');
+  btn.disabled=true;btn.textContent='Generando...';
+
+  // Subir foto si hay nueva
+  var fotoFinal=m.foto||'';
+  if(perdidoNuevaFotoBase64Fam){
+    try{
+      var fd=new FormData();
+      var blob=await fetch('data:'+(perdidoNuevaFotoMimeFam||'image/jpeg')+';base64,'+perdidoNuevaFotoBase64Fam).then(function(r){return r.blob();});
+      fd.append('file',blob);fd.append('upload_preset','petzid');fd.append('folder','petzid/perdidos');
+      var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
+      var data=await res.json();
+      fotoFinal=data.secure_url||fotoFinal;
+    }catch(e){console.log('Cloudinary:',e);}
+  }
+
+  // Publicar en actividades
+  var titulo='🚨 SE PERDIÓ '+m.nombre.toUpperCase();
+  await fetch('/api/galeria?action=publicarActividad',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      uid_creador:m.uid, nombre_creador:m.nombre, foto_creador:fotoFinal,
+      email_creador:m.email||sessionEmail||'',
+      tipo:'perdido', titulo:titulo,
+      descripcion:(mensaje||'')+(ubicacion?'\n📍 '+ubicacion:'')+(recompensa?'\n🏆 '+recompensa:'')+(telefono?'\n📞 '+telefono:''),
+      fecha:fechaStr, ubicacion:ubicacion,
+      especie:m.especie||'', sexo:m.sexo||'', raza:m.raza||'', whatsapp:telefono, recompensa:recompensa
+    })
+  });
+
+  btn.disabled=false;
+  cerrarModalPerdidoFam();
+  window.location.href='/avisos.html';
 }
 
 function confirmarAngelito(uid, nombre){
@@ -368,6 +470,50 @@ document.getElementById('loginEmail').addEventListener('keydown', function(e){
   if(e.key==='Enter') verificarEmail();
 });
 </script>
+<!-- MODAL ME PERDÍ FAMILIA -->
+<div id="modalPerdidoFam" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:800;align-items:center;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 16px 60px rgba(0,0,0,.3);margin:auto">
+    <div style="background:#c0392b;padding:14px 16px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:16px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif">🚨 ME PERDÍ — Generar Póster</div>
+      <button onclick="cerrarModalPerdidoFam()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:18px;cursor:pointer">×</button>
+    </div>
+    <div style="padding:16px">
+      <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Foto de la mascota</div>
+      <div onclick="document.getElementById('perdidoFotoInputFam').click()" style="position:relative;border-radius:12px;overflow:hidden;cursor:pointer;min-height:140px;background:#f0f0ee;margin-bottom:12px">
+        <img id="perdidoFotoPreviewFam" style="width:100%;height:140px;object-fit:cover;display:block">
+        <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:8px 12px;display:flex;align-items:center;gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span id="perdidoFotoLabelFam" style="font-size:12px;font-weight:600;color:#fff">Toca para cambiar la foto</span>
+        </div>
+        <input type="file" id="perdidoFotoInputFam" accept="image/*" style="display:none" onchange="previsualizarFotoFam(this)">
+      </div>
+      <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Última vez visto / descripción</div>
+      <textarea id="perdidoMensajeFam" placeholder="Ej: Se escapó del parque, lleva collar azul..." style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;resize:none;height:70px;font-family:Arial,sans-serif;margin-bottom:10px"></textarea>
+      <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Última ubicación conocida</div>
+      <input type="text" id="perdidoUbicacionFam" placeholder="Ej: Zona 10, Cayalá..." style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Fecha que se perdió</div>
+          <input type="date" id="perdidoFechaFam" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none">
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Teléfono</div>
+          <input type="tel" id="perdidoTelefonoFam" placeholder="+502 ####-####" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none">
+        </div>
+      </div>
+      <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">¿Hay recompensa?</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div id="recompensaNoFam" onclick="selRecompensaFam(false)" style="flex:1;padding:8px;text-align:center;border-radius:10px;border:1.5px solid #00B4B4;background:#e0f7f7;color:#007a7a;font-size:12px;font-weight:700;cursor:pointer">No por ahora</div>
+        <div id="recompensaSiFam" onclick="selRecompensaFam(true)" style="flex:1;padding:8px;text-align:center;border-radius:10px;border:0.5px solid #ddd;background:#fff;color:#888;font-size:12px;font-weight:700;cursor:pointer">Sí, hay recompensa</div>
+      </div>
+      <input type="text" id="perdidoRecompensaFam" placeholder="Ej: Q500 de recompensa" style="display:none;width:100%;padding:12px;border:1.5px solid #F5C842;border-radius:12px;font-size:14px;outline:none;margin-bottom:10px">
+      <div style="display:flex;gap:8px">
+        <button onclick="cerrarModalPerdidoFam()" style="flex:1;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:99px;font-size:13px;cursor:pointer">Cancelar</button>
+        <button onclick="generarPosterFam()" id="btnGenerarPosterFam" style="flex:2;padding:12px;background:#c0392b;color:#fff;border:none;border-radius:99px;font-size:13px;font-weight:700;cursor:pointer">🚨 Generar póster y publicar</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="/header.js"></script>
 </body>
 </html>
