@@ -436,6 +436,52 @@ function onAngelitoChange(){
 }
 
 function mostrarError(msg){var el=document.getElementById('errorBox');if(el){el.textContent=msg;el.style.display='block';}}
+function marcarCamposPendientes(){
+  if(!mascota) return;
+  // Campos requeridos (sin instagram)
+  var campos=[
+    {id:'inputNombre',    val:mascota.nombre,      label:'Nombre'},
+    {id:'inputApodo',     val:mascota.apodo,        label:'Apodo'},
+    {id:'inputEspecie',   val:mascota.especie,      label:'Especie'},
+    {id:'inputSexo',      val:mascota.sexo,         label:'Sexo'},
+    {id:'inputRaza',      val:mascota.raza,         label:'Raza'},
+    {id:'inputFecha',     val:mascota.fecha,        label:'Fecha de nacimiento'},
+    {id:'inputDueno',     val:mascota.dueno,        label:'Responsable'},
+    {id:'inputWhatsapp',  val:mascota.whatsapp,     label:'WhatsApp'},
+    {id:'inputVeterinario',val:mascota.veterinario, label:'Veterinario'},
+    {id:'inputAlimento',  val:mascota.alimento,     label:'Alimento'},
+    {id:'inputZona',      val:mascota.zona,         label:'Zona'}
+  ];
+  campos.forEach(function(c){
+    var el=document.getElementById(c.id);
+    if(!el)return;
+    var vacio=!c.val||String(c.val).trim()===''||String(c.val).trim()==='-';
+    var lbl=el.previousElementSibling;
+    // Quitar indicadores anteriores
+    el.classList.remove('campo-pendiente');
+    if(lbl){
+      var old=lbl.querySelector('.campo-pendiente-label,.campo-ok-label');
+      if(old)old.remove();
+    }
+    if(vacio){
+      el.classList.add('campo-pendiente');
+      if(lbl){
+        var span=document.createElement('span');
+        span.className='campo-pendiente-label';
+        span.textContent='⚠ Pendiente';
+        lbl.appendChild(span);
+      }
+    } else {
+      if(lbl){
+        var span=document.createElement('span');
+        span.className='campo-ok-label';
+        span.textContent='✓';
+        lbl.appendChild(span);
+      }
+    }
+  });
+}
+
 function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
 
 // ── Eliminar mascota ──────────────────────────────────────────
