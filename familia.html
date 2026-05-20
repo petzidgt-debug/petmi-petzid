@@ -237,15 +237,24 @@ function renderCard(m){
   html += '<div class="card-body">';
   html += '<div class="card-nombre">'+m.nombre+'</div>';
   html += '<div class="card-meta">'+(m.apodo?'"'+m.apodo+'" · ':'')+(m.especie||'')+'</div>';
-  html += '<div class="card-btns">';
-  html += '<a href="/perfil.html?uid='+m.uid+'" class="btn-ver">Ver</a>';
+  // Fila 1: Ver + Editar
+  html += '<div class="card-btns" style="margin-bottom:6px">';
+  html += '<a href="/perfil.html?uid='+m.uid+'" class="btn-ver">Ver perfil</a>';
   html += '<a href="/editar.html?uid='+m.uid+'" class="btn-editar">✏️ Editar</a>';
   html += '</div>';
-  if(esPerdida){
-    html += '<button class="btn-aparecio-fam" data-actid="'+actId+'" data-nombre="'+m.nombre+'" '
-      + 'style="width:100%;margin-top:8px;padding:8px;background:#1a7a1a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">'
-      + '🎉 ¡Apareció!</button>';
+  // Fila 2: acciones
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  if(!esAngel && !esPerdida){
+    html += '<button onclick="abrirPerdido(\''+m.uid+'\',\''+m.nombre+'\',\''+m.email+'\')" style="flex:1;padding:7px;background:#c0392b;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🚨 Me perdí</button>';
   }
+  if(esPerdida){
+    html += '<button class="btn-aparecio-fam" data-actid="'+actId+'" data-nombre="'+m.nombre+'" style="flex:1;padding:7px;background:#1a7a1a;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🎉 ¡Apareció!</button>';
+  }
+  if(!esAngel){
+    html += '<button onclick="confirmarAngelito(\''+m.uid+'\',\''+m.nombre+'\')" style="flex:1;padding:7px;background:#764ba2;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🌈 Angelito</button>';
+  }
+  html += '<button onclick="confirmarEliminar(\''+m.uid+'\',\''+m.nombre+'\')" style="padding:7px 10px;background:#fbeaf0;color:#c0392b;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑️</button>';
+  html += '</div>';
   html += '</div></div>';
   return html;
 }
