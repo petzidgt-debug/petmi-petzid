@@ -1056,10 +1056,11 @@ function mostrarToastG(msg){
       <!-- Foto de la mascota -->
       <div style="margin-bottom:12px">
         <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Foto de la mascota</div>
-        <div id="perdidoFotoWrap" onclick="document.getElementById('perdidoFotoInput').click()" style="border:2px dashed #e0e0e0;border-radius:12px;overflow:hidden;cursor:pointer;position:relative;min-height:80px;display:flex;align-items:center;justify-content:center;transition:border-color .2s">
-          <img id="perdidoFotoPreview" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;display:none">
-          <div id="perdidoFotoLabel" style="text-align:center;padding:14px;color:#aaa;font-size:13px">
-            📷 Toca para cambiar o actualizar la foto<br><span style="font-size:11px;color:#ccc">Se usará para el póster</span>
+        <div id="perdidoFotoWrap" onclick="document.getElementById('perdidoFotoInput').click()" style="position:relative;border-radius:12px;overflow:hidden;cursor:pointer;min-height:140px;background:#f0f0ee">
+          <img id="perdidoFotoPreview" style="width:100%;height:140px;object-fit:cover;display:block">
+          <div id="perdidoFotoOverlay" style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:8px 12px;display:flex;align-items:center;gap:8px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span id="perdidoFotoLabel" style="font-size:12px;font-weight:600;color:#fff">Toca para cambiar la foto</span>
           </div>
           <input type="file" id="perdidoFotoInput" accept="image/*" style="display:none" onchange="previsualizarFotoModal(this)">
         </div>
@@ -1133,12 +1134,8 @@ function previsualizarFotoModal(input){
   reader.onload=function(e){
     perdidoNuevaFotoBase64=e.target.result.split(',')[1];
     var prev=document.getElementById('perdidoFotoPreview');
-    var lbl=document.getElementById('perdidoFotoLabel');
-    var wrap=document.getElementById('perdidoFotoWrap');
-    prev.src=e.target.result;prev.style.display='block';
-    lbl.style.display='none';
-    wrap.style.borderColor='#c0392b';
-    wrap.style.background='#fff8f8';
+    prev.src=e.target.result;
+    document.getElementById('perdidoFotoLabel').textContent='Toca para cambiar la foto';
   };
   reader.readAsDataURL(file);
 }
@@ -1151,13 +1148,11 @@ function abrirModalPerdido(){
   var lbl=document.getElementById('perdidoFotoLabel');
   var wrap=document.getElementById('perdidoFotoWrap');
   if(currentModalPet.foto && currentModalPet.foto.indexOf('http')>=0){
-    prev.src=currentModalPet.foto;prev.style.display='block';lbl.style.display='none';
-    wrap.style.borderColor='#e0e0e0';wrap.style.background='';
-    // Añadir botón de cambiar foto
-    lbl.innerHTML='📷 Toca para cambiar la foto<br><span style="font-size:11px;color:#ccc">Se usará para el póster</span>';
+    prev.src=currentModalPet.foto;
+    document.getElementById('perdidoFotoLabel').textContent='Toca para cambiar la foto';
   } else {
-    prev.style.display='none';lbl.style.display='block';
-    wrap.style.borderColor='#e0e0e0';wrap.style.background='';
+    prev.src='';
+    document.getElementById('perdidoFotoLabel').textContent='Toca para agregar una foto';
   }
   // Resetear formulario
   document.getElementById('perdidoMensaje').value = '';
