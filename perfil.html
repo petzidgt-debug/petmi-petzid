@@ -166,7 +166,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <script>
 var sessionEmail = localStorage.getItem('petzid_email') || '';
 var mascota      = null;
-var uid          = (new URLSearchParams(window.location.search).get('uid')||'').toLowerCase();
+var uid          = (new URLSearchParams(window.location.search).get('uid')||'').toLowerCase().trim();
 var esDueno      = false;
 
 // Constantes Supabase (anon key — segura en cliente)
@@ -179,6 +179,15 @@ if(!uid) window.location.href = '/galeria.html';
 fetch(SB_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid)+'&select=*', {
   headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
 }).then(function(r){return r.json();})
+.then(function(data){
+  if(!data||!data.length){
+    // Retry con ilike por si el uid tiene mayusculas en la DB
+    return fetch(SB_URL+'/rest/v1/mascotas?uid=ilike.'+encodeURIComponent(uid)+'&select=*', {
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    }).then(function(r2){return r2.json();});
+  }
+  return data;
+})
 .then(function(data){
   if(!data||!data.length){
     document.getElementById('mainContent').innerHTML='<div style="text-align:center;padding:60px;color:#888">Perfil no encontrado</div>';
