@@ -522,26 +522,21 @@ function viewFamilia(email){
 // ── Ver ID ────────────────────────────────────────────────────
 function viewID(idx){
   var r=filtered[idx];
-  var foto=String(r[27]||'').indexOf('http')>=0?'<img src="'+r[27]+'" style="width:140px;height:175px;object-fit:cover">':'<div style="width:140px;height:175px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">🐾</div>';
-  var html='<div id="pngPreview" style="font-family:Arial,sans-serif;border-radius:12px;overflow:hidden">'
-    +'<div style="background:#00B4B4;display:flex;align-items:stretch"><div style="flex-shrink:0;overflow:hidden">'+foto+'</div>'
-    +'<div style="flex:1;padding:16px 20px 14px;display:flex;flex-direction:column;justify-content:flex-end"><div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.7);margin-bottom:4px">NOMBRE</div>'
-    +'<div style="font-size:24px;font-weight:900;color:#fff;font-family:Arial Black,Arial,sans-serif">"'+String(r[2]||'').toUpperCase()+'"</div>'
-    +'<div style="margin-top:8px;display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;align-self:flex-start">'+String(r[3]||'-').toUpperCase()+'</div></div></div>'
-    +'<div style="background:#fff;padding:14px 18px">'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:10px">'
-    +'<div><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Especie</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[4]||'-')+'</div></div>'
-    +'<div style="text-align:right"><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Sexo</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[5]||'-')+'</div></div></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:10px">'
-    +'<div><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Zona</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[9]||'-')+'</div></div>'
-    +'<div style="text-align:right"><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Veterinario</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[13]||'-')+'</div></div></div>'
-    +'<div><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Responsable</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[10]||'-')+'</div></div></div>'
-    +'<div style="background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:8px 14px">'
-    +'<div style="width:30px;height:30px;background:#E05090;border-radius:6px 6px 6px 0;display:flex;align-items:center;justify-content:center;font-size:14px">🐾</div>'
-    +'<div style="font-size:18px;font-weight:900;font-family:Arial Black,Arial,sans-serif;color:#1a1a1a">petz<span style="color:#E05090">ID</span></div></div></div>';
+  var esGato=String(r[4]||'').toLowerCase().indexOf('gato')>=0;
+  var fotoSrc=String(r[27]||'');
+  var foto=fotoSrc.indexOf('http')>=0
+    ?'<img src="'+fotoSrc+'" style="width:150px;height:188px;object-fit:cover" crossorigin="anonymous">'
+    :'<div style="width:150px;height:188px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">'+(esGato?'🐱':'🐶')+'</div>';
+  var apodo=String(r[3]||'').trim();
+  var apodoBadge=apodo&&apodo!=='-'?'<div style="margin-top:8px;display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;align-self:flex-start">'+apodo.toUpperCase()+'</div>':'';
+  var fl=String(r[7]||'').toLowerCase()==='llegada'?'LLEGÓ A CASA':'NACIMIENTO';
+  function fmtD(v){if(!v)return'-';var p=String(v).split('/');if(p.length===3)return p[0]+'/'+p[1]+'/'+p[2];try{var d=new Date(v);return('0'+d.getDate()).slice(-2)+'/'+(('0'+(d.getMonth()+1)).slice(-2))+'/'+d.getFullYear();}catch(e){return String(v);}}
+  function field(lbl,val,right){return '<div style="text-align:'+(right?'right':'left')+'"><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">'+lbl+'</div><div style="font-size:15px;font-weight:900;color:#222;text-transform:uppercase">'+String(val||'-')+'</div></div>';}
+  var html='<div id="pngPreview" style="font-family:Arial,sans-serif;border-radius:12px;overflow:hidden;max-width:480px">'    +'<div style="background:#00B4B4;display:flex;align-items:stretch">'    +'<div style="flex-shrink:0;overflow:hidden">'+foto+'</div>'    +'<div style="flex:1;padding:16px 18px 14px;display:flex;flex-direction:column;justify-content:flex-end">'    +'<div style="font-size:9px;font-weight:700;letter-spacing:3px;color:rgba(255,255,255,.65);margin-bottom:6px">N O M B R E</div>'    +'<div style="font-size:26px;font-weight:900;color:#fff;font-family:Arial Black,Arial,sans-serif;line-height:1.1">&ldquo;'+String(r[2]||'').toUpperCase()+'&rdquo;</div>'    +apodoBadge+'</div></div>'    +'<div style="background:#fff;padding:12px 16px">'    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:8px">'    +field('ESPECIE',r[4],false)+field('SEXO',r[5],true)+'</div>'    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:8px">'    +field('RAZA',r[6],false)+field(fl,fmtD(r[8]),true)+'</div>'    +field('RESPONSABLE',r[10],false)+'</div>'    +'<div style="background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:8px 14px">'    +'<div style="background:#E05090;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:900;color:#fff">'    +(esGato?'CAT':'DOG')+'</div>'    +'<img src="https://petmi-petzid.vercel.app/logopetmi.png" style="height:32px" crossorigin="anonymous" onerror="this.style.display='none'">'    +'</div></div>';
   document.getElementById('modalIDBody').innerHTML=html;
   document.getElementById('modalID').classList.add('open');
 }
+
 function downloadID(){
   var el=document.getElementById('pngPreview');
   if(!el){alert('No hay ID para descargar');return;}
