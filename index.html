@@ -125,32 +125,70 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 </head>
 <body>
 
-<!-- TARJETA OCULTA PARA PNG -->
-<div id="pngCard" style="position:fixed;left:-9999px;top:0;width:580px;font-family:Arial,sans-serif;overflow:hidden;background:#fff">
-  <div style="background:#00B4B4;display:flex;align-items:stretch">
-    <div id="pngPhoto" style="width:220px;height:220px;flex-shrink:0;background:#b2e0e0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:48px">🐾</div>
-    <div style="flex:1;display:flex;flex-direction:column;padding:14px 18px;gap:4px">
-      <div id="pngEspecieIcon" style="font-size:32px;line-height:1">🐶</div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.6);margin-top:auto">NOMBRE</div>
-      <div id="pngNombre" style="font-size:26px;font-weight:900;font-family:Arial Black,Arial,sans-serif;color:#fff;line-height:1.1">"NOMBRE"</div>
-      <div id="pngApodo" style="display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;align-self:flex-start">Apodo</div>
+<!-- TARJETA OCULTA PARA PNG — diseño v5 (1050x600) -->
+<div id="pngCard" style="position:fixed;left:-9999px;top:0;width:1050px;height:600px;font-family:Arial,sans-serif;overflow:hidden;background:#fff;display:flex;flex-direction:column">
+
+  <!-- Zona principal (sin footer) -->
+  <div style="display:flex;flex:1;overflow:hidden">
+
+    <!-- Foto izquierda (42%) — crop centrado via object-fit -->
+    <div id="pngPhoto" style="width:441px;flex-shrink:0;background:#c8e8e8;overflow:hidden;display:flex;align-items:center;justify-content:center">
+      <!-- la imagen se inyecta aquí con object-fit:cover -->
+    </div>
+
+    <!-- Panel derecho -->
+    <div style="flex:1;display:flex;flex-direction:column">
+
+      <!-- Panel teal (52% de 532px = ~277px) -->
+      <div style="background:#00B4B4;height:277px;padding:18px 20px;display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="font-size:11px;font-weight:700;letter-spacing:10px;color:#c8f0f0;margin-bottom:6px">N O M B R E</div>
+        <div id="pngNombre" style="font-size:42px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;line-height:1.1;margin-bottom:8px">"NOMBRE"</div>
+        <div id="pngApodoBadge" style="display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:13px;font-weight:700;padding:4px 14px;border-radius:6px;align-self:flex-start"></div>
+      </div>
+
+      <!-- Panel blanco — 3 filas (255px) -->
+      <div style="background:#fff;flex:1;padding:0 20px;display:flex;flex-direction:column;justify-content:space-around">
+        <!-- Fila 1 -->
+        <div style="display:flex;justify-content:space-between;padding:14px 0 12px;border-bottom:1px solid #eeeeee">
+          <div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#aaaaaa;text-transform:uppercase;margin-bottom:4px">ESPECIE</div>
+            <div id="pngEspecie" style="font-size:18px;font-weight:900;color:#222;text-transform:uppercase">-</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#aaaaaa;text-transform:uppercase;margin-bottom:4px">SEXO</div>
+            <div id="pngSexo" style="font-size:18px;font-weight:900;color:#222;text-transform:uppercase">-</div>
+          </div>
+        </div>
+        <!-- Fila 2 -->
+        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eeeeee">
+          <div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#aaaaaa;text-transform:uppercase;margin-bottom:4px">RAZA</div>
+            <div id="pngRaza" style="font-size:18px;font-weight:900;color:#222;text-transform:uppercase">-</div>
+          </div>
+          <div style="text-align:right">
+            <div id="pngFechaLbl" style="font-size:9px;font-weight:700;letter-spacing:1px;color:#aaaaaa;text-transform:uppercase;margin-bottom:4px">NACIMIENTO</div>
+            <div id="pngFecha" style="font-size:18px;font-weight:900;color:#222">-</div>
+          </div>
+        </div>
+        <!-- Fila 3 -->
+        <div style="padding:12px 0 14px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#aaaaaa;text-transform:uppercase;margin-bottom:4px">RESPONSABLE</div>
+          <div id="pngDueno" style="font-size:18px;font-weight:900;color:#222;text-transform:uppercase">-</div>
+        </div>
+      </div>
+
     </div>
   </div>
-  <div style="background:#fff;padding:12px 18px">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px 12px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:10px">
-      <div><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Sexo</div><div id="pngSexo" style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
-      <div><div id="pngFechaLbl" style="font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Nacimiento</div><div id="pngFecha" style="font-size:14px;font-weight:900;color:#222">-</div></div>
-      <div><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Raza</div><div id="pngRaza" style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">-</div></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px">
-      <div><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Responsable</div><div id="pngDueno" style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
-      <div style="text-align:right"><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;margin-bottom:3px">Veterinario</div><div id="pngVet" style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">-</div></div>
+
+  <!-- Footer amarillo (68px) -->
+  <div style="background:#F5C842;height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0">
+    <img id="pngLogoFooter" src="https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/logopetmi.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9nb3BldG1pLnBuZyIsImlhdCI6MTc3OTE1NDkzMiwiZXhwIjoyMDk0NTE0OTMyfQ.tN_IuOOnsgXO0atFGtWZQQ4KLRnZW4Nqelb4JTVYlwU" alt="PetMi" style="height:42px;width:auto;object-fit:contain" crossorigin="anonymous">
+    <div style="text-align:right">
+      <div style="font-size:10px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase">ID</div>
+      <div id="pngShortId" style="font-size:18px;font-weight:900;color:#555;letter-spacing:2px">------</div>
     </div>
   </div>
-  <div style="background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:10px 16px">
-    <div style="width:36px;height:36px;background:#E05090;border-radius:8px 8px 8px 0;display:flex;align-items:center;justify-content:center;font-size:16px">🐾</div>
-    <div style="font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#1a1a1a;letter-spacing:-1px">petz<span style="color:#E05090">ID</span></div>
-  </div>
+
 </div>
 
 <!-- MODAL DE CARGA -->
@@ -598,34 +636,73 @@ function showStep(n){
 }
 
 function updatePngCard(){
+  // Foto — crop centrado con object-fit:cover llenando el panel izquierdo completo
   var img=document.getElementById('petPhoto');
   var pngPhoto=document.getElementById('pngPhoto');
   if(img.src&&img.style.display!=='none'){
-    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:220px;height:220px;object-fit:cover;object-position:center center">';
+    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:441px;height:532px;object-fit:cover;object-position:center center;display:block" crossorigin="anonymous">';
+  } else {
+    pngPhoto.innerHTML='';
   }
+
+  // Datos
   var fd=isSibling?familyData:{
     dueno:(document.getElementById('inDueno')?document.getElementById('inDueno').value:''),
-    zona:(document.getElementById('inZona')?document.getElementById('inZona').value:''),
     vet:(document.getElementById('inVet')?document.getElementById('inVet').value:'')
   };
-  document.getElementById('pngNombre').textContent='"'+(document.getElementById('inNombre').value||'NOMBRE').toUpperCase()+'"';
-  document.getElementById('pngApodo').textContent=(document.getElementById('inApodo').value||'').toUpperCase();
-  var esp=getChip('chipsEspecie');
-  var especieIcon=document.getElementById('pngEspecieIcon');
-  if(especieIcon)especieIcon.textContent=esp.toLowerCase().indexOf('gato')>=0?'🐱':'🐶';
-  document.getElementById('pngSexo').textContent=getChip('chipsSexo');
-  document.getElementById('pngFechaLbl').textContent=dateMode==='llegada'?'LLEGO A CASA':'NACIMIENTO';
-  document.getElementById('pngFecha').textContent=fmtDate(document.getElementById('inFecha').value);
+
+  var nombre=(document.getElementById('inNombre').value||'NOMBRE').toUpperCase();
+  var apodo=(document.getElementById('inApodo').value||'').trim().toUpperCase();
+  var raza=(document.getElementById('inRaza').value||'').trim().toUpperCase();
+
+  document.getElementById('pngNombre').textContent='"'+nombre+'"';
+
+  // Badge apodo — ocultar si vacío
+  var badge=document.getElementById('pngApodoBadge');
+  badge.textContent=apodo;
+  badge.style.display=apodo?'inline-block':'none';
+
+  document.getElementById('pngEspecie').textContent=getChip('chipsEspecie').toUpperCase();
+  document.getElementById('pngSexo').textContent=getChip('chipsSexo').toUpperCase();
+  document.getElementById('pngRaza').textContent=raza||'-';
+  document.getElementById('pngFechaLbl').textContent=dateMode==='casa'?'LLEGO A CASA':'NACIMIENTO';
+  document.getElementById('pngFecha').textContent=fmtDate(document.getElementById('inFecha').value)||'-';
   document.getElementById('pngDueno').textContent=String(fd&&fd.dueno?fd.dueno:'-').toUpperCase();
-  document.getElementById('pngVet').textContent=String(fd&&fd.vet?fd.vet:'-').toUpperCase();
-  var razaEl=document.getElementById('pngRaza');
-  if(razaEl){var inRaza=document.getElementById('inRaza');razaEl.textContent=inRaza&&inRaza.value?inRaza.value.toUpperCase():'-';}
+
+  // Últimos 6 del UID
+  document.getElementById('pngShortId').textContent=uid.replace(/-/g,'').toUpperCase().slice(-6);
 }
 
 async function generatePNGBase64(){
   updatePngCard();
+  // Esperar a que la imagen de foto cargue dentro del pngCard
+  var photoImg=document.querySelector('#pngPhoto img');
+  if(photoImg&&!photoImg.complete){
+    await new Promise(function(resolve){
+      photoImg.onload=resolve;
+      photoImg.onerror=resolve;
+      setTimeout(resolve,2000); // fallback 2s
+    });
+  }
+  // Esperar logo del footer
+  var logoImg=document.getElementById('pngLogoFooter');
+  if(logoImg&&!logoImg.complete){
+    await new Promise(function(resolve){
+      logoImg.onload=resolve;
+      logoImg.onerror=resolve;
+      setTimeout(resolve,2000);
+    });
+  }
   var card=document.getElementById('pngCard');
-  var canvas=await html2canvas(card,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',logging:false});
+  var canvas=await html2canvas(card,{
+    scale:1,
+    useCORS:true,
+    allowTaint:false,
+    backgroundColor:'#ffffff',
+    logging:false,
+    width:1050,
+    height:600
+  });
   return canvas.toDataURL('image/png').split(',')[1];
 }
 
