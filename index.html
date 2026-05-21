@@ -25,21 +25,24 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;font-size:16px;overflow-x:h
 .mobile-menu .btn-ingresar{margin:8px 0 0;text-align:center;display:block}
 .main{padding-top:60px;display:flex;flex-direction:column;min-height:calc(100vh - 60px)}
 .card-bar{position:fixed;top:60px;left:0;right:0;z-index:200;background:#00B4B4;padding:8px 12px;display:flex;justify-content:center}
-.card-mini{background:#fff;border-radius:10px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 2px 12px rgba(0,0,0,.15);display:flex;flex-direction:column}
-.card-mini-top{background:#00B4B4;padding:8px 10px;display:flex;flex-direction:row;gap:10px;align-items:center}
-.mini-photo{width:52px;height:52px;border-radius:6px;overflow:hidden;border:2px solid rgba(255,255,255,.4);background:#b2e0e0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;color:rgba(255,255,255,.7)}
-.mini-photo img{width:100%;height:100%;object-fit:contain}
-.mini-info{color:#fff;display:flex;flex-direction:column;justify-content:center;flex:1;min-width:0}
-.mini-name{font-size:15px;font-weight:900;letter-spacing:1px;font-family:'Arial Black',Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mini-nametag{background:#F4A0B0;color:#7a1a2e;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:2px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mini-apodo{font-size:10px;opacity:.85;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-mini-body{padding:6px 10px 5px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px 8px}
-.mflbl{font-size:7px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#bbb;white-space:nowrap}
-.mfval{font-size:10px;font-weight:900;color:#222;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-.card-mini-footer{background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:4px 10px;height:26px;flex-shrink:0}
-.footer-tag{width:18px;height:18px;background:#E05090;border-radius:4px 4px 4px 0;display:flex;align-items:center;justify-content:center;font-size:9px}
-.brand-txt{font-size:12px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#1a1a1a;letter-spacing:-1px}
-.brand-txt span{color:#E05090}
+.card-mini{background:#fff;border-radius:10px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 2px 12px rgba(0,0,0,.15);display:flex;flex-direction:column;aspect-ratio:1050/600}
+.card-mini-inner{display:flex;flex:1;overflow:hidden;min-height:0}
+.mini-photo{width:43%;flex-shrink:0;background:#00B4B4;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:28px;color:rgba(255,255,255,.5)}
+.mini-photo img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.mini-right{flex:1;display:flex;flex-direction:column;min-width:0}
+.mini-teal{background:#00B4B4;flex:0 0 50%;padding:5px 8px;display:flex;flex-direction:column;justify-content:flex-end;min-height:0}
+.mini-nombre-lbl{font-size:6px;font-weight:700;letter-spacing:4px;color:rgba(200,240,240,.85);margin-bottom:2px}
+.mini-name{font-size:12px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-nametag{background:#F4A0B0;color:#7a1a2e;font-size:7px;font-weight:700;padding:1px 6px;border-radius:20px;display:inline-block;margin-top:3px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini-white{background:#fff;flex:1;padding:0 8px;display:flex;flex-direction:column;justify-content:space-around;min-height:0}
+.mini-row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:.5px solid #eee}
+.mini-row:last-child{border-bottom:none}
+.mflbl{font-size:6px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#bbb;white-space:nowrap}
+.mfval{font-size:8px;font-weight:900;color:#222;text-transform:uppercase;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.card-mini-footer{background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:3px 8px;height:14%;flex-shrink:0}
+.mini-id-lbl{font-size:5px;font-weight:700;letter-spacing:1px;color:#888;text-transform:uppercase;line-height:1}
+.mini-id-val{font-size:10px;font-weight:400;color:#1a1a1a;letter-spacing:1px;line-height:1.2}
+.mini-logo{height:14px;width:auto;object-fit:contain}
 .card-spacer{height:0px;transition:height .2s}
 .sib-bar{background:#e0f7f7;padding:6px 12px;display:none;flex-wrap:wrap;gap:6px;border-bottom:1px solid #b2ddd5}
 .sib-pill{padding:4px 10px;border-radius:20px;background:#fff;border:1.5px solid #00B4B4;font-size:11px;font-weight:700;color:#007a7a}
@@ -112,9 +115,10 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
   .card-spacer{display:none}
   .form-col{flex:1;margin-right:300px;display:flex;flex-direction:column}
   .nav-bar{right:300px}
-  .card-mini-top{padding:14px;gap:14px}
-  .mini-photo{width:80px;height:80px;font-size:28px}
-  .mini-name{font-size:18px}
+  .mini-name{font-size:16px}
+  .mfval{font-size:9px}
+  .mini-id-val{font-size:12px}
+  .mini-logo{height:18px}
 }
 @media(max-width:899px){.form-col{flex:1;display:flex;flex-direction:column}}
 @media(max-width:640px){
@@ -210,22 +214,35 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 
 <div class="card-bar" id="cardBar">
   <div class="card-mini">
-    <div class="card-mini-top">
+    <div class="card-mini-inner">
       <div class="mini-photo" id="cPhoto">🐾</div>
-      <div class="mini-info">
-        <div class="mini-name" id="cNombre">"NOMBRE"</div>
-        <div class="mini-nametag" id="cApodo">Apodo</div>
-        <div class="mini-apodo" id="cEspecieSexo">Especie - Sexo</div>
+      <div class="mini-right">
+        <div class="mini-teal">
+          <div class="mini-nombre-lbl">N O M B R E</div>
+          <div class="mini-name" id="cNombre">"NOMBRE"</div>
+          <div class="mini-nametag" id="cApodo" style="display:none">Apodo</div>
+        </div>
+        <div class="mini-white">
+          <div class="mini-row">
+            <div><div class="mflbl">Especie</div><div class="mfval" id="cEspecie">-</div></div>
+            <div style="text-align:right"><div class="mflbl">Sexo</div><div class="mfval" id="cSexo">-</div></div>
+          </div>
+          <div class="mini-row">
+            <div><div class="mflbl">Raza</div><div class="mfval" id="cRaza">-</div></div>
+            <div style="text-align:right"><div class="mflbl" id="cFechaLbl">Fecha</div><div class="mfval" id="cFecha">-</div></div>
+          </div>
+          <div class="mini-row">
+            <div><div class="mflbl">Responsable</div><div class="mfval" id="cDueno">-</div></div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="card-mini-body">
-      <div><div class="mflbl">Responsable</div><div class="mfval" id="cDueno">-</div></div>
-      <div><div class="mflbl">Fecha</div><div class="mfval" id="cFecha">-</div></div>
-      <div><div class="mflbl">Vet</div><div class="mfval" id="cVet">-</div></div>
-    </div>
     <div class="card-mini-footer">
-      <div class="footer-tag">🐾</div>
-      <div class="brand-txt">petz<span>ID</span></div>
+      <div>
+        <div class="mini-id-lbl">ID</div>
+        <div class="mini-id-val" id="cShortId">------</div>
+      </div>
+      <img class="mini-logo" src="https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/logopetmi.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9nb3BldG1pLnBuZyIsImlhdCI6MTc3OTM5NTY4MiwiZXhwIjoyMDk0NzU1NjgyfQ.UFxj_NZ3QonOLDXVoUD_rC3nxRQg4C3aiJLjFrt5SO8" alt="PetMi">
     </div>
   </div>
   <div id="sibCardsDesktop" style="width:100%;margin-top:10px;display:flex;flex-direction:column;gap:8px"></div>
@@ -529,18 +546,27 @@ function getChips(id){return Array.from(document.querySelectorAll('#'+id+' .chip
 
 function syncCard(){
   var n=(document.getElementById('inNombre').value||'').toUpperCase()||'NOMBRE';
-  var a=document.getElementById('inApodo').value||'Apodo';
+  var a=(document.getElementById('inApodo').value||'').trim().toUpperCase();
+  var raza=(document.getElementById('inRaza').value||'').trim().toUpperCase();
   var fd=isSibling?familyData:{
     dueno:(document.getElementById('inDueno')?document.getElementById('inDueno').value:''),
-    zona:(document.getElementById('inZona')?document.getElementById('inZona').value:''),
     vet:(document.getElementById('inVet')?document.getElementById('inVet').value:'')
   };
   document.getElementById('cNombre').textContent='"'+n+'"';
-  document.getElementById('cApodo').textContent=a;
-  document.getElementById('cEspecieSexo').textContent=getChip('chipsEspecie')+' - '+getChip('chipsSexo');
+  // Apodo badge
+  var apodoBadge=document.getElementById('cApodo');
+  if(a){apodoBadge.textContent=a;apodoBadge.style.display='inline-block';}
+  else{apodoBadge.style.display='none';}
+  // Datos
+  document.getElementById('cEspecie').textContent=getChip('chipsEspecie')||'-';
+  document.getElementById('cSexo').textContent=getChip('chipsSexo')||'-';
+  document.getElementById('cRaza').textContent=raza||'-';
+  document.getElementById('cFechaLbl').textContent=dateMode==='casa'?'LLEGO A CASA':'FECHA';
   document.getElementById('cFecha').textContent=fmtDate(document.getElementById('inFecha').value)||'-';
   document.getElementById('cDueno').textContent=String(fd&&fd.dueno?fd.dueno:'-').toUpperCase();
-  document.getElementById('cVet').textContent=String(fd&&fd.vet?fd.vet:'-').toUpperCase();
+  // Short ID preview
+  document.getElementById('cShortId').textContent=uid.replace(/-/g,'').toUpperCase().slice(-6);
+  // Foto
   var img=document.getElementById('petPhoto');
   document.getElementById('cPhoto').innerHTML=img.src&&img.style.display!=='none'?'<img src="'+img.src+'">':"🐾";
   adjustSpacer();
