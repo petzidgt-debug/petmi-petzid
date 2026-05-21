@@ -28,7 +28,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;font-size:16px;overflow-x:h
 .card-mini{background:#fff;border-radius:10px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 2px 12px rgba(0,0,0,.15);display:flex;flex-direction:column}
 .card-mini-top{background:#00B4B4;padding:8px 10px;display:flex;flex-direction:row;gap:10px;align-items:center}
 .mini-photo{width:52px;height:52px;border-radius:6px;overflow:hidden;border:2px solid rgba(255,255,255,.4);background:#b2e0e0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;color:rgba(255,255,255,.7)}
-.mini-photo img{width:100%;height:100%;object-fit:cover}
+.mini-photo img{width:100%;height:100%;object-fit:contain}
 .mini-info{color:#fff;display:flex;flex-direction:column;justify-content:center;flex:1;min-width:0}
 .mini-name{font-size:15px;font-weight:900;letter-spacing:1px;font-family:'Arial Black',Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mini-nametag{background:#F4A0B0;color:#7a1a2e;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:2px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -131,9 +131,9 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
   <!-- Zona principal (sin footer) -->
   <div style="display:flex;flex:1;overflow:hidden">
 
-    <!-- Foto izquierda (42%) — crop centrado via object-fit -->
+    <!-- Foto izquierda (42%) — cuadro centrado, sin estirar -->
     <div id="pngPhoto" style="width:441px;flex-shrink:0;background:#c8e8e8;overflow:hidden;display:flex;align-items:center;justify-content:center">
-      <!-- la imagen se inyecta aquí con object-fit:cover -->
+      <!-- la imagen se inyecta como cuadro centrado -->
     </div>
 
     <!-- Panel derecho -->
@@ -636,11 +636,13 @@ function showStep(n){
 }
 
 function updatePngCard(){
-  // Foto — crop centrado con object-fit:cover llenando el panel izquierdo completo
+  // Foto — cuadro cuadrado centrado, sin estirar ni recortar
   var img=document.getElementById('petPhoto');
   var pngPhoto=document.getElementById('pngPhoto');
   if(img.src&&img.style.display!=='none'){
-    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:441px;height:532px;object-fit:cover;object-position:center center;display:block" crossorigin="anonymous">';
+    // Tamaño del cuadro: el menor entre el ancho (441) y el alto disponible (532), con 24px de margen
+    var boxSize=Math.min(441,532)-48; // 393px
+    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:'+boxSize+'px;height:'+boxSize+'px;object-fit:contain;background:#c8e8e8;border-radius:12px;display:block" crossorigin="anonymous">';
   } else {
     pngPhoto.innerHTML='';
   }
