@@ -93,9 +93,19 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 .done-title{font-size:22px;font-weight:900;color:#222;margin-bottom:6px}
 .done-sub{font-size:14px;color:#888;line-height:1.6;margin-bottom:24px}
 .btn-action{width:100%;padding:15px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;min-height:52px;border:none;display:flex;align-items:center;justify-content:center;gap:8px}
-.btn-wa{background:#25D366;color:#fff}
+.btn-download{background:#00B4B4;color:#fff}
+.btn-download:disabled{background:#aaa;cursor:not-allowed}
 .btn-hermano{background:#fff;color:#E05090;border:1.5px solid #E05090!important}
 .btn-comunidad{background:#fff;color:#888;border:1.5px solid #ddd!important}
+
+/* ── Modal de carga ── */
+.loading-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center}
+.loading-modal.show{display:flex}
+.loading-box{background:#fff;border-radius:20px;padding:36px 28px;text-align:center;max-width:300px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.loading-box img{width:100px;height:100px;object-fit:contain;margin-bottom:16px}
+.loading-box p{font-size:16px;font-weight:700;color:#222;margin:0 0 6px}
+.loading-box span{font-size:13px;color:#888}
+
 @media(min-width:900px){
   .main{flex-direction:row;max-width:1100px;margin:0 auto;padding-top:60px}
   .card-bar{position:fixed;top:60px;width:300px;right:0;left:auto;height:calc(100vh - 60px);padding:24px 20px;flex-direction:column;align-items:center;overflow-y:auto}
@@ -143,7 +153,14 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
   </div>
 </div>
 
-
+<!-- MODAL DE CARGA -->
+<div class="loading-modal" id="loadingModal">
+  <div class="loading-box">
+    <img src="https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/loader.gif?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9hZGVyLmdpZiIsImlhdCI6MTc3OTM4MzQ3MywiZXhwIjoyMDk0NzQzNDczfQ.VXd4jKtCFv4TI7790vhPLKSyYUn5yJN4Bkf30PIXzuU" alt="Cargando">
+    <p id="loadingMsg">Estamos trabajando en tu PetzID</p>
+    <span id="loadingHint">Esto tarda unos segundos...</span>
+  </div>
+</div>
 
 <div class="mobile-menu" id="mobileMenu">
   <a href="https://www.revistapetmi.com" target="_blank" onclick="toggleMenu()">Blog</a>
@@ -249,7 +266,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
         <label>Tu nombre *</label>
         <input type="text" id="inDueno" placeholder="Nombre completo" oninput="syncCard()">
         <label>Correo electronico *</label>
-        <input type="email" id="inEmail" placeholder="Para enviarte el PetzID" inputmode="email">
+        <input type="email" id="inEmail" placeholder="Para tu bienvenida a PetMi" inputmode="email">
         <label>WhatsApp</label>
         <div style="display:flex;gap:8px;align-items:stretch">
           <div style="background:#f0f0ee;border:1.5px solid #e0e0e0;border-radius:12px;padding:13px 14px;font-size:16px;color:#555;display:flex;align-items:center;white-space:nowrap">+502</div>
@@ -297,9 +314,9 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
       <textarea id="inEspecial" placeholder="Un dato curioso, su historia..."></textarea>
       <div style="margin-top:18px;background:#fafafa;border-radius:12px;padding:14px 16px;border:1px solid #eee">
         <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Comunicaciones</div>
-        <div style="font-size:12px;color:#aaa;margin-bottom:12px">¿Quieres recibir ofertas, actividades pet-friendly y novedades de la comunidad PetMi?</div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:12px">Quieres recibir ofertas, actividades pet-friendly y novedades de la comunidad PetMi?</div>
         <div class="toggle-row" style="border:none">
-          <span class="toggle-lbl" style="font-weight:700;color:#333">Sí, quiero recibir información</span>
+          <span class="toggle-lbl" style="font-weight:700;color:#333">Si, quiero recibir informacion</span>
           <label class="toggle"><input type="checkbox" id="togOfertas" checked><span class="tog-slider"></span></label>
         </div>
         <input type="hidden" id="togActividades" value="on">
@@ -313,13 +330,15 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
       <div class="done-wrap">
         <div class="done-icon">🎉</div>
         <div class="done-title">PetzID listo!</div>
-        <div class="done-sub">El perfil de <strong id="doneNombre">tu mascota</strong> esta completo.<br>Te enviamos tu PetzID al correo en unos segundos.</div>
+        <div class="done-sub">El perfil de <strong id="doneNombre">tu mascota</strong> esta completo.<br>Descarga tu ID y comparte con la comunidad.</div>
+
+        <button class="btn-action btn-download" id="btnDescargar" onclick="descargarID()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar mi PetzID
+        </button>
+
         <button class="btn-action btn-hermano" onclick="addSibling()">🐾 Agregar otra mascota</button>
         <button class="btn-action btn-comunidad" onclick="window.location.href='/galeria.html'">🌟 Ver la comunidad PetzID</button>
-        <button class="btn-action btn-wa" onclick="openWhatsApp()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.132 1.527 5.88L0 24l6.272-1.504A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.002-1.368l-.36-.214-3.726.893.924-3.638-.235-.374A9.818 9.818 0 1112 21.818z"/></svg>
-          Recibir ofertas por WhatsApp
-        </button>
       </div>
     </div>
 
@@ -338,6 +357,7 @@ var SCRIPT_URL='/api/submit';
 var cur=1,siblings=[],dateMode='nac',isSibling=false,familyData=null;
 var photoBase64=null,photoMime=null,photoFilename=null;
 var uid=genId();
+var generatedPngBase64=null; // guardamos el PNG para descarga
 
 // Cloudinary
 var CLOUD_NAME='dh5wgqgmk';
@@ -350,7 +370,8 @@ var editEmail=null;
 
 // Pre-llenar datos de familia si hay sesión activa
 (function(){
-  var emailSesion=localStorage.getItem('petzid_email')||'';  var params=new URLSearchParams(window.location.search);
+  var emailSesion=localStorage.getItem('petzid_email')||'';
+  var params=new URLSearchParams(window.location.search);
   var agregar=params.get('agregar');
   if(emailSesion&&agregar==='1'){
     fetch('/api/galeria?action=checkEmail',{
@@ -362,34 +383,21 @@ var editEmail=null;
       if(!d.found||!d.mascotas.length)return;
       var m=d.mascotas[0];
       isSibling=true;
-      familyData={
-        dueno:   m.dueno    ||''  ,
-        email:   m.email    ||''  ,
-        whatsapp:m.whatsapp ||''  ,
-        zona:    m.zona     ||''  ,
-        vet:     m.veterinario||''
-      };
+      familyData={dueno:m.dueno||'',email:m.email||'',whatsapp:m.whatsapp||'',zona:m.zona||'',vet:m.veterinario||''};
       var fb=document.getElementById('familyBlock');
       var si=document.getElementById('siblingFamilyInfo');
       if(fb)fb.style.display='none';
-      if(si){
-        si.style.display='block';
-        var nd=si.querySelector('.sib-name');
-        if(nd)nd.textContent=m.dueno||'';
-      }
+      if(si)si.style.display='block';
     }).catch(function(){});
   }
 })();
 
-// Detectar ?editar=uid o ?agregar=1
 (function(){
   var params=new URLSearchParams(window.location.search);
   var uidParam=params.get('editar');
   var agregar=params.get('agregar');
   if(uidParam){
-    modoEdicion=true;
-    editUID=uidParam;
-    // Cargar datos del uid
+    modoEdicion=true;editUID=uidParam;
     var emailGuardado=localStorage.getItem('petzid_email');
     if(!emailGuardado){window.location.href='/galeria.html';return;}
     editEmail=emailGuardado;
@@ -401,8 +409,7 @@ var editEmail=null;
         if(!mascota)return;
         precargarDatos(mascota);
       });
-  } else if(agregar) {
-    // Solo precargar datos del dueño
+  } else if(agregar){
     var emailGuardado=localStorage.getItem('petzid_email');
     if(emailGuardado){
       fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:emailGuardado})})
@@ -420,10 +427,6 @@ var editEmail=null;
 })();
 
 function precargarDatos(m){
-  // Titulo
-  var titulo=document.querySelector('.hero-title');
-  if(titulo)titulo.textContent='Actualizar datos de '+m.nombre;
-  // Step 1
   setTimeout(function(){
     var inNombre=document.getElementById('inNombre');
     var inApodo=document.getElementById('inApodo');
@@ -431,34 +434,18 @@ function precargarDatos(m){
     if(inNombre)inNombre.value=m.nombre||'';
     if(inApodo)inApodo.value=m.apodo||'';
     if(inRaza)inRaza.value=m.raza||'';
-    // Especie
-    document.querySelectorAll('#chipsEspecie .chip').forEach(function(c){
-      if(c.textContent.trim().toLowerCase()===m.especie.toLowerCase())c.classList.add('sel');
-      else c.classList.remove('sel');
-    });
-    // Sexo
-    document.querySelectorAll('#chipsSexo .chip').forEach(function(c){
-      if(c.textContent.trim().toLowerCase()===m.sexo.toLowerCase())c.classList.add('sel');
-      else c.classList.remove('sel');
-    });
-    // Fecha
+    document.querySelectorAll('#chipsEspecie .chip').forEach(function(c){c.classList.toggle('sel',c.textContent.trim().toLowerCase()===m.especie.toLowerCase());});
+    document.querySelectorAll('#chipsSexo .chip').forEach(function(c){c.classList.toggle('sel',c.textContent.trim().toLowerCase()===m.sexo.toLowerCase());});
     if(m.fecha){
       var inFecha=document.getElementById('inFecha');
-      if(inFecha){
-        // Convertir dd/mm/yyyy a yyyy-mm-dd
-        var partes=String(m.fecha).split('/');
-        if(partes.length===3)inFecha.value=partes[2]+'-'+partes[1]+'-'+partes[0];
-        else inFecha.value=m.fecha;
-      }
+      if(inFecha){var p=String(m.fecha).split('/');if(p.length===3)inFecha.value=p[2]+'-'+p[1]+'-'+p[0];else inFecha.value=m.fecha;}
     }
-    // Foto actual
     if(m.foto&&m.foto.indexOf('http')>=0){
       var img=document.getElementById('petPhoto');
       if(img){img.src=m.foto;img.style.display='block';}
       document.getElementById('phIcon').style.display='none';
       document.getElementById('phTxt').style.display='none';
     }
-    // Step 2
     isSibling=false;
     familyData={dueno:m.dueno,email:m.email,whatsapp:m.whatsapp,zona:m.zona,vet:m.veterinario};
     var inDueno=document.getElementById('inDueno');
@@ -471,7 +458,6 @@ function precargarDatos(m){
     if(inWA)inWA.value=(m.whatsapp||'').replace('+502','');
     if(inZona)inZona.value=m.zona||'';
     if(inVet)inVet.value=m.veterinario||'';
-    // Step 3
     var inInsta=document.getElementById('inInsta');
     var inAlimento=document.getElementById('inAlimento');
     var inEspecial=document.getElementById('inEspecial');
@@ -479,7 +465,7 @@ function precargarDatos(m){
     if(inAlimento)inAlimento.value=m.alimento||'';
     if(inEspecial)inEspecial.value=m.especial||'';
     syncCard();
-  }, 300);
+  },300);
 }
 
 function genId(){
@@ -499,20 +485,9 @@ function adjustSpacer(){
 window.addEventListener('resize',adjustSpacer);
 window.addEventListener('load',adjustSpacer);
 
-function fmtDate(v){
-  if(!v)return'-';
-  var p=v.split('-');
-  if(p.length===3)return p[2]+'/'+p[1]+'/'+p[0];
-  return String(v);
-}
-
-function getChip(id){
-  var el=document.querySelector('#'+id+' .chip.sel');
-  return el?el.textContent.trim():'-';
-}
-function getChips(id){
-  return Array.from(document.querySelectorAll('#'+id+' .chip.sel')).map(function(c){return c.textContent.trim();});
-}
+function fmtDate(v){if(!v)return'-';var p=v.split('-');if(p.length===3)return p[2]+'/'+p[1]+'/'+p[0];return String(v);}
+function getChip(id){var el=document.querySelector('#'+id+' .chip.sel');return el?el.textContent.trim():'-';}
+function getChips(id){return Array.from(document.querySelectorAll('#'+id+' .chip.sel')).map(function(c){return c.textContent.trim();});}
 
 function syncCard(){
   var n=(document.getElementById('inNombre').value||'').toUpperCase()||'NOMBRE';
@@ -538,8 +513,7 @@ function switchDate(mode){
   document.getElementById('dtNac').classList.toggle('sel',mode==='nac');
   document.getElementById('dtCasa').classList.toggle('sel',mode==='casa');
   document.getElementById('dateHint').textContent=mode==='nac'?'Fecha en que nacio tu mascota':'Fecha en que llego a tu hogar';
-  document.getElementById('inFecha').value='';
-  syncCard();
+  document.getElementById('inFecha').value='';syncCard();
 }
 
 function loadPhoto(e){
@@ -550,8 +524,7 @@ function loadPhoto(e){
     img.src=ev.target.result;img.style.display='block';
     document.getElementById('phIcon').style.display='none';
     document.getElementById('phTxt').style.display='none';
-    syncCard();
-    compressPhoto(ev.target.result);
+    syncCard();compressPhoto(ev.target.result);
   };
   reader.readAsDataURL(file);
 }
@@ -580,6 +553,15 @@ function selectChip(gid,el){
 function toggleChip(el){el.classList.toggle('sel');}
 function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open');}
 
+function showLoading(msg, hint){
+  document.getElementById('loadingMsg').textContent=msg||'Estamos trabajando en tu PetzID';
+  document.getElementById('loadingHint').textContent=hint||'Esto tarda unos segundos...';
+  document.getElementById('loadingModal').classList.add('show');
+}
+function hideLoading(){
+  document.getElementById('loadingModal').classList.remove('show');
+}
+
 function validate(){
   if(cur===1){
     if(!document.getElementById('inNombre').value.trim()){alert('Por favor ingresa el nombre de tu mascota');return false;}
@@ -607,7 +589,7 @@ function updateProgress(){
   else{nav.style.display='flex';document.getElementById('btnNext').textContent=cur===3?'Crear mi PetzID!':'Siguiente';}
 }
 
-function goNext(){if(!validate())return;if(cur===3){submitPetzID();return;}if(cur<4){cur++;if(cur===2&&isSibling){cur++;} showStep(cur);updateProgress();}}
+function goNext(){if(!validate())return;if(cur===3){submitPetzID();return;}if(cur<4){cur++;if(cur===2&&isSibling){cur++;}showStep(cur);updateProgress();}}
 function goBack(){if(cur>1){cur--;if(cur===2&&isSibling){cur--;}showStep(cur);updateProgress();}}
 function showStep(n){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
@@ -643,34 +625,56 @@ function updatePngCard(){
 async function generatePNGBase64(){
   updatePngCard();
   var card=document.getElementById('pngCard');
-  var canvas=await html2canvas(card,{
-    scale:2,useCORS:true,allowTaint:true,
-    backgroundColor:'#ffffff',logging:false
-  });
+  var canvas=await html2canvas(card,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',logging:false});
   return canvas.toDataURL('image/png').split(',')[1];
 }
 
-async function uploadToCloudinary(base64, mime){
-  try {
+async function uploadToCloudinary(base64,mime){
+  try{
     var formData=new FormData();
     formData.append('file','data:'+mime+';base64,'+base64);
     formData.append('upload_preset',UPLOAD_PRESET);
     formData.append('folder','petzid');
-    var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{
-      method:'POST',body:formData
-    });
+    var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{method:'POST',body:formData});
     var data=await res.json();
     return data.secure_url||null;
-  } catch(e){
-    console.log('Cloudinary error:',e);
-    return null;
+  }catch(e){console.log('Cloudinary error:',e);return null;}
+}
+
+// Descargar el PNG generado localmente
+function descargarID(){
+  if(!generatedPngBase64){
+    // Si por algún motivo no está generado, regenerar
+    var btn=document.getElementById('btnDescargar');
+    btn.disabled=true;btn.textContent='Generando...';
+    generatePNGBase64().then(function(b64){
+      generatedPngBase64=b64;
+      triggerDownload(b64);
+      btn.disabled=false;
+      btn.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descargar mi PetzID';
+    });
+    return;
   }
+  triggerDownload(generatedPngBase64);
+}
+
+function triggerDownload(b64){
+  var nombre=document.getElementById('inNombre').value||'mascota';
+  var link=document.createElement('a');
+  link.href='data:image/png;base64,'+b64;
+  link.download='PetzID_'+nombre+'.png';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 async function submitPetzID(){
   var btn=document.getElementById('btnNext');
-  btn.textContent='Generando ID...';btn.disabled=true;
+  btn.textContent='Procesando...';btn.disabled=true;
   document.getElementById('errorMsg').style.display='none';
+
+  // Mostrar modal de carga
+  showLoading('Estamos trabajando en tu PetzID','Subiendo foto y guardando datos...');
 
   if(!isSibling){
     familyData={
@@ -682,11 +686,12 @@ async function submitPetzID(){
     };
   }
 
-  var pngBase64=null;
+  // Generar PNG localmente y guardarlo para descarga posterior
   try{
-    btn.textContent='Creando tu PetzID...';
-    pngBase64=await generatePNGBase64();
-  }catch(e){console.log('PNG error:',e);}
+    showLoading('Generando tu PetzID','Un momento...');
+    var pngB64=await generatePNGBase64();
+    generatedPngBase64=pngB64;
+  }catch(e){console.log('PNG local error:',e);}
 
   var payload={
     uid:uid,isSibling:isSibling,
@@ -712,19 +717,17 @@ async function submitPetzID(){
     recibeActividades:document.getElementById('togOfertas').checked,
     recibeComunidad:  document.getElementById('togOfertas').checked,
     especial:    document.getElementById('inEspecial').value.trim(),
-    pngBase64:   pngBase64,
     photoBase64: photoBase64,
     photoMime:   photoMime||'image/jpeg'
   };
 
-  // Subir foto nueva a Cloudinary si hay
+  // Subir foto a Cloudinary
   if(photoBase64){
-    btn.textContent='Subiendo foto...';
-    var fotoUrl=await uploadToCloudinary(photoBase64, photoMime||'image/jpeg');
+    showLoading('Subiendo foto de tu mascota','Casi listo...');
+    var fotoUrl=await uploadToCloudinary(photoBase64,photoMime||'image/jpeg');
     if(fotoUrl)payload.foto=fotoUrl;
   }
 
-  // Si es edicion, usar updateRow en vez de submit
   var apiUrl='/api/submit';
   var apiBody=payload;
   if(modoEdicion&&editUID){
@@ -732,31 +735,18 @@ async function submitPetzID(){
     apiBody={action:'updateRow',uid:editUID,data:payload};
   }
 
-  fetch(apiUrl,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(apiBody)
-  }).then(function(r){return r.json();})
-  .then(function(){
-    if(payload.email){
-      localStorage.setItem('petzid_email',payload.email);
-      localStorage.setItem('petzid_dueno',payload.dueno||'');
-    }
-    document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
-    cur=4;showStep(4);updateProgress();
-  }).catch(function(){
-    if(payload.email){
-      localStorage.setItem('petzid_email',payload.email);
-      localStorage.setItem('petzid_dueno',payload.dueno||'');
-    }
-    document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
-    cur=4;showStep(4);updateProgress();
-  });
-}
+  try{
+    showLoading('Guardando tu PetzID','Enviando correo de bienvenida...');
+    await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(apiBody)});
+  }catch(e){console.log('submit error:',e);}
 
-function openWhatsApp(){
-  var msg=encodeURIComponent('Hola Petmi! Quiero recibir ofertas y novedades para mi mascota.');
-  window.open('https://wa.me/50237673927?text='+msg,'_blank');
+  if(payload.email){
+    localStorage.setItem('petzid_email',payload.email);
+    localStorage.setItem('petzid_dueno',payload.dueno||'');
+  }
+  document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
+  hideLoading();
+  cur=4;showStep(4);updateProgress();
 }
 
 function addSibling(){
@@ -785,6 +775,7 @@ function addSibling(){
   isSibling=true;
   uid=genId();
   photoBase64=null;photoMime=null;photoFilename=null;
+  generatedPngBase64=null;
   document.getElementById('familyBlock').style.display='none';
   document.getElementById('siblingFamilyInfo').style.display='block';
   document.getElementById('conviveBlock').style.display='none';
