@@ -393,7 +393,7 @@ var editEmail=null;
     var emailGuardado=localStorage.getItem('petzid_email');
     if(!emailGuardado){window.location.href='/galeria.html';return;}
     editEmail=emailGuardado;
-    fetch('/api/admin?action=checkEmail&email='+encodeURIComponent(emailGuardado))
+    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:emailGuardado})})
       .then(function(r){return r.json();})
       .then(function(d){
         if(!d.found)return;
@@ -405,7 +405,7 @@ var editEmail=null;
     // Solo precargar datos del dueño
     var emailGuardado=localStorage.getItem('petzid_email');
     if(emailGuardado){
-      fetch('/api/admin?action=checkEmail&email='+encodeURIComponent(emailGuardado))
+      fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:emailGuardado})})
         .then(function(r){return r.json();})
         .then(function(d){
           if(!d.found||!d.mascotas.length)return;
