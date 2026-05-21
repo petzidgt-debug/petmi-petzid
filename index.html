@@ -607,8 +607,8 @@ function updateProgress(){
   else{nav.style.display='flex';document.getElementById('btnNext').textContent=cur===3?'Crear mi PetzID!':'Siguiente';}
 }
 
-function goNext(){if(!validate())return;if(cur===3){submitPetzID();return;}if(cur<4){cur++;showStep(cur);updateProgress();}}
-function goBack(){if(cur>1){cur--;showStep(cur);updateProgress();}}
+function goNext(){if(!validate())return;if(cur===3){submitPetzID();return;}if(cur<4){cur++;if(cur===2&&isSibling){cur++;} showStep(cur);updateProgress();}}
+function goBack(){if(cur>1){cur--;if(cur===2&&isSibling){cur--;}showStep(cur);updateProgress();}}
 function showStep(n){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('step'+n).classList.add('active');
