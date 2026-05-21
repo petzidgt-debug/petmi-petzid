@@ -1544,7 +1544,14 @@ document.addEventListener('keydown', function(e){
 });
 </script>
 
-<a href="/index.html" class="fab-pill" style="background:#00B4B4"><i class="ti ti-plus" aria-hidden="true"></i>Crear PetzID</a>
+<button class="fab-pill" style="background:#00B4B4" onclick="irACrear()"><i class="ti ti-plus" aria-hidden="true"></i>Crear PetzID</button>
+<script>
+function irACrear(){
+  var email=localStorage.getItem('petzid_email');
+  if(email) window.location.href='/index.html?agregar=1';
+  else window.location.href='/index.html';
+}
+</script>
 <script src="/header.js"></script>
 </body>
 </html>
