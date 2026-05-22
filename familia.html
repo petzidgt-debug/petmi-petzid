@@ -455,8 +455,16 @@ function confirmarEliminar(uid, nombre){
       body:JSON.stringify({action:'deleteMascota',uid:uid})
     }).then(function(r){return r.json();})
     .then(function(d){
-      if(d.ok){ location.reload(); }
-      else { alert('Error al eliminar'); }
+      console.log('deleteMascota response:', d);
+      if(d.ok){
+        mostrarMsg('Mascota eliminada','success');
+        setTimeout(function(){location.reload();},1200);
+      } else {
+        alert('Error al eliminar: '+(d.error||JSON.stringify(d)));
+      }
+    }).catch(function(err){
+      console.error('deleteMascota error:', err);
+      alert('Error de conexion: '+err.message);
     });
   }
 }
