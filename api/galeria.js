@@ -1,5 +1,6 @@
 const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -425,10 +426,10 @@ export default async function handler(req, res) {
       const { id } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + id, {
         method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify({ activo: true })
       });
-      return res.status(200).json({ ok: r.ok });
+      return res.status(200).json({ ok: r.ok, status: r.status });
     }
 
     // ── rechazarAviso ─────────────────────────────────────────────
@@ -436,9 +437,9 @@ export default async function handler(req, res) {
       const { id } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + id, {
         method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' }
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
       });
-      return res.status(200).json({ ok: r.ok });
+      return res.status(200).json({ ok: r.ok, status: r.status });
     }
 
     // ── publicarActividad ─────────────────────────────────────────
