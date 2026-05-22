@@ -459,11 +459,8 @@ function renderCumpleaneros(){
 
 // ── Ángeles de 4 patas ────────────────────────────────────────
 function renderAngeles(){
-  var hace30=new Date(Date.now()-30*24*60*60*1000);
   var angeles=allPets.filter(function(p){
-    if(!p.angelito)return false;
-    if(!p.fechaAngelito)return true;
-    return new Date(p.fechaAngelito)>=hace30;
+    return p.angelito;
   });
   var sec=document.getElementById('seccionAngeles');
   if(angeles.length===0){sec.style.display='none';return;}
@@ -646,59 +643,49 @@ function renderModalFooter(p){
   var footer=document.getElementById('modalFooter');
   var esMia=sessionEmail&&p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();
 
-  if(!esMia&&sessionEmail){
-    footer.innerHTML='<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
-    fetch(SUPA_URL+'/rest/v1/amigos?or=(and(uid_solicitante.eq.'+encodeURIComponent(p.uid)+',email_receptor.eq.'+encodeURIComponent(sessionEmail)+'),and(uid_receptor.eq.'+encodeURIComponent(p.uid)+',email_solicitante.eq.'+encodeURIComponent(sessionEmail)+'))&select=*',{
-      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
-    }).then(function(r){return r.json();})
-    .then(function(rows){
-      if(!currentModalPet||currentModalPet.uid!==p.uid) return;
-      var btn;
-      if(!rows||!rows.length){
-        btn='<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\''+p.uid+'\')">🐾 Agregar amigo</button>';
-      } else {
-        var rel=rows[0];
-        if(rel.estado==='aceptado'){
-          btn='<button class="btn-primary" style="background:#e0f7f7;color:#007a7a;cursor:default">🐾 Amigos</button>';
-        } else if(rel.email_solicitante.toLowerCase()===sessionEmail.toLowerCase()){
-          var diasPend=rel.created_at?Math.floor((Date.now()-new Date(rel.created_at).getTime())/86400000):0;
-          if(diasPend>=21){
-            btn='<button class="btn-primary btn-pink" onclick="reenviarSolicitud(\''+p.uid+'\',\''+rel.id+'\')">🔄 Reenviar solicitud</button>';
-          } else {
-            btn='<button class="btn-primary" style="background:#f0f0ee;color:#888;cursor:default">Solicitud enviada</button>';
-          }
-        } else {
-          btn='<button class="btn-primary btn-pink" onclick="aceptarDesdeModal(\''+rel.id+'\')">Aceptar solicitud</button>';
-        }
-      }
-      footer.innerHTML=btn+'<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
-    }).catch(function(){
-      footer.innerHTML='<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\''+p.uid+'\')">🐾 Agregar amigo</button><button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
-    });
+  // Mi propia mascota — banner + sin botones
+  if(esMia){
+    footer.innerHTML='<div style="background:#e0f7f7;border-radius:10px;padding:10px 14px;font-size:12px;color:#007a7a;font-weight:500;width:100%;text-align:center">✏️ Para editar o gestionar a <strong>'+p.nombre+'</strong>, ve a <a href="/familia.html" style="color:#007a7a;font-weight:700">Mi Familia</a></div>';
     return;
   }
 
-  if(esMia){
-    var angelBtn=p.angelito
-      ?'<button class="btn-primary btn-purple" onclick="toggleAngel(false)">🐾🌈 Ya no es angelito</button>'
-      :'<button class="btn-primary btn-purple" onclick="toggleAngel(true)">🐾🌈 Ya es un angelito</button>';
+  // Sin sesion
+  if(!sessionEmail){
     footer.innerHTML=
-      '<button class="btn-primary btn-pink" onclick="actualizarMascota(\''+p.uid+'\')">✏️ Actualizar información</button>'+
-      
-      angelBtn+
-      '<button class="btn-primary" style="background:#c0392b;color:#fff" onclick="abrirModalPerdido()">🚨 Me perdí</button>'+
-      '<button class="btn-danger btn-secondary" onclick="confirmarEliminarMascota()">🗑️ Eliminar mascota</button>'+
-      '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
-  } else if(sessionEmail){
-    footer.innerHTML=
-      getBtnAmigo(p.uid)+
-      '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
-  } else {
-    footer.innerHTML=
-      (p.angelito?'':'<button class="btn-primary" onclick="window.location.href=\'/index.html\'">Registra tu mascota</button>')+
-      '<button class="btn-secondary" onclick="openLoginModal()">'+(p.angelito?'🔑 Soy el dueño':'¿Ya tienes PetzID?')+'</button>'+
-      '<button class="btn-cerrar" onclick="closeModal()">Cerrar</button>';
+      '<button class="btn-primary btn-pink" style="flex:1" onclick="openLoginModal()">🔑 Ingresar</button>'+
+      (p.angelito?'':'<button class="btn-secondary" style="flex:1" onclick="window.location.href='/index.html'">Registrar mascota</button>');
+    return;
   }
+
+  // Mascota ajena — solo amigos
+  footer.innerHTML='<button class="btn-primary btn-pink" style="width:100%" id="btnAmigoModal">🐾 Cargando...</button>';
+  fetch(SUPA_URL+'/rest/v1/amigos?or=(and(uid_solicitante.eq.'+encodeURIComponent(p.uid)+',email_receptor.eq.'+encodeURIComponent(sessionEmail)+'),and(uid_receptor.eq.'+encodeURIComponent(p.uid)+',email_solicitante.eq.'+encodeURIComponent(sessionEmail)+'))&select=*',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(rows){
+    if(!currentModalPet||currentModalPet.uid!==p.uid) return;
+    var btn;
+    if(!rows||!rows.length){
+      btn='<button class="btn-primary btn-pink" style="width:100%" onclick="enviarSolicitudAmistad(\''+p.uid+'\')">🐾 Agregar amigo</button>';
+    } else {
+      var rel=rows[0];
+      if(rel.estado==='aceptado'){
+        btn='<button class="btn-primary" style="width:100%;background:#e0f7f7;color:#007a7a;cursor:default">🐾 Amigos</button>';
+      } else if(rel.email_solicitante.toLowerCase()===sessionEmail.toLowerCase()){
+        var diasPend=rel.created_at?Math.floor((Date.now()-new Date(rel.created_at).getTime())/86400000):0;
+        if(diasPend>=21){
+          btn='<button class="btn-primary btn-pink" style="width:100%" onclick="reenviarSolicitud(\''+p.uid+'\',\''+rel.id+'\')">🔄 Reenviar solicitud</button>';
+        } else {
+          btn='<button class="btn-primary" style="width:100%;background:#f0f0ee;color:#888;cursor:default">Solicitud enviada</button>';
+        }
+      } else {
+        btn='<button class="btn-primary btn-pink" style="width:100%" onclick="aceptarDesdeModal(\''+rel.id+'\')">Aceptar solicitud</button>';
+      }
+    }
+    footer.innerHTML=btn;
+  }).catch(function(){
+    footer.innerHTML='<button class="btn-primary btn-pink" style="width:100%" onclick="enviarSolicitudAmistad(\''+p.uid+'\')">🐾 Agregar amigo</button>';
+  });
 }
 
 function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
