@@ -136,8 +136,8 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
   <div style="display:flex;flex:1;overflow:hidden">
 
     <!-- Foto izquierda (42%) — cuadro centrado, sin estirar -->
-    <div id="pngPhoto" style="width:441px;flex-shrink:0;background:#c8e8e8;overflow:hidden;display:flex;align-items:center;justify-content:center">
-      <!-- la imagen se inyecta como cuadro centrado -->
+    <div id="pngPhoto" style="width:441px;flex-shrink:0;background:#c8e8e8;overflow:hidden;position:relative">
+      <!-- la imagen se inyecta con object-fit:cover -->
     </div>
 
     <!-- Panel derecho -->
@@ -667,8 +667,7 @@ function updatePngCard(){
   var pngPhoto=document.getElementById('pngPhoto');
   if(img.src&&img.style.display!=='none'){
     // Tamaño del cuadro: el menor entre el ancho (441) y el alto disponible (532), con 24px de margen
-    var boxSize=Math.min(441,532)-48; // 393px
-    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:'+boxSize+'px;height:'+boxSize+'px;object-fit:contain;background:#c8e8e8;border-radius:12px;display:block" crossorigin="anonymous">';
+    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:441px;height:532px;object-fit:cover;object-position:center;display:block" crossorigin="anonymous">';
   } else {
     pngPhoto.innerHTML='';
   }
@@ -723,15 +722,21 @@ async function generatePNGBase64(){
   }
   var card=document.getElementById('pngCard');
   var canvas=await html2canvas(card,{
-    scale:1,
+    scale:2,
     useCORS:true,
     allowTaint:false,
     backgroundColor:'#ffffff',
     logging:false,
     width:1050,
-    height:600
+    height:600,
+    windowWidth:1050,
+    windowHeight:600
   });
-  return canvas.toDataURL('image/png').split(',')[1];
+  // Redimensionar a 1050x600 exacto para evitar compresion
+  var finalCanvas=document.createElement('canvas');
+  finalCanvas.width=1050;finalCanvas.height=600;
+  finalCanvas.getContext('2d').drawImage(canvas,0,0,canvas.width,canvas.height,0,0,1050,600);
+  return finalCanvas.toDataURL('image/png').split(',')[1];
 }
 
 async function uploadToCloudinary(base64,mime){
