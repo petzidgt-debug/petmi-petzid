@@ -81,6 +81,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .btn-perdido{background:#c0392b;color:#fff}
 .btn-editar-big{background:#00B4B4;color:#fff}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -166,7 +167,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <script>
 var sessionEmail = localStorage.getItem('petzid_email') || '';
 var mascota      = null;
-var uid          = (new URLSearchParams(window.location.search).get('uid')||'').toLowerCase().trim();
+var uidParam     = (new URLSearchParams(window.location.search).get('uid')||'').trim();
+var uid          = uidParam.toLowerCase(); // para comparaciones locales
 var esDueno      = false;
 
 // Constantes Supabase (anon key — segura en cliente)
@@ -176,17 +178,23 @@ var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 if(!uid) window.location.href = '/galeria.html';
 
 // ── Cargar perfil desde Supabase ──────────────────────────────
-fetch(SB_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid)+'&select=*', {
+// Intentar con UID tal como llegó en la URL, luego en minúsculas, luego ilike
+fetch(SB_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uidParam)+'&select=*', {
   headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
 }).then(function(r){return r.json();})
 .then(function(data){
-  if(!data||!data.length){
-    // Retry con ilike por si el uid tiene mayusculas en la DB
-    return fetch(SB_URL+'/rest/v1/mascotas?uid=ilike.'+encodeURIComponent(uid)+'&select=*', {
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
-    }).then(function(r2){return r2.json();});
-  }
-  return data;
+  if(data&&data.length) return data;
+  // Retry minúsculas
+  return fetch(SB_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid)+'&select=*', {
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  }).then(function(r2){return r2.json();});
+})
+.then(function(data){
+  if(data&&data.length) return data;
+  // Último recurso: ilike (case-insensitive)
+  return fetch(SB_URL+'/rest/v1/mascotas?uid=ilike.'+encodeURIComponent(uidParam)+'&select=*', {
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+  }).then(function(r3){return r3.json();});
 })
 .then(function(data){
   if(!data||!data.length){
@@ -275,8 +283,8 @@ function renderPerfil(){
   if(esDueno){
     ownerHTML='<div class="owner-actions">'
       +'<button class="btn-action btn-perdido" onclick="abrirModalPerdido()">🚨 Me perdí</button>'
-      +'<a class="btn-action btn-editar-big" href="/editar.html?uid='+m.uid+'" style="text-decoration:none;display:flex;align-items:center;justify-content:center">✏️ Editar perfil</a>'
-      +(!esPremium?'<a class="btn-action" href="/editar.html?uid='+m.uid+'" style="text-decoration:none;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff">⭐ Upgrade Premium</a>':'<span class="btn-action" style="background:linear-gradient(135deg,#F5C842,#f0a500);color:#1a1a1a;display:flex;align-items:center;justify-content:center">⭐ Premium activo</span>')
+      +'<button class="btn-action" onclick="descargarPetzID()" style="background:#00B4B4;color:#fff;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descargar ID</button>'
+      +'<a class="btn-action btn-editar-big" href="/?editar='+m.uid+'" style="text-decoration:none;display:flex;align-items:center;justify-content:center">✏️ Editar perfil</a>'
       +'</div>';
   }
 
@@ -768,6 +776,115 @@ function roundRectPoster(ctx,x,y,w,h,r){
 }
 
 document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarModalPerdido();});
+</script>
+
+<!-- PNG Card oculta — diseño v7 -->
+<div id="pngCard" style="position:fixed;left:-9999px;top:0;width:1050px;height:600px;font-family:Arial,sans-serif;overflow:hidden;background:#fff;display:flex;flex-direction:column">
+  <div style="display:flex;flex:1;overflow:hidden">
+    <div id="pngCardPhoto" style="width:441px;flex-shrink:0;background:#00B4B4;overflow:hidden;display:flex;align-items:center;justify-content:center"></div>
+    <div style="flex:1;display:flex;flex-direction:column">
+      <div style="background:#00B4B4;height:264px;padding:18px 22px;display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="font-size:10px;font-weight:700;letter-spacing:9px;color:rgba(200,240,240,.9);margin-bottom:5px">N O M B R E</div>
+        <div id="pngCardNombre" style="font-size:38px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;line-height:1.1;margin-bottom:8px">"NOMBRE"</div>
+        <div id="pngCardApodo" style="display:none;background:#F4A0B0;color:#7a1a2e;font-size:12px;font-weight:700;padding:3px 14px;border-radius:20px;align-self:flex-start"></div>
+      </div>
+      <div style="background:#fff;flex:1;padding:0 22px;display:flex;flex-direction:column;justify-content:space-around">
+        <div style="display:flex;justify-content:space-between;padding:10px 0 8px;border-bottom:1px solid #eee">
+          <div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbbbbb;text-transform:uppercase;margin-bottom:3px">ESPECIE</div><div id="pngCardEspecie" style="font-size:17px;font-weight:700;color:#222;text-transform:uppercase">-</div></div>
+          <div style="text-align:right"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbbbbb;text-transform:uppercase;margin-bottom:3px">SEXO</div><div id="pngCardSexo" style="font-size:17px;font-weight:700;color:#222;text-transform:uppercase">-</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee">
+          <div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbbbbb;text-transform:uppercase;margin-bottom:3px">RAZA</div><div id="pngCardRaza" style="font-size:17px;font-weight:700;color:#222;text-transform:uppercase">-</div></div>
+          <div style="text-align:right"><div id="pngCardFechaLbl" style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbbbbb;text-transform:uppercase;margin-bottom:3px">NACIMIENTO</div><div id="pngCardFecha" style="font-size:17px;font-weight:700;color:#222">-</div></div>
+        </div>
+        <div style="padding:8px 0 10px"><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#bbbbbb;text-transform:uppercase;margin-bottom:3px">RESPONSABLE</div><div id="pngCardDueno" style="font-size:17px;font-weight:700;color:#222;text-transform:uppercase">-</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="background:#F5C842;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0">
+    <div>
+      <div style="font-size:9px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase;line-height:1">ID</div>
+      <div id="pngCardShortId" style="font-size:26px;font-weight:400;color:#1a1a1a;letter-spacing:2px;line-height:1.2">------</div>
+    </div>
+    <img src="https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/logopetmi.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9nb3BldG1pLnBuZyIsImlhdCI6MTc3OTM5NTY4MiwiZXhwIjoyMDk0NzU1NjgyfQ.UFxj_NZ3QonOLDXVoUD_rC3nxRQg4C3aiJLjFrt5SO8" alt="PetMi" style="height:42px;width:auto;object-fit:contain" crossorigin="anonymous">
+  </div>
+</div>
+
+<script>
+// ── Descargar PetzID desde perfil ────────────────────────────
+async function descargarPetzID() {
+  if(!mascota) return;
+
+  // Loading toast
+  mostrarToast('Generando tu PetzID...');
+
+  // Poblar el pngCard con los datos de la mascota
+  document.getElementById('pngCardNombre').textContent = '"' + (mascota.nombre||'NOMBRE').toUpperCase() + '"';
+
+  var apodoBadge = document.getElementById('pngCardApodo');
+  if(mascota.apodo && mascota.apodo.trim()) {
+    apodoBadge.textContent = mascota.apodo.trim().toUpperCase();
+    apodoBadge.style.display = 'inline-block';
+  } else {
+    apodoBadge.style.display = 'none';
+  }
+
+  document.getElementById('pngCardEspecie').textContent = (mascota.especie||'-').toUpperCase();
+  document.getElementById('pngCardSexo').textContent    = (mascota.sexo||'-').toUpperCase();
+  document.getElementById('pngCardRaza').textContent    = (mascota.raza||'-').toUpperCase();
+  document.getElementById('pngCardFechaLbl').textContent = mascota.tipoFecha==='llegada' ? 'LLEGO A CASA' : 'NACIMIENTO';
+  document.getElementById('pngCardFecha').textContent   = formatFecha(mascota.fecha) || '-';
+  document.getElementById('pngCardDueno').textContent   = (mascota.dueno||'-').toUpperCase();
+  document.getElementById('pngCardShortId').textContent = (mascota.uid||'').replace(/-/g,'').toUpperCase().slice(-6);
+
+  // Foto — cover centrado
+  var photoEl = document.getElementById('pngCardPhoto');
+  if(mascota.foto && mascota.foto.indexOf('http')>=0) {
+    photoEl.innerHTML = '<img src="' + mascota.foto + '" style="width:441px;height:528px;object-fit:cover;object-position:center center;display:block" crossorigin="anonymous">';
+    // Esperar carga de foto
+    var fotoImg = photoEl.querySelector('img');
+    if(fotoImg && !fotoImg.complete) {
+      await new Promise(function(res) {
+        fotoImg.onload = res;
+        fotoImg.onerror = res;
+        setTimeout(res, 2500);
+      });
+    }
+  } else {
+    photoEl.innerHTML = '';
+  }
+
+  // Esperar logo
+  var logoImg = document.querySelector('#pngCard img[alt="PetMi"]');
+  if(logoImg && !logoImg.complete) {
+    await new Promise(function(res) { logoImg.onload=res; logoImg.onerror=res; setTimeout(res,2000); });
+  }
+
+  // Generar PNG con html2canvas
+  try {
+    var card = document.getElementById('pngCard');
+    var canvas = await html2canvas(card, {
+      scale: 1,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: 1050,
+      height: 600
+    });
+    var b64 = canvas.toDataURL('image/png');
+    var link = document.createElement('a');
+    link.href = b64;
+    link.download = 'PetzID_' + (mascota.nombre||'mascota') + '.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    mostrarToast('✅ PetzID descargado');
+  } catch(err) {
+    console.error('descargarPetzID error:', err);
+    mostrarToast('Error al generar el ID. Intenta de nuevo.');
+  }
+}
 </script>
 <script src="/header.js"></script>
 </body>
