@@ -702,41 +702,93 @@ function updatePngCard(){
 
 async function generatePNGBase64(){
   updatePngCard();
-  // Esperar a que la imagen de foto cargue dentro del pngCard
-  var photoImg=document.querySelector('#pngPhoto img');
-  if(photoImg&&!photoImg.complete){
-    await new Promise(function(resolve){
-      photoImg.onload=resolve;
-      photoImg.onerror=resolve;
-      setTimeout(resolve,2000); // fallback 2s
-    });
+
+  var W=1050,H=600,FW=441,YH=68,TH=H-YH,TEAL_H=Math.round(TH*0.52),WHITE_H=TH-TEAL_H;
+  var IW=W-FW;
+
+  var canvas=document.createElement('canvas');
+  canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+
+  // Datos del formulario
+  var nombre=(document.getElementById('inNombre').value||'NOMBRE').toUpperCase();
+  var apodo=(document.getElementById('inApodo').value||'').trim().toUpperCase();
+  var especie=getChip('chipsEspecie').toUpperCase();
+  var sexo=getChip('chipsSexo').toUpperCase();
+  var raza=(document.getElementById('inRaza').value||'-').toUpperCase();
+  var fechaLbl=dateMode==='casa'?'LLEGO A CASA':'NACIMIENTO';
+  var fecha=fmtDate(document.getElementById('inFecha').value)||'-';
+  var fd=isSibling?familyData:{dueno:(document.getElementById('inDueno')?document.getElementById('inDueno').value:'-')};
+  var dueno=String(fd&&fd.dueno?fd.dueno:'-').toUpperCase();
+  var shortId=uid.replace(/-/g,'').toUpperCase().slice(-6);
+
+  // ── Foto izquierda — object-fit cover via canvas ──────
+  ctx.fillStyle='#c8e8e8';ctx.fillRect(0,0,FW,H-YH);
+  var petImg=document.getElementById('petPhoto');
+  if(petImg&&petImg.src&&petImg.style.display!=='none'){
+    try{
+      await new Promise(function(res,rej){
+        var tmp=new Image();tmp.crossOrigin='anonymous';
+        tmp.onload=function(){
+          // Cover centrado
+          var scale=Math.max(FW/tmp.width,(H-YH)/tmp.height);
+          var sw=tmp.width*scale,sh=tmp.height*scale;
+          ctx.save();ctx.beginPath();ctx.rect(0,0,FW,H-YH);ctx.clip();
+          ctx.drawImage(tmp,(FW-sw)/2,(H-YH-sh)/2,sw,sh);
+          ctx.restore();res();
+        };
+        tmp.onerror=res;
+        tmp.src=petImg.src;
+        setTimeout(res,3000);
+      });
+    }catch(e){}
   }
-  // Esperar logo del footer
-  var logoImg=document.getElementById('pngLogoFooter');
-  if(logoImg&&!logoImg.complete){
-    await new Promise(function(resolve){
-      logoImg.onload=resolve;
-      logoImg.onerror=resolve;
-      setTimeout(resolve,2000);
-    });
+
+  // ── Teal derecha ───────────────────────────────────────
+  ctx.fillStyle='#00B4B4';ctx.fillRect(FW,0,IW,TEAL_H);
+  var px=FW+20,pw=IW-40;
+  ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='700 11px Arial';ctx.textAlign='left';
+  ctx.letterSpacing='3px';ctx.fillText('N O M B R E',px,TEAL_H-116);ctx.letterSpacing='0px';
+  ctx.fillStyle='#fff';ctx.font='900 42px "Arial Black",Arial';ctx.fillText('"'+nombre+'"',px,TEAL_H-66);
+  if(apodo){
+    ctx.font='700 12px Arial';
+    var bw=ctx.measureText(apodo).width+26;
+    ctx.fillStyle='#F4A0B0';ctx.beginPath();ctx.roundRect(px,TEAL_H-48,bw,26,13);ctx.fill();
+    ctx.fillStyle='#7a1a2e';ctx.textAlign='center';ctx.fillText(apodo,px+bw/2,TEAL_H-30);
   }
-  var card=document.getElementById('pngCard');
-  var canvas=await html2canvas(card,{
-    scale:2,
-    useCORS:true,
-    allowTaint:false,
-    backgroundColor:'#ffffff',
-    logging:false,
-    width:1050,
-    height:600,
-    windowWidth:1050,
-    windowHeight:600
-  });
-  // Redimensionar a 1050x600 exacto para evitar compresion
-  var finalCanvas=document.createElement('canvas');
-  finalCanvas.width=1050;finalCanvas.height=600;
-  finalCanvas.getContext('2d').drawImage(canvas,0,0,canvas.width,canvas.height,0,0,1050,600);
-  return finalCanvas.toDataURL('image/png').split(',')[1];
+
+  // ── Blanco 3 filas ─────────────────────────────────────
+  ctx.fillStyle='#fff';ctx.fillRect(FW,TEAL_H,IW,WHITE_H);
+  var ROW=Math.floor(WHITE_H/3),col=Math.floor(pw/2);
+  function field(lbl,val,x,y,right){
+    ctx.textAlign=right?'right':'left';
+    var tx=right?(x+col):x;
+    ctx.fillStyle='#bbb';ctx.font='600 9px Arial';ctx.fillText(lbl,tx,y);
+    ctx.fillStyle='#222';ctx.font='700 17px Arial';ctx.fillText(val,tx,y+21);
+  }
+  field('ESPECIE',especie,px,TEAL_H+14,false);field('SEXO',sexo,px,TEAL_H+14,true);
+  ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW,pw,1);
+  field('RAZA',raza,px,TEAL_H+ROW+14,false);field(fechaLbl,fecha,px,TEAL_H+ROW+14,true);
+  ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW*2,pw,1);
+  ctx.textAlign='left';
+  ctx.fillStyle='#bbb';ctx.font='600 9px Arial';ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+14);
+  ctx.fillStyle='#222';ctx.font='700 17px Arial';ctx.fillText(dueno,px,TEAL_H+ROW*2+35);
+
+  // ── Footer amarillo ────────────────────────────────────
+  ctx.fillStyle='#F5C842';ctx.fillRect(0,H-YH,W,YH);
+  // ID
+  ctx.fillStyle='#555';ctx.font='600 9px Arial';ctx.textAlign='left';ctx.fillText('ID',px,H-YH+22);
+  ctx.fillStyle='#333';ctx.font='400 24px Arial';ctx.fillText(shortId,px,H-YH+50);
+  // Logo
+  var logoEl=document.getElementById('pngLogoFooter');
+  if(logoEl&&logoEl.complete&&logoEl.naturalWidth>0){
+    try{
+      var lh=42,lw=logoEl.naturalWidth*(lh/logoEl.naturalHeight);
+      ctx.drawImage(logoEl,W-lw-18,H-YH+(YH-lh)/2,lw,lh);
+    }catch(e){}
+  }
+
+  return canvas.toDataURL('image/png').split(',')[1];
 }
 
 async function uploadToCloudinary(base64,mime){
