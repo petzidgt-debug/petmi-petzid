@@ -1,5 +1,5 @@
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-JuoArBFmSUT3C6RsqBi51-GjYw0QxR2YAMS2LMLGN4UDrzmrvodSjCLTTyF7bKL8/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6cQfUBBpPMisKxx-i3aAxQ0iYs7FbmvAav1zSU3mpSS2fqVFBI-hyw3dUkMsrUjg/exec';
 
 export const config = { api: { bodyParser: true } };
 
