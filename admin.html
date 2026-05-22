@@ -921,11 +921,11 @@ function cargarAvisosPendientes(){
   var wrap=document.getElementById('avisosAdminWrap');
   var sub=document.getElementById('subAvisos');
   wrap.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  fetch(SUPA_ADMIN+'/rest/v1/actividades?activo=eq.false&order=created_at.desc&select=*',{
-    headers:{'apikey':SUPA_ADMIN_KEY,'Authorization':'Bearer '+SUPA_ADMIN_KEY}
-  }).then(function(r){return r.json();})
+  fetch('/api/galeria?action=getAvisosPendientes')
+  .then(function(r){return r.json();})
+  .then(function(d){return d.avisos||[];})
   .then(function(rows){
-    sub.textContent=rows.length+' pendiente(s)';
+    sub.textContent=(rows||[]).length+' pendiente(s)';
     if(!rows.length){
       wrap.innerHTML='<div style="text-align:center;padding:40px;color:#aaa">No hay avisos pendientes de aprobacion</div>';
       return;
@@ -965,10 +965,9 @@ function cargarAvisosPendientes(){
 function aprobarAviso(btn){
   var id=btn.getAttribute('data-id');
   btn.disabled=true;btn.textContent='Aprobando...';
-  fetch(SUPA_ADMIN+'/rest/v1/actividades?id=eq.'+id,{
-    method:'PATCH',
-    headers:{'apikey':SUPA_ADMIN_KEY,'Authorization':'Bearer '+SUPA_ADMIN_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-    body:JSON.stringify({activo:true})
+  fetch('/api/galeria?action=aprobarAviso',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'aprobarAviso',id:id})
   }).then(function(){
     var card=btn.closest('[style*="border:0.5px solid #e0e0e0"]');
     if(card) card.remove();
@@ -982,9 +981,9 @@ function rechazarAviso(btn){
   var id=btn.getAttribute('data-id');
   if(!confirm('Eliminar este aviso?')) return;
   btn.disabled=true;btn.textContent='Eliminando...';
-  fetch(SUPA_ADMIN+'/rest/v1/actividades?id=eq.'+id,{
-    method:'DELETE',
-    headers:{'apikey':SUPA_ADMIN_KEY,'Authorization':'Bearer '+SUPA_ADMIN_KEY,'Prefer':'return=minimal'}
+  fetch('/api/galeria?action=rechazarAviso',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'rechazarAviso',id:id})
   }).then(function(){
     var card=btn.closest('[style*="border:0.5px solid #e0e0e0"]');
     if(card) card.remove();
