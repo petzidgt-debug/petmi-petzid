@@ -450,6 +450,7 @@ function confirmarAngelito(uid, nombre){
 
 function confirmarEliminar(uid, nombre){
   if(confirm('¿Eliminar a '+nombre+'? Esta acción no se puede deshacer.')){
+    console.log('Eliminando uid:', uid, 'nombre:', nombre);
     fetch('/api/submit',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'deleteMascota',uid:uid})
