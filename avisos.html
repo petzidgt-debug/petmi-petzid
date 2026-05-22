@@ -684,20 +684,24 @@ function publicar(){
 
   // Subir foto de perdido a Cloudinary si hay una nueva
   async function doPublicar(){
+    var fotoUrl='';
     if(tipoSel==='perdido'&&perdidoFotoBase64){
       btn.textContent='Subiendo foto...';
-      var fotoUrl='';
-      if(tipoSel==='perdido') fotoUrl=await uploadFotoPerdido();
-      else if(tipoSel==='adopcion'&&adopcionFotoBase64){
-        try{
-          var fd=new FormData();
-          var blob=await fetch('data:'+(adopcionFotoMime||'image/jpeg')+';base64,'+adopcionFotoBase64).then(function(r){return r.blob();});
-          fd.append('file',blob);fd.append('upload_preset','petzid');fd.append('folder','petzid/adopcion');
-          var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
-          var data=await res.json();fotoUrl=data.secure_url||'';
-        }catch(e){console.log('Cloudinary adopcion:',e);}
-      }
-      if(fotoUrl) payload.foto_creador=fotoUrl;
+      fotoUrl=await uploadFotoPerdido();
+    } else if(tipoSel==='adopcion'&&adopcionFotoBase64){
+      btn.textContent='Subiendo foto...';
+      try{
+        var fd=new FormData();
+        var blob=await fetch('data:'+(adopcionFotoMime||'image/jpeg')+';base64,'+adopcionFotoBase64).then(function(r){return r.blob();});
+        fd.append('file',blob);fd.append('upload_preset','petzid');fd.append('folder','petzid/adopcion');
+        var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
+        var data=await res.json();fotoUrl=data.secure_url||'';
+      }catch(e){console.log('Cloudinary adopcion:',e);}
+    }
+    // Para adopcion usar imagen, para otros foto_creador
+    if(fotoUrl){
+      if(tipoSel==='adopcion') payload.imagen=fotoUrl;
+      else payload.foto_creador=fotoUrl;
     }
     fetch('/api/galeria?action=publicarActividad',{
       method:'POST',headers:{'Content-Type':'application/json'},
