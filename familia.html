@@ -436,16 +436,65 @@ async function generarPosterFam(){
 }
 
 function confirmarAngelito(uid, nombre){
-  if(confirm('¿Marcar a '+nombre+' como angelito? Esta acción no se puede deshacer.')){
-    var hoy=new Date().toISOString().split('T')[0];
-    fetch('/api/galeria?action=markAngel',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({uid:uid,esAngel:true,fechaAngelito:hoy})
-    }).then(function(){
-      alert('🌈 '+nombre+' fue marcado como angelito. Descansa en paz 🐾');
-      location.reload();
-    });
+  // Mostrar modal para confirmar fecha de partida
+  var overlay = document.getElementById('modalAngelito');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'modalAngelito';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px';
+    var cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancelar';
+    cancelBtn.style.cssText = 'width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer';
+    cancelBtn.onclick = function(){ overlay.style.display='none'; };
+    var confirmBtn = document.createElement('button');
+    confirmBtn.id = 'angelConfirmarBtn';
+    confirmBtn.textContent = 'Confirmar';
+    confirmBtn.style.cssText = 'width:100%;padding:14px;background:#764ba2;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px';
+    var dateInput = document.createElement('input');
+    dateInput.type = 'date'; dateInput.id = 'angelFechaInput';
+    dateInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;outline:none;margin-bottom:16px;box-sizing:border-box';
+    var nombreDiv = document.createElement('div');
+    nombreDiv.id = 'angelNombre';
+    nombreDiv.style.cssText = 'font-size:18px;font-weight:700;color:#222;margin-bottom:6px';
+    var subDiv = document.createElement('div');
+    subDiv.textContent = 'Ingresa la fecha en que nos dejo';
+    subDiv.style.cssText = 'font-size:13px;color:#888;margin-bottom:20px;line-height:1.5';
+    var iconDiv = document.createElement('div');
+    iconDiv.textContent = String.fromCodePoint(0x1F308);
+    iconDiv.style.cssText = 'font-size:36px;margin-bottom:10px';
+    var innerBox = document.createElement('div');
+    innerBox.style.cssText = 'background:#fff;border-radius:20px;padding:28px;width:100%;max-width:340px;text-align:center';
+    innerBox.appendChild(iconDiv);
+    innerBox.appendChild(nombreDiv);
+    innerBox.appendChild(subDiv);
+    innerBox.appendChild(dateInput);
+    innerBox.appendChild(confirmBtn);
+    innerBox.appendChild(cancelBtn);
+    overlay.appendChild(innerBox);
+    document.body.appendChild(overlay);
   }
+  document.getElementById('angelNombre').textContent = nombre + ' ya es un angelito 🐾';
+  document.getElementById('angelFechaInput').value = new Date().toISOString().split('T')[0];
+  overlay.style.display = 'flex';
+  document.getElementById('angelConfirmarBtn').onclick = function(){
+    var fecha = document.getElementById('angelFechaInput').value;
+    if(!fecha){ alert('Selecciona la fecha'); return; }
+    overlay.style.display = 'none';
+    // Mostrar spinner
+    var mb = document.getElementById('modalBorrando');
+    mb.querySelector('div > div:nth-child(2)').textContent = 'Guardando...';
+    mb.style.display = 'flex';
+    fetch('/api/submit',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'markAngel',uid:uid,esAngel:true,fechaAngelito:fecha})
+    }).then(function(r){return r.json();})
+    .then(function(){
+      setTimeout(function(){location.reload();},2500);
+    }).catch(function(){
+      mb.style.display='none';
+      alert('Error al guardar');
+    });
+  };
 }
 
 function confirmarEliminar(btn){
