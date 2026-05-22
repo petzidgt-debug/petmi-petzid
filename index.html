@@ -856,7 +856,7 @@ async function submitPetzID(){
   }catch(e){console.log('PNG local error:',e);}
 
   var payload={
-    uid:uid,isSibling:isSibling,
+    uid:uid,isSibling:isSibling,siblings:isSibling?siblings.map(function(s){return {nombre:s.nombre,especie:s.especie,sexo:s.sexo||''};}) : [],
     nombre:      document.getElementById('inNombre').value.trim(),
     apodo:       document.getElementById('inApodo').value.trim(),
     especie:     getChip('chipsEspecie'),
