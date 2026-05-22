@@ -128,6 +128,17 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <label class="form-label">Ubicación</label>
     <input type="text" class="form-input" id="pubUbicacion" placeholder="Zona 10, Guatemala">
 
+    <!-- Foto para adopcion -->
+    <div id="camposAdopcion" style="display:none;border-top:1.5px dashed #e0f0e0;padding-top:14px;margin-top:4px">
+      <div style="background:#e8f5e9;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#2e7d32">🏠 Los avisos de adopción requieren aprobación del admin antes de publicarse</div>
+      <label class="form-label">Foto de la mascota en adopción</label>
+      <div class="foto-upload-perdido" id="fotoAdopcionWrap" onclick="document.getElementById('adopcionFotoInput').click()">
+        <img id="adopcionFotoPreview" style="display:none">
+        <div class="foto-upload-label" id="adopcionFotoLabel">📷 Toca para agregar una foto · <span style="color:#2e7d32">Recomendado</span></div>
+        <input type="file" id="adopcionFotoInput" accept="image/*" onchange="previsualizarFotoAdopcion(this)">
+      </div>
+    </div>
+
     <!-- Campos adicionales para perdido -->
     <div class="campos-perdido" id="camposPerdido">
       <div class="perdido-tip">🚨 Para avisos de perdido necesitamos más datos para el póster</div>
@@ -521,6 +532,21 @@ function cerrarPublicar(){
   if(inp) inp.value='';
 }
 
+var adopcionFotoBase64=null, adopcionFotoMime=null;
+function previsualizarFotoAdopcion(input){
+  var file=input.files[0];if(!file)return;
+  adopcionFotoMime=file.type;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    adopcionFotoBase64=e.target.result.split(',')[1];
+    var prev=document.getElementById('adopcionFotoPreview');
+    prev.src=e.target.result;prev.style.display='block';
+    document.getElementById('adopcionFotoLabel').style.display='none';
+    document.getElementById('fotoAdopcionWrap').style.borderColor='#2e7d32';
+  };
+  reader.readAsDataURL(file);
+}
+
 function selTipo(tipo,el){
   tipoSel=tipo;
   document.querySelectorAll('.tipo-option').forEach(function(o){o.classList.remove('selected');});
@@ -545,6 +571,12 @@ function selTipo(tipo,el){
   } else {
     cp.classList.remove('visible');
   }
+  // Mostrar/ocultar foto de adopcion
+  var ca=document.getElementById('camposAdopcion');
+  if(ca) ca.style.display=(tipo==='adopcion')?'block':'none';
+  // Para busco: ocultar foto del creador en el aviso
+  var fotoCreador=document.getElementById('fotoUploadWrap');
+  // (busco no muestra foto de mascota — solo texto)
 }
 
 function publicar(){
@@ -622,7 +654,17 @@ function publicar(){
   async function doPublicar(){
     if(tipoSel==='perdido'&&perdidoFotoBase64){
       btn.textContent='Subiendo foto...';
-      var fotoUrl=await uploadFotoPerdido();
+      var fotoUrl='';
+      if(tipoSel==='perdido') fotoUrl=await uploadFotoPerdido();
+      else if(tipoSel==='adopcion'&&adopcionFotoBase64){
+        try{
+          var fd=new FormData();
+          var blob=await fetch('data:'+(adopcionFotoMime||'image/jpeg')+';base64,'+adopcionFotoBase64).then(function(r){return r.blob();});
+          fd.append('file',blob);fd.append('upload_preset','petzid');fd.append('folder','petzid/adopcion');
+          var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
+          var data=await res.json();fotoUrl=data.secure_url||'';
+        }catch(e){console.log('Cloudinary adopcion:',e);}
+      }
       if(fotoUrl) payload.foto_creador=fotoUrl;
     }
     fetch('/api/galeria?action=publicarActividad',{
