@@ -163,19 +163,55 @@ function mostrarNoSession(){
 
 function cargarFamilia(email){
   Promise.all([
-    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})}).then(function(r){return r.json();}),
+    // Leer directo de Supabase (siempre actualizado)
+    fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email.toLowerCase())+'&select=*&order=created_at.asc',{
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+    }).then(function(r){return r.json();}),
     fetch('/api/galeria?action=getActividades&tipo=perdido').then(function(r){return r.json();})
   ]).then(function(results){
-    var d    = results[0];
+    var rows = results[0];
     var acts = (results[1].actividades)||[];
-    if(!d.found||d.mascotas.length===0){ mostrarNoSession(); return; }
-    misMascotas = d.mascotas;
+    if(!rows||!rows.length){ mostrarNoSession(); return; }
+    // Mapear campos de Supabase al formato esperado
+    misMascotas = rows.map(function(m){
+      return {
+        uid:          m.uid||'',
+        nombre:       m.nombre||'',
+        apodo:        m.apodo||'',
+        especie:      m.especie||'',
+        sexo:         m.sexo||'',
+        raza:         m.raza||'',
+        tipoFecha:    m.tipo_fecha||'nacimiento',
+        fecha:        m.fecha||'',
+        zona:         m.zona||'',
+        dueno:        m.dueno||'',
+        email:        m.email||'',
+        whatsapp:     m.whatsapp||'',
+        veterinario:  m.veterinario||'',
+        instagram:    m.instagram||'',
+        alimento:     m.alimento||'',
+        actividades:  m.actividades||'',
+        especial:     m.especial||'',
+        foto:         m.foto||'',
+        angelito:     m.angelito===true||m.angelito==='true'||m.angelito==='Si',
+        fechaAngelito:m.fecha_angelito||''
+      };
+    });
     mascotasPerdidas = {};
     acts.forEach(function(a){ mascotasPerdidas[a.uid_creador] = a.id; });
     renderFamilia();
   }).catch(function(){
-    document.getElementById('mainContent').innerHTML =
-      '<div style="text-align:center;padding:60px;color:#888">Error al cargar. <a href="/galeria.html" style="color:#00B4B4">Volver</a></div>';
+    // Fallback a checkEmail si Supabase falla
+    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.found||!d.mascotas.length){mostrarNoSession();return;}
+        misMascotas=d.mascotas;renderFamilia();
+      })
+      .catch(function(){
+        document.getElementById('mainContent').innerHTML=
+          '<div style="text-align:center;padding:60px;color:#888">Error al cargar. <a href="/galeria.html" style="color:#00B4B4">Volver</a></div>';
+      });
   });
 }
 function renderFamilia(){
