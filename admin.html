@@ -125,10 +125,9 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item active" onclick="showScreen('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
       <div class="nav-item" onclick="showScreen('mascotas',this)"><span class="nav-icon">🐾</span>Mascotas</div>
       <div class="nav-item" onclick="showScreen('familias',this)"><span class="nav-icon">🏠</span>Familias</div>
-      <div class="nav-item" onclick="showScreen('eventos',this)"><span class="nav-icon">🎉</span>Eventos</div>
+      <div class="nav-item" onclick="showScreen('eventos',this)"><span class="nav-icon">🎉</span>Eventos y Avisos</div>
       <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
       <div class="nav-item" onclick="showScreen('campanas',this)"><span class="nav-icon">📧</span>Campanas</div>
-      <div class="nav-item" onclick="showScreen('avisos',this)"><span class="nav-icon">📢</span>Avisos</div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
@@ -238,11 +237,13 @@ tbody tr:last-child td{border-bottom:none}
 
     <div class="screen" id="screenEventos">
       <div class="page-header">
-        <div><div class="page-title">Eventos Pet-Friendly</div><div class="page-sub" id="subEventos">-</div></div>
+        <div><div class="page-title">Eventos y Avisos</div><div class="page-sub" id="subEventos">-</div></div>
         <div style="display:flex;gap:8px">
-          <button class="btn-primary" style="background:#764ba2" onclick="cargarPlanesPendientes()">🐾 Planes pendientes</button>
-          <button class="btn-primary" style="background:#f0a500" onclick="filtrarEventosPendientes()">⏳ Eventos por aprobar</button>
-          <button class="btn-primary" onclick="cargarEventosAdmin()">Todos</button>
+          <button class="btn-primary" style="background:#764ba2" onclick="cargarAvisosTipo('plan')">🐾 Planes</button>
+          <button class="btn-primary" style="background:#2e7d32" onclick="cargarAvisosTipo('busco')">🔍 Busco</button>
+          <button class="btn-primary" style="background:#2e7d32" onclick="cargarAvisosTipo('adopcion')">🏠 Adopcion</button>
+          <button class="btn-primary" style="background:#f0a500" onclick="filtrarEventosPendientes()">⏳ Eventos</button>
+          <button class="btn-primary" onclick="cargarEventosAdmin()">Todos eventos</button>
           <button class="btn-primary" onclick="window.location.href='/admin-evento.html'">+ Nuevo</button>
         </div>
       </div>
@@ -255,13 +256,6 @@ tbody tr:last-child td{border-bottom:none}
         <button class="btn-primary" onclick="window.location.href='/admin-lugar.html'">+ Nuevo Lugar</button>
       </div>
       <div class="table-card"><div id="lugaresAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
-    <div class="screen" id="screenAvisos">
-      <div class="page-header">
-        <div><div class="page-title">Avisos pendientes</div><div class="page-sub" id="subAvisos">Cargando...</div></div>
-        <button class="btn-primary" onclick="cargarAvisosPendientes()">🔄 Actualizar</button>
-      </div>
-      <div id="avisosAdminWrap" style="background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)"><div class="loading"><div class="spinner"></div></div></div>
-    </div>
 
   </div>
 </div>
@@ -918,37 +912,46 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 var SUPA_ADMIN='https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_ADMIN_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
 
-function cargarPlanesPendientes(){
+function cargarAvisosTipo(tipo){
+  var LABELS={plan:'Planes',busco:'Busco',adopcion:'Adopciones'};
+  var COLORS={plan:'#764ba2',busco:'#2e7d32',adopcion:'#2e7d32'};
   var wrap=document.getElementById('eventosAdminWrap');
   var sub=document.getElementById('subEventos');
   wrap.innerHTML='<div class="loading"><div class="spinner"></div></div>';
   fetch('/api/galeria?action=getAvisosPendientes')
   .then(function(r){return r.json();})
   .then(function(d){
-    var rows=(d.avisos||[]).filter(function(a){return a.tipo==='plan';});
-    sub.textContent=rows.length+' plan(es) pendiente(s)';
+    var rows=(d.avisos||[]).filter(function(a){return a.tipo===tipo;});
+    var label=LABELS[tipo]||tipo;
+    sub.textContent=rows.length+' '+label.toLowerCase()+' pendiente(s)';
     if(!rows.length){
-      wrap.innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay planes pendientes de aprobacion</div>';
+      wrap.innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay '+label.toLowerCase()+' pendientes</div>';
       return;
     }
-    var html='<div class="table-wrap"><table><thead><tr><th>Titulo</th><th>Creador</th><th>Fecha</th><th>Ubicacion</th><th>Acciones</th></tr></thead><tbody>';
+    var color=COLORS[tipo]||'#888';
+    var foto=tipo==='adopcion';
+    var html='<div class="table-wrap"><table><thead><tr>'
+      +(foto?'<th>Foto</th>':'')
+      +'<th>Titulo</th><th>Creador</th><th>Fecha</th><th>Descripcion</th><th>Acciones</th></tr></thead><tbody>';
     rows.forEach(function(a){
+      var fotoSrc=a.imagen&&a.imagen.indexOf('http')>=0?a.imagen:(a.foto_creador&&a.foto_creador.indexOf('http')>=0?a.foto_creador:null);
       html+='<tr>'
+        +(foto?'<td>'+(fotoSrc?'<img src="'+fotoSrc+'" style="width:48px;height:48px;object-fit:cover;border-radius:6px">':'—')+'</td>':'')
         +'<td style="font-weight:700">'+a.titulo+'</td>'
         +'<td style="font-size:12px">'+a.nombre_creador+'</td>'
         +'<td style="font-size:12px">'+(a.fecha||'-')+'</td>'
-        +'<td style="font-size:12px;color:#888">'+(a.ubicacion||'-')+'</td>'
-        +'<td style="display:flex;gap:6px">'
-        +'<button class="btn-sm" style="background:#e0f7f7;color:#007a7a" data-id="'+a.id+'" onclick="aprobarPlan(this)">Aprobar</button>'
-        +'<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" data-id="'+a.id+'" onclick="rechazarPlan(this)">Rechazar</button>'
-        +'</td></tr>';
+        +'<td style="font-size:12px;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(a.descripcion||'-')+'</td>'
+        +'<td><div style="display:flex;gap:6px">'
+        +'<button class="btn-sm" style="background:#e0f7f7;color:#007a7a" data-id="'+a.id+'" onclick="aprobarAvisoGeneral(this)">Aprobar</button>'
+        +'<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" data-id="'+a.id+'" onclick="rechazarAvisoGeneral(this)">Rechazar</button>'
+        +'</div></td></tr>';
     });
     html+='</tbody></table></div>';
     wrap.innerHTML=html;
   }).catch(function(e){wrap.innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
 }
 
-function aprobarPlan(btn){
+function aprobarAvisoGeneral(btn){
   var id=btn.getAttribute('data-id');
   btn.disabled=true;btn.textContent='Aprobando...';
   fetch('/api/galeria?action=aprobarAviso',{
@@ -956,20 +959,20 @@ function aprobarPlan(btn){
     body:JSON.stringify({action:'aprobarAviso',id:id})
   }).then(function(){
     btn.closest('tr').remove();
-    mostrarToastAdmin('Plan aprobado y publicado');
+    mostrarToastAdmin('Aprobado y publicado');
   }).catch(function(){btn.disabled=false;btn.textContent='Aprobar';});
 }
 
-function rechazarPlan(btn){
+function rechazarAvisoGeneral(btn){
   var id=btn.getAttribute('data-id');
-  if(!confirm('Eliminar este plan?')) return;
+  if(!confirm('Eliminar este aviso?')) return;
   btn.disabled=true;btn.textContent='Eliminando...';
   fetch('/api/galeria?action=rechazarAviso',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'rechazarAviso',id:id})
   }).then(function(){
     btn.closest('tr').remove();
-    mostrarToastAdmin('Plan eliminado');
+    mostrarToastAdmin('Eliminado');
   }).catch(function(){btn.disabled=false;btn.textContent='Rechazar';});
 }
 
