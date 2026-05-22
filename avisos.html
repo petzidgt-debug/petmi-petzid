@@ -91,7 +91,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <body>
 
 <div class="hero">
-  <h1>📢 1 Avisos</h1>
+  <h1>📢 Avisos</h1>
   <p>Mascotas perdidas, busco, planes y adopciones de la comunidad</p>
 </div>
 
@@ -666,7 +666,8 @@ function publicar(){
 
   var btn=document.querySelector('.btn-publicar');
   btn.disabled=true;btn.textContent='Publicando...';
-  var activo=tipoSel==='adopcion'?false:true;
+  // perdido=activo inmediato, resto requiere aprobacion admin
+  var activo=tipoSel==='perdido';
 
   var payload=Object.assign({
     uid_creador:miMascota.uid,
