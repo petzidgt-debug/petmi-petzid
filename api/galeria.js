@@ -411,7 +411,37 @@ export default async function handler(req, res) {
       return res.status(200).json({ actividades });
     }
 
-    // ── publicarActividad ─────────────────────────────────────
+    // ── getAvisosPendientes ───────────────────────────────────────
+    if (action === 'getAvisosPendientes') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?activo=eq.false&order=created_at.desc&select=*', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ ok: true, avisos: data || [] });
+    }
+
+    // ── aprobarAviso ──────────────────────────────────────────────
+    if (action === 'aprobarAviso' && req.method === 'POST') {
+      const { id } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ activo: true })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── rechazarAviso ─────────────────────────────────────────────
+    if (action === 'rechazarAviso' && req.method === 'POST') {
+      const { id } = req.body;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + id, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── publicarActividad ─────────────────────────────────────────
     if (action === 'publicarActividad' && req.method === 'POST') {
       const { uid_creador, nombre_creador, foto_creador, tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, especie, sexo, raza, whatsapp, recompensa } = req.body;
       if (!titulo || !uid_creador) return res.status(200).json({ ok: false, error: 'Faltan campos' });
