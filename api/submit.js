@@ -1,11 +1,10 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyDq3iLDK5X2_OHX7kxtrLpw5Q-BRD04kpB9XBpLdmhtvnqZC24HAxGRotrKeZq-326/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGKPduL7m5qAAxO9wAQOoqj4LC6gdFqWVZZO4fxpLZPGbcHvq27IIkJunK-ZycAh8Z/exec';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
-
   try {
     let response;
     if (req.method === 'POST') {
@@ -21,23 +20,16 @@ export default async function handler(req, res) {
         redirect: 'follow'
       });
     }
-
     const text = await response.text();
-
-    // Log para debugging en Vercel Functions
     console.log('Apps Script status:', response.status);
     console.log('Apps Script response:', text.substring(0, 500));
-
     let data;
     try {
       data = JSON.parse(text);
     } catch(e) {
-      // Si no es JSON, devolver el texto crudo para poder ver el error
       return res.status(200).json({ ok: false, raw: text, status: response.status });
     }
-
     return res.status(200).json(data);
-
   } catch (err) {
     console.error('Submit handler error:', err.message);
     return res.status(500).json({ ok: false, error: err.message });
