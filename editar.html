@@ -411,12 +411,17 @@ async function guardar(){
   }).then(function(r){return r.json();})
   .then(function(d){
     if(!d.ok){mostrarError('Error al guardar. Intenta de nuevo.');btn.disabled=false;btn.textContent='💾 Guardar cambios';return;}
-    return fetch('/api/submit',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'markAngel',uid:mascota.uid,esAngel:esAngelito,fechaAngelito:fechaAngel})
+    // markAngel directo en Supabase (rapido) + sync sheet en background
+    fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(mascota.uid.toLowerCase()),{
+      method:'PATCH',
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({angelito:esAngelito,fecha_angelito:esAngelito?(fechaAngel||new Date().toISOString().split('T')[0]):null})
     });
+    fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'markAngel',uid:mascota.uid,esAngel:esAngelito,fechaAngelito:fechaAngel})});
+    return Promise.resolve({ok:true});
   }).then(function(r){
-    if(r) return r.json();
+    if(r) return r;
   }).then(function(){
     mostrarToast('✅ Cambios guardados!');
     setTimeout(function(){window.location.href='/familia.html';},1500);
