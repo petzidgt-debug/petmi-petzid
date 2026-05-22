@@ -653,7 +653,7 @@ function renderModalFooter(p){
   if(!sessionEmail){
     footer.innerHTML=
       '<button class="btn-primary btn-pink" style="flex:1" onclick="openLoginModal()">🔑 Ingresar</button>'+
-      (p.angelito?'':'<button class="btn-secondary" style="flex:1" onclick="window.location.href='/index.html'">Registrar mascota</button>');
+      (p.angelito?'':'<button class="btn-secondary" style="flex:1" onclick="irACrear()">Registrar mascota</button>');
     return;
   }
 
