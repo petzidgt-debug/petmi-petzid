@@ -118,6 +118,12 @@ function mostrarToastFam(msg){
 var sessionEmail = localStorage.getItem('petzid_email') || '';
 var sessionDueno = localStorage.getItem('petzid_dueno') || '';
 var misMascotas  = [];
+
+function esAngelito(m){
+  var v = m.angelito;
+  if(v===true||v==='true'||v==='Si'||v==='si'||v==='SI') return true;
+  return false;
+}
 var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 
@@ -175,10 +181,10 @@ function cargarFamilia(email){
 function renderFamilia(){
   var mascotas = misMascotas;
   var dueno    = mascotas[0].dueno || sessionDueno || '';
-  var perros   = mascotas.filter(function(m){ return m.especie.toLowerCase().indexOf('perro') >= 0 && !m.angelito; }).length;
-  var gatos    = mascotas.filter(function(m){ return m.especie.toLowerCase().indexOf('gato')  >= 0 && m.angelito!=='Si'; }).length;
-  var angeles  = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() === 'si'; }).length;
-  var activos  = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() !== 'si'; }).length;
+  var perros   = mascotas.filter(function(m){ return m.especie.toLowerCase().indexOf('perro') >= 0 && !esAngelito(m); }).length;
+  var gatos    = mascotas.filter(function(m){ return m.especie.toLowerCase().indexOf('gato')  >= 0 && !esAngelito(m); }).length;
+  var angeles  = mascotas.filter(function(m){ return esAngelito(m); }).length;
+  var activos  = mascotas.filter(function(m){ return !esAngelito(m); }).length;
 
   var html = '';
 
@@ -197,7 +203,7 @@ function renderFamilia(){
   html += '<div class="wrap">';
 
   // Mascotas activas
-  var activas = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() !== 'si'; });
+  var activas = mascotas.filter(function(m){ return !esAngelito(m); });
   if(activas.length > 0){
     html += '<div class="sec-titulo">🐾 Mis mascotas</div>';
     html += '<div class="mascotas-grid">';
@@ -208,7 +214,7 @@ function renderFamilia(){
   }
 
   // Angelitos
-  var angelitos = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() === 'si'; });
+  var angelitos = mascotas.filter(function(m){ return esAngelito(m); });
   if(angelitos.length > 0){
     html += '<div class="sec-titulo" style="color:#764ba2">🐾 Mis angelitos</div>';
     html += '<div class="mascotas-grid">';
@@ -245,7 +251,7 @@ function renderFamilia(){
 function renderCard(m){
   var esGato    = m.especie.toLowerCase().indexOf('gato') >= 0;
   var emoji     = esGato ? '🐱' : '🐶';
-  var esAngel   = String(m.angelito).toLowerCase() === 'si';
+  var esAngel   = esAngelito(m);
   var esPerdida = !!mascotasPerdidas[m.uid];
   var actId     = mascotasPerdidas[m.uid] || '';
   var fotoStyle = 'width:100%;aspect-ratio:1;object-fit:cover' + (esAngel?';filter:grayscale(30%)':'');
@@ -517,7 +523,7 @@ function confirmarAngelito(uid, nombre){
         body:JSON.stringify({action:'markAngel',uid:uid,esAngel:true,fechaAngelito:fecha})});
       // Actualizar en memoria sin reload
       var m2=misMascotas.find(function(x){return x.uid===uid;});
-      if(m2){m2.angelito='Si';m2.fechaAngelito=fecha;}
+      if(m2){m2.angelito=true;m2.fechaAngelito=fecha;}
       mb.style.display='none';
       mostrarToastFam('🐾 '+nombre+' ya es un angelito');
       renderFamilia();
