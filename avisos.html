@@ -282,85 +282,87 @@ function renderLista(){
 function renderAviso(a,i){
   var esCreador=sessionEmail&&a.email_creador&&a.email_creador.toLowerCase()===sessionEmail.toLowerCase();
   var sUrl=encodeURIComponent('https://petmi-petzid.vercel.app/share.html?tipo=aviso&id='+a.id);
-
   var HEADER_COLORS={perdido:'#c0392b',plan:'#764ba2',busco:'#2e7d32',adopcion:'#2e7d32'};
-  var LABELS={perdido:'🚨 Perdido',plan:'🐾 Plan',busco:'🔍 Busco',adopcion:'🏠 Adopción'};
-  var BORDER={perdido:'2px solid #c0392b',adopcion:'2px solid #2e7d32'};
-
+  var LABELS={perdido:'Perdido',plan:'Plan',busco:'Busco',adopcion:'Adopcion'};
+  var ICONS={perdido:'🚨',plan:'🐾',busco:'🔍',adopcion:'🏠'};
+  var BORDER={perdido:'2px solid #c0392b',adopcion:'1.5px solid #2e7d32'};
   var headerColor=HEADER_COLORS[a.tipo]||'#888';
-  var label=LABELS[a.tipo]||a.tipo;
+  var label=ICONS[a.tipo]+' '+LABELS[a.tipo];
   var border=BORDER[a.tipo]||'0.5px solid #eee';
 
-  // Foto
-  var fotoSrc=a.foto_creador&&a.foto_creador.indexOf('http')>=0?a.foto_creador:null;
-  var fotoHTML=fotoSrc
-    ?'<img src="'+fotoSrc+'" style="width:100%;height:100%;object-fit:cover;display:block">'
-    :'<div style="width:100%;height:100%;min-height:120px;display:flex;align-items:center;justify-content:center;font-size:40px;background:#f5f5f5">'+(a.tipo==='perdido'?'🐾':a.tipo==='plan'?'🐾':a.tipo==='busco'?'🔍':'🏠')+'</div>';
+  // Foto: busco NO tiene, resto usa imagen o foto_creador
+  var fotoSrc = a.tipo==='busco' ? null
+    : (a.imagen&&a.imagen.indexOf('http')>=0 ? a.imagen
+    : (a.foto_creador&&a.foto_creador.indexOf('http')>=0 ? a.foto_creador : null));
 
-  // Autor
-  var autorFoto=a.foto_creador&&a.foto_creador.indexOf('http')>=0
-    ?'<img src="'+a.foto_creador+'" style="width:24px;height:24px;border-radius:6px;object-fit:cover">'
-    :'<div style="width:24px;height:24px;border-radius:6px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:12px">🐾</div>';
+  // Avatar autor
+  var autorAvatar=a.foto_creador&&a.foto_creador.indexOf('http')>=0
+    ?('<img src="'+a.foto_creador+'" style="width:22px;height:22px;border-radius:5px;object-fit:cover">')
+    :('<div style="width:22px;height:22px;border-radius:5px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:11px">'+ICONS[a.tipo]+'</div>');
 
-  var html='<div class="act-card" id="card-'+a.id+'" style="border:'+border+';border-radius:16px;overflow:hidden;margin-bottom:12px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.06)">';
+  // Badge pendiente solo para creador
+  var pendienteBadge = (esCreador&&!a.activo)
+    ? '<div style="display:inline-flex;align-items:center;gap:4px;background:#fff3e0;color:#e65100;font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;margin-bottom:6px">Pendiente de aprobacion</div>'
+    : '';
+
+  var html='<div class="act-card" id="card-'+a.id+'" style="border:'+border+';border-radius:14px;overflow:hidden;margin-bottom:10px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.06)">';
 
   // Header
-  html+='<div style="background:'+headerColor+';padding:8px 14px;display:flex;align-items:center;gap:8px">'
+  html+='<div style="background:'+headerColor+';padding:7px 12px;display:flex;align-items:center;gap:8px">'
     +'<span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:.5px">'+label+'</span>'
     +'<span style="font-size:11px;color:rgba(255,255,255,.7);margin-left:auto">'+tiempoRelativo(a.created_at)+'</span>'
     +'</div>';
 
-  // Body: foto izq + info der
-  html+='<div style="display:flex">';
-  html+='<div style="width:120px;min-height:120px;flex-shrink:0;overflow:hidden;background:#f5f5f5">'+fotoHTML+'</div>';
-  html+='<div style="flex:1;padding:12px 14px;min-width:0">';
-
-  // Titulo
-  var tituloColor=a.tipo==='perdido'?'color:#c0392b;font-weight:900':'color:#222;font-weight:700';
-  html+='<div style="font-size:14px;'+tituloColor+';margin-bottom:5px;line-height:1.3">'+a.titulo+'</div>';
-
-  // Autor (para no-perdidos)
-  if(a.tipo!=='perdido'){
-    html+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">'+autorFoto
-      +'<span style="font-size:12px;color:#666">'+a.nombre_creador+'</span></div>';
+  // Body con o sin foto izquierda
+  if(fotoSrc){
+    html+='<div style="display:flex">'
+      +'<div style="width:110px;flex-shrink:0;overflow:hidden">'
+      +'<img src="'+fotoSrc+'" style="width:110px;height:100%;min-height:130px;object-fit:cover;display:block">'
+      +'</div>'
+      +'<div style="flex:1;padding:10px 12px;min-width:0">';
+  } else {
+    html+='<div style="padding:10px 12px">';
   }
 
-  // Meta: ubicacion + fecha
-  if(a.ubicacion) html+='<div style="font-size:12px;color:#888;margin-bottom:2px">📍 '+a.ubicacion+'</div>';
+  html+=pendienteBadge;
+  html+='<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'
+    +autorAvatar
+    +'<span style="font-size:11px;color:#666">'+a.nombre_creador+'</span></div>';
+
+  var tituloColor=a.tipo==='perdido'?'#c0392b':'#222';
+  html+='<div style="font-size:14px;font-weight:700;color:'+tituloColor+';margin-bottom:3px;line-height:1.3">'+a.titulo+'</div>';
+
+  if(a.ubicacion) html+='<div style="font-size:11px;color:#888;margin-bottom:2px">📍 '+a.ubicacion+'</div>';
   if(a.fecha){
     var fd=new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'short',day:'2-digit',month:'short'});
-    html+='<div style="font-size:12px;color:#aaa;margin-bottom:3px">📅 '+fd+'</div>';
+    html+='<div style="font-size:11px;color:#aaa;margin-bottom:3px">📅 '+fd+'</div>';
   }
+  if(a.descripcion) html+='<div style="font-size:12px;color:#777;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">'+a.descripcion+'</div>';
 
-  // Descripcion
-  if(a.descripcion) html+='<div style="font-size:12px;color:#777;line-height:1.5;margin-top:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">'+a.descripcion+'</div>';
-
-  html+='</div></div>';
+  html+= fotoSrc ? '</div></div>' : '</div>';
 
   // Apuntes
-  html+='<div id="apuntes-'+a.id+'" style="padding:0 14px 6px;display:flex;gap:4px;flex-wrap:wrap;align-items:center"></div>';
+  html+='<div id="apuntes-'+a.id+'" style="padding:0 12px 6px;display:flex;gap:4px;flex-wrap:wrap;align-items:center"></div>';
 
-  // Footer
-  html+='<div style="border-top:0.5px solid #f0f0ee;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap">';
+  // Footer botones
+  html+='<div style="border-top:0.5px solid #f0f0ee;padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
 
   if(a.tipo==='perdido'){
-    if(!esCreador) html+='<button class="btn-info" onclick="contactar(\''+a.email_creador+'\',\''+a.titulo+'\',\'perdido\',\''+( a.whatsapp||'')+'\')">'+(a.whatsapp?'💬 Tengo info por WA':'📞 Tengo info')+'</button>';
-    if(esCreador) html+='<button class="btn-aparecio" onclick="marcarAparecio(\''+a.id+'\',\''+a.nombre_creador+'\')">🎉 ¡Apareció!</button>';
-    html+='<button class="btn-dl" onclick="descargarPoster(\''+a.id+'\')">⬇ Descargar póster</button>';
+    if(!esCreador) html+='<button class="btn-info" onclick="contactar(''+a.email_creador+'',''+a.titulo+'','perdido',''+(a.whatsapp||'')+'')">'+(a.whatsapp?'💬 Tengo info':'📞 Tengo info')+'</button>';
+    if(esCreador) html+='<button class="btn-aparecio" onclick="marcarAparecio(''+a.id+'',''+a.nombre_creador+'')">🎉 Aparecio!</button>';
+    html+='<button class="btn-dl" onclick="descargarPoster(''+a.id+'')">⬇ Poster</button>';
   }
-  if(a.tipo==='plan'||a.tipo==='busco') html+='<button class="btn-apuntar" id="btn-ap-'+a.id+'" onclick="apuntarse(\''+a.id+'\')">🐾 Apuntarse</button>';
-  if(a.tipo==='adopcion'&&!esCreador&&sessionEmail) html+='<button class="btn-interesa" onclick="contactar(\''+a.email_creador+'\',\''+a.titulo+'\',\'adopcion\')">🏠 Me interesa</button>';
-  if(esCreador&&a.tipo!=='perdido') html+='<button style="padding:7px 12px;background:#f0f0ee;color:#888;border:none;border-radius:99px;font-size:11px;cursor:pointer" onclick="eliminar(\''+a.id+'\')">🗑️</button>';
+  if(a.tipo==='plan') html+='<button class="btn-apuntar" id="btn-ap-'+a.id+'" onclick="apuntarse(''+a.id+'')">🐾 Apuntarse</button>';
+  if(a.tipo==='busco'&&!esCreador&&sessionEmail) html+='<button class="btn-apuntar" onclick="contactar(''+a.email_creador+'',''+a.titulo+'','busco')">🔍 Me interesa</button>';
+  if(a.tipo==='adopcion'&&!esCreador&&sessionEmail) html+='<button class="btn-interesa" onclick="contactar(''+a.email_creador+'',''+a.titulo+'','adopcion')">🏠 Me interesa</button>';
+  if(esCreador&&a.tipo!=='perdido') html+='<button style="padding:6px 10px;background:#f0f0ee;color:#888;border:none;border-radius:99px;font-size:11px;cursor:pointer" onclick="eliminar(''+a.id+'')">🗑️</button>';
 
-  // Compartir
-  html+='<button class="btn-wa" style="display:inline-flex;align-items:center;gap:5px" onclick="window.open(\'https://wa.me/?text='+encodeURIComponent(a.titulo)+'%20'+sUrl+'\',\'_blank\')">'
+  html+='<button class="btn-wa" style="display:inline-flex;align-items:center;gap:5px;margin-left:auto" onclick="window.open('https://wa.me/?text='+encodeURIComponent(a.titulo)+'%20'+sUrl+'','_blank')">'
     +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
 
   html+='</div></div>';
   return html;
 }
-
-
 function cargarApuntes(actId){
   fetch('/api/galeria?action=getApuntes&actividad_id='+encodeURIComponent(actId))
     .then(function(r){return r.json();})
