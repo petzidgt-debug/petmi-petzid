@@ -319,6 +319,19 @@ var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Se
 var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 
+function supaDeleteMascota(uid){
+  return fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toLowerCase()),{
+    method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'}
+  });
+}
+function supaMarkAngelito(uid,esAngel,fecha){
+  return fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toLowerCase()),{
+    method:'PATCH',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({angelito:esAngel,fecha_angelito:esAngel?(fecha||new Date().toISOString().split('T')[0]):null})
+  });
+}
+
 // ── Header ────────────────────────────────────────────────────
 function cerrarSesion(){ if(typeof petmiCerrarSesion==='function') petmiCerrarSesion(); }
 
@@ -452,8 +465,9 @@ function renderAngeles(){
     if(!p.fechaAngelito)return true;
     return new Date(p.fechaAngelito)>=hace30;
   });
-  if(angeles.length===0)return;
-  document.getElementById('seccionAngeles').style.display='block';
+  var sec=document.getElementById('seccionAngeles');
+  if(angeles.length===0){sec.style.display='none';return;}
+  sec.style.display='block';
   var html=angeles.map(function(p){
     var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
     var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
@@ -697,23 +711,16 @@ function toggleAngel(esAngel){
   var p=currentModalPet;
   if(!esAngel){
     mostrarConfirm('💔 Quitar de angelitos','¿Quitar a '+p.nombre+' de la sección de angelitos?',function(){
-      fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:false})
-      }).then(function(r){return r.json();})
-      .then(function(d){
-        if(!d.ok){alert('Error.');closeConfirm();return;}
-        // Actualizar en memoria
-        p.angelito=false;
-        p.fechaAngelito='';
+      mostrarToastG('Guardando...');
+      supaMarkAngelito(p.uid,false,null).then(function(){
+        fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:false})});
+        p.angelito=false;p.fechaAngelito='';
         var inAll=allPets.find(function(x){return x.uid===p.uid;});
         if(inAll){inAll.angelito=false;inAll.fechaAngelito='';}
-        renderAngeles();
-        applyFilter();
-        closeConfirm();
-        _renderModal(p);
+        renderAngeles();applyFilter();closeConfirm();_renderModal(p);
         mostrarToastG('💔 '+p.nombre+' quitado de angelitos');
-      })
-      .catch(function(){alert('Error.');closeConfirm();});
+      }).catch(function(){mostrarToastG('Error.');closeConfirm();});
     });
     return;
   }
@@ -740,26 +747,18 @@ function confirmarAngel(){
   var p=currentModalPet;
   var fecha=document.getElementById('angelFechaInput').value;
   document.getElementById('angelFechaOverlay').style.display='none';
-  fetch('/api/submit',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:true,fechaAngelito:fecha})
-  }).then(function(r){return r.json();})
-  .then(function(d){
-    if(!d.ok){alert('Error al actualizar.');return;}
-    // Actualizar en memoria sin recargar página
-    p.angelito=true;
-    p.fechaAngelito=fecha;
-    // Actualizar en allPets
+  // Mostrar feedback inmediato
+  document.getElementById('angelFechaOverlay').style.display='none';
+  mostrarToastG('Guardando...');
+  supaMarkAngelito(p.uid,true,fecha).then(function(){
+    fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:true,fechaAngelito:fecha})});
+    p.angelito=true;p.fechaAngelito=fecha;
     var inAll=allPets.find(function(x){return x.uid===p.uid;});
     if(inAll){inAll.angelito=true;inAll.fechaAngelito=fecha;}
-    // Re-renderizar secciones y modal
-    renderAngeles();
-    applyFilter();
-    closeConfirm();
-    // Reabrir modal con datos actualizados
-    _renderModal(p);
+    renderAngeles();applyFilter();closeConfirm();_renderModal(p);
     mostrarToastG('🐾 '+p.nombre+' ya es un angelito');
-  })
+  }).catch(function(){mostrarToastG('Error al guardar');})
   .catch(function(){alert('Error al actualizar.');});
 }
 
@@ -773,21 +772,12 @@ function confirmarEliminarMascota(){
     '🗑️ Eliminar mascota',
     '¿Eliminar a '+p.nombre+'? Esta acción no se puede deshacer.',
     function(){
-      fetch('/api/submit',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'deleteMascota', uid:p.uid})
-      }).then(function(r){return r.json();})
-      .then(function(d){
-        if(d.ok){
-          closeModal();
-          closeConfirm();
-          mostrarToastG('✅ Mascota eliminada');
-          setTimeout(function(){location.reload();},1500);
-        } else {
-          alert('Error al eliminar. Intenta de nuevo.');
-          closeConfirm();
-        }
+      supaDeleteMascota(p.uid).then(function(){
+        fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'deleteMascota',uid:p.uid})});
+        closeModal();closeConfirm();
+        mostrarToastG('✅ Mascota eliminada');
+        setTimeout(function(){location.reload();},800);
       }).catch(function(){
         alert('Error de conexión. Intenta de nuevo.');
         closeConfirm();
