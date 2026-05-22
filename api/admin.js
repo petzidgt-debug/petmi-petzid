@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUECdXsANlR04MD3n-L_OmT8TF4W-1XvMXvoW2VW2dQ2KZBMR8XJMWjA3yoHo67hyE/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUJig1fZExTNXmPDPTwUADkoZ622nRTrTt0u11vUF4bqj9IB0trg6Kjz794iZ_1eZK/exec';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
