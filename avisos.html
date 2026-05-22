@@ -526,7 +526,26 @@ function abrirFormulario(){
 }
 function cerrarPublicar(){
   document.getElementById('modalPublicar').classList.remove('open');
-  // Limpiar foto
+  // Reset todos los campos
+  ['pubTitulo','pubDesc','pubFecha','pubUbicacion','pubNombreMascota','pubRaza','pubTelefono','pubRecompensa'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  ['pubEspecie','pubSexo'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  // Reset tipo a perdido
+  tipoSel='perdido';
+  document.querySelectorAll('.tipo-option').forEach(function(o){o.classList.remove('selected');});
+  var p=document.querySelector('[onclick*="selTipo(\'perdido"]');if(p)p.classList.add('selected');
+  document.getElementById('camposPerdido').classList.remove('visible');
+  var ca=document.getElementById('camposAdopcion');if(ca)ca.style.display='none';
+  // Reset foto adopcion
+  adopcionFotoBase64=null;adopcionFotoMime=null;
+  var aprev=document.getElementById('adopcionFotoPreview');
+  if(aprev){aprev.src='';aprev.style.display='none';}
+  var albl=document.getElementById('adopcionFotoLabel');
+  if(albl)albl.style.display='block';
+  var awrap=document.getElementById('fotoAdopcionWrap');
+  if(awrap)awrap.style.borderColor='';
+  // Limpiar foto perdido
   perdidoFotoBase64=null;perdidoFotoMime=null;
   var prev=document.getElementById('perdidoFotoPreview');
   var lbl=document.getElementById('perdidoFotoLabel');
@@ -580,9 +599,15 @@ function selTipo(tipo,el){
   // Mostrar/ocultar foto de adopcion
   var ca=document.getElementById('camposAdopcion');
   if(ca) ca.style.display=(tipo==='adopcion')?'block':'none';
-  // Para busco: ocultar foto del creador en el aviso
-  var fotoCreador=document.getElementById('fotoUploadWrap');
-  // (busco no muestra foto de mascota — solo texto)
+  // Placeholder dinamico segun tipo
+  var PLACEHOLDERS={
+    perdido:'Ej: Se perdio Cami en Zona 10',
+    plan:'Ej: Paseo matutino en Parque Cayala sabado 8am',
+    busco:'Ej: Busco kennel para mi perro el fin de semana',
+    adopcion:'Ej: Doy en adopcion a Rocky, 3 anos muy cariñoso'
+  };
+  var tituloInput=document.getElementById('pubTitulo');
+  if(tituloInput) tituloInput.placeholder=PLACEHOLDERS[tipo]||'Escribe el titulo del aviso';
 }
 
 function publicar(){
@@ -681,12 +706,6 @@ function publicar(){
     btn.disabled=false;btn.textContent='Publicar aviso';
     if(d.ok){
       cerrarPublicar();
-      ['pubTitulo','pubDesc','pubFecha','pubUbicacion','pubNombreMascota','pubRaza','pubTelefono','pubRecompensa'].forEach(function(id){
-        var el=document.getElementById(id);if(el)el.value='';
-      });
-      ['pubEspecie','pubSexo'].forEach(function(id){
-        var el=document.getElementById(id);if(el)el.value='';
-      });
       mostrarModalJefe();
       setTimeout(function(){
         ocultarModalJefe();
