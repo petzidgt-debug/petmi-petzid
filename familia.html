@@ -252,7 +252,7 @@ function renderCard(m){
   if(!esAngel){
     html += '<button onclick="confirmarAngelito(\''+m.uid+'\',\''+m.nombre+'\')" style="flex:1;padding:7px;background:#764ba2;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🌈 Angelito</button>';
   }
-  html += '<button onclick="confirmarEliminar(\''+m.uid+'\',\''+m.nombre+'\')" style="padding:7px 10px;background:#fbeaf0;color:#c0392b;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑️</button>';
+  html += '<button onclick="confirmarEliminar(this)" data-uid="'+m.uid+'" data-nombre="'+m.nombre+'" style="padding:7px 10px;background:#fbeaf0;color:#c0392b;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑️</button>';
   html += '</div>';
   html += '</div></div>';
   return html;
@@ -448,15 +448,15 @@ function confirmarAngelito(uid, nombre){
   }
 }
 
-function confirmarEliminar(uid, nombre){
+function confirmarEliminar(btn){
+  var uid    = btn.getAttribute('data-uid');
+  var nombre = btn.getAttribute('data-nombre');
   if(confirm('¿Eliminar a '+nombre+'? Esta acción no se puede deshacer.')){
-    console.log('Eliminando uid:', uid, 'nombre:', nombre);
     fetch('/api/submit',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'deleteMascota',uid:uid})
     }).then(function(r){return r.json();})
     .then(function(d){
-      console.log('deleteMascota response:', d);
       if(d.ok){
         mostrarMsg('Mascota eliminada','success');
         setTimeout(function(){location.reload();},1200);
@@ -464,7 +464,6 @@ function confirmarEliminar(uid, nombre){
         alert('Error al eliminar: '+(d.error||JSON.stringify(d)));
       }
     }).catch(function(err){
-      console.error('deleteMascota error:', err);
       alert('Error de conexion: '+err.message);
     });
   }
