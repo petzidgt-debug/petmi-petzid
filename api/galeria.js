@@ -423,8 +423,8 @@ export default async function handler(req, res) {
         const d = new Date(); d.setDate(d.getDate() + 7);
         expires_at = d.toISOString();
       }
-      // adopcion entra con activo:false esperando aprobacion del admin
-      const activo = req.body.activo_override !== undefined ? req.body.activo_override : true;
+      // perdido = activo inmediato, resto requiere aprobacion admin
+      const activo = req.body.activo_override !== undefined ? req.body.activo_override : (tipo === 'perdido');
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
