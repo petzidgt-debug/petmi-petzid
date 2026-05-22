@@ -208,6 +208,35 @@ if(sessionEmail){
 
 cargar();
 
+// ── Detectar ?tipo=perdido desde familia.html ──────────────
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  if(params.get('tipo')!=='perdido') return;
+  function intentarAbrir(n){
+    if(sessionEmail&&!miMascota&&n<20){setTimeout(function(){intentarAbrir(n+1);},300);return;}
+    tipoSel='perdido';
+    document.querySelectorAll('.tipo-option').forEach(function(o){o.classList.remove('selected');});
+    var btn=document.querySelector('[onclick*="selTipo(\'perdido"]');
+    if(btn) btn.classList.add('selected');
+    var cp=document.getElementById('camposPerdido');
+    if(cp) cp.classList.add('visible');
+    if(miMascota) _preLlenar(miMascota);
+    document.getElementById('modalPublicar').classList.add('open');
+  }
+  setTimeout(function(){intentarAbrir(0);},900);
+})();
+
+function _preLlenar(m){
+  if(!m)return;
+  var campos={pubNombreMascota:m.nombre,pubEspecie:m.especie,pubSexo:m.sexo,pubRaza:m.raza,pubTelefono:m.whatsapp};
+  Object.keys(campos).forEach(function(id){
+    var el=document.getElementById(id);
+    if(el&&campos[id]) el.value=campos[id];
+  });
+  var t=document.getElementById('pubTitulo');
+  if(t&&m.nombre) t.value='🚨 SE PERDIÓ '+m.nombre.toUpperCase();
+}
+
 function cargar(){
   document.getElementById('contenido').innerHTML='<div class="spinner"></div>';
   fetch('/api/galeria?action=getActividades')
@@ -304,7 +333,7 @@ function renderAviso(a,i){
   html+='<div style="border-top:0.5px solid #f0f0ee;padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap">';
 
   if(a.tipo==='perdido'){
-    if(!esCreador) html+='<button class="btn-info" onclick="contactar(\''+a.email_creador+'\',\''+a.titulo+'\',\'perdido\',\''+( a.whatsapp||'')+'\')">'+(a.whatsapp?'💬 Tengo info':'📞 Tengo info')+'</button>';
+    if(!esCreador) html+='<button class="btn-info" onclick="contactar(\''+a.email_creador+'\',\''+a.titulo+'\',\'perdido\',\''+( a.whatsapp||'')+'\')">'+(a.whatsapp?'💬 Tengo info por WA':'📞 Tengo info')+'</button>';
     if(esCreador) html+='<button class="btn-aparecio" onclick="marcarAparecio(\''+a.id+'\',\''+a.nombre_creador+'\')">🎉 ¡Apareció!</button>';
     html+='<button class="btn-dl" onclick="descargarPoster(\''+a.id+'\')">⬇ Descargar póster</button>';
   }
@@ -610,8 +639,12 @@ function publicar(){
       ['pubEspecie','pubSexo'].forEach(function(id){
         var el=document.getElementById(id);if(el)el.value='';
       });
-      mostrarToast(tipoSel==='adopcion'?'🏠 Enviado para revisión del jefe':'📢 ¡Aviso publicado!');
-      if(tipoSel==='adopcion') setTimeout(function(){mostrarToast('El jefe revisará tu adopción pronto 🐾');},2600);
+      mostrarModalJefe();
+      setTimeout(function(){
+        ocultarModalJefe();
+        mostrarToast(tipoSel==='adopcion'?'Enviado para revision':'Aviso publicado!');
+        cargar();
+      },3000);
       cargar();
     }
     }).catch(function(){btn.disabled=false;btn.textContent='Publicar aviso';mostrarToast('Error al publicar');});
@@ -882,6 +915,39 @@ function mostrarToast(msg){
   var el=document.getElementById('toast');
   el.textContent=msg;el.classList.add('show');
   setTimeout(function(){el.classList.remove('show');},2500);
+}
+</script>
+<!-- MODAL JEFE REVISANDO -->
+<div id="modalJefe" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:900;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;padding:28px 24px;text-align:center;max-width:280px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+    <div style="position:relative;width:110px;height:110px;margin:0 auto 16px">
+      <img id="jefeModalImg" style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #F5C842" src="" alt="Jefe">
+      <div style="position:absolute;bottom:2px;right:2px;background:#F5C842;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:15px;border:2px solid #fff">⭐</div>
+    </div>
+    <div style="font-size:17px;font-weight:700;color:#222;margin-bottom:6px">El Jefe está revisando</div>
+    <div style="font-size:13px;color:#888;line-height:1.5">Tu aviso estará disponible en la comunidad muy pronto</div>
+    <div style="margin-top:14px">
+      <span style="display:inline-block;animation:blink 1.4s infinite;font-size:18px;color:#00B4B4;margin:0 2px">●</span>
+      <span style="display:inline-block;animation:blink 1.4s .25s infinite;font-size:18px;color:#00B4B4;margin:0 2px">●</span>
+      <span style="display:inline-block;animation:blink 1.4s .5s infinite;font-size:18px;color:#00B4B4;margin:0 2px">●</span>
+    </div>
+  </div>
+</div>
+<style>@keyframes blink{0%,80%,100%{opacity:0}40%{opacity:1}}</style>
+
+<script>
+var JEFE_FOTOS=[
+  'https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png',
+  'https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg',
+  'https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'
+];
+function mostrarModalJefe(){
+  var img=document.getElementById('jefeModalImg');
+  img.src=JEFE_FOTOS[Math.floor(Math.random()*JEFE_FOTOS.length)];
+  document.getElementById('modalJefe').style.display='flex';
+}
+function ocultarModalJefe(){
+  document.getElementById('modalJefe').style.display='none';
 }
 </script>
 <script src="/header.js"></script>
