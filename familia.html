@@ -530,12 +530,16 @@ function confirmarEliminar(btn){
     // Mostrar modal borrando
     var m = document.getElementById('modalBorrando');
     m.style.display = 'flex';
-    // Borrar directo en Supabase (rápido) + sync Sheet en background
+    // Borrar directo en Supabase + eliminar de memoria inmediatamente
     supaDelete(uid).then(function(){
       // Sync Sheet en background sin esperar
       fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({action:'deleteMascota',uid:uid})});
-      setTimeout(function(){location.reload();},800);
+      // Eliminar de misMascotas en memoria y re-renderizar sin reload
+      misMascotas = misMascotas.filter(function(x){ return x.uid !== uid; });
+      m.style.display='none';
+      mostrarToastFam('Mascota eliminada');
+      renderFamilia();
     }).catch(function(err){
       m.style.display='none';
       alert('Error de conexion: '+err.message);
