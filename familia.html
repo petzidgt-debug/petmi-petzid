@@ -438,14 +438,10 @@ async function generarPosterFam(){
 function confirmarAngelito(uid, nombre){
   if(confirm('¿Marcar a '+nombre+' como angelito? Esta acción no se puede deshacer.')){
     var hoy=new Date().toISOString().split('T')[0];
-    fetch('/api/submit',{
+    fetch('/api/galeria?action=markAngel',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'markAngel',uid:uid,esAngel:true,fechaAngelito:hoy})
-    }).then(function(r){return r.json();})
-    .then(function(){
-      alert('🌈 '+nombre+' fue marcado como angelito. Descansa en paz 🐾');
-      location.reload();
-    }).catch(function(){
+      body:JSON.stringify({uid:uid,esAngel:true,fechaAngelito:hoy})
+    }).then(function(){
       alert('🌈 '+nombre+' fue marcado como angelito. Descansa en paz 🐾');
       location.reload();
     });
@@ -460,9 +456,7 @@ function confirmarEliminar(uid, nombre){
     }).then(function(r){return r.json();})
     .then(function(d){
       if(d.ok){ location.reload(); }
-      else { alert('Error al eliminar: '+(d.error||'intenta de nuevo')); }
-    }).catch(function(err){
-      alert('Error al eliminar: '+err.message);
+      else { alert('Error al eliminar'); }
     });
   }
 }
