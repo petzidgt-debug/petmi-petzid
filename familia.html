@@ -512,10 +512,15 @@ function confirmarAngelito(uid, nombre){
     // Marcar angelito directo en Supabase (rápido) + sync Sheet en background
     mb.querySelector('div > div:nth-child(2)').textContent='Guardando...';
     supaMarkAngel(uid,true,fecha).then(function(){
+      // Sync Sheet en background
       fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({action:'markAngel',uid:uid,esAngel:true,fechaAngelito:fecha})});
-      mb.querySelector('div > div:nth-child(2)').textContent='Listo!';
-      setTimeout(function(){location.reload();},800);
+      // Actualizar en memoria sin reload
+      var m2=misMascotas.find(function(x){return x.uid===uid;});
+      if(m2){m2.angelito='Si';m2.fechaAngelito=fecha;}
+      mb.style.display='none';
+      mostrarToastFam('🐾 '+nombre+' ya es un angelito');
+      renderFamilia();
     }).catch(function(){
       mb.style.display='none';
       alert('Error al guardar');
