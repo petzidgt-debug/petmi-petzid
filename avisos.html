@@ -1032,6 +1032,12 @@ window.aceptarReglas=function(){
   var key='reglas_aceptadas'+(email?'_'+email.replace(/[^a-z0-9]/gi,''):'');
   localStorage.setItem('reglas_aceptadas','1');
   if(email) localStorage.setItem(key,'1');
+  // Registrar en Supabase
+  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/reglas_aceptadas',{
+    method:'POST',
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({email:(email||'anonimo').toLowerCase(),version:'1.0',dispositivo:navigator.userAgent.substring(0,100)})
+  }).catch(function(){});
   document.getElementById('modalReglas').style.display='none';
   abrirPublicar();
 };
