@@ -80,7 +80,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 </head>
 <body>
 
-<div class="wrap" id="mainWrap">
+<div class="wrap" id="mainWrap" style="padding-bottom:80px">
   <div class="loading-wrap" id="loadingWrap">
     <div class="spinner"></div>
     <p style="color:#888;font-size:14px">Cargando datos...</p>
@@ -189,6 +189,7 @@ function renderForm(){
   var esPremium=m.premium===true||m.premium==='true';
   var premiumHasta=m.premium_hasta||'';
 
+  document.getElementById('barraDescarga').style.display='block';
   document.getElementById('mainWrap').innerHTML = `
     ${esPremium ? `
     <div class="premium-activo">
@@ -321,11 +322,6 @@ function renderForm(){
     </div>
 
     <button class="btn-guardar" id="btnGuardar" onclick="guardar()">💾 Guardar cambios</button>
-    <div id="guardadoMsg" style="display:none;background:#e0f7f7;border-radius:12px;padding:10px 16px;margin-top:10px;text-align:center;font-size:14px;font-weight:700;color:#007a7a">✅ Cambios guardados</div>
-    <button onclick="descargarID()" style="width:100%;padding:14px;background:#1a1a2e;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Descargar mi PetzID
-    </button>
 
     <button class="btn-cancelar" onclick="window.location.href='/galeria.html'">Cancelar</button>
     <button class="btn-danger" onclick="document.getElementById('confirmOverlay').classList.add('open')">🗑️ Eliminar esta mascota</button>
@@ -435,6 +431,8 @@ async function guardar(){
     btn.textContent='💾 Guardar cambios';btn.disabled=false;
     var msg=document.getElementById('guardadoMsg');
     if(msg){msg.style.display='block';setTimeout(function(){msg.style.display='none';},3000);}
+    // Update data for download
+    if(document.getElementById('eNombre')) mascota.nombre=document.getElementById('eNombre').value.trim();
   }
   function mostrarFallo(msg){
     document.getElementById('modalGuardando').style.display='none';
@@ -660,6 +658,18 @@ function confirmarEliminar(){
   });
 }
 </script>
+<!-- BARRA FIJA DESCARGA -->
+<div id="guardadoMsg" style="display:none;position:fixed;bottom:80px;left:0;right:0;background:#00B4B4;padding:10px 16px;text-align:center;font-size:14px;font-weight:700;color:#fff;z-index:399">✅ Cambios guardados</div>
+<div id="barraDescarga" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a1a2e;padding:12px 16px;z-index:400;box-shadow:0 -2px 12px rgba(0,0,0,.2)">
+  <div style="max-width:480px;margin:0 auto;display:flex;gap:10px;align-items:center">
+    <button onclick="descargarID()" style="flex:1;padding:13px;background:#F5C842;color:#1a1a2e;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Descargar mi PetzID
+    </button>
+    <a href="/familia.html" style="padding:13px 16px;background:rgba(255,255,255,.1);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap">Mi Familia</a>
+  </div>
+</div>
+
 <!-- MODAL GUARDANDO -->
 <div id="modalGuardando" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:900;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:16px;padding:28px 32px;text-align:center;min-width:200px">
