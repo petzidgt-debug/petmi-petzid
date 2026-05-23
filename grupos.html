@@ -105,8 +105,18 @@ var misGrupos=[];
 function solicitarGrupo(){
   if(!sessionEmail){if(typeof petmiAbrirLogin!=='undefined')petmiAbrirLogin();return;}
   var nombre=prompt('¿Cómo se llamaría tu grupo? (Ej: Schnauzer GT)');
-  if(!nombre)return;
-  alert('Solicitud enviada. El equipo de PetMi revisará tu petición y te notificará. ¡Gracias!');
+  if(!nombre||!nombre.trim())return;
+  var desc=prompt('Descripción breve del grupo:');
+  // Generar ID simple desde nombre
+  var id=nombre.trim().toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
+  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos',{
+    method:'POST',
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({id:id,nombre:nombre.trim(),descripcion:desc||'',admin_email:sessionEmail,activo:false})
+  }).then(function(r){
+    if(r.ok){alert('¡Solicitud enviada! El equipo de PetMi revisará tu petición y te notificará. ¡Gracias!');}
+    else{alert('Error al enviar la solicitud. Intenta de nuevo.');}
+  }).catch(function(){alert('Error de conexión.');});
 }
 </script>
 </body>

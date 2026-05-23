@@ -273,6 +273,41 @@ tbody tr:last-child td{border-bottom:none}
     </div>
 
   </div>
+
+    <div class="screen" id="screenGrupos">
+      <div class="page-header">
+        <div><div class="page-title">Grupos</div><div class="page-sub" id="subGrupos">Cargando...</div></div>
+        <button class="btn-primary" onclick="cargarAdminGrupos()">🔄 Actualizar</button>
+      </div>
+
+      <!-- Solicitudes pendientes -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:8px">📥 Solicitudes pendientes</div>
+        <div class="table-card" id="solicitudesGruposWrap">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nombre</th><th>Solicitante</th><th>Fecha</th><th>Acciones</th></tr></thead>
+              <tbody id="solicitudesGruposBody"><tr><td colspan="4"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grupos activos -->
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:8px">✅ Grupos activos</div>
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Sponsor</th><th>Miembros</th><th>Acciones</th></tr></thead>
+              <tbody id="gruposActivosBody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <!-- MODAL EDITAR -->
@@ -379,6 +414,7 @@ function showScreen(name,el){
   if(name==='lugares') cargarLugaresAdmin();
   if(name==='avisos') setTimeout(cargarAvisosPendientes,100);
   if(name==='reglas') setTimeout(cargarReglas,100);
+  if(name==='grupos') setTimeout(cargarAdminGrupos,100);
 }
 
 // ── Carga de datos ────────────────────────────────────────────
@@ -1088,6 +1124,106 @@ function cargarReglas(){
   }).catch(function(e){
     tbody.innerHTML='<tr><td colspan="3" style="color:red;padding:20px">Error: '+e.message+'</td></tr>';
   });
+}
+
+function cargarAdminGrupos(){
+  var sub=document.getElementById('subGrupos');
+  if(sub) sub.textContent='Cargando...';
+
+  // Cargar solicitudes pendientes (activo=false)
+  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?activo=eq.false&select=*&order=created_at.desc',{
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}
+  }).then(function(r){return r.json();})
+  .then(function(rows){
+    var tbody=document.getElementById('solicitudesGruposBody');
+    if(!rows||!rows.length){
+      tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Sin solicitudes pendientes</td></tr>';
+    }else{
+      tbody.innerHTML=rows.map(function(g){
+        var f=g.created_at?new Date(g.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+        return '<tr>'
+          +'<td style="font-weight:600">'+g.nombre+'</td>'
+          +'<td style="font-size:12px;color:#888">'+(g.admin_email||'—')+'</td>'
+          +'<td style="font-size:12px;color:#888">'+f+'</td>'
+          +'<td style="display:flex;gap:6px;padding:8px 12px">'
+          +'<button class="badge badge-si" style="cursor:pointer;border:none" onclick="aprobarGrupo(''+g.id+'',''+g.nombre+'')">✓ Aprobar</button>'
+          +'<button class="badge badge-no" style="cursor:pointer;border:none" onclick="rechazarGrupo(''+g.id+'',''+g.nombre+'')">✗ Rechazar</button>'
+          +'</td></tr>';
+      }).join('');
+    }
+  }).catch(function(){document.getElementById('solicitudesGruposBody').innerHTML='<tr><td colspan="4" style="color:red;padding:12px">Error</td></tr>';});
+
+  // Cargar grupos activos + conteo miembros
+  Promise.all([
+    fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?activo=eq.true&select=*&order=nombre.asc',{headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}}).then(function(r){return r.json();}),
+    fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/miembros_grupo?select=grupo_id',{headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}}).then(function(r){return r.json();})
+  ]).then(function(res){
+    var grupos=res[0]||[];var membs=res[1]||[];
+    var counts={};membs.forEach(function(m){counts[m.grupo_id]=(counts[m.grupo_id]||0)+1;});
+    if(sub) sub.textContent=grupos.length+' grupo(s) activo(s)';
+    var tbody=document.getElementById('gruposActivosBody');
+    if(!grupos.length){
+      tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">No hay grupos activos</td></tr>';return;
+    }
+    tbody.innerHTML=grupos.map(function(g){
+      return '<tr>'
+        +'<td style="font-size:12px;font-weight:700;color:#00B4B4">'+g.id+'</td>'
+        +'<td style="font-weight:600">'+g.nombre+'</td>'
+        +'<td style="font-size:12px;color:#888;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(g.descripcion||'—')+'</td>'
+        +'<td style="font-size:12px">'+(g.sponsor||'—')+'</td>'
+        +'<td><span class="badge badge-si">'+(counts[g.id]||0)+'</span></td>'
+        +'<td style="display:flex;gap:6px;padding:8px 12px">'
+        +'<button class="badge" style="background:#e0f0ff;color:#0056b3;cursor:pointer;border:none" onclick="editarGrupoAdmin(''+g.id+'')">Editar</button>'
+        +'<button class="badge badge-no" style="cursor:pointer;border:none" onclick="desactivarGrupo(''+g.id+'',''+g.nombre+'')">Desactivar</button>'
+        +'</td></tr>';
+    }).join('');
+  }).catch(function(){document.getElementById('gruposActivosBody').innerHTML='<tr><td colspan="6" style="color:red;padding:12px">Error</td></tr>';});
+}
+
+function aprobarGrupo(id,nombre){
+  if(!confirm('¿Aprobar el grupo "'+nombre+'"?'))return;
+  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
+    method:'PATCH',
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({activo:true})
+  }).then(function(){mostrarToastAdmin('Grupo "'+nombre+'" aprobado ✓');cargarAdminGrupos();})
+  .catch(function(){mostrarToastAdmin('Error al aprobar');});
+}
+
+function rechazarGrupo(id,nombre){
+  if(!confirm('¿Rechazar y eliminar la solicitud de "'+nombre+'"?'))return;
+  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
+    method:'DELETE',
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8'}
+  }).then(function(){mostrarToastAdmin('Solicitud rechazada');cargarAdminGrupos();})
+  .catch(function(){mostrarToastAdmin('Error al rechazar');});
+}
+
+function desactivarGrupo(id,nombre){
+  if(!confirm('¿Desactivar el grupo "'+nombre+'"? Dejará de aparecer en la galería.'))return;
+  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
+    method:'PATCH',
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({activo:false})
+  }).then(function(){mostrarToastAdmin('Grupo desactivado');cargarAdminGrupos();})
+  .catch(function(){mostrarToastAdmin('Error al desactivar');});
+}
+
+function editarGrupoAdmin(id){
+  var nombre=prompt('Nuevo nombre para el grupo (dejar vacío para no cambiar):');
+  var sponsor=prompt('Sponsor del grupo (dejar vacío para no cambiar):');
+  var desc=prompt('Descripción (dejar vacío para no cambiar):');
+  var data={};
+  if(nombre&&nombre.trim()) data.nombre=nombre.trim();
+  if(sponsor!==null) data.sponsor=sponsor.trim()||null;
+  if(desc&&desc.trim()) data.descripcion=desc.trim();
+  if(!Object.keys(data).length)return;
+  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
+    method:'PATCH',
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(data)
+  }).then(function(){mostrarToastAdmin('Grupo actualizado ✓');cargarAdminGrupos();})
+  .catch(function(){mostrarToastAdmin('Error al actualizar');});
 }
 
 function mostrarToastAdmin(msg){
