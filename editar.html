@@ -307,6 +307,7 @@ function renderForm(){
     </div>
 
     <button class="btn-guardar" id="btnGuardar" onclick="guardar()">💾 Guardar cambios</button>
+
     <button class="btn-cancelar" onclick="window.location.href='/galeria.html'">Cancelar</button>
     <button class="btn-danger" onclick="document.getElementById('confirmOverlay').classList.add('open')">🗑️ Eliminar esta mascota</button>
     <div style="height:20px"></div>
@@ -410,7 +411,7 @@ async function guardar(){
     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
   }).then(function(r){return r.json();})
   .then(function(d){
-    if(!d.ok){mostrarError('Error al guardar. Intenta de nuevo.');btn.disabled=false;btn.textContent='💾 Guardar cambios';return;}
+    if(!d.ok){document.getElementById('modalGuardando').style.display='none';mostrarError('Error al guardar. Intenta de nuevo.');btn.disabled=false;btn.textContent='💾 Guardar cambios';return;}
     // markAngel directo en Supabase (rapido) + sync sheet en background
     fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(mascota.uid.toLowerCase()),{
       method:'PATCH',
@@ -423,9 +424,10 @@ async function guardar(){
   }).then(function(r){
     if(r) return r;
   }).then(function(){
-    mostrarToast('✅ Cambios guardados!');
-    setTimeout(function(){window.location.href='/familia.html';},1500);
+    document.getElementById('modalGuardando').style.display='none';
+    document.getElementById('modalExito').style.display='flex';
   }).catch(function(){
+    document.getElementById('modalGuardando').style.display='none';
     mostrarError('Error de conexión. Intenta de nuevo.');btn.disabled=false;btn.textContent='💾 Guardar cambios';
   });
 }
@@ -487,6 +489,97 @@ function marcarCamposPendientes(){
   });
 }
 
+async function descargarID(){
+  if(!mascota) return;
+  var btn = event.target.closest('button');
+  btn.textContent = 'Generando...'; btn.disabled = true;
+
+  var W=1050,H=600,FW=Math.round(W*0.43),IW=W-FW,YH=76,TH=H-YH;
+  var TEAL_H=Math.round(TH*0.50),WHITE_H=TH-TEAL_H;
+  var canvas=document.createElement('canvas');
+  canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+
+  // Foto izquierda
+  ctx.fillStyle='#b2e0e0';ctx.fillRect(0,0,FW,H-YH);
+  if(mascota.foto && mascota.foto.indexOf('http')>=0){
+    try{
+      await new Promise(function(res){
+        var tmp=new Image();tmp.crossOrigin='anonymous';
+        tmp.onload=function(){
+          var scale=Math.max(FW/tmp.width,(H-YH)/tmp.height);
+          var sw=tmp.width*scale,sh=tmp.height*scale;
+          ctx.save();ctx.beginPath();ctx.rect(0,0,FW,H-YH);ctx.clip();
+          ctx.drawImage(tmp,(FW-sw)/2,(H-YH-sh)/2,sw,sh);
+          ctx.restore();res();
+        };
+        tmp.onerror=res;tmp.src=mascota.foto;setTimeout(res,3000);
+      });
+    }catch(e){}
+  }
+
+  // Teal
+  ctx.fillStyle='#00B4B4';ctx.fillRect(FW,0,IW,TEAL_H);
+  var px=FW+20,pw=IW-40;
+  ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='700 11px Arial';ctx.textAlign='left';
+  ctx.fillText('N O M B R E',px,TEAL_H-116);
+  ctx.fillStyle='#fff';ctx.font='900 42px Arial Black,Arial';
+  ctx.fillText('"'+(mascota.nombre||'').toUpperCase()+'"',px,TEAL_H-66);
+  if(mascota.apodo&&mascota.apodo.trim()&&mascota.apodo!=='-'){
+    var ap=mascota.apodo.toUpperCase();
+    ctx.font='700 12px Arial';var bw=ctx.measureText(ap).width+26;
+    ctx.fillStyle='#F4A0B0';ctx.beginPath();ctx.roundRect(px,TEAL_H-46,bw,26,13);ctx.fill();
+    ctx.fillStyle='#7a1a2e';ctx.textAlign='center';ctx.fillText(ap,px+bw/2,TEAL_H-29);
+  }
+
+  // Blanco 3 filas
+  ctx.fillStyle='#fff';ctx.fillRect(FW,TEAL_H,IW,WHITE_H);
+  var ROW=Math.floor(WHITE_H/3),col=Math.floor(pw/2);
+  function field(lbl,val,x,y,right){
+    ctx.textAlign=right?'right':'left';var tx=right?(x+col):x;
+    ctx.fillStyle='#bbb';ctx.font='600 9px Arial';ctx.fillText(lbl,tx,y);
+    ctx.fillStyle='#222';ctx.font='700 17px Arial';ctx.fillText((val||'-').toUpperCase(),tx,y+21);
+  }
+  var fl=(mascota.tipoFecha||'nacimiento')==='llegada'?'LLEGO A CASA':'NACIMIENTO';
+  field('ESPECIE',mascota.especie,px,TEAL_H+14,false);
+  field('SEXO',mascota.sexo,px,TEAL_H+14,true);
+  ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW,pw,1);
+  field('RAZA',mascota.raza,px,TEAL_H+ROW+14,false);
+  field(fl,mascota.fecha,px,TEAL_H+ROW+14,true);
+  ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW*2,pw,1);
+  ctx.textAlign='left';
+  ctx.fillStyle='#bbb';ctx.font='600 9px Arial';ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+14);
+  ctx.fillStyle='#222';ctx.font='700 17px Arial';ctx.fillText((mascota.dueno||'-').toUpperCase(),px,TEAL_H+ROW*2+35);
+
+  // Footer amarillo
+  ctx.fillStyle='#F5C842';ctx.fillRect(0,H-YH,W,YH);
+  var uid6=(mascota.uid||'').replace(/-/g,'').toUpperCase().slice(-6);
+  ctx.fillStyle='#555';ctx.font='600 9px Arial';ctx.textAlign='left';ctx.fillText('ID',px,H-YH+22);
+  ctx.fillStyle='#333';ctx.font='400 24px Arial';ctx.fillText(uid6,px,H-YH+50);
+
+  // Logo
+  try{
+    await new Promise(function(res){
+      var logo=new Image();logo.crossOrigin='anonymous';
+      logo.onload=function(){
+        var lh=42,lw=logo.width*(lh/logo.height);
+        ctx.drawImage(logo,W-lw-16,H-YH+(YH-lh)/2,lw,lh);res();
+      };
+      logo.onerror=res;
+      logo.src='https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/logopetmi.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9nb3BldG1pLnBuZyIsImlhdCI6MTc3OTM5NTY4MiwiZXhwIjoyMDk0NzU1NjgyfQ.UFxj_NZ3QonOLDXVoUD_rC3nxRQg4C3aiJLjFrt5SO8';
+      setTimeout(res,3000);
+    });
+  }catch(e){}
+
+  // Descargar
+  var link=document.createElement('a');
+  link.href=canvas.toDataURL('image/png');
+  link.download='PetzID_'+(mascota.nombre||'mascota')+'.png';
+  document.body.appendChild(link);link.click();document.body.removeChild(link);
+  btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Descargar mi PetzID';
+  btn.disabled=false;
+}
+
 function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
 
 // ── Eliminar mascota ──────────────────────────────────────────
@@ -540,6 +633,28 @@ function confirmarEliminar(){
   });
 }
 </script>
+<!-- MODAL GUARDANDO -->
+<div id="modalGuardando" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:900;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:28px 32px;text-align:center;min-width:200px">
+    <img src="https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/loader.gif?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9hZGVyLmdpZiIsImlhdCI6MTc3OTUwMDgxMSwiZXhwIjoyMDk0ODYwODExfQ.Ibz1Vl9C5vpivhQtda5HE9FwWMN-4Y25LHpECzUkrHA" alt="Cargando" style="width:80px;height:80px;object-fit:contain;margin-bottom:10px">
+    <div style="font-size:15px;font-weight:600;color:#222">Guardando cambios</div>
+    <div style="font-size:12px;color:#aaa;margin-top:4px">Un momento por favor</div>
+  </div>
+</div>
+
+<!-- MODAL EXITO -->
+<div id="modalExito" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:900;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:28px 32px;text-align:center;min-width:240px">
+    <div style="font-size:36px;margin-bottom:10px">✅</div>
+    <div style="font-size:16px;font-weight:700;color:#222;margin-bottom:4px">Cambios guardados</div>
+    <div style="font-size:13px;color:#888;margin-bottom:20px">El perfil de tu mascota fue actualizado</div>
+    <button onclick="descargarID()" style="width:100%;padding:13px;background:#1a1a2e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Descargar mi PetzID
+    </button>
+    <button onclick="window.location.href='/familia.html'" style="width:100%;padding:12px;background:#f0f0ee;color:#555;border:none;border-radius:12px;font-size:13px;cursor:pointer">Volver a Mi Familia</button>
+  </div>
+</div>
 <script src="/header.js"></script>
 </body>
 </html>
