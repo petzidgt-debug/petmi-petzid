@@ -30,6 +30,18 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .hero-stat-lbl{font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1px}
 
 /* SECCION CUMPLEAÑEROS */
+.seccion-grupos{background:#00B4B4;padding:18px 16px}
+.seccion-grupos .seccion-titulo{color:#fff;font-family:'Arial Black',Arial,sans-serif}
+.seccion-grupos .seccion-sub{color:rgba(255,255,255,.75);font-size:13px;margin-bottom:12px}
+.grupos-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;-ms-overflow-style:none;scrollbar-width:none}
+.grupos-scroll::-webkit-scrollbar{display:none}
+.grupo-chip{background:rgba(255,255,255,.95);border-radius:999px;padding:7px 12px 7px 7px;display:flex;align-items:center;gap:7px;white-space:nowrap;cursor:pointer;flex-shrink:0;border:2px solid transparent;transition:border-color .15s}
+.grupo-chip.joined{border-color:#F5C842}
+.grupo-chip-ico{width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:13px}
+.grupo-chip-ico img{width:100%;height:100%;object-fit:cover}
+.grupo-chip-nom{font-size:12px;font-weight:700;color:#222}
+.grupo-chip-cnt{font-size:10px;color:#888}
+.grupo-cta{display:block;margin-top:10px;text-align:center;font-size:12px;font-weight:700;color:#fff;cursor:pointer;padding:8px;background:rgba(255,255,255,.2);border-radius:10px;border:1.5px solid rgba(255,255,255,.35);text-decoration:none}
 .seccion-cumple{background:linear-gradient(135deg,#F5C842,#ffaa00);padding:18px 16px}
 .seccion-titulo{font-size:18px;font-weight:900;color:#1a1a1a;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
 .seccion-sub{font-size:13px;color:rgba(0,0,0,.6);margin-bottom:12px}
@@ -188,6 +200,14 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </div>
 
 <!-- CUMPLEAÑEROS DEL MES -->
+<!-- GRUPOS -->
+<div class="seccion-grupos" id="seccionGrupos" style="display:none">
+  <div class="seccion-titulo">Grupos 🐕</div>
+  <div class="seccion-sub">Comunidades de mascotas en Guatemala</div>
+  <div class="grupos-scroll" id="gruposScroll"></div>
+  <a href="/grupos.html" class="grupo-cta">Únete a tu grupo o Crea tu grupo aquí →</a>
+</div>
+
 <div class="seccion-cumple" id="seccionCumple" style="display:none">
   <div class="seccion-titulo">🎂 Cumpleañeros de <span id="mesActualNombre"></span></div>
   <div class="seccion-sub">Mascotas que cumplen años o llegaron a casa este mes</div>
@@ -373,6 +393,7 @@ fetch('/api/galeria?action=getBasic')
     renderCumpleaneros();
     renderAngeles();
     applyFilter();
+    cargarGrupos();
 
     fetch('/api/galeria?action=getData')
       .then(function(r2){return r2.json();})
