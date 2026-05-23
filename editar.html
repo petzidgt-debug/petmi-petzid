@@ -304,7 +304,7 @@ async function guardar(){
       btn.disabled=false;btn.textContent='💾 Guardar cambios';return;
     }
     // markAngel directo Supabase + sync sheet
-    fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(mascota.uid.toLowerCase()),{
+    fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(mascota.uid.toUpperCase()),{
       method:'PATCH',
       headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
       body:JSON.stringify({angelito:esAngelito,fecha_angelito:esAngelito?(fechaAngel||new Date().toISOString().split('T')[0]):null})
