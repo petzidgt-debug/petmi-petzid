@@ -1,6 +1,8 @@
 {
   "rewrites": [
-    { "source": "/share", "destination": "/api/share" }
+    { "source": "/share", "destination": "/api/share" },
+    { "source": "/grupos/:id", "destination": "/grupo.html" },
+    { "source": "/grupos/:id.html", "destination": "/grupo.html" }
   ],
   "headers": [
     {

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grupo — PetMi</title>
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.wrap{max-width:560px;margin:0 auto;padding:0 0 80px}
+
+/* Hero */
+.grupo-hero{background:#00B4B4;padding:20px 16px}
+.hero-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.hero-avatar{width:64px;height:64px;border-radius:14px;overflow:hidden;background:rgba(255,255,255,.25);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:32px}
+.hero-avatar img{width:100%;height:100%;object-fit:cover}
+.hero-nombre{font-size:22px;font-weight:900;font-family:'Arial Black',Arial;color:#fff}
+.hero-desc{font-size:13px;color:rgba(255,255,255,.8);margin-top:2px}
+.hero-badges{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.2);color:#fff}
+.badge.sponsor{background:#F5C842;color:#1a1a1a}
+.stats-row{display:flex;gap:8px}
+.stat{flex:1;background:rgba(255,255,255,.15);border-radius:10px;padding:10px;text-align:center}
+.stat-n{font-size:20px;font-weight:700;color:#fff}
+.stat-l{font-size:10px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px}
+
+/* Botón unirse */
+.btn-unirse{width:100%;padding:13px;background:#F5C842;color:#1a1a1a;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin:12px 0 0}
+.btn-miembro{width:100%;padding:13px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin:12px 0 0}
+
+/* Tabs */
+.tabs{display:flex;background:#fff;border-bottom:1px solid #eee;position:sticky;top:60px;z-index:100}
+.tab{flex:1;padding:12px 4px;text-align:center;font-size:13px;font-weight:700;color:#888;cursor:pointer;border-bottom:3px solid transparent}
+.tab.active{color:#00B4B4;border-bottom-color:#00B4B4}
+
+/* Contenido tabs */
+.tab-content{display:none;padding:16px}
+.tab-content.show{display:block}
+
+/* Directorio */
+.pet-row{background:#fff;border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.pet-foto{width:44px;height:44px;border-radius:10px;object-fit:cover;background:#e0f7f7;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden}
+.pet-foto img{width:100%;height:100%;object-fit:cover}
+.pet-nombre{font-size:14px;font-weight:700;color:#222}
+.pet-sub{font-size:12px;color:#888}
+.pet-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:999px;background:#F5C842;color:#1a1a1a;margin-left:auto;flex-shrink:0}
+
+/* Avisos */
+.aviso-card{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer}
+.aviso-hdr{padding:6px 12px;font-size:11px;font-weight:700;color:#fff}
+.aviso-body{padding:10px 12px}
+.aviso-tit{font-size:14px;font-weight:700;color:#222;margin-bottom:2px}
+.aviso-sub{font-size:12px;color:#888}
+.aviso-foto{width:100%;height:120px;object-fit:cover;display:block}
+
+/* Eventos */
+.evento-card{background:#fff;border-radius:12px;padding:12px;display:flex;gap:12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.evento-fecha{width:48px;text-align:center;background:#e0f7f7;border-radius:10px;padding:8px 0;flex-shrink:0}
+.evento-dia{font-size:20px;font-weight:700;color:#007a7a;line-height:1}
+.evento-mes{font-size:10px;color:#007a7a;text-transform:uppercase}
+.evento-tit{font-size:14px;font-weight:700;color:#222;margin-bottom:3px}
+.evento-sub{font-size:12px;color:#888}
+
+/* Partners */
+.partner-card{background:#fff;border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.partner-logo{width:48px;height:48px;border-radius:10px;background:#F5C842;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.partner-nombre{font-size:14px;font-weight:700;color:#222}
+.partner-desc{font-size:12px;color:#888;margin-top:2px}
+.btn-partner{padding:7px 16px;background:#00B4B4;color:#fff;border:none;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;margin-left:auto;flex-shrink:0}
+
+/* Empty state */
+.empty{text-align:center;padding:40px 20px;color:#aaa}
+.empty-ico{font-size:36px;margin-bottom:8px}
+
+/* Loading */
+.loading{text-align:center;padding:60px 20px;color:#888}
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Modal unirse */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:340px;text-align:center}
+.modal-ico{font-size:36px;margin-bottom:10px}
+.modal-tit{font-size:18px;font-weight:900;color:#222;margin-bottom:6px}
+.modal-sub{font-size:13px;color:#888;line-height:1.6;margin-bottom:16px}
+.modal-mascota{background:#e0f7f7;border-radius:10px;padding:10px 14px;font-size:13px;color:#007a7a;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.btn-confirmar{width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px}
+.btn-cancelar{width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<script src="/header.js"></script>
+
+<div id="loadingWrap" class="loading" style="margin-top:60px">
+  <div class="spinner"></div>
+  <p>Cargando grupo...</p>
+</div>
+
+<div id="mainContent" style="display:none">
+  <div class="grupo-hero" id="grupoHero">
+    <div class="hero-top">
+      <div class="hero-avatar" id="heroAvatar">🐕</div>
+      <div>
+        <div class="hero-nombre" id="heroNombre"></div>
+        <div class="hero-desc" id="heroDesc"></div>
+        <div class="hero-badges" id="heroBadges"></div>
+      </div>
+    </div>
+    <div class="stats-row" id="statsRow"></div>
+    <button id="btnUnirse" class="btn-unirse" onclick="abrirModalUnirse()">Unirme al grupo</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('directorio',this)">Directorio</div>
+    <div class="tab" onclick="showTab('avisos',this)">Avisos</div>
+    <div class="tab" onclick="showTab('eventos',this)">Eventos</div>
+    <div class="tab" onclick="showTab('partners',this)">Partners</div>
+  </div>
+
+  <div class="tab-content show" id="tabDirectorio"></div>
+  <div class="tab-content" id="tabAvisos"></div>
+  <div class="tab-content" id="tabEventos"></div>
+  <div class="tab-content" id="tabPartners"></div>
+</div>
+
+<!-- Modal unirse -->
+<div class="modal-overlay" id="modalUnirse">
+  <div class="modal-box">
+    <div class="modal-ico">🐾</div>
+    <div class="modal-tit" id="modalUnirseTit">Unirte al grupo</div>
+    <div class="modal-sub">Tu mascota será parte de esta comunidad y podrás ver sus avisos y eventos exclusivos.</div>
+    <div class="modal-mascota" id="modalMascotaInfo">🐶 Selecciona tu mascota</div>
+    <button class="btn-confirmar" onclick="confirmarUnirse()">Confirmar membresía</button>
+    <button class="btn-cancelar" onclick="document.getElementById('modalUnirse').classList.remove('open')">Cancelar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var sessionEmail=localStorage.getItem('petzid_email')||'';
+var grupoId=window.location.pathname.split('/').pop().replace('.html','');
+var grupo=null;
+var misMascotas=[];
+var soyMiembro=false;
+
+// Cargar todo
+(function(){
+  Promise.all([
+    fetch(SUPA_URL+'/rest/v1/grupos?id=eq.'+grupoId+'&select=*',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}}).then(function(r){return r.json();}),
+    fetch(SUPA_URL+'/rest/v1/miembros_grupo?grupo_id=eq.'+grupoId+'&select=uid_mascota,email',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}}).then(function(r){return r.json();}),
+    fetch('/api/galeria?action=getPets',{method:'GET'}).then(function(r){return r.json();}).catch(function(){return {mascotas:[]};})
+  ]).then(function(results){
+    var grupos=results[0];
+    var miembros=results[1]||[];
+    if(!grupos||!grupos.length){window.location.href='/grupos.html';return;}
+    grupo=grupos[0];
+    // Mis mascotas
+    if(sessionEmail){
+      misMascotas=(results[2].mascotas||[]).filter(function(m){return m.email&&m.email.toLowerCase()===sessionEmail.toLowerCase();});
+      soyMiembro=miembros.some(function(m){return m.email&&m.email.toLowerCase()===sessionEmail.toLowerCase();});
+    }
+    renderHero(miembros.length);
+    cargarDirectorio(miembros);
+    cargarAvisos();
+    cargarEventos();
+    cargarPartners();
+    document.title=grupo.nombre+' — PetMi';
+    document.getElementById('loadingWrap').style.display='none';
+    document.getElementById('mainContent').style.display='block';
+  }).catch(function(){
+    document.getElementById('loadingWrap').innerHTML='<p style="color:#c0392b">Error al cargar el grupo.</p>';
+  });
+})();
+
+function renderHero(totalMiembros){
+  document.getElementById('heroNombre').textContent=grupo.nombre;
+  document.getElementById('heroDesc').textContent=grupo.descripcion||'';
+  if(grupo.foto&&grupo.foto.indexOf('http')>=0){
+    document.getElementById('heroAvatar').innerHTML='<img src="'+grupo.foto+'" alt="">';
+  }
+  var badges='<span class="badge">Verificado</span>';
+  if(grupo.sponsor) badges+='<span class="badge sponsor">⭐ '+grupo.sponsor+'</span>';
+  document.getElementById('heroBadges').innerHTML=badges;
+  document.getElementById('statsRow').innerHTML=
+    '<div class="stat"><div class="stat-n">'+totalMiembros+'</div><div class="stat-l">Miembros</div></div>';
+  var btn=document.getElementById('btnUnirse');
+  if(soyMiembro){btn.textContent='Ya soy miembro ✓';btn.className='btn-miembro';btn.onclick=null;}
+  else if(!sessionEmail){btn.textContent='Ingresar para unirme';btn.onclick=function(){if(typeof petmiAbrirLogin!=='undefined')petmiAbrirLogin();};}
+}
+
+function cargarDirectorio(miembros){
+  if(!miembros.length){
+    document.getElementById('tabDirectorio').innerHTML='<div class="empty"><div class="empty-ico">🐾</div><p>Aún no hay mascotas en este grupo.</p></div>';
+    return;
+  }
+  var uids=miembros.map(function(m){return m.uid_mascota;});
+  var uidList=uids.map(function(u){return '"'+u+'"';}).join(',');
+  fetch(SUPA_URL+'/rest/v1/mascotas?uid=in.('+uidList+')&select=uid,nombre,especie,raza,zona,foto,premium',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(mascotas){
+    var html=(mascotas||[]).map(function(p){
+      var esGato=p.especie&&p.especie.toLowerCase().indexOf('gato')>=0;
+      var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
+        ?'<img src="'+p.foto+'" alt="'+p.nombre+'">'
+        :(esGato?'🐱':'🐶');
+      var prem=p.premium===true||p.premium==='true'?'<span class="pet-badge">⭐</span>':'';
+      return '<div class="pet-row" onclick="window.location.href=\'/galeria.html?uid='+p.uid+'\'">'
+        +'<div class="pet-foto">'+fotoHTML+'</div>'
+        +'<div><div class="pet-nombre">"'+p.nombre+'"</div>'
+        +'<div class="pet-sub">'+(p.raza||p.especie||'')+(p.zona?' · '+p.zona:'')+'</div></div>'
+        +prem+'</div>';
+    }).join('');
+    document.getElementById('tabDirectorio').innerHTML=html||'<div class="empty"><div class="empty-ico">🐾</div><p>Sin mascotas registradas.</p></div>';
+  }).catch(function(){
+    document.getElementById('tabDirectorio').innerHTML='<div class="empty"><p>Error al cargar directorio.</p></div>';
+  });
+}
+
+function cargarAvisos(){
+  fetch(SUPA_URL+'/rest/v1/actividades?grupo_id=eq.'+grupoId+'&activo=eq.true&select=*&order=created_at.desc&limit=20',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(rows){
+    if(!rows||!rows.length){
+      document.getElementById('tabAvisos').innerHTML='<div class="empty"><div class="empty-ico">📢</div><p>No hay avisos en este grupo aún.</p></div>';
+      return;
+    }
+    var colores={perdido:'#c0392b',plan:'#764ba2',adopcion:'#2e7d32',busco:'#2e7d32'};
+    var html=rows.map(function(a){
+      var tipo=a.tipo||'plan';
+      var color=colores[tipo]||'#00B4B4';
+      var label={perdido:'🚨 Perdido',plan:'🐾 Plan',adopcion:'🏠 Adopción',busco:'🔍 Busco'}[tipo]||tipo;
+      return '<div class="aviso-card">'
+        +(a.foto?'<img class="aviso-foto" src="'+a.foto+'" alt="">':'')
+        +'<div class="aviso-hdr" style="background:'+color+'">'+label+'</div>'
+        +'<div class="aviso-body"><div class="aviso-tit">'+(a.titulo||a.descripcion||'')+'</div>'
+        +'<div class="aviso-sub">'+(a.zona||'')+'</div></div></div>';
+    }).join('');
+    document.getElementById('tabAvisos').innerHTML=html;
+  }).catch(function(){
+    document.getElementById('tabAvisos').innerHTML='<div class="empty"><p>Error al cargar avisos.</p></div>';
+  });
+}
+
+function cargarEventos(){
+  // Placeholder — integrar con tabla de eventos cuando exista
+  document.getElementById('tabEventos').innerHTML='<div class="empty"><div class="empty-ico">📅</div><p>No hay eventos próximos.</p><p style="font-size:12px;margin-top:8px">Los eventos aparecerán aquí cuando el admin los publique.</p></div>';
+}
+
+function cargarPartners(){
+  if(!grupo.sponsor){
+    document.getElementById('tabPartners').innerHTML='<div class="empty"><div class="empty-ico">🤝</div><p>Este grupo aún no tiene partners.</p><p style="font-size:12px;margin-top:8px">¿Eres un negocio? Contáctanos para patrocinar este grupo.</p></div>';
+    return;
+  }
+  document.getElementById('tabPartners').innerHTML=
+    '<div class="partner-card">'
+    +'<div class="partner-logo">⭐</div>'
+    +'<div><div class="partner-nombre">'+grupo.sponsor+'</div>'
+    +'<div class="partner-desc">Patrocinador oficial de '+grupo.nombre+'</div></div>'
+    +'<button class="btn-partner" onclick="mostrarToast(\'Próximamente\')">Ver</button></div>';
+}
+
+function showTab(name,el){
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('show');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('tab'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('show');
+  el.classList.add('active');
+}
+
+function abrirModalUnirse(){
+  if(!sessionEmail){if(typeof petmiAbrirLogin!=='undefined')petmiAbrirLogin();return;}
+  document.getElementById('modalUnirseTit').textContent='Unirte a '+grupo.nombre;
+  var info=misMascotas.length
+    ?'🐶 '+misMascotas[0].nombre+(misMascotas[0].raza?' · '+misMascotas[0].raza:'')
+    :'No tienes mascotas registradas';
+  document.getElementById('modalMascotaInfo').textContent=info;
+  document.getElementById('modalUnirse').classList.add('open');
+}
+
+function confirmarUnirse(){
+  if(!misMascotas.length){mostrarToast('Primero registra tu mascota');return;}
+  var mascota=misMascotas[0];
+  document.getElementById('modalUnirse').classList.remove('open');
+  fetch(SUPA_URL+'/rest/v1/miembros_grupo',{
+    method:'POST',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({grupo_id:grupoId,uid_mascota:mascota.uid.toUpperCase(),email:sessionEmail,estado:'activo'})
+  }).then(function(){
+    soyMiembro=true;
+    var btn=document.getElementById('btnUnirse');
+    btn.textContent='Ya soy miembro ✓';btn.className='btn-miembro';btn.onclick=null;
+    mostrarToast('Bienvenido/a a '+grupo.nombre+'! 🐾');
+  }).catch(function(){mostrarToast('Ya eres miembro de este grupo');});
+}
+
+function mostrarToast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2500);
+}
+</script>
+</body>
+</html>
