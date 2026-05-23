@@ -255,7 +255,22 @@ tbody tr:last-child td{border-bottom:none}
         <div><div class="page-title">Lugares Pet-Friendly</div><div class="page-sub" id="subLugares">-</div></div>
         <button class="btn-primary" onclick="window.location.href='/admin-lugar.html'">+ Nuevo Lugar</button>
       </div>
-      <div class="table-card"><div id="lugaresAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
+      <div class="table-card"><div id="lugaresAdminWrap"><div class="loading"><div class="spinner"></div></div></div>
+
+    <div class="screen" id="screenReglas">
+      <div class="page-header">
+        <div><div class="page-title">Aceptacion de reglas</div><div class="page-sub" id="subReglas">Cargando...</div></div>
+        <button class="btn-primary" onclick="cargarReglas()">🔄 Actualizar</button>
+      </div>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Email</th><th>Fecha</th><th>Version</th></tr></thead>
+            <tbody id="reglasBody"><tr><td colspan="3"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
   </div>
 </div>
@@ -363,6 +378,7 @@ function showScreen(name,el){
   if(name==='eventos'){cargarEventosAdmin();}
   if(name==='lugares') cargarLugaresAdmin();
   if(name==='avisos') setTimeout(cargarAvisosPendientes,100);
+  if(name==='reglas') setTimeout(cargarReglas,100);
 }
 
 // ── Carga de datos ────────────────────────────────────────────
@@ -1050,6 +1066,28 @@ function rechazarAviso(btn){
     document.getElementById('subAvisos').textContent=n+' pendiente(s)';
     mostrarToastAdmin('Aviso eliminado');
   }).catch(function(){btn.disabled=false;btn.textContent='Rechazar';});
+}
+
+function cargarReglas(){
+  var tbody=document.getElementById('reglasBody');
+  var sub=document.getElementById('subReglas');
+  tbody.innerHTML='<tr><td colspan="3"><div class="loading"><div class="spinner"></div></div></td></tr>';
+  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/reglas_aceptadas?order=fecha.desc&select=email,fecha,version',{
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}
+  }).then(function(r){return r.json();})
+  .then(function(rows){
+    sub.textContent=rows.length+' usuario(s) han aceptado';
+    if(!rows.length){
+      tbody.innerHTML='<tr><td colspan="3" style="text-align:center;padding:40px;color:#aaa">Nadie ha aceptado aun</td></tr>';
+      return;
+    }
+    tbody.innerHTML=rows.map(function(r){
+      var f=r.fecha?new Date(r.fecha).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'-';
+      return '<tr><td style="font-weight:600">'+r.email+'</td><td style="font-size:12px;color:#888">'+f+'</td><td><span class="badge badge-si">v'+r.version+'</span></td></tr>';
+    }).join('');
+  }).catch(function(e){
+    tbody.innerHTML='<tr><td colspan="3" style="color:red;padding:20px">Error: '+e.message+'</td></tr>';
+  });
 }
 
 function mostrarToastAdmin(msg){
