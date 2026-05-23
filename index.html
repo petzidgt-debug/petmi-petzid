@@ -664,7 +664,6 @@ function goNext(){if(!validate())return;if(cur===3){
     var err=document.getElementById('reglasError');
     if(chk&&!chk.checked){
       if(err)err.style.display='block';
-      chk.closest('label').style.color='#c0392b';
       return;
     }
     if(err)err.style.display='none';
