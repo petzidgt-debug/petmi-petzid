@@ -142,9 +142,23 @@ function renderForm(){
 
   var fechaInput = '';
   if(m.fecha){
-    var partes = String(m.fecha).split('/');
-    if(partes.length===3) fechaInput=partes[2]+'-'+partes[1]+'-'+partes[0];
-    else fechaInput=m.fecha;
+    var fs = String(m.fecha).trim();
+    // formato dd/mm/yyyy
+    var partes = fs.split('/');
+    if(partes.length===3 && partes[2].length===4){
+      fechaInput = partes[2]+'-'+partes[1].padStart(2,'0')+'-'+partes[0].padStart(2,'0');
+    // formato yyyy-mm-dd ya correcto
+    } else if(/^\d{4}-\d{2}-\d{2}$/.test(fs)){
+      fechaInput = fs;
+    // Date object string — parsear y convertir
+    } else {
+      try {
+        var d = new Date(fs);
+        if(!isNaN(d.getTime())){
+          fechaInput = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        }
+      } catch(e) {}
+    }
   }
 
   var esGato  = m.especie.toLowerCase().indexOf('gato')>=0;
@@ -250,7 +264,7 @@ function renderForm(){
       <label>WhatsApp</label>
       <div style="display:flex;gap:8px">
         <div style="background:#f0f0ee;border:1.5px solid #e0e0e0;border-radius:12px;padding:13px 14px;font-size:16px;color:#555;white-space:nowrap">+502</div>
-        <input type="tel" id="eWA" value="${(m.whatsapp||'').replace('+502','').replace('+503','')}" placeholder="####-####" inputmode="numeric" style="flex:1">
+        <input type="tel" id="eWA" value="${(m.whatsapp||'').replace(/^\+502/,'').replace(/^502/,'').trim()}" placeholder="####-####" inputmode="numeric" style="flex:1">
       </div>
       <label>Zona</label>
       <input type="text" id="eZona" value="${m.zona||''}" placeholder="Ej: Zona 10, Cayala...">
@@ -376,7 +390,9 @@ async function guardar(){
   }
 
   var wa=document.getElementById('eWA').value.trim();
-  if(wa&&!wa.startsWith('+'))wa='+502'+wa;
+  // Limpiar y agregar prefijo solo si no lo tiene
+  wa = wa.replace(/^\+502/,'').replace(/^502/,'').trim();
+  if(wa) wa = '+502'+wa;
 
   var payload={
     action:'updateRow',
@@ -636,7 +652,8 @@ function confirmarEliminar(){
 <!-- MODAL GUARDANDO -->
 <div id="modalGuardando" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:900;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:16px;padding:28px 32px;text-align:center;min-width:200px">
-    <img src="https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/loader.gif?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9hZGVyLmdpZiIsImlhdCI6MTc3OTUwMDgxMSwiZXhwIjoyMDk0ODYwODExfQ.Ibz1Vl9C5vpivhQtda5HE9FwWMN-4Y25LHpECzUkrHA" alt="Cargando" style="width:80px;height:80px;object-fit:contain;margin-bottom:10px">
+    <div style="width:52px;height:52px;border:4px solid #f0f0ee;border-top-color:#00B4B4;border-radius:50%;animation:editSpin .7s linear infinite;margin:0 auto 14px"></div>
+    <style>@keyframes editSpin{to{transform:rotate(360deg)}}</style>
     <div style="font-size:15px;font-weight:600;color:#222">Guardando cambios</div>
     <div style="font-size:12px;color:#aaa;margin-top:4px">Un momento por favor</div>
   </div>
