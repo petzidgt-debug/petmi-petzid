@@ -485,6 +485,11 @@ function enviarContacto(){
 }
 
 function abrirPublicar(){
+  // Verificar si ya acepto las reglas
+  if(!localStorage.getItem('reglas_aceptadas')){
+    document.getElementById('modalReglas').style.display='flex';
+    return;
+  }
   if(!sessionEmail){mostrarToast('Inicia sesión para publicar');return;}
   // Si miMascota aún no cargó, esperar
   if(!miMascota){
@@ -1008,6 +1013,26 @@ function mostrarToast(msg){
   setTimeout(function(){el.classList.remove('show');},2500);
 }
 </script>
+<!-- MODAL REGLAS -->
+<div id="modalReglas" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:950;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:340px;text-align:center">
+    <div style="font-size:32px;margin-bottom:10px">📋</div>
+    <div style="font-size:17px;font-weight:700;color:#222;margin-bottom:6px">Reglas de convivencia</div>
+    <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:16px">Antes de publicar, acepta las reglas de la comunidad PetMi para mantener un espacio seguro y positivo.</div>
+    <a href="/reglas.html" target="_blank" style="display:block;padding:10px;background:#f0f0ee;color:#00B4B4;font-weight:700;border-radius:10px;text-decoration:none;font-size:13px;margin-bottom:12px">Leer las reglas completas →</a>
+    <button onclick="aceptarReglas()" style="width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Acepto las reglas</button>
+    <button onclick="document.getElementById('modalReglas').style.display='none'" style="width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+<script>
+window.aceptarReglas=function(){
+  localStorage.setItem('reglas_aceptadas','1');
+  document.getElementById('modalReglas').style.display='none';
+  abrirPublicar();
+};
+window._publicarOriginal=window.abrirPublicar;
+</script>
+
 <!-- MODAL JEFE REVISANDO -->
 <div id="modalJefe" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:900;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:20px;padding:28px 24px;text-align:center;max-width:280px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25)">
