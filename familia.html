@@ -129,13 +129,13 @@ var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 
 // Helper directo a Supabase — sin pasar por Apps Script
 function supaDelete(uid){
-  return fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toLowerCase()),{
+  return fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toUpperCase()),{
     method:'DELETE',
     headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'}
   });
 }
 function supaMarkAngel(uid,esAngel,fecha){
-  return fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toLowerCase()),{
+  return fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toUpperCase()),{
     method:'PATCH',
     headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
     body:JSON.stringify({angelito:esAngel,fecha_angelito:esAngel?(fecha||new Date().toISOString().split('T')[0]):null})
