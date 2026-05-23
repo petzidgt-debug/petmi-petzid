@@ -656,6 +656,24 @@ document.getElementById('loginEmail').addEventListener('keydown', function(e){
   </div>
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+<!-- BANNER REGLAS -->
+<div id="bannerReglas" style="display:none;background:#00B4B4;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:60px;z-index:200">
+  <span style="font-size:13px;color:#fff;font-weight:500">📋 Nuevas reglas de convivencia en PetMi — <a href="/reglas.html" target="_blank" style="color:#F5C842;font-weight:700;text-decoration:none">Léelas aquí</a></span>
+  <button onclick="cerrarBannerReglas()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:24px;height:24px;border-radius:50%;font-size:14px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">×</button>
+</div>
+<script>
+(function(){
+  if(!localStorage.getItem('reglas_banner_visto')){
+    var b=document.getElementById('bannerReglas');
+    if(b)b.style.display='flex';
+  }
+  window.cerrarBannerReglas=function(){
+    var b=document.getElementById('bannerReglas');
+    if(b)b.style.display='none';
+    localStorage.setItem('reglas_banner_visto','1');
+  };
+})();
+</script>
 <script src="/header.js"></script>
 </body>
 </html>
