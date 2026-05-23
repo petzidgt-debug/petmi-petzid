@@ -321,6 +321,17 @@ function renderForm(){
     </div>
 
     <button class="btn-guardar" id="btnGuardar" onclick="guardar()">💾 Guardar cambios</button>
+    <div id="exitoWrap" style="display:none;margin-top:12px">
+      <div style="background:#e0f7f7;border-radius:12px;padding:12px 16px;text-align:center;margin-bottom:10px">
+        <div style="font-size:15px;font-weight:700;color:#007a7a;margin-bottom:2px">✅ Cambios guardados</div>
+        <div style="font-size:12px;color:#0F6E56">El perfil de tu mascota fue actualizado</div>
+      </div>
+      <button onclick="descargarID()" style="width:100%;padding:14px;background:#1a1a2e;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar mi PetzID
+      </button>
+      <button onclick="window.location.href='/familia.html'" style="width:100%;padding:12px;background:#f0f0ee;color:#555;border:none;border-radius:14px;font-size:13px;cursor:pointer;margin-top:8px">Volver a Mi Familia</button>
+    </div>
 
     <button class="btn-cancelar" onclick="window.location.href='/galeria.html'">Cancelar</button>
     <button class="btn-danger" onclick="document.getElementById('confirmOverlay').classList.add('open')">🗑️ Eliminar esta mascota</button>
@@ -426,7 +437,10 @@ async function guardar(){
 
   function mostrarExito(){
     document.getElementById('modalGuardando').style.display='none';
-    document.getElementById('modalExito').style.display='flex';
+    var btn=document.getElementById('btnGuardar');
+    btn.textContent='✅ Guardado';btn.disabled=true;
+    document.getElementById('exitoWrap').style.display='block';
+    document.getElementById('exitoWrap').scrollIntoView({behavior:'smooth',block:'center'});
   }
   function mostrarFallo(msg){
     document.getElementById('modalGuardando').style.display='none';
@@ -662,10 +676,6 @@ function confirmarEliminar(){
   </div>
 </div>
 
-<!-- MODAL EXITO -->
-<div id="modalExito" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:900;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:16px;padding:28px 32px;text-align:center;min-width:240px">
-    <div style="font-size:36px;margin-bottom:10px">✅</div>
     <div style="font-size:16px;font-weight:700;color:#222;margin-bottom:4px">Cambios guardados</div>
     <div style="font-size:13px;color:#888;margin-bottom:20px">El perfil de tu mascota fue actualizado</div>
     <button onclick="descargarID()" style="width:100%;padding:13px;background:#1a1a2e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px">
