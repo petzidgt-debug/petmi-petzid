@@ -382,6 +382,7 @@ async function guardar(){
   var nombre=document.getElementById('eNombre').value.trim();
   if(!nombre){mostrarError('El nombre es obligatorio.');return;}
   btn.disabled=true;btn.textContent='Guardando...';
+  document.getElementById('modalGuardando').style.display='flex';
 
   var fotoUrl=null;
   if(nuevaFotoBase64){
@@ -437,8 +438,6 @@ async function guardar(){
     fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'markAngel',uid:mascota.uid,esAngel:esAngelito,fechaAngelito:fechaAngel})});
     return Promise.resolve({ok:true});
-  }).then(function(r){
-    if(r) return r;
   }).then(function(){
     document.getElementById('modalGuardando').style.display='none';
     document.getElementById('modalExito').style.display='flex';
