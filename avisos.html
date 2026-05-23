@@ -486,7 +486,9 @@ function enviarContacto(){
 
 function abrirPublicar(){
   // Verificar si ya acepto las reglas
-  if(!localStorage.getItem('reglas_aceptadas')){
+  var _email=localStorage.getItem('petzid_email')||'';
+  var _key='reglas_aceptadas'+(_email?'_'+_email.replace(/[^a-z0-9]/gi,''):'');
+  if(!localStorage.getItem('reglas_aceptadas')&&!localStorage.getItem(_key)){
     document.getElementById('modalReglas').style.display='flex';
     return;
   }
@@ -1026,7 +1028,10 @@ function mostrarToast(msg){
 </div>
 <script>
 window.aceptarReglas=function(){
+  var email=localStorage.getItem('petzid_email')||'';
+  var key='reglas_aceptadas'+(email?'_'+email.replace(/[^a-z0-9]/gi,''):'');
   localStorage.setItem('reglas_aceptadas','1');
+  if(email) localStorage.setItem(key,'1');
   document.getElementById('modalReglas').style.display='none';
   abrirPublicar();
 };
