@@ -150,11 +150,49 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <p>El equipo de PetMi modera los avisos y se reserva el derecho de eliminar contenido que viole estas reglas, sin previo aviso.</p>
   </div>
 
+  <!-- Aceptacion de reglas -->
+  <div id="aceptarWrap" style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-top:10px;text-align:center">
+    <div id="yaAceptado" style="display:none;color:#0F6E56;font-size:14px;font-weight:700;padding:8px 0">✅ Ya aceptaste las reglas de convivencia</div>
+    <div id="noAceptado">
+      <div style="display:flex;align-items:flex-start;gap:10px;text-align:left;margin-bottom:12px">
+        <input type="checkbox" id="chkAceptar" style="width:18px;height:18px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:#00B4B4">
+        <span style="font-size:13px;color:#555;line-height:1.6">He leído y entiendo las reglas de convivencia de la comunidad PetMi Guatemala</span>
+      </div>
+      <button onclick="aceptarDesdeReglas()" style="width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Aceptar reglas</button>
+      <div id="chkError" style="display:none;font-size:12px;color:#c0392b;margin-top:8px">Marca el checkbox para aceptar</div>
+    </div>
+  </div>
+
   <p class="footer">
     Estas reglas aplican a toda la comunidad PetMi Guatemala.<br>
     Reporta conductas inapropiadas escribiendo a nuestro equipo.
   </p>
 
 </div>
+<script>
+(function(){
+  var email = localStorage.getItem('petzid_email')||'';
+  var key = 'reglas_aceptadas'+(email?'_'+email.replace(/[^a-z0-9]/gi,''):'');
+  var yaAcepto = localStorage.getItem('reglas_aceptadas')||localStorage.getItem(key);
+  if(yaAcepto){
+    document.getElementById('yaAceptado').style.display='block';
+    document.getElementById('noAceptado').style.display='none';
+  }
+  window.aceptarDesdeReglas = function(){
+    var chk = document.getElementById('chkAceptar');
+    var err = document.getElementById('chkError');
+    if(!chk.checked){ err.style.display='block'; return; }
+    err.style.display='none';
+    localStorage.setItem('reglas_aceptadas','1');
+    if(email) localStorage.setItem(key,'1');
+    document.getElementById('noAceptado').style.display='none';
+    document.getElementById('yaAceptado').style.display='block';
+    // Si vienen de familia, volver
+    setTimeout(function(){
+      if(document.referrer.indexOf('familia')>=0) window.history.back();
+    },1500);
+  };
+})();
+</script>
 </body>
 </html>
