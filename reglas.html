@@ -178,6 +178,19 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     document.getElementById('yaAceptado').style.display='block';
     document.getElementById('noAceptado').style.display='none';
   }
+
+function registrarAceptacionReglas(email){
+  if(!email) return;
+  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/reglas_aceptadas',{
+    method:'POST',
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({
+      email:email.toLowerCase().trim(),
+      version:'1.0',
+      dispositivo:navigator.userAgent.substring(0,100)
+    })
+  }).catch(function(){});
+}
   window.aceptarDesdeReglas = function(){
     var chk = document.getElementById('chkAceptar');
     var err = document.getElementById('chkError');
@@ -185,6 +198,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     err.style.display='none';
     localStorage.setItem('reglas_aceptadas','1');
     if(email) localStorage.setItem(key,'1');
+    registrarAceptacionReglas(email||'anonimo');
     document.getElementById('noAceptado').style.display='none';
     document.getElementById('yaAceptado').style.display='block';
     // Si vienen de familia, volver
