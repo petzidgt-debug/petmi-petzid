@@ -4,6 +4,18 @@ const BASE_URL = 'https://petmi-petzid.vercel.app';
 const DEFAULT_IMG = BASE_URL + '/logopetmi.png';
 
 export default async function handler(req, res) {
+  // Forzar respuesta completa — Meta/WhatsApp hace Range requests
+  // que Vercel responde con 206. Eliminamos el header Range.
+  delete req.headers['range'];
+  delete req.headers['Range'];
+
+  // Responder HEAD requests inmediatamente
+  if (req.method === 'HEAD') {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Accept-Ranges', 'none');
+    return res.status(200).end();
+  }
+
   const { tipo, id } = req.query;
 
   let titulo = 'PetMi Guatemala';
