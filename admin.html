@@ -379,13 +379,16 @@ tbody tr:last-child td{border-bottom:none}
 // Stub seguro para doLogin — se sobreescribe cuando carga el script principal
 function doLogin(){
   var pass=document.getElementById('loginPass');
-  if(pass&&pass.value==='petmi2024'){
+  if(!pass)return;
+  if(pass.value==='petmi2024'){
     localStorage.setItem('petmi_admin','1');
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('appShell').style.display='flex';
+    var lw=document.getElementById('loginWrap');
+    var aw=document.getElementById('appWrap');
+    if(lw)lw.style.display='none';
+    if(aw)aw.style.display='flex';
     if(typeof cargarDashboard==='function') cargarDashboard();
   } else {
-    var err=document.getElementById('loginError');
+    var err=document.getElementById('loginErr');
     if(err){err.textContent='Contraseña incorrecta';err.style.display='block';}
   }
 }
