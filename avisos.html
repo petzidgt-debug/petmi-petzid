@@ -856,7 +856,7 @@ function descargarPoster(id){
   var recompMatch=(a.descripcion||a.titulo||'').match(/[Qq]\.?\s*[\d,]+/);
   var recomp=recompMatch?recompMatch[0].trim():'';
 
-  function drawPoster(fi,li){
+  async function drawPoster(fi,li){
     var IW=W-BRD*2,IX=BRD;
     ctx.fillStyle='#a93226';ctx.fillRect(0,0,W,H);
     ctx.fillStyle='#f5f5f3';rr(BRD,BRD,IW,H-BRD*2,16);ctx.fill();
@@ -966,9 +966,31 @@ function descargarPoster(id){
     // Descargar
     var link=document.createElement('a');
     link.download='poster-perdido-'+_nom.replace(/[^a-z0-9]/gi,'-').toLowerCase()+'.png';
-    link.href=canvas.toDataURL('image/png');
+    var dataUrl=canvas.toDataURL('image/png');
+    link.href=dataUrl;
     link.click();
     mostrarToast('✅ Póster descargado!');
+
+    // Subir afiche a Cloudinary y actualizar imagen en Supabase
+    if(a.id){
+      try{
+        var b64=dataUrl.split(',')[1];
+        var fd=new FormData();
+        var blob=await fetch('data:image/png;base64,'+b64).then(function(r){return r.blob();});
+        fd.append('file',blob);
+        fd.append('upload_preset','petzid');
+        fd.append('folder','petzid_perdidos');
+        var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
+        var cData=await res.json();
+        if(cData.secure_url){
+          fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/actividades?id=eq.'+a.id,{
+            method:'PATCH',
+            headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Content-Type':'application/json','Prefer':'return=minimal'},
+            body:JSON.stringify({imagen:cData.secure_url})
+          }).catch(function(){});
+        }
+      }catch(e){console.log('Afiche upload error:',e);}
+    }
   }
 
   var fi=null,li=null,done=0;
