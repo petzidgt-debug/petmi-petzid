@@ -538,7 +538,7 @@ function abrirMensajePublico(uid,nombre,tipo){
       +'<div id="mpSub" style="font-size:13px;color:#888;text-align:center;margin-bottom:14px;line-height:1.5"></div>'
       +'<div id="mpForm"><textarea id="mpTxt" placeholder="Escribe tu mensaje..." style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;resize:none;height:80px;outline:none;margin-bottom:12px;font-family:Arial,sans-serif"></textarea>'
       +'<button onclick="enviarMensajePublico()" style="width:100%;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Enviar mensaje</button>'
-      +'<button onclick="document.getElementById('mensajePublicoOverlay').style.display='none'" style="width:100%;padding:10px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button></div>'
+      +'<button onclick="cerrarMensajePublico()" style="width:100%;padding:10px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button></div>'
       +'<div id="mpOk" style="display:none;text-align:center;padding:8px 0">'
       +'<div style="font-size:36px;margin-bottom:8px">✅</div>'
       +'<div style="font-size:15px;font-weight:700;color:#222;margin-bottom:4px">Mensaje enviado</div>'
@@ -555,6 +555,10 @@ function abrirMensajePublico(uid,nombre,tipo){
   document.getElementById('mpOk').style.display='none';
   overlay._uid=uid;overlay._tipo=tipo;
   overlay.style.display='flex';
+}
+function cerrarMensajePublico(){
+  var o=document.getElementById('mensajePublicoOverlay');
+  if(o) o.style.display='none';
 }
 function enviarMensajePublico(){
   var overlay=document.getElementById('mensajePublicoOverlay');
