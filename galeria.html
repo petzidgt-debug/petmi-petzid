@@ -516,6 +516,58 @@ function setFilter(type,el){
   shown=0; applyFilter();
 }
 
+window.felicitarDesdeBtn = function(btn){
+  var uid=btn.getAttribute('data-uid');
+  var nombre=btn.getAttribute('data-nombre');
+  abrirMensajePublico(uid,nombre,'cumple');
+};
+window.mensajeAngelDesdeBtn = function(btn){
+  var uid=btn.getAttribute('data-uid');
+  var nombre=btn.getAttribute('data-nombre');
+  abrirMensajePublico(uid,nombre,'angel');
+};
+function abrirMensajePublico(uid,nombre,tipo){
+  if(!sessionEmail){if(typeof petmiAbrirLogin!=='undefined')petmiAbrirLogin();return;}
+  var overlay=document.getElementById('mensajePublicoOverlay');
+  if(!overlay){
+    overlay=document.createElement('div');overlay.id='mensajePublicoOverlay';
+    overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px';
+    var box=document.createElement('div');box.style.cssText='background:#fff;border-radius:20px;padding:24px;width:100%;max-width:320px';
+    box.innerHTML='<div id="mpIco" style="font-size:32px;text-align:center;margin-bottom:8px"></div>'
+      +'<div id="mpTit" style="font-size:16px;font-weight:900;color:#222;text-align:center;margin-bottom:4px"></div>'
+      +'<div id="mpSub" style="font-size:13px;color:#888;text-align:center;margin-bottom:14px;line-height:1.5"></div>'
+      +'<div id="mpForm"><textarea id="mpTxt" placeholder="Escribe tu mensaje..." style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;resize:none;height:80px;outline:none;margin-bottom:12px;font-family:Arial,sans-serif"></textarea>'
+      +'<button onclick="enviarMensajePublico()" style="width:100%;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Enviar mensaje</button>'
+      +'<button onclick="document.getElementById('mensajePublicoOverlay').style.display='none'" style="width:100%;padding:10px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button></div>'
+      +'<div id="mpOk" style="display:none;text-align:center;padding:8px 0">'
+      +'<div style="font-size:36px;margin-bottom:8px">✅</div>'
+      +'<div style="font-size:15px;font-weight:700;color:#222;margin-bottom:4px">Mensaje enviado</div>'
+      +'<div style="font-size:13px;color:#888">La familia lo recibirá pronto</div></div>';
+    overlay.appendChild(box);
+    overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.style.display='none';});
+    document.body.appendChild(overlay);
+  }
+  document.getElementById('mpIco').textContent=tipo==='cumple'?'🎂':'🌈';
+  document.getElementById('mpTit').textContent=tipo==='cumple'?'Felicitar a '+nombre+'!':'Un abrazo para '+nombre;
+  document.getElementById('mpSub').textContent=tipo==='cumple'?'Déjale un mensaje de cumpleaños que verá su familia':'Deja un mensaje de apoyo para la familia de '+nombre+'. Siempre en nuestros corazones.';
+  document.getElementById('mpTxt').value='';
+  document.getElementById('mpForm').style.display='block';
+  document.getElementById('mpOk').style.display='none';
+  overlay._uid=uid;overlay._tipo=tipo;
+  overlay.style.display='flex';
+}
+function enviarMensajePublico(){
+  var overlay=document.getElementById('mensajePublicoOverlay');
+  var txt=document.getElementById('mpTxt').value.trim();
+  if(!txt)return;
+  fetch('/api/galeria?action=publicarMensaje',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid_destinatario:overlay._uid,email_emisor:sessionEmail,mensaje:txt,tipo:overlay._tipo})
+  }).catch(function(){});
+  document.getElementById('mpForm').style.display='none';
+  document.getElementById('mpOk').style.display='block';
+  setTimeout(function(){overlay.style.display='none';},2000);
+}
 function applyFilter(){
   var search=document.getElementById('searchInput').value.toLowerCase();
   filtered=allPets.filter(function(p){
@@ -692,7 +744,8 @@ function renderModalFooter(p){
     } else {
       var rel=rows[0];
       if(rel.estado==='aceptado'){
-        btn='<button class="btn-primary" style="width:100%;background:#e0f7f7;color:#007a7a;cursor:default">🐾 Amigos</button>';
+        btn='<button class="btn-primary" style="width:100%;background:#e0f7f7;color:#007a7a;cursor:default">🐾 Amigos</button>'
+           +'<button class="btn-primary" style="width:100%;background:#fff0f0;color:#c0392b;border:1.5px solid #fcc;margin-top:6px" data-id="'+rel.id+'" onclick="eliminarAmistad(this.dataset.id)">Eliminar amistad</button>';
       } else if(rel.email_solicitante.toLowerCase()===sessionEmail.toLowerCase()){
         var diasPend=rel.created_at?Math.floor((Date.now()-new Date(rel.created_at).getTime())/86400000):0;
         if(diasPend>=21){
@@ -897,6 +950,21 @@ function aceptarDesdeModal(uid){
   });
 }
 
+function eliminarAmistad(solicitudId){
+  if(!confirm('¿Seguro que quieres eliminar esta amistad?')) return;
+  fetch('/api/galeria?action=eliminarAmistad',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:solicitudId})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      mostrarToastG('Amistad eliminada');
+      closeModal();
+    } else {
+      mostrarToastG('Error al eliminar');
+    }
+  }).catch(function(){mostrarToastG('Error de conexión');});
+}
 function reenviarSolicitud(uid, solicitudId){
   if(!sessionEmail)return;
   // Eliminar solicitud anterior y enviar nueva
