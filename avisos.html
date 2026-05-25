@@ -281,7 +281,7 @@ function renderLista(){
 
 function renderAviso(a,i){
   var esCreador=sessionEmail&&a.email_creador&&a.email_creador.toLowerCase()===sessionEmail.toLowerCase();
-  var sUrl=encodeURIComponent('https://petmi-petzid.vercel.app/share.html?tipo=aviso&id='+a.id);
+  var sUrl=encodeURIComponent('https://petmi-petzid.vercel.app/share?tipo=aviso&id='+a.id);
   var HEADER_COLORS={perdido:'#c0392b',plan:'#764ba2',busco:'#2e7d32',adopcion:'#2e7d32'};
   var LABELS={perdido:'Perdido',plan:'Plan',busco:'Busco',adopcion:'Adopcion'};
   var ICONS={perdido:'🚨',plan:'🐾',busco:'🔍',adopcion:'🏠'};
