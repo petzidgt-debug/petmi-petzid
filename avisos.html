@@ -92,14 +92,13 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <div class="hero">
   <h1>📢 Avisos</h1>
-  <p>Mascotas perdidas, busco, planes y adopciones de la comunidad</p>
+  <p>Mascotas perdidas, busco y adopciones de la comunidad</p>
 </div>
 
 <div class="filtros-wrap">
   <div class="filtros-scroll">
     <button class="filtro-btn active" onclick="setFiltro('',this)">Todos</button>
     <button class="filtro-btn" onclick="setFiltro('perdido',this)">🚨 Perdidos</button>
-    <button class="filtro-btn" onclick="setFiltro('plan',this)">🐾 Planes</button>
     <button class="filtro-btn" onclick="setFiltro('busco',this)">🔍 Busco</button>
     <button class="filtro-btn" onclick="setFiltro('adopcion',this)">🏠 Adopción</button>
   </div>
@@ -115,7 +114,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <div class="modal-titulo">Publicar aviso</div>
     <div class="tipo-grid">
       <div class="tipo-option selected" onclick="selTipo('perdido',this)">🚨<br>Perdido</div>
-      <div class="tipo-option" onclick="selTipo('plan',this)">🐾<br>Plan</div>
       <div class="tipo-option" onclick="selTipo('busco',this)">🔍<br>Busco</div>
       <div class="tipo-option" onclick="selTipo('adopcion',this)">🏠<br>Adopción</div>
     </div>
@@ -206,11 +204,11 @@ var tipoSel      = 'perdido';
 
 var TIPO_COLORS = {
   perdido:  {bg:'#ffebee',color:'#c0392b',header:'#c0392b'},
-  plan:     {bg:'#f3e8ff',color:'#764ba2',header:'#764ba2'},
+
   busco:    {bg:'#e8f5e9',color:'#2e7d32',header:'#2e7d32'},
   adopcion: {bg:'#e8f5e9',color:'#2e7d32',header:'#2e7d32'}
 };
-var TIPO_LABELS = {perdido:'🚨 Perdido',plan:'🐾 Plan',busco:'🔍 Busco',adopcion:'🏠 Adopción'};
+var TIPO_LABELS = {perdido:'🚨 Perdido',busco:'🔍 Busco',adopcion:'🏠 Adopción'};
 
 if(sessionEmail){
   fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
@@ -282,9 +280,9 @@ function renderLista(){
 function renderAviso(a,i){
   var esCreador=sessionEmail&&a.email_creador&&a.email_creador.toLowerCase()===sessionEmail.toLowerCase();
   var sUrl=encodeURIComponent('https://worker-js.petzid-gt.workers.dev/s/a/'+a.id);
-  var HEADER_COLORS={perdido:'#c0392b',plan:'#764ba2',busco:'#2e7d32',adopcion:'#2e7d32'};
-  var LABELS={perdido:'Perdido',plan:'Plan',busco:'Busco',adopcion:'Adopcion'};
-  var ICONS={perdido:'🚨',plan:'🐾',busco:'🔍',adopcion:'🏠'};
+  var HEADER_COLORS={perdido:'#c0392b',busco:'#2e7d32',adopcion:'#2e7d32'};
+  var LABELS={perdido:'Perdido',busco:'Busco',adopcion:'Adopcion'};
+  var ICONS={perdido:'🚨',busco:'🔍',adopcion:'🏠'};
   var BORDER={perdido:'2px solid #c0392b',adopcion:'1.5px solid #2e7d32'};
   var headerColor=HEADER_COLORS[a.tipo]||'#888';
   var label=ICONS[a.tipo]+' '+LABELS[a.tipo];
@@ -357,7 +355,6 @@ function renderAviso(a,i){
     if(esCreador) html+='<button class="btn-aparecio" data-id="'+aid+'" data-nombre="'+anc+'" onclick="aparecioDesdeBtn(this)">🎉 Aparecio!</button>';
     html+='<button class="btn-dl" data-id="'+aid+'" onclick="posterDesdeBtn(this)">⬇ Poster</button>';
   }
-  if(a.tipo==='plan'){var aid2=a.id||'';html+='<button class="btn-apuntar" id="btn-ap-'+aid2+'" data-id="'+aid2+'" onclick="apuntarseDesdeBtn(this)">🐾 Apuntarse</button>';}
   if(a.tipo==='busco'&&!esCreador&&sessionEmail){var em2=a.email_creador||'';var tit2=a.titulo||'';html+='<button class="btn-apuntar" data-email="'+em2+'" data-titulo="'+tit2+'" data-tipo="busco" onclick="contactarDesdeBtn(this)">🔍 Me interesa</button>';}
   if(a.tipo==='adopcion'&&!esCreador&&sessionEmail){var em3=a.email_creador||'';var tit3=a.titulo||'';html+='<button class="btn-interesa" data-email="'+em3+'" data-titulo="'+tit3+'" data-tipo="adopcion" onclick="contactarDesdeBtn(this)">🏠 Me interesa</button>';}
   if(esCreador&&a.tipo!=='perdido'){var aid3=a.id||'';html+='<button style="padding:6px 10px;background:#f0f0ee;color:#888;border:none;border-radius:99px;font-size:11px;cursor:pointer" data-id="'+aid3+'" onclick="eliminarDesdeBtn(this)">🗑️</button>';}
@@ -609,7 +606,7 @@ function selTipo(tipo,el){
   // Placeholder dinamico segun tipo
   var PLACEHOLDERS={
     perdido:'Ej: Se perdio Cami en Zona 10',
-    plan:'Ej: Paseo matutino en Parque Cayala sabado 8am',
+
     busco:'Ej: Busco kennel para mi perro el fin de semana',
     adopcion:'Ej: Doy en adopcion a Rocky, 3 anos muy cariñoso'
   };
