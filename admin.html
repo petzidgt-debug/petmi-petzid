@@ -1164,8 +1164,8 @@ function cargarAdminGrupos(){
           +'<td style="font-size:12px;color:#888">'+(g.admin_email||'—')+'</td>'
           +'<td style="font-size:12px;color:#888">'+f+'</td>'
           +'<td style="display:flex;gap:6px;padding:8px 12px">'
-          +'<button class="badge badge-si" style="cursor:pointer;border:none" onclick="aprobarGrupo(''+g.id+'',''+g.nombre+'')">✓ Aprobar</button>'
-          +'<button class="badge badge-no" style="cursor:pointer;border:none" onclick="rechazarGrupo(''+g.id+'',''+g.nombre+'')">✗ Rechazar</button>'
+          +'<button class="badge badge-si" style="cursor:pointer;border:none" data-id="'+g.id+'" data-nombre="'+g.nombre+'" onclick="aprobarGrupo(this.dataset.id,this.dataset.nombre)">✓ Aprobar</button>'
+          +'<button class="badge badge-no" style="cursor:pointer;border:none" data-id="'+g.id+'" data-nombre="'+g.nombre+'" onclick="rechazarGrupo(this.dataset.id,this.dataset.nombre)">✗ Rechazar</button>'
           +'</td></tr>';
       }).join('');
     }
@@ -1191,8 +1191,8 @@ function cargarAdminGrupos(){
         +'<td style="font-size:12px">'+(g.sponsor||'—')+'</td>'
         +'<td><span class="badge badge-si">'+(counts[g.id]||0)+'</span></td>'
         +'<td style="display:flex;gap:6px;padding:8px 12px">'
-        +'<button class="badge" style="background:#e0f0ff;color:#0056b3;cursor:pointer;border:none" onclick="editarGrupoAdmin(''+g.id+'')">Editar</button>'
-        +'<button class="badge badge-no" style="cursor:pointer;border:none" onclick="desactivarGrupo(''+g.id+'',''+g.nombre+'')">Desactivar</button>'
+        +'<button class="badge" style="background:#e0f0ff;color:#0056b3;cursor:pointer;border:none" data-id="'+g.id+'" onclick="editarGrupoAdmin(this.dataset.id)">Editar</button>'
+        +'<button class="badge badge-no" style="cursor:pointer;border:none" data-id="'+g.id+'" data-nombre="'+g.nombre+'" onclick="desactivarGrupo(this.dataset.id,this.dataset.nombre)">Desactivar</button>'
         +'</td></tr>';
     }).join('');
   }).catch(function(){document.getElementById('gruposActivosBody').innerHTML='<tr><td colspan="6" style="color:red;padding:12px">Error</td></tr>';});
