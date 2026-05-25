@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
     else if (tipo === 'aviso' && id) {
       const r = await fetch(
-        SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(id) + '&select=titulo,descripcion,imagen,tipo,ubicacion,nombre_creador',
+        SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(id) + '&select=titulo,descripcion,imagen,foto_creador,tipo,ubicacion,nombre_creador',
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
       );
       const data = await r.json();
@@ -38,17 +38,11 @@ export default async function handler(req, res) {
         titulo = a.titulo || titulo;
         const meta = [a.nombre_creador, a.ubicacion].filter(Boolean).join(' · ');
         descripcion = meta || a.descripcion || descripcion;
-        if (a.imagen && a.imagen.indexOf('http') >= 0) imagen = a.imagen;
-        // Para perdidos usar foto del creador si no hay imagen del aviso
-        if (!a.imagen || a.imagen.indexOf('http') < 0) {
-          const r2 = await fetch(
-            SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(id) + '&select=foto_creador',
-            { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-          );
-          const d2 = await r2.json();
-          if (d2 && d2[0] && d2[0].foto_creador && d2[0].foto_creador.indexOf('http') >= 0) {
-            imagen = d2[0].foto_creador;
-          }
+        // Usar imagen del aviso, o foto_creador como fallback
+        if (a.imagen && a.imagen.indexOf('http') >= 0) {
+          imagen = a.imagen;
+        } else if (a.foto_creador && a.foto_creador.indexOf('http') >= 0) {
+          imagen = a.foto_creador;
         }
       }
       urlDestino = BASE_URL + '/avisos.html';
@@ -113,6 +107,8 @@ export default async function handler(req, res) {
 </html>`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=300'); // 5 min cache
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('X-Robots-Tag', 'all');
   return res.status(200).send(html);
 }
