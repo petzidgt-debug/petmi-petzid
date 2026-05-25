@@ -332,7 +332,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <script>
 // ── Estado global ─────────────────────────────────────────────
-var allPets=[], filtered=[], shown=0, perPage=40, currentFilter='todos';
+var allPets=[], filtered=[], shown=0, perPage=40, currentFilter='todos', currentSort='az';
 var sessionEmail=localStorage.getItem('petzid_email')||'';
 var sessionDueno=localStorage.getItem('petzid_dueno')||'';
 var currentModalPet=null;
@@ -574,7 +574,8 @@ function enviarMensajePublico(){
   setTimeout(function(){overlay.style.display='none';},2000);
 }
 function applyFilter(){
-  var search=document.getElementById('searchInput').value.toLowerCase();
+  var searchEl=document.getElementById('searchInput');
+  var search=searchEl?searchEl.value.toLowerCase():'';
   filtered=allPets.filter(function(p){
     if(currentFilter==='angelito'){
       if(!p.angelito)return false;
