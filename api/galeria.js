@@ -171,6 +171,23 @@ export default async function handler(req, res) {
     }
 
     // ── responderSolicitud ────────────────────────────────────
+    // ── eliminarAmistad ───────────────────────────────────────
+    if (action === 'eliminarAmistad' && req.method === 'POST') {
+      const { id } = req.body;
+      const response = await fetch(
+        SUPABASE_URL + '/rest/v1/amigos?id=eq.' + encodeURIComponent(id),
+        {
+          method: 'DELETE',
+          headers: {
+            'apikey':        SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Prefer':        'return=minimal'
+          }
+        }
+      );
+      return res.status(200).json({ ok: response.ok });
+    }
+
     if (action === 'responderSolicitud' && req.method === 'POST') {
       const { id, estado } = req.body; // estado: aceptado | rechazado
       const response = await fetch(
