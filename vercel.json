@@ -9,14 +9,18 @@
       "source": "/api/share",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "X-Robots-Tag", "value": "all" }
+        { "key": "X-Robots-Tag", "value": "all" },
+        { "key": "Accept-Ranges", "value": "none" },
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
       ]
     },
     {
       "source": "/share",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "X-Robots-Tag", "value": "all" }
+        { "key": "X-Robots-Tag", "value": "all" },
+        { "key": "Accept-Ranges", "value": "none" },
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
       ]
     }
   ]
