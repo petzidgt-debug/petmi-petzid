@@ -1159,14 +1159,17 @@ function cargarAdminGrupos(){
     }else{
       tbody.innerHTML=rows.map(function(g){
         var f=g.created_at?new Date(g.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
-        return '<tr>'
-          +'<td style="font-weight:600">'+g.nombre+'</td>'
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td style="font-weight:600">'+g.nombre+'</td>'
           +'<td style="font-size:12px;color:#888">'+(g.admin_email||'—')+'</td>'
           +'<td style="font-size:12px;color:#888">'+f+'</td>'
           +'<td style="display:flex;gap:6px;padding:8px 12px">'
-          +'<button class="badge badge-si" style="cursor:pointer;border:none" data-id="'+g.id+'" data-nombre="'+g.nombre+'" onclick="aprobarGrupo(this.dataset.id,this.dataset.nombre)">✓ Aprobar</button>'
-          +'<button class="badge badge-no" style="cursor:pointer;border:none" data-id="'+g.id+'" data-nombre="'+g.nombre+'" onclick="rechazarGrupo(this.dataset.id,this.dataset.nombre)">✗ Rechazar</button>'
-          +'</td></tr>';
+          +'<button class="badge badge-si" style="cursor:pointer;border:none">✓ Aprobar</button>'
+          +'<button class="badge badge-no" style="cursor:pointer;border:none">✗ Rechazar</button>'
+          +'</td>';
+        tr.querySelectorAll('button')[0].onclick=function(){aprobarGrupo(g.id,g.nombre);};
+        tr.querySelectorAll('button')[1].onclick=function(){rechazarGrupo(g.id,g.nombre);};
+        return tr.outerHTML;
       }).join('');
     }
   }).catch(function(){document.getElementById('solicitudesGruposBody').innerHTML='<tr><td colspan="4" style="color:red;padding:12px">Error</td></tr>';});
@@ -1184,16 +1187,19 @@ function cargarAdminGrupos(){
       tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">No hay grupos activos</td></tr>';return;
     }
     tbody.innerHTML=grupos.map(function(g){
-      return '<tr>'
-        +'<td style="font-size:12px;font-weight:700;color:#00B4B4">'+g.id+'</td>'
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td style="font-size:12px;font-weight:700;color:#00B4B4">'+g.id+'</td>'
         +'<td style="font-weight:600">'+g.nombre+'</td>'
         +'<td style="font-size:12px;color:#888;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(g.descripcion||'—')+'</td>'
         +'<td style="font-size:12px">'+(g.sponsor||'—')+'</td>'
         +'<td><span class="badge badge-si">'+(counts[g.id]||0)+'</span></td>'
         +'<td style="display:flex;gap:6px;padding:8px 12px">'
-        +'<button class="badge" style="background:#e0f0ff;color:#0056b3;cursor:pointer;border:none" data-id="'+g.id+'" onclick="editarGrupoAdmin(this.dataset.id)">Editar</button>'
-        +'<button class="badge badge-no" style="cursor:pointer;border:none" data-id="'+g.id+'" data-nombre="'+g.nombre+'" onclick="desactivarGrupo(this.dataset.id,this.dataset.nombre)">Desactivar</button>'
-        +'</td></tr>';
+        +'<button class="badge" style="background:#e0f0ff;color:#0056b3;cursor:pointer;border:none">Editar</button>'
+        +'<button class="badge badge-no" style="cursor:pointer;border:none">Desactivar</button>'
+        +'</td>';
+      tr.querySelectorAll('button')[0].onclick=function(){editarGrupoAdmin(g.id);};
+      tr.querySelectorAll('button')[1].onclick=function(){desactivarGrupo(g.id,g.nombre);};
+      return tr.outerHTML;
     }).join('');
   }).catch(function(){document.getElementById('gruposActivosBody').innerHTML='<tr><td colspan="6" style="color:red;padding:12px">Error</td></tr>';});
 }
