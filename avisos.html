@@ -352,6 +352,7 @@ function renderAviso(a,i){
     var aid=a.id||'';
     var anc=a.nombre_creador||'';
     if(!esCreador) html+='<button class="btn-info" data-email="'+em+'" data-titulo="'+tit+'" data-tipo="perdido" data-wa="'+wa+'" onclick="contactarDesdeBtn(this)">'+(wa?'💬 Tengo info':'📞 Tengo info')+'</button>';
+  if(!esCreador&&sessionEmail) html+='<button class="btn-interesa" data-email="'+em+'" data-titulo="'+tit+'" data-tipo="perdido" onclick="contactarDesdeBtn(this)">❤️ Me interesa ayudar</button>';
     if(esCreador) html+='<button class="btn-aparecio" data-id="'+aid+'" data-nombre="'+anc+'" onclick="aparecioDesdeBtn(this)">🎉 Aparecio!</button>';
     html+='<button class="btn-dl" data-id="'+aid+'" onclick="posterDesdeBtn(this)">⬇ Poster</button>';
   }
@@ -731,7 +732,19 @@ function publicar(){
 function compartirDesdeBtn(btn){
   var titulo=btn.getAttribute('data-titulo')||'';
   var url=btn.getAttribute('data-url')||'';
-  window.open('https://wa.me/?text='+encodeURIComponent(titulo)+'%20'+url,'_blank');
+  var tipo=btn.getAttribute('data-tipo')||'';
+  var prefijos={
+    'perdido':'🚨 ¡AYUDA! SE PERDIÓ: ',
+    'adopcion':'🏠 EN ADOPCIÓN: ',
+    'busco':'🔍 SE BUSCA: ',
+    'evento':'🎪 EVENTO: ',
+    'perdido_aviso':'🚨 ¡AYUDA! SE PERDIÓ: '
+  };
+  var prefijo=prefijos[tipo]||'🐾 ';
+  var msg=prefijo+titulo+'
+
+Ver más info: '+url;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 function contactarDesdeBtn(btn){
   var email=btn.getAttribute('data-email');
