@@ -386,17 +386,19 @@ export default async function handler(req, res) {
       let imagenUrl = null;
       if (fotoBase64 && fotoMime) {
         try {
-          const formData = new URLSearchParams();
-          formData.append('file', 'data:' + fotoMime + ';base64,' + fotoBase64);
-          formData.append('upload_preset', 'petzid');
-          formData.append('folder', 'petzid/eventos');
           const cRes = await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload', {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              file: 'data:' + fotoMime + ';base64,' + fotoBase64,
+              upload_preset: 'petzid',
+              folder: 'petzid/eventos'
+            })
           });
           const cData = await cRes.json();
+          console.log('Cloudinary response:', JSON.stringify(cData).substring(0, 200));
           if (cData.secure_url) imagenUrl = cData.secure_url;
-        } catch(e) { console.error('Cloudinary error:', e); }
+        } catch(e) { console.error('Cloudinary error:', e.message); }
       }
 
       const r = await fetch(SUPABASE_URL + '/rest/v1/eventos', {
