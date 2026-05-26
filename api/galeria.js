@@ -45,7 +45,7 @@ export default async function handler(req, res) {
     // ── getData — datos completos ─────────────────────────────
     if (action === 'getData') {
       const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?select=*&order=nombre.asc',
+        SUPABASE_URL + '/rest/v1/mascotas?select=*&order=created_at.desc',
         {
           headers: {
             'apikey':        SUPABASE_KEY,
