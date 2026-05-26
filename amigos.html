@@ -8,10 +8,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
-
 .wrap{max-width:600px;margin:0 auto;padding:20px 16px 40px}
-
-/* HERO */
 .amigos-hero{background:linear-gradient(135deg,#00B4B4,#007a7a);border-radius:16px;padding:24px;margin-bottom:20px;text-align:center;color:#fff}
 .amigos-hero h1{font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;margin-bottom:6px}
 .amigos-hero p{font-size:13px;color:rgba(255,255,255,.75)}
@@ -19,53 +16,39 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .astat{text-align:center}
 .astat-num{font-size:24px;font-weight:900}
 .astat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.7)}
-
-/* SECCIONES */
 .seccion{background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .sec-titulo{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#00B4B4;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
 .sec-titulo .badge{background:#E05090;color:#fff;font-size:10px;padding:2px 8px;border-radius:20px}
-
-/* CARDS DE MASCOTAS */
 .mascotas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
-.mascota-mini{background:#f8f8f8;border-radius:12px;overflow:hidden;text-align:center;cursor:pointer;transition:transform .15s;border:1.5px solid #eee}
+.mascota-mini{background:#f8f8f8;border-radius:12px;overflow:hidden;text-align:center;cursor:pointer;transition:transform .15s;border:1.5px solid #eee;position:relative}
 .mascota-mini:hover{transform:translateY(-2px)}
 .mascota-mini-foto{width:100%;aspect-ratio:1;object-fit:cover;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:32px}
 .mascota-mini-foto img{width:100%;aspect-ratio:1;object-fit:cover}
 .mascota-mini-info{padding:8px}
 .mascota-mini-nombre{font-size:13px;font-weight:700;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mascota-mini-especie{font-size:11px;color:#aaa}
-
-/* SOLICITUDES */
+.btn-eliminar-amigo{position:absolute;top:6px;right:6px;width:24px;height:24px;background:rgba(192,57,43,.85);color:#fff;border:none;border-radius:50%;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;opacity:0;transition:opacity .15s}
+.mascota-mini:hover .btn-eliminar-amigo{opacity:1}
 .solicitud-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f5f5f5}
 .solicitud-item:last-child{border-bottom:none}
 .sol-foto{width:48px;height:48px;border-radius:10px;overflow:hidden;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .sol-foto img{width:100%;height:100%;object-fit:cover}
 .sol-info{flex:1;min-width:0}
-.sol-nombre{font-size:14px;font-weight:700;color:#222}
+.sol-nombre{font-size:14px;font-weight:700;color:#222;cursor:pointer;color:#00B4B4}
 .sol-sub{font-size:12px;color:#aaa}
 .sol-btns{display:flex;gap:6px}
 .btn-aceptar{padding:7px 12px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer}
 .btn-rechazar{padding:7px 12px;background:#f0f0ee;color:#888;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer}
-
-/* NO SESIÓN */
 .no-session{text-align:center;padding:40px 20px}
 .no-session-icon{font-size:48px;margin-bottom:16px}
 .btn-ingresar{padding:13px 28px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer}
-
-/* EMPTY */
 .empty-state{text-align:center;padding:28px;color:#bbb}
 .empty-icon{font-size:36px;margin-bottom:8px}
 .empty-txt{font-size:13px}
-
-/* LOADING */
 .spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:20px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
-
-/* LOGIN MODAL */
 .login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
 .login-overlay.open{display:flex}
 .login-modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px}
@@ -79,10 +62,17 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .login-msg{font-size:13px;text-align:center;padding:8px;border-radius:8px;margin-bottom:10px;display:none}
 .login-msg.error{background:#fbeaf0;color:#993556}
 .login-msg.success{background:#e0f7f7;color:#007a7a}
+/* Modal confirmar eliminar */
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:700;display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-overlay.open{display:flex}
+.confirm-box{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:320px;text-align:center}
+.confirm-icon{font-size:36px;margin-bottom:10px}
+.confirm-title{font-size:16px;font-weight:700;color:#222;margin-bottom:6px}
+.confirm-sub{font-size:13px;color:#888;margin-bottom:20px;line-height:1.5}
+.confirm-btns{display:flex;gap:10px}
 </style>
 </head>
 <body>
-
 <div class="wrap" id="mainWrap">
   <div style="text-align:center;padding:60px 0"><div class="spinner"></div></div>
 </div>
@@ -100,20 +90,31 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   </div>
 </div>
 
+<!-- MODAL CONFIRMAR ELIMINAR -->
+<div class="confirm-overlay" id="confirmEliminar">
+  <div class="confirm-box">
+    <div class="confirm-icon">🐾</div>
+    <div class="confirm-title" id="confirmTitulo">¿Eliminar amistad?</div>
+    <div class="confirm-sub" id="confirmSub">Esta acción no se puede deshacer.</div>
+    <div class="confirm-btns">
+      <button onclick="confirmarEliminar()" style="flex:1;padding:12px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Sí, eliminar</button>
+      <button onclick="document.getElementById('confirmEliminar').classList.remove('open')" style="flex:1;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 var sessionEmail = localStorage.getItem('petzid_email') || '';
 var sessionDueno = localStorage.getItem('petzid_dueno') || '';
 var misMascotas  = [];
 var datosAmigos  = null;
+var _eliminarId  = null;
 
-// Init
-if(sessionEmail){
-  cargarTodo();
-} else {
-  renderNoSession();
-}
+if(sessionEmail){ cargarTodo(); } else { renderNoSession(); }
 
 function renderNoSession(){
   document.getElementById('mainWrap').innerHTML =
@@ -127,26 +128,14 @@ function renderNoSession(){
 }
 
 function cargarTodo(){
-  // Limpiar badge de notificaciones
   if(window.petmiLimpiarNotif) petmiLimpiarNotif();
-
-  // 1. Cargar mis mascotas
-  fetch('/api/galeria?action=checkEmail', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'checkEmail', email:sessionEmail})
-  }).then(function(r){return r.json();})
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
+  .then(function(r){return r.json();})
   .then(function(d){
-    if(!d.found || !d.mascotas.length){
-      renderNoSession();
-      return;
-    }
+    if(!d.found||!d.mascotas.length){ renderNoSession(); return; }
     misMascotas = d.mascotas;
-    // 2. Cargar amigos + todas las mascotas para mostrar nombres
-    // Buscar amigos para TODAS mis mascotas
     var fetchAmigos = misMascotas.map(function(m){
-      return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(m.uid))
-        .then(function(r){return r.json();});
+      return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(m.uid)).then(function(r){return r.json();});
     });
     return Promise.all([
       Promise.all(fetchAmigos),
@@ -154,218 +143,160 @@ function cargarTodo(){
     ]);
   }).then(function(resultados){
     if(!resultados) return;
-
-    // Combinar amigos de todas las mascotas
-    var todosAmigos = [], todasPendientes = [], todasMascotasAmigos = [];
-    var uidsVistos = {};
-    resultados[0].forEach(function(da, i){
+    var todosAmigos=[],todasPendientes=[],todasMascotasAmigos=[],uidsVistos={};
+    resultados[0].forEach(function(da,i){
       if(!da) return;
-      var miUid = misMascotas[i].uid;
       (da.amigos||[]).forEach(function(a){
-        var key = a.uid_solicitante+'_'+a.uid_receptor;
-        if(!uidsVistos[key]){ uidsVistos[key]=1; todosAmigos.push(a); }
+        var key=a.uid_solicitante+'_'+a.uid_receptor;
+        if(!uidsVistos[key]){uidsVistos[key]=1;todosAmigos.push(a);}
       });
       (da.pendientes||[]).forEach(function(a){
-        var key = a.id;
-        if(!uidsVistos[key]){ uidsVistos[key]=1; todasPendientes.push(a); }
-        // Incluir mascotasAmigos de pendientes también
-        if(da.mascotasAmigos) da.mascotasAmigos.forEach(function(m){
-          if(!uidsVistos['m_'+m.uid]){uidsVistos['m_'+m.uid]=1;todasMascotasAmigos.push(m);}
-        });
+        var key=a.id;
+        if(!uidsVistos[key]){uidsVistos[key]=1;todasPendientes.push(a);}
+        if(da.mascotasAmigos) da.mascotasAmigos.forEach(function(m){if(!uidsVistos['m_'+m.uid]){uidsVistos['m_'+m.uid]=1;todasMascotasAmigos.push(m);}});
       });
-      if(da.mascotasAmigos) da.mascotasAmigos.forEach(function(m){
-        if(!uidsVistos['m_'+m.uid]){uidsVistos['m_'+m.uid]=1;todasMascotasAmigos.push(m);}
-      });
+      if(da.mascotasAmigos) da.mascotasAmigos.forEach(function(m){if(!uidsVistos['m_'+m.uid]){uidsVistos['m_'+m.uid]=1;todasMascotasAmigos.push(m);}});
     });
-
-    datosAmigos = {
-      amigos:         todosAmigos,
-      pendientes:     todasPendientes,
-      mascotasAmigos: todasMascotasAmigos
-    };
-
-    // Mapear mascotas básicas para mostrar nombres y fotos
-    var basicRows = (resultados[1]&&resultados[1].rows)||[];
-    datosAmigos.todasMascotas = basicRows.map(function(r){
-      return {uid:r[0],nombre:r[1],apodo:r[2],especie:r[3],foto:r[9]};
-    });
+    datosAmigos={amigos:todosAmigos,pendientes:todasPendientes,mascotasAmigos:todasMascotasAmigos};
+    var basicRows=(resultados[1]&&resultados[1].rows)||[];
+    datosAmigos.todasMascotas=basicRows.map(function(r){return {uid:r[1],nombre:r[2],apodo:r[3],especie:r[4],foto:r[10]};});
     renderPagina();
   }).catch(function(){
-    document.getElementById('mainWrap').innerHTML =
-      '<div style="text-align:center;padding:60px;color:#888">Error al cargar. <a href="/galeria.html" style="color:#00B4B4">Volver</a></div>';
+    document.getElementById('mainWrap').innerHTML='<div style="text-align:center;padding:60px;color:#888">Error al cargar. <a href="/galeria.html" style="color:#00B4B4">Volver</a></div>';
   });
+}
+
+function getAmistadId(uid){
+  var misUids=misMascotas.map(function(m){return m.uid;});
+  var rel=datosAmigos.amigos.find(function(a){
+    return (misUids.indexOf(a.uid_solicitante)>=0&&a.uid_receptor===uid)||(misUids.indexOf(a.uid_receptor)>=0&&a.uid_solicitante===uid);
+  });
+  return rel?rel.id:null;
+}
+
+function pedirEliminar(uid, nombre){
+  _eliminarId = getAmistadId(uid);
+  if(!_eliminarId){ mostrarToast('No se encontró la amistad'); return; }
+  document.getElementById('confirmTitulo').textContent = '¿Eliminar a "'+nombre+'"?';
+  document.getElementById('confirmSub').textContent = 'Se eliminará la amistad con '+nombre+'. Esta acción no se puede deshacer.';
+  document.getElementById('confirmEliminar').classList.add('open');
+}
+
+function confirmarEliminar(){
+  document.getElementById('confirmEliminar').classList.remove('open');
+  if(!_eliminarId) return;
+  fetch('/api/galeria?action=eliminarAmistad',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:_eliminarId})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){ mostrarToast('Amistad eliminada'); setTimeout(cargarTodo, 800); }
+    else { mostrarToast('Error al eliminar'); }
+  }).catch(function(){mostrarToast('Error de conexión');});
 }
 
 function renderPagina(){
-  var totalAmigos    = (datosAmigos.amigos||[]).length;
-  var totalPendientes = (datosAmigos.pendientes||[]).filter(function(a){ return a.uid_receptor===misMascotas[0].uid; }).length;
-  var mascotasPrincipal = misMascotas[0];
-
-  var html = '';
+  var totalAmigos=(datosAmigos.amigos||[]).length;
+  var misUids=misMascotas.map(function(m){return m.uid;});
+  var pendientesRecibidas=(datosAmigos.pendientes||[]).filter(function(a){return misUids.indexOf(a.uid_receptor)>=0;});
+  var mascotasPrincipal=misMascotas[0];
+  var html='';
 
   // Hero
-  html += '<div class="amigos-hero">';
-  html += '<h1>🐾 Amigos PetMi</h1>';
-  html += '<p>La red social de mascotas de la comunidad</p>';
-  html += '<div class="amigos-stats">';
-  html += '<div class="astat"><div class="astat-num">'+totalAmigos+'</div><div class="astat-lbl">Amigos</div></div>';
-  html += '<div class="astat"><div class="astat-num">'+totalPendientes+'</div><div class="astat-lbl">Solicitudes</div></div>';
-  html += '<div class="astat"><div class="astat-num">'+misMascotas.length+'</div><div class="astat-lbl">Mis mascotas</div></div>';
-  html += '</div></div>';
+  html+='<div class="amigos-hero"><h1>🐾 Amigos PetMi</h1><p>La red social de mascotas de la comunidad</p>';
+  html+='<div class="amigos-stats">';
+  html+='<div class="astat"><div class="astat-num">'+totalAmigos+'</div><div class="astat-lbl">Amigos</div></div>';
+  html+='<div class="astat"><div class="astat-num">'+pendientesRecibidas.length+'</div><div class="astat-lbl">Solicitudes</div></div>';
+  html+='<div class="astat"><div class="astat-num">'+misMascotas.length+'</div><div class="astat-lbl">Mis mascotas</div></div>';
+  html+='</div></div>';
 
-  // Solicitudes pendientes recibidas
-  // Solicitudes recibidas para CUALQUIERA de mis mascotas
-  var misUids = misMascotas.map(function(m){return m.uid;});
-  var pendientesRecibidas = (datosAmigos.pendientes||[]).filter(function(a){ 
-    return misUids.indexOf(a.uid_receptor) >= 0; 
-  });
-  if(pendientesRecibidas.length > 0){
-    html += '<div class="seccion">';
-    html += '<div class="sec-titulo">Solicitudes pendientes <span class="badge">'+pendientesRecibidas.length+'</span></div>';
+  // Solicitudes recibidas
+  if(pendientesRecibidas.length>0){
+    html+='<div class="seccion"><div class="sec-titulo">Solicitudes pendientes <span class="badge">'+pendientesRecibidas.length+'</span></div>';
     pendientesRecibidas.forEach(function(sol){
-      // Buscar en allMascotas (cargadas al inicio)
-      var mascSol = (datosAmigos.todasMascotas||[]).find(function(m){ return m.uid===sol.uid_solicitante; });
-      var esGato  = mascSol && mascSol.especie && mascSol.especie.toLowerCase().indexOf('gato')>=0;
-      var fotoHTML = mascSol && mascSol.foto && mascSol.foto.indexOf('http')>=0
-        ? '<img src="'+mascSol.foto+'">'
-        : '<span style="font-size:24px">'+(esGato?'🐱':'🐶')+'</span>';
-      html += '<div class="solicitud-item">';
-      html += '<div class="sol-foto">'+fotoHTML+'</div>';
-      html += '<div class="sol-info">';
-      html += '<div class="sol-nombre">'+(mascSol?mascSol.nombre:'Mascota')+'</div>';
-      html += '<div class="sol-sub">'+(mascSol?mascSol.especie:'')+'</div>';
-      html += '</div>';
-      html += '<div class="sol-btns">';
-      html += '<button class="btn-aceptar" onclick="responderSolicitud(\''+sol.id+'\',\'aceptado\')">✓</button>';
-      html += '<button class="btn-rechazar" onclick="responderSolicitud(\''+sol.id+'\',\'rechazado\')">✗</button>';
-      html += '</div></div>';
+      var mascSol=(datosAmigos.todasMascotas||[]).find(function(m){return m.uid===sol.uid_solicitante;});
+      var esGato=mascSol&&mascSol.especie&&mascSol.especie.toLowerCase().indexOf('gato')>=0;
+      var fotoHTML=mascSol&&mascSol.foto&&mascSol.foto.indexOf('http')>=0?'<img src="'+mascSol.foto+'">':'<span style="font-size:24px">'+(esGato?'🐱':'🐶')+'</span>';
+      html+='<div class="solicitud-item">';
+      html+='<div class="sol-foto">'+fotoHTML+'</div>';
+      html+='<div class="sol-info"><div class="sol-nombre" onclick="window.location.href=\'/galeria.html\'">'+(mascSol?'"'+mascSol.nombre+'"':'Mascota')+'</div>';
+      html+='<div class="sol-sub">'+(mascSol?mascSol.especie:'')+'</div></div>';
+      html+='<div class="sol-btns">';
+      html+='<button class="btn-aceptar" data-id="'+sol.id+'" onclick="responderSolicitud(this.dataset.id,\'aceptado\')">✓ Aceptar</button>';
+      html+='<button class="btn-rechazar" data-id="'+sol.id+'" onclick="responderSolicitud(this.dataset.id,\'rechazado\')">✗</button>';
+      html+='</div></div>';
     });
-    html += '</div>';
+    html+='</div>';
   }
 
   // Mis amigos
-  var totalAmigosLista=(datosAmigos.mascotasAmigos||[]).length;
-  html += '<div class="seccion">';
-  html += '<div class="sec-titulo">Mis amigos <span style="color:#aaa;font-weight:400;font-size:11px;text-transform:none;letter-spacing:0">('+totalAmigosLista+')</span></div>';
-  if(!datosAmigos.mascotasAmigos || !datosAmigos.mascotasAmigos.length){
-    html += '<div class="empty-state"><div class="empty-icon">🐾</div><div class="empty-txt">Aún no tienes amigos.<br>Explora la galería y agrega mascotas.</div></div>';
+  html+='<div class="seccion"><div class="sec-titulo">Mis amigos <span style="color:#aaa;font-weight:400;font-size:11px;text-transform:none;letter-spacing:0">('+((datosAmigos.mascotasAmigos||[]).length)+')</span></div>';
+  if(!datosAmigos.mascotasAmigos||!datosAmigos.mascotasAmigos.length){
+    html+='<div class="empty-state"><div class="empty-icon">🐾</div><div class="empty-txt">Aún no tienes amigos.<br>Explora la galería y agrega mascotas.</div></div>';
   } else {
-    html += '<div class="mascotas-grid">';
+    html+='<div class="mascotas-grid">';
     datosAmigos.mascotasAmigos.forEach(function(m){
-      var esGato = m.especie && m.especie.toLowerCase().indexOf('gato')>=0;
-      var emoji  = esGato ? '🐱' : '🐶';
-      var fotoHTML = m.foto && m.foto.indexOf('http')>=0
-        ? '<img src="'+m.foto+'">'
-        : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:32px;background:#e0f7f7">'+emoji+'</div>';
-      html += '<div class="mascota-mini" onclick="window.location.href=\'/perfil.html?uid='+m.uid+'\'">';
-      html += '<div class="mascota-mini-foto">'+fotoHTML+'</div>';
-      html += '<div class="mascota-mini-info">';
-      html += '<div class="mascota-mini-nombre">'+m.nombre+'</div>';
-      html += '<div class="mascota-mini-especie">'+(m.especie||'')+'</div>';
-      html += '<div style="font-size:10px;color:#00B4B4;font-weight:700;margin-top:3px">Ver perfil →</div>';
-      html += '</div></div>';
+      var esGato=m.especie&&m.especie.toLowerCase().indexOf('gato')>=0;
+      var emoji=esGato?'🐱':'🐶';
+      var fotoHTML=m.foto&&m.foto.indexOf('http')>=0?'<img src="'+m.foto+'">':'<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:32px;background:#e0f7f7">'+emoji+'</div>';
+      html+='<div class="mascota-mini">';
+      html+='<button class="btn-eliminar-amigo" data-uid="'+m.uid+'" data-nombre="'+m.nombre+'" onclick="event.stopPropagation();pedirEliminar(this.dataset.uid,this.dataset.nombre)" title="Eliminar amistad">×</button>';
+      html+='<div class="mascota-mini-foto" onclick="window.location.href=\'/galeria.html\'">'+fotoHTML+'</div>';
+      html+='<div class="mascota-mini-info" onclick="window.location.href=\'/galeria.html\'">';
+      html+='<div class="mascota-mini-nombre">"'+m.nombre+'"</div>';
+      html+='<div class="mascota-mini-especie">'+(m.especie||'')+'</div>';
+      html+='<div style="font-size:10px;color:#00B4B4;font-weight:700;margin-top:3px">Ver perfil →</div>';
+      html+='</div></div>';
     });
-    html += '</div>';
+    html+='</div>';
   }
-  html += '</div>';
+  html+='</div>';
 
-  // Solicitudes enviadas pendientes
+  // Solicitudes enviadas
   var pendEnviadas=(datosAmigos.pendientes||[]).filter(function(a){return a.uid_solicitante===mascotasPrincipal.uid;});
   if(pendEnviadas.length>0){
-    html += '<div class="seccion">';
-    html += '<div class="sec-titulo" style="color:#aaa">Solicitudes enviadas ('+pendEnviadas.length+')</div>';
+    html+='<div class="seccion"><div class="sec-titulo" style="color:#aaa">Solicitudes enviadas ('+pendEnviadas.length+')</div>';
     pendEnviadas.forEach(function(sol){
-      html += '<div class="solicitud-item">';
-      html += '<div class="sol-foto">🐾</div>';
-      html += '<div class="sol-info"><div class="sol-nombre">Solicitud pendiente</div>';
-      html += '<div class="sol-sub" style="color:#F5C842">Esperando respuesta</div></div>';
-      html += '</div>';
+      html+='<div class="solicitud-item"><div class="sol-foto">🐾</div>';
+      html+='<div class="sol-info"><div class="sol-nombre" style="color:#888">Solicitud pendiente</div>';
+      html+='<div class="sol-sub" style="color:#F5C842">Esperando respuesta</div></div></div>';
     });
-    html += '</div>';
+    html+='</div>';
   }
 
-  // Botón ir a galería
-  html += '<div style="text-align:center;margin-top:8px">';
-  html += '<a href="/galeria.html" style="display:inline-block;padding:13px 28px;background:#00B4B4;color:#fff;border-radius:24px;font-size:14px;font-weight:700;text-decoration:none">🌟 Explorar galería y agregar amigos</a>';
-  html += '</div>';
-
-  document.getElementById('mainWrap').innerHTML = html;
+  html+='<div style="text-align:center;margin-top:8px"><a href="/galeria.html" style="display:inline-block;padding:13px 28px;background:#00B4B4;color:#fff;border-radius:24px;font-size:14px;font-weight:700;text-decoration:none">🌟 Explorar galería y agregar amigos</a></div>';
+  document.getElementById('mainWrap').innerHTML=html;
 }
 
-function responderSolicitud(id, estado, sol){
-  fetch('/api/galeria?action=responderSolicitud',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({id:id, estado:estado})
-  }).then(function(r){return r.json();})
+function responderSolicitud(id,estado){
+  fetch('/api/galeria?action=responderSolicitud',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,estado:estado})})
+  .then(function(r){return r.json();})
   .then(function(d){
-    if(d.ok){
-      mostrarToast(estado==='aceptado'?'✅ Solicitud aceptada':'Solicitud rechazada');
-      // Notificar por email si se aceptó
-      if(estado==='aceptado' && sol){
-        fetch('/api/admin?action=updateRow',{
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            action:'notificarAceptado',
-            emailSolicit:  sol.email_solicitante,
-            nombreSolicit: sol.nombreSolicit||'tu mascota',
-            nombreAceptor: sol.nombreAceptor||misMascotas[0].nombre
-          })
-        });
-      }
-      setTimeout(function(){cargarTodo();},1000);
-    }
+    if(d.ok){ mostrarToast(estado==='aceptado'?'✅ Solicitud aceptada':'Solicitud rechazada'); setTimeout(cargarTodo,1000); }
   }).catch(function(){mostrarToast('Error al responder');});
 }
 
-function mostrarToast(msg){
-  var el=document.getElementById('toast');
-  el.textContent=msg;el.classList.add('show');
-  setTimeout(function(){el.classList.remove('show');},2500);
-}
-
-// ── Login ────────────────────────────────────────────────────
-function openLogin(){ document.getElementById('loginOverlay').classList.add('open'); }
-function closeLogin(){ document.getElementById('loginOverlay').classList.remove('open'); }
-
+function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+function openLogin(){document.getElementById('loginOverlay').classList.add('open');}
+function closeLogin(){document.getElementById('loginOverlay').classList.remove('open');}
 function verificarEmail(){
   var email=document.getElementById('loginEmail').value.trim().toLowerCase();
   if(!email||email.indexOf('@')<0){mostrarMsg('Ingresa un correo válido','error');return;}
-  var btn=document.getElementById('btnLoginOk');
-  btn.disabled=true;btn.textContent='Verificando...';
-
-  fetch('/api/galeria?action=checkEmail',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'checkEmail',email:email})
-  }).then(function(r){return r.json();})
+  var btn=document.getElementById('btnLoginOk');btn.disabled=true;btn.textContent='Verificando...';
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
+  .then(function(r){return r.json();})
   .then(function(d){
     if(d.found&&d.mascotas&&d.mascotas.length>0){
-      sessionEmail=email;
-      sessionDueno=d.mascotas[0].dueno||'';
-      localStorage.setItem('petzid_email',sessionEmail);
-      localStorage.setItem('petzid_dueno',sessionDueno);
+      sessionEmail=email;sessionDueno=d.mascotas[0].dueno||'';
+      localStorage.setItem('petzid_email',sessionEmail);localStorage.setItem('petzid_dueno',sessionDueno);
       mostrarMsg('Bienvenido/a!','success');
       setTimeout(function(){closeLogin();cargarTodo();},1000);
-    } else {
-      mostrarMsg('No encontramos ese correo','error');
-      btn.disabled=false;btn.textContent='Ingresar';
-    }
-  }).catch(function(){
-    mostrarMsg('Error de conexión','error');
-    btn.disabled=false;btn.textContent='Ingresar';
-  });
+    } else {mostrarMsg('No encontramos ese correo','error');btn.disabled=false;btn.textContent='Ingresar';}
+  }).catch(function(){mostrarMsg('Error de conexión','error');btn.disabled=false;btn.textContent='Ingresar';});
 }
-
-function mostrarMsg(txt,tipo){
-  var el=document.getElementById('loginMsg');
-  el.textContent=txt;el.className='login-msg '+tipo;el.style.display='block';
-}
-
-document.getElementById('loginEmail').addEventListener('keydown',function(e){
-  if(e.key==='Enter')verificarEmail();
-});
+function mostrarMsg(txt,tipo){var el=document.getElementById('loginMsg');el.textContent=txt;el.className='login-msg '+tipo;el.style.display='block';}
+document.getElementById('loginEmail').addEventListener('keydown',function(e){if(e.key==='Enter')verificarEmail();});
 </script>
-
 <script src="/header.js"></script>
 </body>
 </html>
