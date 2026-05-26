@@ -37,7 +37,7 @@ export default async function handler(req, res) {
         m.email,         // 9
         m.foto,          // 10
         m.angelito ? 'Si' : 'No', // 11
-        m.fecha_angelito, // 12
+        m.fecha_angelito  // 12
       ]);
       return res.status(200).json({ rows });
     }
