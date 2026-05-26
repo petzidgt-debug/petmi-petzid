@@ -238,7 +238,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <button class="filter-btn" onclick="setFilter('gato',this)">🐱 Gatos</button>
   <button class="filter-btn" onclick="setFilter('angelito',this)">🐾🌈 Angelitos</button>
   <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre..." oninput="applyFilter()">
-  <button id="sortToggle" onclick="toggleSort()" style="padding:6px 12px;border:1.5px solid #ddd;border-radius:20px;font-size:11px;font-weight:700;color:#555;background:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0">⏱ Recientes</button>
   <span class="results-count" id="resultsCount"></span>
 </div>
 
@@ -333,7 +332,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <script>
 // ── Estado global ─────────────────────────────────────────────
 var allPets=[], filtered=[], shown=0, perPage=40, currentFilter='todos';
-var currentSort='nuevo';
+
 var sessionEmail=localStorage.getItem('petzid_email')||'';
 var sessionDueno=localStorage.getItem('petzid_dueno')||'';
 var currentModalPet=null;
@@ -590,25 +589,16 @@ function applyFilter(){
     return true;
   });
   // Ordenar según currentSort
-  if(currentSort==='az'){
-    filtered.sort(function(a,b){return (a.nombre||'').localeCompare(b.nombre||'','es');});
-  } else {
-    // Recientes: ordenar por createdAt desc
-    filtered.sort(function(a,b){
-      var da=a.createdAt&&a.createdAt.length>0?new Date(a.createdAt).getTime():0;
-      var db=b.createdAt&&b.createdAt.length>0?new Date(b.createdAt).getTime():0;
-      return db-da;
-    });
-  }
+  // Ordenar por más recientes primero
+  filtered.sort(function(a,b){
+    var da=a.createdAt&&a.createdAt.length>0?new Date(a.createdAt).getTime():0;
+    var db=b.createdAt&&b.createdAt.length>0?new Date(b.createdAt).getTime():0;
+    return db-da;
+  });
   shown=0; renderGallery(false);
 }
 
-function toggleSort(){
-  currentSort = currentSort==='az' ? 'nuevo' : 'az';
-  var btn=document.getElementById('sortToggle');
-  if(btn) btn.textContent = currentSort==='az' ? 'A-Z' : '⏱ Recientes';
-  applyFilter();
-}
+
 function loadMore(){renderGallery(true);}
 
 // ── Galería ───────────────────────────────────────────────────
