@@ -332,7 +332,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <script>
 // ── Estado global ─────────────────────────────────────────────
-var allPets=[], filtered=[], shown=0, perPage=40, currentFilter='todos', currentSort='az';
+var allPets=[], filtered=[], shown=0, perPage=40, currentFilter='todos';
+window.currentSort='az'; var currentSort=window.currentSort;
 var sessionEmail=localStorage.getItem('petzid_email')||'';
 var sessionDueno=localStorage.getItem('petzid_dueno')||'';
 var currentModalPet=null;
@@ -589,9 +590,10 @@ function applyFilter(){
     return true;
   });
   // Ordenar según currentSort
-  if(currentSort==='az'){
+  var _sort=window.currentSort||currentSort||'az';
+  if(_sort==='az'){
     filtered.sort(function(a,b){return (a.nombre||'').localeCompare(b.nombre||'','es');});
-  } else {
+  } else if(_sort==='nuevo') {
     filtered.sort(function(a,b){
       var da=a.createdAt&&a.createdAt!=='undefined'&&a.createdAt!==''?new Date(a.createdAt).getTime():0;
       var db=b.createdAt&&b.createdAt!=='undefined'&&b.createdAt!==''?new Date(b.createdAt).getTime():0;
@@ -602,7 +604,8 @@ function applyFilter(){
 }
 
 function toggleSort(){
-  currentSort = currentSort==='az' ? 'nuevo' : 'az';
+  window.currentSort = window.currentSort==='az' ? 'nuevo' : 'az';
+  currentSort = window.currentSort;
   var btn=document.getElementById('sortToggle');
   if(btn) btn.textContent = currentSort==='az' ? 'A-Z' : '⏱ Recientes';
   applyFilter();
