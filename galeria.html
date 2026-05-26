@@ -30,6 +30,16 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .hero-stat-lbl{font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1px}
 
 /* SECCION CUMPLEAÑEROS */
+.seccion-solicitudes{background:#fff;padding:16px;border-bottom:0.5px solid #eee}
+.sol-card{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid #f5f5f5}
+.sol-card:last-child{border-bottom:none}
+.sol-foto{width:48px;height:48px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:22px}
+.sol-foto img{width:100%;height:100%;object-fit:cover}
+.sol-nombre{font-size:14px;font-weight:700;color:#00B4B4;cursor:pointer;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sol-meta{font-size:12px;color:#888;margin-top:2px}
+.sol-btns{display:flex;gap:6px;flex-shrink:0;margin-left:auto}
+.btn-sol-aceptar{padding:7px 14px;background:#00B4B4;color:#fff;border:none;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-sol-rechazar{padding:7px 10px;background:#f0f0ee;color:#888;border:1px solid #ddd;border-radius:999px;font-size:12px;cursor:pointer}
 .seccion-grupos{background:#00B4B4;padding:18px 16px}
 .seccion-grupos .seccion-titulo{color:#fff;font-family:'Arial Black',Arial,sans-serif}
 .seccion-grupos .seccion-sub{color:rgba(255,255,255,.75);font-size:13px;margin-bottom:12px}
@@ -197,6 +207,15 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <div class="hero-stat"><div class="hero-stat-num" id="statGatos">-</div><div class="hero-stat-lbl">Gatos</div></div>
     <div class="hero-stat"><div class="hero-stat-num" id="statAngeles">-</div><div class="hero-stat-lbl">Angelitos 🐾</div></div>
   </div>
+</div>
+
+<!-- SOLICITUDES PENDIENTES -->
+<div class="seccion-solicitudes" id="seccionSolicitudes" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <span style="font-size:14px;font-weight:700;color:#222">Solicitudes de amistad</span>
+    <span id="solicitudesCount" style="background:#E05090;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px"></span>
+  </div>
+  <div id="solicitudesWrap"></div>
 </div>
 
 <!-- CUMPLEAÑEROS DEL MES -->
@@ -795,7 +814,7 @@ function toggleAngel(esAngel){
         p.angelito=false;p.fechaAngelito='';
         var inAll=allPets.find(function(x){return x.uid===p.uid;});
         if(inAll){inAll.angelito=false;inAll.fechaAngelito='';}
-        renderAngeles();applyFilter();closeConfirm();_renderModal(p);
+        renderAngeles();applyFilter();renderSolicitudes();closeConfirm();_renderModal(p);
         mostrarToastG('💔 '+p.nombre+' quitado de angelitos');
       }).catch(function(){mostrarToastG('Error.');closeConfirm();});
     });
@@ -1058,6 +1077,47 @@ function cargarActividadesPreview(){
 cargarActividadesPreview();
 
 // ── Cache de amigos ───────────────────────────────────────────
+function renderSolicitudes(){
+  if(!sessionEmail) return;
+  var pendientes=misAmigosCache.filter(function(a){return a.tipo==='pendiente_recibido';});
+  var sec=document.getElementById('seccionSolicitudes');
+  if(!pendientes.length){if(sec)sec.style.display='none';return;}
+  if(sec)sec.style.display='block';
+  var cnt=document.getElementById('solicitudesCount');
+  if(cnt)cnt.textContent=pendientes.length;
+  var html=pendientes.map(function(sol){
+    var p=allPets.find(function(x){return x.uid===sol.uid;});
+    if(!p)return '';
+    var foto=p.foto&&p.foto.indexOf('http')>=0?'<img src="'+p.foto+'" alt="'+p.nombre+'">':'<span>'+(p.especie&&p.especie.toLowerCase().indexOf('gato')>=0?'🐱':'🐶')+'</span>';
+    var meta=[p.raza,p.zona].filter(function(x){return x&&x.trim()&&x.trim()!=='-';}).join(' · ');
+    return '<div class="sol-card">'
+      +'<div class="sol-foto">'+foto+'</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<span class="sol-nombre" data-uid="'+p.uid+'" onclick="openModalByUID(this.dataset.uid)">"'+p.nombre+'"</span>'
+      +(meta?'<div class="sol-meta">'+meta+'</div>':'')
+      +'</div>'
+      +'<div class="sol-btns">'
+      +'<button class="btn-sol-aceptar" data-id="'+sol.id+'" data-uid="'+sol.uid+'" onclick="aceptarSolicitudDirecto(this)">Aceptar</button>'
+      +'<button class="btn-sol-rechazar" data-id="'+sol.id+'" data-uid="'+sol.uid+'" onclick="rechazarSolicitudDirecto(this)">✕</button>'
+      +'</div></div>';
+  }).join('');
+  var wrap=document.getElementById('solicitudesWrap');
+  if(wrap)wrap.innerHTML=html;
+}
+function aceptarSolicitudDirecto(btn){
+  var id=btn.getAttribute('data-id');
+  fetch('/api/galeria?action=responderSolicitud',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,estado:'aceptado'})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d.ok){var a=misAmigosCache.find(function(x){return x.id===id;});if(a)a.tipo='amigo';mostrarToastG('🐾 Ahora son amigos!');renderSolicitudes();}
+  }).catch(function(){mostrarToastG('Error');});
+}
+function rechazarSolicitudDirecto(btn){
+  var id=btn.getAttribute('data-id');
+  fetch('/api/galeria?action=responderSolicitud',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,estado:'rechazado'})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d.ok){misAmigosCache=misAmigosCache.filter(function(a){return a.id!==id;});mostrarToastG('Solicitud rechazada');renderSolicitudes();}
+  }).catch(function(){mostrarToastG('Error');});
+}
 function cargarCacheAmigos(){
   if(!sessionEmail)return Promise.resolve();
   return new Promise(function(resolve){
