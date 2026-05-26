@@ -25,19 +25,19 @@ export default async function handler(req, res) {
       const data = await response.json();
       // Convertir al formato que espera la galería
       const rows = data.map(m => [
-        m.uid,           // 0
-        m.nombre,        // 1
-        m.apodo,         // 2
-        m.especie,       // 3
-        m.sexo,          // 4
-        m.raza,          // 5
-        m.tipo_fecha,    // 6
-        m.fecha,         // 7
-        m.email,         // 8
-        m.foto,          // 9
-        m.angelito ? 'Si' : 'No', // 10
-        m.fecha_angelito, // 11
-        m.created_at    // 12
+        m.created_at,    // 0 — Fecha Registro (igual que Sheet col A)
+        m.uid,           // 1
+        m.nombre,        // 2
+        m.apodo,         // 3
+        m.especie,       // 4
+        m.sexo,          // 5
+        m.raza,          // 6
+        m.tipo_fecha,    // 7
+        m.fecha,         // 8
+        m.email,         // 9
+        m.foto,          // 10
+        m.angelito ? 'Si' : 'No', // 11
+        m.fecha_angelito, // 12
       ]);
       return res.status(200).json({ rows });
     }
