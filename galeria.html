@@ -592,8 +592,14 @@ function applyFilter(){
   // Ordenar según currentSort
   if(currentSort==='az'){
     filtered.sort(function(a,b){return (a.nombre||'').localeCompare(b.nombre||'','es');});
+  } else {
+    // Recientes: ordenar por createdAt desc
+    filtered.sort(function(a,b){
+      var da=a.createdAt&&a.createdAt.length>0?new Date(a.createdAt).getTime():0;
+      var db=b.createdAt&&b.createdAt.length>0?new Date(b.createdAt).getTime():0;
+      return db-da;
+    });
   }
-  // 'nuevo' mantiene el orden del servidor (created_at.desc desde Supabase)
   shown=0; renderGallery(false);
 }
 
