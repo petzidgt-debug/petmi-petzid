@@ -238,7 +238,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <button class="filter-btn" onclick="setFilter('gato',this)">🐱 Gatos</button>
   <button class="filter-btn" onclick="setFilter('angelito',this)">🐾🌈 Angelitos</button>
   <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre..." oninput="applyFilter()">
-  <button id="sortToggle" onclick="toggleSort()" style="padding:6px 12px;border:1.5px solid #ddd;border-radius:20px;font-size:11px;font-weight:700;color:#555;background:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0">A-Z</button>
+  <button id="sortToggle" onclick="toggleSort()" style="padding:6px 12px;border:1.5px solid #ddd;border-radius:20px;font-size:11px;font-weight:700;color:#555;background:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0">⏱ Recientes</button>
   <span class="results-count" id="resultsCount"></span>
 </div>
 
@@ -333,7 +333,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <script>
 // ── Estado global ─────────────────────────────────────────────
 var allPets=[], filtered=[], shown=0, perPage=40, currentFilter='todos';
-window.currentSort='az'; var currentSort=window.currentSort;
+window.currentSort='nuevo'; var currentSort=window.currentSort;
 var sessionEmail=localStorage.getItem('petzid_email')||'';
 var sessionDueno=localStorage.getItem('petzid_dueno')||'';
 var currentModalPet=null;
