@@ -39,7 +39,11 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .badge-destacado-ali{background:#F5C842;color:#1a1a1a}
 .badge-basico-ali{background:#e0f7f7;color:#007a7a}
 .lugar-body-horiz{display:flex}
-.lugar-foto-sq{width:100px;flex-shrink:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;min-height:90px}
+.lugar-foto-sq{width:110px;flex-shrink:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;min-height:100px}
+.foto-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:800;display:none;align-items:center;justify-content:center;padding:20px}
+.foto-modal.open{display:flex}
+.foto-modal img{max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain}
+.foto-modal-close{position:fixed;top:16px;right:16px;background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;line-height:1}
 .lugar-foto-sq img{width:100%;height:100%;object-fit:cover}
 .lugar-body{flex:1;padding:12px 14px;min-width:0}
 .lugar-tipo-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:99px;margin-bottom:4px;background:#f0f0ee;color:#888}
@@ -88,6 +92,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .jefe-box button{width:100%;padding:12px;background:#E05090;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
+.fab-pill{position:fixed;bottom:24px;right:20px;display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:99px;color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:70;text-decoration:none}
 </style>
 </head>
 <body>
@@ -130,7 +135,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <h3>¿Tu negocio es pet-friendly?</h3>
     <p>Únete como aliado PETzID y llega a cientos de dueños de mascotas en Guatemala. Desde Q250/mes.</p>
     <a class="btn-aliarse" href="mailto:hola@petmi.gt?subject=Quiero ser aliado PETzID">Ser aliado →</a>
-    <div style="margin-top:10px"><button onclick="abrirFormLugar()" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;text-decoration:underline">o sugiere un lugar gratis</button></div>
+    
   </div>
 </div>
 
@@ -190,6 +195,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   </div>
 </div>
 
+<button class="fab-pill" style="background:#E05090" onclick="abrirFormLugar()"><i class="ti ti-plus" aria-hidden="true"></i>Sugerir un lugar</button>
 <div class="toast" id="toast"></div>
 <div class="jefe-modal" id="jefeModal" onclick="this.classList.remove('open')">
   <div class="jefe-box" onclick="event.stopPropagation()">
@@ -304,9 +310,10 @@ function renderCard(l,nivel){
   }
 
   // Card horizontal para basico + organico
-  var fotoSq=l.imagen&&l.imagen.indexOf('http')>=0?'<img src="'+l.imagen+'">':emoji;
+  var tieneFotoL=l.imagen&&l.imagen.indexOf('http')>=0;
+var fotoSq=tieneFotoL?'<img src="'+l.imagen+'" onclick="abrirFotoLugar(\''+l.imagen+'\')" style="cursor:pointer">':emoji;
   var html='<div class="'+cardClass+'"><div class="nivel-bar" style="background:'+barColor+'"></div>';
-  html+='<div class="lugar-body-horiz"><div class="lugar-foto-sq">'+fotoSq+'</div>';
+  html+='<div class="lugar-body-horiz"><div class="lugar-foto-sq" style="'+(tieneFotoL?'cursor:pointer':'')+'">'+fotoSq+'</div>';
   html+='<div class="lugar-body">'+badgeHTML+'<div class="lugar-nombre">'+l.nombre+'</div>';
   if(l.zona)html+='<div class="lugar-zona">📍 Zona '+l.zona+(l.direccion?' · '+l.direccion:'')+'</div>';
   if(l.descripcion)html+='<div class="lugar-desc">'+l.descripcion+'</div>';
@@ -391,8 +398,19 @@ function mostrarJefe(titulo, msg){
   document.getElementById('jefeModal').classList.add('open');
 }
 
+function abrirFotoLugar(src){
+  document.getElementById('fotoModalLugarImg').src=src;
+  document.getElementById('fotoModalLugar').classList.add('open');
+}
+function cerrarFotoLugar(){
+  document.getElementById('fotoModalLugar').classList.remove('open');
+}
 function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
 </script>
+<div class="foto-modal" id="fotoModalLugar" onclick="cerrarFotoLugar()">
+  <button class="foto-modal-close" onclick="cerrarFotoLugar()">×</button>
+  <img id="fotoModalLugarImg" src="" alt="">
+</div>
 <script src="/header.js"></script>
 </body>
 </html>

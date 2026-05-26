@@ -74,6 +74,10 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
 .msg-sg{font-size:13px;padding:10px;border-radius:10px;margin-bottom:12px;display:none}
+.foto-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:800;display:none;align-items:center;justify-content:center;padding:20px}
+.foto-modal.open{display:flex}
+.foto-modal img{max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain}
+.foto-modal-close{position:fixed;top:16px;right:16px;background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;line-height:1}
 </style>
 </head>
 <body>
@@ -143,6 +147,10 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <div id="amigosLista"><div class="spinner"></div></div>
     <button onclick="cerrarInvitar()" style="width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer;margin-top:12px">Cerrar</button>
   </div>
+</div>
+<div class="foto-modal" id="fotoModalEv" onclick="cerrarFotoEvento()">
+  <button class="foto-modal-close" onclick="cerrarFotoEvento()">×</button>
+  <img id="fotoModalEvImg" src="" alt="">
 </div>
 <div class="toast" id="toast"></div>
 <div class="jefe-modal" id="jefeModal" onclick="this.classList.remove('open')">
@@ -444,6 +452,13 @@ function mostrarJefe(titulo,msg){
   document.getElementById('jefeModal').classList.add('open');
 }
 
+function abrirFotoEvento(src){
+  document.getElementById('fotoModalEvImg').src=src;
+  document.getElementById('fotoModalEv').classList.add('open');
+}
+function cerrarFotoEvento(){
+  document.getElementById('fotoModalEv').classList.remove('open');
+}
 function mostrarToast(msg){
   var el=document.getElementById('toast');
   el.textContent=msg;el.classList.add('show');
