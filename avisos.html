@@ -741,9 +741,7 @@ function compartirDesdeBtn(btn){
     'perdido_aviso':'🚨 ¡AYUDA! SE PERDIÓ: '
   };
   var prefijo=prefijos[tipo]||'🐾 ';
-  var msg=prefijo+titulo+'
-
-Ver más info: '+url;
+  var msg=prefijo+titulo+'\n\nVer más info: '+url;
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 function contactarDesdeBtn(btn){
