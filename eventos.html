@@ -382,15 +382,32 @@ function cerrarSugerir(){
   document.getElementById('msgSugerir').style.display='none';
 }
 
-function enviarSugerencia(){
+async function enviarSugerencia(){
   var titulo=document.getElementById('evTitulo').value.trim();
   var fecha=document.getElementById('evFecha').value;
   if(!titulo||!fecha){mostrarToast('Título y fecha son obligatorios');return;}
   var btn=document.getElementById('btnSugerir');
   btn.disabled=true;btn.textContent='Enviando...';
+
+  // Subir foto a Cloudinary desde el frontend (igual que admin)
+  var imagenUrl=null;
+  if(evFotoBase64&&evFotoMime){
+    try{
+      btn.textContent='Subiendo foto...';
+      var fd=new FormData();
+      fd.append('file','data:'+evFotoMime+';base64,'+evFotoBase64);
+      fd.append('upload_preset','petzid');
+      fd.append('folder','petzid/eventos');
+      var cRes=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
+      var cData=await cRes.json();
+      if(cData.secure_url) imagenUrl=cData.secure_url;
+    }catch(e){console.error('Cloudinary:',e);}
+  }
+
+  btn.textContent='Guardando...';
   fetch('/api/galeria?action=enviarEvento',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({titulo:titulo,tipo:document.getElementById('evTipo').value,fecha:fecha,hora:document.getElementById('evHora').value||null,lugar:document.getElementById('evLugar').value.trim(),direccion:document.getElementById('evDireccion').value.trim(),descripcion:document.getElementById('evDesc').value.trim(),link:document.getElementById('evLink').value.trim(),email:sessionEmail||'',fotoBase64:evFotoBase64||null,fotoMime:evFotoMime||null})
+    body:JSON.stringify({titulo:titulo,tipo:document.getElementById('evTipo').value,fecha:fecha,hora:document.getElementById('evHora').value||null,lugar:document.getElementById('evLugar').value.trim(),direccion:document.getElementById('evDireccion').value.trim(),descripcion:document.getElementById('evDesc').value.trim(),link:document.getElementById('evLink').value.trim(),email:sessionEmail||'',imagen:imagenUrl})
   }).then(function(r){return r.json();})
   .then(function(d){
     if(d.ok){
