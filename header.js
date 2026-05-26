@@ -72,9 +72,8 @@
             '<a href="/familia.html" class="h-drop-item">🏠 Mi familia</a>' +
             '<a href="/mensajes.html" class="h-drop-item">💬 Mensajes</a>' +
             '<a href="/amigos.html" class="h-drop-item">🐾 Mis amigos</a>' +
-            '<a href="/index.html?agregar=1" class="h-drop-item">➕ Agregar mascota</a>' +
-            '<a href="/galeria.html" class="h-drop-item">🌟 Ver galería</a>' +
-            '<a href="/promos.html" class="h-drop-item">🎁 Promos</a>' +
+            '<a href="/mis-avisos.html" class="h-drop-item">📢 Mis avisos</a>' +
+            '<a href="/mis-eventos.html" class="h-drop-item">🎪 Mis eventos</a>' +
             '<a href="/reglas.html" class="h-drop-item">📋 Reglas</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
@@ -97,7 +96,8 @@
           '<a href="/familia.html">🏠 Mi familia</a>' +
           '<a href="/mensajes.html">💬 Mensajes</a>' +
           '<a href="/amigos.html">🐾 Mis amigos</a>' +
-          '<a href="/index.html?agregar=1">➕ Agregar mascota</a>' +
+          '<a href="/mis-avisos.html">📢 Mis avisos</a>' +
+          '<a href="/mis-eventos.html">🎪 Mis eventos</a>' +
           '<button onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>'
         : '<span class="h-mob-sec">Cuenta</span>' +
           '<a href="/index.html" style="background:#00B4B4;color:#fff;font-weight:700">🐾 Registra tu mascota</a>' +
