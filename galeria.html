@@ -365,20 +365,20 @@ fetch('/api/galeria?action=getBasic')
     var rows=d.rows||[];
     allPets=rows.map(function(r){
       return {
-        uid:          String(r[0]||'').trim(),
-        nombre:       String(r[1]||'').trim(),
+        uid:          String(r[1]||'').trim(),
+        nombre:       String(r[2]||'').trim(),
         premium:      false, // se carga desde checkEmail si hay sesion
-        apodo:        String(r[2]||'').trim(),
-        especie:      String(r[3]||'').trim(),
-        sexo:         String(r[4]||'').trim(),
-        raza:         String(r[5]||'').trim(),
-        tipoFecha:    String(r[6]||'').trim(),
-        fecha:        String(r[7]||'').trim(),
-        email:        String(r[8]||'').trim(),
-        foto:         String(r[9]||'').trim(),
-        angelito:     String(r[10]||'').trim().toLowerCase()==='si',
-        fechaAngelito:String(r[11]||'').trim(),
-        createdAt:    String(r[12]||'').trim(),
+        apodo:        String(r[3]||'').trim(),
+        especie:      String(r[4]||'').trim(),
+        sexo:         String(r[5]||'').trim(),
+        raza:         String(r[6]||'').trim(),
+        tipoFecha:    String(r[7]||'').trim(),
+        fecha:        String(r[8]||'').trim(),
+        email:        String(r[9]||'').trim(),
+        foto:         String(r[10]||'').trim(),
+        angelito:     String(r[11]||'').trim().toLowerCase()==='si',
+        fechaAngelito:String(r[12]||'').trim(),
+        createdAt:    String(r[0]||'').trim(),
         actividades:'', especial:'', comentario:'', alimento:'', zona:'', notifMensajes:''
       };
     }).filter(function(p){return p.nombre;});
@@ -422,6 +422,7 @@ fetch('/api/galeria?action=getBasic')
           return {
             uid:          String(r[1] ||'').trim(),
             nombre:       String(r[2] ||'').trim(),
+            createdAt:    String(r[0]||'').trim(),
             apodo:        String(r[3] ||'').trim(),
             especie:      String(r[4] ||'').trim(),
             sexo:         String(r[5] ||'').trim(),
@@ -592,8 +593,8 @@ function applyFilter(){
     filtered.sort(function(a,b){return (a.nombre||'').localeCompare(b.nombre||'','es');});
   } else {
     filtered.sort(function(a,b){
-      var da=a.createdAt?new Date(a.createdAt).getTime():0;
-      var db=b.createdAt?new Date(b.createdAt).getTime():0;
+      var da=a.createdAt&&a.createdAt!=='undefined'&&a.createdAt!==''?new Date(a.createdAt).getTime():0;
+      var db=b.createdAt&&b.createdAt!=='undefined'&&b.createdAt!==''?new Date(b.createdAt).getTime():0;
       return db-da;
     });
   }
