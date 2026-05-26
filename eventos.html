@@ -16,18 +16,16 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .filtros-scroll::-webkit-scrollbar{display:none}
 .filtro-btn{padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:600;color:#888;background:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s}
 .filtro-btn.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
-/* MES PICKER */
 .mes-bar{background:#fff;border-bottom:1px solid #eee;padding:8px 16px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
 .mes-bar::-webkit-scrollbar{display:none}
 .mes-chip{padding:5px 14px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;border:1.5px solid #eee;background:#fff;color:#888;transition:all .2s}
 .mes-chip.active{background:#00B4B4;color:#fff;border-color:#00B4B4}
 .mes-chip.hoy{border-color:#00B4B4;color:#00B4B4}
-/* CARDS */
 .wrap{max-width:600px;margin:0 auto;padding:16px}
 .evento-card{background:#fff;border-radius:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.07);overflow:hidden;border:1px solid #eee}
 .evento-card.destacado{border:2px solid #F5C842}
 .evento-header{height:5px;background:linear-gradient(90deg,#00B4B4,#007a7a)}
-.evento-img{width:100%;height:180px;object-fit:cover}
+.evento-img{width:100%;height:180px;object-fit:cover;display:block}
 .evento-body{padding:16px}
 .evento-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;margin-bottom:8px;background:#e0f7f7;color:#007a7a}
 .evento-tipo{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;margin-bottom:8px;margin-left:6px;background:#f0f0ee;color:#888}
@@ -43,9 +41,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .asistentes-row{display:flex;align-items:center;gap:4px;margin-bottom:10px;flex-wrap:wrap}
 .asis-avatar{width:26px;height:26px;border-radius:7px;object-fit:cover;border:2px solid #fff}
 .asis-count{font-size:12px;color:#aaa}
-/* SUGERIR FAB */
 .fab-pill{position:fixed;bottom:24px;right:20px;display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:99px;color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:70;text-decoration:none}
-/* MODAL SUGERIR */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto}
@@ -55,13 +51,10 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .form-input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:12px;font-family:Arial,sans-serif;background:#fff}
 .form-input:focus{border-color:#00B4B4}
 .btn-enviar-sug{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
-/* MODAL INVITAR */
 .amigo-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0ee;cursor:pointer}
-.amigo-item:hover{background:#f8f8f8}
 .amigo-foto{width:40px;height:40px;border-radius:10px;object-fit:cover;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px}
 .amigo-nombre{font-size:14px;font-weight:700;color:#222}
 .amigo-esp{font-size:12px;color:#aaa}
-/* EMPTY / SPINNER */
 .empty{text-align:center;padding:48px 20px}
 .empty-icon{font-size:48px;margin-bottom:12px}
 .empty-txt{font-size:14px;color:#888}
@@ -84,12 +77,10 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </style>
 </head>
 <body>
-
 <div class="hero">
   <h1>🎪 Eventos</h1>
   <p>Eventos oficiales, paseos y exposiciones para mascotas en Guatemala</p>
 </div>
-
 <div class="filtros-wrap">
   <div class="filtros-scroll">
     <button class="filtro-btn active" onclick="setFiltro('',this)">Todos</button>
@@ -99,13 +90,9 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <button class="filtro-btn" onclick="setFiltro('adopcion',this)">🐾 Adopción</button>
   </div>
 </div>
-
 <div class="mes-bar" id="mesBar"></div>
-
 <div class="wrap" id="contenido"><div class="spinner"></div></div>
-
-<button class="fab-pill" style="background:#00B4B4" onclick="abrirSugerir()"><i class="ti ti-plus" aria-hidden="true"></i>Sugerir evento</button>
-
+<button class="fab-pill" style="background:#00B4B4" onclick="abrirSugerir()">+ Sugerir evento</button>
 <div class="modal-overlay" id="modalSugerir">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -149,8 +136,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <button onclick="cerrarSugerir()" style="width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer;margin-top:8px">Cancelar</button>
   </div>
 </div>
-
-<!-- Modal invitar amigos -->
 <div class="modal-overlay" id="modalInvitar">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -159,7 +144,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <button onclick="cerrarInvitar()" style="width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer;margin-top:12px">Cerrar</button>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 <div class="jefe-modal" id="jefeModal" onclick="this.classList.remove('open')">
   <div class="jefe-box" onclick="event.stopPropagation()">
@@ -169,7 +153,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <button onclick="document.getElementById('jefeModal').classList.remove('open')">OK, gracias!</button>
   </div>
 </div>
-
 <script>
 var sessionEmail = localStorage.getItem('petzid_email')||'';
 var miMascota    = null;
@@ -181,10 +164,8 @@ var eventosData  = [];
 var misAsistencias = {};
 var eventoInvitarActual = null;
 var invitadosEnviados = {};
-
 var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 var JEFE_IMGS=['/jefe1.png','/jefe2.jpg','/jefe3.jpg'];
-var jefeIdx=0;
 var evFotoBase64=null;var evFotoMime=null;
 var TIPO_EMOJIS={evento:'🎪',paseo:'🚶',exposicion:'🏆',adopcion:'🐾'};
 
@@ -192,13 +173,9 @@ if(sessionEmail){
   fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
     .then(function(r){return r.json();})
     .then(function(d){
-      if(d.found&&d.mascotas.length){
-        misMascotas=d.mascotas;miMascota=d.mascotas[0];
-        cargarAmigos();
-      }
+      if(d.found&&d.mascotas.length){ misMascotas=d.mascotas;miMascota=d.mascotas[0];cargarAmigos(); }
     });
 }
-
 renderMesPicker();
 cargarEventos();
 
@@ -234,7 +211,6 @@ function cargarEventos(){
     .then(function(r){return r.json();})
     .then(function(d){
       eventosData=(d.eventos||[]).filter(function(e){return !e.fecha||e.fecha>=hoy;});
-      // Cargar mis asistencias
       if(miMascota){
         eventosData.forEach(function(e){
           fetch('/api/galeria?action=getAsistentes&evento_id='+encodeURIComponent(e.id))
@@ -272,20 +248,32 @@ function renderEventos(){
     return;
   }
   var html='';
-  lista.forEach(function(e,i){html+=renderEvento(e,i);});
+  lista.forEach(function(e){html+=renderEvento(e);});
   document.getElementById('contenido').innerHTML=html;
+  // Attach compartir button events after render
+  lista.forEach(function(e){
+    var btn=document.getElementById('btn-compartir-'+e.id);
+    if(btn){
+      btn.addEventListener('click',function(){
+        var msg='🎪 EVENTO: '+e.titulo+'\nVer más info: https://worker-js.petzid-gt.workers.dev/s/e/'+e.id;
+        window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+      });
+    }
+  });
 }
 
-function renderEvento(e,i){
+function renderEvento(e){
   var emoji=TIPO_EMOJIS[e.tipo]||'🎪';
   var fecha=e.fecha?new Date(e.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   var yaAsiste=misAsistencias[e.id];
   var html='<div class="evento-card">';
   html+='<div class="evento-header"></div>';
-  if(e.imagen&&e.imagen.indexOf('http')>=0) html+='<img src="'+e.imagen+'" class="evento-img">';
+  if(e.imagen&&e.imagen.indexOf('http')>=0){
+    html+='<img src="'+e.imagen+'" class="evento-img" alt="'+e.titulo+'">';
+  }
   html+='<div class="evento-body">';
   html+='<span class="evento-badge">🎪 Evento oficial</span>';
-  html+='<span class="evento-tipo">'+emoji+' '+( e.tipo||'evento')+'</span>';
+  html+='<span class="evento-tipo">'+emoji+' '+(e.tipo||'evento')+'</span>';
   html+='<div class="evento-titulo">'+e.titulo+'</div>';
   if(fecha) html+='<div class="evento-fecha">📅 '+fecha+(e.hora?' · '+e.hora:'')+'</div>';
   if(e.lugar) html+='<div class="evento-lugar">📍 '+e.lugar+(e.direccion?' — '+e.direccion:'')+'</div>';
@@ -293,19 +281,20 @@ function renderEvento(e,i){
   html+='<div class="asistentes-row" id="cnt-ev-'+e.id+'"></div>';
   html+='<div class="evento-footer">';
   if(sessionEmail){
-    html+='<button class="btn-asistir'+(yaAsiste?' asistiendo':'')+'" id="btn-ev-'+e.id+'" onclick="asistir(\''+e.id+'\')">'+( yaAsiste?'✅ Confirmado':'✅ Asistiré')+'</button>';
-    if(amigosCache.length>0) html+='<button class="btn-invitar" onclick="abrirInvitar(\''+e.id+'\',\''+e.titulo.replace(/'/g,'')+'\',\''+( e.fecha||'')+'\',\''+( e.lugar||'')+'\')">Invitar amigos</button>';
+    html+='<button class="btn-asistir'+(yaAsiste?' asistiendo':'')+'" id="btn-ev-'+e.id+'" data-id="'+e.id+'\" onclick="asistir(this.dataset.id)">'+(yaAsiste?'✅ Confirmado':'✅ Asistiré')+'</button>';
+    if(amigosCache.length>0){
+      html+='<button class="btn-invitar" data-id="'+e.id+'" data-titulo="'+e.titulo.replace(/"/g,'&quot;').replace(/'/g,'&#39;')+'" data-fecha="'+(e.fecha||'')+'" data-lugar="'+(e.lugar||'')+'" onclick="abrirInvitarDesdeBtn(this)">Invitar amigos</button>';
+    }
   }
   if(e.link) html+='<a href="'+e.link+'" target="_blank" class="btn-link">Más info</a>';
-  var sUrl=encodeURIComponent('https://worker-js.petzid-gt.workers.dev/s/e/'+e.id);
-  html+='<button class="btn-link" style="display:inline-flex;align-items:center;gap:5px" title="Compartir por WhatsApp" onclick="window.open(\'https://wa.me/?text='+encodeURIComponent('🎪 EVENTO: '+e.titulo+'\\nVer más info: '+sUrl)+'\',\'_blank\')">'+'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
+  html+='<button class="btn-link" id="btn-compartir-'+e.id+'" style="display:inline-flex;align-items:center;gap:5px">'+
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
   html+='</div></div></div>';
   return html;
 }
 
 function asistir(eId){
   if(!sessionEmail||!miMascota){mostrarToast('Inicia sesión para confirmar asistencia');return;}
-  var btn=document.getElementById('btn-ev-'+eId);
   var ya=misAsistencias[eId];
   fetch('/api/galeria?action='+(ya?'cancelarAsistencia':'asistirEvento'),{
     method:'POST',headers:{'Content-Type':'application/json'},
@@ -314,10 +303,15 @@ function asistir(eId){
   .then(function(d){
     if(d.ok){
       misAsistencias[eId]=!ya;
-      if(btn){btn.textContent=!ya?'✅ Confirmado':'✅ Asistiré';btn.className='btn-asistir'+( !ya?' asistiendo':'');}
+      var btn=document.getElementById('btn-ev-'+eId);
+      if(btn){btn.textContent=!ya?'✅ Confirmado':'✅ Asistiré';btn.className='btn-asistir'+(!ya?' asistiendo':'');}
       mostrarToast(!ya?'✅ ¡Nos vemos ahí!':'Asistencia cancelada');
     }
   });
+}
+
+function abrirInvitarDesdeBtn(btn){
+  abrirInvitar(btn.dataset.id,btn.dataset.titulo,btn.dataset.fecha,btn.dataset.lugar);
 }
 
 function cargarAmigos(){
@@ -347,12 +341,19 @@ function abrirInvitar(eId,titulo,fecha,lugar){
     amigosCache.forEach(function(a){
       var sent=invitadosEnviados[eId+'_'+a.uid];
       var foto=a.foto&&a.foto.indexOf('http')>=0?'<img src="'+a.foto+'" class="amigo-foto" style="object-fit:cover">':'<div class="amigo-foto">🐾</div>';
-      html+='<div class="amigo-item" onclick="'+(sent?'':'enviarInvitacion(\''+a.uid+'\',\''+a.nombre+'\',\''+a.email+'\')')+'">'+foto+'<div style="flex:1"><div class="amigo-nombre">'+a.nombre+'</div><div class="amigo-esp">'+( a.especie||'')+'</div></div>'+'<span style="font-size:12px;color:'+(sent?'#2e7d32':'#00B4B4')+'">'+( sent?'✓ Invitado':'Invitar')+'</span></div>';
+      html+='<div class="amigo-item" data-uid="'+a.uid+'" data-nombre="'+a.nombre+'" data-email="'+a.email+'" onclick="enviarInvitacionDesdeItem(this)">'
+        +foto+'<div style="flex:1"><div class="amigo-nombre">'+a.nombre+'</div><div class="amigo-esp">'+(a.especie||'')+'</div></div>'
+        +'<span style="font-size:12px;color:'+(sent?'#2e7d32':'#00B4B4')+'">'+(sent?'✓ Invitado':'Invitar')+'</span></div>';
     });
   }
   document.getElementById('amigosLista').innerHTML=html;
   document.getElementById('modalInvitar').classList.add('open');
 }
+
+function enviarInvitacionDesdeItem(el){
+  enviarInvitacion(el.dataset.uid,el.dataset.nombre,el.dataset.email);
+}
+
 function cerrarInvitar(){document.getElementById('modalInvitar').classList.remove('open');}
 
 function enviarInvitacion(uid,nombre,email){
@@ -367,9 +368,8 @@ function enviarInvitacion(uid,nombre,email){
   });
 }
 
-function abrirSugerir(){
-  document.getElementById('modalSugerir').classList.add('open');
-}
+function abrirSugerir(){ document.getElementById('modalSugerir').classList.add('open'); }
+
 function cerrarSugerir(){
   document.getElementById('modalSugerir').classList.remove('open');
   evFotoBase64=null;evFotoMime=null;
@@ -396,17 +396,12 @@ function enviarSugerencia(){
     if(d.ok){
       btn.textContent='Enviado!';
       cerrarSugerir();
-      setTimeout(function(){
-        mostrarJefe('¡Gracias por tu sugerencia!','El jefe revisará el evento pronto y lo publicará en la comunidad 🐾');
-      }, 200);
-    } else {
-      btn.disabled=false;btn.textContent='Enviar sugerencia';
-      mostrarToast('Error al enviar');
-    }
+      setTimeout(function(){ mostrarJefe('¡Gracias por tu sugerencia!','El jefe revisará el evento pronto y lo publicará en la comunidad 🐾'); },200);
+    } else { btn.disabled=false;btn.textContent='Enviar sugerencia';mostrarToast('Error al enviar'); }
   }).catch(function(){btn.disabled=false;btn.textContent='Enviar sugerencia';mostrarToast('Error de conexión');});
 }
 
-function previsualizarFoto(input, previewId, labelId){
+function previsualizarFoto(input,previewId,labelId){
   var file=input.files[0];if(!file)return;
   evFotoMime=file.type;
   var reader=new FileReader();
@@ -420,12 +415,12 @@ function previsualizarFoto(input, previewId, labelId){
   reader.readAsDataURL(file);
 }
 
-function mostrarJefe(titulo, msg){
+function mostrarJefe(titulo,msg){
   var url=JEFE_IMGS[Math.floor(Math.random()*JEFE_IMGS.length)];
   var imgEl=document.getElementById('jefeImg');
   imgEl.style.display='none';
-  imgEl.onload=function(){ imgEl.style.display='block'; };
-  imgEl.onerror=function(){ imgEl.style.display='none'; };
+  imgEl.onload=function(){imgEl.style.display='block';};
+  imgEl.onerror=function(){imgEl.style.display='none';};
   imgEl.src=url;
   document.getElementById('jefeTitulo').textContent=titulo;
   document.getElementById('jefeMsg').textContent=msg;
