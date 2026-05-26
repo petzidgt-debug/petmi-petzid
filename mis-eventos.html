@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Mis Eventos — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.hero{background:linear-gradient(135deg,#764ba2,#E05090);padding:24px 20px 20px;text-align:center;color:#fff}
+.hero h1{font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.hero p{font-size:13px;color:rgba(255,255,255,.75)}
+.wrap{max-width:600px;margin:0 auto;padding:16px 16px 40px}
+.evento-card{background:#fff;border-radius:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);overflow:hidden;border:1px solid #eee}
+.evento-header{height:5px;background:linear-gradient(90deg,#00B4B4,#007a7a)}
+.evento-img{width:100%;height:160px;object-fit:cover;display:block}
+.evento-body{padding:14px 16px}
+.evento-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;margin-bottom:8px;background:#e0f7f7;color:#007a7a}
+.evento-titulo{font-size:15px;font-weight:700;color:#222;margin-bottom:6px;line-height:1.3}
+.evento-fecha{font-size:12px;color:#00B4B4;font-weight:700;margin-bottom:3px}
+.evento-lugar{font-size:12px;color:#888;margin-bottom:10px}
+.evento-footer{display:flex;gap:8px;flex-wrap:wrap}
+.btn-sm{padding:7px 14px;border:none;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-cancelar{background:#fff0f0;color:#c0392b;border:1px solid #fcc}
+.btn-compartir{background:#e0f7f7;color:#007a7a}
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:48px 20px;color:#aaa}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-txt{font-size:14px;line-height:1.7}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.sec-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#aaa;margin-bottom:10px;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>🎪 Mis eventos</h1>
+  <p>Eventos donde confirmaste asistencia</p>
+</div>
+<div class="wrap" id="contenido"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var sessionEmail=localStorage.getItem('petzid_email')||'';
+var miUid=null;
+var TIPO_EMOJIS={evento:'🎪',paseo:'🚶',exposicion:'🏆',adopcion:'🐾'};
+
+if(!sessionEmail){
+  document.getElementById('contenido').innerHTML=
+    '<div class="empty"><div class="empty-icon">🎪</div>'+
+    '<div class="empty-txt">Ingresa para ver los eventos donde dijiste que asistirias.<br><br>'+
+    '<a href="/eventos.html" style="color:#00B4B4;font-weight:700">Ver todos los eventos →</a></div></div>';
+} else {
+  cargarMiUid();
+}
+
+function cargarMiUid(){
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.found&&d.mascotas.length){
+      miUid=d.mascotas[0].uid;
+      cargarMisEventos();
+    } else {
+      document.getElementById('contenido').innerHTML='<div class="empty"><div class="empty-txt">No encontramos tu cuenta.</div></div>';
+    }
+  });
+}
+
+function cargarMisEventos(){
+  // Buscar asistencias del uid
+  fetch(SUPA_URL+'/rest/v1/evento_asistentes?uid_mascota=eq.'+encodeURIComponent(miUid)+'&select=evento_id,created_at',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(asistencias){
+    if(!asistencias||!asistencias.length){
+      document.getElementById('contenido').innerHTML=
+        '<div class="empty"><div class="empty-icon">🎪</div>'+
+        '<div class="empty-txt">Aún no has confirmado asistencia a ningún evento.<br><br>'+
+        '<a href="/eventos.html" style="color:#00B4B4;font-weight:700">Explorar eventos →</a></div></div>';
+      return;
+    }
+    var ids=asistencias.map(function(a){return a.evento_id;});
+    // Fetch eventos
+    return fetch(SUPA_URL+'/rest/v1/eventos?id=in.('+ids.map(function(i){return '"'+i+'"';}).join(',')+')'+'&order=fecha.asc',{
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+    }).then(function(r){return r.json();})
+    .then(function(eventos){
+      renderEventos(eventos||[]);
+    });
+  }).catch(function(){
+    document.getElementById('contenido').innerHTML='<div class="empty"><div class="empty-txt">Error al cargar. <a href="/eventos.html" style="color:#00B4B4">Volver</a></div></div>';
+  });
+}
+
+function renderEventos(eventos){
+  var hoy=new Date().toISOString().split('T')[0];
+  var proximos=eventos.filter(function(e){return e.fecha>=hoy;});
+  var pasados=eventos.filter(function(e){return e.fecha<hoy;});
+  var html='';
+
+  if(!proximos.length&&!pasados.length){
+    document.getElementById('contenido').innerHTML='<div class="empty"><div class="empty-icon">🎪</div><div class="empty-txt">No tienes eventos. <a href="/eventos.html" style="color:#00B4B4;font-weight:700">Explorar →</a></div></div>';
+    return;
+  }
+
+  if(proximos.length){
+    html+='<div class="sec-label">Próximos eventos ('+proximos.length+')</div>';
+    proximos.forEach(function(e){html+=renderCard(e,false);});
+  }
+  if(pasados.length){
+    html+='<div class="sec-label" style="margin-top:16px">Eventos pasados ('+pasados.length+')</div>';
+    pasados.forEach(function(e){html+=renderCard(e,true);});
+  }
+  document.getElementById('contenido').innerHTML=html;
+}
+
+function renderCard(e,pasado){
+  var emoji=TIPO_EMOJIS[e.tipo]||'🎪';
+  var fecha=e.fecha?new Date(e.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
+  var html='<div class="evento-card"'+(pasado?' style="opacity:.7"':'')+'>';
+  html+='<div class="evento-header"></div>';
+  if(e.imagen&&e.imagen.indexOf('http')>=0) html+='<img src="'+e.imagen+'" class="evento-img" alt="'+e.titulo+'">';
+  html+='<div class="evento-body">';
+  html+='<span class="evento-badge">'+emoji+' '+(e.tipo||'evento')+'</span>';
+  html+='<div class="evento-titulo">'+e.titulo+'</div>';
+  if(fecha) html+='<div class="evento-fecha">📅 '+fecha+(e.hora?' · '+e.hora:'')+'</div>';
+  if(e.lugar) html+='<div class="evento-lugar">📍 '+e.lugar+'</div>';
+  html+='<div class="evento-footer">';
+  if(!pasado){
+    html+='<button class="btn-sm btn-cancelar" data-id="'+e.id+'" onclick="cancelarAsistencia(this.dataset.id)">✗ Cancelar asistencia</button>';
+  }
+  html+='<button class="btn-sm btn-compartir" data-id="'+e.id+'" data-titulo="'+e.titulo+'" onclick="compartirEvento(this)">📤 Compartir</button>';
+  if(e.link) html+='<a href="'+e.link+'" target="_blank" class="btn-sm btn-compartir" style="text-decoration:none">Más info</a>';
+  html+='</div></div></div>';
+  return html;
+}
+
+function cancelarAsistencia(eId){
+  if(!confirm('¿Cancelar tu asistencia a este evento?'))return;
+  fetch('/api/galeria?action=cancelarAsistencia',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({evento_id:eId,uid_mascota:miUid})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){mostrarToast('Asistencia cancelada');setTimeout(cargarMisEventos,800);}
+    else mostrarToast('Error al cancelar');
+  }).catch(function(){mostrarToast('Error de conexión');});
+}
+
+function compartirEvento(btn){
+  var msg='🎪 EVENTO: '+btn.dataset.titulo+'\n\nVer más info: https://worker-js.petzid-gt.workers.dev/s/e/'+btn.dataset.id;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+</script>
+<script src="/header.js"></script>
+</body>
+</html>

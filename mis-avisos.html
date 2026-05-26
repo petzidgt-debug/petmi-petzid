@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Mis Avisos — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.hero{background:linear-gradient(135deg,#00B4B4,#007a7a);padding:24px 20px 20px;text-align:center;color:#fff}
+.hero h1{font-size:22px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.hero p{font-size:13px;color:rgba(255,255,255,.75)}
+.wrap{max-width:600px;margin:0 auto;padding:16px 16px 40px}
+.aviso-card{background:#fff;border-radius:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);overflow:hidden;border:1px solid #eee}
+.aviso-header{height:5px}
+.aviso-body{padding:14px 16px}
+.aviso-tipo-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;margin-bottom:8px}
+.aviso-titulo{font-size:15px;font-weight:700;color:#222;margin-bottom:6px;line-height:1.3}
+.aviso-meta{font-size:12px;color:#aaa;margin-bottom:10px}
+.aviso-footer{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn-sm{padding:7px 14px;border:none;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-eliminar{background:#fff0f0;color:#c0392b;border:1px solid #fcc}
+.btn-wa{background:#e0f7f7;color:#007a7a}
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:48px 20px;color:#aaa}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-txt{font-size:14px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.no-session{text-align:center;padding:48px 20px}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>📢 Mis avisos</h1>
+  <p>Avisos que has publicado en la comunidad</p>
+</div>
+<div class="wrap" id="contenido"><div class="spinner"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var sessionEmail=localStorage.getItem('petzid_email')||'';
+
+var TIPO_COLORS={
+  perdido:{bg:'#c0392b',badge:'#fbeaf0',color:'#c0392b'},
+  adopcion:{bg:'#2e7d32',badge:'#e8f5e9',color:'#2e7d32'},
+  busco:{bg:'#1565c0',badge:'#e3f2fd',color:'#1565c0'}
+};
+var TIPO_LABELS={perdido:'🚨 Perdido',adopcion:'🏠 Adopción',busco:'🔍 Busco'};
+
+if(!sessionEmail){
+  document.getElementById('contenido').innerHTML=
+    '<div class="no-session"><div style="font-size:48px;margin-bottom:16px">📢</div>'+
+    '<div style="font-size:16px;font-weight:700;color:#222;margin-bottom:8px">Ingresa para ver tus avisos</div>'+
+    '<div style="font-size:13px;color:#888;margin-bottom:20px">Necesitas estar logueado para ver tus avisos publicados</div>'+
+    '<a href="/avisos.html" style="display:inline-block;padding:12px 24px;background:#00B4B4;color:#fff;border-radius:24px;font-size:14px;font-weight:700;text-decoration:none">Ver todos los avisos</a></div>';
+} else {
+  cargarMisAvisos();
+}
+
+function cargarMisAvisos(){
+  fetch(SUPA_URL+'/rest/v1/actividades?email_creador=eq.'+encodeURIComponent(sessionEmail)+'&order=created_at.desc',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(rows){
+    if(!rows||!rows.length){
+      document.getElementById('contenido').innerHTML=
+        '<div class="empty"><div class="empty-icon">📢</div>'+
+        '<div class="empty-txt">No has publicado ningún aviso aún.<br>'+
+        '<a href="/avisos.html" style="color:#00B4B4;font-weight:700">Publicar un aviso →</a></div></div>';
+      return;
+    }
+    var html='';
+    rows.forEach(function(a){
+      var tc=TIPO_COLORS[a.tipo]||{bg:'#00B4B4',badge:'#e0f7f7',color:'#007a7a'};
+      var lbl=TIPO_LABELS[a.tipo]||a.tipo||'Aviso';
+      var fecha=a.created_at?new Date(a.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}):'';
+      var activo=a.activo!==false;
+      html+='<div class="aviso-card">';
+      html+='<div class="aviso-header" style="background:'+tc.bg+'"></div>';
+      html+='<div class="aviso-body">';
+      html+='<span class="aviso-tipo-badge" style="background:'+tc.badge+';color:'+tc.color+'">'+lbl+'</span>';
+      if(!activo) html+='<span class="aviso-tipo-badge" style="background:#f0f0ee;color:#aaa;margin-left:4px">Inactivo</span>';
+      html+='<div class="aviso-titulo">'+a.titulo+'</div>';
+      html+='<div class="aviso-meta">'+(fecha?'Publicado el '+fecha:'')+(a.ubicacion?' · '+a.ubicacion:'')+'</div>';
+      html+='<div class="aviso-footer">';
+      html+='<button class="btn-sm btn-wa" data-id="'+a.id+'" data-titulo="'+a.titulo+'" data-tipo="'+a.tipo+'" onclick="compartirAviso(this)">📤 Compartir</button>';
+      html+='<button class="btn-sm btn-eliminar" data-id="'+a.id+'" onclick="eliminarAviso(this.dataset.id)">🗑️ Eliminar</button>';
+      html+='</div></div></div>';
+    });
+    document.getElementById('contenido').innerHTML=html;
+  }).catch(function(){
+    document.getElementById('contenido').innerHTML='<div class="empty"><div class="empty-txt">Error al cargar. <a href="/avisos.html" style="color:#00B4B4">Volver</a></div></div>';
+  });
+}
+
+function compartirAviso(btn){
+  var id=btn.dataset.id;
+  var titulo=btn.dataset.titulo||'';
+  var tipo=btn.dataset.tipo||'';
+  var prefijos={perdido:'🚨 ¡AYUDA! SE PERDIÓ: ',adopcion:'🏠 EN ADOPCIÓN: ',busco:'🔍 SE BUSCA: '};
+  var msg=(prefijos[tipo]||'🐾 ')+titulo+'\n\nVer más info: https://worker-js.petzid-gt.workers.dev/s/a/'+id;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function eliminarAviso(id){
+  if(!confirm('¿Eliminar este aviso?'))return;
+  fetch('/api/galeria?action=eliminarActividad',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({actividad_id:id})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){mostrarToast('✅ Aviso eliminado');setTimeout(cargarMisAvisos,800);}
+    else mostrarToast('Error al eliminar');
+  }).catch(function(){mostrarToast('Error de conexión');});
+}
+
+function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+</script>
+<script src="/header.js"></script>
+</body>
+</html>
