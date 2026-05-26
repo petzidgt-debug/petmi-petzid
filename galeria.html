@@ -333,7 +333,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <script>
 // ── Estado global ─────────────────────────────────────────────
 var allPets=[], filtered=[], shown=0, perPage=40, currentFilter='todos';
-window.currentSort='nuevo'; var currentSort=window.currentSort;
+var currentSort='nuevo';
 var sessionEmail=localStorage.getItem('petzid_email')||'';
 var sessionDueno=localStorage.getItem('petzid_dueno')||'';
 var currentModalPet=null;
@@ -590,22 +590,15 @@ function applyFilter(){
     return true;
   });
   // Ordenar según currentSort
-  var _sort=window.currentSort||currentSort||'az';
-  if(_sort==='az'){
+  if(currentSort==='az'){
     filtered.sort(function(a,b){return (a.nombre||'').localeCompare(b.nombre||'','es');});
-  } else if(_sort==='nuevo') {
-    filtered.sort(function(a,b){
-      var da=a.createdAt&&a.createdAt!=='undefined'&&a.createdAt!==''?new Date(a.createdAt).getTime():0;
-      var db=b.createdAt&&b.createdAt!=='undefined'&&b.createdAt!==''?new Date(b.createdAt).getTime():0;
-      return db-da;
-    });
   }
+  // 'nuevo' mantiene el orden del servidor (created_at.desc desde Supabase)
   shown=0; renderGallery(false);
 }
 
 function toggleSort(){
-  window.currentSort = window.currentSort==='az' ? 'nuevo' : 'az';
-  currentSort = window.currentSort;
+  currentSort = currentSort==='az' ? 'nuevo' : 'az';
   var btn=document.getElementById('sortToggle');
   if(btn) btn.textContent = currentSort==='az' ? 'A-Z' : '⏱ Recientes';
   applyFilter();
