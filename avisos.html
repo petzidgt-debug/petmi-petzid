@@ -250,13 +250,13 @@ function scrollToAviso(){
   var urlId=new URLSearchParams(window.location.search).get('id');
   if(!urlId)return;
   setTimeout(function(){
-    var card=document.getElementById('aviso-'+urlId);
+    var card=document.getElementById('card-'+urlId);
     if(card){
       card.scrollIntoView({behavior:'smooth',block:'center'});
-      card.style.boxShadow='0 0 0 3px #00B4B4';
-      setTimeout(function(){card.style.boxShadow='';},3000);
+      card.style.outline='3px solid #00B4B4';
+      setTimeout(function(){card.style.outline='';},3000);
     }
-  },500);
+  },600);
 }
 function cargar(){
   document.getElementById('contenido').innerHTML='<div class="spinner"></div>';
@@ -363,15 +363,23 @@ function renderAviso(a,i){
     var tit=a.titulo||'';
     var aid=a.id||'';
     var anc=a.nombre_creador||'';
-    if(!esCreador) html+='<button class="btn-info" data-email="'+em+'" data-titulo="'+tit+'" data-tipo="perdido" data-wa="'+wa+'" onclick="contactarDesdeBtn(this)">'+(wa?'💬 Tengo info':'📞 Tengo info')+'</button>';
-  if(!esCreador&&sessionEmail) html+='<button class="btn-interesa" data-email="'+em+'" data-titulo="'+tit+'" data-tipo="perdido" onclick="contactarDesdeBtn(this)">❤️ Me interesa ayudar</button>';
+    if(!esCreador&&sessionEmail) html+='<button class="btn-interesa" data-email="'+em+'" data-titulo="'+tit+'" data-tipo="perdido" onclick="contactarDesdeBtn(this)">❤️ Quiero ayudar</button>';
+  if(!esCreador&&!sessionEmail) html+='<button class="btn-interesa" onclick="petmiAbrirLogin()">❤️ Quiero ayudar</button>';
     if(esCreador) html+='<button class="btn-aparecio" data-id="'+aid+'" data-nombre="'+anc+'" onclick="aparecioDesdeBtn(this)">🎉 Aparecio!</button>';
     html+='<button class="btn-dl" data-id="'+aid+'" onclick="posterDesdeBtn(this)">⬇ Poster</button>';
   }
-  if(a.tipo==='busco'&&!esCreador&&sessionEmail){var em2=a.email_creador||'';var tit2=a.titulo||'';html+='<button class="btn-apuntar" data-email="'+em2+'" data-titulo="'+tit2+'" data-tipo="busco" onclick="contactarDesdeBtn(this)">🔍 Me interesa</button>';}
-  if(a.tipo==='adopcion'&&!esCreador&&sessionEmail){var em3=a.email_creador||'';var tit3=a.titulo||'';html+='<button class="btn-interesa" data-email="'+em3+'" data-titulo="'+tit3+'" data-tipo="adopcion" onclick="contactarDesdeBtn(this)">🏠 Me interesa</button>';}
+  if(a.tipo==='busco'&&!esCreador){
+    var em2=a.email_creador||'';var tit2=a.titulo||'';
+    if(sessionEmail) html+='<button class="btn-info" style="background:#1565c0" data-email="'+em2+'" data-titulo="'+tit2+'" data-tipo="busco" onclick="contactarDesdeBtn(this)">🔍 Me interesa</button>';
+    else html+='<button class="btn-info" style="background:#1565c0" onclick="petmiAbrirLogin()">🔍 Me interesa</button>';
+  }
+  if(a.tipo==='adopcion'&&!esCreador){
+    var em3=a.email_creador||'';var tit3=a.titulo||'';
+    if(sessionEmail) html+='<button class="btn-interesa" data-email="'+em3+'" data-titulo="'+tit3+'" data-tipo="adopcion" onclick="contactarDesdeBtn(this)">🏠 Me interesa</button>';
+    else html+='<button class="btn-interesa" onclick="petmiAbrirLogin()">🏠 Me interesa</button>';
+  }
   if(esCreador&&a.tipo!=='perdido'){var aid3=a.id||'';html+='<button style="padding:6px 10px;background:#f0f0ee;color:#888;border:none;border-radius:99px;font-size:11px;cursor:pointer" data-id="'+aid3+'" onclick="eliminarDesdeBtn(this)">🗑️</button>';}
-  html+='<button class="btn-wa" style="display:inline-flex;align-items:center;gap:5px;margin-left:auto" data-titulo="'+a.titulo+'" data-url="'+sUrl+'" data-tipo="'+a.tipo+'" onclick="compartirDesdeBtn(this)">'
+  html+='<button class="btn-wa" style="display:inline-flex;align-items:center;gap:5px;margin-left:auto" data-titulo="'+a.titulo+'" data-url="'+sUrl+'" data-tipo="'+a.tipo+'" data-imagen="'+(a.imagen||a.foto_creador||'')+'" onclick="compartirDesdeBtn(this)">'
     +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
 
   html+='</div></div>';
@@ -748,13 +756,19 @@ function compartirDesdeBtn(btn){
   var nl='\n';
   var msg;
   if(tipo==='perdido'){
-    msg='\ud83d\udea8 \u00a1'+titulo+' SE PERDIO!'+nl+'Ayudemos que regrese a casa!'+nl+nl+'Si lo ves, comunicate con la familia:'+nl+url;
+    // Para perdidos compartir imagen del afiche si existe, sino link
+    var imgUrl=btn.getAttribute('data-imagen')||'';
+    if(imgUrl){
+      msg='ALERTA! '+titulo+' SE PERDIO!'+nl+'Ayudemos que regrese a casa!'+nl+nl+'Si lo ves, comunicate con la familia:'+nl+imgUrl;
+    } else {
+      msg='ALERTA! '+titulo+' SE PERDIO!'+nl+'Ayudemos que regrese a casa!'+nl+nl+'Si lo ves, comunicate con la familia:'+nl+url;
+    }
   } else if(tipo==='adopcion'){
-    msg='\ud83c\udfe0 '+titulo+' esta en adopcion \ud83d\udc3e'+nl+'Le das un hogar? Mas informacion aqui:'+nl+url;
+    msg=titulo+' esta en adopcion'+nl+'Le das un hogar? Mas informacion aqui:'+nl+url;
   } else if(tipo==='busco'){
     msg='BUSCO: '+titulo+nl+'Alguien lo tiene o sabe donde encontrarlo?'+nl+url;
   } else {
-    msg='\ud83d\udc3e '+titulo+nl+url;
+    msg=titulo+nl+url;
   }
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
