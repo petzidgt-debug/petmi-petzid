@@ -291,7 +291,7 @@ function renderLista(){
 
 function renderAviso(a,i){
   var esCreador=sessionEmail&&a.email_creador&&a.email_creador.toLowerCase()===sessionEmail.toLowerCase();
-  var sUrl=encodeURIComponent('https://worker-js.petzid-gt.workers.dev/s/a/'+a.id);
+  var sUrl='https://worker-js.petzid-gt.workers.dev/s/a/'+a.id;
   var HEADER_COLORS={perdido:'#c0392b',busco:'#2e7d32',adopcion:'#2e7d32'};
   var LABELS={perdido:'Perdido',busco:'Busco',adopcion:'Adopcion'};
   var ICONS={perdido:'🚨',busco:'🔍',adopcion:'🏠'};
@@ -750,7 +750,8 @@ function compartirDesdeBtn(btn){
     'adopcion':'🏠 '+titulo+' está en adopción 🐾\n¿Le das un hogar? Más información aquí 👇\n'+url,
     'busco':   '🔍 BUSCO: '+titulo+'\n¿Alguien lo tiene o sabe dónde encontrarlo? 👇\n'+url
   };
-  var msg=msgs[tipo]||('🐾 '+titulo+'\n'+url);
+  var msg=msgs[tipo]||('🐾 '+titulo+'
+'+url);
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 function contactarDesdeBtn(btn){
