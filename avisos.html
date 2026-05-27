@@ -733,15 +733,12 @@ function compartirDesdeBtn(btn){
   var titulo=btn.getAttribute('data-titulo')||'';
   var url=btn.getAttribute('data-url')||'';
   var tipo=btn.getAttribute('data-tipo')||'';
-  var prefijos={
-    'perdido':'🚨 ¡AYUDA! SE PERDIÓ: ',
-    'adopcion':'🏠 EN ADOPCIÓN: ',
-    'busco':'🔍 SE BUSCA: ',
-    'evento':'🎪 EVENTO: ',
-    'perdido_aviso':'🚨 ¡AYUDA! SE PERDIÓ: '
+  var msgs={
+    'perdido': '🚨 ¡'+titulo+' SE PERDIÓ!\nAyudemos que regrese a casa 🏠\n\nSi lo ves, comunícate con la familia 👇\n'+url,
+    'adopcion':'🏠 '+titulo+' está en adopción 🐾\n¿Le das un hogar? Más información aquí 👇\n'+url,
+    'busco':   '🔍 BUSCO: '+titulo+'\n¿Alguien lo tiene o sabe dónde encontrarlo? 👇\n'+url
   };
-  var prefijo=prefijos[tipo]||'🐾 ';
-  var msg=prefijo+titulo+'\n\nVer más info: '+url;
+  var msg=msgs[tipo]||('🐾 '+titulo+'\n'+url);
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 function contactarDesdeBtn(btn){
