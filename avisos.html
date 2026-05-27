@@ -371,7 +371,7 @@ function renderAviso(a,i){
   if(a.tipo==='busco'&&!esCreador&&sessionEmail){var em2=a.email_creador||'';var tit2=a.titulo||'';html+='<button class="btn-apuntar" data-email="'+em2+'" data-titulo="'+tit2+'" data-tipo="busco" onclick="contactarDesdeBtn(this)">🔍 Me interesa</button>';}
   if(a.tipo==='adopcion'&&!esCreador&&sessionEmail){var em3=a.email_creador||'';var tit3=a.titulo||'';html+='<button class="btn-interesa" data-email="'+em3+'" data-titulo="'+tit3+'" data-tipo="adopcion" onclick="contactarDesdeBtn(this)">🏠 Me interesa</button>';}
   if(esCreador&&a.tipo!=='perdido'){var aid3=a.id||'';html+='<button style="padding:6px 10px;background:#f0f0ee;color:#888;border:none;border-radius:99px;font-size:11px;cursor:pointer" data-id="'+aid3+'" onclick="eliminarDesdeBtn(this)">🗑️</button>';}
-  html+='<button class="btn-wa" style="display:inline-flex;align-items:center;gap:5px;margin-left:auto" data-titulo="'+a.titulo+'" data-url="'+sUrl+'" onclick="compartirDesdeBtn(this)">'
+  html+='<button class="btn-wa" style="display:inline-flex;align-items:center;gap:5px;margin-left:auto" data-titulo="'+a.titulo+'" data-url="'+sUrl+'" data-tipo="'+a.tipo+'" onclick="compartirDesdeBtn(this)">'
     +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
 
   html+='</div></div>';
