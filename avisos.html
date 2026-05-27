@@ -744,13 +744,13 @@ function publicar(){
 function compartirDesdeBtn(btn){
   var titulo=btn.getAttribute('data-titulo')||'';
   var url=btn.getAttribute('data-url')||'';
-  var tipo=btn.getAttribute('data-tipo')||'';
+  var nl='\n';
   var msgs={
-    'perdido': '🚨 ¡'+titulo+' SE PERDIÓ!\nAyudemos que regrese a casa 🏠\n\nSi lo ves, comunícate con la familia 👇\n'+url,
-    'adopcion':'🏠 '+titulo+' está en adopción 🐾\n¿Le das un hogar? Más información aquí 👇\n'+url,
-    'busco':   '🔍 BUSCO: '+titulo+'\n¿Alguien lo tiene o sabe dónde encontrarlo? 👇\n'+url
+    'perdido': '\ud83d\udea8 \u00a1'+titulo+' SE PERDIO!'+nl+'Ayudemos que regrese a casa!'+nl+nl+'Si lo ves, comunicate con la familia:'+nl+url,
+    'adopcion': '\ud83c\udfe0 '+titulo+' esta en adopcion \ud83d\udc3e'+nl+'Le das un hogar? Mas informacion aqui:'+nl+url,
+    'busco': 'BUSCO: '+titulo+nl+'Alguien lo tiene o sabe donde encontrarlo?'+nl+url
   };
-  var msg=msgs[tipo]||('🐾 '+titulo+'\n'+url);
+  var msg=msgs[tipo]||('\ud83d\udc3e '+titulo+nl+url);
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 function contactarDesdeBtn(btn){
