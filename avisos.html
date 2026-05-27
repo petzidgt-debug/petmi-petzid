@@ -744,14 +744,18 @@ function publicar(){
 function compartirDesdeBtn(btn){
   var titulo=btn.getAttribute('data-titulo')||'';
   var url=btn.getAttribute('data-url')||'';
-  var url=btn.getAttribute('data-url')||'';
   var tipo=btn.getAttribute('data-tipo')||'';
-  var msgs={
-    'perdido': '\ud83d\udea8 \u00a1'+titulo+' SE PERDIO!'+nl+'Ayudemos que regrese a casa!'+nl+nl+'Si lo ves, comunicate con la familia:'+nl+url,
-    'adopcion': '\ud83c\udfe0 '+titulo+' esta en adopcion \ud83d\udc3e'+nl+'Le das un hogar? Mas informacion aqui:'+nl+url,
-    'busco': 'BUSCO: '+titulo+nl+'Alguien lo tiene o sabe donde encontrarlo?'+nl+url
-  };
-  var msg=msgs[tipo]||('\ud83d\udc3e '+titulo+nl+url);
+  var nl='\n';
+  var msg;
+  if(tipo==='perdido'){
+    msg='\ud83d\udea8 \u00a1'+titulo+' SE PERDIO!'+nl+'Ayudemos que regrese a casa!'+nl+nl+'Si lo ves, comunicate con la familia:'+nl+url;
+  } else if(tipo==='adopcion'){
+    msg='\ud83c\udfe0 '+titulo+' esta en adopcion \ud83d\udc3e'+nl+'Le das un hogar? Mas informacion aqui:'+nl+url;
+  } else if(tipo==='busco'){
+    msg='BUSCO: '+titulo+nl+'Alguien lo tiene o sabe donde encontrarlo?'+nl+url;
+  } else {
+    msg='\ud83d\udc3e '+titulo+nl+url;
+  }
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 function contactarDesdeBtn(btn){
