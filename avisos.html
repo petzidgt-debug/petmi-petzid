@@ -744,7 +744,8 @@ function publicar(){
 function compartirDesdeBtn(btn){
   var titulo=btn.getAttribute('data-titulo')||'';
   var url=btn.getAttribute('data-url')||'';
-  var nl='\n';
+  var url=btn.getAttribute('data-url')||'';
+  var tipo=btn.getAttribute('data-tipo')||'';
   var msgs={
     'perdido': '\ud83d\udea8 \u00a1'+titulo+' SE PERDIO!'+nl+'Ayudemos que regrese a casa!'+nl+nl+'Si lo ves, comunicate con la familia:'+nl+url,
     'adopcion': '\ud83c\udfe0 '+titulo+' esta en adopcion \ud83d\udc3e'+nl+'Le das un hogar? Mas informacion aqui:'+nl+url,
