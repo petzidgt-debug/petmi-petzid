@@ -258,12 +258,28 @@ function renderEventos(){
   var html='';
   lista.forEach(function(e){html+=renderEvento(e);});
   document.getElementById('contenido').innerHTML=html;
+  // Scroll to specific event if ?id= param present
+  var urlId=new URLSearchParams(window.location.search).get('id');
+  if(urlId){
+    setTimeout(function(){
+      var el=document.getElementById('btn-ev-'+urlId);
+      if(!el){
+        // Try finding card by looking for the compartir button
+        el=document.getElementById('btn-compartir-'+urlId);
+      }
+      if(el){
+        el.closest('.evento-card').scrollIntoView({behavior:'smooth',block:'center'});
+        el.closest('.evento-card').style.boxShadow='0 0 0 3px #00B4B4';
+        setTimeout(function(){el.closest('.evento-card').style.boxShadow='';},3000);
+      }
+    },300);
+  }
   // Attach compartir button events after render
   lista.forEach(function(e){
     var btn=document.getElementById('btn-compartir-'+e.id);
     if(btn){
       btn.addEventListener('click',function(){
-        var msg='🎪 EVENTO: '+e.titulo+'\nVer más info: https://worker-js.petzid-gt.workers.dev/s/e/'+e.id;
+        var msg='🎪 '+e.titulo+'\n¿Te apuntas a este evento? 🐾\nhttps://worker-js.petzid-gt.workers.dev/s/e/'+e.id;
         window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
       });
     }
