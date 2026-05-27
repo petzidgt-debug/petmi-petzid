@@ -246,6 +246,18 @@ function _preLlenar(m){
   if(t&&m.nombre) t.value='🚨 SE PERDIÓ '+m.nombre.toUpperCase();
 }
 
+function scrollToAviso(){
+  var urlId=new URLSearchParams(window.location.search).get('id');
+  if(!urlId)return;
+  setTimeout(function(){
+    var card=document.getElementById('aviso-'+urlId);
+    if(card){
+      card.scrollIntoView({behavior:'smooth',block:'center'});
+      card.style.boxShadow='0 0 0 3px #00B4B4';
+      setTimeout(function(){card.style.boxShadow='';},3000);
+    }
+  },500);
+}
 function cargar(){
   document.getElementById('contenido').innerHTML='<div class="spinner"></div>';
   fetch('/api/galeria?action=getActividades')
