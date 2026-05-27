@@ -757,13 +757,12 @@ function compartirDesdeBtn(btn){
   var msg;
   if(tipo==='perdido'){
     // Para perdidos compartir imagen del afiche si existe, sino link
-    var imgUrl=btn.getAttribute('data-imagen')||'';
-    if(imgUrl){
-      msg='ALERTA! '+titulo+' SE PERDIO!'+nl+'Ayudemos que regrese a casa!'+nl+nl+'Si lo ves, comunicate con la familia:'+nl+imgUrl;
-    } else {
-      msg='ALERTA! '+titulo+' SE PERDIO!'+nl+'Ayudemos que regrese a casa!'+nl+nl+'Si lo ves, comunicate con la familia:'+nl+url;
-    }
-  } else if(tipo==='adopcion'){
+  if(tipo==='perdido'){
+    msg=titulo+' SE PERDIO!'+nl+'Ayudemos que regrese a casa!'+nl+nl+'Si lo ves, comunicate con la familia:'+nl+url;
+  }
+
+
+
     msg=titulo+' esta en adopcion'+nl+'Le das un hogar? Mas informacion aqui:'+nl+url;
   } else if(tipo==='busco'){
     msg='BUSCO: '+titulo+nl+'Alguien lo tiene o sabe donde encontrarlo?'+nl+url;
