@@ -750,8 +750,7 @@ function compartirDesdeBtn(btn){
     'adopcion':'🏠 '+titulo+' está en adopción 🐾\n¿Le das un hogar? Más información aquí 👇\n'+url,
     'busco':   '🔍 BUSCO: '+titulo+'\n¿Alguien lo tiene o sabe dónde encontrarlo? 👇\n'+url
   };
-  var msg=msgs[tipo]||('🐾 '+titulo+'
-'+url);
+  var msg=msgs[tipo]||('🐾 '+titulo+'\n'+url);
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
 }
 function contactarDesdeBtn(btn){
