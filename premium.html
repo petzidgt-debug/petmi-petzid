@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Premium — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#1a1a2e,#764ba2);padding:36px 20px 32px;text-align:center;color:#fff}
+.hero-badge{display:inline-block;background:rgba(245,200,66,.2);color:#F5C842;font-size:11px;font-weight:700;padding:4px 14px;border-radius:999px;margin-bottom:14px;border:1px solid rgba(245,200,66,.4)}
+.hero h1{font-size:28px;font-weight:900;font-family:'Arial Black',Arial;line-height:1.2;margin-bottom:10px}
+.hero h1 span{color:#F5C842}
+.hero p{font-size:14px;color:rgba(255,255,255,.8);line-height:1.7;margin-bottom:24px;max-width:320px;margin-left:auto;margin-right:auto}
+.precio-wrap{background:rgba(255,255,255,.1);border-radius:16px;padding:16px 24px;display:inline-block;margin-bottom:8px}
+.precio{font-size:48px;font-weight:900;font-family:'Arial Black',Arial;color:#F5C842;line-height:1}
+.precio-sub{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
+
+/* ESTADO PREMIUM */
+.premium-activo{background:#fff;border-radius:16px;margin:16px;padding:20px;text-align:center;border:2px solid #F5C842;box-shadow:0 2px 12px rgba(245,200,66,.2)}
+.premium-activo-ico{font-size:40px;margin-bottom:8px}
+.premium-activo-titulo{font-size:16px;font-weight:900;color:#222;margin-bottom:4px}
+.premium-activo-sub{font-size:13px;color:#888}
+.premium-activo-fecha{font-size:12px;color:#F5C842;font-weight:700;margin-top:6px}
+
+/* BENEFICIOS */
+.sec{max-width:600px;margin:0 auto;padding:20px 16px}
+.sec-titulo{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#00B4B4;margin-bottom:14px}
+.beneficios{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.ben{background:#fff;border-radius:14px;padding:16px;display:flex;gap:14px;align-items:flex-start;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.ben-ico{font-size:24px;flex-shrink:0;width:40px;text-align:center}
+.ben-titulo{font-size:14px;font-weight:700;color:#222;margin-bottom:3px}
+.ben-desc{font-size:12px;color:#888;line-height:1.5}
+.ben-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;background:#F5C842;color:#1a1a2e;margin-top:5px}
+
+/* CTA */
+.cta-wrap{background:#fff;border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.cta-titulo{font-size:16px;font-weight:900;color:#222;margin-bottom:6px}
+.cta-sub{font-size:13px;color:#888;line-height:1.6;margin-bottom:16px}
+.btn-pagar{width:100%;padding:15px;background:#F5C842;color:#1a1a2e;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-pagar:hover{background:#e6b800}
+.btn-pagar:disabled{background:#ddd;color:#999;cursor:not-allowed}
+.btn-sec{width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer}
+.pronto-note{font-size:12px;color:#aaa;text-align:center;margin-top:8px;line-height:1.5}
+
+/* COMPARACION */
+.comparar{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.comparar-hdr{display:grid;grid-template-columns:1fr 1fr 1fr;background:#f8f8f8;padding:12px 16px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.comparar-hdr .col-prem{color:#764ba2}
+.comparar-row{display:grid;grid-template-columns:1fr 1fr 1fr;padding:12px 16px;border-top:1px solid #f5f5f5;font-size:13px;align-items:center}
+.comparar-row:nth-child(even){background:#fafafa}
+.col-feature{color:#555;font-weight:500}
+.col-check{text-align:center;font-size:16px}
+.col-prem-val{text-align:center;font-size:16px;color:#764ba2;font-weight:700}
+
+/* FAQ */
+.faq{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.faq-item{border-bottom:1px solid #f5f5f5;padding:14px 16px;cursor:pointer}
+.faq-item:last-child{border-bottom:none}
+.faq-q{font-size:13px;font-weight:700;color:#222;display:flex;justify-content:space-between;align-items:center}
+.faq-a{font-size:12px;color:#888;line-height:1.6;margin-top:8px;display:none}
+.faq-item.open .faq-a{display:block}
+.faq-item.open .faq-arr{transform:rotate(180deg)}
+.faq-arr{transition:transform .2s;font-style:normal;color:#aaa}
+
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">⭐ Plan Premium</div>
+  <h1>Lleva tu PetzID<br>al siguiente <span>nivel</span></h1>
+  <p>Accede a todas las funciones avanzadas de PetMi por menos de Q9 al mes.</p>
+  <div class="precio-wrap">
+    <div class="precio">Q100</div>
+    <div class="precio-sub">por año · un solo pago</div>
+  </div>
+</div>
+
+<div id="estadoWrap"></div>
+
+<div class="sec">
+
+  <div class="sec-titulo">Lo que incluye Premium</div>
+  <div class="beneficios">
+    <div class="ben">
+      <div class="ben-ico">🚨</div>
+      <div>
+        <div class="ben-titulo">Alertas de zona</div>
+        <div class="ben-desc">Recibe notificaciones cuando haya mascotas perdidas cerca de tu zona. Sé el primero en ayudar.</div>
+        <span class="ben-badge">Muy pronto</span>
+      </div>
+    </div>
+    <div class="ben">
+      <div class="ben-ico">💬</div>
+      <div>
+        <div class="ben-titulo">WhatsApp en tus avisos</div>
+        <div class="ben-desc">Los interesados en tus avisos pueden escribirte directo por WhatsApp. Más rápido, más efectivo.</div>
+        <span class="ben-badge">Muy pronto</span>
+      </div>
+    </div>
+    <div class="ben">
+      <div class="ben-ico">⭐</div>
+      <div>
+        <div class="ben-titulo">Perfil destacado</div>
+        <div class="ben-desc">Tu mascota aparece con badge Premium ⭐ en la galería y tiene mayor visibilidad en la comunidad.</div>
+      </div>
+    </div>
+    <div class="ben">
+      <div class="ben-ico">🎁</div>
+      <div>
+        <div class="ben-titulo">Descuentos exclusivos</div>
+        <div class="ben-desc">Accede a promociones especiales de veterinarias, pet shops y servicios afiliados a PetMi.</div>
+        <span class="ben-badge">Muy pronto</span>
+      </div>
+    </div>
+    <div class="ben">
+      <div class="ben-ico">📊</div>
+      <div>
+        <div class="ben-titulo">Estadísticas de tu perfil</div>
+        <div class="ben-desc">Ve cuántas personas visitaron el perfil de tu mascota, cuántos mensajes recibiste y más.</div>
+        <span class="ben-badge">Muy pronto</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARACION -->
+  <div class="sec-titulo">Gratis vs Premium</div>
+  <div class="comparar">
+    <div class="comparar-hdr">
+      <div>Función</div>
+      <div style="text-align:center">Gratis</div>
+      <div class="col-prem" style="text-align:center">Premium</div>
+    </div>
+    <div class="comparar-row"><div class="col-feature">Perfil digital</div><div class="col-check">✓</div><div class="col-prem-val">✓</div></div>
+    <div class="comparar-row"><div class="col-feature">Carnet PetzID</div><div class="col-check">✓</div><div class="col-prem-val">✓</div></div>
+    <div class="comparar-row"><div class="col-feature">Galería y amigos</div><div class="col-check">✓</div><div class="col-prem-val">✓</div></div>
+    <div class="comparar-row"><div class="col-feature">Avisos comunidad</div><div class="col-check">✓</div><div class="col-prem-val">✓</div></div>
+    <div class="comparar-row"><div class="col-feature">Badge Premium ⭐</div><div class="col-check">—</div><div class="col-prem-val">✓</div></div>
+    <div class="comparar-row"><div class="col-feature">WA en avisos</div><div class="col-check">—</div><div class="col-prem-val">✓</div></div>
+    <div class="comparar-row"><div class="col-feature">Alertas de zona</div><div class="col-check">—</div><div class="col-prem-val">✓</div></div>
+    <div class="comparar-row"><div class="col-feature">Descuentos partners</div><div class="col-check">—</div><div class="col-prem-val">✓</div></div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap" id="ctaWrap">
+    <div class="cta-titulo">Activa tu Premium ahora</div>
+    <div class="cta-sub">Un solo pago de Q100 por año. Sin renovación automática. Te contactamos por WhatsApp para completar el pago.</div>
+    <a href="https://app.recurrente.com/s/revista-petmi/o/petzid-premium" target="_blank" class="btn-pagar" style="text-decoration:none">
+      Activar Premium — Q100/año
+    </a>
+    <a href="/galeria.html" class="btn-sec" style="text-decoration:none;display:block;text-align:center">Volver a la galería</a>
+    <div class="pronto-note">Pago seguro procesado por Recurrente.<br>Tu Premium se activa automáticamente al confirmar el pago.</div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="sec-titulo">Preguntas frecuentes</div>
+  <div class="faq">
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">¿Cómo funciona el pago? <i class="faq-arr">▾</i></div>
+      <div class="faq-a">Nos escribes por WhatsApp, te enviamos un link de pago seguro por Q100. Una vez confirmado el pago, activamos tu Premium en menos de 24 horas.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">¿Cuánto dura el Premium? <i class="faq-arr">▾</i></div>
+      <div class="faq-a">Un año completo desde la fecha de activación. Sin renovación automática — te avisamos cuando esté por vencer.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">¿El Premium aplica a todas mis mascotas? <i class="faq-arr">▾</i></div>
+      <div class="faq-a">El Premium se activa por familia (email). Todas las mascotas registradas con tu correo obtienen los beneficios Premium.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">¿Puedo cancelar? <i class="faq-arr">▾</i></div>
+      <div class="faq-a">No hay renovación automática así que no necesitas cancelar. El Premium simplemente vence al año y decides si renovar.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var sessionEmail=localStorage.getItem('petzid_email')||'';
+var sessionDueno=localStorage.getItem('petzid_dueno')||'';
+
+if(sessionEmail){
+  verificarEstadoPremium();
+} else {
+  document.getElementById('estadoWrap').innerHTML=
+    '<div style="background:#fff;border-radius:16px;margin:16px;padding:20px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)">'+
+    '<div style="font-size:36px;margin-bottom:10px">🔐</div>'+
+    '<div style="font-size:15px;font-weight:700;color:#222;margin-bottom:6px">Ingresa para continuar</div>'+
+    '<div style="font-size:13px;color:#888;margin-bottom:16px">Necesitas estar logueado para activar Premium</div>'+
+    '<button onclick="petmiAbrirLogin()" style="padding:12px 28px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer">Ingresar</button>'+
+    '</div>';
+}
+
+function verificarEstadoPremium(){
+  fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(sessionEmail)+'&select=premium,premium_hasta&limit=1',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(rows){
+    if(rows&&rows.length&&rows[0].premium){
+      var hasta=rows[0].premium_hasta?new Date(rows[0].premium_hasta).toLocaleDateString('es-GT',{day:'2-digit',month:'long',year:'numeric'}):'';
+      document.getElementById('estadoWrap').innerHTML=
+        '<div class="premium-activo">'+
+        '<div class="premium-activo-ico">⭐</div>'+
+        '<div class="premium-activo-titulo">Ya eres Premium!</div>'+
+        '<div class="premium-activo-sub">Todos tus beneficios están activos</div>'+
+        (hasta?'<div class="premium-activo-fecha">Válido hasta: '+hasta+'</div>':'')+
+        '</div>';
+      // Hide CTA
+      var cta=document.getElementById('ctaWrap');
+      if(cta) cta.style.display='none';
+    }
+  }).catch(function(){});
+}
+
+
+
+function toggleFaq(el){
+  el.classList.toggle('open');
+}
+
+function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+</script>
+<script src="/header.js"></script>
+</body>
+</html>

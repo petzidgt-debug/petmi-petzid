@@ -11,6 +11,10 @@
     {
       "source": "/grupos/:id.html",
       "destination": "/grupo.html"
+    },
+    {
+      "source": "/webhook/premium",
+      "destination": "/api/webhook-premium"
     }
   ],
   "headers": [
