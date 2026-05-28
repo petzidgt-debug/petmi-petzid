@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Admin Premium — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+
+/* APP */
+.app-wrap{display:none;max-width:900px;margin:0 auto;padding:20px 16px 60px}
+.page-titulo{font-size:22px;font-weight:900;color:#222;margin-bottom:4px;font-family:'Arial Black',Arial}
+.page-sub{font-size:13px;color:#888;margin-bottom:24px}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:24px}
+.stat{background:#fff;border-radius:14px;padding:16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.stat-n{font-size:28px;font-weight:900;color:#00B4B4;font-family:'Arial Black',Arial}
+.stat-l{font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.stat.amarillo .stat-n{color:#F5C842}
+.stat.verde .stat-n{color:#2e7d32}
+.stat.rojo .stat-n{color:#c0392b}
+
+/* CARD */
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-titulo{font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#00B4B4;margin-bottom:16px}
+
+/* FORM ACTIVAR */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:10px}
+.form-input{width:100%;padding:10px 14px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;font-family:Arial,sans-serif}
+.form-input:focus{border-color:#00B4B4}
+.form-select{width:100%;padding:10px 14px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;background:#fff;font-family:Arial,sans-serif}
+.btn-activar{padding:10px 20px;background:#F5C842;color:#1a1a2e;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-desact{padding:10px 16px;background:#fff0f0;color:#c0392b;border:1px solid #fcc;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+.form-msg{font-size:13px;padding:10px 14px;border-radius:10px;margin-top:10px;display:none}
+.form-msg.ok{background:#e0f7f7;color:#007a7a}
+.form-msg.err{background:#fbeaf0;color:#c0392b}
+
+/* FILTROS */
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filtro-btn{padding:6px 16px;border:1.5px solid #eee;border-radius:999px;font-size:12px;font-weight:600;color:#888;background:#fff;cursor:pointer}
+.filtro-btn.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;color:#aaa;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #f5f5f5}
+td{padding:11px 12px;border-bottom:1px solid #f5f5f5;color:#333}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+
+/* BADGES */
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px}
+.badge-activo{background:#e0f7f7;color:#007a7a}
+.badge-vence{background:#FFF9E6;color:#856404}
+.badge-vencido{background:#fbeaf0;color:#c0392b}
+.badge-manual{background:#f0f0ee;color:#888}
+.badge-zigi{background:#e3f2fd;color:#1565c0}
+.badge-recurrente{background:#f3e8ff;color:#6a1b9a}
+.badge-cortesia{background:#f5f5f5;color:#aaa}
+
+/* ACCIONES */
+.btn-icon{background:none;border:1px solid #eee;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:12px;color:#888}
+.btn-icon:hover{background:#f5f5f5}
+.btn-renovar{color:#007a7a;border-color:#00B4B4}
+
+/* SPINNER */
+.spinner{width:32px;height:32px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:30px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* EMPTY */
+.empty{text-align:center;padding:32px;color:#aaa;font-size:13px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- APP -->
+<div class="app-wrap" id="appWrap" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <div class="page-titulo">⭐ Admin Premium</div>
+    <a href="/admin.html" style="font-size:12px;color:#00B4B4;font-weight:700;text-decoration:none">← Volver al Admin</a>
+  </div>
+  <div class="page-sub">Control de suscripciones y pagos Premium</div>
+
+  <!-- Stats -->
+  <div class="stats" id="statsWrap">
+    <div class="stat"><div class="stat-n" id="sActivos">—</div><div class="stat-l">Activos</div></div>
+    <div class="stat amarillo"><div class="stat-n" id="sVence">—</div><div class="stat-l">Vencen en 30d</div></div>
+    <div class="stat rojo"><div class="stat-n" id="sVencidos">—</div><div class="stat-l">Vencidos</div></div>
+    <div class="stat verde"><div class="stat-n" id="sTotal">—</div><div class="stat-l">Total cobrado</div></div>
+  </div>
+
+  <!-- Activar / Gestionar -->
+  <div class="card">
+    <div class="card-titulo">Activar o gestionar Premium</div>
+    <div class="form-grid">
+      <input type="email" class="form-input" id="fEmail" placeholder="Email del usuario">
+      <input type="text" class="form-input" id="fMonto" placeholder="Monto (Q100)">
+      <select class="form-select" id="fMetodo">
+        <option value="recurrente">Recurrente (automático)</option>
+        <option value="zigi">Zigi BI</option>
+        <option value="transferencia">Transferencia</option>
+        <option value="efectivo">Efectivo</option>
+        <option value="cortesia">Cortesía</option>
+      </select>
+      <input type="text" class="form-input" id="fRef" placeholder="Referencia de pago (opcional)">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-activar" onclick="activarPremium()">⭐ Activar 1 año</button>
+      <button class="btn-desact" onclick="desactivarPremium()">✗ Desactivar</button>
+      <button style="padding:10px 16px;background:#f0f0ee;color:#555;border:none;border-radius:10px;font-size:13px;cursor:pointer" onclick="buscarUsuario()">🔍 Buscar</button>
+    </div>
+    <div class="form-msg" id="formMsg"></div>
+    <div id="buscarResult" style="margin-top:10px"></div>
+  </div>
+
+  <!-- Lista -->
+  <div class="card">
+    <div class="card-titulo">Usuarios Premium</div>
+    <div class="filtros">
+      <button class="filtro-btn active" onclick="setFiltro('todos',this)">Todos</button>
+      <button class="filtro-btn" onclick="setFiltro('activo',this)">Activos</button>
+      <button class="filtro-btn" onclick="setFiltro('vence',this)">Vencen pronto</button>
+      <button class="filtro-btn" onclick="setFiltro('vencido',this)">Vencidos</button>
+      <button class="filtro-btn" onclick="setFiltro('cortesia',this)">Cortesía</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Inicio</th>
+            <th>Vence</th>
+            <th>Monto</th>
+            <th>Método</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tablaBody"><tr><td colspan="8"><div class="spinner"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var H={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+var todosLosDatos=[];
+var filtroActual='todos';
+
+function doLogin(){
+  // Auth check — redirect to admin if not logged in
+  if(localStorage.getItem('petmi_admin')!=='1'){
+    window.location.href='/admin.html';
+    return;
+  }
+  document.getElementById('appWrap').style.display='block';
+  cargarTodo();
+}
+
+function cargarTodo(){
+  fetch(SUPA_URL+'/rest/v1/mascotas?select=nombre,email,premium,premium_hasta,premium_metodo,premium_ref,premium_inicio&order=premium_hasta.desc.nullslast',{headers:H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    todosLosDatos=(rows||[]).filter(function(r){return r.premium||r.premium_hasta;});
+    renderStats();
+    renderTabla();
+  }).catch(function(){mostrarToast('Error al cargar datos');});
+}
+
+function renderStats(){
+  var hoy=new Date();
+  var en30=new Date();en30.setDate(en30.getDate()+30);
+  var activos=0,vence=0,vencidos=0,total=0;
+  todosLosDatos.forEach(function(r){
+    if(!r.premium_hasta){if(r.premium)activos++;return;}
+    var f=new Date(r.premium_hasta);
+    if(!r.premium){vencidos++;}
+    else if(f<hoy){vencidos++;} 
+    else if(f<=en30){vence++;activos++;}
+    else{activos++;}
+    if(r.premium_metodo!=='cortesia') total+=100;
+  });
+  document.getElementById('sActivos').textContent=activos;
+  document.getElementById('sVence').textContent=vence;
+  document.getElementById('sVencidos').textContent=vencidos;
+  document.getElementById('sTotal').textContent='Q'+total.toLocaleString();
+}
+
+function setFiltro(f,el){
+  filtroActual=f;
+  document.querySelectorAll('.filtro-btn').forEach(function(b){b.classList.remove('active');});
+  if(el)el.classList.add('active');
+  renderTabla();
+}
+
+function renderTabla(){
+  var hoy=new Date();
+  var en30=new Date();en30.setDate(en30.getDate()+30);
+  var lista=todosLosDatos.filter(function(r){
+    if(filtroActual==='todos') return true;
+    var f=r.premium_hasta?new Date(r.premium_hasta):null;
+    if(filtroActual==='activo') return r.premium&&f&&f>=hoy;
+    if(filtroActual==='vence') return r.premium&&f&&f>=hoy&&f<=en30;
+    if(filtroActual==='vencido') return !r.premium||(f&&f<hoy);
+    if(filtroActual==='cortesia') return r.premium_metodo==='cortesia';
+    return true;
+  });
+
+  if(!lista.length){
+    document.getElementById('tablaBody').innerHTML='<tr><td colspan="8"><div class="empty">No hay usuarios en este filtro</div></td></tr>';
+    return;
+  }
+
+  var html='';
+  lista.forEach(function(r){
+    var f=r.premium_hasta?new Date(r.premium_hasta):null;
+    var fi=r.premium_inicio?new Date(r.premium_inicio):null;
+    var hoyTs=hoy.getTime();
+    var estado='',badge='';
+    if(!r.premium||!f){estado='Inactivo';badge='badge-vencido';}
+    else if(f.getTime()<hoyTs){estado='Vencido';badge='badge-vencido';}
+    else if(f.getTime()<=new Date(hoyTs+30*86400000).getTime()){estado='Vence pronto';badge='badge-vence';}
+    else{estado='Activo';badge='badge-activo';}
+
+    var metBadge=r.premium_metodo==='zigi'?'badge-zigi':r.premium_metodo==='recurrente'?'badge-recurrente':r.premium_metodo==='cortesia'?'badge-cortesia':'badge-manual';
+    var metLabel=(r.premium_metodo||'manual');
+
+    html+='<tr>';
+    html+='<td style="font-weight:600">'+(r.nombre||'—')+'</td>';
+    html+='<td style="color:#888;font-size:12px">'+r.email+'</td>';
+    html+='<td style="color:#888;font-size:12px">'+(fi?fi.toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}):'—')+'</td>';
+    html+='<td style="color:#888;font-size:12px">'+(f?f.toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}):'—')+'</td>';
+    html+='<td style="font-weight:600;color:#2e7d32">'+(r.premium_metodo==='cortesia'?'Q0':'Q100')+'</td>';
+    html+='<td><span class="badge '+metBadge+'">'+metLabel+'</span></td>';
+    html+='<td><span class="badge '+badge+'">'+estado+'</span></td>';
+    html+='<td style="display:flex;gap:6px">';
+    html+='<button class="btn-icon btn-renovar" data-email="'+r.email+'" onclick="renovarDesdeTabla(this)">↻</button>';
+    html+='<button class="btn-icon" style="color:#c0392b;border-color:#fcc" data-email="'+r.email+'" onclick="desactivarDesdeTabla(this)">✗</button>';
+    html+='</td>';
+    html+='</tr>';
+  });
+  document.getElementById('tablaBody').innerHTML=html;
+}
+
+function renovarDesdeTabla(btn){
+  document.getElementById('fEmail').value=btn.getAttribute('data-email');
+  window.scrollTo({top:0,behavior:'smooth'});
+  mostrarToast('Email cargado — toca Activar 1 año');
+}
+
+function desactivarDesdeTabla(btn){
+  document.getElementById('fEmail').value=btn.getAttribute('data-email');
+  desactivarPremium();
+}
+
+function activarPremium(){
+  var email=document.getElementById('fEmail').value.trim().toLowerCase();
+  var metodo=document.getElementById('fMetodo').value;
+  var ref=document.getElementById('fRef').value.trim();
+  if(!email){mostrarMsg('Ingresa un email','err');return;}
+  var hasta=new Date();hasta.setFullYear(hasta.getFullYear()+1);
+  var inicio=new Date();
+  fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email),{
+    method:'PATCH',
+    headers:Object.assign({},H,{'Content-Type':'application/json','Prefer':'return=minimal'}),
+    body:JSON.stringify({premium:true,premium_hasta:hasta.toISOString(),premium_inicio:inicio.toISOString(),premium_metodo:metodo,premium_ref:ref||null})
+  }).then(function(r){
+    if(r.ok){
+      mostrarMsg('Premium activado para '+email+' hasta '+hasta.toLocaleDateString('es-GT'),'ok');
+      document.getElementById('fEmail').value='';
+      document.getElementById('fRef').value='';
+      cargarTodo();
+    } else {mostrarMsg('Error al activar','err');}
+  });
+}
+
+function desactivarPremium(){
+  var email=document.getElementById('fEmail').value.trim().toLowerCase();
+  if(!email){mostrarMsg('Ingresa un email','err');return;}
+  if(!confirm('Desactivar Premium de '+email+'?'))return;
+  fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email),{
+    method:'PATCH',
+    headers:Object.assign({},H,{'Content-Type':'application/json','Prefer':'return=minimal'}),
+    body:JSON.stringify({premium:false,premium_hasta:null})
+  }).then(function(r){
+    if(r.ok){mostrarMsg('Premium desactivado para '+email,'ok');cargarTodo();}
+    else mostrarMsg('Error','err');
+  });
+}
+
+function buscarUsuario(){
+  var email=document.getElementById('fEmail').value.trim().toLowerCase();
+  if(!email){mostrarMsg('Ingresa un email para buscar','err');return;}
+  fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email)+'&select=nombre,email,premium,premium_hasta,premium_metodo&limit=5',{headers:H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    var el=document.getElementById('buscarResult');
+    if(!rows||!rows.length){el.innerHTML='<div style="font-size:13px;color:#c0392b;padding:8px">No se encontro ese email</div>';return;}
+    var html='<div style="background:#f8f8f8;border-radius:10px;padding:12px;font-size:13px">';
+    rows.forEach(function(r){
+      var f=r.premium_hasta?new Date(r.premium_hasta).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}):'—';
+      html+='<div style="margin-bottom:4px"><strong>'+r.nombre+'</strong> · '+r.email+'</div>';
+      html+='<div style="color:#888">Premium: '+(r.premium?'Sí ⭐':'No')+' · Vence: '+f+' · Método: '+(r.premium_metodo||'—')+'</div>';
+    });
+    html+='</div>';
+    el.innerHTML=html;
+  });
+}
+
+function mostrarMsg(txt,tipo){
+  var el=document.getElementById('formMsg');
+  el.textContent=txt;el.className='form-msg '+tipo;el.style.display='block';
+  setTimeout(function(){el.style.display='none';},4000);
+}
+
+doLogin();
+function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+</script>
+</body>
+</html>
