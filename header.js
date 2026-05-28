@@ -74,6 +74,7 @@
             '<a href="/amigos.html" class="h-drop-item">🐾 Mis amigos</a>' +
             '<a href="/mis-avisos.html" class="h-drop-item">📢 Mis avisos</a>' +
             '<a href="/mis-eventos.html" class="h-drop-item">🎪 Mis eventos</a>' +
+            '<a href="/premium.html" class="h-drop-item">⭐ Premium</a>' +
             '<a href="/reglas.html" class="h-drop-item">📋 Reglas</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
@@ -90,6 +91,7 @@
       '<a href="/lugares.html">📍 Lugares</a>' +
       '<a href="/galeria.html">Amigos PetMi</a>' +
       '<a href="/promos.html" style="color:#764ba2;font-weight:700">🎁 Promos</a>' +
+      '<a href="/premium.html">⭐ Premium</a>' +
       '<a href="/reglas.html">📋 Reglas de convivencia</a>' +
       (sessionEmail
         ? '<span class="h-mob-sec">Mi cuenta</span>' +
