@@ -155,7 +155,9 @@ tr:hover td{background:#fafafa}
 <script>
 var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var SUPA_SERVICE='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
 var H={'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+var H_WRITE={'apikey':SUPA_SERVICE,'Authorization':'Bearer '+SUPA_SERVICE,'Content-Type':'application/json','Prefer':'return=minimal'};
 var todosLosDatos=[];
 var filtroActual='todos';
 
@@ -274,7 +276,7 @@ function activarPremium(){
   var inicio=new Date();
   fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email),{
     method:'PATCH',
-    headers:Object.assign({},H,{'Content-Type':'application/json','Prefer':'return=minimal'}),
+    headers:H_WRITE,
     body:JSON.stringify({premium:true,premium_hasta:hasta.toISOString(),premium_inicio:inicio.toISOString(),premium_metodo:metodo,premium_ref:ref||null})
   }).then(function(r){
     if(r.ok){
@@ -292,7 +294,7 @@ function desactivarPremium(){
   if(!confirm('Desactivar Premium de '+email+'?'))return;
   fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email),{
     method:'PATCH',
-    headers:Object.assign({},H,{'Content-Type':'application/json','Prefer':'return=minimal'}),
+    headers:H_WRITE,
     body:JSON.stringify({premium:false,premium_hasta:null})
   }).then(function(r){
     if(r.ok){mostrarMsg('Premium desactivado para '+email,'ok');cargarTodo();}
