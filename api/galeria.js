@@ -171,6 +171,21 @@ export default async function handler(req, res) {
     }
 
     // ── responderSolicitud ────────────────────────────────────
+    // ── updateCarnetLayout ────────────────────────────────────
+    if (action === 'updateCarnetLayout' && req.method === 'POST') {
+      const { uid, layout } = req.body;
+      if (!uid || !layout) return res.status(200).json({ ok: false });
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid),
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ carnet_layout: layout })
+        }
+      );
+      return res.status(200).json({ ok: r.ok });
+    }
+
     // ── eliminarAmistad ───────────────────────────────────────
     if (action === 'eliminarAmistad' && req.method === 'POST') {
       const { id } = req.body;
