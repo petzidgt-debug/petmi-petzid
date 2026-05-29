@@ -35,6 +35,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .plan-body{padding:14px 20px}
 .feature{display:flex;align-items:flex-start;gap:10px;margin-bottom:9px;font-size:13px;color:#444;line-height:1.5}
 .check{color:#00B4B4;flex-shrink:0;font-weight:700;margin-top:1px}
+.feat-sub{font-size:11px;color:#aaa;margin-top:2px}
 .soon{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;background:#FFF9E6;color:#856404;margin-left:4px}
 .plan-footer{padding:14px 20px;background:#fafafa;border-top:1px solid #f5f5f5}
 .btn-plan{width:100%;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;background:#00B4B4;color:#fff;text-decoration:none;display:block;text-align:center}
@@ -98,11 +99,13 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <div class="plan-precio-sub">por año · pago único · sin renovación automática</div>
     </div>
     <div class="plan-body">
-      <div class="feature"><span class="check">✓</span><div>Badge Premium ⭐ en la galería y mayor visibilidad</div></div>
-      <div class="feature"><span class="check">✓</span><div>WhatsApp directo en tus avisos <span class="soon">Muy pronto</span></div></div>
-      <div class="feature"><span class="check">✓</span><div>Alertas de mascotas perdidas en tu zona <span class="soon">Muy pronto</span></div></div>
+      <div class="feature"><span class="check">✓</span><div>3 diseños de carnet PetzID para elegir<div class="feat-sub">Personaliza el look del carnet de tu mascota</div></div></div>
+      <div class="feature"><span class="check">✓</span><div>Badge Premium ⭐ en la galería — mayor visibilidad</div></div>
+      <div class="feature"><span class="check">✓</span><div>Perfil público con URL única y código QR descargable<div class="feat-sub">Cualquiera puede ver el perfil de tu mascota</div></div></div>
+      <div class="feature"><span class="check">✓</span><div>Opción de ventas en avisos</div></div>
+      <div class="feature"><span class="check">✓</span><div>Descuento 10% en tienda PetMi</div></div>
       <div class="feature"><span class="check">✓</span><div>Descuentos exclusivos con partners afiliados <span class="soon">Muy pronto</span></div></div>
-      <div class="feature"><span class="check">✓</span><div>Estadísticas de visitas a tu perfil <span class="soon">Muy pronto</span></div></div>
+      <div class="feature"><span class="check">✓</span><div>Alertas por email de mascotas perdidas en tu zona <span class="soon">Muy pronto</span></div></div>
     </div>
     <div class="plan-footer" id="planFooter">
       <a href="https://app.recurrente.com/s/revista-petmi/o/petzid-premium" target="_blank" class="btn-plan">Activar Premium — Q100/año</a>
@@ -137,29 +140,16 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     </div>
   </div>
 
-  <div class="extra">
-    <div class="extra-ico">📱</div>
-    <div class="extra-info">
-      <div class="extra-nombre">Código QR impreso</div>
-      <div class="extra-desc">Vinculado al perfil online de tu mascota. Cualquiera puede escanear y ver todos sus datos.</div>
-      <button class="btn-extra btn-teal" onclick="solicitarExtra('Codigo QR impreso','Q25')">Solicitar por WhatsApp</button>
-    </div>
-    <div class="precio-wrap">
-      <div class="extra-precio">Q25</div>
-    </div>
-  </div>
-
   <div class="extra pack">
     <div class="extra-ico">🎁</div>
     <div class="extra-info">
       <div class="extra-nombre">Pack completo</div>
-      <div class="extra-desc">Tarjeta PVC + Foto retocada + Código QR. Todo incluido con descuento.</div>
-      <button class="btn-extra btn-purple" onclick="solicitarExtra('Pack completo (Tarjeta + Foto + QR)','Q80')">Solicitar por WhatsApp</button>
+      <div class="extra-desc">Plan Premium anual + Foto retocada + Tarjeta PVC. Todo incluido.</div>
+      <button class="btn-extra btn-purple" onclick="solicitarExtra('Pack completo (Premium + Foto retocada + Tarjeta PVC)','Q150')">Solicitar por WhatsApp</button>
     </div>
     <div class="precio-wrap">
-      <div class="extra-precio purple">Q80</div>
-      <div class="ahorro">Ahorras Q20</div>
-      <span class="precio-tachado">Q100</span>
+      <div class="extra-precio purple">Q150</div>
+      <div class="ahorro">Todo incluido</div>
     </div>
   </div>
 

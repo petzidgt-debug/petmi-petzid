@@ -214,6 +214,7 @@ function renderForm(){
     +'<input type="date" id="eFechaAngel" value="'+(m.fechaAngel?m.fechaAngel.substring(0,10):'')+'" style="width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:15px;outline:none">'
     +'</div></div>'
     +'<button class="btn-guardar" id="btnGuardar" onclick="guardar()">💾 Guardar cambios</button>'
+    +(mascota.premium ? '<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Diseno del carnet ⭐</div><div style="display:flex;gap:6px"><button id="btnLayout_actual" onclick="setLayout(\'actual\')" style="flex:1;padding:8px;border:2px solid #00B4B4;border-radius:10px;font-size:11px;font-weight:700;background:#e0f7f7;color:#007a7a;cursor:pointer">Actual</button><button id="btnLayout_b" onclick="setLayout(\'b\')" style="flex:1;padding:8px;border:1.5px solid #eee;border-radius:10px;font-size:11px;font-weight:700;background:#fff;color:#555;cursor:pointer">Layout B</button><button id="btnLayout_d" onclick="setLayout(\'d\')" style="flex:1;padding:8px;border:1.5px solid #eee;border-radius:10px;font-size:11px;font-weight:700;background:#fff;color:#555;cursor:pointer">Layout D</button></div></div>' : '')
     +'<button onclick="descargarID()" style="width:100%;padding:13px;background:#1a1a2e;color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px" id="btnDL">'
     +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
     +'Descargar mi PetzID</button>'
@@ -331,6 +332,30 @@ function onAngelitoChange(){
 }
 function mostrarError(msg){var el=document.getElementById('errorBox');if(el){el.textContent=msg;el.style.display='block';}}
 function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+
+var carnetLayout = localStorage.getItem('petzid_carnet_layout') || 'actual';
+
+function setLayout(l) {
+  carnetLayout = l;
+  localStorage.setItem('petzid_carnet_layout', l);
+  ['actual','b','d'].forEach(function(t) {
+    var b = document.getElementById('btnLayout_'+t);
+    if (!b) return;
+    if (t === l) {
+      b.style.border = '2px solid #00B4B4';
+      b.style.background = '#e0f7f7';
+      b.style.color = '#007a7a';
+    } else {
+      b.style.border = '1.5px solid #eee';
+      b.style.background = '#fff';
+      b.style.color = '#555';
+    }
+  });
+  fetch('/api/galeria?action=updateCarnetLayout', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({uid: mascota ? mascota.uid : '', layout: l})
+  }).catch(function(){});
+}
 
 async function descargarID(){
   if(!mascota) return;
