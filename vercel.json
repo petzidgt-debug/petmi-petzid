@@ -15,6 +15,10 @@
     {
       "source": "/webhook/premium",
       "destination": "/api/webhook-premium"
+    },
+    {
+      "source": "/p/:uid",
+      "destination": "/p.html"
     }
   ],
   "headers": [
