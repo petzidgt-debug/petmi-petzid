@@ -90,12 +90,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <p style="color:#888;font-size:14px">Cargando...</p>
   </div>
 </div>
-<div id="idsPremiumBtn" style="display:none;max-width:600px;margin:0 auto;padding:0 16px 16px">
-  <button id="btnAbrirIDsPremium" style="width:100%;padding:13px;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer">
-    Disenos Premium ID
-  </button>
-</div>
-
 
 <!-- LOGIN MODAL -->
 <div class="login-overlay" id="loginOverlay">
@@ -524,6 +518,15 @@ document.getElementById('loginEmail').addEventListener('keydown', function(e){
   </div>
 </div>
 <script src="/header.js"></script>
+
+<!-- BOTON FIJO FOOTER IDs PREMIUM -->
+<div id="idsPremiumBtn" style="display:none;position:fixed;bottom:72px;left:0;right:0;z-index:60;pointer-events:none">
+  <div style="max-width:600px;margin:0 auto;padding:0 16px">
+    <button id="btnAbrirIDsPremium" style="width:100%;padding:13px;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(118,75,162,.4);pointer-events:all">
+      Disenos Premium ID
+    </button>
+  </div>
+</div>
 
 <!-- MODAL IDs PREMIUM -->
 <div id="modalIDsPremium" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:400;display:none;align-items:flex-end;justify-content:center">
