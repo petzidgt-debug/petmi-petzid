@@ -116,15 +116,20 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <!-- Extras físicos -->
   <div class="sec-titulo">Extras físicos — para cualquier dueño</div>
 
-  <div class="extra">
+  <div class="extra" id="extraTarjeta">
     <div class="extra-ico">💳</div>
     <div class="extra-info">
-      <div class="extra-nombre">Tarjeta PVC</div>
-      <div class="extra-desc">Formato CR80 — igual a una tarjeta de crédito. Impermeable y de alta durabilidad. Con foto de tu mascota.</div>
-      <button class="btn-extra btn-teal" onclick="solicitarExtra('Tarjeta PVC','Q50')">Solicitar por WhatsApp</button>
+      <div class="extra-nombre">Tarjeta PVC individual</div>
+      <div class="extra-desc">Formato CR80 — igual a una tarjeta de crédito. Impermeable y de alta durabilidad.</div>
+      <div id="tarjetaPrecioDesc" style="font-size:11px;margin-top:4px;display:none;color:#2e7d32;font-weight:700">✓ Precio Premium activo</div>
+      <button class="btn-extra btn-teal" id="btnSolicitarTarjeta" onclick="solicitarExtra('Tarjeta PVC individual',esPremiumActivo?'Q35':'Q50')">Solicitar por WhatsApp</button>
     </div>
     <div class="precio-wrap">
-      <div class="extra-precio">Q50</div>
+      <div id="tarjetaPrecioNormal" class="extra-precio">Q50</div>
+      <div id="tarjetaPrecioPromо" style="display:none">
+        <div class="extra-precio" style="color:#2e7d32">Q35</div>
+        <span class="precio-tachado">Q50</span>
+      </div>
     </div>
   </div>
 
@@ -155,7 +160,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
   <div class="nota">
     Los extras se coordinan por WhatsApp.<br>
-    El equipo PetMi te contacta para los detalles y envío. 🐾
+    El equipo PetMi te contacta para los detalles y envío. 🐾<br>
+    <span style="color:#2e7d32;font-weight:700">Con Plan Premium: tarjeta PVC a Q35 (precio regular Q50)</span>
   </div>
 
   <!-- FAQ -->
@@ -193,6 +199,7 @@ var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 var sessionEmail=localStorage.getItem('petzid_email')||'';
 var sessionDueno=localStorage.getItem('petzid_dueno')||'';
 var WA='50237673927';
+var esPremiumActivo=false;
 
 if(sessionEmail) verificarPremium();
 
@@ -214,6 +221,14 @@ function verificarPremium(){
         '</div>';
       var footer=document.getElementById('planFooter');
       if(footer) footer.style.display='none';
+      // Show premium tarjeta pricing
+      esPremiumActivo = true;
+      var pNormal=document.getElementById('tarjetaPrecioNormal');
+      var pPromo=document.getElementById('tarjetaPrecioPromо');
+      var pDesc=document.getElementById('tarjetaPrecioDesc');
+      if(pNormal) pNormal.style.display='none';
+      if(pPromo) pPromo.style.display='block';
+      if(pDesc) pDesc.style.display='block';
     }
   }).catch(function(){});
 }
