@@ -297,7 +297,7 @@ function renderCard(m){
     ? '<img src="'+m.foto+'" style="'+fotoStyle+'" onerror="this.style.display=\'none\'">'
     : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:'+(esPerdida?'#ffebee':'#e0f7f7')+'">'+emoji+'</div>';
 
-  var esPremium = m.premium === true;
+  var esPremium = m.premium === true || m.premium === 1 || m.premium === 'true';
   var cardClass = 'mascota-card' + (esAngel?' angelito':'') + (esPerdida?' perdida':'');
   var html = '<div class="'+cardClass+'">';
   html += '<div class="card-foto" style="position:relative">'+fotoHTML;
@@ -331,6 +331,27 @@ function renderCard(m){
   html += '</div>';
   html += '</div></div>';
   return html;
+}
+
+function renderBotonFamiliar(){
+  var tienePremium = misMascotas && misMascotas.some(function(m){ return m.premium === true || m.premium === 1; });
+  var total = misMascotas ? misMascotas.filter(function(m){ return !m.angelito; }).length : 0;
+  var el = document.getElementById('btnFamiliarWrap');
+  if(!el) return;
+  if(!tienePremium){
+    el.innerHTML = '<button onclick="window.location.href=this.dataset.href" data-href="/premium.html" style="width:100%;padding:12px;background:#f8f8f8;color:#aaa;border:1.5px solid #eee;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">🔒 Carnet Familiar — Solo Premium</button>';
+  } else if(total < 2){
+    el.innerHTML = '<button style="width:100%;padding:12px;background:#f8f8f8;color:#aaa;border:1.5px solid #eee;border-radius:12px;font-size:13px;cursor:pointer" disabled>🏠 Carnet Familiar — necesitas 2+ mascotas</button>';
+  } else {
+    el.innerHTML = '<button onclick="abrirIDFamiliar()" style="width:100%;padding:13px;background:linear-gradient(135deg,#00B4B4,#007a7a);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><span>🏠</span> Descargar Carnet Familiar</button>';
+  }
+}
+
+function abrirIDFamiliar(){
+  mostrarToast('Generando carnet familiar... ⏳');
+  // Generate family carnet canvas
+  var activas = misMascotas.filter(function(m){ return !m.angelito; }).slice(0,4);
+  descargarIDFamiliar(activas);
 }
 
 function marcarAparecioFamilia(actId, nombre){
