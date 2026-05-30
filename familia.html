@@ -531,318 +531,377 @@ document.getElementById('loginEmail').addEventListener('keydown', function(e){
 <!-- MODAL IDs PREMIUM -->
 <div id="modalIDsPremium" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:400;display:none;align-items:flex-end;justify-content:center">
   <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto">
-    <div style="padding:16px 16px 0">
-      <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px"></div>
-    </div>
 
     <!-- PASO 1: Tipo -->
-    <div id="paso1" style="padding:0 16px 24px">
+    <div id="ipPaso1" style="padding:20px 16px 24px">
+      <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px"></div>
       <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:4px">IDs Premium</div>
       <div style="font-size:13px;color:#888;margin-bottom:20px">Elige el tipo de carnet a descargar</div>
-      <div style="display:flex;gap:10px;margin-bottom:12px">
-        <div id="tipoIndividual" style="flex:1;border:2px solid #00B4B4;background:#e0f7f7;border-radius:14px;padding:20px 12px;cursor:pointer;text-align:center">
-          <div style="font-size:28px;margin-bottom:8px">🐾</div>
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <div id="ipTipoInd" style="flex:1;border:2px solid #00B4B4;background:#e0f7f7;border-radius:14px;padding:20px 12px;cursor:pointer;text-align:center">
+          <div style="font-size:28px;margin-bottom:8px">&#128062;</div>
           <div style="font-size:14px;font-weight:700;color:#222">Individual</div>
           <div style="font-size:11px;color:#888;margin-top:4px">Un carnet por mascota</div>
         </div>
-        <div id="tipoFamiliar" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:14px;padding:20px 12px;cursor:pointer;text-align:center">
-          <div style="font-size:28px;margin-bottom:8px">🏠</div>
+        <div id="ipTipoFam" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:14px;padding:20px 12px;cursor:pointer;text-align:center">
+          <div style="font-size:28px;margin-bottom:8px">&#127968;</div>
           <div style="font-size:14px;font-weight:700;color:#222">Familiar</div>
           <div style="font-size:11px;color:#888;margin-top:4px">Hasta 4 mascotas</div>
         </div>
       </div>
-      <button id="btnPaso1Siguiente" style="width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Siguiente</button>
-      <button id="btnCerrarModal" style="width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button>
+      <button id="ipBtnSig1" style="width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Siguiente</button>
+      <button id="ipBtnCerrar" style="width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button>
     </div>
 
-    <!-- PASO 2a: Elegir mascota (individual) -->
-    <div id="paso2a" style="display:none;padding:0 16px 24px">
+    <!-- PASO 2: Seleccionar mascota -->
+    <div id="ipPaso2" style="display:none;padding:20px 16px 24px">
+      <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px"></div>
       <div style="font-size:15px;font-weight:900;color:#222;margin-bottom:4px">Selecciona la mascota</div>
-      <div style="font-size:13px;color:#888;margin-bottom:16px">Elige para cual descargar el carnet</div>
-      <div id="listaMascotas" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
-      <button id="btnPaso2aAtras" style="width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Atras</button>
+      <div style="font-size:13px;color:#888;margin-bottom:16px">Toca para elegir y ver el diseno</div>
+      <div id="ipListaMascotas" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+      <button id="ipBtnAtras2" style="width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Atras</button>
     </div>
 
-    <!-- PASO 3: Elegir layout + preview + descargar -->
-    <div id="paso3" style="display:none;padding:0 16px 24px">
-      <div style="font-size:15px;font-weight:900;color:#222;margin-bottom:2px" id="paso3Titulo">Diseno del carnet</div>
-      <div style="font-size:13px;color:#888;margin-bottom:14px">Elige el estilo y descarga</div>
-      <div style="display:flex;gap:8px;margin-bottom:14px">
-        <div id="lOpt_actual" data-layout="actual" style="flex:1;border:2px solid #00B4B4;background:#e0f7f7;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center">
-          <div style="font-size:18px;margin-bottom:4px">🌙</div>
+    <!-- PASO 3: Layout + Preview + Descarga -->
+    <div id="ipPaso3" style="display:none;padding:20px 16px 24px">
+      <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px"></div>
+      <div id="ipPaso3Titulo" style="font-size:15px;font-weight:900;color:#222;margin-bottom:4px">Diseno del carnet</div>
+      <div style="font-size:13px;color:#888;margin-bottom:14px">Elige el estilo</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px" id="ipLayoutBtns">
+        <div id="ipL_actual" style="flex:1;border:2px solid #00B4B4;background:#e0f7f7;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">&#127769;</div>
           <div style="font-size:11px;font-weight:700;color:#333">Actual</div>
         </div>
-        <div id="lOpt_b" data-layout="b" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center">
-          <div style="font-size:18px;margin-bottom:4px">🔵</div>
+        <div id="ipL_b" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">&#128309;</div>
           <div style="font-size:11px;font-weight:700;color:#333">Layout B</div>
         </div>
-        <div id="lOpt_d" data-layout="d" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center">
-          <div style="font-size:18px;margin-bottom:4px">🌑</div>
+        <div id="ipL_d" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">&#127761;</div>
           <div style="font-size:11px;font-weight:700;color:#333">Layout D</div>
         </div>
       </div>
       <div style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Vista previa</div>
-      <canvas id="previewCanvas" style="width:100%;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.12);display:block;margin-bottom:16px"></canvas>
-      <button id="btnDescargar" style="width:100%;padding:13px;background:#1a1a2e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Descargar carnet</button>
-      <button id="btnPaso3Atras" style="width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Atras</button>
+      <canvas id="ipCanvas" style="width:100%;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.12);display:block;margin-bottom:16px"></canvas>
+      <button id="ipBtnDescargar" style="width:100%;padding:13px;background:#1a1a2e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Descargar carnet</button>
+      <button id="ipBtnAtras3" style="width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Atras</button>
     </div>
+
   </div>
 </div>
 
-<div id="toastFam" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap"></div>
+<div id="ipToast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap"></div>
 
 <script>
-(function(){
-  // ── State ──────────────────────────────────────────────
-  var tipoCurrent  = 'individual'; // 'individual' | 'familiar'
-  var layoutCurrent = 'actual';
-  var mascotaSeleccionada = null; // mascota object for individual
+// ── IDs Premium Modal ─────────────────────────────────────────
+var IP = {
+  tipo: 'individual',
+  layout: 'actual',
+  mascota: null,
 
-  // ── Open / Close ───────────────────────────────────────
-  // Event delegation — btnAbrirIDsPremium se agrega dinámicamente
-  document.addEventListener('click', function(e){
-    if(e.target && e.target.id === 'btnAbrirIDsPremium'){
-      irPaso(1);
-      document.getElementById('modalIDsPremium').style.display = 'flex';
-    }
-    if(e.target && (e.target.id === 'btnCerrarModal' || e.target === document.getElementById('modalIDsPremium'))){
-      cerrar();
-    }
-  });
+  toast: function(msg){
+    var el=document.getElementById('ipToast');
+    if(!el)return;
+    el.textContent=msg;el.style.opacity='1';
+    setTimeout(function(){el.style.opacity='0';},2500);
+  },
 
-  function cerrar(){
-    document.getElementById('modalIDsPremium').style.display = 'none';
-  }
+  show: function(){
+    IP.irPaso(1);
+    document.getElementById('modalIDsPremium').style.display='flex';
+  },
 
-  // ── Paso navigation ────────────────────────────────────
-  function irPaso(n){
-    document.getElementById('paso1').style.display  = n===1?'block':'none';
-    document.getElementById('paso2a').style.display = n===2?'block':'none';
-    document.getElementById('paso3').style.display  = n===3?'block':'none';
-  }
+  hide: function(){
+    document.getElementById('modalIDsPremium').style.display='none';
+  },
 
-  // ── Paso 1: tipo selector ──────────────────────────────
-  document.getElementById('tipoIndividual').addEventListener('click', function(){
-    tipoCurrent = 'individual';
-    this.style.border='2px solid #00B4B4'; this.style.background='#e0f7f7';
-    document.getElementById('tipoFamiliar').style.border='1.5px solid #eee'; document.getElementById('tipoFamiliar').style.background='#fff';
-  });
-  document.getElementById('tipoFamiliar').addEventListener('click', function(){
-    tipoCurrent = 'familiar';
-    this.style.border='2px solid #764ba2'; this.style.background='#f3e8ff';
-    document.getElementById('tipoIndividual').style.border='1.5px solid #eee'; document.getElementById('tipoIndividual').style.background='#fff';
-  });
+  irPaso: function(n){
+    document.getElementById('ipPaso1').style.display = n===1 ? 'block' : 'none';
+    document.getElementById('ipPaso2').style.display = n===2 ? 'block' : 'none';
+    document.getElementById('ipPaso3').style.display = n===3 ? 'block' : 'none';
+  },
 
-  document.getElementById('btnPaso1Siguiente').addEventListener('click', function(){
-    if(tipoCurrent === 'individual'){
-      renderListaMascotas();
-      irPaso(2);
+  setTipo: function(t){
+    IP.tipo = t;
+    var ind = document.getElementById('ipTipoInd');
+    var fam = document.getElementById('ipTipoFam');
+    if(t === 'individual'){
+      ind.style.border='2px solid #00B4B4'; ind.style.background='#e0f7f7';
+      fam.style.border='1.5px solid #eee'; fam.style.background='#fff';
     } else {
-      // Familiar — ir directo a diseño con todas las mascotas
-      mascotaSeleccionada = null;
-      document.getElementById('paso3Titulo').textContent = 'Diseno — Carnet Familiar';
-      selectLayout('actual');
-      irPaso(3);
+      fam.style.border='2px solid #764ba2'; fam.style.background='#f3e8ff';
+      ind.style.border='1.5px solid #eee'; ind.style.background='#fff';
     }
-  });
+  },
 
-  // ── Paso 2a: seleccionar mascota ───────────────────────
-  function renderListaMascotas(){
-    var lista = document.getElementById('listaMascotas');
+  renderMascotas: function(){
+    var lista = document.getElementById('ipListaMascotas');
     lista.innerHTML = '';
-    var activas = window.misMascotas ? misMascotas.filter(function(m){ return !m.angelito; }) : [];
+    var activas = (window.misMascotas||[]).filter(function(m){ return !m.angelito && String(m.angelito).toLowerCase()!=='si'; });
+    if(!activas.length){
+      lista.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:13px">No hay mascotas activas</div>';
+      return;
+    }
     activas.forEach(function(m){
       var item = document.createElement('div');
-      item.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f8f8f8;border-radius:12px;cursor:pointer;border:2px solid transparent';
-      item.innerHTML = '<div style="width:44px;height:44px;border-radius:10px;background:#e0f7f7;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px">'
-        + (m.foto && m.foto.indexOf('http')>=0 ? '<img src="'+m.foto+'" style="width:100%;height:100%;object-fit:cover">' : '🐾')
-        + '</div>'
+      item.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f8f8f8;border-radius:12px;cursor:pointer;border:2px solid transparent;transition:all .15s';
+      var fotoHtml = m.foto && m.foto.indexOf('http')>=0
+        ? '<img src="'+m.foto+'" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0">'
+        : '<div style="width:44px;height:44px;border-radius:10px;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">&#128062;</div>';
+      var premBadge = (m.premium===true||m.premium===1) ? '<span style="font-size:9px;background:#F5C842;color:#1a1a2e;padding:2px 7px;border-radius:99px;font-weight:700">Premium</span>' : '';
+      item.innerHTML = fotoHtml
         + '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:#222">'+m.nombre+'</div>'
-        + '<div style="font-size:11px;color:#aaa">'+( m.raza||m.especie||'')+'</div></div>'
-        + (m.premium===true||m.premium===1 ? '<span style="font-size:10px;background:#F5C842;color:#1a1a2e;padding:2px 8px;border-radius:99px;font-weight:700">Premium</span>' : '');
+        + '<div style="font-size:11px;color:#aaa">'+(m.raza||m.especie||'')+'</div></div>'
+        + premBadge;
       item.addEventListener('click', function(){
-        // Deselect all
-        lista.querySelectorAll('div').forEach(function(d){ d.style.border='2px solid transparent';d.style.background='#f8f8f8'; });
+        lista.querySelectorAll('div[style*="cursor:pointer"]').forEach(function(d){
+          d.style.border='2px solid transparent'; d.style.background='#f8f8f8';
+        });
         item.style.border='2px solid #00B4B4'; item.style.background='#e0f7f7';
-        mascotaSeleccionada = m;
-        // Go to paso 3
-        document.getElementById('paso3Titulo').textContent = 'Diseno — '+m.nombre;
-        var savedLayout = localStorage.getItem('carnet_layout_'+m.uid)||'actual';
-        selectLayout(savedLayout);
-        irPaso(3);
+        IP.mascota = m;
+        document.getElementById('ipPaso3Titulo').textContent = 'Diseno — '+m.nombre;
+        var saved = localStorage.getItem('carnet_layout_'+m.uid)||'actual';
+        IP.setLayout(saved);
+        IP.irPaso(3);
+        IP.renderPreview();
       });
       lista.appendChild(item);
     });
-  }
+  },
 
-  document.getElementById('btnPaso2aAtras').addEventListener('click', function(){ irPaso(1); });
-
-  // ── Paso 3: layout + preview + download ───────────────
-  document.getElementById('btnPaso3Atras').addEventListener('click', function(){
-    irPaso(tipoCurrent === 'individual' ? 2 : 1);
-  });
-
-  // Layout options
-  ['actual','b','d'].forEach(function(l){
-    document.getElementById('lOpt_'+l).addEventListener('click', function(){ selectLayout(l); });
-  });
-
-  function selectLayout(l){
-    layoutCurrent = l;
+  setLayout: function(l){
+    IP.layout = l;
     ['actual','b','d'].forEach(function(t){
-      var el = document.getElementById('lOpt_'+t);
+      var el = document.getElementById('ipL_'+t);
+      if(!el)return;
       el.style.border = t===l ? '2px solid #00B4B4' : '1.5px solid #eee';
       el.style.background = t===l ? '#e0f7f7' : '#fff';
     });
-    renderPreview();
-  }
+    IP.renderPreview();
+  },
 
-  document.getElementById('btnDescargar').addEventListener('click', function(){
-    if(tipoCurrent === 'individual' && mascotaSeleccionada){
-      localStorage.setItem('carnet_layout_'+mascotaSeleccionada.uid, layoutCurrent);
-      fetch('/api/galeria?action=updateCarnetLayout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:mascotaSeleccionada.uid,layout:layoutCurrent})}).catch(function(){});
-      descargarIndividual(mascotaSeleccionada, layoutCurrent);
-    } else {
-      var activas = misMascotas.filter(function(m){ return !m.angelito; }).slice(0,4);
-      descargarFamiliar(activas);
-    }
-  });
+  // ── Canvas helpers ──────────────────────────────────────────
+  rr: function(ctx,x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  },
+  lbl: function(ctx,t,v,x,y,light){
+    ctx.fillStyle=light?'rgba(255,255,255,.4)':'#aaa';ctx.font='8px Arial';ctx.fillText(t,x,y);
+    ctx.fillStyle=light?'rgba(255,255,255,.88)':'#333';ctx.font='11px Arial';ctx.fillText(String(v||'-').substring(0,22),x,y+14);
+  },
+  logo: function(ctx,x,y,sz,light){
+    ctx.font='bold '+sz+'px Arial';
+    ctx.fillStyle=light?'#fff':'#00B4B4';ctx.fillText('petz',x,y);
+    ctx.fillStyle='#F5C842';ctx.fillText('ID',x+ctx.measureText('petz').width,y);
+  },
 
-  // ── Canvas helpers ─────────────────────────────────────
-  function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
-  function lbl(ctx,t,v,x,y,light){ctx.fillStyle=light?'rgba(255,255,255,.4)':'#aaa';ctx.font='8px Arial';ctx.fillText(t,x,y);ctx.fillStyle=light?'rgba(255,255,255,.88)':'#333';ctx.font='11px Arial';ctx.fillText(v,x,y+14);}
-  function logo(ctx,x,y,sz,light){ctx.font='bold '+sz+'px Arial';ctx.fillStyle=light?'#fff':'#00B4B4';ctx.fillText('petz',x,y);ctx.fillStyle='#F5C842';ctx.fillText('ID',x+ctx.measureText('petz').width,y);}
-  function loadImg(src,cb){var img=new Image();img.crossOrigin='anonymous';img.onload=function(){cb(img);};img.onerror=function(){cb(null);};img.src=src;return img;}
-
-  function drawCarnetActual(ctx,W,H,m,fImg){
+  drawActual: function(ctx,W,H,m,fImg){
+    var rr=IP.rr,lbl=IP.lbl,logo=IP.logo;
     var g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1b3a4a');ctx.fillStyle=g;rr(ctx,0,0,W,H,14);ctx.fill();
     ctx.fillStyle='rgba(255,255,255,.1)';rr(ctx,14,14,106,H-28,10);ctx.fill();
-    if(fImg){ctx.save();rr(ctx,14,14,106,H-28,10);ctx.clip();var sc=Math.max(106/fImg.width,(H-28)/fImg.height);ctx.drawImage(fImg,14+(106-fImg.width*sc)/2,14+((H-28)-fImg.height*sc)/2,fImg.width*sc,fImg.height*sc);ctx.restore();}
+    if(fImg){ctx.save();rr(ctx,14,14,106,H-28,10);ctx.clip();var sc=Math.max(106/fImg.width,(H-28)/fImg.height);ctx.drawImage(fImg,14+(106-fImg.width*sc)/2,14+((H-28)-fImg.height*sc)/2,fImg.width*sc,fImg.height*sc);ctx.restore();}else{ctx.fillStyle='#aaa';ctx.font='32px Arial';ctx.textAlign='center';ctx.fillText('&#128062;',67,H/2+12);ctx.textAlign='left';}
     var DX=132;logo(ctx,DX,30,12,true);
-    ctx.fillStyle='#fff';ctx.font='bold 18px Arial Black,Arial';ctx.fillText(m.nombre||'',DX,56);
-    if(m.apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 10px Arial';ctx.fillText('"'+m.apodo+'"',DX,70);}
-    var oy=m.apodo?84:72;
-    lbl(ctx,'RAZA',m.raza||'-',DX,oy,true);lbl(ctx,'FECHA',m.fecha||'-',DX,oy+26,true);lbl(ctx,'RESPONSABLE',m.dueno||'-',DX,oy+52,true);
-  }
+    ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX,48);
+    ctx.fillStyle='#fff';ctx.font='bold 18px Arial Black,Arial';ctx.fillText(m.nombre||'',DX,68);
+    if(m.apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 10px Arial';ctx.fillText('"'+m.apodo+'"',DX,82);}
+    var oy=m.apodo?96:84;
+    lbl(ctx,'RAZA',m.raza,DX,oy,true);
+    lbl(ctx,'SEXO',m.sexo,DX,oy+24,true);
+    lbl(ctx,'FECHA DE NACIMIENTO',m.fecha,DX,oy+48,true);
+    lbl(ctx,'RESPONSABLE',m.dueno,DX,oy+72,true);
+    ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX,220);ctx.lineTo(W-14,220);ctx.stroke();
+    logo(ctx,DX,238,10,true);
+  },
 
-  function drawCarnetB(ctx,W,H,m,fImg){
+  drawB: function(ctx,W,H,m,fImg){
+    var rr=IP.rr,lbl=IP.lbl,logo=IP.logo;
     ctx.fillStyle='#fff';rr(ctx,0,0,W,H,14);ctx.fill();
     var FR=120;ctx.fillStyle='#00B4B4';rr(ctx,0,0,FR,H,14);ctx.fill();ctx.fillStyle='#00B4B4';ctx.fillRect(FR-14,0,14,H);
     logo(ctx,14,24,12,true);
-    // Foto circular marca de agua
-    if(fImg){ctx.save();ctx.globalAlpha=0.15;ctx.beginPath();ctx.arc(60,H/2+10,44,0,Math.PI*2);ctx.clip();var sc=Math.max(88/fImg.width,88/fImg.height);ctx.drawImage(fImg,60-fImg.width*sc/2,H/2+10-fImg.height*sc/2,fImg.width*sc,fImg.height*sc);ctx.restore();}
-    ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(60,H/2+10,44,0,Math.PI*2);ctx.stroke();
-    // QR placeholder
-    ctx.fillStyle='rgba(255,255,255,.85)';rr(ctx,18,H-94,84,76,6);ctx.fill();
-    ctx.fillStyle='#aaa';ctx.font='7px Arial';ctx.textAlign='center';ctx.fillText('QR',60,H-52);ctx.textAlign='left';
-    // Foto pasaporte
-    var F2H=170,F2W=Math.round(F2H*0.75),F2X=W-F2W-12;
-    ctx.fillStyle='#f8f8f8';rr(ctx,F2X,12,F2W,F2H,8);ctx.fill();
-    if(fImg){ctx.save();rr(ctx,F2X,12,F2W,F2H,8);ctx.clip();var sc2=Math.min(F2W/fImg.width,F2H/fImg.height);ctx.drawImage(fImg,F2X+(F2W-fImg.width*sc2)/2,12+(F2H-fImg.height*sc2)/2,fImg.width*sc2,fImg.height*sc2);ctx.restore();}
-    ctx.strokeStyle='#ddd';ctx.lineWidth=1;rr(ctx,F2X,12,F2W,F2H,8);ctx.stroke();
-    var DX=134;ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX,28);ctx.fillStyle='#1a1a2e';ctx.font='bold 20px Arial Black,Arial';ctx.fillText(m.nombre||'',DX,50);
+    // Foto circular marca de agua en franja
+    if(fImg){
+      ctx.save();ctx.globalAlpha=0.18;ctx.beginPath();ctx.arc(60,H/2+10,46,0,Math.PI*2);ctx.clip();
+      var sc=Math.max(92/fImg.width,92/fImg.height);ctx.drawImage(fImg,60-fImg.width*sc/2,H/2+10-fImg.height*sc/2,fImg.width*sc,fImg.height*sc);
+      ctx.restore();
+    }
+    ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(60,H/2+10,46,0,Math.PI*2);ctx.stroke();
+    // QR placeholder en franja
+    ctx.fillStyle='rgba(255,255,255,.85)';rr(ctx,16,H-96,88,78,6);ctx.fill();
+    ctx.fillStyle='#aaa';ctx.font='7px Arial';ctx.textAlign='center';ctx.fillText('QR PERFIL',60,H-52);ctx.textAlign='left';
+    // Foto pasaporte derecha
+    var F2H=H-28,F2W=Math.round(F2H*0.7),F2X=W-F2W-12;
+    ctx.fillStyle='#f8f8f8';rr(ctx,F2X,14,F2W,F2H,8);ctx.fill();
+    if(fImg){ctx.save();rr(ctx,F2X,14,F2W,F2H,8);ctx.clip();var sc2=Math.min(F2W/fImg.width,F2H/fImg.height);ctx.drawImage(fImg,F2X+(F2W-fImg.width*sc2)/2,14+(F2H-fImg.height*sc2)/2,fImg.width*sc2,fImg.height*sc2);ctx.restore();}
+    ctx.strokeStyle='#ddd';ctx.lineWidth=1;rr(ctx,F2X,14,F2W,F2H,8);ctx.stroke();
+    // Datos
+    var DX=136;
+    ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX,28);
+    ctx.fillStyle='#1a1a2e';ctx.font='bold 18px Arial Black,Arial';ctx.fillText(m.nombre||'',DX,50);
     if(m.apodo){ctx.fillStyle='#888';ctx.font='italic 10px Arial';ctx.fillText('"'+m.apodo+'"',DX,64);}
-    var oy2=m.apodo?78:66;
-    lbl(ctx,'RAZA',m.raza||'-',DX,oy2,false);lbl(ctx,'FECHA',m.fecha||'-',DX,oy2+26,false);lbl(ctx,'RESPONSABLE',m.dueno||'-',DX,oy2+52,false);
-    ctx.strokeStyle='#f0f0ee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX,168);ctx.lineTo(F2X-8,168);ctx.stroke();logo(ctx,DX,190,10,false);
-  }
+    var oy2=m.apodo?76:64;
+    lbl(ctx,'RAZA',m.raza,DX,oy2,false);
+    lbl(ctx,'SEXO',m.sexo,DX,oy2+24,false);
+    lbl(ctx,'FECHA DE NACIMIENTO',m.fecha,DX,oy2+48,false);
+    lbl(ctx,'RESPONSABLE',m.dueno,DX,oy2+72,false);
+    ctx.strokeStyle='#f0f0ee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX,200);ctx.lineTo(F2X-8,200);ctx.stroke();
+    logo(ctx,DX,220,10,false);
+  },
 
-  function drawCarnetD(ctx,W,H,m,fImg){
+  drawD: function(ctx,W,H,m,fImg){
+    var rr=IP.rr,lbl=IP.lbl,logo=IP.logo;
     var gd=ctx.createLinearGradient(0,0,W,H);gd.addColorStop(0,'#0d1b2a');gd.addColorStop(1,'#1b3a4a');ctx.fillStyle=gd;rr(ctx,0,0,W,H,14);ctx.fill();
     var PW=Math.floor(W*0.54);
     ctx.fillStyle='rgba(255,255,255,.08)';rr(ctx,12,12,PW,H-24,10);ctx.fill();
-    if(fImg){ctx.save();rr(ctx,12,12,PW,H-24,10);ctx.clip();var sc=Math.min(PW/fImg.width,(H-24)/fImg.height);ctx.drawImage(fImg,12+(PW-fImg.width*sc)/2,12+((H-24)-fImg.height*sc)/2,fImg.width*sc,fImg.height*sc);ctx.restore();}
-    var DX3=PW+26;logo(ctx,DX3,28,12,true);ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX3,36);ctx.lineTo(W-12,36);ctx.stroke();
-    ctx.fillStyle='#fff';ctx.font='bold 16px Arial Black,Arial';ctx.fillText(m.nombre||'',DX3,58);
-    if(m.apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 10px Arial';ctx.fillText('"'+m.apodo+'"',DX3,72);}
-    var oy3=m.apodo?86:76;
-    lbl(ctx,'RAZA',m.raza||'-',DX3,oy3,true);lbl(ctx,'FECHA',m.fecha||'-',DX3,oy3+26,true);lbl(ctx,'RESPONSABLE',m.dueno||'-',DX3,oy3+52,true);
-    ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX3,170);ctx.lineTo(W-12,170);ctx.stroke();logo(ctx,DX3,190,11,true);
-    var QS=62;ctx.fillStyle='rgba(255,255,255,.08)';rr(ctx,W-QS-12,H-QS-12,QS,QS,6);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;rr(ctx,W-QS-12,H-QS-12,QS,QS,6);ctx.stroke();
-  }
+    if(fImg){ctx.save();rr(ctx,12,12,PW,H-24,10);ctx.clip();var sc=Math.min(PW/fImg.width,(H-24)/fImg.height);ctx.drawImage(fImg,12+(PW-fImg.width*sc)/2,12+((H-24)-fImg.height*sc)/2,fImg.width*sc,fImg.height*sc);ctx.restore();}else{ctx.fillStyle='rgba(255,255,255,.1)';rr(ctx,12,12,PW,H-24,10);ctx.fill();}
+    var DX3=PW+26;logo(ctx,DX3,28,12,true);
+    ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX3,36);ctx.lineTo(W-12,36);ctx.stroke();
+    ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX3,52);
+    ctx.fillStyle='#fff';ctx.font='bold 16px Arial Black,Arial';ctx.fillText(m.nombre||'',DX3,72);
+    if(m.apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 10px Arial';ctx.fillText('"'+m.apodo+'"',DX3,86);}
+    var oy3=m.apodo?100:88;
+    lbl(ctx,'RAZA',m.raza,DX3,oy3,true);
+    lbl(ctx,'SEXO',m.sexo,DX3,oy3+24,true);
+    lbl(ctx,'FECHA',m.fecha,DX3,oy3+48,true);
+    lbl(ctx,'RESPONSABLE',m.dueno,DX3,oy3+72,true);
+    ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX3,200);ctx.lineTo(W-12,200);ctx.stroke();
+    logo(ctx,DX3,220,11,true);
+    var QS=62;rr(ctx,W-QS-12,H-QS-12,QS,QS,6);ctx.fillStyle='rgba(255,255,255,.08)';ctx.fill();ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;rr(ctx,W-QS-12,H-QS-12,QS,QS,6);ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='7px Arial';ctx.textAlign='center';ctx.fillText('QR',W-QS/2-12,H-QS/2-12+4);ctx.textAlign='left';
+  },
 
-  function drawOnCanvas(canvas, m, layout, callback){
-    var W=460,H=290;canvas.width=W;canvas.height=H;
-    var ctx=canvas.getContext('2d');
-    function doDraw(fImg){
-      ctx.clearRect(0,0,W,H);
-      if(layout==='actual') drawCarnetActual(ctx,W,H,m,fImg);
-      else if(layout==='b') drawCarnetB(ctx,W,H,m,fImg);
-      else drawCarnetD(ctx,W,H,m,fImg);
-      if(callback) callback(canvas);
-    }
-    if(m.foto && m.foto.indexOf('http')>=0){
-      loadImg(m.foto, function(img){ doDraw(img); });
-    } else { doDraw(null); }
-  }
-
-  function renderPreview(){
-    var canvas = document.getElementById('previewCanvas');
-    if(!canvas) return;
-    var m = (tipoCurrent==='individual' && mascotaSeleccionada) ? mascotaSeleccionada : (window.misMascotas&&misMascotas[0]||{nombre:'Mascota',raza:'',fecha:'',dueno:'',apodo:''});
-    if(tipoCurrent==='familiar'){
-      drawFamiliarOnCanvas(canvas);
-    } else {
-      drawOnCanvas(canvas, m, layoutCurrent, null);
-    }
-  }
-
-  function drawFamiliarOnCanvas(canvas){
-    var W=460,H=290;canvas.width=W;canvas.height=H;
-    var ctx=canvas.getContext('2d');
-    var mascotas=(window.misMascotas||[]).filter(function(m){return !m.angelito;}).slice(0,4);
+  drawFamiliar: function(ctx,W,H,mascotas){
+    var rr=IP.rr,logo=IP.logo;
     var count=mascotas.length;
-    function rrf(x,y,w,h,r){rr(ctx,x,y,w,h,r);}
-    var g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1b3a4a');ctx.fillStyle=g;rrf(0,0,W,H,14);ctx.fill();
-    ctx.fillStyle='#00B4B4';rrf(0,0,W,52,14);ctx.fill();ctx.fillStyle='#00B4B4';ctx.fillRect(0,40,W,12);
-    ctx.fillStyle='#fff';ctx.font='bold 15px Arial';ctx.fillText('petz',14,34);ctx.fillStyle='#F5C842';ctx.fillText('ID',14+ctx.measureText('petz').width,34);
+    var g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1b3a4a');ctx.fillStyle=g;rr(ctx,0,0,W,H,14);ctx.fill();
+    ctx.fillStyle='#00B4B4';rr(ctx,0,0,W,52,14);ctx.fill();ctx.fillStyle='#00B4B4';ctx.fillRect(0,40,W,12);
+    logo(ctx,14,34,14,true);
     ctx.fillStyle='rgba(255,255,255,.6)';ctx.font='11px Arial';ctx.textAlign='right';ctx.fillText('Carnet Familiar',W-14,34);ctx.textAlign='left';
     var dueno=mascotas[0]&&mascotas[0].dueno?mascotas[0].dueno:'';
-    if(dueno){ctx.fillStyle='#fff';ctx.font='bold 14px Arial';ctx.fillText('Familia '+dueno,14,76);}
+    if(dueno){ctx.fillStyle='#fff';ctx.font='bold 13px Arial';ctx.fillText('Familia '+dueno,14,76);}
     ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='11px Arial';ctx.fillText(count+' mascota'+(count!==1?'s':'')+' registradas',14,94);
-    var COLS=count<=2?count:2,AVAIL_W=W-28-90,CARD_W=Math.floor((AVAIL_W-(COLS-1)*8)/COLS),CARD_H=Math.floor((H-104-24)/Math.ceil(count/COLS));
+    var COLS=count<=2?count:2,ROWS=Math.ceil(count/COLS);
+    var AVAIL_W=W-28-90,CARD_W=Math.floor((AVAIL_W-(COLS-1)*8)/COLS),CARD_H=Math.floor((H-108-20-(ROWS-1)*8)/ROWS);
     mascotas.forEach(function(m,i){
       var col=i%COLS,row=Math.floor(i/COLS);
-      var cx=14+col*(CARD_W+8),cy=104+row*(CARD_H+8);
-      ctx.fillStyle='rgba(255,255,255,.07)';rrf(cx,cy,CARD_W,CARD_H,8);ctx.fill();
+      var cx=14+col*(CARD_W+8),cy=108+row*(CARD_H+8);
+      ctx.fillStyle='rgba(255,255,255,.07)';rr(ctx,cx,cy,CARD_W,CARD_H,8);ctx.fill();
       var FW=CARD_H-8;
-      ctx.fillStyle='rgba(255,255,255,.1)';rrf(cx+4,cy+4,FW,FW,6);ctx.fill();
-      ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.fillText(m.nombre||'',cx+FW+10,cy+CARD_H/2-2);
-      if(m.raza){ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='9px Arial';ctx.fillText(m.raza,cx+FW+10,cy+CARD_H/2+12);}
+      // Foto placeholder
+      ctx.fillStyle='rgba(255,255,255,.1)';rr(ctx,cx+4,cy+4,FW,FW,6);ctx.fill();
+      // Nombre y raza
+      ctx.fillStyle='#fff';ctx.font='bold 12px Arial';ctx.fillText(m.nombre||'',cx+FW+10,cy+CARD_H/2-4);
+      if(m.raza){ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='9px Arial';ctx.fillText(m.raza,cx+FW+10,cy+CARD_H/2+10);}
+      // Cargar foto async
       if(m.foto&&m.foto.indexOf('http')>=0){
-        (function(cx2,cy2,fw,src){var img=new Image();img.crossOrigin='anonymous';img.onload=function(){ctx.save();rr(ctx,cx2+4,cy2+4,fw,fw,6);ctx.clip();var sc=Math.max(fw/img.width,fw/img.height);ctx.drawImage(img,cx2+4+(fw-img.width*sc)/2,cy2+4+(fw-img.height*sc)/2,img.width*sc,img.height*sc);ctx.restore();};img.src=src;})(cx,cy,FW,m.foto);
+        (function(cx2,cy2,fw,src){
+          var img=new Image();img.crossOrigin='anonymous';
+          img.onload=function(){ctx.save();rr(ctx,cx2+4,cy2+4,fw,fw,6);ctx.clip();var sc=Math.max(fw/img.width,fw/img.height);ctx.drawImage(img,cx2+4+(fw-img.width*sc)/2,cy2+4+(fw-img.height*sc)/2,img.width*sc,img.height*sc);ctx.restore();};
+          img.src=src;
+        })(cx,cy,FW,m.foto);
       }
     });
-    ctx.fillStyle='rgba(255,255,255,.08)';rrf(W-78,H-78,64,64,6);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;rrf(W-78,H-78,64,64,6);ctx.stroke();
+    // QR
+    ctx.fillStyle='rgba(255,255,255,.08)';rr(ctx,W-78,H-78,64,64,6);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;rr(ctx,W-78,H-78,64,64,6);ctx.stroke();
     ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='8px Arial';ctx.textAlign='center';ctx.fillText('QR',W-46,H-42);ctx.textAlign='left';
-  }
+  },
 
-  function descargarIndividual(m, layout){
+  renderPreview: function(){
+    var canvas = document.getElementById('ipCanvas');
+    if(!canvas)return;
+    var W=460,H=290;canvas.width=W;canvas.height=H;
+    var ctx=canvas.getContext('2d');
+
+    if(IP.tipo === 'familiar'){
+      var activas=(window.misMascotas||[]).filter(function(m){return !m.angelito&&String(m.angelito).toLowerCase()!=='si';}).slice(0,4);
+      IP.drawFamiliar(ctx,W,H,activas);
+      return;
+    }
+
+    var m = IP.mascota || {};
+    function draw(fImg){
+      ctx.clearRect(0,0,W,H);
+      if(IP.layout==='actual') IP.drawActual(ctx,W,H,m,fImg);
+      else if(IP.layout==='b') IP.drawB(ctx,W,H,m,fImg);
+      else IP.drawD(ctx,W,H,m,fImg);
+    }
+
+    if(m.foto && m.foto.indexOf('http')>=0){
+      var img=new Image();img.crossOrigin='anonymous';
+      img.onload=function(){draw(img);};
+      img.onerror=function(){draw(null);};
+      img.src=m.foto;
+    } else {
+      draw(null);
+    }
+  },
+
+  descargar: function(){
     var canvas=document.createElement('canvas');
-    drawOnCanvas(canvas, m, layout, function(c){
+    var W=460,H=290;canvas.width=W;canvas.height=H;
+    var ctx=canvas.getContext('2d');
+    var nombre = 'PetzID';
+
+    if(IP.tipo==='familiar'){
+      var activas=(window.misMascotas||[]).filter(function(m){return !m.angelito&&String(m.angelito).toLowerCase()!=='si';}).slice(0,4);
+      IP.drawFamiliar(ctx,W,H,activas);
+      nombre='PetzID_Familiar';
       setTimeout(function(){
-        var link=document.createElement('a');link.href=c.toDataURL('image/png');link.download='PetzID_'+m.nombre+'.png';link.click();
-        toast('Carnet de '+m.nombre+' descargado');
+        var link=document.createElement('a');link.href=canvas.toDataURL('image/png');link.download=nombre+'.png';link.click();
+        IP.toast('Carnet familiar descargado');
+      },900);
+      return;
+    }
+
+    var m=IP.mascota||{};
+    nombre='PetzID_'+(m.nombre||'mascota');
+    function finish(fImg){
+      if(IP.layout==='actual') IP.drawActual(ctx,W,H,m,fImg);
+      else if(IP.layout==='b') IP.drawB(ctx,W,H,m,fImg);
+      else IP.drawD(ctx,W,H,m,fImg);
+      // Save layout preference
+      if(m.uid){
+        localStorage.setItem('carnet_layout_'+m.uid,IP.layout);
+        fetch('/api/galeria?action=updateCarnetLayout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:m.uid,layout:IP.layout})}).catch(function(){});
+      }
+      setTimeout(function(){
+        var link=document.createElement('a');link.href=canvas.toDataURL('image/png');link.download=nombre+'.png';link.click();
+        IP.toast('Carnet de '+m.nombre+' descargado');
       },400);
-    });
+    }
+    if(m.foto&&m.foto.indexOf('http')>=0){
+      var img=new Image();img.crossOrigin='anonymous';img.onload=function(){finish(img);};img.onerror=function(){finish(null);};img.src=m.foto;
+    } else { finish(null); }
   }
+};
 
-  function descargarFamiliar(mascotas){
-    var canvas=document.createElement('canvas');
-    canvas.width=460;canvas.height=290;
-    drawFamiliarOnCanvas(canvas);
-    setTimeout(function(){
-      var link=document.createElement('a');link.href=canvas.toDataURL('image/png');link.download='PetzID_Familiar.png';link.click();
-      toast('Carnet familiar descargado');
-    },900);
+// ── Event listeners ──────────────────────────────────────────
+document.addEventListener('click', function(e){
+  var t=e.target;
+  if(!t)return;
+  if(t.id==='btnAbrirIDsPremium'||t.closest('#btnAbrirIDsPremium')){IP.tipo='individual';IP.setTipo('individual');IP.show();return;}
+  if(t.id==='ipBtnCerrar'){IP.hide();return;}
+  if(t===document.getElementById('modalIDsPremium')){IP.hide();return;}
+  if(t.id==='ipTipoInd'||t.closest('#ipTipoInd')){IP.setTipo('individual');return;}
+  if(t.id==='ipTipoFam'||t.closest('#ipTipoFam')){IP.setTipo('familiar');return;}
+  if(t.id==='ipBtnSig1'){
+    if(IP.tipo==='individual'){IP.renderMascotas();IP.irPaso(2);}
+    else{document.getElementById('ipPaso3Titulo').textContent='Diseno - Carnet Familiar';IP.setLayout('actual');IP.irPaso(3);IP.renderPreview();}
+    return;
   }
-
-  function toast(msg){
-    var el=document.getElementById('toastFam');
-    el.textContent=msg;el.style.opacity='1';
-    setTimeout(function(){el.style.opacity='0';},2500);
+  if(t.id==='ipBtnAtras2'){IP.irPaso(1);return;}
+  if(t.id==='ipBtnAtras3'){IP.irPaso(IP.tipo==='individual'?2:1);return;}
+  if(t.id==='ipBtnDescargar'){IP.descargar();return;}
+  // Layout buttons
+  var lBtn=t.closest('#ipL_actual,#ipL_b,#ipL_d');
+  if(lBtn){
+    var l=lBtn.id.replace('ipL_','');
+    IP.setLayout(l);
+    return;
   }
-})();
+});
 </script>
 </body>
 </html>
