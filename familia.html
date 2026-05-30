@@ -40,7 +40,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .card-btns{display:flex;gap:6px}
 .btn-ver{flex:1;padding:7px;background:#e0f7f7;color:#007a7a;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
 .btn-editar{flex:1;padding:7px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
-.btn-diseno-premium{flex:1;padding:7px;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-align:center}
+.btn-diseno-premium{flex:1;padding:7px;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
 .btn-diseno-lock{flex:1;padding:7px;background:#f8f8f8;color:#aaa;border:1.5px solid #eee;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
 
 /* AGREGAR */
@@ -109,40 +109,9 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </div>
 
 <script>
-function mostrarToastFam(msg){
-  var el=document.getElementById('toastFam');
-  if(!el){el=document.createElement('div');el.id='toastFam';
-  el.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap';
-  document.body.appendChild(el);}
-  el.textContent=msg;el.style.opacity='1';
-  clearTimeout(el._t);el._t=setTimeout(function(){el.style.opacity='0';},2500);
-}
 var sessionEmail = localStorage.getItem('petzid_email') || '';
 var sessionDueno = localStorage.getItem('petzid_dueno') || '';
 var misMascotas  = [];
-
-function esAngelito(m){
-  var v = m.angelito;
-  if(v===true||v==='true'||v==='Si'||v==='si'||v==='SI') return true;
-  return false;
-}
-var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
-var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-
-// Helper directo a Supabase — sin pasar por Apps Script
-function supaDelete(uid){
-  return fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toUpperCase()),{
-    method:'DELETE',
-    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'}
-  });
-}
-function supaMarkAngel(uid,esAngel,fecha){
-  return fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toUpperCase()),{
-    method:'PATCH',
-    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-    body:JSON.stringify({angelito:esAngel,fecha_angelito:esAngel?(fecha||new Date().toISOString().split('T')[0]):null})
-  });
-}
 var mascotasPerdidas = {};
 
 // Init
@@ -165,64 +134,28 @@ function mostrarNoSession(){
 
 function cargarFamilia(email){
   Promise.all([
-    // Leer directo de Supabase (siempre actualizado)
-    fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email.toLowerCase())+'&select=*&order=created_at.asc',{
-      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
-    }).then(function(r){return r.json();}),
+    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})}).then(function(r){return r.json();}),
     fetch('/api/galeria?action=getActividades&tipo=perdido').then(function(r){return r.json();})
   ]).then(function(results){
-    var rows = results[0];
+    var d    = results[0];
     var acts = (results[1].actividades)||[];
-    if(!rows||!rows.length){ mostrarNoSession(); return; }
-    // Mapear campos de Supabase al formato esperado
-    misMascotas = rows.map(function(m){
-      return {
-        uid:          m.uid||'',
-        nombre:       m.nombre||'',
-        apodo:        m.apodo||'',
-        especie:      m.especie||'',
-        sexo:         m.sexo||'',
-        raza:         m.raza||'',
-        tipoFecha:    m.tipo_fecha||'nacimiento',
-        fecha:        m.fecha||'',
-        zona:         m.zona||'',
-        dueno:        m.dueno||'',
-        email:        m.email||'',
-        whatsapp:     m.whatsapp||'',
-        veterinario:  m.veterinario||'',
-        instagram:    m.instagram||'',
-        alimento:     m.alimento||'',
-        actividades:  m.actividades||'',
-        especial:     m.especial||'',
-        foto:         m.foto||'',
-        angelito:     m.angelito===true||m.angelito==='true'||m.angelito==='Si',
-        fechaAngelito:m.fecha_angelito||''
-      };
-    });
+    if(!d.found||d.mascotas.length===0){ mostrarNoSession(); return; }
+    misMascotas = d.mascotas;
     mascotasPerdidas = {};
     acts.forEach(function(a){ mascotasPerdidas[a.uid_creador] = a.id; });
     renderFamilia();
   }).catch(function(){
-    // Fallback a checkEmail si Supabase falla
-    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(!d.found||!d.mascotas.length){mostrarNoSession();return;}
-        misMascotas=d.mascotas;renderFamilia();
-      })
-      .catch(function(){
-        document.getElementById('mainContent').innerHTML=
-          '<div style="text-align:center;padding:60px;color:#888">Error al cargar. <a href="/galeria.html" style="color:#00B4B4">Volver</a></div>';
-      });
+    document.getElementById('mainContent').innerHTML =
+      '<div style="text-align:center;padding:60px;color:#888">Error al cargar. <a href="/galeria.html" style="color:#00B4B4">Volver</a></div>';
   });
 }
 function renderFamilia(){
   var mascotas = misMascotas;
   var dueno    = mascotas[0].dueno || sessionDueno || '';
-  var perros   = mascotas.filter(function(m){ return m.especie.toLowerCase().indexOf('perro') >= 0 && !esAngelito(m); }).length;
-  var gatos    = mascotas.filter(function(m){ return m.especie.toLowerCase().indexOf('gato')  >= 0 && !esAngelito(m); }).length;
-  var angeles  = mascotas.filter(function(m){ return esAngelito(m); }).length;
-  var activos  = mascotas.filter(function(m){ return !esAngelito(m); }).length;
+  var perros   = mascotas.filter(function(m){ return m.especie.toLowerCase().indexOf('perro') >= 0 && !m.angelito; }).length;
+  var gatos    = mascotas.filter(function(m){ return m.especie.toLowerCase().indexOf('gato')  >= 0 && m.angelito!=='Si'; }).length;
+  var angeles  = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() === 'si'; }).length;
+  var activos  = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() !== 'si'; }).length;
 
   var html = '';
 
@@ -241,7 +174,7 @@ function renderFamilia(){
   html += '<div class="wrap">';
 
   // Mascotas activas
-  var activas = mascotas.filter(function(m){ return !esAngelito(m); });
+  var activas = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() !== 'si'; });
   if(activas.length > 0){
     html += '<div class="sec-titulo">🐾 Mis mascotas</div>';
     html += '<div class="mascotas-grid">';
@@ -252,7 +185,7 @@ function renderFamilia(){
   }
 
   // Angelitos
-  var angelitos = mascotas.filter(function(m){ return esAngelito(m); });
+  var angelitos = mascotas.filter(function(m){ return String(m.angelito).toLowerCase() === 'si'; });
   if(angelitos.length > 0){
     html += '<div class="sec-titulo" style="color:#764ba2">🐾 Mis angelitos</div>';
     html += '<div class="mascotas-grid">';
@@ -266,6 +199,7 @@ function renderFamilia(){
   html += '<div class="btn-agregar-wrap">';
   html += '<a href="/index.html?agregar=1" class="btn-agregar">➕ Agregar mascota</a>';
   html += '</div>';
+  html += '<div id="btnFamiliarWrap" style="padding:0 16px 20px"></div>';
 
   html += '</div>';
 
@@ -279,6 +213,7 @@ function renderFamilia(){
   html += '</div>';
 
   document.getElementById('mainContent').innerHTML = html;
+  renderBotonFamiliar();
   // Event delegation para botones apareció (evita problema de comillas en onclick)
   document.getElementById('mainContent').addEventListener('click', function(e){
     var btn = e.target.closest('.btn-aparecio-fam');
@@ -289,7 +224,7 @@ function renderFamilia(){
 function renderCard(m){
   var esGato    = m.especie.toLowerCase().indexOf('gato') >= 0;
   var emoji     = esGato ? '🐱' : '🐶';
-  var esAngel   = esAngelito(m);
+  var esAngel   = String(m.angelito).toLowerCase() === 'si';
   var esPerdida = !!mascotasPerdidas[m.uid];
   var actId     = mascotasPerdidas[m.uid] || '';
   var fotoStyle = 'width:100%;aspect-ratio:1;object-fit:cover' + (esAngel?';filter:grayscale(30%)':'');
@@ -297,7 +232,6 @@ function renderCard(m){
     ? '<img src="'+m.foto+'" style="'+fotoStyle+'" onerror="this.style.display=\'none\'">'
     : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:'+(esPerdida?'#ffebee':'#e0f7f7')+'">'+emoji+'</div>';
 
-  var esPremium = m.premium === true || m.premium === 1 || m.premium === 'true';
   var cardClass = 'mascota-card' + (esAngel?' angelito':'') + (esPerdida?' perdida':'');
   var html = '<div class="'+cardClass+'">';
   html += '<div class="card-foto" style="position:relative">'+fotoHTML;
@@ -307,13 +241,14 @@ function renderCard(m){
   html += '<div class="card-body">';
   html += '<div class="card-nombre">'+m.nombre+'</div>';
   html += '<div class="card-meta">'+(m.apodo?'"'+m.apodo+'" · ':'')+(m.especie||'')+'</div>';
-  // Fila 1: Ver + Editar + Diseño Premium
+  // Fila 1: Ver + Editar + Diseño ID
   html += '<div class="card-btns" style="margin-bottom:6px">';
   html += '<a href="/editar.html?uid='+m.uid+'" class="btn-editar" style="flex:1">✏️ Editar</a>';
+  var esPremium = m.premium===true||m.premium===1||m.premium==='true';
   if(esPremium){
     html += '<button class="btn-diseno-premium" data-uid="'+m.uid+'" data-nombre="'+m.nombre+'" onclick="abrirDisenoPremium(this.dataset.uid,this.dataset.nombre)">🎨 Diseño ID</button>';
   } else {
-    html += '<button class="btn-diseno-lock" onclick="window.location.href=this.dataset.href" data-href="/premium.html">🔒 Diseño ID</button>';
+    html += '<button class="btn-diseno-lock" data-href="/premium.html" onclick="window.location.href=this.dataset.href">🔒 Diseño ID</button>';
   }
   html += '</div>';
   // Fila 2: acciones
@@ -327,31 +262,10 @@ function renderCard(m){
   if(!esAngel){
     html += '<button onclick="confirmarAngelito(\''+m.uid+'\',\''+m.nombre+'\')" style="flex:1;padding:7px;background:#764ba2;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🌈 Angelito</button>';
   }
-  html += '<button onclick="confirmarEliminar(this)" data-uid="'+m.uid+'" data-nombre="'+m.nombre+'" style="padding:7px 10px;background:#fbeaf0;color:#c0392b;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑️</button>';
+  html += '<button onclick="confirmarEliminar(\''+m.uid+'\',\''+m.nombre+'\')" style="padding:7px 10px;background:#fbeaf0;color:#c0392b;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑️</button>';
   html += '</div>';
   html += '</div></div>';
   return html;
-}
-
-function renderBotonFamiliar(){
-  var tienePremium = misMascotas && misMascotas.some(function(m){ return m.premium === true || m.premium === 1; });
-  var total = misMascotas ? misMascotas.filter(function(m){ return !m.angelito; }).length : 0;
-  var el = document.getElementById('btnFamiliarWrap');
-  if(!el) return;
-  if(!tienePremium){
-    el.innerHTML = '<button onclick="window.location.href=this.dataset.href" data-href="/premium.html" style="width:100%;padding:12px;background:#f8f8f8;color:#aaa;border:1.5px solid #eee;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">🔒 Carnet Familiar — Solo Premium</button>';
-  } else if(total < 2){
-    el.innerHTML = '<button style="width:100%;padding:12px;background:#f8f8f8;color:#aaa;border:1.5px solid #eee;border-radius:12px;font-size:13px;cursor:pointer" disabled>🏠 Carnet Familiar — necesitas 2+ mascotas</button>';
-  } else {
-    el.innerHTML = '<button onclick="abrirIDFamiliar()" style="width:100%;padding:13px;background:linear-gradient(135deg,#00B4B4,#007a7a);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><span>🏠</span> Descargar Carnet Familiar</button>';
-  }
-}
-
-function abrirIDFamiliar(){
-  mostrarToast('Generando carnet familiar... ⏳');
-  // Generate family carnet canvas
-  var activas = misMascotas.filter(function(m){ return !m.angelito; }).slice(0,4);
-  descargarIDFamiliar(activas);
 }
 
 function marcarAparecioFamilia(actId, nombre){
@@ -532,93 +446,27 @@ async function generarPosterFam(){
 }
 
 function confirmarAngelito(uid, nombre){
-  // Mostrar modal para confirmar fecha de partida
-  var overlay = document.getElementById('modalAngelito');
-  if(!overlay){
-    overlay = document.createElement('div');
-    overlay.id = 'modalAngelito';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px';
-    var cancelBtn = document.createElement('button');
-    cancelBtn.textContent = 'Cancelar';
-    cancelBtn.style.cssText = 'width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer';
-    cancelBtn.onclick = function(){ overlay.style.display='none'; };
-    var confirmBtn = document.createElement('button');
-    confirmBtn.id = 'angelConfirmarBtn';
-    confirmBtn.textContent = 'Confirmar';
-    confirmBtn.style.cssText = 'width:100%;padding:14px;background:#764ba2;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px';
-    var dateInput = document.createElement('input');
-    dateInput.type = 'date'; dateInput.id = 'angelFechaInput';
-    dateInput.style.cssText = 'width:100%;padding:13px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;outline:none;margin-bottom:16px;box-sizing:border-box';
-    var nombreDiv = document.createElement('div');
-    nombreDiv.id = 'angelNombre';
-    nombreDiv.style.cssText = 'font-size:18px;font-weight:700;color:#222;margin-bottom:6px';
-    var subDiv = document.createElement('div');
-    subDiv.textContent = 'Ingresa la fecha en que nos dejo';
-    subDiv.style.cssText = 'font-size:13px;color:#888;margin-bottom:20px;line-height:1.5';
-    var iconDiv = document.createElement('div');
-    iconDiv.textContent = String.fromCodePoint(0x1F308);
-    iconDiv.style.cssText = 'font-size:36px;margin-bottom:10px';
-    var innerBox = document.createElement('div');
-    innerBox.style.cssText = 'background:#fff;border-radius:20px;padding:28px;width:100%;max-width:340px;text-align:center';
-    innerBox.appendChild(iconDiv);
-    innerBox.appendChild(nombreDiv);
-    innerBox.appendChild(subDiv);
-    innerBox.appendChild(dateInput);
-    innerBox.appendChild(confirmBtn);
-    innerBox.appendChild(cancelBtn);
-    overlay.appendChild(innerBox);
-    document.body.appendChild(overlay);
-  }
-  document.getElementById('angelNombre').textContent = nombre + ' ya es un angelito 🐾';
-  document.getElementById('angelFechaInput').value = new Date().toISOString().split('T')[0];
-  overlay.style.display = 'flex';
-  document.getElementById('angelConfirmarBtn').onclick = function(){
-    var fecha = document.getElementById('angelFechaInput').value;
-    if(!fecha){ alert('Selecciona la fecha'); return; }
-    overlay.style.display = 'none';
-    // Mostrar spinner
-    var mb = document.getElementById('modalBorrando');
-    mb.querySelector('div > div:nth-child(2)').textContent = 'Guardando...';
-    mb.style.display = 'flex';
-    // Marcar angelito directo en Supabase (rápido) + sync Sheet en background
-    mb.querySelector('div > div:nth-child(2)').textContent='Guardando...';
-    supaMarkAngel(uid,true,fecha).then(function(){
-      // Sync Sheet en background
-      fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'markAngel',uid:uid,esAngel:true,fechaAngelito:fecha})});
-      // Actualizar en memoria sin reload
-      var m2=misMascotas.find(function(x){return x.uid===uid;});
-      if(m2){m2.angelito=true;m2.fechaAngelito=fecha;}
-      mb.style.display='none';
-      mostrarToastFam('🐾 '+nombre+' ya es un angelito');
-      renderFamilia();
-    }).catch(function(){
-      mb.style.display='none';
-      alert('Error al guardar');
+  if(confirm('¿Marcar a '+nombre+' como angelito? Esta acción no se puede deshacer.')){
+    var hoy=new Date().toISOString().split('T')[0];
+    fetch('/api/galeria?action=markAngel',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({uid:uid,esAngel:true,fechaAngelito:hoy})
+    }).then(function(){
+      alert('🌈 '+nombre+' fue marcado como angelito. Descansa en paz 🐾');
+      location.reload();
     });
-  };
+  }
 }
 
-function confirmarEliminar(btn){
-  var uid    = btn.getAttribute('data-uid');
-  var nombre = btn.getAttribute('data-nombre');
+function confirmarEliminar(uid, nombre){
   if(confirm('¿Eliminar a '+nombre+'? Esta acción no se puede deshacer.')){
-    // Mostrar modal borrando
-    var m = document.getElementById('modalBorrando');
-    m.style.display = 'flex';
-    // Borrar directo en Supabase + eliminar de memoria inmediatamente
-    supaDelete(uid).then(function(){
-      // Sync Sheet en background sin esperar
-      fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'deleteMascota',uid:uid})});
-      // Eliminar de misMascotas en memoria y re-renderizar sin reload
-      misMascotas = misMascotas.filter(function(x){ return x.uid !== uid; });
-      m.style.display='none';
-      mostrarToastFam('Mascota eliminada');
-      renderFamilia();
-    }).catch(function(err){
-      m.style.display='none';
-      alert('Error de conexion: '+err.message);
+    fetch('/api/galeria?action=deleteMascota',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({uid:uid})
+    }).then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok){ location.reload(); }
+      else { alert('Error al eliminar'); }
     });
   }
 }
@@ -676,290 +524,189 @@ document.getElementById('loginEmail').addEventListener('keydown', function(e){
     </div>
   </div>
 </div>
-<!-- MODAL BORRANDO -->
-<div id="modalBorrando" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:900;align-items:center;justify-content:center">
-  <div style="background:#fff;border-radius:16px;padding:28px 36px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-    <div style="width:36px;height:36px;border:3px solid #f0f0ee;border-top-color:#c0392b;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px"></div>
-    <div style="font-size:15px;font-weight:600;color:#222">Eliminando mascota...</div>
-    <div style="font-size:12px;color:#aaa;margin-top:4px">Un momento por favor</div>
+<!-- MODAL DISEÑO PREMIUM -->
+<div id="modalDisenoPremium" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:300;display:none;align-items:flex-end;justify-content:center">
+  <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
+    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px"></div>
+    <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:4px" id="disenoPremiumTitulo">Diseno del carnet</div>
+    <div style="font-size:13px;color:#888;margin-bottom:14px">Elige el estilo de tu carnet PetzID</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <div id="layoutOpt_actual" data-layout="actual" onclick="selectLayoutOpt(this.dataset.layout)" style="flex:1;border:2px solid #00B4B4;background:#e0f7f7;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">🌙</div>
+        <div style="font-size:11px;font-weight:700;color:#333">Actual</div>
+      </div>
+      <div id="layoutOpt_b" data-layout="b" onclick="selectLayoutOpt(this.dataset.layout)" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">🔵</div>
+        <div style="font-size:11px;font-weight:700;color:#333">Layout B</div>
+      </div>
+      <div id="layoutOpt_d" data-layout="d" onclick="selectLayoutOpt(this.dataset.layout)" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">🌑</div>
+        <div style="font-size:11px;font-weight:700;color:#333">Layout D</div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Vista previa</div>
+      <canvas id="previewCanvas" style="width:100%;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.12);display:block"></canvas>
+    </div>
+    <button data-action="aplicar" onclick="aplicarDiseno()" style="width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Aplicar diseno</button>
+    <button data-action="cancelar" onclick="cerrarDisenoPremium()" style="width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button>
   </div>
 </div>
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-<!-- BANNER REGLAS FIJO ABAJO -->
-<div id="bannerReglas" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#00B4B4;padding:12px 16px;z-index:500;box-shadow:0 -2px 12px rgba(0,0,0,.15)">
-  <div style="max-width:480px;margin:0 auto;text-align:center">
-    <div style="font-size:13px;color:#fff;font-weight:500;margin-bottom:8px">📋 Por favor lee y acepta las Reglas de convivencia de PetMi</div>
-    <a href="/reglas.html" target="_blank" onclick="marcarReglasLeidas()" style="display:inline-block;padding:9px 24px;background:#F5C842;color:#1a1a1a;font-weight:700;border-radius:99px;text-decoration:none;font-size:13px">Leer y aceptar reglas</a>
-  </div>
-</div>
-<script>
-(function(){
-  // Una sola aceptacion por familia (email) — no por dispositivo
-  var email = localStorage.getItem('petzid_email')||'';
-  var key = 'reglas_aceptadas'+(email?'_'+email.replace(/[^a-z0-9]/gi,''):'');
-  if(!localStorage.getItem('reglas_aceptadas')&&!localStorage.getItem(key)){
-    var b=document.getElementById('bannerReglas');
-    if(b)b.style.display='block';
-  }
-  window.marcarReglasLeidas=function(){
-    localStorage.setItem('reglas_aceptadas','1');
-    if(email) localStorage.setItem(key,'1');
-    var b=document.getElementById('bannerReglas');
-    if(b)b.style.display='none';
-  };
-})();
-</script>
+
 <script>
 var disenoPremiumUid = null;
 var disenoPremiumLayout = 'actual';
-
 var disenoPremiumMascota = null;
 
 function abrirDisenoPremium(uid, nombre){
   disenoPremiumUid = uid;
-  document.getElementById('disenoPremiumTitulo').textContent = 'Diseño del carnet — ' + nombre;
-  // Find mascota data from loaded mascotas
-  disenoPremiumMascota = misMascotas ? misMascotas.find(function(m){return m.uid===uid;}) : null;
-  // Load saved layout
-  var saved = localStorage.getItem('carnet_layout_' + uid) || 'actual';
+  disenoPremiumMascota = null;
+  if(window.misMascotas){
+    for(var i=0;i<misMascotas.length;i++){
+      if(misMascotas[i].uid===uid){disenoPremiumMascota=misMascotas[i];break;}
+    }
+  }
+  document.getElementById('disenoPremiumTitulo').textContent = 'Diseno del carnet - '+nombre;
+  var saved = localStorage.getItem('carnet_layout_'+uid)||'actual';
   selectLayoutOpt(saved);
-  document.getElementById('modalDisenoPremium').style.display = 'flex';
+  document.getElementById('modalDisenoPremium').style.display='flex';
 }
 
 function cerrarDisenoPremium(){
-  document.getElementById('modalDisenoPremium').style.display = 'none';
+  document.getElementById('modalDisenoPremium').style.display='none';
 }
 
 function selectLayoutOpt(l){
-  disenoPremiumLayout = l;
+  disenoPremiumLayout=l;
   ['actual','b','d'].forEach(function(t){
-    var el = document.getElementById('layoutOpt_' + t);
-    if(!el) return;
-    if(t === l){
-      el.style.border = '2px solid #00B4B4';
-      el.style.background = '#e0f7f7';
-    } else {
-      el.style.border = '1.5px solid #eee';
-      el.style.background = '#fff';
-    }
+    var el=document.getElementById('layoutOpt_'+t);
+    if(!el)return;
+    el.style.border=t===l?'2px solid #00B4B4':'1.5px solid #eee';
+    el.style.background=t===l?'#e0f7f7':'#fff';
   });
   renderPreviewCarnet(l);
 }
 
 function renderPreviewCarnet(layout){
-  var canvas = document.getElementById('previewCanvas');
-  if(!canvas) return;
-  var W=460, H=290;
-  canvas.width=W; canvas.height=H;
-  var ctx = canvas.getContext('2d');
-
-  // Get current mascota data
-  var m = disenoPremiumMascota || {};
-  var nombre = m.nombre || 'Mascota';
-  var apodo  = m.apodo  || '';
-  var raza   = m.raza   || '—';
-  var sexo   = m.sexo   || '—';
-  var fecha  = m.fecha  || '';
-  var dueno  = m.dueno  || '—';
-  var fotoSrc= m.foto   || '';
-
-  function rr(x,y,w,h,r){
-    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
-    ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
-    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
-    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
-    ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
-  }
-  function drawImgOrPH(img,x,y,w,h,r,bg){
-    ctx.save();rr(x,y,w,h,r||0);ctx.clip();
-    ctx.fillStyle=bg||'#e0f7f7';ctx.fillRect(x,y,w,h);
-    if(img&&img.complete&&img.naturalWidth){
-      var sc=Math.max(w/img.width,h/img.height);
-      ctx.drawImage(img,x+(w-img.width*sc)/2,y+(h-img.height*sc)/2,img.width*sc,img.height*sc);
-    }else{
-      ctx.fillStyle='#aaa';ctx.font='28px Arial';ctx.textAlign='center';
-      ctx.fillText('🐾',x+w/2,y+h/2+10);ctx.textAlign='left';
-    }
-    ctx.restore();
-  }
-  function lbl(t,v,x,y,light){
-    ctx.fillStyle=light?'rgba(255,255,255,.4)':'#aaa';ctx.font='8px Arial';ctx.fillText(t,x,y);
-    ctx.fillStyle=light?'rgba(255,255,255,.88)':'#333';ctx.font='11px Arial';ctx.fillText(v,x,y+14);
-  }
-  function logo(x,y,sz,light){
-    ctx.font='bold '+sz+'px Arial';
-    ctx.fillStyle=light?'#fff':'#00B4B4';ctx.fillText('petz',x,y);
-    var w=ctx.measureText('petz').width;
-    ctx.fillStyle='#F5C842';ctx.fillText('ID',x+w,y);
-  }
-
-  // Load foto
-  var fImg = null;
-  if(fotoSrc&&fotoSrc.indexOf('http')>=0){
-    fImg = new Image();fImg.crossOrigin='anonymous';fImg.src=fotoSrc;
-  }
-
+  var canvas=document.getElementById('previewCanvas');
+  if(!canvas)return;
+  var W=460,H=290;canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+  var m=disenoPremiumMascota||{};
+  var nombre=m.nombre||'Mascota',apodo=m.apodo||'',raza=m.raza||'',sexo=m.sexo||'',fecha=m.fecha||'',dueno=m.dueno||'';
+  function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+  function lbl(t,v,x,y,light){ctx.fillStyle=light?'rgba(255,255,255,.4)':'#aaa';ctx.font='8px Arial';ctx.fillText(t,x,y);ctx.fillStyle=light?'rgba(255,255,255,.88)':'#333';ctx.font='11px Arial';ctx.fillText(v,x,y+14);}
+  function logo(x,y,sz,light){ctx.font='bold '+sz+'px Arial';ctx.fillStyle=light?'#fff':'#00B4B4';ctx.fillText('petz',x,y);ctx.fillStyle='#F5C842';ctx.fillText('ID',x+ctx.measureText('petz').width,y);}
+  var fImg=null;
+  if(m.foto&&m.foto.indexOf('http')>=0){fImg=new Image();fImg.crossOrigin='anonymous';fImg.src=m.foto;}
   function draw(){
     ctx.clearRect(0,0,W,H);
-
     if(layout==='actual'){
-      // Fondo oscuro
-      var g=ctx.createLinearGradient(0,0,W,H);
-      g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1b3a4a');
-      ctx.fillStyle=g;rr(0,0,W,H,14);ctx.fill();
-      // Foto izquierda
-      drawImgOrPH(fImg,14,14,106,H-28,10,'#1a2a3a');
-      ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;rr(14,14,106,H-28,10);ctx.stroke();
-      // Datos
-      var DX=132;
-      logo(DX,30,13,true);
-      ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX,50);
-      ctx.fillStyle='#fff';ctx.font='bold 20px Arial Black,Arial';ctx.fillText(nombre,DX,70);
-      if(apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 11px Arial';ctx.fillText('"'+apodo+'"',DX,86);}
-      lbl('RAZA',raza,DX,apodo?100:88,true);
-      lbl('SEXO',sexo,DX,apodo?126:114,true);
-      lbl('FECHA NAC.',fecha||'—',DX,apodo?152:140,true);
-      lbl('RESPONSABLE',dueno,DX,apodo?178:166,true);
-      ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(DX,210);ctx.lineTo(W-14,210);ctx.stroke();
-
+      var g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1b3a4a');ctx.fillStyle=g;rr(0,0,W,H,14);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.1)';rr(14,14,106,H-28,10);ctx.fill();
+      if(fImg&&fImg.complete&&fImg.naturalWidth){ctx.save();rr(14,14,106,H-28,10);ctx.clip();var sc=Math.max(106/fImg.width,(H-28)/fImg.height);ctx.drawImage(fImg,14+(106-fImg.width*sc)/2,14+((H-28)-fImg.height*sc)/2,fImg.width*sc,fImg.height*sc);ctx.restore();}
+      var DX=132;logo(DX,30,12,true);
+      ctx.fillStyle='#fff';ctx.font='bold 18px Arial Black,Arial';ctx.fillText(nombre,DX,56);
+      if(apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 10px Arial';ctx.fillText('"'+apodo+'"',DX,70);}
+      lbl('RAZA',raza,DX,apodo?84:72,true);lbl('FECHA',fecha||'-',DX,apodo?110:98,true);lbl('RESPONSABLE',dueno,DX,apodo?136:124,true);
     } else if(layout==='b'){
-      // Fondo blanco
       ctx.fillStyle='#fff';rr(0,0,W,H,14);ctx.fill();
-      // Franja teal
-      var FR=120;
-      ctx.fillStyle='#00B4B4';rr(0,0,FR,H,14);ctx.fill();
-      ctx.fillStyle='#00B4B4';ctx.fillRect(FR-14,0,14,H);
+      var FR=120;ctx.fillStyle='#00B4B4';rr(0,0,FR,H,14);ctx.fill();ctx.fillStyle='#00B4B4';ctx.fillRect(FR-14,0,14,H);
       logo(14,24,12,true);
-      // Foto circular marca agua
-      ctx.save();ctx.globalAlpha=0.15;
-      ctx.beginPath();ctx.arc(60,H/2+10,44,0,Math.PI*2);ctx.clip();
-      if(fImg&&fImg.complete&&fImg.naturalWidth){
-        var sc=Math.max(88/fImg.width,88/fImg.height);
-        ctx.drawImage(fImg,60-fImg.width*sc/2,H/2+10-fImg.height*sc/2,fImg.width*sc,fImg.height*sc);
-      }
-      ctx.restore();
-      ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;
-      ctx.beginPath();ctx.arc(60,H/2+10,44,0,Math.PI*2);ctx.stroke();
-      // QR placeholder en franja
-      ctx.fillStyle='rgba(255,255,255,.85)';rr(18,H-96,84,76,6);ctx.fill();
-      ctx.fillStyle='#aaa';ctx.font='8px Arial';ctx.textAlign='center';
-      ctx.fillText('QR',60,H-50);ctx.textAlign='left';
-      // Foto pasaporte derecha
-      var F2H=170,F2W=Math.round(F2H*0.75);
-      var F2X=W-F2W-12;
-      drawImgOrPH(fImg,F2X,12,F2W,F2H,8,'#f8f8f8');
+      ctx.save();ctx.globalAlpha=0.15;ctx.beginPath();ctx.arc(60,H/2+10,44,0,Math.PI*2);ctx.clip();if(fImg&&fImg.complete&&fImg.naturalWidth){var sc=Math.max(88/fImg.width,88/fImg.height);ctx.drawImage(fImg,60-fImg.width*sc/2,H/2+10-fImg.height*sc/2,fImg.width*sc,fImg.height*sc);}ctx.restore();
+      ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(60,H/2+10,44,0,Math.PI*2);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.85)';rr(18,H-94,84,76,6);ctx.fill();
+      var F2H=170,F2W=Math.round(F2H*0.75),F2X=W-F2W-12;
+      ctx.fillStyle='#f8f8f8';rr(F2X,12,F2W,F2H,8);ctx.fill();
+      if(fImg&&fImg.complete&&fImg.naturalWidth){ctx.save();rr(F2X,12,F2W,F2H,8);ctx.clip();var sc=Math.min(F2W/fImg.width,F2H/fImg.height);ctx.drawImage(fImg,F2X+(F2W-fImg.width*sc)/2,12+(F2H-fImg.height*sc)/2,fImg.width*sc,fImg.height*sc);ctx.restore();}
       ctx.strokeStyle='#ddd';ctx.lineWidth=1;rr(F2X,12,F2W,F2H,8);ctx.stroke();
-      // Datos
-      var DX=134;
-      ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX,28);
-      ctx.fillStyle='#1a1a2e';ctx.font='bold 20px Arial Black,Arial';ctx.fillText(nombre,DX,50);
+      var DX=134;ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX,28);ctx.fillStyle='#1a1a2e';ctx.font='bold 20px Arial Black,Arial';ctx.fillText(nombre,DX,50);
       if(apodo){ctx.fillStyle='#888';ctx.font='italic 10px Arial';ctx.fillText('"'+apodo+'"',DX,64);}
-      lbl('RAZA',raza,DX,apodo?78:66,false);
-      lbl('SEXO',sexo,DX,apodo?104:92,false);
-      lbl('FECHA NAC.',fecha||'—',DX,apodo?130:118,false);
-      lbl('RESPONSABLE',dueno,DX,apodo?156:144,false);
-      ctx.strokeStyle='#f0f0ee';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(DX,188);ctx.lineTo(F2X-8,188);ctx.stroke();
-      logo(DX,210,10,false);
-
-    } else if(layout==='d'){
-      // Fondo oscuro degradado
-      var gd=ctx.createLinearGradient(0,0,W,H);
-      gd.addColorStop(0,'#0d1b2a');gd.addColorStop(1,'#1b3a4a');
-      ctx.fillStyle=gd;rr(0,0,W,H,14);ctx.fill();
-      // Foto ancha izquierda
+      lbl('RAZA',raza,DX,apodo?78:66,false);lbl('FECHA',fecha||'-',DX,apodo?104:92,false);lbl('RESPONSABLE',dueno,DX,apodo?130:118,false);
+      ctx.strokeStyle='#f0f0ee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX,160);ctx.lineTo(F2X-8,160);ctx.stroke();logo(DX,182,10,false);
+    } else {
+      var gd=ctx.createLinearGradient(0,0,W,H);gd.addColorStop(0,'#0d1b2a');gd.addColorStop(1,'#1b3a4a');ctx.fillStyle=gd;rr(0,0,W,H,14);ctx.fill();
       var PW=Math.floor(W*0.54);
-      drawImgOrPH(fImg,12,12,PW,H-24,10,'#1a2a3a');
-      ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;rr(12,12,PW,H-24,10);ctx.stroke();
-      // Datos derecha
-      var DX3=PW+26;
-      logo(DX3,28,12,true);
-      ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(DX3,36);ctx.lineTo(W-12,36);ctx.stroke();
-      ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX3,52);
-      ctx.fillStyle='#fff';ctx.font='bold 17px Arial Black,Arial';ctx.fillText(nombre,DX3,70);
-      if(apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 10px Arial';ctx.fillText('"'+apodo+'"',DX3,84);}
-      lbl('RAZA',raza,DX3,apodo?98:88,true);
-      lbl('SEXO',sexo,DX3,apodo?122:112,true);
-      lbl('FECHA NAC.',fecha||'—',DX3,apodo?146:136,true);
-      lbl('RESPONSABLE',dueno,DX3,apodo?170:160,true);
-      ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(DX3,200);ctx.lineTo(W-12,200);ctx.stroke();
-      logo(DX3,220,11,true);
-      // QR placeholder esquina inferior derecha
-      var QS=62;
-      ctx.fillStyle='rgba(255,255,255,.08)';rr(W-QS-12,H-QS-12,QS,QS,6);ctx.fill();
-      ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1;rr(W-QS-12,H-QS-12,QS,QS,6);ctx.stroke();
-      ctx.fillStyle='rgba(255,255,255,.25)';ctx.font='8px Arial';ctx.textAlign='center';
-      ctx.fillText('QR',W-QS/2-12,H-QS/2-12+4);ctx.textAlign='left';
+      ctx.fillStyle='rgba(255,255,255,.08)';rr(12,12,PW,H-24,10);ctx.fill();
+      if(fImg&&fImg.complete&&fImg.naturalWidth){ctx.save();rr(12,12,PW,H-24,10);ctx.clip();var sc=Math.min(PW/fImg.width,(H-24)/fImg.height);ctx.drawImage(fImg,12+(PW-fImg.width*sc)/2,12+((H-24)-fImg.height*sc)/2,fImg.width*sc,fImg.height*sc);ctx.restore();}
+      var DX3=PW+26;logo(DX3,28,12,true);ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX3,36);ctx.lineTo(W-12,36);ctx.stroke();
+      ctx.fillStyle='#fff';ctx.font='bold 16px Arial Black,Arial';ctx.fillText(nombre,DX3,60);
+      if(apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 10px Arial';ctx.fillText('"'+apodo+'"',DX3,74);}
+      lbl('RAZA',raza,DX3,apodo?88:78,true);lbl('FECHA',fecha||'-',DX3,apodo?112:102,true);lbl('RESPONSABLE',dueno,DX3,apodo?136:126,true);
+      ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX3,164);ctx.lineTo(W-12,164);ctx.stroke();logo(DX3,184,11,true);
+      var QS=62;ctx.fillStyle='rgba(255,255,255,.08)';rr(W-QS-12,H-QS-12,QS,QS,6);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;rr(W-QS-12,H-QS-12,QS,QS,6);ctx.stroke();
     }
   }
-
-  if(fImg){
-    fImg.onload=function(){draw();};
-    fImg.onerror=function(){draw();};
-    if(fImg.complete) draw();
-  } else {
-    draw();
-  }
+  if(fImg){fImg.onload=draw;fImg.onerror=draw;if(fImg.complete)draw();}else{draw();}
 }
 
 function aplicarDiseno(){
-  if(!disenoPremiumUid) return;
-  localStorage.setItem('carnet_layout_' + disenoPremiumUid, disenoPremiumLayout);
-  fetch('/api/galeria?action=updateCarnetLayout', {
-    method: 'POST', headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({uid: disenoPremiumUid, layout: disenoPremiumLayout})
-  }).then(function(){
-    cerrarDisenoPremium();
-    mostrarToast('✅ Diseño guardado');
-  }).catch(function(){
-    cerrarDisenoPremium();
-    mostrarToast('✅ Diseño guardado localmente');
-  });
+  if(!disenoPremiumUid)return;
+  localStorage.setItem('carnet_layout_'+disenoPremiumUid,disenoPremiumLayout);
+  fetch('/api/galeria?action=updateCarnetLayout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:disenoPremiumUid,layout:disenoPremiumLayout})}).catch(function(){});
+  cerrarDisenoPremium();
+  mostrarToast('Diseno guardado');
 }
 
-// Close modal on backdrop click
-document.addEventListener('click', function(e){
-  var modal = document.getElementById('modalDisenoPremium');
-  if(e.target === modal) cerrarDisenoPremium();
-});
-</script>
-<!-- MODAL DISEÑO PREMIUM -->
-<div class="modal-overlay" id="modalDisenoPremium" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:300;display:none;align-items:flex-end;justify-content:center">
-  <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
-    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px"></div>
-    <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:4px" id="disenoPremiumTitulo">Diseño del carnet</div>
-    <div style="font-size:13px;color:#888;margin-bottom:14px">Elige el estilo de tu carnet PetzID ⭐</div>
-    <!-- Opciones -->
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <div id="layoutOpt_actual" onclick="selectLayoutOpt('actual')" style="flex:1;border:2px solid #00B4B4;background:#e0f7f7;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center;transition:all .15s">
-        <div style="font-size:20px;margin-bottom:4px">🌙</div>
-        <div style="font-size:11px;font-weight:700;color:#333">Actual</div>
-        <div style="font-size:9px;color:#aaa;margin-top:1px">Clásico oscuro</div>
-      </div>
-      <div id="layoutOpt_b" onclick="selectLayoutOpt('b')" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center;transition:all .15s">
-        <div style="font-size:20px;margin-bottom:4px">🔵</div>
-        <div style="font-size:11px;font-weight:700;color:#333">Layout B</div>
-        <div style="font-size:9px;color:#aaa;margin-top:1px">Franja teal</div>
-      </div>
-      <div id="layoutOpt_d" onclick="selectLayoutOpt('d')" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center;transition:all .15s">
-        <div style="font-size:20px;margin-bottom:4px">🌑</div>
-        <div style="font-size:11px;font-weight:700;color:#333">Layout D</div>
-        <div style="font-size:9px;color:#aaa;margin-top:1px">Oscuro premium</div>
-      </div>
-    </div>
-    <!-- PREVIEW CANVAS -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Vista previa</div>
-      <canvas id="previewCanvas" style="width:100%;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.12);display:block"></canvas>
-    </div>
-    <button onclick="aplicarDiseno()" style="width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Aplicar diseño</button>
-    <button onclick="cerrarDisenoPremium()" style="width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button>
-  </div>
-</div>
+function renderBotonFamiliar(){
+  var el=document.getElementById('btnFamiliarWrap');
+  if(!el)return;
+  var tienePremium=window.misMascotas&&misMascotas.some(function(m){return m.premium===true||m.premium===1;});
+  var total=window.misMascotas?misMascotas.filter(function(m){return !m.angelito;}).length:0;
+  if(!tienePremium){
+    el.innerHTML='<button data-href="/premium.html" onclick="window.location.href=this.dataset.href" style="width:100%;padding:12px;background:#f8f8f8;color:#aaa;border:1.5px solid #eee;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer">Carnet Familiar - Solo Premium</button>';
+  } else if(total<2){
+    el.innerHTML='<button disabled style="width:100%;padding:12px;background:#f8f8f8;color:#aaa;border:1.5px solid #eee;border-radius:12px;font-size:13px;cursor:pointer">Carnet Familiar - necesitas 2 o mas mascotas</button>';
+  } else {
+    el.innerHTML='<button onclick="abrirIDFamiliar()" style="width:100%;padding:13px;background:linear-gradient(135deg,#00B4B4,#007a7a);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Descargar Carnet Familiar</button>';
+  }
+}
 
+function abrirIDFamiliar(){
+  mostrarToast('Generando carnet familiar...');
+  var activas=misMascotas.filter(function(m){return !m.angelito;}).slice(0,4);
+  setTimeout(function(){descargarIDFamiliar(activas);},200);
+}
+
+function descargarIDFamiliar(mascotas){
+  var canvas=document.createElement('canvas');
+  var W=460,H=290;canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+  var count=mascotas.length;
+  function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+  var g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1b3a4a');ctx.fillStyle=g;rr(0,0,W,H,14);ctx.fill();
+  ctx.fillStyle='#00B4B4';rr(0,0,W,52,14);ctx.fill();ctx.fillStyle='#00B4B4';ctx.fillRect(0,40,W,12);
+  ctx.fillStyle='#fff';ctx.font='bold 15px Arial';ctx.fillText('petz',14,34);ctx.fillStyle='#F5C842';ctx.fillText('ID',14+ctx.measureText('petz').width,34);
+  ctx.fillStyle='rgba(255,255,255,.6)';ctx.font='11px Arial';ctx.textAlign='right';ctx.fillText('Carnet Familiar',W-14,34);ctx.textAlign='left';
+  var dueno=mascotas[0]&&mascotas[0].dueno?mascotas[0].dueno:'';
+  if(dueno){ctx.fillStyle='#fff';ctx.font='bold 15px Arial';ctx.fillText('Familia '+dueno,14,78);}
+  ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='11px Arial';ctx.fillText(count+' mascota'+(count!==1?'s':'')+' registradas',14,96);
+  var COLS=count<=2?count:2,ROWS=Math.ceil(count/COLS);
+  var AVAIL_W=W-28-90,CARD_W=Math.floor((AVAIL_W-(COLS-1)*8)/COLS),CARD_H=Math.floor((H-108-24-(ROWS-1)*8)/ROWS);
+  mascotas.forEach(function(m,i){
+    var col=i%COLS,row=Math.floor(i/COLS);
+    var cx=14+col*(CARD_W+8),cy=108+row*(CARD_H+8);
+    ctx.fillStyle='rgba(255,255,255,.07)';rr(cx,cy,CARD_W,CARD_H,8);ctx.fill();
+    var FW=CARD_H-8;
+    if(m.foto&&m.foto.indexOf('http')>=0){
+      (function(x,y,fw,src){var img=new Image();img.crossOrigin='anonymous';img.onload=function(){ctx.save();rr(x+4,y+4,fw,fw,6);ctx.clip();var sc=Math.max(fw/img.width,fw/img.height);ctx.drawImage(img,x+4+(fw-img.width*sc)/2,y+4+(fw-img.height*sc)/2,img.width*sc,img.height*sc);ctx.restore();};img.src=src;})(cx,cy,FW,m.foto);
+    }
+    ctx.fillStyle='#fff';ctx.font='bold 12px Arial';ctx.fillText(m.nombre||'',cx+FW+10,cy+CARD_H/2-4);
+    if(m.raza){ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='9px Arial';ctx.fillText(m.raza,cx+FW+10,cy+CARD_H/2+10);}
+  });
+  ctx.fillStyle='rgba(255,255,255,.08)';rr(W-78,H-78,64,64,6);ctx.fill();
+  setTimeout(function(){var link=document.createElement('a');link.href=canvas.toDataURL('image/png');link.download='PetzID_Familiar.png';link.click();mostrarToast('Carnet familiar descargado');},900);
+}
+
+function mostrarToast(msg){
+  var el=document.getElementById('toast');
+  if(!el){el=document.createElement('div');el.id='toast';el.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap';document.body.appendChild(el);}
+  el.textContent=msg;el.style.opacity='1';
+  setTimeout(function(){el.style.opacity='0';},2500);
+}
+
+document.getElementById('modalDisenoPremium').addEventListener('click',function(e){if(e.target===this)cerrarDisenoPremium();});
+</script>
 <script src="/header.js"></script>
 </body>
 </html>
