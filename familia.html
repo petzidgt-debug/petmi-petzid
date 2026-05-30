@@ -40,6 +40,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .card-btns{display:flex;gap:6px}
 .btn-ver{flex:1;padding:7px;background:#e0f7f7;color:#007a7a;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
 .btn-editar{flex:1;padding:7px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
+.btn-diseno-premium{flex:1;padding:7px;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-align:center}
+.btn-diseno-lock{flex:1;padding:7px;background:#f8f8f8;color:#aaa;border:1.5px solid #eee;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
 
 /* AGREGAR */
 .btn-agregar-wrap{text-align:center;padding:8px 0 20px}
@@ -295,6 +297,7 @@ function renderCard(m){
     ? '<img src="'+m.foto+'" style="'+fotoStyle+'" onerror="this.style.display=\'none\'">'
     : '<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:'+(esPerdida?'#ffebee':'#e0f7f7')+'">'+emoji+'</div>';
 
+  var esPremium = m.premium === true;
   var cardClass = 'mascota-card' + (esAngel?' angelito':'') + (esPerdida?' perdida':'');
   var html = '<div class="'+cardClass+'">';
   html += '<div class="card-foto" style="position:relative">'+fotoHTML;
@@ -304,9 +307,14 @@ function renderCard(m){
   html += '<div class="card-body">';
   html += '<div class="card-nombre">'+m.nombre+'</div>';
   html += '<div class="card-meta">'+(m.apodo?'"'+m.apodo+'" · ':'')+(m.especie||'')+'</div>';
-  // Fila 1: Ver + Editar
+  // Fila 1: Ver + Editar + Diseño Premium
   html += '<div class="card-btns" style="margin-bottom:6px">';
   html += '<a href="/editar.html?uid='+m.uid+'" class="btn-editar" style="flex:1">✏️ Editar</a>';
+  if(esPremium){
+    html += '<button class="btn-diseno-premium" data-uid="'+m.uid+'" data-nombre="'+m.nombre+'" onclick="abrirDisenoPremium(this.dataset.uid,this.dataset.nombre)">🎨 Diseño ID</button>';
+  } else {
+    html += '<button class="btn-diseno-lock" onclick="window.location.href=this.dataset.href" data-href="/premium.html">🔒 Diseño ID</button>';
+  }
   html += '</div>';
   // Fila 2: acciones
   html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
@@ -680,6 +688,257 @@ document.getElementById('loginEmail').addEventListener('keydown', function(e){
   };
 })();
 </script>
+<script>
+var disenoPremiumUid = null;
+var disenoPremiumLayout = 'actual';
+
+var disenoPremiumMascota = null;
+
+function abrirDisenoPremium(uid, nombre){
+  disenoPremiumUid = uid;
+  document.getElementById('disenoPremiumTitulo').textContent = 'Diseño del carnet — ' + nombre;
+  // Find mascota data from loaded mascotas
+  disenoPremiumMascota = misMascotas ? misMascotas.find(function(m){return m.uid===uid;}) : null;
+  // Load saved layout
+  var saved = localStorage.getItem('carnet_layout_' + uid) || 'actual';
+  selectLayoutOpt(saved);
+  document.getElementById('modalDisenoPremium').style.display = 'flex';
+}
+
+function cerrarDisenoPremium(){
+  document.getElementById('modalDisenoPremium').style.display = 'none';
+}
+
+function selectLayoutOpt(l){
+  disenoPremiumLayout = l;
+  ['actual','b','d'].forEach(function(t){
+    var el = document.getElementById('layoutOpt_' + t);
+    if(!el) return;
+    if(t === l){
+      el.style.border = '2px solid #00B4B4';
+      el.style.background = '#e0f7f7';
+    } else {
+      el.style.border = '1.5px solid #eee';
+      el.style.background = '#fff';
+    }
+  });
+  renderPreviewCarnet(l);
+}
+
+function renderPreviewCarnet(layout){
+  var canvas = document.getElementById('previewCanvas');
+  if(!canvas) return;
+  var W=460, H=290;
+  canvas.width=W; canvas.height=H;
+  var ctx = canvas.getContext('2d');
+
+  // Get current mascota data
+  var m = disenoPremiumMascota || {};
+  var nombre = m.nombre || 'Mascota';
+  var apodo  = m.apodo  || '';
+  var raza   = m.raza   || '—';
+  var sexo   = m.sexo   || '—';
+  var fecha  = m.fecha  || '';
+  var dueno  = m.dueno  || '—';
+  var fotoSrc= m.foto   || '';
+
+  function rr(x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  }
+  function drawImgOrPH(img,x,y,w,h,r,bg){
+    ctx.save();rr(x,y,w,h,r||0);ctx.clip();
+    ctx.fillStyle=bg||'#e0f7f7';ctx.fillRect(x,y,w,h);
+    if(img&&img.complete&&img.naturalWidth){
+      var sc=Math.max(w/img.width,h/img.height);
+      ctx.drawImage(img,x+(w-img.width*sc)/2,y+(h-img.height*sc)/2,img.width*sc,img.height*sc);
+    }else{
+      ctx.fillStyle='#aaa';ctx.font='28px Arial';ctx.textAlign='center';
+      ctx.fillText('🐾',x+w/2,y+h/2+10);ctx.textAlign='left';
+    }
+    ctx.restore();
+  }
+  function lbl(t,v,x,y,light){
+    ctx.fillStyle=light?'rgba(255,255,255,.4)':'#aaa';ctx.font='8px Arial';ctx.fillText(t,x,y);
+    ctx.fillStyle=light?'rgba(255,255,255,.88)':'#333';ctx.font='11px Arial';ctx.fillText(v,x,y+14);
+  }
+  function logo(x,y,sz,light){
+    ctx.font='bold '+sz+'px Arial';
+    ctx.fillStyle=light?'#fff':'#00B4B4';ctx.fillText('petz',x,y);
+    var w=ctx.measureText('petz').width;
+    ctx.fillStyle='#F5C842';ctx.fillText('ID',x+w,y);
+  }
+
+  // Load foto
+  var fImg = null;
+  if(fotoSrc&&fotoSrc.indexOf('http')>=0){
+    fImg = new Image();fImg.crossOrigin='anonymous';fImg.src=fotoSrc;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    if(layout==='actual'){
+      // Fondo oscuro
+      var g=ctx.createLinearGradient(0,0,W,H);
+      g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1b3a4a');
+      ctx.fillStyle=g;rr(0,0,W,H,14);ctx.fill();
+      // Foto izquierda
+      drawImgOrPH(fImg,14,14,106,H-28,10,'#1a2a3a');
+      ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;rr(14,14,106,H-28,10);ctx.stroke();
+      // Datos
+      var DX=132;
+      logo(DX,30,13,true);
+      ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX,50);
+      ctx.fillStyle='#fff';ctx.font='bold 20px Arial Black,Arial';ctx.fillText(nombre,DX,70);
+      if(apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 11px Arial';ctx.fillText('"'+apodo+'"',DX,86);}
+      lbl('RAZA',raza,DX,apodo?100:88,true);
+      lbl('SEXO',sexo,DX,apodo?126:114,true);
+      lbl('FECHA NAC.',fecha||'—',DX,apodo?152:140,true);
+      lbl('RESPONSABLE',dueno,DX,apodo?178:166,true);
+      ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(DX,210);ctx.lineTo(W-14,210);ctx.stroke();
+
+    } else if(layout==='b'){
+      // Fondo blanco
+      ctx.fillStyle='#fff';rr(0,0,W,H,14);ctx.fill();
+      // Franja teal
+      var FR=120;
+      ctx.fillStyle='#00B4B4';rr(0,0,FR,H,14);ctx.fill();
+      ctx.fillStyle='#00B4B4';ctx.fillRect(FR-14,0,14,H);
+      logo(14,24,12,true);
+      // Foto circular marca agua
+      ctx.save();ctx.globalAlpha=0.15;
+      ctx.beginPath();ctx.arc(60,H/2+10,44,0,Math.PI*2);ctx.clip();
+      if(fImg&&fImg.complete&&fImg.naturalWidth){
+        var sc=Math.max(88/fImg.width,88/fImg.height);
+        ctx.drawImage(fImg,60-fImg.width*sc/2,H/2+10-fImg.height*sc/2,fImg.width*sc,fImg.height*sc);
+      }
+      ctx.restore();
+      ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(60,H/2+10,44,0,Math.PI*2);ctx.stroke();
+      // QR placeholder en franja
+      ctx.fillStyle='rgba(255,255,255,.85)';rr(18,H-96,84,76,6);ctx.fill();
+      ctx.fillStyle='#aaa';ctx.font='8px Arial';ctx.textAlign='center';
+      ctx.fillText('QR',60,H-50);ctx.textAlign='left';
+      // Foto pasaporte derecha
+      var F2H=170,F2W=Math.round(F2H*0.75);
+      var F2X=W-F2W-12;
+      drawImgOrPH(fImg,F2X,12,F2W,F2H,8,'#f8f8f8');
+      ctx.strokeStyle='#ddd';ctx.lineWidth=1;rr(F2X,12,F2W,F2H,8);ctx.stroke();
+      // Datos
+      var DX=134;
+      ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX,28);
+      ctx.fillStyle='#1a1a2e';ctx.font='bold 20px Arial Black,Arial';ctx.fillText(nombre,DX,50);
+      if(apodo){ctx.fillStyle='#888';ctx.font='italic 10px Arial';ctx.fillText('"'+apodo+'"',DX,64);}
+      lbl('RAZA',raza,DX,apodo?78:66,false);
+      lbl('SEXO',sexo,DX,apodo?104:92,false);
+      lbl('FECHA NAC.',fecha||'—',DX,apodo?130:118,false);
+      lbl('RESPONSABLE',dueno,DX,apodo?156:144,false);
+      ctx.strokeStyle='#f0f0ee';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(DX,188);ctx.lineTo(F2X-8,188);ctx.stroke();
+      logo(DX,210,10,false);
+
+    } else if(layout==='d'){
+      // Fondo oscuro degradado
+      var gd=ctx.createLinearGradient(0,0,W,H);
+      gd.addColorStop(0,'#0d1b2a');gd.addColorStop(1,'#1b3a4a');
+      ctx.fillStyle=gd;rr(0,0,W,H,14);ctx.fill();
+      // Foto ancha izquierda
+      var PW=Math.floor(W*0.54);
+      drawImgOrPH(fImg,12,12,PW,H-24,10,'#1a2a3a');
+      ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;rr(12,12,PW,H-24,10);ctx.stroke();
+      // Datos derecha
+      var DX3=PW+26;
+      logo(DX3,28,12,true);
+      ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(DX3,36);ctx.lineTo(W-12,36);ctx.stroke();
+      ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX3,52);
+      ctx.fillStyle='#fff';ctx.font='bold 17px Arial Black,Arial';ctx.fillText(nombre,DX3,70);
+      if(apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 10px Arial';ctx.fillText('"'+apodo+'"',DX3,84);}
+      lbl('RAZA',raza,DX3,apodo?98:88,true);
+      lbl('SEXO',sexo,DX3,apodo?122:112,true);
+      lbl('FECHA NAC.',fecha||'—',DX3,apodo?146:136,true);
+      lbl('RESPONSABLE',dueno,DX3,apodo?170:160,true);
+      ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(DX3,200);ctx.lineTo(W-12,200);ctx.stroke();
+      logo(DX3,220,11,true);
+      // QR placeholder esquina inferior derecha
+      var QS=62;
+      ctx.fillStyle='rgba(255,255,255,.08)';rr(W-QS-12,H-QS-12,QS,QS,6);ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1;rr(W-QS-12,H-QS-12,QS,QS,6);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.25)';ctx.font='8px Arial';ctx.textAlign='center';
+      ctx.fillText('QR',W-QS/2-12,H-QS/2-12+4);ctx.textAlign='left';
+    }
+  }
+
+  if(fImg){
+    fImg.onload=function(){draw();};
+    fImg.onerror=function(){draw();};
+    if(fImg.complete) draw();
+  } else {
+    draw();
+  }
+}
+
+function aplicarDiseno(){
+  if(!disenoPremiumUid) return;
+  localStorage.setItem('carnet_layout_' + disenoPremiumUid, disenoPremiumLayout);
+  fetch('/api/galeria?action=updateCarnetLayout', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({uid: disenoPremiumUid, layout: disenoPremiumLayout})
+  }).then(function(){
+    cerrarDisenoPremium();
+    mostrarToast('✅ Diseño guardado');
+  }).catch(function(){
+    cerrarDisenoPremium();
+    mostrarToast('✅ Diseño guardado localmente');
+  });
+}
+
+// Close modal on backdrop click
+document.addEventListener('click', function(e){
+  var modal = document.getElementById('modalDisenoPremium');
+  if(e.target === modal) cerrarDisenoPremium();
+});
+</script>
+<!-- MODAL DISEÑO PREMIUM -->
+<div class="modal-overlay" id="modalDisenoPremium" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:300;display:none;align-items:flex-end;justify-content:center">
+  <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
+    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px"></div>
+    <div style="font-size:17px;font-weight:900;color:#222;margin-bottom:4px" id="disenoPremiumTitulo">Diseño del carnet</div>
+    <div style="font-size:13px;color:#888;margin-bottom:14px">Elige el estilo de tu carnet PetzID ⭐</div>
+    <!-- Opciones -->
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <div id="layoutOpt_actual" onclick="selectLayoutOpt('actual')" style="flex:1;border:2px solid #00B4B4;background:#e0f7f7;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center;transition:all .15s">
+        <div style="font-size:20px;margin-bottom:4px">🌙</div>
+        <div style="font-size:11px;font-weight:700;color:#333">Actual</div>
+        <div style="font-size:9px;color:#aaa;margin-top:1px">Clásico oscuro</div>
+      </div>
+      <div id="layoutOpt_b" onclick="selectLayoutOpt('b')" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center;transition:all .15s">
+        <div style="font-size:20px;margin-bottom:4px">🔵</div>
+        <div style="font-size:11px;font-weight:700;color:#333">Layout B</div>
+        <div style="font-size:9px;color:#aaa;margin-top:1px">Franja teal</div>
+      </div>
+      <div id="layoutOpt_d" onclick="selectLayoutOpt('d')" style="flex:1;border:1.5px solid #eee;background:#fff;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center;transition:all .15s">
+        <div style="font-size:20px;margin-bottom:4px">🌑</div>
+        <div style="font-size:11px;font-weight:700;color:#333">Layout D</div>
+        <div style="font-size:9px;color:#aaa;margin-top:1px">Oscuro premium</div>
+      </div>
+    </div>
+    <!-- PREVIEW CANVAS -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Vista previa</div>
+      <canvas id="previewCanvas" style="width:100%;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.12);display:block"></canvas>
+    </div>
+    <button onclick="aplicarDiseno()" style="width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Aplicar diseño</button>
+    <button onclick="cerrarDisenoPremium()" style="width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+
 <script src="/header.js"></script>
 </body>
 </html>
