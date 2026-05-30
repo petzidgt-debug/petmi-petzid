@@ -590,13 +590,15 @@ document.getElementById('loginEmail').addEventListener('keydown', function(e){
   var mascotaSeleccionada = null; // mascota object for individual
 
   // ── Open / Close ───────────────────────────────────────
-  document.getElementById('btnAbrirIDsPremium').addEventListener('click', function(){
-    irPaso(1);
-    document.getElementById('modalIDsPremium').style.display = 'flex';
-  });
-  document.getElementById('btnCerrarModal').addEventListener('click', cerrar);
-  document.getElementById('modalIDsPremium').addEventListener('click', function(e){
-    if(e.target === this) cerrar();
+  // Event delegation — btnAbrirIDsPremium se agrega dinámicamente
+  document.addEventListener('click', function(e){
+    if(e.target && e.target.id === 'btnAbrirIDsPremium'){
+      irPaso(1);
+      document.getElementById('modalIDsPremium').style.display = 'flex';
+    }
+    if(e.target && (e.target.id === 'btnCerrarModal' || e.target === document.getElementById('modalIDsPremium'))){
+      cerrar();
+    }
   });
 
   function cerrar(){
