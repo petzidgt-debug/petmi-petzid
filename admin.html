@@ -1172,17 +1172,15 @@ function cargarAdminGrupos(){
     }else{
       tbody.innerHTML=rows.map(function(g){
         var f=g.created_at?new Date(g.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
-        var tr=document.createElement('tr');
-        tr.innerHTML='<td style="font-weight:600">'+g.nombre+'</td>'
+        return '<tr>'
+          +'<td style="font-weight:600">'+g.nombre+'</td>'
           +'<td style="font-size:12px;color:#888">'+(g.admin_email||'—')+'</td>'
           +'<td style="font-size:12px;color:#888">'+f+'</td>'
           +'<td style="display:flex;gap:6px;padding:8px 12px">'
-          +'<button class="badge badge-si" style="cursor:pointer;border:none">✓ Aprobar</button>'
-          +'<button class="badge badge-no" style="cursor:pointer;border:none">✗ Rechazar</button>'
-          +'</td>';
-        tr.querySelectorAll('button')[0].onclick=function(){aprobarGrupo(g.id,g.nombre);};
-        tr.querySelectorAll('button')[1].onclick=function(){rechazarGrupo(g.id,g.nombre);};
-        return tr.outerHTML;
+          +'<button class="badge badge-si" style="cursor:pointer;border:none" data-id="'+g.id+'" data-nombre="'+g.nombre+'" onclick="aprobarGrupo(this.dataset.id,this.dataset.nombre)">✓ Aprobar</button>'
+          +'<button class="badge badge-no" style="cursor:pointer;border:none" data-id="'+g.id+'" data-nombre="'+g.nombre+'" onclick="rechazarGrupo(this.dataset.id,this.dataset.nombre)">✗ Rechazar</button>'
+          +'</td>'
+          +'</tr>';
       }).join('');
     }
   }).catch(function(){document.getElementById('solicitudesGruposBody').innerHTML='<tr><td colspan="4" style="color:red;padding:12px">Error</td></tr>';});
