@@ -12,7 +12,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .hero h1{font-size:22px;font-weight:900;font-family:'Arial Black',Arial;margin-bottom:4px}
 .hero p{font-size:13px;color:rgba(255,255,255,.75)}
 .wrap{max-width:600px;margin:0 auto;padding:16px 16px 60px}
-.sec-titulo{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#aaa;margin:20px 0 10px}
+.sec-titulo{font-size:14px;font-weight:700;color:#222;margin:20px 0 10px}
 /* MASCOTA SELECTOR */
 .masc-selector{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:16px}
 .masc-selector::-webkit-scrollbar{display:none}
@@ -90,17 +90,32 @@ function field(ctx,label,val,x,y,light){
 }
 
 function generateQR(text,size,callback){
-  var el=document.createElement('div');
-  el.style.cssText='position:absolute;left:-9999px;top:-9999px';
-  document.body.appendChild(el);
   try{
+    var el=document.createElement('div');
+    el.style.cssText='position:absolute;left:-9999px;top:-9999px';
+    document.body.appendChild(el);
     new QRCode(el,{text:text,width:size,height:size,colorDark:'#1a1a2e',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
     setTimeout(function(){
-      var img=el.querySelector('img');
-      if(img){img.onload=function(){callback(img);document.body.removeChild(el);};img.onerror=function(){callback(null);document.body.removeChild(el);};if(img.complete)callback(img);}
-      else{callback(null);document.body.removeChild(el);}
-    },200);
-  }catch(e){callback(null);try{document.body.removeChild(el);}catch(x){}}
+      // qrcodejs generates a canvas element
+      var qrCanvas=el.querySelector('canvas');
+      if(qrCanvas){
+        var img=new Image();
+        img.onload=function(){document.body.removeChild(el);callback(img);};
+        img.src=qrCanvas.toDataURL('image/png');
+      } else {
+        // fallback: try img
+        var qrImg=el.querySelector('img');
+        if(qrImg&&qrImg.src){
+          var img2=new Image();
+          img2.onload=function(){document.body.removeChild(el);callback(img2);};
+          img2.onerror=function(){document.body.removeChild(el);callback(null);};
+          img2.src=qrImg.src;
+        } else {
+          document.body.removeChild(el);callback(null);
+        }
+      }
+    },300);
+  }catch(e){console.error('QR error:',e);callback(null);}
 }
 
 function loadImg(src,callback){
@@ -195,11 +210,13 @@ function drawFamiliarDark(ctx,W,H,mascotas,qrImg){
   if(dueno){ctx.fillStyle='#fff';ctx.font='bold 13px Arial';ctx.fillText('Familia '+dueno,14,76);}
   ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='11px Arial';ctx.fillText(count+' mascota'+(count!==1?'s':'')+' registradas',14,94);
   var COLS=count<=2?count:2,ROWS=Math.ceil(count/COLS);
-  var AW=W-28-90,CW=Math.floor((AW-(COLS-1)*8)/COLS),CH=Math.floor((H-108-20-(ROWS-1)*8)/ROWS);
+  var AW=W-28-90,CW=Math.floor((AW-(COLS-1)*8)/COLS);
+  var CH=Math.min(Math.floor((H-108-20-(ROWS-1)*8)/ROWS),80);
+  var FW=CH-8;
   mascotas.forEach(function(m,i){
     var col=i%COLS,row=Math.floor(i/COLS),cx=14+col*(CW+8),cy=108+row*(CH+8);
     ctx.fillStyle='rgba(255,255,255,.07)';rr(ctx,cx,cy,CW,CH,8);ctx.fill();
-    var FW=CH-8;ctx.fillStyle='rgba(255,255,255,.12)';rr(ctx,cx+4,cy+4,FW,FW,6);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.12)';rr(ctx,cx+4,cy+4,FW,FW,6);ctx.fill();
     if(m._img){ctx.save();rr(ctx,cx+4,cy+4,FW,FW,6);ctx.clip();var sc=Math.max(FW/m._img.width,FW/m._img.height);ctx.drawImage(m._img,cx+4+(FW-m._img.width*sc)/2,cy+4+(FW-m._img.height*sc)/2,m._img.width*sc,m._img.height*sc);ctx.restore();}
     ctx.fillStyle='#fff';ctx.font='bold 12px Arial';ctx.fillText(m.nombre||'',cx+FW+10,cy+CH/2-4);
     ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='9px Arial';ctx.fillText(m.raza||'',cx+FW+10,cy+CH/2+10);
@@ -219,11 +236,13 @@ function drawFamiliarLight(ctx,W,H,mascotas,qrImg){
   ctx.fillStyle='#aaa';ctx.font='11px Arial';ctx.fillText(count+' mascota'+(count!==1?'s':'')+' registradas',14,94);
   ctx.strokeStyle='#f0f0ee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(14,102);ctx.lineTo(W-14,102);ctx.stroke();
   var COLS=count<=2?count:2,ROWS=Math.ceil(count/COLS);
-  var AW=W-28-90,CW=Math.floor((AW-(COLS-1)*8)/COLS),CH=Math.floor((H-108-20-(ROWS-1)*8)/ROWS);
+  var AW=W-28-90,CW=Math.floor((AW-(COLS-1)*8)/COLS);
+  var CH=Math.min(Math.floor((H-108-20-(ROWS-1)*8)/ROWS),80);
+  var FW=CH-8;
   mascotas.forEach(function(m,i){
     var col=i%COLS,row=Math.floor(i/COLS),cx=14+col*(CW+8),cy=108+row*(CH+8);
     ctx.fillStyle='#f8f8f8';rr(ctx,cx,cy,CW,CH,8);ctx.fill();ctx.strokeStyle='#eee';ctx.lineWidth=1;rr(ctx,cx,cy,CW,CH,8);ctx.stroke();
-    var FW=CH-8;ctx.fillStyle='#e0f7f7';rr(ctx,cx+4,cy+4,FW,FW,6);ctx.fill();
+    ctx.fillStyle='#e0f7f7';rr(ctx,cx+4,cy+4,FW,FW,6);ctx.fill();
     if(m._img){ctx.save();rr(ctx,cx+4,cy+4,FW,FW,6);ctx.clip();var sc=Math.max(FW/m._img.width,FW/m._img.height);ctx.drawImage(m._img,cx+4+(FW-m._img.width*sc)/2,cy+4+(FW-m._img.height*sc)/2,m._img.width*sc,m._img.height*sc);ctx.restore();}
     ctx.fillStyle='#222';ctx.font='bold 12px Arial';ctx.fillText(m.nombre||'',cx+FW+10,cy+CH/2-4);
     ctx.fillStyle='#888';ctx.font='9px Arial';ctx.fillText(m.raza||'',cx+FW+10,cy+CH/2+10);
