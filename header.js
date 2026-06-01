@@ -75,6 +75,7 @@
             '<a href="/mis-avisos.html" class="h-drop-item">📢 Mis avisos</a>' +
             '<a href="/mis-eventos.html" class="h-drop-item">🎪 Mis eventos</a>' +
             '<a href="/premium.html" class="h-drop-item">⭐ Premium</a>' +
+            '<a href="/mis-ids.html" class="h-drop-item">🎨 Mis IDs</a>' +
             '<a href="/reglas.html" class="h-drop-item">📋 Reglas</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +

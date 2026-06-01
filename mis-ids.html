@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Mis IDs — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.hero{background:linear-gradient(135deg,#1a1a2e,#764ba2);padding:28px 20px 24px;text-align:center;color:#fff}
+.hero h1{font-size:22px;font-weight:900;font-family:'Arial Black',Arial;margin-bottom:4px}
+.hero p{font-size:13px;color:rgba(255,255,255,.75)}
+.wrap{max-width:600px;margin:0 auto;padding:16px 16px 60px}
+.sec-titulo{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#aaa;margin:20px 0 10px}
+/* MASCOTA SELECTOR */
+.masc-selector{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:16px}
+.masc-selector::-webkit-scrollbar{display:none}
+.masc-chip{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:12px;cursor:pointer;flex-shrink:0;border:2px solid transparent;background:#fff;transition:all .15s;min-width:72px}
+.masc-chip.active{border-color:#00B4B4;background:#e0f7f7}
+.masc-chip-foto{width:44px;height:44px;border-radius:10px;overflow:hidden;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:22px}
+.masc-chip-foto img{width:100%;height:100%;object-fit:cover}
+.masc-chip-nombre{font-size:11px;font-weight:700;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px;text-align:center}
+/* LAYOUT SELECTOR */
+.layout-grid{display:flex;gap:8px;margin-bottom:16px}
+.layout-opt{flex:1;border:1.5px solid #eee;background:#fff;border-radius:12px;padding:10px 6px;cursor:pointer;text-align:center;transition:all .15s}
+.layout-opt.active{border:2px solid #00B4B4;background:#e0f7f7}
+.layout-opt-ico{font-size:20px;margin-bottom:4px}
+.layout-opt-nom{font-size:11px;font-weight:700;color:#333}
+/* CANVAS PREVIEW */
+.preview-wrap{margin-bottom:16px}
+.preview-lbl{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+#previewCanvas{width:100%;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:block}
+/* FAMILIAR */
+.familiar-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.familiar-layouts{display:flex;gap:8px;margin-bottom:12px}
+#familiarCanvas{width:100%;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:block;margin-bottom:12px}
+/* BOTONES */
+.btn-dl{width:100%;padding:13px;background:#1a1a2e;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
+.btn-dl:hover{background:#2a2a4e}
+.btn-sec{width:100%;padding:11px;background:#f0f0ee;color:#555;border:none;border-radius:12px;font-size:13px;cursor:pointer}
+.no-premium{text-align:center;padding:40px 20px;background:#fff;border-radius:16px;margin-top:20px}
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Mis IDs</h1>
+  <p>Diseña y descarga los carnets de tus mascotas</p>
+</div>
+
+<div class="wrap" id="root">
+  <div class="spinner"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var sessionEmail=localStorage.getItem('petzid_email')||'';
+var BASE_URL='https://app.revistapetmi.com';
+
+var misMascotas=[];
+var mascotaActual=null;
+var layoutActual='actual';
+var famLayoutActual='dark';
+
+// ── Helpers ─────────────────────────────────────────────────
+function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+
+function logoText(ctx,x,y,sz,light){
+  ctx.font='bold '+sz+'px Arial';
+  ctx.fillStyle=light?'#fff':'#00B4B4';ctx.fillText('petz',x,y);
+  ctx.fillStyle='#F5C842';ctx.fillText('ID',x+ctx.measureText('petz').width,y);
+}
+
+function field(ctx,label,val,x,y,light){
+  ctx.fillStyle=light?'rgba(255,255,255,.4)':'#bbb';
+  ctx.font='600 6px Arial';ctx.fillText(label,x,y);
+  ctx.fillStyle=light?'rgba(255,255,255,.9)':'#222';
+  ctx.font='700 9px Arial';ctx.fillText((val||'-').toString().toUpperCase().substring(0,18),x,y+13);
+}
+
+function generateQR(text,size,callback){
+  var el=document.createElement('div');
+  el.style.cssText='position:absolute;left:-9999px;top:-9999px';
+  document.body.appendChild(el);
+  try{
+    new QRCode(el,{text:text,width:size,height:size,colorDark:'#1a1a2e',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+    setTimeout(function(){
+      var img=el.querySelector('img');
+      if(img){img.onload=function(){callback(img);document.body.removeChild(el);};img.onerror=function(){callback(null);document.body.removeChild(el);};if(img.complete)callback(img);}
+      else{callback(null);document.body.removeChild(el);}
+    },200);
+  }catch(e){callback(null);try{document.body.removeChild(el);}catch(x){}}
+}
+
+function loadImg(src,callback){
+  var img=new Image();img.crossOrigin='anonymous';
+  img.onload=function(){callback(img);};
+  img.onerror=function(){callback(null);};
+  img.src=src;
+}
+
+// ── Draw functions ───────────────────────────────────────────
+function drawActual(ctx,W,H,m,fi,qrImg){
+  var FW=Math.round(W*0.43),IW=W-FW,YH=Math.round(H*0.127),TH=H-YH;
+  var TEAL_H=Math.round(TH*0.50),WHITE_H=TH-TEAL_H,px=FW+12,pw=IW-24;
+  // Foto
+  ctx.fillStyle='#b2e0e0';ctx.fillRect(0,0,FW,TH);
+  if(fi){var sc=Math.max(FW/fi.width,TH/fi.height);ctx.save();ctx.beginPath();ctx.rect(0,0,FW,TH);ctx.clip();ctx.drawImage(fi,(FW-fi.width*sc)/2,(TH-fi.height*sc)/2,fi.width*sc,fi.height*sc);ctx.restore();}
+  // Zona teal
+  ctx.fillStyle='#00B4B4';ctx.fillRect(FW,0,IW,TEAL_H);
+  ctx.fillStyle='rgba(255,255,255,.65)';ctx.font='700 7px Arial';ctx.textAlign='left';ctx.fillText('N O M B R E',px,TEAL_H-52);
+  ctx.fillStyle='#fff';ctx.font='900 20px Arial Black,Arial';ctx.fillText('"'+(m.nombre||'').toUpperCase()+'"',px,TEAL_H-30);
+  if(m.apodo&&m.apodo.trim()){var ap=(m.apodo||'').toUpperCase();ctx.font='700 7px Arial';var bw=ctx.measureText(ap).width+14;ctx.fillStyle='#F4A0B0';ctx.beginPath();ctx.rect(px,TEAL_H-18,bw,14);ctx.fill();ctx.fillStyle='#7a1a2e';ctx.textAlign='center';ctx.fillText(ap,px+bw/2,TEAL_H-8);ctx.textAlign='left';}
+  // Zona blanca
+  ctx.fillStyle='#fff';ctx.fillRect(FW,TEAL_H,IW,WHITE_H);
+  var ROW=Math.floor(WHITE_H/3),col=Math.floor(pw/2);
+  function fld(l,v,x,y,right){ctx.textAlign=right?'right':'left';var tx=right?(x+col):x;ctx.fillStyle='#bbb';ctx.font='600 6px Arial';ctx.fillText(l,tx,y);ctx.fillStyle='#222';ctx.font='700 9px Arial';ctx.fillText((v||'-').toString().toUpperCase().substring(0,16),tx,y+12);}
+  fld('ESPECIE',m.especie,px,TEAL_H+8,false);fld('SEXO',m.sexo,px,TEAL_H+8,true);
+  ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW,pw,1);
+  fld('RAZA',m.raza,px,TEAL_H+ROW+8,false);fld('NACIMIENTO',m.fecha,px,TEAL_H+ROW+8,true);
+  ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW*2,pw,1);
+  ctx.textAlign='left';ctx.fillStyle='#bbb';ctx.font='600 6px Arial';ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+8);
+  ctx.fillStyle='#222';ctx.font='700 9px Arial';ctx.fillText((m.dueno||'-').toUpperCase(),px,TEAL_H+ROW*2+22);
+  // Footer amarillo
+  ctx.fillStyle='#F5C842';ctx.fillRect(0,TH,W,YH);
+  ctx.fillStyle='#555';ctx.font='600 5px Arial';ctx.textAlign='left';ctx.fillText('ID',px,TH+9);
+  ctx.fillStyle='#333';ctx.font='400 12px Arial';ctx.fillText((m.uid||'').replace(/-/g,'').toUpperCase().slice(-6),px,TH+22);
+  // QR en footer
+  if(qrImg){ctx.fillStyle='#fff';ctx.fillRect(W-72,TH+2,60,YH-4);ctx.drawImage(qrImg,W-72,TH+2,60,YH-4);}
+  ctx.fillStyle='#00B4B4';ctx.font='bold 12px Arial';ctx.textAlign='right';ctx.fillText('petz',W-72-(qrImg?4:4),TH+22);ctx.fillStyle='#F5C842';ctx.fillText('ID',W-72-(qrImg?4:4)+ctx.measureText('petz').width,TH+22);ctx.textAlign='left';
+}
+
+function drawB(ctx,W,H,m,fi,qrImg){
+  ctx.fillStyle='#fff';rr(ctx,0,0,W,H,14);ctx.fill();
+  var FR=122;ctx.fillStyle='#00B4B4';rr(ctx,0,0,FR,H,14);ctx.fill();ctx.fillStyle='#00B4B4';ctx.fillRect(FR-14,0,14,H);
+  logoText(ctx,14,24,12,true);
+  // Foto circular marca agua
+  if(fi){ctx.save();ctx.globalAlpha=0.18;ctx.beginPath();ctx.arc(61,H/2+10,46,0,Math.PI*2);ctx.clip();var sc=Math.max(92/fi.width,92/fi.height);ctx.drawImage(fi,61-fi.width*sc/2,H/2+10-fi.height*sc/2,fi.width*sc,fi.height*sc);ctx.restore();}
+  ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(61,H/2+10,46,0,Math.PI*2);ctx.stroke();
+  // QR en franja
+  if(qrImg){ctx.fillStyle='rgba(255,255,255,.9)';rr(ctx,16,H-90,90,76,6);ctx.fill();ctx.drawImage(qrImg,18,H-88,86,72);}
+  else{ctx.fillStyle='rgba(255,255,255,.85)';rr(ctx,16,H-90,90,76,6);ctx.fill();ctx.fillStyle='#aaa';ctx.font='7px Arial';ctx.textAlign='center';ctx.fillText('QR PERFIL',61,H-48);ctx.textAlign='left';}
+  // Foto pasaporte
+  var F2H=H-28,F2W=Math.round(F2H*0.68),F2X=W-F2W-12;
+  ctx.fillStyle='#f0f0f0';rr(ctx,F2X,14,F2W,F2H,8);ctx.fill();
+  if(fi){ctx.save();rr(ctx,F2X,14,F2W,F2H,8);ctx.clip();var sc2=Math.min(F2W/fi.width,F2H/fi.height);ctx.drawImage(fi,F2X+(F2W-fi.width*sc2)/2,14+(F2H-fi.height*sc2)/2,fi.width*sc2,fi.height*sc2);ctx.restore();}
+  ctx.strokeStyle='#ddd';ctx.lineWidth=1;rr(ctx,F2X,14,F2W,F2H,8);ctx.stroke();
+  // Datos
+  var DX=140;ctx.fillStyle='#00B4B4';ctx.font='bold 7px Arial';ctx.fillText('NOMBRE',DX,26);ctx.fillStyle='#1a1a2e';ctx.font='bold 18px Arial Black,Arial';ctx.fillText(m.nombre||'',DX,48);
+  if(m.apodo){ctx.fillStyle='#888';ctx.font='italic 10px Arial';ctx.fillText('"'+m.apodo+'"',DX,62);}
+  var oy=m.apodo?74:62;
+  field(ctx,'RAZA',m.raza,DX,oy,false);field(ctx,'SEXO',m.sexo,DX,oy+24,false);field(ctx,'FECHA',m.fecha,DX,oy+48,false);field(ctx,'RESPONSABLE',m.dueno,DX,oy+72,false);
+  ctx.strokeStyle='#f0f0ee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX,196);ctx.lineTo(F2X-8,196);ctx.stroke();
+  logoText(ctx,DX,214,10,false);
+}
+
+function drawD(ctx,W,H,m,fi,qrImg){
+  var gd=ctx.createLinearGradient(0,0,W,H);gd.addColorStop(0,'#0d1b2a');gd.addColorStop(1,'#1b3a4a');ctx.fillStyle=gd;rr(ctx,0,0,W,H,14);ctx.fill();
+  var PW=Math.floor(W*0.54);
+  ctx.fillStyle='rgba(255,255,255,.08)';rr(ctx,12,12,PW,H-24,10);ctx.fill();
+  if(fi){ctx.save();rr(ctx,12,12,PW,H-24,10);ctx.clip();var sc=Math.min(PW/fi.width,(H-24)/fi.height);ctx.drawImage(fi,12+(PW-fi.width*sc)/2,12+((H-24)-fi.height*sc)/2,fi.width*sc,fi.height*sc);ctx.restore();}
+  var DX3=PW+26;logoText(ctx,DX3,28,12,true);
+  ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX3,36);ctx.lineTo(W-12,36);ctx.stroke();
+  ctx.fillStyle='#00B4B4';ctx.font='bold 7px Arial';ctx.fillText('NOMBRE',DX3,50);
+  ctx.fillStyle='#fff';ctx.font='bold 16px Arial Black,Arial';ctx.fillText(m.nombre||'',DX3,68);
+  if(m.apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 10px Arial';ctx.fillText('"'+m.apodo+'"',DX3,82);}
+  var oy3=m.apodo?96:84;
+  field(ctx,'RAZA',m.raza,DX3,oy3,true);field(ctx,'SEXO',m.sexo,DX3,oy3+24,true);field(ctx,'FECHA',m.fecha,DX3,oy3+48,true);field(ctx,'RESPONSABLE',m.dueno,DX3,oy3+72,true);
+  ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX3,196);ctx.lineTo(W-12,196);ctx.stroke();
+  logoText(ctx,DX3,214,11,true);
+  // QR esquina inferior derecha
+  var QS=62;rr(ctx,W-QS-10,H-QS-10,QS,QS,6);ctx.fillStyle='rgba(255,255,255,.08)';ctx.fill();
+  if(qrImg){ctx.drawImage(qrImg,W-QS-8,H-QS-8,QS-4,QS-4);}
+  else{ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;rr(ctx,W-QS-10,H-QS-10,QS,QS,6);ctx.stroke();ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='7px Arial';ctx.textAlign='center';ctx.fillText('QR',W-QS/2-10,H-QS/2-6);ctx.textAlign='left';}
+}
+
+function drawFamiliarDark(ctx,W,H,mascotas,qrImg){
+  var count=mascotas.length;
+  var g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1b3a4a');ctx.fillStyle=g;rr(ctx,0,0,W,H,14);ctx.fill();
+  ctx.fillStyle='#00B4B4';rr(ctx,0,0,W,52,14);ctx.fill();ctx.fillStyle='#00B4B4';ctx.fillRect(0,40,W,12);
+  logoText(ctx,14,34,14,true);
+  ctx.fillStyle='rgba(255,255,255,.6)';ctx.font='11px Arial';ctx.textAlign='right';ctx.fillText('Carnet Familiar',W-14,34);ctx.textAlign='left';
+  var dueno=mascotas[0]&&mascotas[0].dueno?mascotas[0].dueno:'';
+  if(dueno){ctx.fillStyle='#fff';ctx.font='bold 13px Arial';ctx.fillText('Familia '+dueno,14,76);}
+  ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='11px Arial';ctx.fillText(count+' mascota'+(count!==1?'s':'')+' registradas',14,94);
+  var COLS=count<=2?count:2,ROWS=Math.ceil(count/COLS);
+  var AW=W-28-90,CW=Math.floor((AW-(COLS-1)*8)/COLS),CH=Math.floor((H-108-20-(ROWS-1)*8)/ROWS);
+  mascotas.forEach(function(m,i){
+    var col=i%COLS,row=Math.floor(i/COLS),cx=14+col*(CW+8),cy=108+row*(CH+8);
+    ctx.fillStyle='rgba(255,255,255,.07)';rr(ctx,cx,cy,CW,CH,8);ctx.fill();
+    var FW=CH-8;ctx.fillStyle='rgba(255,255,255,.12)';rr(ctx,cx+4,cy+4,FW,FW,6);ctx.fill();
+    if(m._img){ctx.save();rr(ctx,cx+4,cy+4,FW,FW,6);ctx.clip();var sc=Math.max(FW/m._img.width,FW/m._img.height);ctx.drawImage(m._img,cx+4+(FW-m._img.width*sc)/2,cy+4+(FW-m._img.height*sc)/2,m._img.width*sc,m._img.height*sc);ctx.restore();}
+    ctx.fillStyle='#fff';ctx.font='bold 12px Arial';ctx.fillText(m.nombre||'',cx+FW+10,cy+CH/2-4);
+    ctx.fillStyle='rgba(255,255,255,.4)';ctx.font='9px Arial';ctx.fillText(m.raza||'',cx+FW+10,cy+CH/2+10);
+  });
+  if(qrImg){ctx.fillStyle='rgba(255,255,255,.88)';rr(ctx,W-78,H-78,64,64,6);ctx.fill();ctx.drawImage(qrImg,W-76,H-76,60,60);}
+  else{ctx.fillStyle='rgba(255,255,255,.08)';rr(ctx,W-78,H-78,64,64,6);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;rr(ctx,W-78,H-78,64,64,6);ctx.stroke();ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='8px Arial';ctx.textAlign='center';ctx.fillText('QR',W-46,H-42);ctx.textAlign='left';}
+}
+
+function drawFamiliarLight(ctx,W,H,mascotas,qrImg){
+  var count=mascotas.length;
+  ctx.fillStyle='#fff';rr(ctx,0,0,W,H,14);ctx.fill();
+  ctx.fillStyle='#00B4B4';rr(ctx,0,0,W,52,14);ctx.fill();ctx.fillStyle='#00B4B4';ctx.fillRect(0,40,W,12);
+  logoText(ctx,14,34,14,true);
+  ctx.fillStyle='rgba(255,255,255,.8)';ctx.font='11px Arial';ctx.textAlign='right';ctx.fillText('Carnet Familiar',W-14,34);ctx.textAlign='left';
+  var dueno=mascotas[0]&&mascotas[0].dueno?mascotas[0].dueno:'';
+  if(dueno){ctx.fillStyle='#222';ctx.font='bold 13px Arial';ctx.fillText('Familia '+dueno,14,76);}
+  ctx.fillStyle='#aaa';ctx.font='11px Arial';ctx.fillText(count+' mascota'+(count!==1?'s':'')+' registradas',14,94);
+  ctx.strokeStyle='#f0f0ee';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(14,102);ctx.lineTo(W-14,102);ctx.stroke();
+  var COLS=count<=2?count:2,ROWS=Math.ceil(count/COLS);
+  var AW=W-28-90,CW=Math.floor((AW-(COLS-1)*8)/COLS),CH=Math.floor((H-108-20-(ROWS-1)*8)/ROWS);
+  mascotas.forEach(function(m,i){
+    var col=i%COLS,row=Math.floor(i/COLS),cx=14+col*(CW+8),cy=108+row*(CH+8);
+    ctx.fillStyle='#f8f8f8';rr(ctx,cx,cy,CW,CH,8);ctx.fill();ctx.strokeStyle='#eee';ctx.lineWidth=1;rr(ctx,cx,cy,CW,CH,8);ctx.stroke();
+    var FW=CH-8;ctx.fillStyle='#e0f7f7';rr(ctx,cx+4,cy+4,FW,FW,6);ctx.fill();
+    if(m._img){ctx.save();rr(ctx,cx+4,cy+4,FW,FW,6);ctx.clip();var sc=Math.max(FW/m._img.width,FW/m._img.height);ctx.drawImage(m._img,cx+4+(FW-m._img.width*sc)/2,cy+4+(FW-m._img.height*sc)/2,m._img.width*sc,m._img.height*sc);ctx.restore();}
+    ctx.fillStyle='#222';ctx.font='bold 12px Arial';ctx.fillText(m.nombre||'',cx+FW+10,cy+CH/2-4);
+    ctx.fillStyle='#888';ctx.font='9px Arial';ctx.fillText(m.raza||'',cx+FW+10,cy+CH/2+10);
+  });
+  if(qrImg){ctx.fillStyle='#f8f8f8';rr(ctx,W-78,H-78,64,64,6);ctx.fill();ctx.strokeStyle='#eee';ctx.lineWidth=1;rr(ctx,W-78,H-78,64,64,6);ctx.stroke();ctx.drawImage(qrImg,W-76,H-76,60,60);}
+  else{ctx.fillStyle='#f0f0f0';rr(ctx,W-78,H-78,64,64,6);ctx.fill();ctx.strokeStyle='#eee';ctx.lineWidth=1;rr(ctx,W-78,H-78,64,64,6);ctx.stroke();ctx.fillStyle='#bbb';ctx.font='8px Arial';ctx.textAlign='center';ctx.fillText('QR',W-46,H-42);ctx.textAlign='left';}
+}
+
+// ── Preview (sin QR para rapidez) ───────────────────────────
+function renderPreview(){
+  var canvas=document.getElementById('previewCanvas');if(!canvas)return;
+  var W=460,H=290;canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+  var m=mascotaActual;if(!m)return;
+  function draw(fi){ctx.clearRect(0,0,W,H);if(layoutActual==='actual')drawActual(ctx,W,H,m,fi,null);else if(layoutActual==='b')drawB(ctx,W,H,m,fi,null);else drawD(ctx,W,H,m,fi,null);}
+  if(m.foto&&m.foto.indexOf('http')>=0){loadImg(m.foto,function(fi){draw(fi);});}
+  else draw(null);
+}
+
+function renderFamiliarPreview(){
+  var canvas=document.getElementById('familiarCanvas');if(!canvas)return;
+  var W=460,H=290;canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+  var activas=misMascotas.filter(function(m){return !m.angelito;}).slice(0,4);
+  if(famLayoutActual==='dark') drawFamiliarDark(ctx,W,H,activas,null);
+  else drawFamiliarLight(ctx,W,H,activas,null);
+  // Cargar fotos async
+  activas.forEach(function(m,i){
+    if(m.foto&&m.foto.indexOf('http')>=0){
+      loadImg(m.foto,function(fi){
+        m._img=fi;
+        if(famLayoutActual==='dark') drawFamiliarDark(ctx,W,H,activas,null);
+        else drawFamiliarLight(ctx,W,H,activas,null);
+      });
+    }
+  });
+}
+
+// ── Descargar individual ─────────────────────────────────────
+function descargarIndividual(){
+  var m=mascotaActual;if(!m)return;
+  var canvas=document.createElement('canvas');var W=460,H=290;canvas.width=W;canvas.height=H;var ctx=canvas.getContext('2d');
+  var perfilUrl=BASE_URL+'/p/'+m.uid;
+  function finish(fi,qrImg){
+    if(layoutActual==='actual')drawActual(ctx,W,H,m,fi,qrImg);
+    else if(layoutActual==='b')drawB(ctx,W,H,m,fi,qrImg);
+    else drawD(ctx,W,H,m,fi,qrImg);
+    localStorage.setItem('carnet_layout_'+m.uid,layoutActual);
+    fetch('/api/galeria?action=updateCarnetLayout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:m.uid,layout:layoutActual})}).catch(function(){});
+    setTimeout(function(){var l=document.createElement('a');l.href=canvas.toDataURL('image/png');l.download='PetzID_'+m.nombre+'.png';l.click();toast('Carnet de '+m.nombre+' descargado');},300);
+  }
+  generateQR(perfilUrl,70,function(qrImg){
+    if(m.foto&&m.foto.indexOf('http')>=0){loadImg(m.foto,function(fi){finish(fi,qrImg);});}
+    else finish(null,qrImg);
+  });
+}
+
+// ── Descargar familiar ───────────────────────────────────────
+function descargarFamiliar(){
+  var activas=misMascotas.filter(function(m){return !m.angelito;}).slice(0,4);
+  var canvas=document.createElement('canvas');var W=460,H=290;canvas.width=W;canvas.height=H;var ctx=canvas.getContext('2d');
+  var famUrl=BASE_URL+'/familia/'+(activas[0]&&activas[0].email?activas[0].email.split('@')[0]:'familia');
+  // Preload all fotos
+  var loaded=0;
+  function tryDraw(){
+    generateQR(famUrl,70,function(qrImg){
+      if(famLayoutActual==='dark') drawFamiliarDark(ctx,W,H,activas,qrImg);
+      else drawFamiliarLight(ctx,W,H,activas,qrImg);
+      setTimeout(function(){var l=document.createElement('a');l.href=canvas.toDataURL('image/png');l.download='PetzID_Familiar.png';l.click();toast('Carnet familiar descargado');},400);
+    });
+  }
+  activas.forEach(function(m){
+    if(m.foto&&m.foto.indexOf('http')>=0){
+      loadImg(m.foto,function(fi){m._img=fi;loaded++;if(loaded===activas.length)tryDraw();});
+    } else {loaded++;if(loaded===activas.length)tryDraw();}
+  });
+  if(!activas.length) tryDraw();
+}
+
+// ── Selección layout ─────────────────────────────────────────
+function setLayout(l){
+  layoutActual=l;
+  document.querySelectorAll('.layout-opt').forEach(function(el){el.classList.remove('active');});
+  var el=document.getElementById('lOpt_'+l);if(el)el.classList.add('active');
+  renderPreview();
+  // Save preference
+  if(mascotaActual&&mascotaActual.uid) localStorage.setItem('carnet_layout_'+mascotaActual.uid,l);
+}
+
+function setFamLayout(l){
+  famLayoutActual=l;
+  document.querySelectorAll('.fam-layout-opt').forEach(function(el){el.classList.remove('active');});
+  var el=document.getElementById('famL_'+l);if(el)el.classList.add('active');
+  renderFamiliarPreview();
+}
+
+function selectMascota(uid){
+  mascotaActual=misMascotas.find(function(m){return m.uid===uid;})||null;
+  document.querySelectorAll('.masc-chip').forEach(function(el){el.classList.remove('active');});
+  var chip=document.querySelector('.masc-chip[data-uid="'+uid+'"]');if(chip)chip.classList.add('active');
+  // Load saved layout
+  var saved=localStorage.getItem('carnet_layout_'+uid)||'actual';
+  layoutActual=saved;
+  document.querySelectorAll('.layout-opt').forEach(function(el){el.classList.remove('active');});
+  var lOpt=document.getElementById('lOpt_'+saved);if(lOpt)lOpt.classList.add('active');
+  renderPreview();
+}
+
+// ── Render UI ────────────────────────────────────────────────
+function renderUI(){
+  var activas=misMascotas.filter(function(m){return !m.angelito;});
+  var hasPremium=misMascotas.some(function(m){return m.premium===true||m.premium===1;});
+
+  if(!hasPremium){
+    document.getElementById('root').innerHTML=
+      '<div class="no-premium">'+
+      '<div style="font-size:48px;margin-bottom:16px">🔒</div>'+
+      '<div style="font-size:16px;font-weight:700;color:#222;margin-bottom:8px">IDs Premium</div>'+
+      '<div style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.7">Diseña carnets personalizados con tu foto.<br>Disponible con el plan Premium.</div>'+
+      '<a href="/premium.html" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff;border-radius:24px;font-size:14px;font-weight:700;text-decoration:none">Ver plan Premium →</a>'+
+      '</div>';
+    return;
+  }
+
+  var html='';
+
+  // ── Individual ──
+  html+='<div class="sec-titulo">Carnet individual</div>';
+  // Selector mascotas
+  html+='<div class="masc-selector">';
+  activas.forEach(function(m){
+    var fotoHtml=m.foto&&m.foto.indexOf('http')>=0
+      ?'<img src="'+m.foto+'" crossorigin="anonymous">'
+      :'🐾';
+    html+='<div class="masc-chip" data-uid="'+m.uid+'" onclick="selectMascota(this.dataset.uid)">'
+      +'<div class="masc-chip-foto">'+fotoHtml+'</div>'
+      +'<div class="masc-chip-nombre">'+m.nombre+'</div>'
+      +'</div>';
+  });
+  html+='</div>';
+  // Layout selector
+  html+='<div class="layout-grid">'
+    +'<div class="layout-opt active" id="lOpt_actual" onclick="setLayout(\'actual\')"><div class="layout-opt-ico">🪪</div><div class="layout-opt-nom">Actual</div></div>'
+    +'<div class="layout-opt" id="lOpt_b" onclick="setLayout(\'b\')"><div class="layout-opt-ico">🔵</div><div class="layout-opt-nom">Layout B</div></div>'
+    +'<div class="layout-opt" id="lOpt_d" onclick="setLayout(\'d\')"><div class="layout-opt-ico">🌑</div><div class="layout-opt-nom">Layout D</div></div>'
+    +'</div>';
+  // Preview
+  html+='<div class="preview-wrap"><div class="preview-lbl">Vista previa</div><canvas id="previewCanvas" height="290"></canvas></div>';
+  html+='<button class="btn-dl" onclick="descargarIndividual()">⬇ Descargar carnet individual</button>';
+
+  // ── Familiar ──
+  if(activas.length>=2){
+    html+='<div class="sec-titulo" style="margin-top:8px">Carnet familiar ('+activas.length+' mascotas)</div>';
+    html+='<div class="familiar-card">';
+    html+='<div class="familiar-layouts">'
+      +'<div class="layout-opt fam-layout-opt active" id="famL_dark" onclick="setFamLayout(\'dark\')"><div class="layout-opt-ico">🌙</div><div class="layout-opt-nom">Oscuro</div></div>'
+      +'<div class="layout-opt fam-layout-opt" id="famL_light" onclick="setFamLayout(\'light\')"><div class="layout-opt-ico">☀️</div><div class="layout-opt-nom">Claro</div></div>'
+      +'</div>';
+    html+='<div class="preview-lbl">Vista previa</div><canvas id="familiarCanvas" height="290"></canvas>';
+    html+='<button class="btn-dl" onclick="descargarFamiliar()">⬇ Descargar carnet familiar</button>';
+    html+='</div>';
+  }
+
+  document.getElementById('root').innerHTML=html;
+
+  // Init
+  if(activas.length){
+    mascotaActual=activas[0];
+    var chip=document.querySelector('.masc-chip');if(chip)chip.classList.add('active');
+    var saved=localStorage.getItem('carnet_layout_'+mascotaActual.uid)||'actual';
+    layoutActual=saved;
+    var lOpt=document.getElementById('lOpt_'+saved);
+    document.querySelectorAll('.layout-opt:not(.fam-layout-opt)').forEach(function(el){el.classList.remove('active');});
+    if(lOpt)lOpt.classList.add('active');
+    setTimeout(function(){renderPreview();if(activas.length>=2)renderFamiliarPreview();},100);
+  }
+}
+
+// ── Load data ────────────────────────────────────────────────
+if(!sessionEmail){
+  document.getElementById('root').innerHTML='<div class="no-premium"><div style="font-size:48px;margin-bottom:16px">🔐</div><div style="font-size:16px;font-weight:700;color:#222;margin-bottom:8px">Ingresa para continuar</div><button onclick="petmiAbrirLogin()" style="padding:12px 28px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer">Ingresar</button></div>';
+}else{
+  fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(sessionEmail)+'&select=*&order=created_at.asc',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(rows){
+    misMascotas=rows||[];
+    renderUI();
+  }).catch(function(){
+    document.getElementById('root').innerHTML='<div style="text-align:center;padding:40px;color:#aaa">Error al cargar. <a href="/familia.html" style="color:#00B4B4">Volver</a></div>';
+  });
+}
+</script>
+<script src="/header.js"></script>
+</body>
+</html>
