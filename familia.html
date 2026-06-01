@@ -110,6 +110,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 var sessionEmail = localStorage.getItem('petzid_email') || '';
 var sessionDueno = localStorage.getItem('petzid_dueno') || '';
 var misMascotas  = [];
+window.misMascotas = misMascotas;
 var mascotasPerdidas = {};
 
 // Init
@@ -139,6 +140,7 @@ function cargarFamilia(email){
     var acts = (results[1].actividades)||[];
     if(!d.found||d.mascotas.length===0){ mostrarNoSession(); return; }
     misMascotas = d.mascotas;
+    window.misMascotas = misMascotas;
     mascotasPerdidas = {};
     acts.forEach(function(a){ mascotasPerdidas[a.uid_creador] = a.id; });
     renderFamilia();
@@ -637,7 +639,7 @@ var IP = {
   renderMascotas: function(){
     var lista = document.getElementById('ipListaMascotas');
     lista.innerHTML = '';
-    var activas = (window.misMascotas||[]).filter(function(m){ return !m.angelito && String(m.angelito).toLowerCase()!=='si'; });
+    var activas = (window.misMascotas||[]).filter(function(m){ return !m.angelito; });
     if(!activas.length){
       lista.innerHTML = '<div style="text-align:center;padding:20px;color:#aaa;font-size:13px">No hay mascotas activas</div>';
       return;
@@ -698,22 +700,30 @@ var IP = {
     ctx.fillStyle='#F5C842';ctx.fillText('ID',x+ctx.measureText('petz').width,y);
   },
 
-  drawActual: function(ctx,W,H,m,fImg){
-    var rr=IP.rr,lbl=IP.lbl,logo=IP.logo;
-    var g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#0d1b2a');g.addColorStop(1,'#1b3a4a');ctx.fillStyle=g;rr(ctx,0,0,W,H,14);ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,.1)';rr(ctx,14,14,106,H-28,10);ctx.fill();
-    if(fImg){ctx.save();rr(ctx,14,14,106,H-28,10);ctx.clip();var sc=Math.max(106/fImg.width,(H-28)/fImg.height);ctx.drawImage(fImg,14+(106-fImg.width*sc)/2,14+((H-28)-fImg.height*sc)/2,fImg.width*sc,fImg.height*sc);ctx.restore();}else{ctx.fillStyle='#aaa';ctx.font='32px Arial';ctx.textAlign='center';ctx.fillText('&#128062;',67,H/2+12);ctx.textAlign='left';}
-    var DX=132;logo(ctx,DX,30,12,true);
-    ctx.fillStyle='#00B4B4';ctx.font='bold 8px Arial';ctx.fillText('NOMBRE',DX,48);
-    ctx.fillStyle='#fff';ctx.font='bold 18px Arial Black,Arial';ctx.fillText(m.nombre||'',DX,68);
-    if(m.apodo){ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='italic 10px Arial';ctx.fillText('"'+m.apodo+'"',DX,82);}
-    var oy=m.apodo?96:84;
-    lbl(ctx,'RAZA',m.raza,DX,oy,true);
-    lbl(ctx,'SEXO',m.sexo,DX,oy+24,true);
-    lbl(ctx,'FECHA DE NACIMIENTO',m.fecha,DX,oy+48,true);
-    lbl(ctx,'RESPONSABLE',m.dueno,DX,oy+72,true);
-    ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(DX,220);ctx.lineTo(W-14,220);ctx.stroke();
-    logo(ctx,DX,238,10,true);
+  drawActual: function(ctx,W,H,m,fi){
+    var FW=Math.round(W*0.43),IW=W-FW,YH=Math.round(H*0.127);
+    var TH=H-YH,TEAL_H=Math.round(TH*0.50),WHITE_H=TH-TEAL_H;
+    var px=FW+12,pw=IW-24;
+    ctx.fillStyle='#b2e0e0';ctx.fillRect(0,0,FW,TH);
+    if(fi){var sc=Math.max(FW/fi.width,TH/fi.height);var sw=fi.width*sc,sh=fi.height*sc;ctx.save();ctx.beginPath();ctx.rect(0,0,FW,TH);ctx.clip();ctx.drawImage(fi,(FW-sw)/2,(TH-sh)/2,sw,sh);ctx.restore();}
+    ctx.fillStyle='#00B4B4';ctx.fillRect(FW,0,IW,TEAL_H);
+    ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='700 7px Arial';ctx.textAlign='left';ctx.fillText('N O M B R E',px,TEAL_H-52);
+    ctx.fillStyle='#fff';ctx.font='900 22px Arial Black,Arial';ctx.fillText('"'+(m.nombre||'').toUpperCase()+'"',px,TEAL_H-30);
+    if(m.apodo&&m.apodo.trim()){var ap=(m.apodo||'').toUpperCase();ctx.font='700 8px Arial';var bw=ctx.measureText(ap).width+16;ctx.fillStyle='#F4A0B0';ctx.beginPath();ctx.rect(px,TEAL_H-18,bw,16);ctx.fill();ctx.fillStyle='#7a1a2e';ctx.textAlign='center';ctx.fillText(ap,px+bw/2,TEAL_H-8);}
+    ctx.fillStyle='#fff';ctx.fillRect(FW,TEAL_H,IW,WHITE_H);
+    var ROW=Math.floor(WHITE_H/3),col=Math.floor(pw/2);
+    function fld(l,v,x,y,right){ctx.textAlign=right?'right':'left';var tx=right?(x+col):x;ctx.fillStyle='#bbb';ctx.font='600 6px Arial';ctx.fillText(l,tx,y);ctx.fillStyle='#222';ctx.font='700 10px Arial';ctx.fillText((v||'-').toUpperCase().substring(0,18),tx,y+13);}
+    var fl=(m.tipoFecha||'nacimiento')==='llegada'?'LLEGO A CASA':'NACIMIENTO';
+    fld('ESPECIE',m.especie,px,TEAL_H+8,false);fld('SEXO',m.sexo,px,TEAL_H+8,true);
+    ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW,pw,1);
+    fld('RAZA',m.raza,px,TEAL_H+ROW+8,false);fld(fl,m.fecha,px,TEAL_H+ROW+8,true);
+    ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW*2,pw,1);
+    ctx.textAlign='left';ctx.fillStyle='#bbb';ctx.font='600 6px Arial';ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+8);
+    ctx.fillStyle='#222';ctx.font='700 10px Arial';ctx.fillText((m.dueno||'-').toUpperCase(),px,TEAL_H+ROW*2+22);
+    ctx.fillStyle='#F5C842';ctx.fillRect(0,TH,W,YH);
+    var uid6=(m.uid||'').replace(/-/g,'').toUpperCase().slice(-6);
+    ctx.fillStyle='#555';ctx.font='600 6px Arial';ctx.textAlign='left';ctx.fillText('ID',px,TH+10);ctx.fillStyle='#333';ctx.font='400 14px Arial';ctx.fillText(uid6,px,TH+26);
+    ctx.fillStyle='#00B4B4';ctx.font='bold 13px Arial';ctx.textAlign='right';ctx.fillText('petz',W-26,TH+24);ctx.fillStyle='#F5C842';ctx.fillText('ID',W-10,TH+24);ctx.textAlign='left';
   },
 
   drawB: function(ctx,W,H,m,fImg){
@@ -815,7 +825,7 @@ var IP = {
     var ctx=canvas.getContext('2d');
 
     if(IP.tipo === 'familiar'){
-      var activas=(window.misMascotas||[]).filter(function(m){return !m.angelito&&String(m.angelito).toLowerCase()!=='si';}).slice(0,4);
+      var activas=(window.misMascotas||[]).filter(function(m){return !m.angelito;}).slice(0,4);
       IP.drawFamiliar(ctx,W,H,activas);
       return;
     }
@@ -831,7 +841,7 @@ var IP = {
     if(m.foto && m.foto.indexOf('http')>=0){
       var img=new Image();img.crossOrigin='anonymous';
       img.onload=function(){draw(img);};
-      img.onerror=function(){draw(null);};
+      img.onerror=function(){var img2=new Image();img2.onload=function(){draw(img2);};img2.onerror=function(){draw(null);};img2.src=m.foto;};
       img.src=m.foto;
     } else {
       draw(null);
@@ -845,7 +855,7 @@ var IP = {
     var nombre = 'PetzID';
 
     if(IP.tipo==='familiar'){
-      var activas=(window.misMascotas||[]).filter(function(m){return !m.angelito&&String(m.angelito).toLowerCase()!=='si';}).slice(0,4);
+      var activas=(window.misMascotas||[]).filter(function(m){return !m.angelito;}).slice(0,4);
       IP.drawFamiliar(ctx,W,H,activas);
       nombre='PetzID_Familiar';
       setTimeout(function(){
