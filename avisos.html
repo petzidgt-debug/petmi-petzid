@@ -106,7 +106,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <div class="wrap" id="contenido"><div class="spinner"></div></div>
 
-<button class="fab-pill" style="background:#764ba2" onclick="abrirPublicar()"><i class="ti ti-plus" aria-hidden="true"></i>Publicar aviso</button>
+<button class="fab-pill" id="btnPublicar" style="background:#764ba2" onclick="abrirPublicar()"><i class="ti ti-plus" aria-hidden="true"></i>Publicar aviso</button>
 
 <div class="modal-overlay" id="modalPublicar">
   <div class="modal-sheet">
@@ -198,6 +198,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <script>
 var sessionEmail = localStorage.getItem('petzid_email')||'';
 var miMascota    = null;
+var esAfiliado   = false;
+var afiliadoPlan = null;
 var filtroActual = '';
 var avisosData   = [];
 var tipoSel      = 'perdido';
@@ -213,6 +215,23 @@ var TIPO_LABELS = {perdido:'🚨 Perdido',busco:'🔍 Busco',adopcion:'🏠 Adop
 if(sessionEmail){
   fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
     .then(function(r){return r.json();}).then(function(d){if(d.found&&d.mascotas.length)miMascota=d.mascotas[0];});
+  // Verificar si es afiliado activo
+  var SUPA_URL2='https://ilcreewilnkchvozicyp.supabase.co';
+  var SUPA_KEY2='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+  fetch(SUPA_URL2+'/rest/v1/actividades?es_afiliado=eq.true&afiliado_email=eq.'+encodeURIComponent(sessionEmail)+'&activo=eq.true&select=afiliado_plan,afiliado_vence&limit=1',{
+    headers:{'apikey':SUPA_KEY2,'Authorization':'Bearer '+SUPA_KEY2}
+  }).then(function(r){return r.json();}).then(function(rows){
+    if(rows&&rows.length){
+      var vence=rows[0].afiliado_vence?new Date(rows[0].afiliado_vence):null;
+      if(!vence||vence>=new Date()){
+        esAfiliado=true;
+        afiliadoPlan=rows[0].afiliado_plan||'basico';
+        // Mostrar badge en FAB
+        var fab=document.getElementById('btnPublicar');
+        if(fab){fab.style.background='linear-gradient(135deg,#00B4B4,#F5C842)';fab.innerHTML='<i class="ti ti-star" aria-hidden="true"></i> Publicar como Partner';}
+      }
+    }
+  }).catch(function(){});
 }
 
 cargar();
@@ -279,6 +298,12 @@ function setFiltro(tipo,el){
 
 function renderLista(){
   var lista=filtroActual?avisosData.filter(function(a){return a.tipo===filtroActual;}):avisosData;
+  // Afiliados primero
+  lista=lista.slice().sort(function(a,b){
+    if(a.es_afiliado&&!b.es_afiliado) return -1;
+    if(!a.es_afiliado&&b.es_afiliado) return 1;
+    return 0;
+  });
   if(!lista.length){
     document.getElementById('contenido').innerHTML='<div class="empty"><div class="empty-icon">📢</div><div class="empty-txt">No hay avisos aún</div></div>';
     return;
@@ -291,6 +316,7 @@ function renderLista(){
 
 function renderAviso(a,i){
   var esCreador=sessionEmail&&a.email_creador&&a.email_creador.toLowerCase()===sessionEmail.toLowerCase();
+  var esAfiliadoAviso=a.es_afiliado===true||a.es_afiliado==='true';
   var sUrl='https://worker-js.petzid-gt.workers.dev/s/a/'+a.id;
   var HEADER_COLORS={perdido:'#c0392b',busco:'#2e7d32',adopcion:'#2e7d32'};
   var LABELS={perdido:'Perdido',busco:'Busco',adopcion:'Adopcion'};
@@ -298,7 +324,8 @@ function renderAviso(a,i){
   var BORDER={perdido:'2px solid #c0392b',adopcion:'1.5px solid #2e7d32'};
   var headerColor=HEADER_COLORS[a.tipo]||'#888';
   var label=ICONS[a.tipo]+' '+LABELS[a.tipo];
-  var border=BORDER[a.tipo]||'0.5px solid #eee';
+  var border=esAfiliadoAviso?'2px solid #F5C842':(BORDER[a.tipo]||'0.5px solid #eee');
+  var partnerBadge=esAfiliadoAviso?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;background:#F5C842;color:#1a1a2e;padding:3px 10px;border-radius:99px;margin-bottom:6px">Partner PetMi ✓</span><br>':'';
 
   // Foto: busco NO tiene, resto usa imagen o foto_creador
   var fotoSrc = a.tipo==='busco' ? null
@@ -340,6 +367,7 @@ function renderAviso(a,i){
     +'<span style="font-size:11px;color:#666">'+a.nombre_creador+'</span></div>';
 
   var tituloColor=a.tipo==='perdido'?'#c0392b':'#222';
+  if(esAfiliadoAviso) html+=partnerBadge;
   html+='<div style="font-size:14px;font-weight:700;color:'+tituloColor+';margin-bottom:3px;line-height:1.3">'+a.titulo+'</div>';
 
   if(a.ubicacion) html+='<div style="font-size:11px;color:#888;margin-bottom:2px">📍 '+a.ubicacion+'</div>';
@@ -701,6 +729,8 @@ function publicar(){
     nombre_creador:extraData.nombre_creador||miMascota.nombre,
     foto_creador:miMascota.foto||'',
     email_creador:sessionEmail,
+    es_afiliado:esAfiliado,
+    afiliado_email:esAfiliado?sessionEmail:null,
     tipo:tipoSel,
     titulo:titulo,
     descripcion:document.getElementById('pubDesc').value.trim(),
