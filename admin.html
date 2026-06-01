@@ -127,8 +127,10 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('familias',this)"><span class="nav-icon">🏠</span>Familias</div>
       <div class="nav-item" onclick="showScreen('eventos',this)"><span class="nav-icon">🎉</span>Eventos y Avisos</div>
       <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
+      <div class="nav-item" onclick="showScreen('grupos',this)"><span class="nav-icon">👥</span>Grupos</div>
       <div class="nav-item" onclick="showScreen('campanas',this)"><span class="nav-icon">📧</span>Campanas</div>
-      <div class="nav-item" onclick="window.open('/admin-premium.html','_blank')"><span class="nav-icon">⭐</span>Premium</div>
+      <div class="nav-item" onclick="showScreen('afiliados',this)"><span class="nav-icon">🤝</span>Afiliados</div>
+      <div class="nav-item" onclick="showScreen('premium',this)"><span class="nav-icon">⭐</span>Premium</div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
@@ -319,6 +321,12 @@ tbody tr:last-child td{border-bottom:none}
       <div id="premiumLista"><div class="spinner"></div></div>
     </div>
 
+    <!-- AFILIADOS -->
+    <div class="screen" id="screenAfiliados">
+      <h2 class="screen-title">🤝 Afiliados</h2>
+      <iframe id="iframeAfiliados" src="" style="width:100%;height:80vh;border:none;border-radius:14px;background:#fff" loading="lazy"></iframe>
+    </div>
+
   </div>
 </div>
 
@@ -446,6 +454,11 @@ function showScreen(name,el){
   if(name==='premium') cargarListaPremium();
   if(name==='reglas') setTimeout(cargarReglas,100);
   if(name==='grupos') setTimeout(cargarAdminGrupos,100);
+  if(name==='afiliados'){
+    var ifr=document.getElementById('iframeAfiliados');
+    if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
+  }
+  if(name==='premium') setTimeout(cargarPremiumAdmin,100);
 }
 
 // ── Carga de datos ────────────────────────────────────────────
