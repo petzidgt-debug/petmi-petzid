@@ -120,6 +120,28 @@ tr:hover td{background:#fafafa}
     <div id="buscarResult" style="margin-top:10px"></div>
   </div>
 
+
+  <!-- Pack de ventas adicionales -->
+  <div class="card">
+    <div class="card-titulo">&#128176; Pack de ventas adicionales</div>
+    <div style="font-size:12px;color:#888;margin-bottom:14px">Agrega ventas extras al mes para usuarios Premium. Base: 3 ventas/mes.</div>
+    <div class="form-grid">
+      <input type="email" class="form-input" id="packEmail" placeholder="Email del usuario Premium">
+      <select class="form-select" id="packTipo">
+        <option value="3">+3 ventas &mdash; Q25</option>
+        <option value="6">+6 ventas &mdash; Q50</option>
+        <option value="9">+9 ventas &mdash; Q75</option>
+      </select>
+      <input type="text" class="form-input" id="packRef" placeholder="Referencia de pago">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-activar" style="background:#856404" onclick="activarPack()">Activar pack (+30 dias)</button>
+      <button class="btn-desact" onclick="quitarPack()">Quitar pack</button>
+    </div>
+    <div class="form-msg" id="packMsg"></div>
+    <div id="packResult" style="margin-top:10px;font-size:12px;color:#555"></div>
+  </div>
+
   <!-- Lista -->
   <div class="card">
     <div class="card-titulo">Usuarios Premium</div>
@@ -162,17 +184,17 @@ var todosLosDatos=[];
 var filtroActual='todos';
 
 function doLogin(){
-  if(localStorage.getItem('petmi_admin')==='1'){
-    document.getElementById('appWrap').style.display='block';
-    cargarTodo();
+  // Auth check — redirect to admin if not logged in
+  if(localStorage.getItem('petmi_admin')!=='1'){
+    window.location.href='/admin.html';
     return;
   }
-  // No tiene sesión — redirigir al admin
-  window.location.href='/admin.html';
+  document.getElementById('appWrap').style.display='block';
+  cargarTodo();
 }
 
 function cargarTodo(){
-  fetch(SUPA_URL+'/rest/v1/mascotas?select=nombre,email,premium,premium_hasta,premium_metodo,premium_ref,premium_inicio&order=premium_hasta.desc.nullslast',{headers:H})
+  fetch(SUPA_URL+'/rest/v1/mascotas?select=nombre,email,premium,premium_hasta,premium_metodo,premium_ref,premium_inicio,ventas_extra_mes,ventas_extra_vence&order=premium_hasta.desc.nullslast',{headers:H})
   .then(function(r){return r.json();})
   .then(function(rows){
     todosLosDatos=(rows||[]).filter(function(r){return r.premium||r.premium_hasta;});
@@ -246,7 +268,8 @@ function renderTabla(){
     html+='<td style="color:#888;font-size:12px">'+(f?f.toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}):'—')+'</td>';
     html+='<td style="font-weight:600;color:#2e7d32">'+(r.premium_metodo==='cortesia'?'Q0':'Q100')+'</td>';
     html+='<td><span class="badge '+metBadge+'">'+metLabel+'</span></td>';
-    html+='<td><span class="badge '+badge+'">'+estado+'</span></td>';
+    var packActivo = r.ventas_extra_mes && r.ventas_extra_vence && new Date(r.ventas_extra_vence) >= new Date();
+    html+='<td><span class="badge '+badge+'">'+estado+'</span>'+(packActivo?'<br><span style="font-size:10px;color:#856404;font-weight:700">Pack +'+r.ventas_extra_mes+' ventas</span>':'')+'</td>';
     html+='<td style="display:flex;gap:6px">';
     html+='<button class="btn-icon btn-renovar" data-email="'+r.email+'" onclick="renovarDesdeTabla(this)">↻</button>';
     html+='<button class="btn-icon" style="color:#c0392b;border-color:#fcc" data-email="'+r.email+'" onclick="desactivarDesdeTabla(this)">✗</button>';
@@ -329,6 +352,60 @@ function mostrarMsg(txt,tipo){
 
 doLogin();
 function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+
+// ── Pack de ventas adicionales ────────────────────────────────
+function activarPack(){
+  var email = document.getElementById('packEmail').value.trim().toLowerCase();
+  var extra  = parseInt(document.getElementById('packTipo').value) || 3;
+  if(!email){ packMsg('Ingresa el email','err'); return; }
+
+  // Verificar que sea Premium activo
+  fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email)+'&select=nombre,premium,ventas_extra_mes',{headers:H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    if(!rows||!rows.length){ packMsg('Usuario no encontrado','err'); return; }
+    if(!rows[0].premium){ packMsg('El usuario no tiene Premium activo','err'); return; }
+
+    var vence = new Date();
+    vence.setDate(vence.getDate() + 30);
+
+    return fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email),{
+      method:'PATCH', headers:H_WRITE,
+      body: JSON.stringify({
+        ventas_extra_mes:  extra,
+        ventas_extra_vence: vence.toISOString()
+      })
+    }).then(function(r){
+      if(r.ok){
+        packMsg('Pack +'+extra+' ventas activado hasta '+vence.toLocaleDateString('es-GT'),'ok');
+        document.getElementById('packResult').textContent = 'Usuario: '+(rows[0].nombre||email)+' — '+extra+' ventas extra por 30 dias';
+        cargarTodo();
+      } else { packMsg('Error al activar','err'); }
+    });
+  }).catch(function(){ packMsg('Error de conexion','err'); });
+}
+
+function quitarPack(){
+  var email = document.getElementById('packEmail').value.trim().toLowerCase();
+  if(!email){ packMsg('Ingresa el email','err'); return; }
+  if(!confirm('Quitar pack de ventas de '+email+'?')) return;
+  fetch(SUPA_URL+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email),{
+    method:'PATCH', headers:H_WRITE,
+    body: JSON.stringify({ ventas_extra_mes: null, ventas_extra_vence: null })
+  }).then(function(r){
+    if(r.ok){ packMsg('Pack removido','ok'); cargarTodo(); }
+    else packMsg('Error','err');
+  });
+}
+
+function packMsg(txt, tipo){
+  var el = document.getElementById('packMsg');
+  el.textContent = txt;
+  el.style.display = 'block';
+  el.style.background = tipo==='ok' ? '#e0f7f7' : '#fbeaf0';
+  el.style.color = tipo==='ok' ? '#007a7a' : '#c0392b';
+  setTimeout(function(){ el.style.display='none'; }, 4000);
+}
 </script>
 </body>
 </html>

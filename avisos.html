@@ -101,6 +101,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <button class="filtro-btn" onclick="setFiltro('perdido',this)">🚨 Perdidos</button>
     <button class="filtro-btn" onclick="setFiltro('busco',this)">🔍 Busco</button>
     <button class="filtro-btn" onclick="setFiltro('adopcion',this)">🏠 Adopción</button>
+    <button class="filtro-btn" onclick="setFiltro('venta',this)">💰 Venta</button>
   </div>
 </div>
 
@@ -116,6 +117,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <div class="tipo-option selected" onclick="selTipo('perdido',this)">🚨<br>Perdido</div>
       <div class="tipo-option" onclick="selTipo('busco',this)">🔍<br>Busco</div>
       <div class="tipo-option" onclick="selTipo('adopcion',this)">🏠<br>Adopción</div>
+      <div class="tipo-option" id="tipoVentaBtn" onclick="selTipo('venta',this)" style="display:none;border-color:#F5C842;color:#856404">💰<br>Vender</div>
     </div>
     <label class="form-label">Título *</label>
     <input type="text" class="form-input" id="pubTitulo" placeholder="Ej: Se perdió Cami en Zona 10">
@@ -200,6 +202,9 @@ var sessionEmail = localStorage.getItem('petzid_email')||'';
 var miMascota    = null;
 var esAfiliado   = false;
 var afiliadoPlan = null;
+var ventasLimite = 3;  // base Premium
+var ventasUsadas = 0;
+var ventasExtraVence = null;
 var filtroActual = '';
 var avisosData   = [];
 var tipoSel      = 'perdido';
@@ -210,11 +215,36 @@ var TIPO_COLORS = {
   busco:    {bg:'#e8f5e9',color:'#2e7d32',header:'#2e7d32'},
   adopcion: {bg:'#e8f5e9',color:'#2e7d32',header:'#2e7d32'}
 };
-var TIPO_LABELS = {perdido:'🚨 Perdido',busco:'🔍 Busco',adopcion:'🏠 Adopción'};
+var TIPO_LABELS = {perdido:'🚨 Perdido',busco:'🔍 Busco',adopcion:'🏠 Adopción',venta:'💰 Venta'};
 
 if(sessionEmail){
   fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
     .then(function(r){return r.json();}).then(function(d){if(d.found&&d.mascotas.length)miMascota=d.mascotas[0];});
+  // Verificar si usuario es Premium (para mostrar opcion venta)
+  var SUPA_URL3='https://ilcreewilnkchvozicyp.supabase.co';
+  var SUPA_KEY3='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+  fetch(SUPA_URL3+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(sessionEmail)+'&premium=eq.true&select=premium,ventas_extra_mes,ventas_extra_vence&limit=1',{
+    headers:{'apikey':SUPA_KEY3,'Authorization':'Bearer '+SUPA_KEY3}
+  }).then(function(r){return r.json();}).then(function(rows){
+    if(rows&&rows.length){
+      var btn=document.getElementById('tipoVentaBtn');
+      if(btn) btn.style.display='';
+      // Calcular limite con extras
+      var extra = parseInt(rows[0].ventas_extra_mes)||0;
+      var extraVence = rows[0].ventas_extra_vence ? new Date(rows[0].ventas_extra_vence) : null;
+      if(extra>0 && extraVence && extraVence >= new Date()){
+        ventasLimite = 3 + extra;
+        ventasExtraVence = extraVence;
+      }
+      // Contar ventas del mes actual
+      var mesInicio = new Date();mesInicio.setDate(1);mesInicio.setHours(0,0,0,0);
+      fetch(SUPA_URL3+'/rest/v1/actividades?email_creador=eq.'+encodeURIComponent(sessionEmail)+'&tipo=eq.venta&created_at=gte.'+mesInicio.toISOString()+'&select=id',{
+        headers:{'apikey':SUPA_KEY3,'Authorization':'Bearer '+SUPA_KEY3}
+      }).then(function(r){return r.json();}).then(function(ventas){
+        ventasUsadas = (ventas||[]).length;
+      }).catch(function(){});
+    }
+  }).catch(function(){});
   // Verificar si es afiliado activo
   var SUPA_URL2='https://ilcreewilnkchvozicyp.supabase.co';
   var SUPA_KEY2='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
@@ -318,9 +348,9 @@ function renderAviso(a,i){
   var esCreador=sessionEmail&&a.email_creador&&a.email_creador.toLowerCase()===sessionEmail.toLowerCase();
   var esAfiliadoAviso=a.es_afiliado===true||a.es_afiliado==='true';
   var sUrl='https://worker-js.petzid-gt.workers.dev/s/a/'+a.id;
-  var HEADER_COLORS={perdido:'#c0392b',busco:'#2e7d32',adopcion:'#2e7d32'};
-  var LABELS={perdido:'Perdido',busco:'Busco',adopcion:'Adopcion'};
-  var ICONS={perdido:'🚨',busco:'🔍',adopcion:'🏠'};
+  var HEADER_COLORS={perdido:'#c0392b',busco:'#2e7d32',adopcion:'#2e7d32',venta:'#856404'};
+  var LABELS={perdido:'Perdido',busco:'Busco',adopcion:'Adopcion',venta:'Venta'};
+  var ICONS={perdido:'🚨',busco:'🔍',adopcion:'🏠',venta:'💰'};
   var BORDER={perdido:'2px solid #c0392b',adopcion:'1.5px solid #2e7d32'};
   var headerColor=HEADER_COLORS[a.tipo]||'#888';
   var label=ICONS[a.tipo]+' '+LABELS[a.tipo];
@@ -719,10 +749,22 @@ function publicar(){
     }
   }
 
+  // Verificar cuota de ventas para Premium
+  if(tipoSel==='venta'){
+    if(ventasUsadas>=ventasLimite){
+      var maxMsg = 'Has usado '+ventasUsadas+' de '+ventasLimite+' ventas este mes. ';
+      maxMsg += ventasLimite<=3
+        ? 'Agrega un pack (+3 por Q25) desde premium.html o contacta al admin.'
+        : 'Límite máximo alcanzado. Contacta al admin para más opciones.';
+      mostrarToast(maxMsg);
+      return;
+    }
+  }
+
   var btn=document.querySelector('.btn-publicar');
   btn.disabled=true;btn.textContent='Publicando...';
   // perdido=activo inmediato, resto requiere aprobacion admin
-  var activo=tipoSel==='perdido';
+  var activo=tipoSel==='perdido'||tipoSel==='venta';
 
   var payload=Object.assign({
     uid_creador:miMascota.uid,
@@ -771,6 +813,7 @@ function publicar(){
       mostrarModalJefe();
       setTimeout(function(){
         ocultarModalJefe();
+        if(tipoSel==='venta') ventasUsadas++;
         mostrarToast(tipoSel==='adopcion'?'Enviado para revision':'Aviso publicado!');
         cargar();
       },3000);
