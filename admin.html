@@ -104,6 +104,10 @@ tbody tr:last-child td{border-bottom:none}
   .stats-grid{grid-template-columns:1fr 1fr}
   .charts-grid{grid-template-columns:1fr}
 }
+
+/* ── Premium inline ─────────────────────────────────────── */
+.pm-filtro{padding:6px 14px;border:1.5px solid #eee;border-radius:999px;font-size:12px;font-weight:600;color:#888;background:#fff;cursor:pointer;font-family:Arial}
+.pm-filtro.active{border-color:#F5C842;background:#FFF9E6;color:#856404}
 </style>
 </head>
 <body>
@@ -310,13 +314,60 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
     <div class="screen" id="screenPremium">
-      <iframe id="iframePremium" src="" style="width:100%;height:85vh;border:none;border-radius:14px;background:#fff" loading="lazy"></iframe>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="page-title">⭐ Gestión Premium</div>
+      </div>
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px">
+        <div style="background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)"><div style="font-size:26px;font-weight:900;color:#00B4B4" id="pm_sActivos">—</div><div style="font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Activos</div></div>
+        <div style="background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)"><div style="font-size:26px;font-weight:900;color:#F5C842" id="pm_sVence">—</div><div style="font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Vencen pronto</div></div>
+        <div style="background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)"><div style="font-size:26px;font-weight:900;color:#c0392b" id="pm_sVencidos">—</div><div style="font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Vencidos</div></div>
+        <div style="background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)"><div style="font-size:26px;font-weight:900;color:#2e7d32" id="pm_sTotal">—</div><div style="font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-top:3px">Total cobrado</div></div>
+      </div>
+      <!-- Activar -->
+      <div class="table-card" style="padding:16px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#aaa;margin-bottom:12px">Activar / Gestionar Premium</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:10px">
+          <input type="email" id="pm_fEmail" placeholder="Email del usuario" style="padding:10px 14px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;font-family:Arial">
+          <input type="text" id="pm_fMonto" placeholder="Monto (Q100)" style="padding:10px 14px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;font-family:Arial">
+          <select id="pm_fMetodo" style="padding:10px 14px;border:1.5px solid #eee;border-radius:10px;font-size:13px;background:#fff;outline:none">
+            <option value="recurrente">Recurrente (automático)</option>
+            <option value="zigi">Zigi BI</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="cortesia">Cortesía</option>
+          </select>
+          <input type="text" id="pm_fRef" placeholder="Referencia de pago" style="padding:10px 14px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;font-family:Arial">
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="pm_activar()" style="padding:10px 18px;background:#F5C842;color:#1a1a2e;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">⭐ Activar 1 año</button>
+          <button onclick="pm_desactivar()" style="padding:10px 18px;background:#fff0f0;color:#c0392b;border:1px solid #fcc;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">✗ Desactivar</button>
+          <button onclick="pm_buscar()" style="padding:10px 16px;background:#f0f0ee;color:#555;border:none;border-radius:10px;font-size:13px;cursor:pointer">🔍 Buscar</button>
+        </div>
+        <div id="pm_formMsg" style="font-size:13px;padding:10px;border-radius:8px;display:none;margin-top:10px"></div>
+        <div id="pm_buscarResult" style="margin-top:10px"></div>
+      </div>
+      <!-- Tabla -->
+      <div class="table-card">
+        <div style="padding:12px 16px;border-bottom:1px solid #f5f5f5;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="pm-filtro active" onclick="pm_setFiltro('todos',this)">Todos</button>
+          <button class="pm-filtro" onclick="pm_setFiltro('activo',this)">Activos</button>
+          <button class="pm-filtro" onclick="pm_setFiltro('vence',this)">Vencen pronto</button>
+          <button class="pm-filtro" onclick="pm_setFiltro('vencido',this)">Vencidos</button>
+          <button class="pm-filtro" onclick="pm_setFiltro('cortesia',this)">Cortesía</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Usuario</th><th>Email</th><th>Inicio</th><th>Vence</th><th>Monto</th><th>Método</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="pm_tablaBody"><tr><td colspan="8"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- AFILIADOS -->
     <div class="screen" id="screenAfiliados">
-      <h2 class="screen-title">🤝 Afiliados</h2>
-      <iframe id="iframeAfiliados" src="" style="width:100%;height:80vh;border:none;border-radius:14px;background:#fff" loading="lazy"></iframe>
+      <iframe id="iframeAfiliados" src="/admin-afiliados.html" style="width:100%;height:85vh;border:none;border-radius:14px;background:#fff"></iframe>
     </div>
 
   </div>
@@ -449,10 +500,7 @@ function showScreen(name,el){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados.html';
   }
-  if(name==='premium'){
-    var ifp=document.getElementById('iframePremium');
-    if(ifp&&!ifp.src) ifp.src='/admin-premium.html';
-  }
+  if(name==='premium') setTimeout(pm_cargar, 50);
 }
 
 // ── Carga de datos ────────────────────────────────────────────
@@ -1276,6 +1324,161 @@ function mostrarToastAdmin(msg){
   el.textContent=msg;el.style.opacity='1';
   clearTimeout(el._t);el._t=setTimeout(function(){el.style.opacity='0';},2500);
 }
+
+
+// ══════════════════════════════════════════════════
+// PREMIUM INLINE
+// ══════════════════════════════════════════════════
+var pm_datos = [];
+var pm_filtro = 'todos';
+var SUPA_URL_PM='https://ilcreewilnkchvozicyp.supabase.co';
+var pm_H  = {'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'};
+var pm_HW = {'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A','Content-Type':'application/json','Prefer':'return=minimal'};
+
+function pm_cargar(){
+  fetch(SUPA_URL_PM+'/rest/v1/mascotas?select=nombre,email,premium,premium_hasta,premium_metodo,premium_ref,premium_inicio&order=premium_hasta.desc.nullslast',{headers:pm_H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    pm_datos=(rows||[]).filter(function(r){return r.premium||r.premium_hasta;});
+    pm_renderStats();
+    pm_renderTabla();
+  }).catch(function(){console.log('Error cargando premium');});
+}
+
+function pm_renderStats(){
+  var hoy=new Date(), en30=new Date();en30.setDate(en30.getDate()+30);
+  var activos=0,vence=0,vencidos=0,total=0;
+  pm_datos.forEach(function(r){
+    if(!r.premium_hasta){if(r.premium)activos++;return;}
+    var f=new Date(r.premium_hasta);
+    if(!r.premium||f<hoy){vencidos++;}
+    else if(f<=en30){vence++;activos++;}
+    else{activos++;}
+    if(r.premium_metodo!=='cortesia') total+=100;
+  });
+  document.getElementById('pm_sActivos').textContent=activos;
+  document.getElementById('pm_sVence').textContent=vence;
+  document.getElementById('pm_sVencidos').textContent=vencidos;
+  document.getElementById('pm_sTotal').textContent='Q'+total.toLocaleString();
+}
+
+function pm_setFiltro(f,el){
+  pm_filtro=f;
+  document.querySelectorAll('.pm-filtro').forEach(function(b){b.classList.remove('active');});
+  if(el)el.classList.add('active');
+  pm_renderTabla();
+}
+
+function pm_renderTabla(){
+  var hoy=new Date(),en30=new Date();en30.setDate(en30.getDate()+30);
+  var lista=pm_datos.filter(function(r){
+    if(pm_filtro==='todos') return true;
+    var f=r.premium_hasta?new Date(r.premium_hasta):null;
+    if(pm_filtro==='activo') return r.premium&&f&&f>=hoy;
+    if(pm_filtro==='vence') return r.premium&&f&&f>=hoy&&f<=en30;
+    if(pm_filtro==='vencido') return !r.premium||(f&&f<hoy);
+    if(pm_filtro==='cortesia') return r.premium_metodo==='cortesia';
+    return true;
+  });
+  if(!lista.length){
+    document.getElementById('pm_tablaBody').innerHTML='<tr><td colspan="8"><div class="empty">Sin usuarios en este filtro</div></td></tr>';
+    return;
+  }
+  var html='';
+  lista.forEach(function(r){
+    var f=r.premium_hasta?new Date(r.premium_hasta):null;
+    var fi=r.premium_inicio?new Date(r.premium_inicio):null;
+    var hoyTs=hoy.getTime();
+    var estado,badge;
+    if(!r.premium||!f){estado='Inactivo';badge='badge-inactive';}
+    else if(f.getTime()<hoyTs){estado='Vencido';badge='badge-inactive';}
+    else if(f.getTime()<=en30.getTime()){estado='Vence pronto';badge='badge-warn';}
+    else{estado='Activo';badge='badge-ok';}
+    var metBadge={'zigi':'badge-ok','recurrente':'badge-ok','cortesia':'badge-inactive'}[r.premium_metodo]||'badge-warn';
+    html+='<tr>'
+      +'<td style="font-weight:600">'+(r.nombre||'—')+'</td>'
+      +'<td style="color:#888;font-size:12px">'+r.email+'</td>'
+      +'<td style="color:#888;font-size:12px">'+(fi?fi.toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}):'—')+'</td>'
+      +'<td style="color:#888;font-size:12px">'+(f?f.toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}):'—')+'</td>'
+      +'<td style="font-weight:600;color:#2e7d32">'+(r.premium_metodo==='cortesia'?'Q0':'Q100')+'</td>'
+      +'<td><span class="badge '+metBadge+'">'+(r.premium_metodo||'manual')+'</span></td>'
+      +'<td><span class="badge '+badge+'">'+estado+'</span></td>'
+      +'<td style="display:flex;gap:6px">'
+      +'<button style="background:none;border:1px solid #00B4B4;border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12px;color:#007a7a" data-email="'+r.email+'" onclick="pm_selEmail(this)">↻</button>'
+      +'<button style="background:none;border:1px solid #fcc;border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12px;color:#c0392b" data-email="'+r.email+'" onclick="pm_desactivarRow(this)">✗</button>'
+      +'</td></tr>';
+  });
+  document.getElementById('pm_tablaBody').innerHTML=html;
+}
+
+function showPmSection(){
+  document.getElementById('pm_fEmail').scrollIntoView({behavior:'smooth'});
+}
+
+function pm_activar(){
+  var email=document.getElementById('pm_fEmail').value.trim().toLowerCase();
+  var metodo=document.getElementById('pm_fMetodo').value;
+  var ref=document.getElementById('pm_fRef').value.trim();
+  if(!email){pm_msg('Ingresa un email','err');return;}
+  var hasta=new Date();hasta.setFullYear(hasta.getFullYear()+1);
+  fetch(SUPA_URL_PM+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email),{
+    method:'PATCH',headers:pm_HW,
+    body:JSON.stringify({premium:true,premium_hasta:hasta.toISOString(),premium_inicio:new Date().toISOString(),premium_metodo:metodo,premium_ref:ref||null})
+  }).then(function(r){
+    if(r.ok){pm_msg('⭐ Premium activado hasta '+hasta.toLocaleDateString('es-GT'),'ok');pm_cargar();}
+    else pm_msg('Error al activar','err');
+  });
+}
+
+function pm_desactivar(){
+  var email=document.getElementById('pm_fEmail').value.trim().toLowerCase();
+  if(!email){pm_msg('Ingresa un email','err');return;}
+  if(!confirm('Desactivar Premium de '+email+'?'))return;
+  fetch(SUPA_URL_PM+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email),{
+    method:'PATCH',headers:pm_HW,
+    body:JSON.stringify({premium:false,premium_hasta:null})
+  }).then(function(r){
+    if(r.ok){pm_msg('Premium desactivado','ok');pm_cargar();}
+    else pm_msg('Error','err');
+  });
+}
+
+function pm_buscar(){
+  var email=document.getElementById('pm_fEmail').value.trim().toLowerCase();
+  if(!email){pm_msg('Ingresa un email','err');return;}
+  fetch(SUPA_URL_PM+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(email)+'&select=nombre,email,premium,premium_hasta,premium_metodo&limit=5',{headers:pm_H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    var el=document.getElementById('pm_buscarResult');
+    if(!rows||!rows.length){el.innerHTML='<div style="font-size:13px;color:#c0392b;padding:8px 0">No encontrado</div>';return;}
+    var html='<div style="background:#f8f8f8;border-radius:10px;padding:12px;font-size:13px;margin-top:4px">';
+    rows.forEach(function(r){
+      var f=r.premium_hasta?new Date(r.premium_hasta).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}):'—';
+      html+='<div><strong>'+(r.nombre||r.email)+'</strong> · '+(r.premium?'⭐ Premium':'Sin premium')+' · Vence: '+f+'</div>';
+    });
+    el.innerHTML=html+'</div>';
+  });
+}
+
+function pm_desactivarRow(btn){
+  document.getElementById('pm_fEmail').value=btn.getAttribute('data-email');
+  pm_desactivar();
+}
+
+function pm_selEmail(btn){
+  document.getElementById('pm_fEmail').value=btn.getAttribute('data-email');
+  document.getElementById('pm_fEmail').scrollIntoView({behavior:'smooth'});
+}
+
+function pm_msg(txt,tipo){
+  var el=document.getElementById('pm_formMsg');
+  el.textContent=txt;
+  el.style.display='block';
+  el.style.background=tipo==='ok'?'#e0f7f7':'#fbeaf0';
+  el.style.color=tipo==='ok'?'#007a7a':'#c0392b';
+  setTimeout(function(){el.style.display='none';},4000);
+}
+
 </script>
 </body>
 </html>
