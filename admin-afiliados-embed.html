@@ -75,13 +75,20 @@ tr:hover td{background:#fafafa}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
 
-
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:#fff;border-radius:20px;padding:32px;width:100%;max-width:340px;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.login-input{width:100%;padding:12px 14px;border:1.5px solid #eee;border-radius:12px;font-size:15px;outline:none;margin-bottom:12px}
+.login-btn{width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer}
+.login-err{font-size:13px;color:#c0392b;text-align:center;margin-top:10px;display:none}
 </style>
 </head>
 <body>
 
+
+
 <!-- APP -->
-<div class="app-wrap" id="appWrap" style="display:none">
+<div class="app-wrap" id="appWrap">
   <div class="page-titulo">🤝 Admin Afiliados</div>
   <div class="page-sub">
     <span>Control de afiliados y promos</span>
@@ -93,6 +100,8 @@ tr:hover td{background:#fafafa}
     <div class="stat gold"><div class="stat-n" id="sGold">—</div><div class="stat-l">Gold</div></div>
     <div class="stat teal"><div class="stat-n" id="sSilver">—</div><div class="stat-l">Silver</div></div>
     <div class="stat purple"><div class="stat-n" id="sBasico">—</div><div class="stat-l">Básico</div></div>
+    <div class="stat gold"><div class="stat-n" id="sDPlus">—</div><div class="stat-l">Digital+</div></div>
+    <div class="stat gold"><div class="stat-n" id="sDPlusPlus">—</div><div class="stat-l">Digital++</div></div>
     <div class="stat"><div class="stat-n" id="sTotal">—</div><div class="stat-l">Total activos</div></div>
   </div>
 
@@ -103,9 +112,15 @@ tr:hover td{background:#fafafa}
       <input type="email" class="form-input" id="fEmail" placeholder="Email del afiliado">
       <input type="text" class="form-input" id="fNombre" placeholder="Nombre del negocio">
       <select class="form-select" id="fPlan">
-        <option value="basico">🥉 Básico — 7 días</option>
-        <option value="silver">🥈 Silver — 15 días</option>
-        <option value="gold">🥇 Gold — 30 días</option>
+        <option value="basico">🥉 Básico — Q150/mes · 1 pub</option>
+        <option value="silver">🥈 Silver — Q350/mes · 3 pubs · pinned</option>
+        <option value="gold">🥇 Gold — Q600/mes · 1 pub · pinned + redes</option>
+        <option value="digital_plus">⭐ Digital+ — Q1,400/mes · 3 pubs + producción</option>
+        <option value="digital_plusplus">🚀 Digital++ — Q2,500/mes · 5 pubs + producción full</option>
+      </select>
+      <select class="form-select" id="fPeriodo" style="margin-top:8px">
+        <option value="mensual">Mensual</option>
+        <option value="anual">Anual (−20% afiliados / −10% patrocinadores)</option>
       </select>
       <input type="text" class="form-input" id="fRef" placeholder="Referencia de pago">
     </div>
@@ -171,6 +186,8 @@ tr:hover td{background:#fafafa}
       <button class="filtro-btn" onclick="setFiltro('gold',this)">Gold</button>
       <button class="filtro-btn" onclick="setFiltro('silver',this)">Silver</button>
       <button class="filtro-btn" onclick="setFiltro('basico',this)">Básico</button>
+      <button class="filtro-btn" onclick="setFiltro('digital_plus',this)">Digital+</button>
+      <button class="filtro-btn" onclick="setFiltro('digital_plusplus',this)">Digital++</button>
       <button class="filtro-btn" onclick="setFiltro('vencido',this)">Vencidos</button>
     </div>
     <div class="table-wrap">
@@ -201,11 +218,21 @@ var HA={'apikey':SUPA_ANON,'Authorization':'Bearer '+SUPA_ANON};
 var HS={'apikey':SUPA_SVC,'Authorization':'Bearer '+SUPA_SVC,'Content-Type':'application/json','Prefer':'return=minimal'};
 
 var todosAfiliados=[];
+document.addEventListener("DOMContentLoaded", function(){ cargarTodo(); });
 var filtroActual='todos';
-var DIAS_PLAN={basico:7,silver:15,gold:30};
-document.addEventListener('DOMContentLoaded',function(){document.getElementById('appWrap').style.display='block';cargarTodo();});
+var DIAS_PLAN = { basico: 30, silver: 30, gold: 30, digital_plus: 30, digital_plusplus: 30 };
+var PLAN_PUBS  = { basico: 1, silver: 3, gold: 1, digital_plus: 3, digital_plusplus: 5 };
+var PLAN_PRECIOS = { basico: 'Q150/mes', silver: 'Q350/mes', gold: 'Q600/mes', digital_plus: 'Q1,400/mes', digital_plusplus: 'Q2,500/mes' };
 
-function doLogin(){cargarTodo();}
+function doLogin(){
+  if(document.getElementById('loginPass').value==='petmi2024'){
+    document.getElementById('loginWrap').style.display='none';
+    document.getElementById('appWrap').style.display='block';
+    cargarTodo();
+  } else {
+    document.getElementById('loginErr').style.display='block';
+  }
+}
 
 function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
 
@@ -213,7 +240,7 @@ function mostrarMsg(id,txt,tipo){var el=document.getElementById(id);el.textConte
 
 // ── Cargar todo ───────────────────────────────────────────────
 function cargarTodo(){
-  fetch(SUPA_URL+'/rest/v1/actividades?es_afiliado=eq.true&select=id,titulo,email_creador,afiliado_plan,afiliado_vence,afiliado_email,activo,created_at&order=afiliado_vence.desc.nullslast',{headers:HA})
+  fetch(SUPA_URL+'/rest/v1/actividades?es_afiliado=eq.true&select=id,titulo,email_creador,afiliado_plan,afiliado_vence,afiliado_email,afiliado_periodo,pausado,pausado_razon,activo,created_at&order=afiliado_vence.desc.nullslast',{headers:HA})
   .then(function(r){return r.json();})
   .then(function(rows){
     todosAfiliados=rows||[];
@@ -224,19 +251,23 @@ function cargarTodo(){
 
 function renderStats(){
   var hoy=new Date();
-  var gold=0,silver=0,basico=0,total=0;
+  var gold=0,silver=0,basico=0,dplus=0,dplusplus=0,total=0;
   todosAfiliados.forEach(function(r){
     if(!r.activo) return;
     var f=r.afiliado_vence?new Date(r.afiliado_vence):null;
-    if(f&&f<hoy) return; // vencido
+    if(f&&f<hoy) return;
     total++;
     if(r.afiliado_plan==='gold') gold++;
     else if(r.afiliado_plan==='silver') silver++;
+    else if(r.afiliado_plan==='digital_plus') dplus++;
+    else if(r.afiliado_plan==='digital_plusplus') dplusplus++;
     else basico++;
   });
   document.getElementById('sGold').textContent=gold;
   document.getElementById('sSilver').textContent=silver;
   document.getElementById('sBasico').textContent=basico;
+  document.getElementById('sDPlus').textContent=dplus;
+  document.getElementById('sDPlusPlus').textContent=dplusplus;
   document.getElementById('sTotal').textContent=total;
 }
 
@@ -254,10 +285,7 @@ function renderTabla(){
     var vencido=!r.activo||(f&&f<hoy);
     if(filtroActual==='todos') return true;
     if(filtroActual==='vencido') return vencido;
-    if(filtroActual==='gold') return r.afiliado_plan==='gold'&&!vencido;
-    if(filtroActual==='silver') return r.afiliado_plan==='silver'&&!vencido;
-    if(filtroActual==='basico') return r.afiliado_plan==='basico'&&!vencido;
-    return true;
+    return r.afiliado_plan===filtroActual&&!vencido;
   });
 
   if(!lista.length){
@@ -273,18 +301,24 @@ function renderTabla(){
     var vencePronto=f&&f.getTime()>=hoyTs&&f.getTime()<=hoyTs+7*86400000;
     var estado=vencido?'Vencido':vencePronto?'Vence pronto':'Activo';
     var estadoBadge=vencido?'badge-vencido':vencePronto?'badge-vence':'badge-activo';
-    var planBadge=r.afiliado_plan==='gold'?'badge-gold':r.afiliado_plan==='silver'?'badge-silver':'badge-basico';
-    var planLabel=r.afiliado_plan==='gold'?'🥇 Gold':r.afiliado_plan==='silver'?'🥈 Silver':'🥉 Básico';
+    var planBadgeMap={basico:'badge-basico',silver:'badge-silver',gold:'badge-gold',digital_plus:'badge-gold',digital_plusplus:'badge-gold'};
+    var planBadge=planBadgeMap[r.afiliado_plan]||'badge-basico';
+    var planStr=planLabel(r.afiliado_plan);
+    var precio=PLAN_PRECIOS[r.afiliado_plan]||'';
     var venceStr=f?f.toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}):'—';
+    var pausadoInd=r.pausado?'<br><span style="font-size:10px;color:#c0392b">⏸ Pausado</span>':'';
 
     html+='<tr>'
-      +'<td style="font-weight:600">'+(r.titulo||r.afiliado_email||'—')+'</td>'
+      +'<td style="font-weight:600">'+(r.titulo||r.afiliado_email||'—')+pausadoInd+'</td>'
       +'<td style="color:#888;font-size:12px">'+(r.afiliado_email||r.email_creador||'—')+'</td>'
-      +'<td><span class="badge '+planBadge+'">'+planLabel+'</span></td>'
+      +'<td><span class="badge '+planBadge+'">'+planStr+'</span><br><span style="font-size:10px;color:#aaa">'+precio+'</span></td>'
       +'<td style="color:#888;font-size:12px">'+venceStr+'</td>'
       +'<td><span class="badge '+estadoBadge+'">'+estado+'</span></td>'
-      +'<td style="display:flex;gap:6px">'
-      +'<button class="btn-sec" style="padding:5px 10px;font-size:11px" data-email="'+(r.afiliado_email||r.email_creador)+'" onclick="cargarEnForm(this.dataset.email)">Seleccionar</button>'
+      +'<td style="display:flex;gap:5px;flex-wrap:wrap">'
+      +'<button class="btn-sec" style="padding:5px 10px;font-size:11px" data-email="'+(r.afiliado_email||r.email_creador)+'" onclick="cargarEnForm(this.dataset.email)">✏️ Sel.</button>'
+      +(r.pausado
+        ?'<button class="btn-activar" style="padding:5px 10px;font-size:11px;background:#2e7d32" data-id="'+r.id+'" onclick="reactivarPub(this.dataset.id)">▶ Reactivar</button>'
+        :'<button class="btn-danger" style="padding:5px 10px;font-size:11px" data-id="'+r.id+'" onclick="pausarPub(this.dataset.id)">⏸ Pausar</button>')
       +'</td>'
       +'</tr>';
   });
@@ -305,7 +339,9 @@ function activarAfiliado(){
   var ref=document.getElementById('fRef').value.trim();
   if(!email){mostrarMsg('formMsg','Ingresa un email','err');return;}
 
-  var dias=DIAS_PLAN[plan]||7;
+  var dias=30; // todos los planes son ciclos de 30 días
+  var periodo=document.getElementById('fPeriodo').value;
+  if(periodo==='anual') dias=365;
   var vence=new Date();vence.setDate(vence.getDate()+dias);
 
   // Crear aviso en actividades marcado como afiliado
@@ -318,6 +354,7 @@ function activarAfiliado(){
       email_creador:email,
       es_afiliado:true,
       afiliado_plan:plan,
+      afiliado_periodo:periodo,
       afiliado_vence:vence.toISOString().split('T')[0],
       afiliado_email:email,
       activo:true
@@ -359,7 +396,34 @@ function buscarAfiliado(){
   el.innerHTML=html;
 }
 
-function planLabel(p){return p==='gold'?'🥇 Gold':p==='silver'?'🥈 Silver':'🥉 Básico';}
+// ── Pausar / Reactivar publicación ───────────────────────────
+function pausarPub(id){
+  var razon=prompt('Razón del pausado (será visible al afiliado):');
+  if(razon===null) return; // cancelado
+  fetch(SUPA_URL+'/rest/v1/actividades?id=eq.'+id,{
+    method:'PATCH',headers:HS,
+    body:JSON.stringify({pausado:true,pausado_razon:razon||'Incumple reglas de publicación'})
+  }).then(function(r){
+    if(r.ok){toast('⏸ Publicación pausada');cargarTodo();}
+    else toast('Error al pausar');
+  });
+}
+
+function reactivarPub(id){
+  if(!confirm('¿Reactivar esta publicación?'))return;
+  fetch(SUPA_URL+'/rest/v1/actividades?id=eq.'+id,{
+    method:'PATCH',headers:HS,
+    body:JSON.stringify({pausado:false,pausado_razon:null})
+  }).then(function(r){
+    if(r.ok){toast('▶ Publicación reactivada');cargarTodo();}
+    else toast('Error al reactivar');
+  });
+}
+
+function planLabel(p){
+  var labels = { basico:'🥉 Básico', silver:'🥈 Silver', gold:'🥇 Gold', digital_plus:'⭐ Digital+', digital_plusplus:'🚀 Digital++' };
+  return labels[p] || p || '—';
+}
 
 // ── Promo segmentada ─────────────────────────────────────────
 function previsualizarPromo(){
