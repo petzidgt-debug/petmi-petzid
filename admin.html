@@ -448,17 +448,16 @@ function showScreen(name,el){
   document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   if(el) el.classList.add('active');
-  if(name==='eventos'){cargarEventosAdmin();}
+  if(name==='eventos') cargarEventosAdmin();
   if(name==='lugares') cargarLugaresAdmin();
   if(name==='avisos') setTimeout(cargarAvisosPendientes,100);
-  if(name==='premium') cargarListaPremium();
+  if(name==='premium') setTimeout(cargarPremiumAdmin,100);
   if(name==='reglas') setTimeout(cargarReglas,100);
   if(name==='grupos') setTimeout(cargarAdminGrupos,100);
   if(name==='afiliados'){
     var ifr=document.getElementById('iframeAfiliados');
-    if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
+    if(ifr&&!ifr.src) ifr.src='/admin-afiliados.html';
   }
-  if(name==='premium') setTimeout(cargarPremiumAdmin,100);
 }
 
 // ── Carga de datos ────────────────────────────────────────────
