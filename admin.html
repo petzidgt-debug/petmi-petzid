@@ -316,7 +316,7 @@ tbody tr:last-child td{border-bottom:none}
     <!-- AFILIADOS -->
     <div class="screen" id="screenAfiliados">
       <h2 class="screen-title">🤝 Afiliados</h2>
-      <iframe id="iframeAfiliados" src="" style="width:100%;height:80vh;border:none;border-radius:14px;background:#fff" loading="lazy"></iframe>
+      <iframe id="iframeAfiliados" src="" style="width:100%;height:80vh;border:none;border-radius:14px;background:#fff"></iframe>
     </div>
 
   </div>
@@ -447,11 +447,11 @@ function showScreen(name,el){
   if(name==='grupos') setTimeout(cargarAdminGrupos,100);
   if(name==='afiliados'){
     var ifr=document.getElementById('iframeAfiliados');
-    if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
+    if(ifr&&!ifr.getAttribute('src')) ifr.src='/admin-afiliados-embed.html';
   }
   if(name==='premium'){
     var ifrP=document.getElementById('iframePremium');
-    if(ifrP&&!ifrP.src) ifrP.src='/admin-premium-embed.html';
+    if(ifrP&&!ifrP.getAttribute('src')) ifrP.src='/admin-premium-embed.html';
   }
 }
 
