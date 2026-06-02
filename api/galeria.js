@@ -786,6 +786,17 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
 
+    if (action === 'deleteMascota' && req.method === 'POST') {
+      const { uid } = req.body;
+      if (!uid) return res.status(200).json({ ok: false, error: 'Falta uid' });
+      // Use service role to bypass RLS
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid.toUpperCase()), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
+      });
+      return res.status(200).json({ ok: r.ok, status: r.status });
+    }
+
     return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
