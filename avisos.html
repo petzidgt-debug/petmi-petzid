@@ -866,17 +866,8 @@ function publicar(){
       fotoUrl=await uploadFotoPerdido();
     } else if(tipoSel==='adopcion'&&adopcionFotoBase64){
       btn.textContent='Subiendo foto...';
-    } else if(tipoSel==='venta'&&window.ventaFotoBase64){
+    } else if(tipoSel==='adopcion'&&adopcionFotoBase64){
       btn.textContent='Subiendo foto...';
-      try{
-        var vfd=new FormData();
-        vfd.append('file','data:image/jpeg;base64,'+window.ventaFotoBase64);
-        vfd.append('upload_preset','petzid');
-        vfd.append('folder','petzid/ventas');
-        var vr=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:vfd});
-        var vd=await vr.json();
-        if(vd.secure_url) extraData.imagen=vd.secure_url;
-      }catch(e){console.log('Cloudinary venta:',e);}
       try{
         var fd=new FormData();
         var blob=await fetch('data:'+(adopcionFotoMime||'image/jpeg')+';base64,'+adopcionFotoBase64).then(function(r){return r.blob();});
@@ -884,6 +875,18 @@ function publicar(){
         var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
         var data=await res.json();fotoUrl=data.secure_url||'';
       }catch(e){console.log('Cloudinary adopcion:',e);}
+    } else if(tipoSel==='venta'&&window.ventaFotoBase64){
+      btn.textContent='Subiendo foto...';
+      try{
+        var vblob=await fetch('data:image/jpeg;base64,'+window.ventaFotoBase64).then(function(r){return r.blob();});
+        var vfd=new FormData();
+        vfd.append('file',vblob,'venta.jpg');
+        vfd.append('upload_preset','petzid');
+        vfd.append('folder','petzid/ventas');
+        var vr=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:vfd});
+        var vd=await vr.json();
+        if(vd.secure_url) extraData.imagen=vd.secure_url;
+      }catch(e){console.log('Cloudinary venta:',e);}
     }
     // Para adopcion usar imagen, para otros foto_creador
     if(fotoUrl){
