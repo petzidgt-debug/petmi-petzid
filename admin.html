@@ -1609,11 +1609,11 @@ var af_DIAS = { basico: 30, silver: 30, gold: 30, digital_plus: 30, digital_plus
 var af_PUBS  = { basico: 1, silver: 3, gold: 1, digital_plus: 3, digital_plusplus: 5 };
 var af_PRECIOS = { basico: 'Q150/mes', silver: 'Q350/mes', gold: 'Q600/mes', digital_plus: 'Q1,400/mes', digital_plusplus: 'Q2,500/mes' };
 
-function doLogin(){
+function af_doLogin(){
   if(document.getElementById('loginPass').value==='petmi2024'){
     document.getElementById('loginWrap').style.display='none';
     document.getElementById('appWrap').style.display='block';
-    cargarTodo();
+    af_cargarTodo();
   } else {
     document.getElementById('loginErr').style.display='block';
   }
@@ -1631,7 +1631,7 @@ function af_cargarTodo(){
     af_todos=rows||[];
     renderStats();
     renderTabla();
-  }).catch(function(){toast('Error al cargar');});
+  }).catch(function(){af_toast('Error al cargar');});
 }
 
 function af_renderStats(){
@@ -1722,7 +1722,7 @@ function af_activarAfiliado(){
   var nombre=document.getElementById('af_fNombre').value.trim();
   var plan=document.getElementById('af_fPlan').value;
   var ref=document.getElementById('af_fRef').value.trim();
-  if(!email){mostrarMsg('formMsg','Ingresa un email','err');return;}
+  if(!email){af_mostrarMsg('formMsg','Ingresa un email','err');return;}
 
   var dias=30; // todos los planes son ciclos de 30 días
   var periodo=document.getElementById('af_fPeriodo').value;
@@ -1747,28 +1747,28 @@ function af_activarAfiliado(){
   }).then(function(r){return r.json();})
   .then(function(d){
     if(d&&!d.error){
-      mostrarMsg('formMsg','Afiliado activado — '+planLabel(plan)+' hasta '+vence.toLocaleDateString('es-GT'),'ok');
+      af_mostrarMsg('formMsg','Afiliado activado — '+planLabel(plan)+' hasta '+vence.toLocaleDateString('es-GT'),'ok');
       document.getElementById('af_fNombre').value='';document.getElementById('af_fRef').value='';
-      cargarTodo();
-    } else mostrarMsg('formMsg','Error: '+(d.message||d.error||'desconocido'),'err');
-  }).catch(function(){mostrarMsg('formMsg','Error de conexión','err');});
+      af_cargarTodo();
+    } else af_mostrarMsg('formMsg','Error: '+(d.message||d.error||'desconocido'),'err');
+  }).catch(function(){af_mostrarMsg('formMsg','Error de conexión','err');});
 }
 
 function af_desactivarAfiliado(){
   var email=document.getElementById('af_fEmail').value.trim().toLowerCase();
-  if(!email){mostrarMsg('formMsg','Ingresa un email','err');return;}
+  if(!email){af_mostrarMsg('formMsg','Ingresa un email','err');return;}
   if(!confirm('Desactivar afiliado '+email+'?'))return;
   fetch(AF_URL+'/rest/v1/actividades?afiliado_email=eq.'+encodeURIComponent(email)+'&es_afiliado=eq.true',{
     method:'PATCH',headers:AF_HS,body:JSON.stringify({activo:false})
   }).then(function(r){
-    if(r.ok){mostrarMsg('formMsg','Afiliado desactivado','ok');cargarTodo();}
-    else mostrarMsg('formMsg','Error al desactivar','err');
+    if(r.ok){af_mostrarMsg('formMsg','Afiliado desactivado','ok');af_cargarTodo();}
+    else af_mostrarMsg('formMsg','Error al desactivar','err');
   });
 }
 
 function af_buscarAfiliado(){
   var email=document.getElementById('af_fEmail').value.trim().toLowerCase();
-  if(!email){mostrarMsg('formMsg','Ingresa un email','err');return;}
+  if(!email){af_mostrarMsg('formMsg','Ingresa un email','err');return;}
   var found=af_todos.filter(function(r){return (r.afiliado_email||r.email_creador||'').toLowerCase()===email;});
   var el=document.getElementById('af_buscarResult');
   if(!found.length){el.innerHTML='<div style="font-size:13px;color:#c0392b;padding:8px 0">No encontrado</div>';return;}
@@ -1789,8 +1789,8 @@ function af_pausarPub(id){
     method:'PATCH',headers:AF_HS,
     body:JSON.stringify({pausado:true,pausado_razon:razon||'Incumple reglas de publicación'})
   }).then(function(r){
-    if(r.ok){toast('⏸ Publicación pausada');cargarTodo();}
-    else toast('Error al pausar');
+    if(r.ok){af_toast('⏸ Publicación pausada');af_cargarTodo();}
+    else af_toast('Error al pausar');
   });
 }
 
@@ -1800,8 +1800,8 @@ function af_reactivarPub(id){
     method:'PATCH',headers:AF_HS,
     body:JSON.stringify({pausado:false,pausado_razon:null})
   }).then(function(r){
-    if(r.ok){toast('▶ Publicación reactivada');cargarTodo();}
-    else toast('Error al reactivar');
+    if(r.ok){af_toast('▶ Publicación reactivada');af_cargarTodo();}
+    else af_toast('Error al reactivar');
   });
 }
 
@@ -1843,7 +1843,7 @@ function af_publicarPromo(){
   var email=document.getElementById('af_pEmail').value.trim().toLowerCase();
   var titulo=document.getElementById('af_pTitulo').value.trim();
   var desc=document.getElementById('af_pDesc').value.trim();
-  if(!titulo){mostrarMsg('promoMsg','Ingresa un título','err');return;}
+  if(!titulo){af_mostrarMsg('promoMsg','Ingresa un título','err');return;}
 
   var zona=document.getElementById('af_pZona').value;
   var especie=document.getElementById('af_pEspecie').value;
@@ -1878,11 +1878,11 @@ function af_publicarPromo(){
   }).then(function(r){return r.json();})
   .then(function(d){
     if(d.ok||d.enviados){
-      mostrarMsg('promoMsg','Promo publicada y emails enviados ('+(d.enviados||'?')+' destinatarios)','ok');
+      af_mostrarMsg('promoMsg','Promo publicada y emails enviados ('+(d.enviados||'?')+' destinatarios)','ok');
       document.getElementById('af_pTitulo').value='';
       document.getElementById('af_pDesc').value='';
-    } else mostrarMsg('promoMsg','Promo creada pero error en emails','err');
-  }).catch(function(e){mostrarMsg('promoMsg','Error: '+e.message,'err');});
+    } else af_mostrarMsg('promoMsg','Promo creada pero error en emails','err');
+  }).catch(function(e){af_mostrarMsg('promoMsg','Error: '+e.message,'err');});
 }
 
 </script>
