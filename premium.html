@@ -102,7 +102,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <div class="feature"><span class="check">✓</span><div>3 diseños de carnet PetzID para elegir<div class="feat-sub">Personaliza el look del carnet de tu mascota</div></div></div>
       <div class="feature"><span class="check">✓</span><div>Badge Premium ⭐ en la galería — mayor visibilidad</div></div>
       <div class="feature"><span class="check">✓</span><div>Perfil público con URL única y código QR descargable<div class="feat-sub">Cualquiera puede ver el perfil de tu mascota</div></div></div>
-      <div class="feature"><span class="check">✓</span><div>Opción de ventas en avisos</div></div>
+      <div class="feature"><span class="check">✓</span><div>3 publicaciones de venta/mes en avisos<div class="feat-sub">¿Necesitas más? Packs adicionales: +3 por Q25 · +6 por Q50 · +9 por Q75</div></div></div>
       <div class="feature"><span class="check">✓</span><div>Descuento 10% en tienda PetMi</div></div>
       <div class="feature"><span class="check">✓</span><div>Descuentos exclusivos con partners afiliados <span class="soon">Muy pronto</span></div></div>
       <div class="feature"><span class="check">✓</span><div>Alertas por email de mascotas perdidas en tu zona <span class="soon">Muy pronto</span></div></div>
@@ -122,7 +122,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <div class="extra-nombre">Tarjeta PVC individual</div>
       <div class="extra-desc">Formato CR80 — igual a una tarjeta de crédito. Impermeable y de alta durabilidad.</div>
       <div id="tarjetaPrecioDesc" style="font-size:11px;margin-top:4px;display:none;color:#2e7d32;font-weight:700">✓ Precio Premium activo</div>
-      <button class="btn-extra btn-teal" id="btnSolicitarTarjeta" onclick="solicitarExtra('Tarjeta PVC individual',esPremiumActivo?'Q35':'Q50')">Solicitar por WhatsApp</button>
+      <button class="btn-extra btn-teal" id="btnSolicitarTarjeta" onclick="solicitarExtra('Tarjeta PVC individual',esPremiumActivo?'Q35':'Q50')">Solicitar ahora</button>
     </div>
     <div class="precio-wrap">
       <div id="tarjetaPrecioNormal" class="extra-precio">Q50</div>
@@ -138,7 +138,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <div class="extra-info">
       <div class="extra-nombre">Foto retocada</div>
       <div class="extra-desc">Quitamos el fondo, corregimos colores y cuidamos cada detalle para un resultado profesional.</div>
-      <button class="btn-extra btn-teal" onclick="solicitarExtra('Foto retocada','Q25')">Solicitar por WhatsApp</button>
+      <button class="btn-extra btn-teal" onclick="solicitarExtra('Foto retocada','Q25')">Solicitar ahora</button>
     </div>
     <div class="precio-wrap">
       <div class="extra-precio">Q25</div>
@@ -150,7 +150,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <div class="extra-info">
       <div class="extra-nombre">Pack completo</div>
       <div class="extra-desc">Plan Premium anual + Foto retocada + Tarjeta PVC. Todo incluido.</div>
-      <button class="btn-extra btn-purple" onclick="solicitarExtra('Pack completo (Premium + Foto retocada + Tarjeta PVC)','Q150')">Solicitar por WhatsApp</button>
+      <button class="btn-extra btn-purple" onclick="solicitarExtra('Pack completo (Premium + Foto retocada + Tarjeta PVC)','Q150')">Solicitar ahora</button>
     </div>
     <div class="precio-wrap">
       <div class="extra-precio purple">Q150</div>
@@ -161,7 +161,47 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <div class="nota">
     Los extras se coordinan por WhatsApp.<br>
     El equipo PetMi te contacta para los detalles y envío. 🐾<br>
-    <span style="color:#2e7d32;font-weight:700">Con Plan Premium: tarjeta PVC a Q35 (precio regular Q50)</span>
+    <span style="color:#2e7d32;font-weight:700">Con Plan Premium: tarjeta PVC a Q35 · packs de ventas adicionales disponibles</span>
+  </div>
+
+
+  <!-- Packs de ventas adicionales -->
+  <div class="sec-titulo">Packs de ventas — solo usuarios Premium</div>
+
+  <div class="extra">
+    <div class="extra-ico">📦</div>
+    <div class="extra-info">
+      <div class="extra-nombre">Pack +3 ventas</div>
+      <div class="extra-desc">3 publicaciones de venta adicionales por 30 días.</div>
+      <button class="btn-extra btn-teal" onclick="solicitarExtra('Pack +3 ventas adicionales','Q25')">Solicitar ahora</button>
+    </div>
+    <div class="precio-wrap">
+      <div class="extra-precio">Q25</div>
+    </div>
+  </div>
+
+  <div class="extra">
+    <div class="extra-ico">📦</div>
+    <div class="extra-info">
+      <div class="extra-nombre">Pack +6 ventas</div>
+      <div class="extra-desc">6 publicaciones de venta adicionales por 30 días.</div>
+      <button class="btn-extra btn-teal" onclick="solicitarExtra('Pack +6 ventas adicionales','Q50')">Solicitar ahora</button>
+    </div>
+    <div class="precio-wrap">
+      <div class="extra-precio">Q50</div>
+    </div>
+  </div>
+
+  <div class="extra">
+    <div class="extra-ico">📦</div>
+    <div class="extra-info">
+      <div class="extra-nombre">Pack +9 ventas</div>
+      <div class="extra-desc">9 publicaciones de venta adicionales por 30 días.</div>
+      <button class="btn-extra btn-teal" onclick="solicitarExtra('Pack +9 ventas adicionales','Q75')">Solicitar ahora</button>
+    </div>
+    <div class="precio-wrap">
+      <div class="extra-precio">Q75</div>
+    </div>
   </div>
 
   <!-- FAQ -->
