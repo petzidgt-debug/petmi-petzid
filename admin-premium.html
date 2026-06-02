@@ -162,13 +162,13 @@ var todosLosDatos=[];
 var filtroActual='todos';
 
 function doLogin(){
-  // Auth check — redirect to admin if not logged in
-  if(localStorage.getItem('petmi_admin')!=='1'){
-    window.location.href='/admin.html';
+  if(localStorage.getItem('petmi_admin')==='1'){
+    document.getElementById('appWrap').style.display='block';
+    cargarTodo();
     return;
   }
-  document.getElementById('appWrap').style.display='block';
-  cargarTodo();
+  // No tiene sesión — redirigir al admin
+  window.location.href='/admin.html';
 }
 
 function cargarTodo(){

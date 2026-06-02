@@ -233,7 +233,15 @@ var PLAN_PUBS  = { basico: 1, silver: 3, gold: 1, digital_plus: 3, digital_plusp
 var PLAN_PRECIOS = { basico: 'Q150/mes', silver: 'Q350/mes', gold: 'Q600/mes', digital_plus: 'Q1,400/mes', digital_plusplus: 'Q2,500/mes' };
 
 function doLogin(){
+  // Si viene del admin master, entrar directo
+  if(localStorage.getItem('petmi_admin')==='1'){
+    document.getElementById('loginWrap').style.display='none';
+    document.getElementById('appWrap').style.display='block';
+    cargarTodo();
+    return;
+  }
   if(document.getElementById('loginPass').value==='petmi2024'){
+    localStorage.setItem('petmi_admin','1');
     document.getElementById('loginWrap').style.display='none';
     document.getElementById('appWrap').style.display='block';
     cargarTodo();
@@ -507,6 +515,7 @@ function publicarPromo(){
     } else mostrarMsg('promoMsg','Promo creada pero error en emails','err');
   }).catch(function(e){mostrarMsg('promoMsg','Error: '+e.message,'err');});
 }
+doLogin();
 </script>
 </body>
 </html>
