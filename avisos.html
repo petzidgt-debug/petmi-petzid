@@ -57,6 +57,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .foto-upload-label{font-size:13px;color:#aaa;padding:16px 0;display:block}
 .foto-upload-label span{color:#c0392b;font-weight:600}
 .campos-perdido.visible{display:block}
+.campos-venta.visible{display:block}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .form-select{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:12px;background:#fff;font-family:Arial,sans-serif;cursor:pointer}
 .form-select:focus{border-color:#c0392b}
@@ -140,6 +141,39 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     </div>
 
     <!-- Campos adicionales para perdido -->
+
+    <!-- Campos venta (solo Premium) -->
+    <div id="camposVenta" style="display:none;border-top:1.5px dashed #F5C842;padding-top:14px;margin-top:4px">
+      <div style="background:#FFF9E6;border-left:3px solid #F5C842;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#856404;margin-bottom:14px;line-height:1.5">
+        💰 Completa los datos de tu producto para mayor visibilidad
+      </div>
+      <!-- Foto del producto -->
+      <label class="form-label">Foto del producto</label>
+      <div class="foto-upload-perdido" id="ventaFotoWrap" onclick="document.getElementById('ventaFotoInput').click()">
+        <img id="ventaFotoPreview" style="display:none;width:100%;height:160px;object-fit:cover;border-radius:8px">
+        <div class="foto-upload-label" id="ventaFotoLabel">📷 Toca para agregar una foto · <span style="color:#856404">Recomendado</span></div>
+        <input type="file" id="ventaFotoInput" accept="image/*" onchange="previsualizarFotoVenta(this)">
+      </div>
+      <!-- Precio y estado -->
+      <div class="form-row" style="margin-top:10px">
+        <div>
+          <label class="form-label">Precio (Q) *</label>
+          <input type="number" class="form-input" id="ventaPrecio" placeholder="Ej: 150" min="0">
+        </div>
+        <div>
+          <label class="form-label">Estado *</label>
+          <select class="form-select" id="ventaEstado">
+            <option value="">Selecciona...</option>
+            <option value="Nuevo">Nuevo</option>
+            <option value="Casi nuevo">Casi nuevo</option>
+            <option value="Usado">Usado</option>
+          </select>
+        </div>
+      </div>
+      <label class="form-label">WhatsApp de contacto</label>
+      <input type="tel" class="form-input" id="ventaWa" placeholder="Ej: 5555 1234" maxlength="15">
+    </div>
+
     <div class="campos-perdido" id="camposPerdido">
       <div class="perdido-tip">🚨 Para avisos de perdido necesitamos más datos para el póster</div>
 
@@ -405,6 +439,10 @@ function renderAviso(a,i){
     var fd=new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'short',day:'2-digit',month:'short'});
     html+='<div style="font-size:11px;color:#aaa;margin-bottom:3px">📅 '+fd+'</div>';
   }
+  if(a.tipo==='venta'){
+    if(a.precio) html+='<div style="font-size:15px;font-weight:700;color:#856404;margin-bottom:2px">Q '+parseFloat(a.precio).toLocaleString()+'</div>';
+    if(a.estado_producto) html+='<div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#FFF9E6;color:#856404;margin-bottom:4px">'+a.estado_producto+'</div>';
+  }
   if(a.descripcion) html+='<div style="font-size:12px;color:#777;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">'+a.descripcion+'</div>';
 
   html+= fotoSrc ? '</div></div>' : '</div>';
@@ -612,7 +650,7 @@ function abrirFormulario(){
 function cerrarPublicar(){
   document.getElementById('modalPublicar').classList.remove('open');
   // Reset todos los campos
-  ['pubTitulo','pubDesc','pubFecha','pubUbicacion','pubNombreMascota','pubRaza','pubTelefono','pubRecompensa'].forEach(function(id){
+  ['pubTitulo','pubDesc','pubFecha','pubUbicacion','pubNombreMascota','pubRaza','pubTelefono','pubRecompensa','ventaPrecio','ventaWa'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
   ['pubEspecie','pubSexo'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
@@ -657,6 +695,30 @@ function previsualizarFotoAdopcion(input){
   reader.readAsDataURL(file);
 }
 
+function previsualizarFotoVenta(input){
+  var file=input.files[0];
+  if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var canvas=document.createElement('canvas');
+      var MAX=1200,w=img.width,h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      window.ventaFotoBase64=canvas.toDataURL('image/jpeg',0.82).split(',')[1];
+      var prev=document.getElementById('ventaFotoPreview');
+      var lbl=document.getElementById('ventaFotoLabel');
+      prev.src=canvas.toDataURL('image/jpeg',0.82);
+      prev.style.display='block';
+      if(lbl) lbl.style.display='none';
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 function selTipo(tipo,el){
   tipoSel=tipo;
   document.querySelectorAll('.tipo-option').forEach(function(o){o.classList.remove('selected');});
@@ -681,15 +743,19 @@ function selTipo(tipo,el){
   } else {
     cp.classList.remove('visible');
   }
-  // Mostrar/ocultar foto de adopcion
+  // Mostrar/ocultar campos adopcion
   var ca=document.getElementById('camposAdopcion');
   if(ca) ca.style.display=(tipo==='adopcion')?'block':'none';
+  // Mostrar/ocultar campos venta
+  var cv=document.getElementById('camposVenta');
+  if(cv) cv.style.display=(tipo==='venta')?'block':'none';
   // Placeholder dinamico segun tipo
   var PLACEHOLDERS={
     perdido:'Ej: Se perdio Cami en Zona 10',
 
     busco:'Ej: Busco kennel para mi perro el fin de semana',
-    adopcion:'Ej: Doy en adopcion a Rocky, 3 anos muy cariñoso'
+    adopcion:'Ej: Doy en adopcion a Rocky, 3 anos muy cariñoso',
+    venta:'Ej: Vendo arnés para perro grande, poco uso'
   };
   var tituloInput=document.getElementById('pubTitulo');
   if(tituloInput) tituloInput.placeholder=PLACEHOLDERS[tipo]||'Escribe el titulo del aviso';
@@ -749,6 +815,17 @@ function publicar(){
     }
   }
 
+  if(tipoSel==='venta'){
+    var precio=document.getElementById('ventaPrecio').value;
+    var estado=document.getElementById('ventaEstado').value;
+    var ventaWa=document.getElementById('ventaWa').value.trim();
+    if(!precio){mostrarToast('El precio es obligatorio para ventas');return;}
+    if(!estado){mostrarToast('Selecciona el estado del producto');return;}
+    extraData.precio=parseFloat(precio);
+    extraData.estado_producto=estado;
+    if(ventaWa) extraData.whatsapp=ventaWa;
+  }
+
   // Verificar cuota de ventas para Premium
   if(tipoSel==='venta'){
     if(ventasUsadas>=ventasLimite){
@@ -789,6 +866,17 @@ function publicar(){
       fotoUrl=await uploadFotoPerdido();
     } else if(tipoSel==='adopcion'&&adopcionFotoBase64){
       btn.textContent='Subiendo foto...';
+    } else if(tipoSel==='venta'&&window.ventaFotoBase64){
+      btn.textContent='Subiendo foto...';
+      try{
+        var vfd=new FormData();
+        vfd.append('file','data:image/jpeg;base64,'+window.ventaFotoBase64);
+        vfd.append('upload_preset','petzid');
+        vfd.append('folder','petzid/ventas');
+        var vr=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:vfd});
+        var vd=await vr.json();
+        if(vd.secure_url) extraData.imagen=vd.secure_url;
+      }catch(e){console.log('Cloudinary venta:',e);}
       try{
         var fd=new FormData();
         var blob=await fetch('data:'+(adopcionFotoMime||'image/jpeg')+';base64,'+adopcionFotoBase64).then(function(r){return r.blob();});
