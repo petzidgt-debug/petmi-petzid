@@ -10,7 +10,11 @@
   meta.name = 'theme-color'; meta.content = '#00B4B4';
   document.head.appendChild(meta);
 
-  // Apple PWA
+  // PWA capable (standard)
+  var mobileCapable = document.createElement('meta');
+  mobileCapable.name = 'mobile-web-app-capable'; mobileCapable.content = 'yes';
+  document.head.appendChild(mobileCapable);
+  // Apple PWA (legacy)
   var appleMeta = document.createElement('meta');
   appleMeta.name = 'apple-mobile-web-app-capable'; appleMeta.content = 'yes';
   document.head.appendChild(appleMeta);
