@@ -74,6 +74,20 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .3s}
+.modal-overlay.show{opacity:1}
+.modal-box{background:#fff;border-radius:24px;padding:32px 24px;max-width:360px;width:100%;text-align:center;transform:scale(.9);transition:transform .3s}
+.modal-overlay.show .modal-box{transform:scale(1)}
+.modal-ico{font-size:56px;margin-bottom:12px;animation:bounce 1s ease infinite alternate}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.modal-titulo{font-size:22px;font-weight:900;font-family:'Arial Black',Arial;color:#1a1a2e;margin-bottom:8px}
+.modal-sub{font-size:13px;color:#888;line-height:1.7;margin-bottom:20px}
+.modal-beneficios{background:#f0faf8;border-radius:14px;padding:14px 16px;margin-bottom:20px;text-align:left}
+.modal-b{font-size:13px;color:#444;padding:5px 0;border-bottom:1px solid #e0f0ee;display:flex;gap:8px;align-items:center}
+.modal-b:last-child{border-bottom:none}
+.modal-btn{width:100%;padding:14px;background:#F5C842;color:#1a1a2e;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.modal-skip{font-size:12px;color:#aaa;cursor:pointer;text-decoration:underline}
 </style>
 </head>
 <body>
@@ -255,16 +269,31 @@ function verificarPremium(){
     if(!rows||!rows.length) return;
     var r=rows[0];
     if(r.premium){
-      var hasta=r.premium_hasta?new Date(r.premium_hasta).toLocaleDateString('es-GT',{day:'2-digit',month:'long',year:'numeric'}):'';
+      // Si no hay fecha, mostrar igual con +1 año como referencia
+      var hastaDate = r.premium_hasta
+        ? new Date(r.premium_hasta)
+        : (function(){ var d=new Date(); d.setFullYear(d.getFullYear()+1); return d; })();
+      var hasta = hastaDate.toLocaleDateString('es-GT',{day:'2-digit',month:'long',year:'numeric'});
+      var diasRestantes = Math.max(0, Math.ceil((hastaDate - new Date()) / 86400000));
+      var diasLabel = diasRestantes <= 30
+        ? ' <span style="background:#E05090;color:#fff;font-size:10px;padding:2px 8px;border-radius:99px;font-weight:700;margin-left:6px">Vence en '+diasRestantes+' días</span>'
+        : '';
       document.getElementById('estadoWrap').innerHTML=
         '<div class="premium-activo">'+
         '<div class="premium-activo-ico">⭐</div>'+
-        '<div class="premium-activo-titulo">Ya eres Premium!</div>'+
-        '<div class="premium-activo-sub">Todos tus beneficios estan activos</div>'+
-        (hasta?'<div class="premium-activo-fecha">Valido hasta: '+hasta+'</div>':'')+
+        '<div class="premium-activo-titulo">¡Ya eres Premium!</div>'+
+        '<div class="premium-activo-sub">Todos tus beneficios están activos</div>'+
+        '<div class="premium-activo-fecha">Válido hasta: '+hasta+diasLabel+'</div>'+
         '</div>';
       var footer=document.getElementById('planFooter');
       if(footer) footer.style.display='none';
+
+      // Mostrar modal de bienvenida si no lo ha visto en los últimos 7 días
+      var visto = parseInt(localStorage.getItem('premium_welcome_seen')||'0');
+      var siete = 7 * 24 * 60 * 60 * 1000;
+      if(!visto || (Date.now() - visto) > siete){
+        setTimeout(mostrarModalPremium, 600);
+      }
       // Show premium tarjeta pricing
       esPremiumActivo = true;
       var pNormal=document.getElementById('tarjetaPrecioNormal');
@@ -283,8 +312,46 @@ function solicitarExtra(extra,precio){
   window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
 }
 
+function mostrarModalPremium(){
+  // Solo mostrar una vez por sesión
+  if(sessionStorage.getItem('premium_modal_shown')) return;
+  sessionStorage.setItem('premium_modal_shown','1');
+  var m = document.getElementById('modalPremium');
+  if(!m) return;
+  m.style.display='flex';
+  setTimeout(function(){ m.classList.add('show'); }, 50);
+}
+
+function cerrarModalPremium(){
+  var m = document.getElementById('modalPremium');
+  if(!m) return;
+  m.classList.remove('show');
+  setTimeout(function(){ m.style.display='none'; }, 300);
+  // Marcar como visto en localStorage para no volver a mostrar esta semana
+  localStorage.setItem('premium_welcome_seen', Date.now());
+}
+
 function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
 </script>
 <script src="/header.js"></script>
+
+<!-- Modal bienvenida Premium -->
+<div class="modal-overlay" id="modalPremium" style="display:none">
+  <div class="modal-box">
+    <div class="modal-ico">🎉</div>
+    <div class="modal-titulo">¡Ya sos Premium!</div>
+    <div class="modal-sub">Tu cuenta Premium está activa. Estos son los beneficios que ya podés usar:</div>
+    <div class="modal-beneficios">
+      <div class="modal-b"><span>⭐</span><span>Badge Premium en la galería</span></div>
+      <div class="modal-b"><span>💰</span><span>3 ventas/mes en avisos</span></div>
+      <div class="modal-b"><span>💳</span><span>Tarjeta PVC a Q35 (precio especial)</span></div>
+      <div class="modal-b"><span>🎨</span><span>3 diseños de carnet PetzID</span></div>
+      <div class="modal-b"><span>🔗</span><span>Perfil público con QR descargable</span></div>
+    </div>
+    <button class="modal-btn" onclick="cerrarModalPremium()">¡Entendido, gracias! 🐾</button>
+    <div class="modal-skip" onclick="cerrarModalPremium()">Cerrar</div>
+  </div>
+</div>
+
 </body>
 </html>
