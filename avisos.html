@@ -885,7 +885,10 @@ function publicar(){
         vfd.append('folder','petzid/ventas');
         var vr=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:vfd});
         var vd=await vr.json();
-        if(vd.secure_url) extraData.imagen=vd.secure_url;
+        if(vd.secure_url){
+          extraData.imagen=vd.secure_url;
+          payload.imagen=vd.secure_url; // asignar directo al payload
+        }
       }catch(e){console.log('Cloudinary venta:',e);}
     }
     // Para adopcion usar imagen, para otros foto_creador
