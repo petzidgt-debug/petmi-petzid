@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Planes Partners — PetMi</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --teal:#00B4B4;--teal-d:#007a7a;--teal-l:#e0f7f7;
+  --pink:#E05090;--pink-l:#fbeaf0;
+  --gold:#F5C842;--gold-l:#FFF9E6;
+  --ink:#1a1a2e;--ink2:#444;--muted:#888;
+  --bg:#f5f4f0;--card:#fff;--border:#e4e1db;
+  --pop-bg:#e0f7f7;
+}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+.hero{background:#1a1a2e;padding:52px 24px 56px;text-align:center;color:#fff}
+.hero-pill{display:inline-block;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:5px 16px;border:1px solid rgba(224,80,144,.5);color:var(--pink);border-radius:99px;margin-bottom:20px}
+.hero h1{font-size:clamp(24px,5vw,42px);font-weight:700;line-height:1.15;margin-bottom:14px;letter-spacing:-.5px}
+.hero h1 span{color:var(--teal)}
+.hero p{font-size:14px;color:rgba(255,255,255,.55);line-height:1.8;max-width:440px;margin:0 auto 32px}
+.hero-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn-wa{display:inline-flex;align-items:center;gap:7px;padding:12px 24px;background:#25D366;color:#fff;border-radius:99px;font-size:13px;font-weight:600;text-decoration:none}
+.btn-ghost{display:inline-flex;align-items:center;gap:7px;padding:12px 24px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:99px;font-size:13px;font-weight:500;text-decoration:none}
+.wrap{max-width:1040px;margin:0 auto;padding:48px 20px 80px}
+.table-outer{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:16px;border:1.5px solid var(--border);background:var(--card);box-shadow:0 2px 20px rgba(0,0,0,.06)}
+table{width:100%;border-collapse:collapse;min-width:660px}
+th{padding:18px 12px 14px;text-align:center;vertical-align:bottom;font-weight:500;font-size:13px;border-bottom:1.5px solid var(--border)}
+th.feat-h{text-align:left;font-size:13px;font-weight:600;color:var(--ink);width:26%;padding-left:20px;vertical-align:middle}
+.col-icon{font-size:22px;display:block;margin-bottom:6px}
+.col-name{font-size:15px;font-weight:700;display:block;margin-bottom:4px}
+.col-tipo{display:inline-block;font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:2px 9px;border-radius:99px;margin-bottom:6px}
+.tipo-auto{background:#f0f0ee;color:#666}
+.tipo-serv{background:var(--pink-l);color:var(--pink)}
+.pop-badge{display:inline-block;font-size:9px;font-weight:700;background:var(--gold);color:#1a1a2e;padding:2px 10px;border-radius:99px;margin-bottom:4px}
+.price-main{font-size:18px;font-weight:700;color:var(--ink);display:block;line-height:1}
+.price-anual{font-size:10px;color:var(--ink2);display:block;margin-top:3px}
+.price-anual strong{color:#2e7d32;font-weight:600}
+th.pop{background:var(--teal-l)}
+td.pop{background:var(--teal-l)}
+th.col-sep-th{border-left:2px solid var(--pink)}
+td.col-sep-td{border-left:2px solid var(--pink)}
+td{padding:10px 12px;text-align:center;font-size:13px;color:var(--ink2);border-bottom:1px solid var(--border)}
+td.feat{text-align:left;color:var(--ink);font-size:13px;padding-left:20px}
+td.sec{background:#fafaf8;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:10px 20px 6px;text-align:left;border-top:1px solid var(--border)}
+td.sec-span{background:#fafaf8}
+tr:last-child td{border-bottom:none}
+.check{color:var(--teal-d);font-size:16px}
+.cross{color:#ccc;font-size:14px}
+.num{font-weight:600;color:var(--ink)}
+.cta-row td{padding:16px 12px;border-top:1.5px solid var(--border);border-bottom:none}
+.btn-cta{display:block;width:100%;padding:9px 6px;border-radius:10px;font-size:11px;font-weight:600;text-align:center;text-decoration:none;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--ink);font-family:'Sora',sans-serif}
+.btn-cta.teal{background:var(--teal);color:#fff;border-color:var(--teal-d)}
+.btn-cta.blue{background:var(--pink);color:#fff;border-color:#b03070}
+.nota{margin-top:20px;padding:16px 20px;background:var(--card);border-radius:14px;border:1.5px solid var(--border);font-size:12px;color:var(--muted);line-height:1.8}
+.nota strong{color:var(--ink2);font-weight:600}
+.contacto{margin-top:48px;background:#1a1a2e;border-radius:20px;padding:40px 32px;text-align:center;color:#fff}
+.contacto h2{font-size:22px;font-weight:700;margin-bottom:10px;letter-spacing:-.3px}
+.contacto p{font-size:13px;color:rgba(255,255,255,.55);margin-bottom:24px;line-height:1.8}
+.faq-wrap{margin-top:48px}
+.faq-title{font-size:20px;font-weight:700;margin-bottom:20px;letter-spacing:-.3px}
+.faq-item{border-bottom:1.5px solid var(--border);padding:16px 0;cursor:pointer}
+.faq-q{font-size:14px;font-weight:500;color:var(--ink);display:flex;justify-content:space-between;align-items:center;gap:12px;user-select:none}
+.faq-arr{color:var(--muted);font-size:20px;transition:transform .2s;flex-shrink:0}
+.faq-item.open .faq-arr{transform:rotate(45deg)}
+.faq-a{font-size:13px;color:var(--muted);line-height:1.8;margin-top:10px;display:none}
+.faq-item.open .faq-a{display:block}
+@media(max-width:600px){.wrap{padding:32px 16px 60px}.contacto{padding:28px 20px}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-pill">🐾 PetMi Partners</div>
+  <h1>Llega a los dueños<br>de mascotas de <span>Guatemala</span></h1>
+  <p>La única plataforma con base de datos segmentada de dueños registrados. Conecta tu marca directo con tu audiencia.</p>
+  <div class="hero-btns">
+    <a href="https://wa.me/50237673927?text=Hola%20PetMi!%20Me%20interesa%20ser%20partner" target="_blank" class="btn-wa">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Quiero ser Partner
+    </a>
+    <a href="#tabla" class="btn-ghost">Ver planes ↓</a>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- DIFERENCIADOR -->
+  <div style="margin-bottom:40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
+
+    <div style="background:var(--card);border-radius:16px;padding:22px;border:1.5px solid var(--border);border-top:3px solid var(--teal)">
+      <div style="font-size:28px;margin-bottom:10px">🎯</div>
+      <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">Base de datos segmentada</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7">Enviamos tu promo directo a dueños filtrados por <strong style="color:var(--ink2)">zona, especie, raza y sexo</strong>. No publicidad masiva — audiencia calificada.</div>
+    </div>
+
+    <div style="background:var(--card);border-radius:16px;padding:22px;border:1.5px solid var(--border);border-top:3px solid var(--pink)">
+      <div style="font-size:28px;margin-bottom:10px">📧</div>
+      <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">Email directo al dueño</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7">Tasa de apertura de email <strong style="color:var(--ink2)">3× mayor</strong> que redes sociales. Llegás a la bandeja de entrada, no al feed.</div>
+    </div>
+
+    <div style="background:var(--card);border-radius:16px;padding:22px;border:1.5px solid var(--border);border-top:3px solid var(--gold)">
+      <div style="font-size:28px;margin-bottom:10px">📱</div>
+      <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">App + email + redes</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7">Presencia en la app PetMi, envíos a base de datos y publicaciones en redes sociales — todo desde un solo plan.</div>
+    </div>
+
+    <div style="background:var(--card);border-radius:16px;padding:22px;border:1.5px solid var(--border);border-top:3px solid #2e7d32">
+      <div style="font-size:28px;margin-bottom:10px">🐾</div>
+      <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px">Audiencia registrada</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7">Dueños que ya registraron a su mascota en PetMi. <strong style="color:var(--ink2)">Datos reales</strong> — nombre, especie, zona, raza. No estimaciones.</div>
+    </div>
+
+  </div>
+
+  <div id="tabla" class="table-outer">
+    <table>
+      <thead>
+        <tr>
+          <th class="feat-h">PetMi — 5 planes comerciales</th>
+          <th>
+            <span class="col-tipo tipo-auto">Autoservicio</span>
+            <span class="col-icon">🥉</span>
+            <span class="col-name">Básico</span>
+            <span class="price-main">Q150<span style="font-size:11px;font-weight:400;color:var(--muted)">/mes</span></span>
+            <span class="price-anual">Q1,440/año <strong>−20%</strong></span>
+          </th>
+          <th class="pop">
+            <span class="pop-badge">Popular</span>
+            <span class="col-tipo tipo-auto">Autoservicio</span>
+            <span class="col-icon">🥈</span>
+            <span class="col-name">Silver</span>
+            <span class="price-main">Q350<span style="font-size:11px;font-weight:400;color:var(--muted)">/mes</span></span>
+            <span class="price-anual">Q3,360/año <strong>−20%</strong></span>
+          </th>
+          <th>
+            <span class="col-tipo tipo-auto">Autoservicio</span>
+            <span class="col-icon">🥇</span>
+            <span class="col-name">Gold</span>
+            <span class="price-main">Q600<span style="font-size:11px;font-weight:400;color:var(--muted)">/mes</span></span>
+            <span class="price-anual">Q5,760/año <strong>−20%</strong></span>
+          </th>
+          <th class="col-sep-th">
+            <span class="col-tipo tipo-serv">Servicio completo</span>
+            <span class="col-icon">⭐</span>
+            <span class="col-name">Digital+</span>
+            <span class="price-main">Q1,400<span style="font-size:11px;font-weight:400;color:var(--muted)">/mes</span></span>
+            <span class="price-anual">Q15,120/año <strong>−10%</strong></span>
+          </th>
+          <th>
+            <span class="col-tipo tipo-serv">Servicio completo</span>
+            <span class="col-icon">🚀</span>
+            <span class="col-name">Digital++</span>
+            <span class="price-main">Q2,500<span style="font-size:11px;font-weight:400;color:var(--muted)">/mes</span></span>
+            <span class="price-anual">Q27,000/año <strong>−10%</strong></span>
+          </th>
+        </tr>
+        <tr>
+          <td class="sec"></td>
+          <td colspan="3" style="text-align:center;font-size:11px;color:var(--muted);background:#fafaf8;border-bottom:1px solid var(--border);padding:8px">Afiliados · autoservicio</td>
+          <td colspan="2" class="col-sep-td" style="text-align:center;font-size:11px;color:var(--muted);background:#fafaf8;border-bottom:1px solid var(--border);padding:8px">Patrocinadores · servicio gestionado</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="sec">App PetzID</td><td class="sec-span"></td><td class="sec-span pop"></td><td class="sec-span"></td><td class="sec-span col-sep-td"></td><td class="sec-span"></td></tr>
+        <tr>
+          <td class="feat">Publicaciones/mes</td>
+          <td class="num">1</td><td class="pop num">2</td><td class="num">4</td>
+          <td class="col-sep-td num">4</td><td class="num">5</td>
+        </tr>
+        <tr>
+          <td class="feat">Publicaciones pinned</td>
+          <td><span class="cross">—</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td>
+          <td class="col-sep-td"><span class="check">✓</span></td><td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td class="feat">Badge Partner PetMi ✓</td>
+          <td><span class="check">✓</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td>
+          <td class="col-sep-td"><span class="check">✓</span></td><td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td class="feat">Portal de afiliado propio</td>
+          <td><span class="check">✓</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td>
+          <td class="col-sep-td"><span class="check">✓</span></td><td><span class="check">✓</span></td>
+        </tr>
+
+        <tr><td class="sec">Base de datos segmentada</td><td class="sec-span"></td><td class="sec-span pop"></td><td class="sec-span"></td><td class="sec-span col-sep-td"></td><td class="sec-span"></td></tr>
+        <tr>
+          <td class="feat">Envíos email/mes</td>
+          <td>1</td><td class="pop">2</td><td>2</td>
+          <td class="col-sep-td">2</td><td>4 (semanal)</td>
+        </tr>
+        <tr>
+          <td class="feat">Segmentación zona + especie</td>
+          <td><span class="cross">—</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td>
+          <td class="col-sep-td"><span class="check">✓</span></td><td><span class="check">✓</span></td>
+        </tr>
+
+        <tr><td class="sec">Redes sociales PetMi</td><td class="sec-span"></td><td class="sec-span pop"></td><td class="sec-span"></td><td class="sec-span col-sep-td"></td><td class="sec-span"></td></tr>
+        <tr>
+          <td class="feat">Stories/mes</td>
+          <td><span class="cross">—</span></td><td class="pop">1</td><td>2</td>
+          <td class="col-sep-td">2</td><td>4</td>
+        </tr>
+        <tr>
+          <td class="feat">Post en feed</td>
+          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td>1/mes</td>
+          <td class="col-sep-td">2/mes</td><td>4/mes</td>
+        </tr>
+        <tr>
+          <td class="feat">Reel patrocinado</td>
+          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
+          <td class="col-sep-td">1/mes</td><td>2/mes</td>
+        </tr>
+
+        <tr><td class="sec">Producción de contenido</td><td class="sec-span"></td><td class="sec-span pop"></td><td class="sec-span"></td><td class="sec-span col-sep-td"></td><td class="sec-span"></td></tr>
+        <tr>
+          <td class="feat">Artículo SEO en web</td>
+          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
+          <td class="col-sep-td">1/mes</td><td>2/mes</td>
+        </tr>
+        <tr>
+          <td class="feat">Video educativo</td>
+          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
+          <td class="col-sep-td"><span class="cross">—</span></td><td>1/mes</td>
+        </tr>
+        <tr>
+          <td class="feat">Campaña Giveaway</td>
+          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
+          <td class="col-sep-td">1/mes</td><td>1/mes</td>
+        </tr>
+        <tr>
+          <td class="feat">Pauta Meta incluida</td>
+          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
+          <td class="col-sep-td"><span class="check">✓</span></td><td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td class="feat">Reporte mensual de métricas</td>
+          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
+          <td class="col-sep-td"><span class="cross">—</span></td><td><span class="check">✓</span></td>
+        </tr>
+
+        <tr class="cta-row">
+          <td></td>
+          <td><a href="https://wa.me/50237673927?text=Plan%20B%C3%A1sico%20afiliado" target="_blank" class="btn-cta">Consultar</a></td>
+          <td class="pop"><a href="https://wa.me/50237673927?text=Plan%20Silver%20afiliado" target="_blank" class="btn-cta teal">Consultar</a></td>
+          <td><a href="https://wa.me/50237673927?text=Plan%20Gold%20afiliado" target="_blank" class="btn-cta">Consultar</a></td>
+          <td class="col-sep-td"><a href="https://wa.me/50237673927?text=Plan%20Digital%2B" target="_blank" class="btn-cta blue">Consultar</a></td>
+          <td><a href="https://wa.me/50237673927?text=Plan%20Digital%2B%2B" target="_blank" class="btn-cta blue">Consultar</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="background:var(--teal-l);border:1.5px solid var(--teal);border-radius:14px;padding:16px 20px;margin-top:20px;font-size:13px;color:var(--teal-d);line-height:1.8;margin-bottom:8px">
+    <strong>Ejemplo real:</strong> Una marca de alimento para gatos puede enviar su promo exactamente a los dueños de gatos de Zona 10, 14 y 15 de Guatemala — y solo a ellos. Sin pagar por impresiones irrelevantes.
+  </div>
+  <div class="nota">
+    <strong>Afiliados (Básico · Silver · Gold)</strong> — publican desde su portal propio. PetMi distribuye. &nbsp;·&nbsp;
+    <strong>Patrocinadores (Digital+ · Digital++)</strong> — PetMi diseña, escribe y publica todo el contenido. &nbsp;·&nbsp;
+    Descuento <strong>20%</strong> en afiliados y <strong>10%</strong> en patrocinadores al pagar el año completo.
+  </div>
+
+  <div class="faq-wrap">
+    <div class="faq-title">Preguntas frecuentes</div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">¿Cuál es la diferencia entre afiliado y patrocinador? <span class="faq-arr">+</span></div>
+      <div class="faq-a">Los afiliados publican ellos mismos desde su portal — PetMi distribuye a los dueños correctos. Los patrocinadores delegan toda la producción de contenido: diseño, copy, publicación y distribución. Es la diferencia entre una herramienta y un servicio completo.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">¿Qué es la base de datos segmentada? <span class="faq-arr">+</span></div>
+      <div class="faq-a">Es el registro de dueños de mascotas de PetMi. Podés filtrar por zona de Guatemala, especie (perro, gato), sexo y raza. Los envíos van directo a los dueños que más se parecen a tu cliente ideal.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">¿Qué significa que las publicaciones sean "pinned"? <span class="faq-arr">+</span></div>
+      <div class="faq-a">Las publicaciones pinned aparecen primero en la sección de avisos de la app PetMi, antes que las publicaciones regulares. Mayor visibilidad garantizada para tu marca.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">¿Puedo cambiar de plan? <span class="faq-arr">+</span></div>
+      <div class="faq-a">Sí. Podés subir de plan en cualquier momento. Si bajás de plan, el cambio aplica al siguiente ciclo de facturación. Contactanos por WhatsApp para coordinar.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">¿Cómo funciona el descuento anual? <span class="faq-arr">+</span></div>
+      <div class="faq-a">Los planes de afiliados tienen 20% de descuento al pagar el año completo por adelantado. Los planes de patrocinadores tienen 10% de descuento anual. El pago se realiza en un solo cobro.</div>
+    </div>
+  </div>
+
+  <div class="contacto">
+    <h2>¿Listo para ser Partner?</h2>
+    <p>Contáctanos y te explicamos qué plan encaja mejor con tu negocio.<br>Sin compromiso, sin contratos largos.</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <a href="https://wa.me/50237673927?text=Hola%20PetMi!%20Me%20interesa%20ser%20partner" target="_blank" class="btn-wa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp
+      </a>
+      <a href="https://instagram.com/revistapetmi" target="_blank" class="btn-ghost">📸 Instagram</a>
+    </div>
+  </div>
+</div>
+
+<script src="/header.js"></script>
+</body>
+</html>
