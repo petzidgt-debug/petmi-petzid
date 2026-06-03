@@ -1,3 +1,34 @@
+// ── PWA: manifest + service worker ──────────────────────────
+(function(){
+  // Manifest
+  var link = document.createElement('link');
+  link.rel = 'manifest'; link.href = '/manifest.json';
+  document.head.appendChild(link);
+
+  // Theme color
+  var meta = document.createElement('meta');
+  meta.name = 'theme-color'; meta.content = '#00B4B4';
+  document.head.appendChild(meta);
+
+  // Apple PWA
+  var appleMeta = document.createElement('meta');
+  appleMeta.name = 'apple-mobile-web-app-capable'; appleMeta.content = 'yes';
+  document.head.appendChild(appleMeta);
+  var appleStatus = document.createElement('meta');
+  appleStatus.name = 'apple-mobile-web-app-status-bar-style'; appleStatus.content = 'default';
+  document.head.appendChild(appleStatus);
+  var appleTitle = document.createElement('meta');
+  appleTitle.name = 'apple-mobile-web-app-title'; appleTitle.content = 'PetMi';
+  document.head.appendChild(appleTitle);
+
+  // Service Worker
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('/sw.js').catch(function(){});
+    });
+  }
+})();
+
 // header.js — Header compartido PetMi v5
 (function(){
   function initHeader(){
