@@ -27,9 +27,9 @@ body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--in
 .btn-ghost{display:inline-flex;align-items:center;gap:7px;padding:12px 24px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:99px;font-size:13px;font-weight:500;text-decoration:none}
 .wrap{max-width:1040px;margin:0 auto;padding:48px 20px 80px}
 .table-outer{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:16px;border:1.5px solid var(--border);background:var(--card);box-shadow:0 2px 20px rgba(0,0,0,.06)}
-table{width:100%;border-collapse:collapse;min-width:660px}
+table{width:100%;border-collapse:collapse;min-width:320px}
 th{padding:18px 12px 14px;text-align:center;vertical-align:bottom;font-weight:500;font-size:13px;border-bottom:1.5px solid var(--border)}
-th.feat-h{text-align:left;font-size:13px;font-weight:600;color:var(--ink);width:26%;padding-left:20px;vertical-align:middle}
+th.feat-h{text-align:left;font-size:13px;font-weight:600;color:var(--ink);width:40%;padding-left:16px;vertical-align:middle}
 .col-icon{font-size:22px;display:block;margin-bottom:6px}
 .col-name{font-size:15px;font-weight:700;display:block;margin-bottom:4px}
 .col-tipo{display:inline-block;font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:2px 9px;border-radius:99px;margin-bottom:6px}
@@ -41,8 +41,6 @@ th.feat-h{text-align:left;font-size:13px;font-weight:600;color:var(--ink);width:
 .price-anual strong{color:#2e7d32;font-weight:600}
 th.pop{background:var(--teal-l)}
 td.pop{background:var(--teal-l)}
-th.col-sep-th{border-left:2px solid var(--pink)}
-td.col-sep-td{border-left:2px solid var(--pink)}
 td{padding:10px 12px;text-align:center;font-size:13px;color:var(--ink2);border-bottom:1px solid var(--border)}
 td.feat{text-align:left;color:var(--ink);font-size:13px;padding-left:20px}
 td.sec{background:#fafaf8;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:10px 20px 6px;text-align:left;border-top:1px solid var(--border)}
@@ -117,11 +115,13 @@ tr:last-child td{border-bottom:none}
 
   </div>
 
-  <div id="tabla" class="table-outer">
+  <!-- TABLA AFILIADOS -->
+  <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Afiliados &mdash; autoservicio</div>
+  <div id="tabla" class="table-outer" style="margin-bottom:28px">
     <table>
       <thead>
         <tr>
-          <th class="feat-h">PetMi — 5 planes comerciales</th>
+          <th class="feat-h"></th>
           <th>
             <span class="col-tipo tipo-auto">Autoservicio</span>
             <span class="col-icon">🥉</span>
@@ -144,7 +144,39 @@ tr:last-child td{border-bottom:none}
             <span class="price-main">Q600<span style="font-size:11px;font-weight:400;color:var(--muted)">/mes</span></span>
             <span class="price-anual">Q5,760/año <strong>−20%</strong></span>
           </th>
-          <th class="col-sep-th">
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="sec" colspan="4">App PetzID</td></tr>
+        <tr><td class="feat">Publicaciones/mes</td><td class="num">1</td><td class="pop num">2</td><td class="num">4</td></tr>
+        <tr><td class="feat">Publicaciones pinned</td><td><span class="cross">—</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td class="feat">Badge Partner PetMi ✓</td><td><span class="check">✓</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td class="feat">Portal de afiliado propio</td><td><span class="check">✓</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td class="sec" colspan="4">Base de datos segmentada</td></tr>
+        <tr><td class="feat">Envíos email/mes</td><td>1</td><td class="pop">2</td><td>2</td></tr>
+        <tr><td class="feat">Segmentación zona + especie</td><td><span class="cross">—</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td class="sec" colspan="4">Redes sociales PetMi</td></tr>
+        <tr><td class="feat">Stories/mes</td><td><span class="cross">—</span></td><td class="pop">1</td><td>2</td></tr>
+        <tr><td class="feat">Post en feed</td><td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td>1/mes</td></tr>
+        <tr><td class="feat">Reel patrocinado</td><td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td></tr>
+        <tr class="cta-row">
+          <td></td>
+          <td><a href="https://wa.me/50237673927?text=Plan%20B%C3%A1sico%20afiliado" target="_blank" class="btn-cta">Consultar</a></td>
+          <td class="pop"><a href="https://wa.me/50237673927?text=Plan%20Silver%20afiliado" target="_blank" class="btn-cta teal">Consultar</a></td>
+          <td><a href="https://wa.me/50237673927?text=Plan%20Gold%20afiliado" target="_blank" class="btn-cta">Consultar</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TABLA PATROCINADORES -->
+  <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Patrocinadores &mdash; servicio gestionado por PetMi</div>
+  <div class="table-outer">
+    <table>
+      <thead>
+        <tr>
+          <th class="feat-h"></th>
+          <th>
             <span class="col-tipo tipo-serv">Servicio completo</span>
             <span class="col-icon">⭐</span>
             <span class="col-name">Digital+</span>
@@ -159,102 +191,31 @@ tr:last-child td{border-bottom:none}
             <span class="price-anual">Q27,000/año <strong>−10%</strong></span>
           </th>
         </tr>
-        <tr>
-          <td class="sec"></td>
-          <td colspan="3" style="text-align:center;font-size:11px;color:var(--muted);background:#fafaf8;border-bottom:1px solid var(--border);padding:8px">Afiliados · autoservicio</td>
-          <td colspan="2" class="col-sep-td" style="text-align:center;font-size:11px;color:var(--muted);background:#fafaf8;border-bottom:1px solid var(--border);padding:8px">Patrocinadores · servicio gestionado</td>
-        </tr>
       </thead>
       <tbody>
-        <tr><td class="sec">App PetzID</td><td class="sec-span"></td><td class="sec-span pop"></td><td class="sec-span"></td><td class="sec-span col-sep-td"></td><td class="sec-span"></td></tr>
-        <tr>
-          <td class="feat">Publicaciones/mes</td>
-          <td class="num">1</td><td class="pop num">2</td><td class="num">4</td>
-          <td class="col-sep-td num">4</td><td class="num">5</td>
-        </tr>
-        <tr>
-          <td class="feat">Publicaciones pinned</td>
-          <td><span class="cross">—</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td>
-          <td class="col-sep-td"><span class="check">✓</span></td><td><span class="check">✓</span></td>
-        </tr>
-        <tr>
-          <td class="feat">Badge Partner PetMi ✓</td>
-          <td><span class="check">✓</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td>
-          <td class="col-sep-td"><span class="check">✓</span></td><td><span class="check">✓</span></td>
-        </tr>
-        <tr>
-          <td class="feat">Portal de afiliado propio</td>
-          <td><span class="check">✓</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td>
-          <td class="col-sep-td"><span class="check">✓</span></td><td><span class="check">✓</span></td>
-        </tr>
-
-        <tr><td class="sec">Base de datos segmentada</td><td class="sec-span"></td><td class="sec-span pop"></td><td class="sec-span"></td><td class="sec-span col-sep-td"></td><td class="sec-span"></td></tr>
-        <tr>
-          <td class="feat">Envíos email/mes</td>
-          <td>1</td><td class="pop">2</td><td>2</td>
-          <td class="col-sep-td">2</td><td>4 (semanal)</td>
-        </tr>
-        <tr>
-          <td class="feat">Segmentación zona + especie</td>
-          <td><span class="cross">—</span></td><td class="pop"><span class="check">✓</span></td><td><span class="check">✓</span></td>
-          <td class="col-sep-td"><span class="check">✓</span></td><td><span class="check">✓</span></td>
-        </tr>
-
-        <tr><td class="sec">Redes sociales PetMi</td><td class="sec-span"></td><td class="sec-span pop"></td><td class="sec-span"></td><td class="sec-span col-sep-td"></td><td class="sec-span"></td></tr>
-        <tr>
-          <td class="feat">Stories/mes</td>
-          <td><span class="cross">—</span></td><td class="pop">1</td><td>2</td>
-          <td class="col-sep-td">2</td><td>4</td>
-        </tr>
-        <tr>
-          <td class="feat">Post en feed</td>
-          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td>1/mes</td>
-          <td class="col-sep-td">2/mes</td><td>4/mes</td>
-        </tr>
-        <tr>
-          <td class="feat">Reel patrocinado</td>
-          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
-          <td class="col-sep-td">1/mes</td><td>2/mes</td>
-        </tr>
-
-        <tr><td class="sec">Producción de contenido</td><td class="sec-span"></td><td class="sec-span pop"></td><td class="sec-span"></td><td class="sec-span col-sep-td"></td><td class="sec-span"></td></tr>
-        <tr>
-          <td class="feat">Artículo SEO en web</td>
-          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
-          <td class="col-sep-td">1/mes</td><td>2/mes</td>
-        </tr>
-        <tr>
-          <td class="feat">Video educativo</td>
-          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
-          <td class="col-sep-td"><span class="cross">—</span></td><td>1/mes</td>
-        </tr>
-        <tr>
-          <td class="feat">Campaña Giveaway</td>
-          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
-          <td class="col-sep-td">1/mes</td><td>1/mes</td>
-        </tr>
-        <tr>
-          <td class="feat">Pauta Meta incluida</td>
-          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
-          <td class="col-sep-td"><span class="check">✓</span></td><td><span class="check">✓</span></td>
-        </tr>
-        <tr>
-          <td class="feat">Reporte mensual de métricas</td>
-          <td><span class="cross">—</span></td><td class="pop"><span class="cross">—</span></td><td><span class="cross">—</span></td>
-          <td class="col-sep-td"><span class="cross">—</span></td><td><span class="check">✓</span></td>
-        </tr>
-
+        <tr><td class="sec" colspan="3">Producción de contenido (PetMi diseña y publica)</td></tr>
+        <tr><td class="feat">Posts en redes (diseño + copy)</td><td>2/mes</td><td>4/mes</td></tr>
+        <tr><td class="feat">Stories/mes</td><td>2</td><td>4</td></tr>
+        <tr><td class="feat">Reel patrocinado</td><td>1/mes</td><td>2/mes</td></tr>
+        <tr><td class="feat">Artículo SEO en web</td><td>1/mes</td><td>2/mes</td></tr>
+        <tr><td class="feat">Video educativo</td><td><span class="cross">—</span></td><td>1/mes</td></tr>
+        <tr><td class="feat">Campaña Giveaway</td><td>1/mes</td><td>1/mes</td></tr>
+        <tr><td class="sec" colspan="3">Distribución</td></tr>
+        <tr><td class="feat">Pauta Meta incluida</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td class="feat">Envíos email base de datos</td><td>2/mes</td><td>4/mes (semanal)</td></tr>
+        <tr><td class="feat">Reporte mensual de métricas</td><td><span class="cross">—</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td class="sec" colspan="3">App PetzID incluida</td></tr>
+        <tr><td class="feat">Publicaciones/mes · pinned</td><td>4</td><td>5</td></tr>
+        <tr><td class="feat">Badge Partner PetMi ✓</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
         <tr class="cta-row">
           <td></td>
-          <td><a href="https://wa.me/50237673927?text=Plan%20B%C3%A1sico%20afiliado" target="_blank" class="btn-cta">Consultar</a></td>
-          <td class="pop"><a href="https://wa.me/50237673927?text=Plan%20Silver%20afiliado" target="_blank" class="btn-cta teal">Consultar</a></td>
-          <td><a href="https://wa.me/50237673927?text=Plan%20Gold%20afiliado" target="_blank" class="btn-cta">Consultar</a></td>
-          <td class="col-sep-td"><a href="https://wa.me/50237673927?text=Plan%20Digital%2B" target="_blank" class="btn-cta blue">Consultar</a></td>
-          <td><a href="https://wa.me/50237673927?text=Plan%20Digital%2B%2B" target="_blank" class="btn-cta blue">Consultar</a></td>
+          <td><a href="https://wa.me/50237673927?text=Plan%20Digital%2B" target="_blank" class="btn-cta blue">Consultar Digital+</a></td>
+          <td><a href="https://wa.me/50237673927?text=Plan%20Digital%2B%2B" target="_blank" class="btn-cta blue">Consultar Digital++</a></td>
         </tr>
       </tbody>
     </table>
   </div>
+
 
   <div style="background:var(--teal-l);border:1.5px solid var(--teal);border-radius:14px;padding:16px 20px;margin-top:20px;font-size:13px;color:var(--teal-d);line-height:1.8;margin-bottom:8px">
     <strong>Ejemplo real:</strong> Una marca de alimento para gatos puede enviar su promo exactamente a los dueños de gatos de Zona 10, 14 y 15 de Guatemala — y solo a ellos. Sin pagar por impresiones irrelevantes.
