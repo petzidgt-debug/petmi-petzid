@@ -411,13 +411,12 @@
 
   // Capturar el evento beforeinstallprompt
   window.addEventListener('beforeinstallprompt', function(e){
-    e.preventDefault();
     deferredPrompt = e;
     if(isMobile && !isStandalone && !dismissed){
       setTimeout(function(){
         var banner = document.getElementById('pwaBanner');
         if(banner) banner.classList.add('show');
-      }, 3000); // Mostrar después de 3 segundos
+      }, 3000);
     }
   });
 
