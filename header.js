@@ -88,7 +88,7 @@
       // Mobile body padding
       '@media(max-width:768px){body{padding-bottom:70px}}',
       '@media(max-width:768px){#fabCrearPetzID{display:none!important}}',
-      '.h-pwa-banner{background:var(--color-background-primary,#fff);border-top:1px solid #eee;padding:16px 16px 14px;display:none}',
+      '.h-pwa-banner{background:var(--color-background-primary,#fff);border-top:1px solid #eee;padding:16px 16px 14px;display:none;position:fixed;bottom:68px;left:0;right:0;z-index:200;box-shadow:0 -4px 20px rgba(0,0,0,.12)}',
       '.h-pwa-banner.show{display:block}',
       '.h-pwa-handle{width:36px;height:4px;border-radius:99px;background:#ddd;margin:0 auto 14px}',
       '.h-pwa-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}',
