@@ -75,7 +75,7 @@
       '.h-avisos-badge{display:none;background:#E24B4A;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:3px}',
 
       // Bottom nav mobile
-      '.h-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #f0f0ee;z-index:300;padding:8px 4px 10px;box-shadow:0 -2px 10px rgba(0,0,0,.06)}',
+      '.h-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #f0f0ee;z-index:50;padding:8px 4px 10px;box-shadow:0 -2px 10px rgba(0,0,0,.06)}',
       '@media(max-width:768px){.h-bottom-nav{display:flex;justify-content:space-around;align-items:center}}',
       '.h-btab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative;text-decoration:none;border:none;background:none;font-family:Arial,sans-serif}',
       '.h-btab-ico{font-size:22px;line-height:1}',
@@ -88,6 +88,8 @@
       // Mobile body padding
       '@media(max-width:768px){body{padding-bottom:70px}}',
       '@media(max-width:768px){#fabCrearPetzID{display:none!important}}',
+      // Ocultar bottom nav si la pagina tiene su propia barra inferior
+      '.has-nav-bar .h-bottom-nav{display:none!important}',
       '@media(max-width:768px){.fab-pill{bottom:82px!important}}',
       '@media(max-width:768px){#toast,[id="toast"]{bottom:82px!important}}',
       '@media(max-width:768px){.toast{bottom:82px!important}}',
@@ -352,6 +354,14 @@
   // Escuchar clicks y touch
   document.addEventListener('click',   function(){ setTimeout(checkModals, 60); }, true);
   document.addEventListener('touchend', function(){ setTimeout(checkModals, 60); }, true);
+
+  // Ocultar bottom nav si la pagina tiene su propio nav-bar fijo (ej: index.html)
+  document.addEventListener('DOMContentLoaded', function(){
+    if(document.querySelector('.nav-bar')){
+      var bn = document.querySelector('.h-bottom-nav');
+      if(bn) bn.style.setProperty('display','none','important');
+    }
+  });
 })();
 
 // ── Cargar conteo de avisos activos ─────────────────────────
