@@ -311,31 +311,47 @@
   function checkModals(){
     var nav = getNav();
     if(!nav) return;
-    // Buscar cualquier overlay/modal visible (position fixed que cubra pantalla)
-    var modals = document.querySelectorAll(
-      '.modal-overlay, .login-modal-overlay, .confirm-overlay, .h-login-overlay, ' +
-      '[id="modalReglas"], [id="modalPerdido"], .foto-modal, .jefe-modal'
-    );
     var anyOpen = false;
-    modals.forEach(function(m){
+
+    // 1. Clases conocidas de modales/overlays en todas las páginas
+    var selectors = [
+      '.modal-overlay', '.login-overlay', '.login-modal-overlay',
+      '.confirm-overlay', '.h-login-overlay', '.foto-modal',
+      '.jefe-modal', '[id="modalReglas"]', '[id="modalPerdido"]',
+      '[id="modalPerdidoFam"]', '[id="loginOverlay"]'
+    ];
+    document.querySelectorAll(selectors.join(',')).forEach(function(m){
       var st = window.getComputedStyle(m);
       if(st.display !== 'none' && st.visibility !== 'hidden') anyOpen = true;
     });
-    // También revisar overlays creados dinámicamente (galeria, avisos)
-    document.querySelectorAll('body > div[style*="position:fixed"]').forEach(function(el){
-      var st = window.getComputedStyle(el);
-      if(st.display !== 'none' && st.zIndex > 100) anyOpen = true;
-    });
+
+    // 2. Cualquier div fixed con z-index alto (modales creados dinámicamente)
+    if(!anyOpen){
+      document.querySelectorAll('div, section').forEach(function(el){
+        if(anyOpen) return;
+        var st = window.getComputedStyle(el);
+        if(st.position === 'fixed' && parseInt(st.zIndex||0) >= 200 &&
+           st.display !== 'none' && st.visibility !== 'hidden' &&
+           st.top === '0px' && st.left === '0px'){
+          anyOpen = true;
+        }
+      });
+    }
+
     nav.style.display = anyOpen ? 'none' : '';
   }
 
-  // Observar cambios en el DOM y estilos
-  var observer = new MutationObserver(function(){ checkModals(); });
+  var observer = new MutationObserver(function(){ setTimeout(checkModals, 30); });
   document.addEventListener('DOMContentLoaded', function(){
-    observer.observe(document.body, { attributes:true, childList:true, subtree:true, attributeFilter:['style','class'] });
+    observer.observe(document.body, {
+      attributes: true, childList: true, subtree: true,
+      attributeFilter: ['style', 'class']
+    });
+    checkModals();
   });
-  // También escuchar clicks (para cuando se abren modales con JS)
-  document.addEventListener('click', function(){ setTimeout(checkModals, 50); }, true);
+  // Escuchar clicks y touch
+  document.addEventListener('click',   function(){ setTimeout(checkModals, 60); }, true);
+  document.addEventListener('touchend', function(){ setTimeout(checkModals, 60); }, true);
 })();
 
 // ── Cargar conteo de avisos activos ─────────────────────────
