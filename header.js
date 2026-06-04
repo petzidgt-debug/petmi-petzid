@@ -87,6 +87,7 @@
       '.h-fab-lbl{font-size:9px;color:#cc9800;font-weight:700;white-space:nowrap}',
       // Mobile body padding
       '@media(max-width:768px){body{padding-bottom:70px}}',
+      '@media(max-width:768px){#fabCrearPetzID{display:none!important}}',
       '@media(max-width:768px){.fab-pill{bottom:82px!important}}',
       '@media(max-width:768px){#toast,[id="toast"]{bottom:82px!important}}',
       '@media(max-width:768px){.toast{bottom:82px!important}}',
@@ -191,12 +192,12 @@
     var header = document.createElement('header');
     header.className = 'site-header';
     header.innerHTML =
-      '<a href="/galeria.html" class="h-logo">' +
+      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-logo">' +
         '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="34" onerror="this.style.display=\'none\'">' +
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
       '<div class="h-right">' +
-        '<button class="h-search" onclick="petmiToggleSearch()" aria-label="Buscar">🔍</button>' +
+        '<a href="https://www.revistapetmi.com/home" target="_blank" class="h-search" aria-label="Qué es PetzID" style="text-decoration:none">🪪</a>' +
         rightHTML +
       '</div>';
     document.body.insertBefore(header, document.body.firstChild);
@@ -302,6 +303,41 @@
 
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initHeader);}else{initHeader();}
 })();
+// ── Ocultar bottom nav cuando hay modal abierto ─────────────
+(function(){
+  var bottomNav = null;
+  function getNav(){ return bottomNav || (bottomNav = document.querySelector('.h-bottom-nav')); }
+
+  function checkModals(){
+    var nav = getNav();
+    if(!nav) return;
+    // Buscar cualquier overlay/modal visible (position fixed que cubra pantalla)
+    var modals = document.querySelectorAll(
+      '.modal-overlay, .login-modal-overlay, .confirm-overlay, .h-login-overlay, ' +
+      '[id="modalReglas"], [id="modalPerdido"], .foto-modal, .jefe-modal'
+    );
+    var anyOpen = false;
+    modals.forEach(function(m){
+      var st = window.getComputedStyle(m);
+      if(st.display !== 'none' && st.visibility !== 'hidden') anyOpen = true;
+    });
+    // También revisar overlays creados dinámicamente (galeria, avisos)
+    document.querySelectorAll('body > div[style*="position:fixed"]').forEach(function(el){
+      var st = window.getComputedStyle(el);
+      if(st.display !== 'none' && st.zIndex > 100) anyOpen = true;
+    });
+    nav.style.display = anyOpen ? 'none' : '';
+  }
+
+  // Observar cambios en el DOM y estilos
+  var observer = new MutationObserver(function(){ checkModals(); });
+  document.addEventListener('DOMContentLoaded', function(){
+    observer.observe(document.body, { attributes:true, childList:true, subtree:true, attributeFilter:['style','class'] });
+  });
+  // También escuchar clicks (para cuando se abren modales con JS)
+  document.addEventListener('click', function(){ setTimeout(checkModals, 50); }, true);
+})();
+
 // ── Cargar conteo de avisos activos ─────────────────────────
 (function(){
   var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';

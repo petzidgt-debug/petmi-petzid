@@ -250,14 +250,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <div class="cumple-scroll" id="angelesScroll"></div>
 </div>
 
-<!-- BANNER AVISOS ACTIVOS -->
-<div id="avisosBanner" style="display:none;margin:0 16px 8px;border-radius:12px;background:#fff;border:0.5px solid #eee;box-shadow:0 1px 4px rgba(0,0,0,.06)">
-  <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap" id="avisosBannerItems"></div>
-    <a href="/avisos.html" style="font-size:12px;color:#00B4B4;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">Ver todos →</a>
-  </div>
-</div>
-
 <!-- FILTERS -->
 <div class="filters">
   <button class="filter-btn active" onclick="setFilter('todos',this)">Todos</button>
@@ -357,38 +349,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </div>
 
 <script>
-// ── Banner avisos activos ──────────────────────────────────
-(function(){
-  var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
-  var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-  var TIPOS={
-    perdido:{ico:'🚨',label:'Perdido',color:'#c0392b',bg:'#FCEBEB'},
-    adopcion:{ico:'🏠',label:'Adopción',color:'#0F6E56',bg:'#E1F5EE'},
-    busco:{ico:'🔍',label:'Busco',color:'#534AB7',bg:'#EEEDFE'},
-    venta:{ico:'💰',label:'Venta',color:'#854F0B',bg:'#FAEEDA'},
-    promo:{ico:'📢',label:'Promo',color:'#185FA5',bg:'#E6F1FB'}
-  };
-  fetch(SUPA_URL+'/rest/v1/actividades?activo=eq.true&select=tipo&limit=200',{
-    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
-  }).then(function(r){return r.json();})
-  .then(function(rows){
-    if(!rows||!rows.length) return;
-    var counts={};
-    rows.forEach(function(r){counts[r.tipo]=(counts[r.tipo]||0)+1;});
-    var html='';
-    Object.keys(counts).forEach(function(tipo){
-      var t=TIPOS[tipo]||{ico:'📌',label:tipo,color:'#888',bg:'#f0f0f0'};
-      html+='<a href="/avisos.html" style="display:inline-flex;align-items:center;gap:5px;text-decoration:none;background:'+t.bg+';border-radius:99px;padding:4px 10px">'
-        +'<span style="font-size:12px">'+t.ico+'</span>'
-        +'<span style="font-size:11px;font-weight:700;color:'+t.color+'">'+counts[tipo]+' '+t.label+(counts[tipo]!==1?'s':'')+'</span>'
-        +'</a>';
-    });
-    var items=document.getElementById('avisosBannerItems');
-    var banner=document.getElementById('avisosBanner');
-    if(items&&banner&&html){items.innerHTML=html;banner.style.display='block';}
-  }).catch(function(){});
-})();
-
 // ── Estado global ─────────────────────────────────────────────
 var allPets=[], filtered=[], shown=0, perPage=40, currentFilter='todos';
 
@@ -1726,7 +1686,7 @@ document.addEventListener('keydown', function(e){
 });
 </script>
 
-<button class="fab-pill" style="background:#00B4B4" onclick="irACrear()"><i class="ti ti-plus" aria-hidden="true"></i>Crear PetzID</button>
+<button class="fab-pill" id="fabCrearPetzID" style="background:#00B4B4" onclick="irACrear()"><i class="ti ti-plus" aria-hidden="true"></i>Crear PetzID</button>
 <script>
 function irACrear(){
   var email=localStorage.getItem('petzid_email');
