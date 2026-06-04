@@ -42,14 +42,14 @@
     var style = document.createElement('style');
     style.textContent = [
       // ── Estilos nuevo header ──
-      '.site-header{background:#00B4B4;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:300;box-shadow:0 2px 8px rgba(0,0,0,.12)}',
+      '.site-header{background:#f5f5f5;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:300;box-shadow:0 2px 8px rgba(0,0,0,.08);border-bottom:1px solid #e8e8e8}',
       '.h-logo{flex-shrink:0;text-decoration:none;display:flex;align-items:center}',
       '.h-logo img{height:34px;display:block;object-fit:contain}',
       // Desktop nav
       '.h-nav{display:flex;align-items:center;gap:2px}',
       '@media(max-width:768px){.h-nav{display:none}}',
-      '.h-link{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;font-size:13px;font-weight:600;color:rgba(255,255,255,.85);text-decoration:none;border:none;background:none;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif;transition:background .15s}',
-      '.h-link:hover,.h-link.active{background:rgba(255,255,255,.18);color:#fff}',
+      '.h-link{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;font-size:13px;font-weight:600;color:#555;text-decoration:none;border:none;background:none;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif;transition:background .15s}',
+      '.h-link:hover,.h-link.active{background:#e0f7f7;color:#00B4B4}',
       '.h-drop{position:relative}',
       '.h-drop-menu{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);min-width:180px;overflow:hidden;display:none;z-index:500;border:0.5px solid #eee}',
       '.h-drop-menu.open{display:block}',
@@ -59,24 +59,21 @@
       '.h-drop-item.danger{color:#c0392b}',
       // Right section
       '.h-right{display:flex;align-items:center;gap:8px;flex-shrink:0}',
-      '.h-search{width:32px;height:32px;border-radius:99px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;border:none;color:#fff;transition:background .15s}',
-      '.h-search:hover{background:rgba(255,255,255,.3)}',
+      '.h-search{width:32px;height:32px;border-radius:99px;background:#e8e8e8;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;border:none;color:#555;transition:background .15s}',
+      '.h-search:hover{background:#e0f7f7}',
       '.h-avatar{width:32px;height:32px;border-radius:99px;background:#1a1a2e;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;cursor:pointer;border:none;font-family:Arial,sans-serif;position:relative}',
-      '.h-avatar-dot{position:absolute;bottom:1px;right:1px;width:8px;height:8px;border-radius:99px;background:#2ecc71;border:1.5px solid #00B4B4}',
+      '.h-avatar-dot{position:absolute;bottom:1px;right:1px;width:8px;height:8px;border-radius:99px;background:#2ecc71;border:1.5px solid #fff}',
       '.h-avatar-dd{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.18);width:220px;overflow:hidden;display:none;z-index:500;border:0.5px solid #eee}',
       '.h-avatar-dd.open{display:block}',
       '.h-avatar-hdr{padding:13px 16px;border-bottom:1px solid #f5f5f5;background:#f8f8f8}',
       '.h-avatar-email{font-size:11px;color:#aaa;margin:0}',
       '.h-avatar-name{font-size:14px;font-weight:700;color:#222;margin:3px 0 0}',
       '.h-btn-reg{padding:8px 16px;border:none;border-radius:99px;font-size:12px;font-weight:700;color:#1a1a2e;background:#F5C842;cursor:pointer;text-decoration:none;white-space:nowrap;font-family:Arial,sans-serif}',
-      '.h-btn-in{padding:8px 16px;border:1.5px solid rgba(255,255,255,.5);border-radius:99px;font-size:12px;font-weight:700;color:#fff;background:transparent;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
-      '.h-btn-in:hover{background:rgba(255,255,255,.15)}',
+      '.h-btn-in{padding:8px 16px;border:1.5px solid #00B4B4;border-radius:99px;font-size:12px;font-weight:700;color:#00B4B4;background:transparent;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
+      '.h-btn-in:hover{background:#e0f7f7}',
       // Avisos badge
       '.h-avisos-badge{display:none;background:#E24B4A;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:3px}',
-      // FAB flotante desktop
-      '.h-fab{position:fixed;bottom:28px;right:28px;display:flex;align-items:center;gap:8px;padding:13px 22px;border-radius:99px;background:#F5C842;color:#1a1a2e;font-size:14px;font-weight:700;box-shadow:0 4px 18px rgba(0,0,0,.2);cursor:pointer;border:none;text-decoration:none;z-index:200;font-family:Arial,sans-serif;transition:transform .15s}',
-      '.h-fab:hover{transform:scale(1.04)}',
-      '@media(max-width:768px){.h-fab{display:none}}',
+
       // Bottom nav mobile
       '.h-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #f0f0ee;z-index:300;padding:8px 4px 10px;box-shadow:0 -2px 10px rgba(0,0,0,.06)}',
       '@media(max-width:768px){.h-bottom-nav{display:flex;justify-content:space-around;align-items:center}}',
@@ -201,9 +198,6 @@
       '</div>';
     document.body.insertBefore(header, document.body.firstChild);
 
-    // FAB flotante desktop
-    var fabHTML = '<a href="/index.html" class="h-fab">➕ Agregar mascota</a>';
-    document.body.insertAdjacentHTML('beforeend', fabHTML);
 
     // Bottom nav mobile
     var bottomNav = document.createElement('nav');
