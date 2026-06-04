@@ -88,6 +88,19 @@
       // Mobile body padding
       '@media(max-width:768px){body{padding-bottom:70px}}',
       '@media(max-width:768px){#fabCrearPetzID{display:none!important}}',
+      '.h-pwa-banner{background:var(--color-background-primary,#fff);border-top:1px solid #eee;padding:16px 16px 14px;display:none}',
+      '.h-pwa-banner.show{display:block}',
+      '.h-pwa-handle{width:36px;height:4px;border-radius:99px;background:#ddd;margin:0 auto 14px}',
+      '.h-pwa-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}',
+      '.h-pwa-icon{width:48px;height:48px;border-radius:12px;background:#00B4B4;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}',
+      '.h-pwa-icon img{width:32px;height:32px;object-fit:contain}',
+      '.h-pwa-name{font-size:15px;font-weight:700;color:#222;margin-bottom:2px}',
+      '.h-pwa-url{font-size:12px;color:#888}',
+      '.h-pwa-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}',
+      '.h-pwa-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:99px;background:#f5f5f5;border:0.5px solid #eee;font-size:11px;color:#555}',
+      '.h-pwa-btns{display:flex;gap:8px}',
+      '.h-pwa-install{flex:1;padding:11px;border-radius:99px;background:#00B4B4;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer}',
+      '.h-pwa-later{padding:11px 16px;border-radius:99px;background:#f5f5f5;color:#666;border:0.5px solid #eee;font-size:13px;cursor:pointer}',
       // Ocultar bottom nav si la pagina tiene su propia barra inferior
       '.has-nav-bar .h-bottom-nav{display:none!important}',
       '@media(max-width:768px){.fab-pill{bottom:82px!important}}',
@@ -204,6 +217,27 @@
       '</div>';
     document.body.insertBefore(header, document.body.firstChild);
 
+
+    // PWA install banner
+    var pwaBanner = document.createElement('div');
+    pwaBanner.className = 'h-pwa-banner';
+    pwaBanner.id = 'pwaBanner';
+    pwaBanner.innerHTML =
+      '<div class="h-pwa-handle"></div>' +
+      '<div class="h-pwa-row">' +
+        '<div class="h-pwa-icon"><img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi"></div>' +
+        '<div><div class="h-pwa-name">Instalar PetMi</div><div class="h-pwa-url">app.revistapetmi.com</div></div>' +
+      '</div>' +
+      '<div class="h-pwa-pills">' +
+        '<span class="h-pwa-pill">📱 Sin App Store</span>' +
+        '<span class="h-pwa-pill">📴 Funciona offline</span>' +
+        '<span class="h-pwa-pill">🔔 Notificaciones</span>' +
+      '</div>' +
+      '<div class="h-pwa-btns">' +
+        '<button class="h-pwa-install" id="pwaBtnInstall">Instalar gratis</button>' +
+        '<button class="h-pwa-later" onclick="petmiPwaLater()">Ahora no</button>' +
+      '</div>';
+    document.body.appendChild(pwaBanner);
 
     // Bottom nav mobile
     var bottomNav = document.createElement('nav');
@@ -363,6 +397,85 @@
     }
   });
 })();
+
+// ── PWA Install Banner ───────────────────────────────────────
+(function(){
+  var deferredPrompt = null;
+  var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+
+  // Solo móvil y si no está instalada ya
+  var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  var dismissed = localStorage.getItem('pwa_dismissed');
+
+  // Capturar el evento beforeinstallprompt
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    if(isMobile && !isStandalone && !dismissed){
+      setTimeout(function(){
+        var banner = document.getElementById('pwaBanner');
+        if(banner) banner.classList.add('show');
+      }, 3000); // Mostrar después de 3 segundos
+    }
+  });
+
+  // Botón instalar
+  document.addEventListener('click', function(e){
+    if(e.target && e.target.id === 'pwaBtnInstall'){
+      if(deferredPrompt){
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(result){
+          if(result.outcome === 'accepted'){
+            registrarInstall('aceptada');
+          }
+          deferredPrompt = null;
+          var banner = document.getElementById('pwaBanner');
+          if(banner) banner.classList.remove('show');
+        });
+      } else {
+        // iOS — mostrar instrucciones
+        alert('En iPhone: toca el botón compartir y selecciona "Agregar a pantalla de inicio"');
+        registrarInstall('ios-manual');
+      }
+    }
+  });
+
+  // Detectar cuando se instala
+  window.addEventListener('appinstalled', function(){
+    registrarInstall('instalada');
+    var banner = document.getElementById('pwaBanner');
+    if(banner) banner.classList.remove('show');
+  });
+
+  function registrarInstall(tipo){
+    var ua = navigator.userAgent;
+    var plat = /iPhone|iPad/i.test(ua) ? 'iOS' : /Android/i.test(ua) ? 'Android' : 'Desktop';
+    var email = '';
+    try { email = sessionStorage.getItem('petmiEmail') || localStorage.getItem('petmiEmail') || ''; } catch(err){}
+    fetch(SUPA_URL + '/rest/v1/pwa_installs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        email: email || null,
+        dispositivo: tipo,
+        plataforma: plat
+      })
+    }).catch(function(){});
+  }
+})();
+
+function petmiPwaLater(){
+  localStorage.setItem('pwa_dismissed', '1');
+  var banner = document.getElementById('pwaBanner');
+  if(banner) banner.classList.remove('show');
+}
 
 // ── Cargar conteo de avisos activos ─────────────────────────
 (function(){
