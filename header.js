@@ -41,33 +41,56 @@
     var currentPath  = window.location.pathname;
     var style = document.createElement('style');
     style.textContent = [
-      '.site-header{background:#fff;border-bottom:1px solid #eee;padding:0 16px;display:flex;align-items:center;height:60px;position:sticky;top:0;z-index:300;box-shadow:0 1px 6px rgba(0,0,0,.07);gap:8px}',
-      '.site-header .h-logo img{height:36px;display:block}',
-      '.site-header .h-logo{text-decoration:none;flex-shrink:0}',
-      '.site-header .h-nav{display:flex;align-items:center;gap:2px;flex:1;justify-content:center}',
-      '.site-header .h-link{padding:6px 10px;border-radius:20px;font-size:13px;font-weight:600;color:#555;text-decoration:none;border:none;background:none;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
-      '.site-header .h-link:hover{background:#f0f0ee;color:#00B4B4}',
-      '.site-header .h-link.active{color:#00B4B4;font-weight:700}',
-      '.site-header .h-drop{position:relative;display:inline-block}',
-      '.site-header .h-drop-menu{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);min-width:160px;overflow:hidden;display:none;z-index:500}',
-      '.site-header .h-drop-menu.open{display:block}',
-      '.site-header .h-drop-item{display:block;padding:11px 16px;font-size:13px;font-weight:600;color:#333;text-decoration:none;border:none;background:none;width:100%;text-align:left;cursor:pointer;border-bottom:1px solid #f5f5f5;font-family:Arial,sans-serif}',
-      '.site-header .h-drop-item:last-child{border-bottom:none}',
-      '.site-header .h-drop-item:hover{background:#f8f8f8}',
-      '.site-header .h-drop-item.danger{color:#c0392b}',
-      '.site-header .h-right{display:flex;align-items:center;gap:6px;flex-shrink:0}',
-      '.site-header .h-badge{background:#E05090;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;text-decoration:none;white-space:nowrap;display:none}' +
-      '.h-avisos-badge{display:none;position:absolute;top:-4px;right:-8px;background:#E24B4A;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:99px;line-height:1.4}',
-      '.site-header .h-btn{padding:7px 13px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;background:#fff;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
-      '.site-header .h-btn-reg{padding:7px 13px;border:none;border-radius:20px;font-size:12px;font-weight:700;color:#fff;background:#00B4B4;cursor:pointer;text-decoration:none;white-space:nowrap;font-family:Arial,sans-serif}',
-      '.site-header .h-btn-in{padding:7px 13px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:700;color:#555;background:#fff;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
-      '.site-header .h-ham{display:none;flex-direction:column;gap:4px;cursor:pointer;padding:8px;background:none;border:none;flex-shrink:0}',
-      '.site-header .h-ham span{display:block;width:22px;height:2px;background:#555;border-radius:2px}',
-      '.site-header .h-mob{display:none;position:fixed;top:60px;left:0;right:0;background:#fff;border-bottom:1px solid #eee;z-index:400;box-shadow:0 4px 12px rgba(0,0,0,.1)}',
-      '.site-header .h-mob.open{display:block}',
-      '.site-header .h-mob a,.site-header .h-mob button{display:block;width:100%;padding:13px 20px;font-size:14px;font-weight:600;color:#333;text-decoration:none;text-align:left;border:none;background:none;cursor:pointer;border-bottom:1px solid #f5f5f5;font-family:Arial,sans-serif}',
-      '.site-header .h-mob-sec{font-size:10px;font-weight:700;letter-spacing:1px;color:#bbb;text-transform:uppercase;padding:10px 20px 4px;display:block}',
-      '@media(max-width:640px){.site-header .h-nav{display:none}.site-header .h-ham{display:flex}}',
+      // ── Estilos nuevo header ──
+      '.site-header{background:#00B4B4;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:300;box-shadow:0 2px 8px rgba(0,0,0,.12)}',
+      '.h-logo{flex-shrink:0;text-decoration:none;display:flex;align-items:center}',
+      '.h-logo img{height:34px;display:block;object-fit:contain}',
+      // Desktop nav
+      '.h-nav{display:flex;align-items:center;gap:2px}',
+      '@media(max-width:768px){.h-nav{display:none}}',
+      '.h-link{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;font-size:13px;font-weight:600;color:rgba(255,255,255,.85);text-decoration:none;border:none;background:none;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif;transition:background .15s}',
+      '.h-link:hover,.h-link.active{background:rgba(255,255,255,.18);color:#fff}',
+      '.h-drop{position:relative}',
+      '.h-drop-menu{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);min-width:180px;overflow:hidden;display:none;z-index:500;border:0.5px solid #eee}',
+      '.h-drop-menu.open{display:block}',
+      '.h-drop-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;font-weight:600;color:#333;text-decoration:none;border:none;background:none;width:100%;text-align:left;cursor:pointer;border-bottom:0.5px solid #f5f5f5;font-family:Arial,sans-serif}',
+      '.h-drop-item:last-child{border-bottom:none}',
+      '.h-drop-item:hover{background:#f8f8f8}',
+      '.h-drop-item.danger{color:#c0392b}',
+      // Right section
+      '.h-right{display:flex;align-items:center;gap:8px;flex-shrink:0}',
+      '.h-search{width:32px;height:32px;border-radius:99px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;border:none;color:#fff;transition:background .15s}',
+      '.h-search:hover{background:rgba(255,255,255,.3)}',
+      '.h-avatar{width:32px;height:32px;border-radius:99px;background:#1a1a2e;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;cursor:pointer;border:none;font-family:Arial,sans-serif;position:relative}',
+      '.h-avatar-dot{position:absolute;bottom:1px;right:1px;width:8px;height:8px;border-radius:99px;background:#2ecc71;border:1.5px solid #00B4B4}',
+      '.h-avatar-dd{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.18);width:220px;overflow:hidden;display:none;z-index:500;border:0.5px solid #eee}',
+      '.h-avatar-dd.open{display:block}',
+      '.h-avatar-hdr{padding:13px 16px;border-bottom:1px solid #f5f5f5;background:#f8f8f8}',
+      '.h-avatar-email{font-size:11px;color:#aaa;margin:0}',
+      '.h-avatar-name{font-size:14px;font-weight:700;color:#222;margin:3px 0 0}',
+      '.h-btn-reg{padding:8px 16px;border:none;border-radius:99px;font-size:12px;font-weight:700;color:#1a1a2e;background:#F5C842;cursor:pointer;text-decoration:none;white-space:nowrap;font-family:Arial,sans-serif}',
+      '.h-btn-in{padding:8px 16px;border:1.5px solid rgba(255,255,255,.5);border-radius:99px;font-size:12px;font-weight:700;color:#fff;background:transparent;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
+      '.h-btn-in:hover{background:rgba(255,255,255,.15)}',
+      // Avisos badge
+      '.h-avisos-badge{display:none;background:#E24B4A;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:3px}',
+      // FAB flotante desktop
+      '.h-fab{position:fixed;bottom:28px;right:28px;display:flex;align-items:center;gap:8px;padding:13px 22px;border-radius:99px;background:#F5C842;color:#1a1a2e;font-size:14px;font-weight:700;box-shadow:0 4px 18px rgba(0,0,0,.2);cursor:pointer;border:none;text-decoration:none;z-index:200;font-family:Arial,sans-serif;transition:transform .15s}',
+      '.h-fab:hover{transform:scale(1.04)}',
+      '@media(max-width:768px){.h-fab{display:none}}',
+      // Bottom nav mobile
+      '.h-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #f0f0ee;z-index:300;padding:8px 4px 10px;box-shadow:0 -2px 10px rgba(0,0,0,.06)}',
+      '@media(max-width:768px){.h-bottom-nav{display:flex;justify-content:space-around;align-items:center}}',
+      '.h-btab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative;text-decoration:none;border:none;background:none;font-family:Arial,sans-serif}',
+      '.h-btab-ico{font-size:22px;line-height:1}',
+      '.h-btab-lbl{font-size:9px;color:#aaa;font-weight:600}',
+      '.h-btab.active .h-btab-lbl{color:#00B4B4;font-weight:700}',
+      '.h-btab-bdg{position:absolute;top:-2px;right:8px;background:#E24B4A;color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:99px;display:none}',
+      '.h-fab-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border:none;background:none;font-family:Arial,sans-serif;padding:0}',
+      '.h-fab-circle{width:48px;height:48px;border-radius:99px;background:#F5C842;display:flex;align-items:center;justify-content:center;font-size:24px;margin-top:-18px;box-shadow:0 4px 14px rgba(0,0,0,.18);border:3px solid #fff;color:#1a1a2e;font-weight:900;line-height:1}',
+      '.h-fab-lbl{font-size:9px;color:#cc9800;font-weight:700;white-space:nowrap}',
+      // Mobile body padding
+      '@media(max-width:768px){body{padding-bottom:70px}}',
+      // Login modal
       '.h-login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}',
       '.h-login-overlay.open{display:flex}',
       '.h-login-box{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px}',
@@ -84,64 +107,73 @@
     ].join('');
     document.head.appendChild(style);
 
+    // ── Desktop nav ──────────────────────────────────────────
     var navHTML =
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">Blog</a>' +
-      '<a href="https://www.revistapetmi.com/category/all-products" target="_blank" class="h-link">Tienda</a>' +
+      '<a href="/galeria.html" class="h-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">🐾 Galería</a>' +
       '<div class="h-drop">' +
-        '<button class="h-link" onclick="petmiTogglePF(event)">Pet Friendly ▾</button>' +
+        '<button class="h-link" onclick="petmiTogglePF(event)">📢 Avisos & Eventos ▾ <span id="hAvisosCount" class="h-avisos-badge"></span></button>' +
         '<div class="h-drop-menu" id="pfMenu">' +
-          '<a href="/eventos.html" class="h-drop-item">🎪 Eventos</a>' +
-          '<a href="/avisos.html" class="h-drop-item">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
-          '<a href="/lugares.html" class="h-drop-item">📍 Lugares</a>' +
+          '<a href="/avisos.html?tipo=perdido" class="h-drop-item">🚨 Perdidos</a>' +
+          '<a href="/avisos.html?tipo=adopcion" class="h-drop-item">🏠 Adopciones</a>' +
+          '<a href="/avisos.html?tipo=busco" class="h-drop-item">🔍 Busco</a>' +
+          '<a href="/avisos.html?tipo=venta" class="h-drop-item">💰 Ventas</a>' +
+          '<a href="/eventos.html" class="h-drop-item" style="border-top:2px solid #f0f0ee">🎪 Eventos</a>' +
         '</div>' +
       '</div>' +
-      '<a href="/galeria.html" class="h-link">Amigos PetMi</a>' +
-      '<a href="/promos.html" class="h-link' + (currentPath.indexOf('promos') >= 0 ? ' active' : '') + '" style="color:#764ba2;font-weight:700">🎁 Promos</a>' +
-      '<a href="/reglas.html" class="h-link" style="color:#888;font-size:12px">Reglas</a>';
+      '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
+      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">📖 Revista</a>' +
+      '<a href="https://www.revistapetmi.com/category/all-products" target="_blank" class="h-link">🛍️ Tienda</a>';
+    // ── Right: avatar o botones ──────────────────────────────
+    var userInitials = sessionDueno
+      ? sessionDueno.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()
+      : (sessionEmail||'').substring(0,2).toUpperCase();
 
     var rightHTML = sessionEmail
-      ? '<a href="/amigos.html" id="petmiNotifBadge" class="h-badge">1 solicitud</a>' +
-        '<a href="/mensajes.html" id="petmiMsgBadge" class="h-badge" style="background:#00B4B4;display:none">1 mensaje</a>' +
-        '<div class="h-drop">' +
-          '<button class="h-btn" onclick="petmiToggleMenu(event)">🐾 ' + (sessionDueno ? sessionDueno.split(' ')[0] : sessionEmail.split('@')[0]) + ' ▾</button>' +
-          '<div class="h-drop-menu" id="petmiMenuDropdown" style="left:auto;right:0;transform:none">' +
+      ? '<div class="h-drop" style="position:relative">' +
+          '<button class="h-avatar" onclick="petmiToggleMenu(event)">' +
+            userInitials +
+            '<span class="h-avatar-dot"></span>' +
+          '</button>' +
+          '<div class="h-avatar-dd" id="petmiMenuDropdown">' +
+            '<div class="h-avatar-hdr">' +
+              '<p class="h-avatar-email">' + sessionEmail + '</p>' +
+              '<p class="h-avatar-name">' + (sessionDueno || '') + '</p>' +
+            '</div>' +
             '<a href="/familia.html" class="h-drop-item">🏠 Mi familia</a>' +
-            '<a href="/mensajes.html" class="h-drop-item">💬 Mensajes</a>' +
-            '<a href="/amigos.html" class="h-drop-item">🐾 Mis amigos</a>' +
-            '<a href="/mis-avisos.html" class="h-drop-item">📢 Mis avisos</a>' +
-            '<a href="/mis-eventos.html" class="h-drop-item">🎪 Mis eventos</a>' +
+            '<a href="/mis-ids.html" class="h-drop-item">🆔 Mis IDs</a>' +
             '<a href="/premium.html" class="h-drop-item">⭐ Premium</a>' +
-            '<a href="/mis-ids.html" class="h-drop-item">🎨 Mis IDs</a>' +
-            '<a href="/reglas.html" class="h-drop-item">📋 Reglas</a>' +
+            '<a href="/promos.html" class="h-drop-item">🎁 Promos para mí</a>' +
+            '<a href="/amigos.html" class="h-drop-item">👥 Amigos</a>' +
+            '<a href="/mis-avisos.html" class="h-drop-item">📝 Mis avisos</a>' +
+            '<a href="/mis-eventos.html" class="h-drop-item">🎪 Mis eventos</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
         '</div>'
-      : '<a href="/index.html" class="h-btn-reg">Registra tu mascota</a>' +
+      : '<a href="/index.html" class="h-btn-reg">Registrar mascota</a>' +
         '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>';
-
-    var mobHTML =
-      '<span class="h-mob-sec">Navegación</span>' +
-      '<a href="https://www.revistapetmi.com/" target="_blank">Blog</a>' +
-      '<a href="https://www.revistapetmi.com/category/all-products" target="_blank">Tienda</a>' +
-      '<a href="/eventos.html">🎪 Eventos</a>' +
-      '<a href="/avisos.html" style="position:relative">📢 Avisos <span id="hAvisosCountMob" class="h-avisos-badge"></span></a>' +
-      '<a href="/lugares.html">📍 Lugares</a>' +
-      '<a href="/galeria.html">Amigos PetMi</a>' +
-      '<a href="/promos.html" style="color:#764ba2;font-weight:700">🎁 Promos</a>' +
-      '<a href="/premium.html">⭐ Premium</a>' +
-      '<a href="/reglas.html">📋 Reglas de convivencia</a>' +
-      (sessionEmail
-        ? '<span class="h-mob-sec">Mi cuenta</span>' +
-          '<a href="/familia.html">🏠 Mi familia</a>' +
-          '<a href="/mensajes.html">💬 Mensajes</a>' +
-          '<a href="/amigos.html">🐾 Mis amigos</a>' +
-          '<a href="/mis-avisos.html">📢 Mis avisos</a>' +
-          '<a href="/mis-eventos.html">🎪 Mis eventos</a>' +
-          '<button onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>'
-        : '<span class="h-mob-sec">Cuenta</span>' +
-          '<a href="/index.html" style="background:#00B4B4;color:#fff;font-weight:700">🐾 Registra tu mascota</a>' +
-          '<button onclick="petmiAbrirLogin()">Ingresar</button>');
-
+    // ── Bottom nav mobile ─────────────────────────────────────
+    var bottomNavHTML =
+      '<a href="/galeria.html" class="h-btab' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">' +
+        '<span class="h-btab-ico">🐾</span>' +
+        '<span class="h-btab-lbl">Galería</span>' +
+      '</a>' +
+      '<a href="/avisos.html" class="h-btab' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '" style="position:relative">' +
+        '<span class="h-btab-ico">📢</span>' +
+        '<span class="h-btab-bdg" id="hAvisosCountMob"></span>' +
+        '<span class="h-btab-lbl">Avisos</span>' +
+      '</a>' +
+      '<a href="/index.html" class="h-fab-tab">' +
+        '<div class="h-fab-circle">➕</div>' +
+        '<span class="h-fab-lbl">Crear PetzID</span>' +
+      '</a>' +
+      '<a href="/lugares.html" class="h-btab' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">' +
+        '<span class="h-btab-ico">📍</span>' +
+        '<span class="h-btab-lbl">Lugares</span>' +
+      '</a>' +
+      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-btab">' +
+        '<span class="h-btab-ico">📖</span>' +
+        '<span class="h-btab-lbl">Revista</span>' +
+      '</a>';
     var loginHTML =
       '<div class="h-login-overlay" id="petmiLoginOverlay">' +
         '<div class="h-login-box">' +
@@ -155,26 +187,35 @@
         '</div>' +
       '</div>';
 
+    // ── Build header ──────────────────────────────────────────
     var header = document.createElement('header');
     header.className = 'site-header';
     header.innerHTML =
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-logo">' +
-        '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="36" onerror="this.style.display=\'none\'">' +
+      '<a href="/galeria.html" class="h-logo">' +
+        '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="34" onerror="this.style.display=\'none\'">' +
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
-      '<div class="h-right">' + rightHTML + '</div>' +
-      '<button class="h-ham" onclick="petmiToggleHam()" aria-label="Menu"><span></span><span></span><span></span></button>' +
-      '<div class="h-mob" id="petmiMobMenu">' + mobHTML + '</div>';
+      '<div class="h-right">' +
+        '<button class="h-search" onclick="petmiToggleSearch()" aria-label="Buscar">🔍</button>' +
+        rightHTML +
+      '</div>';
     document.body.insertBefore(header, document.body.firstChild);
+
+    // FAB flotante desktop
+    var fabHTML = '<a href="/index.html" class="h-fab">➕ Agregar mascota</a>';
+    document.body.insertAdjacentHTML('beforeend', fabHTML);
+
+    // Bottom nav mobile
+    var bottomNav = document.createElement('nav');
+    bottomNav.className = 'h-bottom-nav';
+    bottomNav.innerHTML = bottomNavHTML;
+    document.body.appendChild(bottomNav);
+
     document.body.insertAdjacentHTML('beforeend', loginHTML);
 
     document.addEventListener('click', function(e){
-      if(!e.target.closest('.h-drop')) {
-        document.querySelectorAll('.h-drop-menu.open').forEach(function(m){ m.classList.remove('open'); });
-      }
-      if(!e.target.closest('.h-ham') && !e.target.closest('.h-mob')) {
-        var mob = document.getElementById('petmiMobMenu');
-        if(mob) mob.classList.remove('open');
+      if(!e.target.closest('.h-drop') && !e.target.closest('.h-avatar')) {
+        document.querySelectorAll('.h-drop-menu.open, .h-avatar-dd.open').forEach(function(m){ m.classList.remove('open'); });
       }
     });
     setTimeout(function(){
