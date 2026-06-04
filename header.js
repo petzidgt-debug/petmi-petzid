@@ -87,6 +87,9 @@
       '.h-fab-lbl{font-size:9px;color:#cc9800;font-weight:700;white-space:nowrap}',
       // Mobile body padding
       '@media(max-width:768px){body{padding-bottom:70px}}',
+      '@media(max-width:768px){.fab-pill{bottom:82px!important}}',
+      '@media(max-width:768px){#toast,[id="toast"]{bottom:82px!important}}',
+      '@media(max-width:768px){.toast{bottom:82px!important}}',
       // Login modal
       '.h-login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}',
       '.h-login-overlay.open{display:flex}',
