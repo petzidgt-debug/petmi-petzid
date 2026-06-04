@@ -254,8 +254,11 @@ function drawFamiliarLight(ctx,W,H,mascotas,qrImg){
 // ── Preview (sin QR para rapidez) ───────────────────────────
 function renderPreview(){
   var canvas=document.getElementById('previewCanvas');if(!canvas)return;
-  var W=460,H=290;canvas.width=W;canvas.height=H;
+  var SCALE=3;var W=460,H=290;
+  canvas.width=W*SCALE;canvas.height=H*SCALE;
+  canvas.style.maxWidth='100%';
   var ctx=canvas.getContext('2d');
+  ctx.scale(SCALE,SCALE);
   var m=mascotaActual;if(!m)return;
   function draw(fi){ctx.clearRect(0,0,W,H);if(layoutActual==='actual')drawActual(ctx,W,H,m,fi,null);else if(layoutActual==='b')drawB(ctx,W,H,m,fi,null);else drawD(ctx,W,H,m,fi,null);}
   if(m.foto&&m.foto.indexOf('http')>=0){loadImg(m.foto,function(fi){draw(fi);});}
@@ -264,8 +267,11 @@ function renderPreview(){
 
 function renderFamiliarPreview(){
   var canvas=document.getElementById('familiarCanvas');if(!canvas)return;
-  var W=460,H=290;canvas.width=W;canvas.height=H;
+  var SCALE=3;var W=460,H=290;
+  canvas.width=W*SCALE;canvas.height=H*SCALE;
+  canvas.style.maxWidth='100%';
   var ctx=canvas.getContext('2d');
+  ctx.scale(SCALE,SCALE);
   var activas=misMascotas.filter(function(m){return !m.angelito;}).slice(0,4);
   if(famLayoutActual==='dark') drawFamiliarDark(ctx,W,H,activas,null);
   else drawFamiliarLight(ctx,W,H,activas,null);
@@ -284,7 +290,7 @@ function renderFamiliarPreview(){
 // ── Descargar individual ─────────────────────────────────────
 function descargarIndividual(){
   var m=mascotaActual;if(!m)return;
-  var canvas=document.createElement('canvas');var W=460,H=290;canvas.width=W;canvas.height=H;var ctx=canvas.getContext('2d');
+  var canvas=document.createElement('canvas');var SCALE=3;var W=460,H=290;canvas.width=W*SCALE;canvas.height=H*SCALE;var ctx=canvas.getContext('2d');ctx.scale(SCALE,SCALE);
   var perfilUrl=BASE_URL+'/p/'+m.uid;
   function finish(fi,qrImg){
     if(layoutActual==='actual')drawActual(ctx,W,H,m,fi,qrImg);
@@ -303,7 +309,7 @@ function descargarIndividual(){
 // ── Descargar familiar ───────────────────────────────────────
 function descargarFamiliar(){
   var activas=misMascotas.filter(function(m){return !m.angelito;}).slice(0,4);
-  var canvas=document.createElement('canvas');var W=460,H=290;canvas.width=W;canvas.height=H;var ctx=canvas.getContext('2d');
+  var canvas=document.createElement('canvas');var SCALE=3;var W=460,H=290;canvas.width=W*SCALE;canvas.height=H*SCALE;var ctx=canvas.getContext('2d');ctx.scale(SCALE,SCALE);
   var famUrl=BASE_URL+'/familia/'+(activas[0]&&activas[0].email?activas[0].email.split('@')[0]:'familia');
   // Preload all fotos
   var loaded=0;
