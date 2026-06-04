@@ -56,7 +56,8 @@
       '.site-header .h-drop-item:hover{background:#f8f8f8}',
       '.site-header .h-drop-item.danger{color:#c0392b}',
       '.site-header .h-right{display:flex;align-items:center;gap:6px;flex-shrink:0}',
-      '.site-header .h-badge{background:#E05090;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;text-decoration:none;white-space:nowrap;display:none}',
+      '.site-header .h-badge{background:#E05090;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;text-decoration:none;white-space:nowrap;display:none}' +
+      '.h-avisos-badge{display:none;position:absolute;top:-4px;right:-8px;background:#E24B4A;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:99px;line-height:1.4}' +,
       '.site-header .h-btn{padding:7px 13px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;background:#fff;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
       '.site-header .h-btn-reg{padding:7px 13px;border:none;border-radius:20px;font-size:12px;font-weight:700;color:#fff;background:#00B4B4;cursor:pointer;text-decoration:none;white-space:nowrap;font-family:Arial,sans-serif}',
       '.site-header .h-btn-in{padding:7px 13px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:700;color:#555;background:#fff;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
@@ -90,7 +91,7 @@
         '<button class="h-link" onclick="petmiTogglePF(event)">Pet Friendly ▾</button>' +
         '<div class="h-drop-menu" id="pfMenu">' +
           '<a href="/eventos.html" class="h-drop-item">🎪 Eventos</a>' +
-          '<a href="/avisos.html" class="h-drop-item">📢 Avisos</a>' +
+          '<a href="/avisos.html" class="h-drop-item">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
           '<a href="/lugares.html" class="h-drop-item">📍 Lugares</a>' +
         '</div>' +
       '</div>' +
@@ -123,7 +124,7 @@
       '<a href="https://www.revistapetmi.com/" target="_blank">Blog</a>' +
       '<a href="https://www.revistapetmi.com/category/all-products" target="_blank">Tienda</a>' +
       '<a href="/eventos.html">🎪 Eventos</a>' +
-      '<a href="/avisos.html">📢 Avisos</a>' +
+      '<a href="/avisos.html" style="position:relative">📢 Avisos <span id="hAvisosCountMob" class="h-avisos-badge"></span></a>' +
       '<a href="/lugares.html">📍 Lugares</a>' +
       '<a href="/galeria.html">Amigos PetMi</a>' +
       '<a href="/promos.html" style="color:#764ba2;font-weight:700">🎁 Promos</a>' +
@@ -262,4 +263,20 @@
   function petmiLoginMsg(txt,tipo){var el=document.getElementById('petmiLoginMsg');if(el){el.textContent=txt;el.className='h-login-msg '+tipo;el.style.display='block';}}
 
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initHeader);}else{initHeader();}
+})();
+// ── Cargar conteo de avisos activos ─────────────────────────
+(function(){
+  var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
+  var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+  fetch(SUPA_URL+'/rest/v1/actividades?activo=eq.true&select=id',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'count=exact','Range':'0-0'}
+  }).then(function(r){
+    var count=parseInt(r.headers.get('Content-Range').split('/')[1]||'0');
+    if(count>0){
+      ['hAvisosCount','hAvisosCountMob'].forEach(function(id){
+        var el=document.getElementById(id);
+        if(el){el.textContent=count>99?'99+':count;el.style.display='inline-block';}
+      });
+    }
+  }).catch(function(){});
 })();
