@@ -57,7 +57,7 @@
       '.site-header .h-drop-item.danger{color:#c0392b}',
       '.site-header .h-right{display:flex;align-items:center;gap:6px;flex-shrink:0}',
       '.site-header .h-badge{background:#E05090;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;text-decoration:none;white-space:nowrap;display:none}' +
-      '.h-avisos-badge{display:none;position:absolute;top:-4px;right:-8px;background:#E24B4A;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:99px;line-height:1.4}' +,
+      '.h-avisos-badge{display:none;position:absolute;top:-4px;right:-8px;background:#E24B4A;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:99px;line-height:1.4}',
       '.site-header .h-btn{padding:7px 13px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;background:#fff;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
       '.site-header .h-btn-reg{padding:7px 13px;border:none;border-radius:20px;font-size:12px;font-weight:700;color:#fff;background:#00B4B4;cursor:pointer;text-decoration:none;white-space:nowrap;font-family:Arial,sans-serif}',
       '.site-header .h-btn-in{padding:7px 13px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:700;color:#555;background:#fff;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif}',
