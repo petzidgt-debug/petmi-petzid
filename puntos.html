@@ -188,13 +188,19 @@ var accionesCompletadas = {};
 
 // ── Init ─────────────────────────────────────────────────────
 window.addEventListener('petmiReady', function(e) {
-  sessionEmail = e.detail && e.detail.email ? e.detail.email : '';
-  init();
+  sessionEmail = (e.detail && e.detail.email)
+    ? e.detail.email
+    : (localStorage.getItem('petzid_email') || '');
+  if (sessionEmail) init();
 });
 document.addEventListener('DOMContentLoaded', function() {
   // Render acciones siempre, incluso sin login
   renderAcciones([]);
-  var em = sessionStorage.getItem('petmiEmail') || localStorage.getItem('petmiEmail') || '';
+  // Buscar email en todas las posibles claves
+  var em = sessionStorage.getItem('petmiEmail')
+        || localStorage.getItem('petmiEmail')
+        || localStorage.getItem('petzid_email')
+        || '';
   if (em && !sessionEmail) { sessionEmail = em; init(); }
 });
 
