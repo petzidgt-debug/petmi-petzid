@@ -450,20 +450,20 @@
     var plat = /iPhone|iPad/i.test(ua) ? 'iOS' : /Android/i.test(ua) ? 'Android' : 'Desktop';
     var email = '';
     try { email = sessionStorage.getItem('petmiEmail') || localStorage.getItem('petmiEmail') || ''; } catch(err){}
+    // Registrar en pwa_installs
     fetch(SUPA_URL + '/rest/v1/pwa_installs', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY,
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({
-        email: email || null,
-        dispositivo: tipo,
-        plataforma: plat
-      })
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ email: email || null, dispositivo: tipo, plataforma: plat })
     }).catch(function(){});
+    // Registrar punto si hay email
+    if(email && tipo !== 'ios-manual'){
+      fetch('/api/galeria?action=registrarPunto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, accion: 'instalar_app', puntos: 3 })
+      }).catch(function(){});
+    }
   }
 })();
 

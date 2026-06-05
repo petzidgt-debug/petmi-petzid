@@ -304,6 +304,15 @@ async function guardar(){
       mostrarError('Error al guardar. Intenta de nuevo.');
       btn.disabled=false;btn.textContent='💾 Guardar cambios';return;
     }
+    // Verificar si perfil está completo para dar puntos
+    var p = payload.data;
+    var perfilCompleto = p.nombre && p.especie && p.raza && p.zona && p.veterinario && fotoUrl || mascota.foto;
+    if(perfilCompleto && sessionEmail){
+      fetch('/api/galeria?action=registrarPunto',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email:sessionEmail, accion:'perfil_completo', puntos:5})
+      }).catch(function(){});
+    }
     // markAngel directo Supabase + sync sheet
     fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(mascota.uid.toUpperCase()),{
       method:'PATCH',

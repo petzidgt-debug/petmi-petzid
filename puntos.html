@@ -226,13 +226,36 @@ function init() {
       document.getElementById('refPts').textContent = refRows.reduce(function(s,r){return s+r.puntos;},0);
 
       renderHero(totalPuntos);
-      renderRacha(calcularRacha(rows));
+      var streak = calcularRacha(rows);
+      renderRacha(streak);
+      verificarRacha(streak, sessionEmail);
       renderAcciones(Object.keys(accionesCompletadas));
       renderPremios(totalPuntos);
       renderHistorial(rows.slice(0, 10));
     }).catch(function() {
       renderHero(0); renderRacha(0); renderAcciones([]); renderPremios(0); renderHistorial([]);
     });
+}
+
+function verificarRacha(streak, email) {
+  if (streak >= 7 && email) {
+    // Verificar si ya se dio el punto hoy por racha
+    var hoy = new Date().toISOString().split('T')[0];
+    var lastRacha = localStorage.getItem('petmi_racha_' + email);
+    if (lastRacha !== hoy) {
+      fetch('/api/galeria?action=registrarPunto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, accion: 'racha_7dias', puntos: 3 })
+      }).then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.ok) {
+          localStorage.setItem('petmi_racha_' + email, hoy);
+          alert('🔥 ¡Lograste una racha de 7 días! +3 puntos');
+        }
+      }).catch(function(){});
+    }
+  }
 }
 
 function calcularRacha(rows) {
