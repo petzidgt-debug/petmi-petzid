@@ -2,683 +2,415 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<link rel="icon" href="/favico.jpg" type="image/jpeg">
-<title>Portal Partner — PetMi</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portal Afiliado — PetMi</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh}
 
-/* ── LOGIN ─────────────────────────────────────────────── */
-.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#00B4B4,#007a7a)}
-.login-box{background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,.15)}
-.login-logo{font-size:26px;font-weight:900;color:#1a1a1a;margin-bottom:4px}
-.login-logo span{color:#E05090}
-.login-sub{font-size:13px;color:#aaa;margin-bottom:28px}
-.login-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#aaa;margin-bottom:6px}
-.login-input{width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:15px;outline:none;font-family:Arial;margin-bottom:14px}
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:#fff;border-radius:20px;padding:32px 28px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.10)}
+.login-logo{text-align:center;margin-bottom:24px}
+.login-logo img{height:44px;object-fit:contain}
+.login-title{font-size:20px;font-weight:700;color:#1a1a2e;margin-bottom:6px;text-align:center}
+.login-sub{font-size:13px;color:#888;text-align:center;margin-bottom:24px}
+.login-label{font-size:12px;font-weight:600;color:#555;margin-bottom:6px;display:block}
+.login-input{width:100%;padding:13px 14px;border:1.5px solid #eee;border-radius:12px;font-size:15px;outline:none;margin-bottom:16px;transition:border .15s}
 .login-input:focus{border-color:#00B4B4}
 .login-btn{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer}
 .login-btn:disabled{background:#aaa}
-.login-err{font-size:13px;color:#c0392b;background:#fbeaf0;padding:10px 14px;border-radius:10px;margin-top:12px;display:none}
-.login-contacto{font-size:12px;color:#aaa;text-align:center;margin-top:16px}
-.login-contacto a{color:#00B4B4;font-weight:700;text-decoration:none}
+.login-msg{font-size:13px;text-align:center;padding:10px;border-radius:10px;margin-bottom:12px;display:none}
+.login-msg.error{background:#fbeaf0;color:#993556;display:block}
+.login-msg.ok{background:#e0f7f7;color:#007a7a;display:block}
 
-/* ── APP SHELL ──────────────────────────────────────────── */
-.app{display:none}
-.topbar{background:linear-gradient(135deg,#0a3d3d,#00B4B4);padding:20px 20px 0;color:#fff}
-.topbar-inner{max-width:700px;margin:0 auto}
-.topbar-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.topbar-logo{font-size:18px;font-weight:900}
-.topbar-logo span{color:#F5C842}
-.btn-logout{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:600}
-.topbar-nombre{font-size:20px;font-weight:900;font-family:'Arial Black',Arial;margin-bottom:2px}
-.topbar-email{font-size:12px;color:rgba(255,255,255,.7)}
+/* PORTAL */
+.portal{display:none}
+.portal-header{background:#1a1a2e;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.portal-logo img{height:32px;object-fit:contain}
+.portal-logout{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:7px 14px;border-radius:99px;font-size:12px;cursor:pointer}
 
-/* PLAN BADGE */
-.plan-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-top:8px}
-.plan-basico{background:rgba(255,255,255,.15);color:#fff}
-.plan-silver{background:rgba(220,220,220,.25);color:#fff}
-.plan-gold{background:rgba(245,200,66,.25);color:#F5C842}
+/* PLAN CARD */
+.plan-card{margin:16px;background:linear-gradient(135deg,#1a1a2e,#00B4B4);border-radius:16px;padding:20px;color:#fff}
+.plan-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:99px;padding:5px 14px;font-size:13px;font-weight:700;margin-bottom:12px}
+.plan-email{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px}
+.plan-nombre{font-size:20px;font-weight:700;margin-bottom:16px}
+.plan-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.plan-stat{background:rgba(255,255,255,.12);border-radius:10px;padding:10px;text-align:center}
+.plan-stat-n{font-size:20px;font-weight:700;color:#F5C842}
+.plan-stat-l{font-size:10px;color:rgba(255,255,255,.6);margin-top:2px}
+
+/* CUOTA */
+.cuota-wrap{margin:0 16px 16px;background:#fff;border-radius:14px;padding:14px 16px;border:0.5px solid #eee}
+.cuota-title{font-size:12px;font-weight:700;color:#555;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.cuota-bar-bg{background:#f0f0ee;border-radius:99px;height:8px;margin-bottom:6px}
+.cuota-bar{height:8px;border-radius:99px;background:#00B4B4;transition:width .5s}
+.cuota-bar.warning{background:#F5C842}
+.cuota-bar.full{background:#E24B4A}
+.cuota-label{font-size:12px;color:#888}
+.cuota-reset{font-size:11px;color:#aaa;margin-top:4px}
 
 /* TABS */
-.tabs-bar{background:#fff;border-bottom:2px solid #f0f0f0;display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;max-width:700px;margin:0 auto}
-.tabs-bar::-webkit-scrollbar{display:none}
-.tab-btn{flex-shrink:0;padding:14px 18px;border:none;background:none;font-size:13px;font-weight:600;color:#aaa;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:Arial}
-.tab-btn.active{color:#00B4B4;border-bottom-color:#00B4B4}
+.tabs{display:flex;gap:6px;margin:0 16px 16px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{padding:8px 18px;border-radius:99px;font-size:13px;font-weight:600;border:1.5px solid #eee;background:#fff;color:#888;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.tab-btn.act{background:#00B4B4;color:#fff;border-color:#00B4B4}
 
-/* CONTENT */
-.content{max-width:700px;margin:0 auto;padding:16px 16px 80px}
+/* FORM PUBLICAR */
+.pub-form{margin:0 16px 16px;background:#fff;border-radius:14px;padding:16px;border:0.5px solid #eee;display:none}
+.pub-form.show{display:block}
+.pub-form-title{font-size:15px;font-weight:700;color:#222;margin-bottom:14px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:#555;margin-bottom:6px;display:block}
+.form-input{width:100%;padding:11px 13px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;transition:border .15s}
+.form-input:focus{border-color:#00B4B4}
+.form-textarea{width:100%;padding:11px 13px;border:1.5px solid #eee;border-radius:10px;font-size:14px;outline:none;resize:vertical;min-height:80px;font-family:Arial,sans-serif}
+.form-textarea:focus{border-color:#00B4B4}
+.pub-btn{width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
+.pub-btn:disabled{background:#aaa;cursor:not-allowed}
+.pub-btn.blocked{background:#E24B4A}
 
-/* ── CARDS ──────────────────────────────────────────────── */
-.card{background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.card-titulo{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#aaa;margin-bottom:14px}
+/* MIS PUBLICACIONES */
+.mis-pubs{margin:0 16px 16px}
+.mis-pubs-title{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.pub-card{background:#fff;border-radius:12px;padding:14px;border:0.5px solid #eee;margin-bottom:8px;position:relative}
+.pub-card-titulo{font-size:14px;font-weight:600;color:#222;margin-bottom:4px}
+.pub-card-desc{font-size:12px;color:#888;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pub-card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pub-tipo{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:#e0f7f7;color:#007a7a}
+.pub-fecha{font-size:11px;color:#aaa}
+.pub-badge-pausado{font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:#FCEBEB;color:#c0392b}
+.pub-razon{font-size:11px;color:#c0392b;margin-top:6px;background:#FCEBEB;border-radius:8px;padding:6px 10px}
+.pub-empty{text-align:center;padding:24px;color:#aaa;font-size:13px}
+.spinner{text-align:center;padding:24px;color:#aaa;font-size:13px}
 
-/* ── STATS ──────────────────────────────────────────────── */
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-.stat-box{background:#fff;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.stat-n{font-size:26px;font-weight:900;font-family:'Arial Black',Arial;color:#00B4B4}
-.stat-n.warn{color:#E05090}
-.stat-n.ok{color:#2e7d32}
-.stat-l{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
-
-/* PROGRESO CUOTA */
-.cuota-wrap{margin-bottom:14px}
-.cuota-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
-.cuota-label span:first-child{font-weight:700;color:#333}
-.cuota-label span:last-child{color:#aaa}
-.prog-bar{height:8px;background:#f0f0ee;border-radius:99px;overflow:hidden}
-.prog-fill{height:100%;border-radius:99px;background:#00B4B4;transition:width .4s}
-.prog-fill.lleno{background:#E05090}
-.cuota-reset{font-size:11px;color:#aaa;margin-top:5px}
-
-/* VENCIMIENTO */
-.vence-banner{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;margin-bottom:14px;font-size:13px}
-.vence-banner.ok{background:#e0f7f7;color:#007a7a}
-.vence-banner.warn{background:#FFF9E6;color:#856404}
-.vence-banner.peligro{background:#fbeaf0;color:#c0392b}
-
-/* ── PUBLICACIONES ──────────────────────────────────────── */
-.pub-card{background:#fff;border-radius:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden;border:1px solid #f0f0f0}
-.pub-img{width:100%;height:140px;object-fit:cover;display:block}
-.pub-body{padding:12px 14px}
-.pub-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
-.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px}
-.badge-tipo{background:#e0f7f7;color:#007a7a}
-.badge-pausado{background:#fbeaf0;color:#c0392b}
-.badge-partner{background:#FFF9E6;color:#856404;border:1px solid #F5C842}
-.pub-titulo{font-size:14px;font-weight:700;color:#222;margin-bottom:4px;line-height:1.3}
-.pub-meta{font-size:11px;color:#aaa;margin-bottom:8px}
-.pub-pausa-razon{font-size:12px;color:#c0392b;background:#fbeaf0;padding:8px 10px;border-radius:8px;margin-bottom:8px}
-.pub-footer{display:flex;gap:6px;flex-wrap:wrap}
-.btn-sm{padding:7px 14px;border:none;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer}
-.btn-eliminar{background:#fff0f0;color:#c0392b;border:1px solid #fcc}
-
-/* ── FORMULARIO ─────────────────────────────────────────── */
-.tipo-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
-.tipo-tab{padding:8px 16px;border:1.5px solid #eee;border-radius:99px;font-size:13px;font-weight:600;color:#888;background:#fff;cursor:pointer;font-family:Arial}
-.tipo-tab.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
-
-label.field-lbl{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#aaa;margin-bottom:5px;margin-top:14px}
-input.field,select.field,textarea.field{width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;outline:none;font-family:Arial}
-input.field:focus,select.field:focus,textarea.field:focus{border-color:#00B4B4}
-textarea.field{resize:vertical;min-height:80px}
-
-.foto-drop{border:2px dashed #ddd;border-radius:10px;padding:18px;text-align:center;cursor:pointer;margin-top:8px}
-.foto-drop:hover{border-color:#00B4B4}
-.foto-preview-img{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-top:8px;display:none}
-
-.btn-publicar{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:18px}
-.btn-publicar:disabled{background:#aaa;cursor:not-allowed}
-.btn-publicar.lleno{background:#E05090}
-
-.form-msg{padding:12px;border-radius:10px;font-size:13px;font-weight:600;margin-top:10px;display:none}
-.form-msg.ok{background:#e0f7f7;color:#007a7a}
-.form-msg.err{background:#fbeaf0;color:#c0392b}
-
-/* ── SPINNER / TOAST ─────────────────────────────────────── */
-.spinner{width:32px;height:32px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:32px auto}
-@keyframes spin{to{transform:rotate(360deg)}}
-.empty{text-align:center;padding:40px 20px;color:#aaa;font-size:13px;line-height:1.8}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
-
-/* Spinner inline btn */
-.spin-btn{width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px}
 </style>
 </head>
 <body>
 
-<!-- ══════════════ LOGIN ══════════════ -->
-<div class="login-screen" id="loginScreen">
-  <div class="login-box">
-    <div class="login-logo">petz<span>ID</span></div>
-    <div class="login-sub">Portal Partner</div>
-    <div class="login-label">Tu email de negocio</div>
-    <input type="email" class="login-input" id="loginEmail" placeholder="negocio@email.com"
-      onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="login-btn" id="loginBtn" onclick="doLogin()">Ingresar al portal</button>
-    <div class="login-err" id="loginErr"></div>
-    <div class="login-contacto">¿No estás registrado? <a href="https://wa.me/50237673927" target="_blank">Contáctanos por WhatsApp</a></div>
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi">
+    </div>
+    <div class="login-title">Portal de Afiliados</div>
+    <div class="login-sub">Ingresa con el email registrado como afiliado</div>
+    <div class="login-msg" id="loginMsg"></div>
+    <label class="login-label">Correo electrónico</label>
+    <input type="email" class="login-input" id="loginEmail" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')verificarAfiliado()">
+    <button class="login-btn" id="loginBtn" onclick="verificarAfiliado()">Ingresar</button>
   </div>
 </div>
 
-<!-- ══════════════ APP ══════════════ -->
-<div class="app" id="appShell">
-
-  <!-- TopBar -->
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div class="topbar-row">
-        <div class="topbar-logo">petz<span>ID</span> <span style="font-size:11px;font-weight:400;color:rgba(255,255,255,.6)">Portal Partner</span></div>
-        <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
-      </div>
-      <div class="topbar-nombre" id="topNombre">—</div>
-      <div class="topbar-email" id="topEmail">—</div>
-      <div id="topPlanPill"></div>
-      <div style="height:14px"></div>
+<!-- PORTAL -->
+<div class="portal" id="portalWrap">
+  <div class="portal-header">
+    <div class="portal-logo">
+      <img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi">
     </div>
+    <button class="portal-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+  </div>
+
+  <!-- Plan card -->
+  <div class="plan-card" id="planCard">
+    <div class="plan-badge" id="planBadge">🥈 Silver</div>
+    <div class="plan-email" id="planEmail"></div>
+    <div class="plan-nombre" id="planNombre">Cargando...</div>
+    <div class="plan-stats">
+      <div class="plan-stat">
+        <div class="plan-stat-n" id="statDias">—</div>
+        <div class="plan-stat-l">Días restantes</div>
+      </div>
+      <div class="plan-stat">
+        <div class="plan-stat-n" id="statUsadas">—</div>
+        <div class="plan-stat-l">Usadas este ciclo</div>
+      </div>
+      <div class="plan-stat">
+        <div class="plan-stat-n" id="statLimite">—</div>
+        <div class="plan-stat-l">Límite mensual</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cuota bar -->
+  <div class="cuota-wrap">
+    <div class="cuota-title">
+      <span>Publicaciones este ciclo</span>
+      <span id="cuotaNum" style="color:#00B4B4;font-size:13px"></span>
+    </div>
+    <div class="cuota-bar-bg"><div class="cuota-bar" id="cuotaBar" style="width:0%"></div></div>
+    <div class="cuota-label" id="cuotaLabel"></div>
+    <div class="cuota-reset" id="cuotaReset"></div>
   </div>
 
   <!-- Tabs -->
-  <div style="background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06)">
-    <div class="tabs-bar">
-      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab(this)">📊 Dashboard</button>
-      <button class="tab-btn" data-tab="publicar" onclick="switchTab(this)">✏️ Publicar</button>
-      <button class="tab-btn" data-tab="mispubs" onclick="switchTab(this)">📋 Mis publicaciones</button>
-    </div>
+  <div class="tabs">
+    <button class="tab-btn act" onclick="setTab('avisos',this)">📢 Avisos</button>
+    <button class="tab-btn" onclick="setTab('lugares',this)">📍 Lugares</button>
+    <button class="tab-btn" onclick="setTab('eventos',this)">🎪 Eventos</button>
+    <button class="tab-btn" onclick="setTab('ventas',this)">💰 Ventas</button>
   </div>
 
-  <!-- ── TAB: DASHBOARD ── -->
-  <div class="content" id="tab-dashboard">
-
-    <!-- Stats -->
-    <div class="stats-grid" id="statsGrid">
-      <div class="stat-box"><div class="stat-n" id="stPubs">—</div><div class="stat-l">Publicadas</div></div>
-      <div class="stat-box"><div class="stat-n" id="stRestantes">—</div><div class="stat-l">Restantes</div></div>
-      <div class="stat-box"><div class="stat-n" id="stDias">—</div><div class="stat-l">Días activo</div></div>
+  <!-- Formulario publicar -->
+  <div class="pub-form show" id="pubForm">
+    <div class="pub-form-title">Nueva publicación</div>
+    <div class="form-group">
+      <label class="form-label">Título *</label>
+      <input type="text" class="form-input" id="pubTitulo" placeholder="Ej: Promo especial para mascotas">
     </div>
-
-    <!-- Vencimiento -->
-    <div id="venceBanner"></div>
-
-    <!-- Cuota -->
-    <div class="card">
-      <div class="card-titulo">Cuota del ciclo actual</div>
-      <div class="cuota-wrap" id="cuotaWrap">
-        <div class="spinner"></div>
-      </div>
+    <div class="form-group">
+      <label class="form-label">Descripción</label>
+      <textarea class="form-textarea" id="pubDescripcion" placeholder="Describe tu publicación..."></textarea>
     </div>
-
-    <!-- Plan detalle -->
-    <div class="card" id="planDetalleCard">
-      <div class="card-titulo">Tu plan</div>
-      <div id="planDetalle"><div class="spinner"></div></div>
+    <div class="form-group" id="groupFecha" style="display:none">
+      <label class="form-label">Fecha del evento</label>
+      <input type="date" class="form-input" id="pubFecha">
     </div>
-
+    <div class="form-group" id="groupPrecio" style="display:none">
+      <label class="form-label">Precio (Q)</label>
+      <input type="number" class="form-input" id="pubPrecio" placeholder="0.00">
+    </div>
+    <div class="form-group" id="groupDireccion" style="display:none">
+      <label class="form-label">Dirección</label>
+      <input type="text" class="form-input" id="pubDireccion" placeholder="Zona, ciudad...">
+    </div>
+    <button class="pub-btn" id="pubBtn" onclick="publicar()">📤 Publicar</button>
   </div>
 
-  <!-- ── TAB: PUBLICAR ── -->
-  <div class="content" id="tab-publicar" style="display:none">
-    <div class="card">
-      <div class="card-titulo">Nueva publicación</div>
-
-      <!-- Alerta cuota llena -->
-      <div id="cuotaAlerta" style="display:none;padding:14px;background:#fbeaf0;border-radius:12px;font-size:13px;color:#c0392b;font-weight:600;margin-bottom:16px"></div>
-
-      <!-- Tipo -->
-      <div class="tipo-tabs" id="tipoTabs">
-        <button class="tipo-tab active" data-tipo="promo" onclick="selTipo(this)">📢 Promo</button>
-        <button class="tipo-tab" data-tipo="aviso" onclick="selTipo(this)">🔔 Aviso</button>
-        <button class="tipo-tab" data-tipo="lugar" onclick="selTipo(this)">📍 Lugar</button>
-        <button class="tipo-tab" data-tipo="evento" onclick="selTipo(this)">🎉 Evento</button>
-        <button class="tipo-tab" data-tipo="venta" onclick="selTipo(this)">💰 Venta</button>
-      </div>
-
-      <!-- Campos base -->
-      <label class="field-lbl">Título *</label>
-      <input type="text" class="field" id="fTitulo" placeholder="Título de tu publicación">
-
-      <label class="field-lbl">Descripción</label>
-      <textarea class="field" id="fDesc" placeholder="Describe tu promo, servicio o producto..."></textarea>
-
-      <!-- Campos extra por tipo -->
-      <div id="camposEvento" style="display:none">
-        <label class="field-lbl">Fecha del evento</label>
-        <input type="date" class="field" id="fFecha">
-        <label class="field-lbl">Hora</label>
-        <input type="text" class="field" id="fHora" placeholder="10:00 AM">
-        <label class="field-lbl">Lugar / Dirección</label>
-        <input type="text" class="field" id="fLugar" placeholder="Nombre del lugar">
-      </div>
-
-      <div id="camposLugar" style="display:none">
-        <label class="field-lbl">Dirección</label>
-        <input type="text" class="field" id="fDireccion" placeholder="Dirección completa">
-        <label class="field-lbl">Zona</label>
-        <input type="text" class="field" id="fZona" placeholder="Ej: 10">
-      </div>
-
-      <div id="camposVenta" style="display:none">
-        <label class="field-lbl">Precio (Q)</label>
-        <input type="number" class="field" id="fPrecio" placeholder="Ej: 150">
-        <label class="field-lbl">WhatsApp de contacto</label>
-        <input type="text" class="field" id="fWa" placeholder="502xxxxxxxx">
-      </div>
-
-      <!-- Foto -->
-      <label class="field-lbl">Foto</label>
-      <div class="foto-drop" onclick="document.getElementById('fotoFile').click()">
-        <div style="font-size:24px;margin-bottom:4px">📸</div>
-        <div style="font-size:12px;color:#aaa">Toca para subir una imagen</div>
-      </div>
-      <input type="file" id="fotoFile" accept="image/*" style="display:none" onchange="onFotoChange(event)">
-      <img id="fotoPreview" class="foto-preview-img">
-
-      <button class="btn-publicar" id="btnPublicar" onclick="publicar()">Publicar</button>
-      <div class="form-msg" id="pubMsg"></div>
-    </div>
+  <!-- Mis publicaciones -->
+  <div class="mis-pubs">
+    <div class="mis-pubs-title">Mis publicaciones</div>
+    <div id="pubsLista"><div class="spinner">Cargando...</div></div>
   </div>
-
-  <!-- ── TAB: MIS PUBLICACIONES ── -->
-  <div class="content" id="tab-mispubs" style="display:none">
-    <div id="listaPubs"><div class="spinner"></div></div>
-  </div>
-
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-/* ═══════════════════════ CONFIG ════════════════════════ */
-var SUPA_URL  = 'https://ilcreewilnkchvozicyp.supabase.co';
-var SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-var SUPA_SVC  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
-var CLOUD_NAME   = 'dh5wgqgmk';
-var UPLOAD_PRESET = 'petzid';
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var H = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY };
 
-var HA = { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON };
-var HS = { 'apikey': SUPA_SVC,  'Authorization': 'Bearer ' + SUPA_SVC, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
-
-/* Límites por plan */
-var PLAN_PUBS = { basico: 1, silver: 3, gold: 1 };
+var LIMITES = { basico: 1, silver: 3, gold: 5 };
+var PLAN_DIAS = { basico_mensual: 30, silver_mensual: 30, gold_mensual: 30, basico_anual: 365, silver_anual: 365, gold_anual: 365 };
 var PLAN_LABELS = { basico: '🥉 Básico', silver: '🥈 Silver', gold: '🥇 Gold' };
-var PLAN_COLORS = { basico: 'plan-basico', silver: 'plan-silver', gold: 'plan-gold' };
 
-/* Estado global */
 var afiliadoEmail = '';
-var afiliadoData  = null;  // registro de la tabla actividades
-var pubsCiclo     = 0;
-var fotoBase64    = null;
-var tipoActual    = 'promo';
+var afiliadoData = null;
+var tabActual = 'avisos';
+var publicacionesUsadas = 0;
+var limiteActual = 1;
+var cicloInicio = null;
 
-/* ═══════════════════════ LOGIN ════════════════════════ */
-function doLogin() {
+// ── LOGIN ────────────────────────────────────────────────────
+function verificarAfiliado() {
   var email = document.getElementById('loginEmail').value.trim().toLowerCase();
-  if (!email) { showLoginErr('Ingresa tu email'); return; }
-
+  if (!email) return mostrarMsg('Ingresa tu correo', 'error');
   var btn = document.getElementById('loginBtn');
-  btn.disabled = true;
-  btn.textContent = 'Verificando...';
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  document.getElementById('loginMsg').style.display = 'none';
 
   var hoy = new Date().toISOString().split('T')[0];
-
-  fetch(SUPA_URL + '/rest/v1/actividades?es_afiliado=eq.true&afiliado_email=eq.' + encodeURIComponent(email) + '&activo=eq.true&select=*&limit=1', { headers: HA })
+  fetch(SUPA_URL + '/rest/v1/actividades?es_afiliado=eq.true&afiliado_email=eq.' + encodeURIComponent(email) + '&activo=eq.true&afiliado_vence=gte.' + hoy + '&select=*&limit=1', { headers: H })
     .then(function(r) { return r.json(); })
     .then(function(rows) {
       if (!rows || !rows.length) {
-        showLoginErr('No encontramos una cuenta de partner con ese email. ¿Aún no eres partner? Contáctanos.');
-        btn.disabled = false; btn.textContent = 'Ingresar al portal';
-        return;
-      }
-      var row = rows[0];
-      if (row.afiliado_vence && row.afiliado_vence < hoy) {
-        showLoginErr('Tu plan venció el ' + formatFecha(row.afiliado_vence) + '. Renueva contactando a PetMi.');
-        btn.disabled = false; btn.textContent = 'Ingresar al portal';
-        return;
+        mostrarMsg('No encontramos un afiliado activo con ese correo', 'error');
+        btn.disabled = false; btn.textContent = 'Ingresar'; return;
       }
       afiliadoEmail = email;
-      afiliadoData  = row;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('appShell').style.display = 'block';
-      iniciarApp();
+      afiliadoData = rows[0];
+      sessionStorage.setItem('afiliadoEmail', email);
+      cargarPortal();
     })
     .catch(function() {
-      showLoginErr('Error de conexión. Intenta de nuevo.');
-      btn.disabled = false; btn.textContent = 'Ingresar al portal';
+      mostrarMsg('Error de conexión. Intenta de nuevo.', 'error');
+      btn.disabled = false; btn.textContent = 'Ingresar';
     });
 }
 
-function showLoginErr(msg) {
-  var el = document.getElementById('loginErr');
-  el.textContent = msg;
-  el.style.display = 'block';
+function mostrarMsg(txt, tipo) {
+  var el = document.getElementById('loginMsg');
+  el.textContent = txt; el.className = 'login-msg ' + tipo; el.style.display = 'block';
 }
 
-function cerrarSesion() {
-  afiliadoEmail = '';
-  afiliadoData  = null;
-  document.getElementById('appShell').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('loginEmail').value = '';
-  document.getElementById('loginErr').style.display = 'none';
-}
-
-/* ═══════════════════════ APP INIT ════════════════════════ */
-function iniciarApp() {
+// ── PORTAL ───────────────────────────────────────────────────
+function cargarPortal() {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('portalWrap').style.display = 'block';
   var d = afiliadoData;
   var plan = d.afiliado_plan || 'basico';
+  var periodo = d.afiliado_periodo || 'mensual';
+  var vence = new Date(d.afiliado_vence);
+  var hoy = new Date();
+  var dias = Math.max(0, Math.ceil((vence - hoy) / 86400000));
+  var diasPlan = PLAN_DIAS[plan + '_' + periodo] || 30;
+  cicloInicio = new Date(vence);
+  cicloInicio.setDate(cicloInicio.getDate() - diasPlan);
 
-  // TopBar
-  document.getElementById('topNombre').textContent = d.titulo || afiliadoEmail;
-  document.getElementById('topEmail').textContent  = afiliadoEmail;
-  document.getElementById('topPlanPill').innerHTML =
-    '<div class="plan-pill ' + (PLAN_COLORS[plan] || 'plan-basico') + '">' +
-    (PLAN_LABELS[plan] || plan) + ' · Vence ' + formatFecha(d.afiliado_vence) + '</div>';
+  document.getElementById('planBadge').textContent = PLAN_LABELS[plan] || plan;
+  document.getElementById('planEmail').textContent = afiliadoEmail;
+  document.getElementById('planNombre').textContent = (d.titulo || afiliadoEmail) + ' — Plan ' + plan.charAt(0).toUpperCase() + plan.slice(1) + ' ' + periodo;
+  document.getElementById('statDias').textContent = dias;
+  document.getElementById('statLimite').textContent = LIMITES[plan] || 1;
+  limiteActual = LIMITES[plan] || 1;
 
-  cargarDashboard();
-  cargarMisPubs();
+  // Calcular publicaciones usadas en ciclo actual
+  contarPublicaciones();
+  cargarMisPublicaciones();
 }
 
-/* ═══════════════════════ DASHBOARD ════════════════════════ */
-function cargarDashboard() {
-  var d    = afiliadoData;
-  var plan = d.afiliado_plan || 'basico';
-  var limite = PLAN_PUBS[plan] || 1;
-  var hoy  = new Date();
-
-  // Calcular ciclo actual (30 días desde fecha de pago)
-  var vence   = d.afiliado_vence ? new Date(d.afiliado_vence + 'T12:00:00') : null;
-  var diasRestantes = vence ? Math.max(0, Math.ceil((vence - hoy) / 86400000)) : 0;
-
-  // Buscar publicaciones del ciclo (últimos 30 días)
-  var desde30 = new Date(hoy); desde30.setDate(desde30.getDate() - 30);
-  var desdeStr = desde30.toISOString().split('T')[0];
-
-  fetch(SUPA_URL + '/rest/v1/actividades?es_afiliado=eq.true&afiliado_email=eq.' + encodeURIComponent(afiliadoEmail) +
-    '&created_at=gte.' + desdeStr + 'T00:00:00&select=id,titulo,pausado,created_at&order=created_at.desc', { headers: HA })
+function contarPublicaciones() {
+  var inicioISO = cicloInicio ? cicloInicio.toISOString() : new Date(0).toISOString();
+  fetch(SUPA_URL + '/rest/v1/actividades?afiliado_email=eq.' + encodeURIComponent(afiliadoEmail) + '&es_afiliado=eq.true&created_at=gte.' + inicioISO + '&select=id', { headers: H })
     .then(function(r) { return r.json(); })
     .then(function(rows) {
-      // Excluir el registro "maestro" que es el primer registro del afiliado
-      var pubs = (rows || []).filter(function(r) { return r.titulo && r.titulo !== (afiliadoData.titulo || ''); });
-      // Contar solo publicaciones reales (no el registro de activación)
-      pubsCiclo = pubs.length;
-      var restantes = Math.max(0, limite - pubsCiclo);
-      var pct = Math.min(100, Math.round((pubsCiclo / limite) * 100));
-
-      // Stats
-      document.getElementById('stPubs').textContent = pubsCiclo;
-      document.getElementById('stPubs').className   = 'stat-n' + (pubsCiclo >= limite ? ' warn' : ' ok');
-      document.getElementById('stRestantes').textContent = restantes;
-      document.getElementById('stRestantes').className   = 'stat-n' + (restantes === 0 ? ' warn' : '');
-      document.getElementById('stDias').textContent = diasRestantes;
-      document.getElementById('stDias').className   = 'stat-n' + (diasRestantes <= 7 ? ' warn' : '');
-
-      // Banner vencimiento
-      var bannerClass = diasRestantes > 15 ? 'ok' : diasRestantes > 7 ? 'warn' : 'peligro';
-      var bannerEmoji = diasRestantes > 15 ? '✅' : diasRestantes > 7 ? '⚠️' : '🚨';
-      document.getElementById('venceBanner').innerHTML =
-        '<div class="vence-banner ' + bannerClass + '">' +
-        bannerEmoji + ' Tu plan vence el <strong>' + formatFecha(afiliadoData.afiliado_vence) + '</strong>' +
-        (diasRestantes === 0 ? ' — <strong>¡Vencido!</strong>' : ' (' + diasRestantes + ' días)') + '</div>';
-
-      // Barra de cuota
-      var resetDate = new Date(desde30); resetDate.setDate(resetDate.getDate() + 30);
-      document.getElementById('cuotaWrap').innerHTML =
-        '<div class="cuota-label"><span>' + pubsCiclo + ' de ' + limite + ' publicaciones usadas</span><span>' + pct + '%</span></div>' +
-        '<div class="prog-bar"><div class="prog-fill' + (pubsCiclo >= limite ? ' lleno' : '') + '" style="width:' + pct + '%"></div></div>' +
-        '<div class="cuota-reset">Próximo reset: ' + formatFecha(resetDate.toISOString().split('T')[0]) + '</div>';
-
-      // Plan detalle
-      renderPlanDetalle(plan, limite, diasRestantes);
-
-      // Cuota alerta en tab publicar
-      actualizarCuotaAlerta(pubsCiclo, limite, plan, restantes);
-    });
-}
-
-function renderPlanDetalle(plan, limite, diasRestantes) {
-  var descripciones = {
-    basico:
-      '<div style="font-size:13px;color:#555;line-height:1.9">' +
-      '📱 <b>' + limite + ' publicación/mes</b> en la app PetzID<br>' +
-      '✅ Badge Partner PetMi<br>' +
-      '📧 1 envío email/mes a base de datos<br>' +
-      '🗂️ Portal para publicar y gestionar<br>' +
-      '</div>',
-    silver:
-      '<div style="font-size:13px;color:#555;line-height:1.9">' +
-      '📱 <b>' + limite + ' publicaciones/mes</b> en la app PetzID<br>' +
-      '📌 Publicaciones <b>pinned</b> (aparecen primero)<br>' +
-      '✅ Badge Partner PetMi<br>' +
-      '📧 2 envíos email/mes segmentados<br>' +
-      '🎯 Segmentación por zona y especie<br>' +
-      '📸 1 story/mes en redes de PetMi<br>' +
-      '</div>',
-    gold:
-      '<div style="font-size:13px;color:#555;line-height:1.9">' +
-      '📱 <b>' + limite + ' publicación/mes</b> en la app PetzID<br>' +
-      '📌 Publicación <b>pinned</b> (aparece primero)<br>' +
-      '✅ Badge Partner PetMi<br>' +
-      '📧 2 envíos email/mes con segmentación completa<br>' +
-      '📸 2 stories + 1 post en feed/mes en redes de PetMi<br>' +
-      '📊 Reporte mensual de alcance<br>' +
-      '</div>'
-  };
-  document.getElementById('planDetalle').innerHTML =
-    '<div style="margin-bottom:12px">' +
-    '<span style="font-size:22px">' + (PLAN_LABELS[plan] || plan) + '</span>' +
-    '</div>' +
-    (descripciones[plan] || '') +
-    '<div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0f0f0;font-size:12px;color:#aaa">' +
-    '¿Quieres mejorar tu plan? <a href="https://wa.me/50237673927" target="_blank" style="color:#00B4B4;font-weight:700">Contacta a PetMi</a>' +
-    '</div>';
-}
-
-function actualizarCuotaAlerta(pubsCiclo, limite, plan, restantes) {
-  var el = document.getElementById('cuotaAlerta');
-  var btn = document.getElementById('btnPublicar');
-  if (pubsCiclo >= limite) {
-    el.innerHTML = '🚫 Has usado las ' + limite + ' publicación(es) de este ciclo.<br>' +
-      '<span style="font-size:12px;font-weight:400">Espera el próximo reset o <a href="https://wa.me/50237673927" target="_blank" style="color:#c0392b">mejora tu plan</a>.</span>';
-    el.style.display = 'block';
-    btn.disabled = true;
-    btn.className = 'btn-publicar lleno';
-    btn.textContent = 'Cuota agotada — ' + limite + '/' + limite + ' usadas';
-  } else {
-    el.style.display = 'none';
-    btn.disabled = false;
-    btn.className = 'btn-publicar';
-    btn.textContent = 'Publicar (' + restantes + ' restante' + (restantes !== 1 ? 's' : '') + ')';
-  }
-}
-
-/* ═══════════════════════ MIS PUBLICACIONES ════════════════════════ */
-function cargarMisPubs() {
-  fetch(SUPA_URL + '/rest/v1/actividades?es_afiliado=eq.true&afiliado_email=eq.' + encodeURIComponent(afiliadoEmail) +
-    '&order=created_at.desc&select=id,titulo,descripcion,tipo,imagen,pausado,pausado_razon,activo,created_at', { headers: HA })
-    .then(function(r) { return r.json(); })
-    .then(function(rows) {
-      var pubs = (rows || []).filter(function(r) {
-        return r.titulo && r.titulo !== (afiliadoData.titulo || '');
-      });
-      if (!pubs.length) {
-        document.getElementById('listaPubs').innerHTML =
-          '<div class="empty">📋 Aún no tienes publicaciones.<br>Ve a la pestaña <b>Publicar</b> para crear tu primera.</div>';
-        return;
+      publicacionesUsadas = (rows || []).length;
+      document.getElementById('statUsadas').textContent = publicacionesUsadas;
+      document.getElementById('cuotaNum').textContent = publicacionesUsadas + ' / ' + limiteActual;
+      var pct = Math.min(100, Math.round((publicacionesUsadas / limiteActual) * 100));
+      var bar = document.getElementById('cuotaBar');
+      bar.style.width = pct + '%';
+      bar.className = 'cuota-bar' + (pct >= 100 ? ' full' : pct >= 70 ? ' warning' : '');
+      document.getElementById('cuotaLabel').textContent = publicacionesUsadas >= limiteActual
+        ? '⚠️ Límite alcanzado — contacta a PetMi para más publicaciones'
+        : 'Te quedan ' + (limiteActual - publicacionesUsadas) + ' publicación(es) este ciclo';
+      if (cicloInicio) {
+        var reset = new Date(cicloInicio); reset.setDate(reset.getDate() + 30);
+        document.getElementById('cuotaReset').textContent = 'Próximo reset: ' + reset.toLocaleDateString('es-GT');
       }
-      var html = '';
-      pubs.forEach(function(p) {
-        var fecha = p.created_at ? new Date(p.created_at).toLocaleDateString('es-GT', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
-        var tipoBadge = { promo:'🏷️ Promo', aviso:'🔔 Aviso', lugar:'📍 Lugar', evento:'🎉 Evento', venta:'💰 Venta' };
-        html += '<div class="pub-card">';
-        if (p.imagen && p.imagen.indexOf('http') >= 0) {
-          html += '<img src="' + p.imagen + '" class="pub-img" alt="' + (p.titulo || '') + '">';
-        }
-        html += '<div class="pub-body">';
-        html += '<div class="pub-badges">';
-        html += '<span class="badge badge-tipo">' + (tipoBadge[p.tipo] || p.tipo || 'Publicación') + '</span>';
-        html += '<span class="badge badge-partner">Partner PetMi ✓</span>';
-        if (p.pausado) html += '<span class="badge badge-pausado">⏸ Pausado</span>';
-        html += '</div>';
-        html += '<div class="pub-titulo">' + p.titulo + '</div>';
-        html += '<div class="pub-meta">' + fecha + (p.activo ? '' : ' · Inactivo') + '</div>';
-        if (p.pausado && p.pausado_razon) {
-          html += '<div class="pub-pausa-razon">⚠️ Razón: ' + p.pausado_razon + '</div>';
-        }
-        html += '<div class="pub-footer">';
-        html += '<button class="btn-sm btn-eliminar" data-id="' + p.id + '" onclick="eliminarPub(this.dataset.id)">🗑️ Eliminar</button>';
-        html += '</div></div></div>';
-      });
-      document.getElementById('listaPubs').innerHTML = html;
-    });
+      actualizarBtnPublicar();
+    }).catch(function() {});
 }
 
-function eliminarPub(id) {
-  if (!confirm('¿Eliminar esta publicación?')) return;
-  fetch(SUPA_URL + '/rest/v1/actividades?id=eq.' + id, { method: 'DELETE', headers: HS })
-    .then(function(r) {
-      if (r.ok) {
-        toast('✅ Publicación eliminada');
-        cargarMisPubs();
-        cargarDashboard();
-      } else toast('Error al eliminar');
-    });
-}
-
-/* ═══════════════════════ PUBLICAR ════════════════════════ */
-function selTipo(el) {
-  document.querySelectorAll('.tipo-tab').forEach(function(b) { b.classList.remove('active'); });
-  el.classList.add('active');
-  tipoActual = el.dataset.tipo;
-  document.getElementById('camposEvento').style.display = tipoActual === 'evento' ? 'block' : 'none';
-  document.getElementById('camposLugar').style.display  = tipoActual === 'lugar'  ? 'block' : 'none';
-  document.getElementById('camposVenta').style.display  = tipoActual === 'venta'  ? 'block' : 'none';
-}
-
-function onFotoChange(ev) {
-  var file = ev.target.files[0];
-  if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var img = new Image();
-    img.onload = function() {
-      var canvas = document.createElement('canvas');
-      var MAX = 1200, w = img.width, h = img.height;
-      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      fotoBase64 = canvas.toDataURL('image/jpeg', 0.82).split(',')[1];
-      var prev = document.getElementById('fotoPreview');
-      prev.src = canvas.toDataURL('image/jpeg', 0.82);
-      prev.style.display = 'block';
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-async function publicar() {
-  var titulo = document.getElementById('fTitulo').value.trim();
-  if (!titulo) { mostrarMsg('pubMsg', 'El título es obligatorio', 'err'); return; }
-
-  var plan   = afiliadoData.afiliado_plan || 'basico';
-  var limite = PLAN_PUBS[plan] || 1;
-  if (pubsCiclo >= limite) {
-    mostrarMsg('pubMsg', 'Ya usaste todas tus publicaciones de este ciclo', 'err');
-    return;
+function actualizarBtnPublicar() {
+  var btn = document.getElementById('pubBtn');
+  if (publicacionesUsadas >= limiteActual) {
+    btn.disabled = true;
+    btn.className = 'pub-btn blocked';
+    btn.textContent = '🚫 Límite alcanzado — contacta a PetMi';
+  } else {
+    btn.disabled = false;
+    btn.className = 'pub-btn';
+    btn.textContent = '📤 Publicar';
   }
+}
 
-  var btn = document.getElementById('btnPublicar');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin-btn"></span>Publicando...';
+// ── TABS ─────────────────────────────────────────────────────
+function setTab(tab, el) {
+  tabActual = tab;
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('act'); });
+  el.classList.add('act');
+  document.getElementById('groupFecha').style.display = tab === 'eventos' ? 'block' : 'none';
+  document.getElementById('groupPrecio').style.display = tab === 'ventas' ? 'block' : 'none';
+  document.getElementById('groupDireccion').style.display = tab === 'lugares' ? 'block' : 'none';
+  document.getElementById('pubTitulo').value = '';
+  document.getElementById('pubDescripcion').value = '';
+}
 
-  var imagenUrl = '';
-
-  if (fotoBase64) {
-    btn.innerHTML = '<span class="spin-btn"></span>Subiendo foto...';
-    try {
-      var fd = new FormData();
-      fd.append('file', 'data:image/jpeg;base64,' + fotoBase64);
-      fd.append('upload_preset', UPLOAD_PRESET);
-      fd.append('folder', 'petzid/afiliados');
-      var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload', { method: 'POST', body: fd });
-      var cld = await res.json();
-      imagenUrl = cld.secure_url || '';
-    } catch(e) { console.log('Cloudinary error:', e); }
-  }
+// ── PUBLICAR ─────────────────────────────────────────────────
+function publicar() {
+  if (publicacionesUsadas >= limiteActual) return;
+  var titulo = document.getElementById('pubTitulo').value.trim();
+  var desc   = document.getElementById('pubDescripcion').value.trim();
+  if (!titulo) { mostrarToast('El título es obligatorio'); return; }
 
   var payload = {
-    titulo:        titulo,
-    descripcion:   document.getElementById('fDesc').value.trim() || null,
-    tipo:          tipoActual,
-    email_creador: afiliadoEmail,
-    es_afiliado:   true,
+    tipo: tabActual,
+    titulo: titulo,
+    descripcion: desc,
+    es_afiliado: true,
     afiliado_email: afiliadoEmail,
-    afiliado_plan:  plan,
-    activo:        true,
-    pausado:       false,
-    imagen:        imagenUrl || null
+    afiliado_plan: afiliadoData.afiliado_plan,
+    activo: true,
+    pausado: false
   };
+  if (tabActual === 'eventos' && document.getElementById('pubFecha').value)
+    payload.fecha = document.getElementById('pubFecha').value;
+  if (tabActual === 'ventas' && document.getElementById('pubPrecio').value)
+    payload.precio = parseFloat(document.getElementById('pubPrecio').value);
+  if (tabActual === 'lugares' && document.getElementById('pubDireccion').value)
+    payload.lugar = document.getElementById('pubDireccion').value.trim();
 
-  // Campos extra
-  if (tipoActual === 'evento') {
-    payload.fecha     = document.getElementById('fFecha').value || null;
-    payload.hora      = document.getElementById('fHora').value.trim() || null;
-    payload.ubicacion = document.getElementById('fLugar').value.trim() || null;
-  }
-  if (tipoActual === 'lugar') {
-    payload.ubicacion = document.getElementById('fDireccion').value.trim() || null;
-    payload.zona      = document.getElementById('fZona').value.trim() || null;
-  }
-  if (tipoActual === 'venta') {
-    payload.precio    = document.getElementById('fPrecio').value || null;
-    payload.whatsapp  = document.getElementById('fWa').value.trim() || null;
-  }
+  var btn = document.getElementById('pubBtn');
+  btn.disabled = true; btn.textContent = 'Publicando...';
 
-  try {
-    var r = await fetch(SUPA_URL + '/rest/v1/actividades', {
-      method: 'POST',
-      headers: HS,
-      body: JSON.stringify(payload)
-    });
+  fetch(SUPA_URL + '/rest/v1/actividades', {
+    method: 'POST',
+    headers: Object.assign({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, H),
+    body: JSON.stringify(payload)
+  }).then(function(r) {
     if (r.ok) {
-      mostrarMsg('pubMsg', '✅ Publicación enviada. Ya aparece en la app con tu badge Partner.', 'ok');
-      // Reset form
-      document.getElementById('fTitulo').value = '';
-      document.getElementById('fDesc').value   = '';
-      document.getElementById('fFecha').value  = '';
-      document.getElementById('fHora').value   = '';
-      document.getElementById('fLugar').value  = '';
-      document.getElementById('fPrecio').value = '';
-      document.getElementById('fWa').value     = '';
-      document.getElementById('fotoPreview').style.display = 'none';
-      fotoBase64 = null;
-      pubsCiclo++;
-      cargarDashboard();
-      cargarMisPubs();
+      mostrarToast('✅ Publicado exitosamente');
+      document.getElementById('pubTitulo').value = '';
+      document.getElementById('pubDescripcion').value = '';
+      publicacionesUsadas++;
+      contarPublicaciones();
+      cargarMisPublicaciones();
     } else {
-      mostrarMsg('pubMsg', 'Error al publicar. Intenta de nuevo.', 'err');
+      mostrarToast('Error al publicar. Intenta de nuevo.');
+      btn.disabled = false; btn.textContent = '📤 Publicar';
     }
-  } catch(e) {
-    mostrarMsg('pubMsg', 'Error de conexión.', 'err');
-  }
-
-  btn.disabled = false;
-  var restantes = Math.max(0, limite - pubsCiclo);
-  btn.innerHTML = 'Publicar (' + restantes + ' restante' + (restantes !== 1 ? 's' : '') + ')';
-}
-
-/* ═══════════════════════ TABS ════════════════════════ */
-function switchTab(el) {
-  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-  el.classList.add('active');
-  var tabs = ['dashboard', 'publicar', 'mispubs'];
-  tabs.forEach(function(t) {
-    document.getElementById('tab-' + t).style.display = el.dataset.tab === t ? 'block' : 'none';
+  }).catch(function() {
+    mostrarToast('Error de conexión');
+    btn.disabled = false; btn.textContent = '📤 Publicar';
   });
 }
 
-/* ═══════════════════════ HELPERS ════════════════════════ */
-function formatFecha(str) {
-  if (!str) return '—';
-  var d = new Date(str + 'T12:00:00');
-  return d.toLocaleDateString('es-GT', { day: '2-digit', month: 'long', year: 'numeric' });
+// ── MIS PUBLICACIONES ─────────────────────────────────────────
+function cargarMisPublicaciones() {
+  fetch(SUPA_URL + '/rest/v1/actividades?afiliado_email=eq.' + encodeURIComponent(afiliadoEmail) + '&es_afiliado=eq.true&select=id,titulo,descripcion,tipo,activo,pausado,pausado_razon,created_at&order=created_at.desc&limit=20', { headers: H })
+    .then(function(r) { return r.json(); })
+    .then(function(rows) {
+      var lista = document.getElementById('pubsLista');
+      if (!rows || !rows.length) { lista.innerHTML = '<div class="pub-empty">Aún no has publicado nada</div>'; return; }
+      var TIPO_LABELS = { avisos: '📢 Aviso', lugares: '📍 Lugar', eventos: '🎪 Evento', ventas: '💰 Venta' };
+      lista.innerHTML = rows.map(function(p) {
+        var fecha = new Date(p.created_at).toLocaleDateString('es-GT');
+        return '<div class="pub-card">'
+          + '<div class="pub-card-titulo">' + p.titulo + '</div>'
+          + (p.descripcion ? '<div class="pub-card-desc">' + p.descripcion + '</div>' : '')
+          + '<div class="pub-card-meta">'
+          + '<span class="pub-tipo">' + (TIPO_LABELS[p.tipo] || p.tipo) + '</span>'
+          + '<span class="pub-fecha">' + fecha + '</span>'
+          + (p.pausado ? '<span class="pub-badge-pausado">⏸ Pausado</span>' : '')
+          + (!p.activo ? '<span class="pub-badge-pausado">❌ Inactivo</span>' : '')
+          + '</div>'
+          + (p.pausado && p.pausado_razon ? '<div class="pub-razon">Razón: ' + p.pausado_razon + '</div>' : '')
+          + '</div>';
+      }).join('');
+    }).catch(function() {
+      document.getElementById('pubsLista').innerHTML = '<div class="pub-empty">Error al cargar publicaciones</div>';
+    });
 }
 
-function toast(msg) {
-  var el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(function() { el.classList.remove('show'); }, 2500);
+// ── UTILS ────────────────────────────────────────────────────
+function cerrarSesion() {
+  sessionStorage.removeItem('afiliadoEmail');
+  afiliadoEmail = ''; afiliadoData = null;
+  document.getElementById('portalWrap').style.display = 'none';
+  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('loginMsg').style.display = 'none';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('loginBtn').textContent = 'Ingresar';
 }
 
-function mostrarMsg(id, txt, tipo) {
-  var el = document.getElementById(id);
-  el.textContent = txt;
-  el.className = 'form-msg ' + tipo;
-  el.style.display = 'block';
-  setTimeout(function() { el.style.display = 'none'; }, 5000);
+function mostrarToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+// Auto-login si hay sesión guardada
+var savedEmail = sessionStorage.getItem('afiliadoEmail');
+if (savedEmail) {
+  document.getElementById('loginEmail').value = savedEmail;
+  verificarAfiliado();
 }
 </script>
 </body>

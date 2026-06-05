@@ -797,6 +797,26 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok, status: r.status });
     }
 
+    // ── pausarPublicacion ──────────────────────────────────────
+    if (action === 'pausarPublicacion' && req.method === 'POST') {
+      const { id, pausado, pausado_razon } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ pausado: pausado === true, pausado_razon: pausado_razon || null })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getAfiliados ───────────────────────────────────────────
+    if (action === 'getAfiliados') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?es_afiliado=eq.true&select=id,afiliado_email,afiliado_plan,afiliado_vence,afiliado_periodo,titulo,descripcion,tipo,activo,pausado,pausado_razon,created_at&order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      return res.status(200).json({ afiliados: await r.json() });
+    }
+
     // ── getPuntos ──────────────────────────────────────────────
     if (action === 'getPuntos') {
       const email = req.query.email || '';
