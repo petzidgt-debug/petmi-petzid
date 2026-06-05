@@ -88,10 +88,11 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <div class="filtros-wrap">
   <div class="filtros-scroll">
     <button class="filtro-btn active" onclick="setFiltro('',this)">Todos</button>
+    <button class="filtro-btn" onclick="setFiltro('perdido',this)">🚨 Perdidos</button>
+    <button class="filtro-btn" onclick="setFiltro('adopcion',this)">🏠 Adopciones</button>
+    <button class="filtro-btn" onclick="setFiltro('busco',this)">🔍 Busco</button>
+    <button class="filtro-btn" onclick="setFiltro('venta',this)">💰 Ventas</button>
     <button class="filtro-btn" onclick="setFiltro('evento',this)">🎪 Eventos</button>
-    <button class="filtro-btn" onclick="setFiltro('paseo',this)">🚶 Paseos</button>
-    <button class="filtro-btn" onclick="setFiltro('exposicion',this)">🏆 Exposiciones</button>
-    <button class="filtro-btn" onclick="setFiltro('adopcion',this)">🐾 Adopción</button>
   </div>
 </div>
 <div class="mes-bar" id="mesBar"></div>
@@ -290,7 +291,7 @@ function renderEvento(e){
   var emoji=TIPO_EMOJIS[e.tipo]||'🎪';
   var fecha=e.fecha?new Date(e.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'';
   var yaAsiste=misAsistencias[e.id];
-  var html='<div class="evento-card">';
+  var html='<div class="evento-card" data-fecha="'+(e.fecha||'')+'">';
   html+='<div class="evento-header"></div>';
   if(e.imagen&&e.imagen.indexOf('http')>=0){
     html+='<img src="'+e.imagen+'" class="evento-img" alt="'+e.titulo+'">';
