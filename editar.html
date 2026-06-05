@@ -139,11 +139,39 @@ function validarCamposPuntos() {
   if (new URLSearchParams(window.location.search).get('highlight') === 'perfil') {
     var existing = document.getElementById('puntosChecklist');
     if (existing) existing.remove();
+    // Si perfil completo, verificar si ya tiene puntos
+    if (completos === 6) {
+      var SUPA_K = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+      var em = sessionEmail;
+      fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/puntos?email=eq.' + encodeURIComponent(em) + '&accion=eq.perfil_completo&select=id&limit=1', {
+        headers: { 'apikey': SUPA_K, 'Authorization': 'Bearer ' + SUPA_K }
+      }).then(function(r){ return r.json(); })
+      .then(function(rows){
+        var existing2 = document.getElementById('puntosChecklist');
+        if (existing2) existing2.remove();
+        if (rows && rows.length > 0) {
+          // Ya tiene puntos — no mostrar nada
+          return;
+        }
+        // Perfil completo pero sin puntos — mostrar éxito
+        var wrap = document.createElement('div');
+        wrap.id = 'puntosChecklist';
+        wrap.className = 'puntos-checklist';
+        wrap.style.borderColor = '#00B4B4';
+        wrap.style.background = '#e0f7f7';
+        wrap.innerHTML = '<div class="puntos-checklist-title" style="color:#007a7a">✅ ¡Perfil completo! Guarda para ganar +5 puntos</div>';
+        var main = document.getElementById('mainWrap');
+        if (main && main.firstChild) main.insertBefore(wrap, main.firstChild);
+      }).catch(function(){
+        // Si falla la consulta (tabla no existe), no mostrar nada
+      });
+      return;
+    }
+    // Perfil incompleto — mostrar campos que faltan
     var wrap = document.createElement('div');
     wrap.id = 'puntosChecklist';
     wrap.className = 'puntos-checklist';
-    wrap.innerHTML = '<div class="puntos-checklist-title">⭐ Perfil para puntos: ' + completos + '/6'
-      + (completos === 6 ? ' <span style="color:#00B4B4;font-size:11px;margin-left:auto">¡Listo para +5 pts!</span>' : '') + '</div>'
+    wrap.innerHTML = '<div class="puntos-checklist-title">⭐ Completa tu perfil para ganar +5 pts (' + completos + '/6)</div>'
       + itemsHTML;
     var main = document.getElementById('mainWrap');
     if (main && main.firstChild) main.insertBefore(wrap, main.firstChild);
