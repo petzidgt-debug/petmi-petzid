@@ -97,10 +97,13 @@
       '.h-pwa-name{font-size:15px;font-weight:700;color:#222;margin-bottom:2px}',
       '.h-pwa-url{font-size:12px;color:#888}',
       '.h-pwa-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}',
-      '.h-pwa-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:99px;background:#f5f5f5;border:0.5px solid #eee;font-size:11px;color:#555}',
+      '.h-pwa-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:99px;background:#f5f5f5;border:0.5px solid #eee;font-size:11px;color:#555;font-weight:600}',
+      '.h-pwa-pill.green{background:#e0f7f7;border-color:#00B4B4;color:#007a7a}',
+      '.h-pwa-pill.gold{background:#FFF8E1;border-color:#F5C842;color:#856404}',
       '.h-pwa-btns{display:flex;gap:8px}',
-      '.h-pwa-install{flex:1;padding:11px;border-radius:99px;background:#00B4B4;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer}',
-      '.h-pwa-later{padding:11px 16px;border-radius:99px;background:#f5f5f5;color:#666;border:0.5px solid #eee;font-size:13px;cursor:pointer}',
+      '.h-pwa-install{flex:1;padding:11px;border-radius:99px;background:#00B4B4;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}',
+      '.h-pwa-install:hover{background:#007a7a}',
+      '.h-pwa-later{padding:11px 16px;border-radius:99px;background:#f0f0ee;color:#444;border:1.5px solid #ddd;font-size:13px;font-weight:600;cursor:pointer}',
       // Ocultar bottom nav si la pagina tiene su propia barra inferior
       '.has-nav-bar .h-bottom-nav{display:none!important}',
       '@media(max-width:768px){.fab-pill{bottom:82px!important}}',
@@ -150,10 +153,9 @@
             '<a href="/familia.html" class="h-drop-item">🏠 Mi familia</a>' +
             '<a href="/mis-ids.html" class="h-drop-item">🆔 Mis IDs</a>' +
             '<a href="/premium.html" class="h-drop-item">⭐ Premium</a>' +
-            '<a href="/promos.html" class="h-drop-item">🎁 Promos para mí</a>' +
             '<a href="/amigos.html" class="h-drop-item">👥 Amigos</a>' +
             '<a href="/mis-avisos.html" class="h-drop-item">📝 Mis avisos</a>' +
-            '<a href="/mis-eventos.html" class="h-drop-item">🎪 Mis eventos</a>' +
+            '<a href="/puntos.html" class="h-drop-item">⭐ Mis puntos</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
         '</div>'
@@ -221,12 +223,14 @@
         '<div><div class="h-pwa-name">Instalar PetMi</div><div class="h-pwa-url">app.revistapetmi.com</div></div>' +
       '</div>' +
       '<div class="h-pwa-pills">' +
-        '<span class="h-pwa-pill">📱 Sin App Store</span>' +
-        '<span class="h-pwa-pill">📴 Funciona offline</span>' +
-        '<span class="h-pwa-pill">🔔 Notificaciones</span>' +
+        '<span class="h-pwa-pill green">✅ GRATIS</span>' +
+        '<span class="h-pwa-pill">⚡ + Velocidad</span>' +
+        '<span class="h-pwa-pill">🔔 Alertas</span>' +
+        '<span class="h-pwa-pill">🎁 + Promos</span>' +
+        '<span class="h-pwa-pill gold">⭐ +3 puntos al instalar</span>' +
       '</div>' +
       '<div class="h-pwa-btns">' +
-        '<button class="h-pwa-install" id="pwaBtnInstall">Instalar gratis</button>' +
+        '<button class="h-pwa-install" id="pwaBtnInstall">📲 Instalar gratis</button>' +
         '<button class="h-pwa-later" onclick="petmiPwaLater()">Ahora no</button>' +
       '</div>';
     document.body.appendChild(pwaBanner);
@@ -399,7 +403,8 @@
   // Solo móvil y si no está instalada ya
   var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-  var dismissed = localStorage.getItem('pwa_dismissed');
+  var lastDismissed = localStorage.getItem('pwa_dismissed_at');
+  var dismissed = lastDismissed && (Date.now() - parseInt(lastDismissed)) < 7*24*60*60*1000;
 
   // Capturar el evento beforeinstallprompt
   window.addEventListener('beforeinstallprompt', function(e){
@@ -463,7 +468,7 @@
 })();
 
 function petmiPwaLater(){
-  localStorage.setItem('pwa_dismissed', '1');
+  localStorage.setItem('pwa_dismissed_at', Date.now().toString());
   var banner = document.getElementById('pwaBanner');
   if(banner) banner.classList.remove('show');
 }
