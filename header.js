@@ -126,16 +126,8 @@
     // ── Desktop nav ──────────────────────────────────────────
     var navHTML =
       '<a href="/galeria.html" class="h-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">🐾 Galería</a>' +
-      '<div class="h-drop">' +
-        '<button class="h-link" onclick="petmiTogglePF(event)">📢 Avisos & Eventos ▾ <span id="hAvisosCount" class="h-avisos-badge"></span></button>' +
-        '<div class="h-drop-menu" id="pfMenu">' +
-          '<a href="/avisos.html?tipo=perdido" class="h-drop-item">🚨 Perdidos</a>' +
-          '<a href="/avisos.html?tipo=adopcion" class="h-drop-item">🏠 Adopciones</a>' +
-          '<a href="/avisos.html?tipo=busco" class="h-drop-item">🔍 Busco</a>' +
-          '<a href="/avisos.html?tipo=venta" class="h-drop-item">💰 Ventas</a>' +
-          '<a href="/eventos.html" class="h-drop-item" style="border-top:2px solid #f0f0ee">🎪 Eventos</a>' +
-        '</div>' +
-      '</div>' +
+      '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-link' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
+      '<a href="https://app.revistapetmi.com/eventos.html" class="h-link' + (currentPath.indexOf('eventos') >= 0 ? ' active' : '') + '">🎪 Eventos</a>' +
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
       '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">📖 Revista</a>' +
       '<a href="https://www.revistapetmi.com/category/all-products" target="_blank" class="h-link">🛍️ Tienda</a>';
@@ -173,7 +165,7 @@
         '<span class="h-btab-ico">🐾</span>' +
         '<span class="h-btab-lbl">Galería</span>' +
       '</a>' +
-      '<a href="/avisos.html" class="h-btab' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '" style="position:relative">' +
+      '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-btab' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '" style="position:relative">' +
         '<span class="h-btab-ico">📢</span>' +
         '<span class="h-btab-bdg" id="hAvisosCountMob"></span>' +
         '<span class="h-btab-lbl">Avisos</span>' +
@@ -480,7 +472,7 @@ function petmiPwaLater(){
 (function(){
   var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
   var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-  fetch(SUPA_URL+'/rest/v1/actividades?activo=eq.true&select=id',{
+  fetch(SUPA_URL+'/rest/v1/actividades?activo=eq.true&tipo=in.(perdido,busco,adopcion,venta,promo)&select=id',{
     headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'count=exact','Range':'0-0'}
   }).then(function(r){
     var count=parseInt(r.headers.get('Content-Range').split('/')[1]||'0');
