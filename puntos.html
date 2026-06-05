@@ -401,17 +401,12 @@ function renderHistorial(rows) {
 
 function triggerInstall(e) {
   e.preventDefault();
-  // Intentar prompt de instalación guardado
   if(window._pwaPrompt) {
     window._pwaPrompt.prompt();
   } else if(/iPhone|iPad/i.test(navigator.userAgent)) {
-    alert('En iPhone:
-1. Toca el botón compartir ↑
-2. Selecciona "Agregar a pantalla de inicio"');
+    alert('En iPhone: toca el botón compartir y selecciona "Agregar a pantalla de inicio"');
   } else {
-    alert('Para instalar la app:
-1. Abre el menú del navegador (⋮)
-2. Selecciona "Instalar app" o "Agregar a pantalla de inicio"');
+    alert('Abre el menú del navegador y selecciona "Instalar app" o "Agregar a pantalla de inicio"');
   }
 }
 
