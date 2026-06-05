@@ -116,6 +116,18 @@ var mascotasPerdidas = {};
 // Init
 if (sessionEmail) {
   cargarFamilia(sessionEmail);
+}
+
+// Banner de puntos si viene de puntos.html
+if (new URLSearchParams(window.location.search).get('highlight') === 'perfil') {
+  document.addEventListener('DOMContentLoaded', function(){
+    var banner = document.createElement('div');
+    banner.style.cssText = 'background:#FFF8E1;border:1.5px solid #F5C842;border-radius:12px;padding:12px 16px;margin:12px 16px;font-size:13px;color:#856404;font-weight:600;display:flex;align-items:center;gap:10px';
+    banner.innerHTML = '<span style="font-size:20px">⭐</span><span>Completa el perfil de tu mascota para ganar <strong>+5 puntos</strong>. Toca Editar y completa foto, raza, zona y veterinario.</span>';
+    var main = document.querySelector('.familia-wrap, main, body');
+    if (main) main.insertBefore(banner, main.firstChild);
+    else document.body.insertBefore(banner, document.body.firstChild);
+  });
 } else {
   mostrarNoSession();
 }
@@ -244,7 +256,8 @@ function renderCard(m){
   html += '<div class="card-meta">'+(m.apodo?'"'+m.apodo+'" · ':'')+(m.especie||'')+'</div>';
   // Fila 1: Ver + Editar
   html += '<div class="card-btns" style="margin-bottom:6px">';
-  html += '<a href="/editar.html?uid='+m.uid+'" class="btn-editar" style="flex:1">✏️ Editar</a>';
+  var highlightParam = new URLSearchParams(window.location.search).get('highlight') === 'perfil' ? '&highlight=perfil' : '';
+  html += '<a href="/editar.html?uid='+m.uid+highlightParam+'" class="btn-editar" style="flex:1">✏️ Editar</a>';
   html += '</div>';
   // Fila 2: acciones
   html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
