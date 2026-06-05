@@ -472,7 +472,8 @@ function petmiPwaLater(){
 (function(){
   var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
   var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-  fetch(SUPA_URL+'/rest/v1/actividades?activo=eq.true&tipo=in.(perdido,busco,adopcion,venta,promo)&select=id',{
+  var ahora=new Date().toISOString();
+  fetch(SUPA_URL+'/rest/v1/actividades?activo=eq.true&tipo=in.(perdido,busco,adopcion,venta,promo)&or=(expires_at.is.null,expires_at.gte.'+ahora+')&select=id',{
     headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'count=exact','Range':'0-0'}
   }).then(function(r){
     var count=parseInt(r.headers.get('Content-Range').split('/')[1]||'0');
