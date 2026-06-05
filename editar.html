@@ -311,7 +311,9 @@ async function guardar(){
       fetch('/api/galeria?action=registrarPunto',{
         method:'POST', headers:{'Content-Type':'application/json'},
         body:JSON.stringify({email:sessionEmail, accion:'perfil_completo', puntos:5})
-      }).catch(function(){});
+      }).then(function(r){return r.json();})
+      .then(function(d){ if(d&&d.ok && window.petmiNotificarPunto) petmiNotificarPunto('perfil_completo',5); })
+      .catch(function(){});
     }
     // markAngel directo Supabase + sync sheet
     fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(mascota.uid.toUpperCase()),{

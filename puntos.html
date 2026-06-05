@@ -190,6 +190,8 @@ window.addEventListener('petmiReady', function(e) {
   init();
 });
 document.addEventListener('DOMContentLoaded', function() {
+  // Render acciones siempre, incluso sin login
+  renderAcciones([]);
   var em = sessionStorage.getItem('petmiEmail') || localStorage.getItem('petmiEmail') || '';
   if (em && !sessionEmail) { sessionEmail = em; init(); }
 });
@@ -251,7 +253,8 @@ function verificarRacha(streak, email) {
       .then(function(d) {
         if (d.ok) {
           localStorage.setItem('petmi_racha_' + email, hoy);
-          alert('🔥 ¡Lograste una racha de 7 días! +3 puntos');
+          if (window.petmiNotificarPunto) petmiNotificarPunto('racha_7dias', 3);
+          else alert('🔥 ¡Lograste una racha de 7 días! +3 puntos');
         }
       }).catch(function(){});
     }

@@ -462,10 +462,39 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, accion: 'instalar_app', puntos: 3 })
-      }).catch(function(){});
+      }).then(function(r){ return r.json(); })
+      .then(function(d){ if(d && d.ok) petmiNotificarPunto('instalar_app', 3); })
+      .catch(function(){});
     }
   }
 })();
+
+// ── Notificación de puntos ganados ───────────────────────────
+function petmiNotificarPunto(accion, pts) {
+  var MENSAJES = {
+    instalar_app:    '📲 +' + pts + ' pts por instalar la app',
+    perfil_completo: '🐾 +' + pts + ' pts — ¡Perfil completo!',
+    referir_amigo:   '👥 +' + pts + ' pts por referir un amigo',
+    racha_7dias:     '🔥 +' + pts + ' pts — ¡Racha de 7 días!',
+    juego_diario:    '🎮 +' + pts + ' pts por el juego diario',
+    apoyar_asoc:     '🤝 +' + pts + ' pts por apoyar una asociación'
+  };
+  var msg = MENSAJES[accion] || '⭐ +' + pts + ' puntos ganados';
+  // Buscar o crear toast de puntos
+  var t = document.getElementById('petmiPuntoToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'petmiPuntoToast';
+    t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#F5C842;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;border:1px solid #F5C842';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(function() {
+    t.style.opacity = '0';
+  }, 3500);
+}
+window.petmiNotificarPunto = petmiNotificarPunto;
 
 function petmiPwaLater(){
   localStorage.setItem('pwa_dismissed_at', Date.now().toString());
