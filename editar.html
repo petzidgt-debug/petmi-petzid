@@ -69,6 +69,15 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 .confirm-title{font-size:18px;font-weight:900;color:#222;margin-bottom:8px}
 .confirm-sub{font-size:13px;color:#888;margin-bottom:24px;line-height:1.5}
 .confirm-btns{display:flex;gap:10px}
+
+/* Validacion puntos */
+.campo-requerido-ok{border-color:#00B4B4!important;background:#f0fffe!important}
+.campo-requerido-falta{border-color:#E24B4A!important;background:#fff5f5!important}
+.puntos-checklist{background:#fff;border-radius:12px;padding:14px 16px;margin:0 0 14px;border:1px solid #eee}
+.puntos-checklist-title{font-size:13px;font-weight:700;color:#222;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.check-item{display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 0}
+.check-item.ok{color:#007a7a}
+.check-item.falta{color:#c0392b;font-weight:600}
 </style>
 </head>
 <body>
@@ -139,6 +148,8 @@ var nuevaFotoMime   = null;
         else { window.location.href='/galeria.html'; return; }
       }
       renderForm();
+      // Validar campos requeridos para puntos
+      setTimeout(function(){ validarCamposPuntos(); }, 300);
     })
     .catch(function(){
       document.getElementById('loadingWrap').innerHTML=
@@ -460,6 +471,68 @@ function confirmarEliminar(){
     <div style="font-size:12px;color:#aaa;margin-top:4px">Un momento por favor</div>
   </div>
 </div>
-<script src="/header.js"></script>
+<script src="/header.js">
+// ── Validación campos para puntos ────────────────────────────
+function validarCamposPuntos() {
+  var m = mascota || {};
+  var CAMPOS = [
+    { id: 'eNombre',  label: 'Nombre',       val: function() { return document.getElementById('eNombre') ? document.getElementById('eNombre').value.trim() : m.nombre; } },
+    { id: 'foto',     label: 'Foto',          val: function() { return m.foto && m.foto.indexOf('http') >= 0; }, esImg: true },
+    { id: 'especie',  label: 'Especie',       val: function() { return m.especie; }, esChip: 'chipsEspecie' },
+    { id: 'eRaza',    label: 'Raza',          val: function() { return document.getElementById('eRaza') ? document.getElementById('eRaza').value.trim() : m.raza; } },
+    { id: 'eZona',    label: 'Zona',          val: function() { return document.getElementById('eZona') ? document.getElementById('eZona').value.trim() : m.zona; } },
+    { id: 'eVet',     label: 'Veterinario',   val: function() { return document.getElementById('eVet') ? document.getElementById('eVet').value.trim() : m.veterinario; } }
+  ];
+
+  var completos = 0;
+  var itemsHTML = '';
+
+  CAMPOS.forEach(function(c) {
+    var ok = !!c.val();
+    if (ok) completos++;
+
+    // Marcar campo en el form
+    if (!c.esImg && !c.esChip) {
+      var el = document.getElementById(c.id);
+      if (el) {
+        el.className = (el.className || '').replace(/campo-requerido-\w+/g, '').trim();
+        el.classList.add(ok ? 'campo-requerido-ok' : 'campo-requerido-falta');
+      }
+    }
+
+    itemsHTML += '<div class="check-item ' + (ok ? 'ok' : 'falta') + '">'
+      + (ok ? '✅' : '❌') + ' ' + c.label
+      + '</div>';
+  });
+
+  // Mostrar checklist si viene de puntos
+  if (new URLSearchParams(window.location.search).get('highlight') === 'perfil') {
+    var existing = document.getElementById('puntosChecklist');
+    if (existing) existing.remove();
+    var wrap = document.createElement('div');
+    wrap.id = 'puntosChecklist';
+    wrap.className = 'puntos-checklist';
+    wrap.innerHTML = '<div class="puntos-checklist-title">'
+      + '<span>⭐</span>'
+      + '<span>Perfil para puntos: ' + completos + '/6 campos</span>'
+      + (completos === 6 ? '<span style="color:#00B4B4;font-size:11px;margin-left:auto">¡Listo para +5 pts!</span>' : '')
+      + '</div>'
+      + itemsHTML;
+    var form = document.querySelector('.form-col, form, .main');
+    if (form) {
+      var firstChild = form.querySelector('label, input, .form-group, .chip-group');
+      if (firstChild) form.insertBefore(wrap, firstChild);
+      else form.prepend(wrap);
+    }
+  }
+}
+
+// Re-validar cuando el usuario escribe
+document.addEventListener('input', function(e) {
+  if (['eNombre','eRaza','eZona','eVet'].indexOf(e.target.id) >= 0) {
+    validarCamposPuntos();
+  }
+});
+</script>
 </body>
 </html>
