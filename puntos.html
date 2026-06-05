@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mis Puntos — PetMi</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:80px}
+
+/* HERO */
+.pt-hero{background:linear-gradient(135deg,#1a1a2e 0%,#00B4B4 100%);padding:28px 20px 24px;text-align:center;position:relative}
+.pt-hero-label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.pt-hero-pts{font-size:56px;font-weight:900;color:#F5C842;line-height:1;margin-bottom:4px}
+.pt-hero-sub{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:16px}
+.pt-nivel{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:99px;padding:5px 14px;font-size:12px;color:#fff;font-weight:600}
+.pt-progress-wrap{margin:14px 20px 0;background:rgba(255,255,255,.2);border-radius:99px;height:6px}
+.pt-progress-bar{height:6px;border-radius:99px;background:#F5C842;transition:width .5s}
+.pt-progress-label{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.55);margin-top:6px;padding:0 2px}
+
+/* RACHA */
+.pt-racha-wrap{margin:16px;background:#fff;border-radius:14px;padding:14px 16px;border:0.5px solid #eee}
+.pt-racha-title{font-size:12px;font-weight:700;color:#555;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.pt-racha-days{display:flex;gap:6px;justify-content:space-between}
+.pt-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.pt-day-dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:#f5f5f5;color:#ccc;border:0.5px solid #eee}
+.pt-day-dot.done{background:#e0f7f7;color:#00B4B4;border-color:#00B4B4;font-size:16px}
+.pt-day-dot.today{background:#00B4B4;color:#fff;font-weight:700;font-size:13px}
+.pt-day-lbl{font-size:9px;color:#aaa;font-weight:600}
+
+/* SECTIONS */
+.pt-section{margin:16px}
+.pt-section-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+
+/* ACCIONES */
+.pt-acciones{display:flex;flex-direction:column;gap:8px}
+.pt-accion{background:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;border:0.5px solid #eee;text-decoration:none}
+.pt-accion-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.pt-accion-info{flex:1;min-width:0}
+.pt-accion-name{font-size:14px;font-weight:600;color:#222;margin-bottom:2px}
+.pt-accion-sub{font-size:11px;color:#aaa}
+.pt-accion-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.pt-accion-pts{font-size:13px;font-weight:700;color:#00B4B4;background:#e0f7f7;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.pt-accion.done .pt-accion-name{color:#aaa}
+.pt-accion.done .pt-accion-pts{color:#aaa;background:#f5f5f5}
+.pt-check{width:22px;height:22px;border-radius:50%;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:12px;color:#00B4B4;flex-shrink:0}
+
+/* PREMIOS */
+.pt-premios{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pt-premio{background:#fff;border-radius:14px;padding:16px 12px;border:0.5px solid #eee;text-align:center;position:relative;display:flex;flex-direction:column;align-items:center}
+.pt-premio.locked{opacity:.6}
+.pt-premio.unlocked{border-color:#00B4B4;box-shadow:0 0 0 1px #00B4B4}
+.pt-premio-ico{font-size:32px;margin-bottom:8px}
+.pt-premio-name{font-size:12px;font-weight:700;color:#222;margin-bottom:4px;line-height:1.3}
+.pt-premio-pts{font-size:11px;color:#888;margin-bottom:10px}
+.pt-premio-lock{position:absolute;top:10px;right:10px;font-size:13px}
+.pt-btn-canjear{padding:7px 16px;border-radius:99px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:#00B4B4;color:#fff;width:100%}
+.pt-btn-canjear.locked{background:#f0f0ee;color:#aaa;cursor:default}
+
+/* HISTORIAL */
+.pt-historial{display:flex;flex-direction:column;gap:6px}
+.pt-hist-item{background:#fff;border-radius:11px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border:0.5px solid #eee}
+.pt-hist-left{display:flex;align-items:center;gap:10px}
+.pt-hist-ico{font-size:20px;width:32px;text-align:center}
+.pt-hist-name{font-size:13px;color:#333;font-weight:500}
+.pt-hist-date{font-size:11px;color:#aaa;margin-top:1px}
+.pt-hist-pts{font-size:15px;font-weight:700;color:#00B4B4}
+.pt-empty{text-align:center;padding:24px;color:#aaa;font-size:13px}
+.spinner{text-align:center;padding:24px;color:#aaa;font-size:13px}
+
+/* REFERIDO */
+.pt-referido{background:#fff;border-radius:14px;padding:16px;border:0.5px solid #eee}
+.pt-ref-label{font-size:13px;font-weight:600;color:#222;margin-bottom:6px}
+.pt-ref-sub{font-size:12px;color:#888;margin-bottom:12px;line-height:1.5}
+.pt-ref-link{display:flex;gap:8px;align-items:center}
+.pt-ref-input{flex:1;padding:10px 12px;border:1.5px solid #e0f7f7;border-radius:10px;font-size:12px;color:#555;background:#f8f8f8;outline:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt-ref-copy{padding:10px 16px;border-radius:10px;background:#00B4B4;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.pt-ref-stats{display:flex;gap:12px;margin-top:10px}
+.pt-ref-stat{flex:1;background:#f8f7f4;border-radius:10px;padding:10px;text-align:center}
+.pt-ref-stat-n{font-size:20px;font-weight:700;color:#00B4B4}
+.pt-ref-stat-l{font-size:11px;color:#aaa;margin-top:2px}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="pt-hero">
+  <div class="pt-hero-label">Mis puntos PetMi</div>
+  <div class="pt-hero-pts" id="totalPts">—</div>
+  <div class="pt-hero-sub" id="ptsSub">Cargando...</div>
+  <div class="pt-nivel" id="nivelBadge">🐾 Básico</div>
+  <div class="pt-progress-wrap" style="margin-top:14px">
+    <div class="pt-progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="pt-progress-label">
+    <span id="progressMin">0</span>
+    <span id="progressMax">50</span>
+  </div>
+</div>
+
+<!-- RACHA -->
+<div class="pt-racha-wrap">
+  <div class="pt-racha-title">
+    <span>🔥 Racha diaria</span>
+    <span id="rachaLabel" style="font-size:12px;color:#00B4B4;font-weight:600"></span>
+  </div>
+  <div class="pt-racha-days" id="rachaDays"></div>
+</div>
+
+<!-- COMO GANAR -->
+<div class="pt-section">
+  <div class="pt-section-title">Gana puntos</div>
+  <div class="pt-acciones" id="accionesLista"></div>
+</div>
+
+<!-- REFERIDO -->
+<div class="pt-section">
+  <div class="pt-section-title">Refiere un amigo</div>
+  <div class="pt-referido">
+    <div class="pt-ref-label">Tu link único de referido</div>
+    <div class="pt-ref-sub">Cuando alguien se registra con tu link, ambos ganan puntos. 🎉</div>
+    <div class="pt-ref-link">
+      <input class="pt-ref-input" id="refLink" readonly value="Cargando...">
+      <button class="pt-ref-copy" onclick="copiarLink()">Copiar</button>
+    </div>
+    <div class="pt-ref-stats">
+      <div class="pt-ref-stat">
+        <div class="pt-ref-stat-n" id="refCount">0</div>
+        <div class="pt-ref-stat-l">Amigos referidos</div>
+      </div>
+      <div class="pt-ref-stat">
+        <div class="pt-ref-stat-n" id="refPts">0</div>
+        <div class="pt-ref-stat-l">Puntos ganados</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PREMIOS -->
+<div class="pt-section">
+  <div class="pt-section-title">Canjea premios</div>
+  <div class="pt-premios" id="premiosGrid"></div>
+</div>
+
+<!-- HISTORIAL -->
+<div class="pt-section">
+  <div class="pt-section-title">Historial</div>
+  <div class="pt-historial" id="historialLista">
+    <div class="spinner">Cargando...</div>
+  </div>
+</div>
+
+<script src="/header.js"></script>
+<script>
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var H = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY };
+
+var NIVELES = [
+  { nombre: '🐾 Básico',  min: 0,   max: 50  },
+  { nombre: '🥈 Silver',  min: 50,  max: 150 },
+  { nombre: '🥇 Gold',    min: 150, max: 300 },
+  { nombre: '💎 Diamond', min: 300, max: 300 }
+];
+
+var ACCIONES = [
+  { id: 'perfil_completo', ico: '🐾', bg: '#e0f7f7', nombre: 'Perfil completo', sub: 'Nombre, foto, raza, zona y veterinario', pts: 5, link: '/editar.html' },
+  { id: 'instalar_app',   ico: '📲', bg: '#EEEDFE',  nombre: 'Instalar la app', sub: 'Descarga PetMi a tu pantalla', pts: 3, link: null },
+  { id: 'apoyar_asoc',    ico: '🤝', bg: '#FBEAF0',  nombre: 'Apoyar una asociación', sub: 'Próximamente disponible', pts: 5, link: null, pronto: true },
+  { id: 'referir_amigo',  ico: '👥', bg: '#FFF8E1',  nombre: 'Referir un amigo', sub: 'Usa tu link único de referido', pts: 10, link: '#referido' },
+  { id: 'juego_diario',   ico: '🎮', bg: '#f0f0ee',  nombre: 'Juego diario', sub: 'Próximamente disponible', pts: 1, link: null, pronto: true },
+  { id: 'racha_7dias',    ico: '🔥', bg: '#FCEBEB',  nombre: 'Racha de 7 días', sub: 'Ingresa 7 días seguidos', pts: 3, link: null }
+];
+
+var PREMIOS = [
+  { ico: '🏷️', nombre: '10% descuento en tienda', pts: 50  },
+  { ico: '⭐', nombre: '1 mes Premium gratis',     pts: 100 },
+  { ico: '🪪', nombre: 'Tarjeta PVC gratis',        pts: 150 },
+  { ico: '📸', nombre: 'Sesión de fotos',            pts: 200 }
+];
+
+var sessionEmail = '';
+var totalPuntos = 0;
+var accionesCompletadas = {};
+
+// ── Init ─────────────────────────────────────────────────────
+window.addEventListener('petmiReady', function(e) {
+  sessionEmail = e.detail && e.detail.email ? e.detail.email : '';
+  init();
+});
+document.addEventListener('DOMContentLoaded', function() {
+  var em = sessionStorage.getItem('petmiEmail') || localStorage.getItem('petmiEmail') || '';
+  if (em && !sessionEmail) { sessionEmail = em; init(); }
+});
+
+function init() {
+  if (!sessionEmail) {
+    document.getElementById('totalPts').textContent = '0';
+    document.getElementById('ptsSub').textContent = 'Inicia sesión para ver tus puntos';
+    renderAcciones([]); renderPremios(0); renderRacha(0); renderHistorial([]);
+    return;
+  }
+  // Link de referido
+  fetch('/api/galeria?action=getMascotasByEmail&email=' + encodeURIComponent(sessionEmail))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var uid = d.mascotas && d.mascotas[0] ? d.mascotas[0].uid : sessionEmail;
+      var link = 'https://app.revistapetmi.com/index.html?ref=' + encodeURIComponent(uid);
+      document.getElementById('refLink').value = link;
+    }).catch(function() {
+      document.getElementById('refLink').value = 'https://app.revistapetmi.com/index.html?ref=' + encodeURIComponent(sessionEmail);
+    });
+
+  // Puntos
+  fetch(SUPA_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(sessionEmail) + '&select=accion,puntos,created_at&order=created_at.desc', { headers: H })
+    .then(function(r) { return r.json(); })
+    .then(function(rows) {
+      rows = rows || [];
+      totalPuntos = rows.reduce(function(s, r) { return s + (r.puntos || 0); }, 0);
+      rows.forEach(function(r) { accionesCompletadas[r.accion] = true; });
+
+      // Referidos
+      var refRows = rows.filter(function(r) { return r.accion === 'referir_amigo'; });
+      document.getElementById('refCount').textContent = refRows.length;
+      document.getElementById('refPts').textContent = refRows.reduce(function(s,r){return s+r.puntos;},0);
+
+      renderHero(totalPuntos);
+      renderRacha(calcularRacha(rows));
+      renderAcciones(Object.keys(accionesCompletadas));
+      renderPremios(totalPuntos);
+      renderHistorial(rows.slice(0, 10));
+    }).catch(function() {
+      renderHero(0); renderRacha(0); renderAcciones([]); renderPremios(0); renderHistorial([]);
+    });
+}
+
+function calcularRacha(rows) {
+  var dias = {};
+  rows.forEach(function(r) {
+    var d = r.created_at ? r.created_at.split('T')[0] : null;
+    if (d) dias[d] = true;
+  });
+  var streak = 0;
+  var hoy = new Date();
+  for (var i = 0; i < 30; i++) {
+    var d = new Date(hoy); d.setDate(d.getDate() - i);
+    var key = d.toISOString().split('T')[0];
+    if (dias[key]) streak++;
+    else if (i > 0) break;
+  }
+  return streak;
+}
+
+function renderHero(pts) {
+  document.getElementById('totalPts').textContent = pts;
+  var nivel = NIVELES[0];
+  for (var i = 0; i < NIVELES.length; i++) {
+    if (pts >= NIVELES[i].min) nivel = NIVELES[i];
+  }
+  document.getElementById('nivelBadge').textContent = nivel.nombre;
+  var siguiente = null;
+  for (var j = 0; j < NIVELES.length; j++) {
+    if (NIVELES[j].min > pts) { siguiente = NIVELES[j]; break; }
+  }
+  if (siguiente) {
+    document.getElementById('ptsSub').textContent = 'Te faltan ' + (siguiente.min - pts) + ' pts para ' + siguiente.nombre;
+    var pct = Math.min(100, Math.round(((pts - nivel.min) / (siguiente.min - nivel.min)) * 100));
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressMin').textContent = nivel.min;
+    document.getElementById('progressMax').textContent = siguiente.min;
+  } else {
+    document.getElementById('ptsSub').textContent = '¡Nivel máximo alcanzado! 💎';
+    document.getElementById('progressBar').style.width = '100%';
+  }
+}
+
+function renderRacha(streak) {
+  var DIAS = ['L','M','M','J','V','S','D'];
+  var hoy = new Date().getDay();
+  var html = '';
+  for (var i = 0; i < 7; i++) {
+    var esDone = i < streak - 1;
+    var esHoy  = i === streak - 1;
+    var lbl    = DIAS[(hoy - (streak - 1 - i) + 7) % 7];
+    html += '<div class="pt-day">'
+      + '<div class="pt-day-dot ' + (esDone ? 'done' : esHoy ? 'today' : '') + '">'
+      + (esDone ? '🔥' : esHoy ? streak : i + 1)
+      + '</div>'
+      + '<div class="pt-day-lbl">' + lbl + '</div>'
+      + '</div>';
+  }
+  document.getElementById('rachaDays').innerHTML = html;
+  document.getElementById('rachaLabel').textContent = streak + ' día' + (streak !== 1 ? 's' : '');
+}
+
+function renderAcciones(completadas) {
+  var html = ACCIONES.map(function(a) {
+    var done = completadas.indexOf(a.id) >= 0;
+    var href = a.link ? 'href="' + a.link + '"' : '';
+    return '<a class="pt-accion ' + (done ? 'done' : '') + '" ' + href + '>'
+      + '<div class="pt-accion-ico" style="background:' + a.bg + '">' + a.ico + '</div>'
+      + '<div class="pt-accion-info">'
+      + '<div class="pt-accion-name">' + a.nombre + (a.pronto ? ' <span style="font-size:10px;background:#f0f0ee;color:#aaa;padding:2px 6px;border-radius:99px;font-weight:500">Próximamente</span>' : '') + '</div>'
+      + '<div class="pt-accion-sub">' + a.sub + '</div>'
+      + '</div>'
+      + '<div class="pt-accion-right">'
+      + (done ? '<div class="pt-check">✓</div>' : '')
+      + '<div class="pt-accion-pts">+' + a.pts + ' pts</div>'
+      + '</div>'
+      + '</a>';
+  }).join('');
+  document.getElementById('accionesLista').innerHTML = html;
+}
+
+function renderPremios(pts) {
+  var html = PREMIOS.map(function(p) {
+    var unlocked = pts >= p.pts;
+    return '<div class="pt-premio ' + (unlocked ? 'unlocked' : 'locked') + '">'
+      + (!unlocked ? '<div class="pt-premio-lock">🔒</div>' : '')
+      + '<div class="pt-premio-ico">' + p.ico + '</div>'
+      + '<div class="pt-premio-name">' + p.nombre + '</div>'
+      + '<div class="pt-premio-pts">' + p.pts + ' puntos</div>'
+      + '<button class="pt-btn-canjear ' + (unlocked ? '' : 'locked') + '" '
+      + (unlocked ? 'onclick="canjear(\'' + p.nombre + '\',' + p.pts + ')"' : 'disabled') + '>'
+      + (unlocked ? 'Canjear' : 'Faltan ' + (p.pts - pts) + ' pts')
+      + '</button></div>';
+  }).join('');
+  document.getElementById('premiosGrid').innerHTML = html;
+}
+
+var HIST_LABELS = {
+  perfil_completo: { ico: '🐾', label: 'Perfil completo' },
+  instalar_app:    { ico: '📲', label: 'Instaló la app' },
+  referir_amigo:   { ico: '👥', label: 'Refirió un amigo' },
+  apoyar_asoc:     { ico: '🤝', label: 'Apoyó una asociación' },
+  juego_diario:    { ico: '🎮', label: 'Juego diario' },
+  racha_7dias:     { ico: '🔥', label: 'Racha de 7 días' }
+};
+
+function renderHistorial(rows) {
+  if (!rows.length) { document.getElementById('historialLista').innerHTML = '<div class="pt-empty">Aún no tienes puntos — ¡empieza ahora!</div>'; return; }
+  var html = rows.map(function(r) {
+    var info = HIST_LABELS[r.accion] || { ico: '⭐', label: r.accion };
+    var fecha = r.created_at ? new Date(r.created_at) : new Date();
+    var hoy = new Date();
+    var diff = Math.floor((hoy - fecha) / 86400000);
+    var fechaStr = diff === 0 ? 'Hoy' : diff === 1 ? 'Ayer' : 'Hace ' + diff + ' días';
+    return '<div class="pt-hist-item">'
+      + '<div class="pt-hist-left">'
+      + '<div class="pt-hist-ico">' + info.ico + '</div>'
+      + '<div><div class="pt-hist-name">' + info.label + '</div>'
+      + '<div class="pt-hist-date">' + fechaStr + '</div></div>'
+      + '</div>'
+      + '<div class="pt-hist-pts">+' + r.puntos + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('historialLista').innerHTML = html;
+}
+
+function copiarLink() {
+  var input = document.getElementById('refLink');
+  navigator.clipboard.writeText(input.value).then(function() {
+    var btn = document.querySelector('.pt-ref-copy');
+    var orig = btn.textContent;
+    btn.textContent = '✅ Copiado';
+    setTimeout(function() { btn.textContent = orig; }, 2000);
+  }).catch(function() {
+    input.select(); document.execCommand('copy');
+  });
+}
+
+function canjear(nombre, pts) {
+  if (totalPuntos < pts) return;
+  if (!confirm('¿Canjear "' + nombre + '" por ' + pts + ' puntos?\n\nEl equipo de PetMi te contactará para entregarte el premio.')) return;
+  // Notificar al admin via Apps Script
+  var url = 'https://script.google.com/macros/s/YOUR_APPS_SCRIPT_URL/exec';
+  fetch(url, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'canjearPremio', email: sessionEmail, premio: nombre, puntos: pts })
+  }).catch(function() {});
+  alert('¡Solicitud enviada! El equipo de PetMi te contactará pronto. 🎉');
+}
+</script>
+</body>
+</html>

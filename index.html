@@ -422,6 +422,7 @@ var SCRIPT_URL='/api/submit';
 var cur=1,siblings=[],dateMode='nac',isSibling=false,familyData=null;
 var photoBase64=null,photoMime=null,photoFilename=null;
 var uid=genId();
+var refBy=new URLSearchParams(window.location.search).get('ref')||'';
 var generatedPngBase64=null; // guardamos el PNG para descarga
 
 // Cloudinary
