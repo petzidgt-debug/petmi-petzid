@@ -476,7 +476,7 @@ export default async function handler(req, res) {
 
     // ── publicarActividad ─────────────────────────────────────────
     if (action === 'publicarActividad' && req.method === 'POST') {
-      const { uid_creador, nombre_creador, foto_creador, tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, especie, sexo, raza, whatsapp, recompensa, precio, estado_producto, es_afiliado, afiliado_email, afiliado_plan, pausado } = req.body;
+      const { uid_creador, nombre_creador, foto_creador, tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, especie, sexo, raza, whatsapp, recompensa } = req.body;
       if (!titulo || !uid_creador) return res.status(200).json({ ok: false, error: 'Faltan campos' });
       // Calcular expiración: planes expiran en la fecha del plan, anuncios en 7 días
       let expires_at = null;
@@ -491,7 +491,7 @@ export default async function handler(req, res) {
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
-        body: JSON.stringify({ uid_creador, nombre_creador, foto_creador, email_creador: req.body.email_creador||'', tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, activo, expires_at, especie: especie||null, sexo: sexo||null, raza: raza||null, whatsapp: whatsapp||null, recompensa: recompensa||null, precio: precio||null, estado_producto: estado_producto||null, es_afiliado: es_afiliado||false, afiliado_email: afiliado_email||null, afiliado_plan: afiliado_plan||null, pausado: pausado||false })
+        body: JSON.stringify({ uid_creador, nombre_creador, foto_creador, email_creador: req.body.email_creador||'', tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, activo, expires_at, especie: especie||null, sexo: sexo||null, raza: raza||null, whatsapp: whatsapp||null, recompensa: recompensa||null })
       });
       const data = await r.json();
       return res.status(200).json({ ok: r.ok, id: data[0]?.id });
@@ -795,6 +795,59 @@ export default async function handler(req, res) {
         headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
       });
       return res.status(200).json({ ok: r.ok, status: r.status });
+    }
+
+    // ── pausarPublicacion ──────────────────────────────────────
+    if (action === 'pausarPublicacion' && req.method === 'POST') {
+      const { id, pausado, pausado_razon } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ pausado: pausado === true, pausado_razon: pausado_razon || null })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getAfiliados ───────────────────────────────────────────
+    if (action === 'getAfiliados') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?es_afiliado=eq.true&select=id,afiliado_email,afiliado_plan,afiliado_vence,afiliado_periodo,titulo,descripcion,tipo,activo,pausado,pausado_razon,created_at&order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      return res.status(200).json({ afiliados: await r.json() });
+    }
+
+    // ── getPuntos ──────────────────────────────────────────────
+    if (action === 'getPuntos') {
+      const email = req.query.email || '';
+      if (!email) return res.status(200).json({ puntos: [], total: 0 });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(email) + '&select=accion,puntos,created_at&order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const rows = await r.json();
+      const total = Array.isArray(rows) ? rows.reduce((s, r) => s + (r.puntos || 0), 0) : 0;
+      return res.status(200).json({ puntos: rows || [], total });
+    }
+
+    // ── registrarPunto ─────────────────────────────────────────
+    if (action === 'registrarPunto' && req.method === 'POST') {
+      const { email, accion, puntos, referencia } = req.body;
+      if (!email || !accion || !puntos) return res.status(200).json({ ok: false });
+      // Evitar duplicados en acciones únicas
+      const UNICAS = ['perfil_completo', 'instalar_app'];
+      if (UNICAS.includes(accion)) {
+        const check = await fetch(SUPABASE_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(email) + '&accion=eq.' + accion + '&select=id&limit=1', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        const existing = await check.json();
+        if (Array.isArray(existing) && existing.length > 0) return res.status(200).json({ ok: false, msg: 'Ya registrado' });
+      }
+      const r = await fetch(SUPABASE_URL + '/rest/v1/puntos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ email, accion, puntos, referencia: referencia || null })
+      });
+      return res.status(200).json({ ok: r.ok });
     }
 
     return res.status(200).json({ status: 'PetMi Supabase API activa' });
