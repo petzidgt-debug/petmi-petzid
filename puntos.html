@@ -42,8 +42,10 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 .pt-accion-sub{font-size:11px;color:#aaa}
 .pt-accion-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .pt-accion-pts{font-size:13px;font-weight:700;color:#00B4B4;background:#e0f7f7;padding:4px 10px;border-radius:99px;white-space:nowrap}
-.pt-accion.done .pt-accion-name{color:#aaa}
-.pt-accion.done .pt-accion-pts{color:#aaa;background:#f5f5f5}
+.pt-accion.done .pt-accion-pts{color:#007a7a;background:#e0f7f7}
+.pt-accion.done .pt-accion-name{color:#222}
+.pt-accion:not(.done) .pt-accion-pts{color:#aaa;background:#f5f5f5}
+.pt-accion:not(.done) .pt-accion-name{color:#555}
 .pt-check{width:22px;height:22px;border-radius:50%;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:12px;color:#00B4B4;flex-shrink:0}
 
 /* PREMIOS */
@@ -165,8 +167,8 @@ var NIVELES = [
 ];
 
 var ACCIONES = [
-  { id: 'perfil_completo', ico: '🐾', bg: '#e0f7f7', nombre: 'Perfil completo', sub: 'Nombre, foto, raza, zona y veterinario', pts: 5, link: '/editar.html' },
-  { id: 'instalar_app',   ico: '📲', bg: '#EEEDFE',  nombre: 'Instalar la app', sub: 'Descarga PetMi a tu pantalla', pts: 3, link: null },
+  { id: 'perfil_completo', ico: '🐾', bg: '#e0f7f7', nombre: 'Perfil completo', sub: 'Nombre, foto, raza, zona y veterinario', pts: 5, link: '/editar.html?highlight=perfil' },
+  { id: 'instalar_app',   ico: '📲', bg: '#EEEDFE',  nombre: 'Instalar la app', sub: 'Descarga PetMi a tu pantalla', pts: 3, link: null, accion: 'instalar' },
   { id: 'apoyar_asoc',    ico: '🤝', bg: '#FBEAF0',  nombre: 'Apoyar una asociación', sub: 'Próximamente disponible', pts: 5, link: null, pronto: true },
   { id: 'referir_amigo',  ico: '👥', bg: '#FFF8E1',  nombre: 'Referir un amigo', sub: 'Usa tu link único de referido', pts: 10, link: '#referido' },
   { id: 'juego_diario',   ico: '🎮', bg: '#f0f0ee',  nombre: 'Juego diario', sub: 'Próximamente disponible', pts: 1, link: null, pronto: true },
@@ -323,15 +325,28 @@ function renderRacha(streak) {
 function renderAcciones(completadas) {
   var html = ACCIONES.map(function(a) {
     var done = completadas.indexOf(a.id) >= 0;
-    var href = a.link ? 'href="' + a.link + '"' : '';
-    return '<a class="pt-accion ' + (done ? 'done' : '') + '" ' + href + '>'
+    var href = '';
+    if(done) {
+      href = ''; // completado, no navega
+    } else if(a.accion === 'instalar') {
+      href = 'onclick="triggerInstall(event)"';
+    } else if(a.link) {
+      href = 'href="' + a.link + '"';
+    }
+    var doneLabel = done
+      ? '<div class="pt-check" style="background:#e0f7f7;color:#00B4B4">✓</div>'
+      : (a.link || a.accion ? '<span style="font-size:11px;color:#00B4B4;font-weight:600">→</span>' : '');
+    return '<a class="pt-accion ' + (done ? 'done' : '') + '" ' + href + ' style="cursor:' + (done?'default':'pointer') + '">'
       + '<div class="pt-accion-ico" style="background:' + a.bg + '">' + a.ico + '</div>'
       + '<div class="pt-accion-info">'
-      + '<div class="pt-accion-name">' + a.nombre + (a.pronto ? ' <span style="font-size:10px;background:#f0f0ee;color:#aaa;padding:2px 6px;border-radius:99px;font-weight:500">Próximamente</span>' : '') + '</div>'
+      + '<div class="pt-accion-name">' + a.nombre
+      + (a.pronto ? ' <span style="font-size:10px;background:#f0f0ee;color:#aaa;padding:2px 6px;border-radius:99px;font-weight:500">Próximamente</span>' : '')
+      + (done ? ' <span style="font-size:10px;background:#e0f7f7;color:#007a7a;padding:2px 6px;border-radius:99px;font-weight:500">✓ Completado</span>' : '')
+      + '</div>'
       + '<div class="pt-accion-sub">' + a.sub + '</div>'
       + '</div>'
       + '<div class="pt-accion-right">'
-      + (done ? '<div class="pt-check">✓</div>' : '')
+      + doneLabel
       + '<div class="pt-accion-pts">+' + a.pts + ' pts</div>'
       + '</div>'
       + '</a>';
@@ -382,6 +397,22 @@ function renderHistorial(rows) {
       + '</div>';
   }).join('');
   document.getElementById('historialLista').innerHTML = html;
+}
+
+function triggerInstall(e) {
+  e.preventDefault();
+  // Intentar prompt de instalación guardado
+  if(window._pwaPrompt) {
+    window._pwaPrompt.prompt();
+  } else if(/iPhone|iPad/i.test(navigator.userAgent)) {
+    alert('En iPhone:
+1. Toca el botón compartir ↑
+2. Selecciona "Agregar a pantalla de inicio"');
+  } else {
+    alert('Para instalar la app:
+1. Abre el menú del navegador (⋮)
+2. Selecciona "Instalar app" o "Agregar a pantalla de inicio"');
+  }
 }
 
 function copiarLink() {

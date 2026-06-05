@@ -94,6 +94,27 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 <script>
 var CLOUD_NAME    = 'dh5wgqgmk';
 var UPLOAD_PRESET = 'petzid';
+// Destacar campos pendientes si viene de puntos.html
+(function(){
+  if(new URLSearchParams(window.location.search).get('highlight') !== 'perfil') return;
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){
+      var aviso = document.createElement('div');
+      aviso.style.cssText = 'background:#FFF8E1;border:1.5px solid #F5C842;border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:13px;color:#856404;font-weight:600';
+      aviso.innerHTML = '⭐ Completa estos campos para ganar <strong>+5 puntos</strong>: foto, raza, zona y veterinario';
+      var firstEl = document.querySelector('.form-title, h2, .screen');
+      if(firstEl) firstEl.parentNode.insertBefore(aviso, firstEl.nextSibling);
+      ['eRaza','eZona','eVet'].forEach(function(id){
+        var el = document.getElementById(id);
+        if(el && !el.value.trim()){
+          el.style.borderColor = '#F5C842';
+          el.style.background = '#FFFDF0';
+        }
+      });
+    }, 1000);
+  });
+})();
+
 var SUPA_URL      = 'https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_KEY      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 var sessionEmail  = localStorage.getItem('petzid_email') || '';

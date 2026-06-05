@@ -409,6 +409,7 @@
   // Capturar el evento beforeinstallprompt
   window.addEventListener('beforeinstallprompt', function(e){
     deferredPrompt = e;
+    window._pwaPrompt = e; // Accesible desde puntos.html
     if(isMobile && !isStandalone && !dismissed){
       setTimeout(function(){
         var banner = document.getElementById('pwaBanner');
