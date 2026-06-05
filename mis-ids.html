@@ -293,7 +293,8 @@ function descargarIndividual(){
   var canvas=document.createElement('canvas');var SCALE=3;var W=460,H=290;canvas.width=W*SCALE;canvas.height=H*SCALE;var ctx=canvas.getContext('2d');ctx.scale(SCALE,SCALE);
   var perfilUrl=BASE_URL+'/p/'+m.uid;
   function finish(fi,qrImg){
-    if(layoutActual==='actual')drawActual(ctx,W,H,m,fi,qrImg);
+    // QR solo para layouts Premium (B y D)
+    if(layoutActual==='actual')drawActual(ctx,W,H,m,fi,null);
     else if(layoutActual==='b')drawB(ctx,W,H,m,fi,qrImg);
     else drawD(ctx,W,H,m,fi,qrImg);
     localStorage.setItem('carnet_layout_'+m.uid,layoutActual);
