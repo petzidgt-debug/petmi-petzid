@@ -130,7 +130,7 @@
     var navHTML =
       '<a href="/galeria.html" class="h-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">🐾 Galería</a>' +
       '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-link' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
-      '<a href="https://app.revistapetmi.com/eventos.html" class="h-link' + (currentPath.indexOf('eventos') >= 0 ? ' active' : '') + '">🎪 Eventos</a>' +
+
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
       '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">📖 Revista</a>' +
       '<a href="https://www.revistapetmi.com/category/all-products" target="_blank" class="h-link">🛍️ Tienda</a>';
@@ -155,7 +155,7 @@
             '<a href="/premium.html" class="h-drop-item">⭐ Premium</a>' +
             '<a href="/amigos.html" class="h-drop-item">👥 Amigos</a>' +
             '<a href="/mis-avisos.html" class="h-drop-item">📝 Mis avisos</a>' +
-            '<a href="/puntos.html" class="h-drop-item">⭐ Mis puntos</a>' +
+            '<a href="/puntos.html" class="h-drop-item">🏆 Mis puntos</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
         '</div>'
