@@ -74,20 +74,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
-
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .3s}
-.modal-overlay.show{opacity:1}
-.modal-box{background:#fff;border-radius:24px;padding:32px 24px;max-width:360px;width:100%;text-align:center;transform:scale(.9);transition:transform .3s}
-.modal-overlay.show .modal-box{transform:scale(1)}
-.modal-ico{font-size:56px;margin-bottom:12px;animation:bounce 1s ease infinite alternate}
-@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
-.modal-titulo{font-size:22px;font-weight:900;font-family:'Arial Black',Arial;color:#1a1a2e;margin-bottom:8px}
-.modal-sub{font-size:13px;color:#888;line-height:1.7;margin-bottom:20px}
-.modal-beneficios{background:#f0faf8;border-radius:14px;padding:14px 16px;margin-bottom:20px;text-align:left}
-.modal-b{font-size:13px;color:#444;padding:5px 0;border-bottom:1px solid #e0f0ee;display:flex;gap:8px;align-items:center}
-.modal-b:last-child{border-bottom:none}
-.modal-btn{width:100%;padding:14px;background:#F5C842;color:#1a1a2e;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
-.modal-skip{font-size:12px;color:#aaa;cursor:pointer;text-decoration:underline}
 </style>
 </head>
 <body>
@@ -103,6 +89,39 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <!-- Estado premium si ya es activo -->
   <div id="estadoWrap"></div>
 
+  <!-- PROMO DE LANZAMIENTO -->
+  <div id="promoWrap" style="display:none">
+    <div class="sec-titulo">🎁 Promo de lanzamiento</div>
+    <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:20px;border:2px solid #F5C842;box-shadow:0 2px 12px rgba(245,200,66,.2)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:28px">🎁</span>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:#222">2 meses de Premium GRATIS</div>
+          <div style="font-size:12px;color:#888">Promo de lanzamiento — válido hasta el 31 de julio 2026</div>
+        </div>
+      </div>
+      <div id="promoCanjeoWrap">
+        <div style="font-size:13px;color:#555;margin-bottom:12px">Ingresa tu código de promo para activar tu período de prueba gratuito:</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" id="promoInput" placeholder="Ej: PETMI2M"
+            style="flex:1;padding:12px 14px;border:1.5px solid #ddd;border-radius:12px;font-size:15px;text-transform:uppercase;outline:none;font-family:Arial,sans-serif"
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter')canjearPromo()">
+          <button onclick="canjearPromo()" id="btnCanjear"
+            style="padding:12px 20px;background:#F5C842;color:#1a1a2e;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">
+            Canjear
+          </button>
+        </div>
+        <div id="promoMsg" style="font-size:13px;padding:8px 12px;border-radius:8px;display:none"></div>
+      </div>
+      <div id="promoActivado" style="display:none;text-align:center;padding:10px 0">
+        <div style="font-size:32px;margin-bottom:6px">✅</div>
+        <div style="font-size:15px;font-weight:700;color:#007a7a">¡Código canjeado exitosamente!</div>
+        <div style="font-size:13px;color:#888;margin-top:4px" id="promoActivadoSub"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Plan Premium -->
   <div class="sec-titulo">Plan digital</div>
   <div class="plan">
@@ -116,7 +135,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <div class="feature"><span class="check">✓</span><div>3 diseños de carnet PetzID para elegir<div class="feat-sub">Personaliza el look del carnet de tu mascota</div></div></div>
       <div class="feature"><span class="check">✓</span><div>Badge Premium ⭐ en la galería — mayor visibilidad</div></div>
       <div class="feature"><span class="check">✓</span><div>Perfil público con URL única y código QR descargable<div class="feat-sub">Cualquiera puede ver el perfil de tu mascota</div></div></div>
-      <div class="feature"><span class="check">✓</span><div>3 publicaciones de venta/mes en avisos<div class="feat-sub">¿Necesitas más? Packs adicionales: +3 por Q25 · +6 por Q50 · +9 por Q75</div></div></div>
+      <div class="feature"><span class="check">✓</span><div>Opción de ventas en avisos</div></div>
       <div class="feature"><span class="check">✓</span><div>Descuento 10% en tienda PetMi</div></div>
       <div class="feature"><span class="check">✓</span><div>Descuentos exclusivos con partners afiliados <span class="soon">Muy pronto</span></div></div>
       <div class="feature"><span class="check">✓</span><div>Alertas por email de mascotas perdidas en tu zona <span class="soon">Muy pronto</span></div></div>
@@ -136,7 +155,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <div class="extra-nombre">Tarjeta PVC individual</div>
       <div class="extra-desc">Formato CR80 — igual a una tarjeta de crédito. Impermeable y de alta durabilidad.</div>
       <div id="tarjetaPrecioDesc" style="font-size:11px;margin-top:4px;display:none;color:#2e7d32;font-weight:700">✓ Precio Premium activo</div>
-      <button class="btn-extra btn-teal" id="btnSolicitarTarjeta" onclick="solicitarExtra('Tarjeta PVC individual',esPremiumActivo?'Q35':'Q50')">Solicitar ahora</button>
+      <button class="btn-extra btn-teal" id="btnSolicitarTarjeta" onclick="solicitarExtra('Tarjeta PVC individual',esPremiumActivo?'Q35':'Q50')">Solicitar por WhatsApp</button>
     </div>
     <div class="precio-wrap">
       <div id="tarjetaPrecioNormal" class="extra-precio">Q50</div>
@@ -152,7 +171,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <div class="extra-info">
       <div class="extra-nombre">Foto retocada</div>
       <div class="extra-desc">Quitamos el fondo, corregimos colores y cuidamos cada detalle para un resultado profesional.</div>
-      <button class="btn-extra btn-teal" onclick="solicitarExtra('Foto retocada','Q25')">Solicitar ahora</button>
+      <button class="btn-extra btn-teal" onclick="solicitarExtra('Foto retocada','Q25')">Solicitar por WhatsApp</button>
     </div>
     <div class="precio-wrap">
       <div class="extra-precio">Q25</div>
@@ -164,7 +183,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <div class="extra-info">
       <div class="extra-nombre">Pack completo</div>
       <div class="extra-desc">Plan Premium anual + Foto retocada + Tarjeta PVC. Todo incluido.</div>
-      <button class="btn-extra btn-purple" onclick="solicitarExtra('Pack completo (Premium + Foto retocada + Tarjeta PVC)','Q150')">Solicitar ahora</button>
+      <button class="btn-extra btn-purple" onclick="solicitarExtra('Pack completo (Premium + Foto retocada + Tarjeta PVC)','Q150')">Solicitar por WhatsApp</button>
     </div>
     <div class="precio-wrap">
       <div class="extra-precio purple">Q150</div>
@@ -175,47 +194,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <div class="nota">
     Los extras se coordinan por WhatsApp.<br>
     El equipo PetMi te contacta para los detalles y envío. 🐾<br>
-    <span style="color:#2e7d32;font-weight:700">Con Plan Premium: tarjeta PVC a Q35 · packs de ventas disponibles</span>
-  </div>
-
-
-  <!-- Packs de ventas adicionales -->
-  <div class="sec-titulo">Packs de ventas — solo usuarios Premium</div>
-
-  <div class="extra" style="border-color:#856404;background:#FFFDF0">
-    <div class="extra-ico">📦</div>
-    <div class="extra-info">
-      <div class="extra-nombre">Pack +3 ventas</div>
-      <div class="extra-desc">3 publicaciones de venta adicionales por 30 días.</div>
-      <button class="btn-extra btn-teal" onclick="solicitarExtra('Pack +3 ventas adicionales','Q25')">Solicitar ahora</button>
-    </div>
-    <div class="precio-wrap">
-      <div class="extra-precio">Q25</div>
-    </div>
-  </div>
-
-  <div class="extra" style="border-color:#856404;background:#FFFDF0">
-    <div class="extra-ico">📦</div>
-    <div class="extra-info">
-      <div class="extra-nombre">Pack +6 ventas</div>
-      <div class="extra-desc">6 publicaciones de venta adicionales por 30 días.</div>
-      <button class="btn-extra btn-teal" onclick="solicitarExtra('Pack +6 ventas adicionales','Q50')">Solicitar ahora</button>
-    </div>
-    <div class="precio-wrap">
-      <div class="extra-precio">Q50</div>
-    </div>
-  </div>
-
-  <div class="extra" style="border-color:#856404;background:#FFFDF0">
-    <div class="extra-ico">📦</div>
-    <div class="extra-info">
-      <div class="extra-nombre">Pack +9 ventas</div>
-      <div class="extra-desc">9 publicaciones de venta adicionales por 30 días.</div>
-      <button class="btn-extra btn-teal" onclick="solicitarExtra('Pack +9 ventas adicionales','Q75')">Solicitar ahora</button>
-    </div>
-    <div class="precio-wrap">
-      <div class="extra-precio">Q75</div>
-    </div>
+    <span style="color:#2e7d32;font-weight:700">Con Plan Premium: tarjeta PVC a Q35 (precio regular Q50)</span>
   </div>
 
   <!-- FAQ -->
@@ -241,10 +220,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <div class="faq-q">Cuanto tarda en llegar la tarjeta? <span class="faq-arr">▾</span></div>
       <div class="faq-a">El tiempo de produccion es de 5 a 7 dias habiles. Te avisamos cuando este lista para entrega o envio.</div>
     </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">Cuanto duran los packs de ventas? <span class="faq-arr">▾</span></div>
-      <div class="faq-a">30 dias desde la activacion. Al vencer, vuelves a las 3 ventas base incluidas en tu Premium. Puedes comprar un nuevo pack en cualquier momento.</div>
-    </div>
   </div>
 
 </div>
@@ -269,31 +244,16 @@ function verificarPremium(){
     if(!rows||!rows.length) return;
     var r=rows[0];
     if(r.premium){
-      // Si no hay fecha, mostrar igual con +1 año como referencia
-      var hastaDate = r.premium_hasta
-        ? new Date(r.premium_hasta)
-        : (function(){ var d=new Date(); d.setFullYear(d.getFullYear()+1); return d; })();
-      var hasta = hastaDate.toLocaleDateString('es-GT',{day:'2-digit',month:'long',year:'numeric'});
-      var diasRestantes = Math.max(0, Math.ceil((hastaDate - new Date()) / 86400000));
-      var diasLabel = diasRestantes <= 30
-        ? ' <span style="background:#E05090;color:#fff;font-size:10px;padding:2px 8px;border-radius:99px;font-weight:700;margin-left:6px">Vence en '+diasRestantes+' días</span>'
-        : '';
+      var hasta=r.premium_hasta?new Date(r.premium_hasta).toLocaleDateString('es-GT',{day:'2-digit',month:'long',year:'numeric'}):'';
       document.getElementById('estadoWrap').innerHTML=
         '<div class="premium-activo">'+
         '<div class="premium-activo-ico">⭐</div>'+
-        '<div class="premium-activo-titulo">¡Ya eres Premium!</div>'+
-        '<div class="premium-activo-sub">Todos tus beneficios están activos</div>'+
-        '<div class="premium-activo-fecha">Válido hasta: '+hasta+diasLabel+'</div>'+
+        '<div class="premium-activo-titulo">Ya eres Premium!</div>'+
+        '<div class="premium-activo-sub">Todos tus beneficios estan activos</div>'+
+        (hasta?'<div class="premium-activo-fecha">Valido hasta: '+hasta+'</div>':'')+
         '</div>';
       var footer=document.getElementById('planFooter');
       if(footer) footer.style.display='none';
-
-      // Mostrar modal de bienvenida si no lo ha visto en los últimos 7 días
-      var visto = parseInt(localStorage.getItem('premium_welcome_seen')||'0');
-      var siete = 7 * 24 * 60 * 60 * 1000;
-      if(!visto || (Date.now() - visto) > siete){
-        setTimeout(mostrarModalPremium, 600);
-      }
       // Show premium tarjeta pricing
       esPremiumActivo = true;
       var pNormal=document.getElementById('tarjetaPrecioNormal');
@@ -312,46 +272,124 @@ function solicitarExtra(extra,precio){
   window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
 }
 
-function mostrarModalPremium(){
-  // Solo mostrar una vez por sesión
-  if(sessionStorage.getItem('premium_modal_shown')) return;
-  sessionStorage.setItem('premium_modal_shown','1');
-  var m = document.getElementById('modalPremium');
-  if(!m) return;
-  m.style.display='flex';
-  setTimeout(function(){ m.classList.add('show'); }, 50);
-}
-
-function cerrarModalPremium(){
-  var m = document.getElementById('modalPremium');
-  if(!m) return;
-  m.classList.remove('show');
-  setTimeout(function(){ m.style.display='none'; }, 300);
-  // Marcar como visto en localStorage para no volver a mostrar esta semana
-  localStorage.setItem('premium_welcome_seen', Date.now());
-}
-
 function mostrarToast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
 </script>
-<script src="/header.js"></script>
+<script src="/header.js">
+// ── Promo de lanzamiento ──────────────────────────────────────
+var SUPA_P = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_P_SVC = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+var SUPA_P_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 
-<!-- Modal bienvenida Premium -->
-<div class="modal-overlay" id="modalPremium" style="display:none">
-  <div class="modal-box">
-    <div class="modal-ico">🎉</div>
-    <div class="modal-titulo">¡Ya sos Premium!</div>
-    <div class="modal-sub">Tu cuenta Premium está activa. Estos son los beneficios que ya podés usar:</div>
-    <div class="modal-beneficios">
-      <div class="modal-b"><span>⭐</span><span>Badge Premium en la galería</span></div>
-      <div class="modal-b"><span>💰</span><span>3 ventas/mes en avisos</span></div>
-      <div class="modal-b"><span>💳</span><span>Tarjeta PVC a Q35 (precio especial)</span></div>
-      <div class="modal-b"><span>🎨</span><span>3 diseños de carnet PetzID</span></div>
-      <div class="modal-b"><span>🔗</span><span>Perfil público con QR descargable</span></div>
-    </div>
-    <button class="modal-btn" onclick="cerrarModalPremium()">¡Entendido, gracias! 🐾</button>
-    <div class="modal-skip" onclick="cerrarModalPremium()">Cerrar</div>
-  </div>
-</div>
+function mostrarPromoSection() {
+  var wrap = document.getElementById('promoWrap');
+  if (wrap) wrap.style.display = 'block';
+}
 
+function promoMsg(msg, tipo) {
+  var el = document.getElementById('promoMsg');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = tipo === 'ok' ? '#e0f7f7' : tipo === 'error' ? '#fbeaf0' : '#FFF8E1';
+  el.style.color = tipo === 'ok' ? '#007a7a' : tipo === 'error' ? '#993556' : '#856404';
+}
+
+function canjearPromo() {
+  var codigo = (document.getElementById('promoInput').value || '').trim().toUpperCase();
+  if (!codigo) { promoMsg('Ingresa un código de promo', 'warn'); return; }
+  var email = localStorage.getItem('petzid_email') || sessionStorage.getItem('petmiEmail') || '';
+  if (!email) { promoMsg('Debes iniciar sesión para canjear un código', 'error'); return; }
+
+  var btn = document.getElementById('btnCanjear');
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  promoMsg('', 'warn');
+
+  // 1. Verificar código
+  fetch(SUPA_P + '/rest/v1/promos?codigo=eq.' + encodeURIComponent(codigo) + '&activo=eq.true&select=id,codigo,meses,max_usos,usos_actuales,expires_at', {
+    headers: { 'apikey': SUPA_P_ANON, 'Authorization': 'Bearer ' + SUPA_P_ANON }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(promos) {
+    if (!promos || !promos.length) {
+      promoMsg('Código inválido o expirado', 'error');
+      btn.disabled = false; btn.textContent = 'Canjear'; return;
+    }
+    var promo = promos[0];
+
+    // Verificar expiración
+    if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+      promoMsg('Este código ya venció', 'error');
+      btn.disabled = false; btn.textContent = 'Canjear'; return;
+    }
+    // Verificar max usos
+    if (promo.max_usos && promo.usos_actuales >= promo.max_usos) {
+      promoMsg('Este código ya alcanzó el límite de usos', 'error');
+      btn.disabled = false; btn.textContent = 'Canjear'; return;
+    }
+
+    // 2. Verificar si ya lo usó este email
+    return fetch(SUPA_P + '/rest/v1/promo_usos?codigo=eq.' + encodeURIComponent(codigo) + '&email=eq.' + encodeURIComponent(email) + '&select=id&limit=1', {
+      headers: { 'apikey': SUPA_P_SVC, 'Authorization': 'Bearer ' + SUPA_P_SVC }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(usos) {
+      if (usos && usos.length > 0) {
+        promoMsg('Ya canjeaste este código anteriormente', 'error');
+        btn.disabled = false; btn.textContent = 'Canjear'; return;
+      }
+      // 3. Activar Premium
+      var hoy = new Date();
+      var vence = new Date(hoy);
+      vence.setMonth(vence.getMonth() + (promo.meses || 2));
+      var venceISO = vence.toISOString().split('T')[0];
+
+      // Actualizar mascotas (activar premium)
+      return fetch(SUPA_P + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email), {
+        method: 'PATCH',
+        headers: { 'apikey': SUPA_P_SVC, 'Authorization': 'Bearer ' + SUPA_P_SVC, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ premium: true, premium_vence: venceISO })
+      })
+      .then(function() {
+        // 4. Registrar uso
+        return fetch(SUPA_P + '/rest/v1/promo_usos', {
+          method: 'POST',
+          headers: { 'apikey': SUPA_P_SVC, 'Authorization': 'Bearer ' + SUPA_P_SVC, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ codigo: codigo, email: email, meses_otorgados: promo.meses || 2 })
+        });
+      })
+      .then(function() {
+        // 5. Incrementar contador de usos
+        return fetch(SUPA_P + '/rest/v1/promos?id=eq.' + promo.id, {
+          method: 'PATCH',
+          headers: { 'apikey': SUPA_P_SVC, 'Authorization': 'Bearer ' + SUPA_P_SVC, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ usos_actuales: (promo.usos_actuales || 0) + 1 })
+        });
+      })
+      .then(function() {
+        // Mostrar éxito
+        document.getElementById('promoCanjeoWrap').style.display = 'none';
+        document.getElementById('promoActivado').style.display = 'block';
+        document.getElementById('promoActivadoSub').textContent =
+          (promo.meses || 2) + ' meses de Premium activos hasta el ' + venceISO;
+        // Notificar puntos
+        if (window.petmiNotificarPunto) petmiNotificarPunto('promo', promo.meses || 2);
+        // Enviar email de confirmación via Apps Script
+        fetch('https://script.google.com/macros/s/AKfycbxCdSTVtNHJ01Qv0TLHP2M_y96HZFjYlK4LFMM0BrXQw7iywuBhkETF7VYz3h98cRXw/exec', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'notificarPromoActivada', email: email, meses: promo.meses || 2, vence: venceISO })
+        }).catch(function(){});
+      });
+    });
+  })
+  .catch(function() {
+    promoMsg('Error de conexión. Intenta de nuevo.', 'error');
+    btn.disabled = false; btn.textContent = 'Canjear';
+  });
+}
+
+// Mostrar sección promo si no es premium activo
+document.addEventListener('petmiReady', function() { mostrarPromoSection(); });
+document.addEventListener('DOMContentLoaded', function() { mostrarPromoSection(); });
+</script>
 </body>
 </html>
