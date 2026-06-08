@@ -407,13 +407,55 @@ function renderHistorial(rows) {
 
 function triggerInstall(e) {
   e.preventDefault();
+  // Ya instalada en modo standalone
+  if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+    mostrarToastPuntos('📲 ¡La app ya está instalada!');
+    return;
+  }
   if(window._pwaPrompt) {
     window._pwaPrompt.prompt();
+    window._pwaPrompt.userChoice.then(function(r){
+      if(r.outcome === 'accepted') mostrarToastPuntos('📲 ¡App instalada! +3 puntos en camino...');
+    });
   } else if(/iPhone|iPad/i.test(navigator.userAgent)) {
-    alert('En iPhone: toca el botón compartir y selecciona "Agregar a pantalla de inicio"');
+    // Mostrar modal de instrucciones iOS
+    var m = document.createElement('div');
+    m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:flex-end;justify-content:center;padding:16px';
+    m.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:400px;margin-bottom:20px">'
+      + '<div style="font-size:18px;font-weight:700;color:#222;margin-bottom:12px">📲 Instalar en iPhone</div>'
+      + '<div style="font-size:14px;color:#555;line-height:1.8">'
+      + '1. Toca el botón <strong>Compartir</strong> ↑ en Safari<br>'
+      + '2. Selecciona <strong>"Agregar a pantalla de inicio"</strong><br>'
+      + '3. Toca <strong>Agregar</strong>'
+      + '</div>'
+      + '<button onclick="this.closest('div').parentElement.remove()" style="width:100%;margin-top:16px;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Entendido</button>'
+      + '</div>';
+    document.body.appendChild(m);
   } else {
-    alert('Abre el menú del navegador y selecciona "Instalar app" o "Agregar a pantalla de inicio"');
+    var m2 = document.createElement('div');
+    m2.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:flex-end;justify-content:center;padding:16px';
+    m2.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:400px;margin-bottom:20px">'
+      + '<div style="font-size:18px;font-weight:700;color:#222;margin-bottom:12px">📲 Instalar la app</div>'
+      + '<div style="font-size:14px;color:#555;line-height:1.8">'
+      + '1. Toca el menú <strong>⋮</strong> del navegador<br>'
+      + '2. Selecciona <strong>"Instalar app"</strong> o <br>&nbsp;&nbsp;&nbsp;<strong>"Añadir a pantalla de inicio"</strong>'
+      + '</div>'
+      + '<button onclick="this.closest('div').parentElement.remove()" style="width:100%;margin-top:16px;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Entendido</button>'
+      + '</div>';
+    document.body.appendChild(m2);
   }
+}
+
+function mostrarToastPuntos(msg) {
+  var t = document.getElementById('petmiPuntoToast');
+  if(!t) {
+    t = document.createElement('div');
+    t.id = 'petmiPuntoToast';
+    t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#F5C842;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.opacity = '1';
+  setTimeout(function(){ t.style.opacity = '0'; }, 3000);
 }
 
 function copiarLink() {

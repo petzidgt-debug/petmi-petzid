@@ -131,6 +131,8 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('campanas',this)"><span class="nav-icon">📧</span>Campanas</div>
       <div class="nav-item" onclick="showScreen('afiliados',this)"><span class="nav-icon">🤝</span>Afiliados</div>
       <div class="nav-item" onclick="showScreen('premium',this)"><span class="nav-icon">⭐</span>Premium</div>
+      <div class="nav-item" onclick="showScreen('puntos',this)"><span class="nav-icon">🏆</span>Puntos</div>
+      <div class="nav-item" onclick="showScreen('instalaciones',this)"><span class="nav-icon">📲</span>Instalaciones</div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
@@ -310,6 +312,58 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
     <div class="screen" id="screenPremium">
+      <!-- ── SCREEN PUNTOS ────────────────────────────────── -->
+      <div id="screenPuntos" class="screen" style="display:none">
+        <h2 class="screen-title">🏆 Sistema de Puntos</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px" id="puntosStats">
+          <div class="stat-card"><div class="stat-num" id="ptsTotal">—</div><div class="stat-label">Usuarios con puntos</div></div>
+          <div class="stat-card"><div class="stat-num" id="ptsTotalSum">—</div><div class="stat-label">Puntos totales entregados</div></div>
+          <div class="stat-card"><div class="stat-num" id="ptsPerfiles">—</div><div class="stat-label">Perfiles completos</div></div>
+          <div class="stat-card"><div class="stat-num" id="ptsInstalaciones">—</div><div class="stat-label">Apps instaladas</div></div>
+        </div>
+        <div class="table-card">
+          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee;display:flex;align-items:center;justify-content:space-between">
+            Ranking de puntos por usuario
+            <button onclick="exportPuntos()" style="padding:6px 14px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer">⬇ Exportar CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Email</th><th>Total pts</th><th>Perfiles</th><th>App</th><th>Referidos</th><th>Racha</th><th>Juego</th></tr></thead>
+              <tbody id="puntosBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="table-card" style="margin-top:16px">
+          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Historial reciente de puntos</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Email</th><th>Acción</th><th>Pts</th><th>Fecha</th></tr></thead>
+              <tbody id="puntosHistBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SCREEN INSTALACIONES ──────────────────────────── -->
+      <div id="screenInstalaciones" class="screen" style="display:none">
+        <h2 class="screen-title">📲 Instalaciones de la App</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
+          <div class="stat-card"><div class="stat-num" id="instTotal">—</div><div class="stat-label">Total instalaciones</div></div>
+          <div class="stat-card"><div class="stat-num" id="instAndroid">—</div><div class="stat-label">Android</div></div>
+          <div class="stat-card"><div class="stat-num" id="instIOS">—</div><div class="stat-label">iOS</div></div>
+          <div class="stat-card"><div class="stat-num" id="instHoy">—</div><div class="stat-label">Hoy</div></div>
+        </div>
+        <div class="table-card">
+          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Detalle de instalaciones</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Email</th><th>Plataforma</th><th>Dispositivo</th><th>Fecha</th></tr></thead>
+              <tbody id="instBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <h2 class="screen-title">⭐ Gestión Premium</h2>
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
         <input type="text" id="premiumEmail" placeholder="Email del usuario" style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;min-width:200px">
@@ -437,13 +491,105 @@ function doLogin(){
   }
 }
 function doLogout(){
-  localStorage.removeItem('petmi_admin');
   document.getElementById('loginWrap').style.display='flex';
   document.getElementById('appWrap').style.display='none';
   document.getElementById('loginPass').value='';
 }
 
 // ── Navegación ────────────────────────────────────────────────
+// ── Puntos Admin ──────────────────────────────────────────
+var SUPA_ADM = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_ADM_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+var SUPA_ADM_H = {'apikey': SUPA_ADM_KEY, 'Authorization': 'Bearer ' + SUPA_ADM_KEY};
+
+function loadPuntos(){
+  fetch(SUPA_ADM + '/rest/v1/puntos?select=email,accion,puntos,created_at&order=created_at.desc&limit=500', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    if(!rows||!rows.length){
+      document.getElementById('puntosBody').innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Sin registros</td></tr>';
+      return;
+    }
+    // Aggregate by email
+    var byEmail = {};
+    rows.forEach(function(r){
+      if(!byEmail[r.email]) byEmail[r.email]={total:0,perfil:0,app:0,ref:0,racha:0,juego:0};
+      byEmail[r.email].total += r.puntos;
+      if(r.accion==='perfil_completo') byEmail[r.email].perfil += r.puntos;
+      if(r.accion==='instalar_app')    byEmail[r.email].app    += r.puntos;
+      if(r.accion==='referir_amigo')   byEmail[r.email].ref    += r.puntos;
+      if(r.accion==='racha_7dias')     byEmail[r.email].racha  += r.puntos;
+      if(r.accion==='juego_diario')    byEmail[r.email].juego  += r.puntos;
+    });
+    var sorted = Object.keys(byEmail).sort(function(a,b){return byEmail[b].total - byEmail[a].total;});
+    var totalSum = rows.reduce(function(s,r){return s+r.puntos;},0);
+    var perfiles = rows.filter(function(r){return r.accion==='perfil_completo';}).length;
+    var apps     = rows.filter(function(r){return r.accion==='instalar_app';}).length;
+
+    document.getElementById('ptsTotal').textContent = sorted.length;
+    document.getElementById('ptsTotalSum').textContent = totalSum;
+    document.getElementById('ptsPerfiles').textContent = perfiles;
+    document.getElementById('ptsInstalaciones').textContent = apps;
+
+    var html = sorted.map(function(em,i){
+      var d = byEmail[em];
+      return '<tr>'
+        +'<td>'+(i+1)+'</td>'
+        +'<td>'+em+'</td>'
+        +'<td><strong style="color:#00B4B4">'+d.total+'</strong></td>'
+        +'<td>'+(d.perfil||'')+'</td>'
+        +'<td>'+(d.app||'')+'</td>'
+        +'<td>'+(d.ref||'')+'</td>'
+        +'<td>'+(d.racha||'')+'</td>'
+        +'<td>'+(d.juego||'')+'</td>'
+        +'</tr>';
+    }).join('');
+    document.getElementById('puntosBody').innerHTML = html;
+
+    // Historial
+    var histHTML = rows.slice(0,50).map(function(r){
+      var LABELS = {perfil_completo:'🐾 Perfil completo',instalar_app:'📲 App instalada',referir_amigo:'👥 Referido',racha_7dias:'🔥 Racha 7 días',juego_diario:'🎮 Juego'};
+      return '<tr><td>'+r.email+'</td><td>'+(LABELS[r.accion]||r.accion)+'</td><td>+'+r.puntos+'</td><td>'+new Date(r.created_at).toLocaleDateString('es-GT')+'</td></tr>';
+    }).join('');
+    document.getElementById('puntosHistBody').innerHTML = histHTML || '<tr><td colspan="4" style="text-align:center;color:#aaa">Sin historial</td></tr>';
+  }).catch(function(e){ console.error(e); });
+}
+
+function exportPuntos(){
+  fetch(SUPA_ADM + '/rest/v1/puntos?select=email,accion,puntos,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    var csv = 'email,accion,puntos,fecha\n' + rows.map(function(r){
+      return r.email+','+r.accion+','+r.puntos+','+r.created_at.split('T')[0];
+    }).join('\n');
+    var a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'puntos-petmi.csv'; a.click();
+  });
+}
+
+function loadInstalaciones(){
+  fetch(SUPA_ADM + '/rest/v1/pwa_installs?select=email,dispositivo,plataforma,created_at&order=created_at.desc&limit=200', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    if(!rows||!rows.length){
+      document.getElementById('instBody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Sin instalaciones registradas</td></tr>';
+      return;
+    }
+    var hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('instTotal').textContent = rows.length;
+    document.getElementById('instAndroid').textContent = rows.filter(function(r){return r.plataforma==='Android';}).length;
+    document.getElementById('instIOS').textContent = rows.filter(function(r){return r.plataforma==='iOS';}).length;
+    document.getElementById('instHoy').textContent = rows.filter(function(r){return r.created_at && r.created_at.startsWith(hoy);}).length;
+    var html = rows.map(function(r){
+      return '<tr><td>'+(r.email||'Anónimo')+'</td><td>'+(r.plataforma||'—')+'</td><td>'+(r.dispositivo||'—')+'</td><td>'+new Date(r.created_at).toLocaleDateString('es-GT')+'</td></tr>';
+    }).join('');
+    document.getElementById('instBody').innerHTML = html;
+  }).catch(function(){
+    document.getElementById('instBody').innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa">Error al cargar</td></tr>';
+  });
+}
+
 function showScreen(name,el){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
@@ -452,10 +598,16 @@ function showScreen(name,el){
   if(name==='eventos'){cargarEventosAdmin();}
   if(name==='lugares') cargarLugaresAdmin();
   if(name==='avisos') setTimeout(cargarAvisosPendientes,100);
+  if(name==='premium') cargarListaPremium();
   if(name==='reglas') setTimeout(cargarReglas,100);
   if(name==='grupos') setTimeout(cargarAdminGrupos,100);
-  if(name==='afiliados') window.open('/admin-afiliados.html','_blank');
-  if(name==='premium') window.open('/admin-premium.html','_blank');
+  if(name==='puntos') loadPuntos();
+  if(name==='instalaciones') loadInstalaciones();
+  if(name==='afiliados'){
+    var ifr=document.getElementById('iframeAfiliados');
+    if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
+  }
+  if(name==='premium') setTimeout(cargarPremiumAdmin,100);
 }
 
 // ── Carga de datos ────────────────────────────────────────────
