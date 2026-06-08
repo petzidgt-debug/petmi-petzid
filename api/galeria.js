@@ -835,6 +835,13 @@ export default async function handler(req, res) {
       if (!email || !accion || !puntos) return res.status(200).json({ ok: false });
       // Evitar duplicados en acciones únicas
       const UNICAS = ['perfil_completo', 'instalar_app'];
+      // juego_diario: max 1 por dia
+      const hoy = new Date().toISOString().split('T')[0];
+      if(accion === 'juego_diario'){
+        const checkDia = await fetch(SUPABASE_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(email) + '&accion=eq.juego_diario&created_at=gte.' + hoy + '&select=id&limit=1', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+        const diaRows = await checkDia.json();
+        if(Array.isArray(diaRows) && diaRows.length > 0) return res.status(200).json({ ok: false, msg: 'Ya jugaste hoy' });
+      }
       if (UNICAS.includes(accion)) {
         const check = await fetch(SUPABASE_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(email) + '&accion=eq.' + accion + '&select=id&limit=1', {
           headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
