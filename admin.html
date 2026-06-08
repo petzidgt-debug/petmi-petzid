@@ -242,6 +242,109 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
 
+    <div id="screenPuntos" class="screen">
+      <h2 class="screen-title">🏆 Sistema de Puntos</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px" id="puntosStats">
+        <div class="stat-card"><div class="stat-num" id="ptsTotal">—</div><div class="stat-label">Usuarios con puntos</div></div>
+        <div class="stat-card"><div class="stat-num" id="ptsTotalSum">—</div><div class="stat-label">Puntos totales entregados</div></div>
+        <div class="stat-card"><div class="stat-num" id="ptsPerfiles">—</div><div class="stat-label">Perfiles completos</div></div>
+        <div class="stat-card"><div class="stat-num" id="ptsInstalaciones">—</div><div class="stat-label">Apps instaladas</div></div>
+      </div>
+      <div class="table-card">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee;display:flex;align-items:center;justify-content:space-between">
+          Ranking de puntos por usuario
+          <button onclick="exportPuntos()" style="padding:6px 14px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer">⬇ Exportar CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Email</th><th>Total pts</th><th>Perfiles</th><th>App</th><th>Referidos</th><th>Racha</th><th>Juego</th></tr></thead>
+            <tbody id="puntosBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="table-card" style="margin-top:16px">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Historial reciente de puntos</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Email</th><th>Acción</th><th>Pts</th><th>Fecha</th></tr></thead>
+            <tbody id="puntosHistBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="screenInstalaciones" class="screen">
+      <h2 class="screen-title">📲 Instalaciones de la App</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-num" id="instTotal">—</div><div class="stat-label">Total instalaciones</div></div>
+        <div class="stat-card"><div class="stat-num" id="instAndroid">—</div><div class="stat-label">Android</div></div>
+        <div class="stat-card"><div class="stat-num" id="instIOS">—</div><div class="stat-label">iOS</div></div>
+        <div class="stat-card"><div class="stat-num" id="instHoy">—</div><div class="stat-label">Hoy</div></div>
+      </div>
+      <div class="table-card">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Detalle de instalaciones</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Email</th><th>Plataforma</th><th>Dispositivo</th><th>Fecha</th></tr></thead>
+            <tbody id="instBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="screenJuegos" class="screen">
+      <h2 class="screen-title">🎮 Estadísticas de Juegos</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-num" id="jTotalPartidas">—</div><div class="stat-label">Total partidas</div></div>
+        <div class="stat-card"><div class="stat-num" id="jJugadoresUnicos">—</div><div class="stat-label">Jugadores únicos</div></div>
+        <div class="stat-card"><div class="stat-num" id="jHoy">—</div><div class="stat-label">Jugaron hoy</div></div>
+        <div class="stat-card"><div class="stat-num" id="jRacha">—</div><div class="stat-label">Racha más larga</div></div>
+      </div>
+      <div class="table-card" style="margin-bottom:16px">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Partidas por día (últimos 14 días)</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Partidas</th><th>Jugadores</th><th>Pts promedio</th></tr></thead>
+            <tbody id="jDiasBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="table-card">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Ranking de jugadores</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Email</th><th>Partidas</th><th>Puntos totales</th><th>Última partida</th></tr></thead>
+            <tbody id="jRankingBody"><tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="screenAmigos" class="screen">
+      <h2 class="screen-title">👥 Estadísticas de Amigos</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-num" id="aTotalAmigos">—</div><div class="stat-label">Total amistades</div></div>
+        <div class="stat-card"><div class="stat-num" id="aPendientes">—</div><div class="stat-label">Solicitudes pendientes</div></div>
+        <div class="stat-card"><div class="stat-num" id="aMensajes">—</div><div class="stat-label">Mensajes enviados</div></div>
+        <div class="stat-card"><div class="stat-num" id="aConversaciones">—</div><div class="stat-label">Conversaciones activas</div></div>
+      </div>
+      <div class="table-card" style="margin-bottom:16px">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Usuarios más conectados</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Email</th><th>Amigos</th><th>Mensajes enviados</th></tr></thead>
+            <tbody id="aConectadosBody"><tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="table-card">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Solicitudes recientes</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>De</th><th>Para</th><th>Estado</th><th>Fecha</th></tr></thead>
+            <tbody id="aSolicitudesBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="screen" id="screenEventos">
       <div class="page-header">
         <div><div class="page-title">Eventos y Avisos</div><div class="page-sub" id="subEventos">-</div></div>
@@ -314,114 +417,16 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
     <!-- ── SCREEN PUNTOS ────────────────────────────────── -->
-      <div id="screenPuntos" class="screen">
-        <h2 class="screen-title">🏆 Sistema de Puntos</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px" id="puntosStats">
-          <div class="stat-card"><div class="stat-num" id="ptsTotal">—</div><div class="stat-label">Usuarios con puntos</div></div>
-          <div class="stat-card"><div class="stat-num" id="ptsTotalSum">—</div><div class="stat-label">Puntos totales entregados</div></div>
-          <div class="stat-card"><div class="stat-num" id="ptsPerfiles">—</div><div class="stat-label">Perfiles completos</div></div>
-          <div class="stat-card"><div class="stat-num" id="ptsInstalaciones">—</div><div class="stat-label">Apps instaladas</div></div>
-        </div>
-        <div class="table-card">
-          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee;display:flex;align-items:center;justify-content:space-between">
-            Ranking de puntos por usuario
-            <button onclick="exportPuntos()" style="padding:6px 14px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer">⬇ Exportar CSV</button>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>#</th><th>Email</th><th>Total pts</th><th>Perfiles</th><th>App</th><th>Referidos</th><th>Racha</th><th>Juego</th></tr></thead>
-              <tbody id="puntosBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="table-card" style="margin-top:16px">
-          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Historial reciente de puntos</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Email</th><th>Acción</th><th>Pts</th><th>Fecha</th></tr></thead>
-              <tbody id="puntosHistBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+
 
       <!-- ── SCREEN INSTALACIONES ──────────────────────────── -->
-      <div id="screenInstalaciones" class="screen">
-        <h2 class="screen-title">📲 Instalaciones de la App</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
-          <div class="stat-card"><div class="stat-num" id="instTotal">—</div><div class="stat-label">Total instalaciones</div></div>
-          <div class="stat-card"><div class="stat-num" id="instAndroid">—</div><div class="stat-label">Android</div></div>
-          <div class="stat-card"><div class="stat-num" id="instIOS">—</div><div class="stat-label">iOS</div></div>
-          <div class="stat-card"><div class="stat-num" id="instHoy">—</div><div class="stat-label">Hoy</div></div>
-        </div>
-        <div class="table-card">
-          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Detalle de instalaciones</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Email</th><th>Plataforma</th><th>Dispositivo</th><th>Fecha</th></tr></thead>
-              <tbody id="instBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+
 
       <!-- ── SCREEN JUEGOS ─────────────────────────────────── -->
-      <div id="screenJuegos" class="screen">
-        <h2 class="screen-title">🎮 Estadísticas de Juegos</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
-          <div class="stat-card"><div class="stat-num" id="jTotalPartidas">—</div><div class="stat-label">Total partidas</div></div>
-          <div class="stat-card"><div class="stat-num" id="jJugadoresUnicos">—</div><div class="stat-label">Jugadores únicos</div></div>
-          <div class="stat-card"><div class="stat-num" id="jHoy">—</div><div class="stat-label">Jugaron hoy</div></div>
-          <div class="stat-card"><div class="stat-num" id="jRacha">—</div><div class="stat-label">Racha más larga</div></div>
-        </div>
-        <div class="table-card" style="margin-bottom:16px">
-          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Partidas por día (últimos 14 días)</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Fecha</th><th>Partidas</th><th>Jugadores</th><th>Pts promedio</th></tr></thead>
-              <tbody id="jDiasBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="table-card">
-          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Ranking de jugadores</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>#</th><th>Email</th><th>Partidas</th><th>Puntos totales</th><th>Última partida</th></tr></thead>
-              <tbody id="jRankingBody"><tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+
 
       <!-- ── SCREEN AMIGOS ──────────────────────────────────── -->
-      <div id="screenAmigos" class="screen">
-        <h2 class="screen-title">👥 Estadísticas de Amigos</h2>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
-          <div class="stat-card"><div class="stat-num" id="aTotalAmigos">—</div><div class="stat-label">Total amistades</div></div>
-          <div class="stat-card"><div class="stat-num" id="aPendientes">—</div><div class="stat-label">Solicitudes pendientes</div></div>
-          <div class="stat-card"><div class="stat-num" id="aMensajes">—</div><div class="stat-label">Mensajes enviados</div></div>
-          <div class="stat-card"><div class="stat-num" id="aConversaciones">—</div><div class="stat-label">Conversaciones activas</div></div>
-        </div>
-        <div class="table-card" style="margin-bottom:16px">
-          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Usuarios más conectados</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Email</th><th>Amigos</th><th>Mensajes enviados</th></tr></thead>
-              <tbody id="aConectadosBody"><tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="table-card">
-          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Solicitudes recientes</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>De</th><th>Para</th><th>Estado</th><th>Fecha</th></tr></thead>
-              <tbody id="aSolicitudesBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div><!-- AFILIADOS --><!-- MODAL EDITAR -->
+<!-- AFILIADOS --><!-- MODAL EDITAR -->
 <div class="modal-overlay" id="modalEdit">
   <div class="modal">
     <div class="modal-title"><span id="modalEditTitle">Editar</span><button class="modal-close" onclick="closeModal('modalEdit')">✕</button></div>
