@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Juego del Día — PetMi</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:80px}
+
+.hero{background:linear-gradient(135deg,#1a1a2e,#00B4B4);padding:24px 20px 20px;text-align:center}
+.hero-label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.hero-title{font-size:26px;font-weight:900;color:#fff;margin-bottom:4px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:14px}
+.hero-timer{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border-radius:99px;padding:6px 18px;font-size:18px;font-weight:700;color:#F5C842}
+
+.wrap{max-width:480px;margin:0 auto;padding:16px}
+
+/* Palabras objetivo */
+.palabras-wrap{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:0.5px solid #eee}
+.palabras-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.palabras-grid{display:flex;flex-wrap:wrap;gap:8px}
+.palabra-chip{padding:6px 14px;border-radius:99px;font-size:13px;font-weight:700;border:1.5px solid #ddd;color:#555;background:#f8f8f8;transition:all .2s}
+.palabra-chip.found{border-color:#00B4B4;background:#e0f7f7;color:#007a7a;text-decoration:line-through}
+
+/* Grid sopa de letras */
+.sopa-wrap{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;border:0.5px solid #eee;overflow-x:auto}
+.sopa-grid{display:inline-grid;gap:3px;user-select:none;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+.sopa-row{display:flex;gap:3px}
+.sopa-cell{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;border-radius:8px;cursor:pointer;color:#333;background:#f8f7f4;border:0.5px solid #e8e8e8;transition:all .15s;flex-shrink:0}
+.sopa-cell.sel{background:#00B4B4;color:#fff;border-color:#00B4B4;transform:scale(1.05)}
+.sopa-cell.found{background:#e0f7f7;color:#007a7a;border-color:#b2dede}
+.sopa-cell.found-flash{background:#F5C842;color:#1a1a2e;border-color:#F5C842}
+
+/* Resultado */
+.result-card{background:#fff;border-radius:14px;padding:20px;margin-bottom:14px;border:0.5px solid #eee;text-align:center;display:none}
+.result-card.show{display:block}
+.result-ico{font-size:52px;margin-bottom:8px}
+.result-title{font-size:20px;font-weight:700;color:#222;margin-bottom:4px}
+.result-sub{font-size:13px;color:#888;margin-bottom:16px}
+.result-pts{display:inline-flex;align-items:center;gap:6px;background:#e0f7f7;color:#007a7a;padding:8px 20px;border-radius:99px;font-size:14px;font-weight:700;margin-bottom:16px}
+.result-btn{display:block;width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none}
+
+/* Ya jugado hoy */
+.ya-jugado{background:#fff;border-radius:14px;padding:24px 20px;text-align:center;border:0.5px solid #eee;margin-bottom:14px;display:none}
+.ya-jugado.show{display:block}
+
+/* Racha */
+.racha-wrap{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:0.5px solid #eee}
+.racha-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.racha-days{display:flex;gap:6px;justify-content:space-between}
+.racha-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.racha-dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:#f5f5f5;color:#ccc;border:0.5px solid #eee}
+.racha-dot.done{background:#e0f7f7;color:#00B4B4;border-color:#00B4B4;font-size:16px}
+.racha-dot.today{background:#00B4B4;color:#fff;font-weight:700;font-size:12px}
+.racha-lbl{font-size:9px;color:#aaa;font-weight:600}
+
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#F5C842;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-label">🎮 Juego del día</div>
+  <div class="hero-title">Encuentra al Peludo</div>
+  <div class="hero-sub">Busca las 5 razas escondidas</div>
+  <div class="hero-timer" id="timerDisplay">⏱ 00:00</div>
+</div>
+
+<div class="wrap">
+
+  <!-- Ya jugado hoy -->
+  <div class="ya-jugado" id="yaJugado">
+    <div style="font-size:48px;margin-bottom:10px">✅</div>
+    <div style="font-size:17px;font-weight:700;color:#222;margin-bottom:4px">¡Ya jugaste hoy!</div>
+    <div style="font-size:13px;color:#888;margin-bottom:14px">Vuelve mañana para una nueva sopa de letras</div>
+    <div id="yaJugadoTiempo" style="font-size:13px;color:#00B4B4;font-weight:600;margin-bottom:14px"></div>
+    <a href="/puntos.html" style="display:block;padding:11px;background:#00B4B4;color:#fff;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none">Ver mis puntos</a>
+  </div>
+
+  <!-- Racha -->
+  <div class="racha-wrap">
+    <div class="racha-title">
+      <span>🔥 Racha diaria</span>
+      <span id="rachaLabel" style="font-size:12px;color:#00B4B4;font-weight:600"></span>
+    </div>
+    <div class="racha-days" id="rachaDays"></div>
+  </div>
+
+  <!-- Palabras objetivo -->
+  <div class="palabras-wrap" id="palabrasWrap">
+    <div class="palabras-title">Encuentra estas razas</div>
+    <div class="palabras-grid" id="palabrasGrid"></div>
+  </div>
+
+  <!-- Grid sopa -->
+  <div class="sopa-wrap" id="sopaWrap">
+    <div class="sopa-grid" id="sopaGrid"></div>
+  </div>
+
+  <!-- Resultado -->
+  <div class="result-card" id="resultCard">
+    <div class="result-ico">🏆</div>
+    <div class="result-title" id="resultTitle">¡Excelente!</div>
+    <div class="result-sub" id="resultSub">Encontraste todas las razas</div>
+    <div class="result-pts" id="resultPts">⭐ +1 punto ganado</div>
+    <a href="/puntos.html" class="result-btn">Ver mis puntos →</a>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/header.js"></script>
+<script>
+// ── Config ────────────────────────────────────────────────────
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var sessionEmail = localStorage.getItem('petzid_email') || sessionStorage.getItem('petmiEmail') || '';
+var GRID_SIZE = 10;
+
+// ── Banco de palabras (razas) ─────────────────────────────────
+var BANCO = [
+  ['GOLDEN','POODLE','BEAGLE','HUSKY','BOXER'],
+  ['LABRADOR','PITBULL','SCHNAUZER','MALTESE','SHIH'],
+  ['BULLDOG','DACHSHUND','COLLIE','SETTER','CORGI'],
+  ['CHOW','DOBERMAN','AKITA','SAMOYED','VIZSLA'],
+  ['PAPILLON','BASENJI','BORZOI','SALUKI','KUVASZ'],
+  ['RIDGEBACK','WEIMARANER','POINTER','SPANIEL','TERRIER'],
+  ['SIAMES','PERSA','RAGDOLL','BENGAL','SPHYNX'],
+  ['MAINE','ABISINIO','BIRMAN','BURMESE','DEVON'],
+  ['ANGORA','RAGAMUFFIN','TONKINESE','BALINESE','BOMBAY'],
+  ['MANX','OCICAT','SOMALI','PIXIEBOB','LYKOI'],
+  ['BOXER','BRIARD','PULI','KOMONDOR','KELPIE'],
+  ['VIZSLA','SEGUGIO','GALGO','LEVRIERO','PODENCO']
+];
+
+// Palabras del día según día del año
+function getPalabrasHoy() {
+  var now = new Date();
+  var start = new Date(now.getFullYear(), 0, 0);
+  var diff = now - start;
+  var dayOfYear = Math.floor(diff / 86400000);
+  return BANCO[dayOfYear % BANCO.length];
+}
+
+// ── Estado ────────────────────────────────────────────────────
+var palabrasHoy = getPalabrasHoy();
+var grid = [];
+var found = [];
+var selecting = false;
+var selStart = null;
+var selCells = [];
+var timerInterval = null;
+var seconds = 0;
+var gameOver = false;
+var hoy = new Date().toISOString().split('T')[0];
+
+// ── Verificar si ya jugó hoy ──────────────────────────────────
+function checkYaJugado() {
+  var lastPlay = localStorage.getItem('juego_ultimo_' + (sessionEmail||'anon'));
+  var lastTime = localStorage.getItem('juego_tiempo_' + (sessionEmail||'anon'));
+  if (lastPlay === hoy) {
+    document.getElementById('yaJugado').classList.add('show');
+    document.getElementById('palabrasWrap').style.display = 'none';
+    document.getElementById('sopaWrap').style.display = 'none';
+    document.getElementById('timerDisplay').style.display = 'none';
+    if (lastTime) document.getElementById('yaJugadoTiempo').textContent = 'Tu tiempo de ayer: ' + lastTime;
+    return true;
+  }
+  return false;
+}
+
+// ── Generar grid ──────────────────────────────────────────────
+function generarGrid() {
+  // Init empty grid
+  grid = [];
+  for (var i = 0; i < GRID_SIZE; i++) {
+    grid.push([]);
+    for (var j = 0; j < GRID_SIZE; j++) {
+      grid[i].push({ letter: '', word: null, dir: null });
+    }
+  }
+
+  var DIRS = [
+    [0, 1],   // horizontal →
+    [1, 0],   // vertical ↓
+    [1, 1],   // diagonal ↘
+    [0, -1],  // horizontal ←
+    [-1, 0],  // vertical ↑
+  ];
+
+  palabrasHoy.forEach(function(word) {
+    var placed = false;
+    var attempts = 0;
+    while (!placed && attempts < 200) {
+      attempts++;
+      var dir = DIRS[Math.floor(Math.random() * DIRS.length)];
+      var dr = dir[0], dc = dir[1];
+      var maxR = GRID_SIZE - (dr >= 0 ? word.length * dr : 0);
+      var maxC = GRID_SIZE - (dc >= 0 ? word.length * dc : 0);
+      var minR = dr < 0 ? (word.length - 1) * Math.abs(dr) : 0;
+      var minC = dc < 0 ? (word.length - 1) * Math.abs(dc) : 0;
+      var startR = minR + Math.floor(Math.random() * (maxR - minR + 1));
+      var startC = minC + Math.floor(Math.random() * (maxC - minC + 1));
+      // Check fit
+      var ok = true;
+      for (var k = 0; k < word.length; k++) {
+        var r = startR + k * dr;
+        var c = startC + k * dc;
+        if (r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE) { ok = false; break; }
+        if (grid[r][c].letter && grid[r][c].letter !== word[k]) { ok = false; break; }
+      }
+      if (ok) {
+        for (var k = 0; k < word.length; k++) {
+          var r = startR + k * dr;
+          var c = startC + k * dc;
+          grid[r][c].letter = word[k];
+          grid[r][c].word = word;
+        }
+        placed = true;
+      }
+    }
+  });
+
+  // Fill remaining with random letters
+  var LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (var i = 0; i < GRID_SIZE; i++) {
+    for (var j = 0; j < GRID_SIZE; j++) {
+      if (!grid[i][j].letter) {
+        grid[i][j].letter = LETRAS[Math.floor(Math.random() * LETRAS.length)];
+      }
+    }
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────
+function renderPalabras() {
+  var html = palabrasHoy.map(function(p) {
+    return '<div class="palabra-chip" id="chip-' + p + '">' + p + '</div>';
+  }).join('');
+  document.getElementById('palabrasGrid').innerHTML = html;
+}
+
+function renderGrid() {
+  var g = document.getElementById('sopaGrid');
+  g.innerHTML = '';
+  for (var i = 0; i < GRID_SIZE; i++) {
+    var row = document.createElement('div');
+    row.className = 'sopa-row';
+    for (var j = 0; j < GRID_SIZE; j++) {
+      var cell = document.createElement('div');
+      cell.className = 'sopa-cell';
+      cell.textContent = grid[i][j].letter;
+      cell.dataset.r = i;
+      cell.dataset.c = j;
+      cell.addEventListener('mousedown', onCellStart);
+      cell.addEventListener('mouseover', onCellOver);
+      cell.addEventListener('touchstart', onTouchStart, {passive:true});
+      cell.addEventListener('touchmove', onTouchMove, {passive:false});
+      row.appendChild(cell);
+    }
+    g.appendChild(row);
+  }
+  document.addEventListener('mouseup', onCellEnd);
+  document.addEventListener('touchend', onCellEnd);
+}
+
+function getCell(r, c) {
+  return document.querySelector('.sopa-cell[data-r="' + r + '"][data-c="' + c + '"]');
+}
+
+// ── Selección ─────────────────────────────────────────────────
+function onCellStart(e) {
+  if (gameOver) return;
+  selecting = true;
+  selStart = { r: parseInt(e.target.dataset.r), c: parseInt(e.target.dataset.c) };
+  clearSel();
+  addSel(selStart.r, selStart.c);
+}
+
+function onCellOver(e) {
+  if (!selecting || gameOver) return;
+  var r = parseInt(e.target.dataset.r);
+  var c = parseInt(e.target.dataset.c);
+  updateSel(r, c);
+}
+
+function onTouchStart(e) {
+  if (gameOver) return;
+  var t = e.touches[0];
+  var el = document.elementFromPoint(t.clientX, t.clientY);
+  if (el && el.classList.contains('sopa-cell')) {
+    selecting = true;
+    selStart = { r: parseInt(el.dataset.r), c: parseInt(el.dataset.c) };
+    clearSel();
+    addSel(selStart.r, selStart.c);
+  }
+}
+
+function onTouchMove(e) {
+  if (!selecting || gameOver) return;
+  e.preventDefault();
+  var t = e.touches[0];
+  var el = document.elementFromPoint(t.clientX, t.clientY);
+  if (el && el.classList.contains('sopa-cell')) {
+    updateSel(parseInt(el.dataset.r), parseInt(el.dataset.c));
+  }
+}
+
+function onCellEnd() {
+  if (!selecting) return;
+  selecting = false;
+  checkWord();
+  clearSel();
+}
+
+function updateSel(r, c) {
+  clearSel();
+  if (!selStart) return;
+  var dr = r - selStart.r;
+  var dc = c - selStart.c;
+  // Only allow straight lines
+  var straight = (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc));
+  if (!straight) { addSel(selStart.r, selStart.c); return; }
+  var len = Math.max(Math.abs(dr), Math.abs(dc));
+  if (len === 0) { addSel(selStart.r, selStart.c); return; }
+  var sr = dr === 0 ? 0 : (dr > 0 ? 1 : -1);
+  var sc = dc === 0 ? 0 : (dc > 0 ? 1 : -1);
+  selCells = [];
+  for (var i = 0; i <= len; i++) {
+    var nr = selStart.r + i * sr;
+    var nc = selStart.c + i * sc;
+    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+      addSel(nr, nc);
+    }
+  }
+}
+
+function addSel(r, c) {
+  var el = getCell(r, c);
+  if (el && !el.classList.contains('found')) {
+    el.classList.add('sel');
+    selCells.push({ r: r, c: c });
+  }
+}
+
+function clearSel() {
+  document.querySelectorAll('.sopa-cell.sel').forEach(function(el) {
+    el.classList.remove('sel');
+  });
+  selCells = [];
+}
+
+// ── Verificar palabra ─────────────────────────────────────────
+function checkWord() {
+  if (!selCells.length) return;
+  var word = selCells.map(function(s) { return grid[s.r][s.c].letter; }).join('');
+  var wordRev = word.split('').reverse().join('');
+  var match = palabrasHoy.find(function(p) { return p === word || p === wordRev; });
+  if (match && found.indexOf(match) < 0) {
+    found.push(match);
+    // Mark cells as found
+    selCells.forEach(function(s) {
+      var el = getCell(s.r, s.c);
+      if (el) {
+        el.classList.remove('sel');
+        el.classList.add('found', 'found-flash');
+        setTimeout(function(e) { e.classList.remove('found-flash'); }.bind(null, el), 600);
+      }
+    });
+    // Mark chip
+    var chip = document.getElementById('chip-' + match);
+    if (chip) chip.classList.add('found');
+    mostrarToast('✅ ' + match + ' encontrado!');
+    // Check win
+    if (found.length === palabrasHoy.length) {
+      setTimeout(ganaste, 500);
+    }
+  }
+}
+
+// ── Timer ─────────────────────────────────────────────────────
+function startTimer() {
+  timerInterval = setInterval(function() {
+    seconds++;
+    var m = Math.floor(seconds / 60);
+    var s = seconds % 60;
+    document.getElementById('timerDisplay').textContent =
+      '⏱ ' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }, 1000);
+}
+
+function formatTime(s) {
+  var m = Math.floor(s / 60);
+  var sec = s % 60;
+  return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+// ── Ganaste ───────────────────────────────────────────────────
+function ganaste() {
+  gameOver = true;
+  clearInterval(timerInterval);
+  var tiempo = formatTime(seconds);
+
+  // Guardar en localStorage
+  localStorage.setItem('juego_ultimo_' + (sessionEmail||'anon'), hoy);
+  localStorage.setItem('juego_tiempo_' + (sessionEmail||'anon'), tiempo);
+
+  // Mostrar resultado
+  var card = document.getElementById('resultCard');
+  var pts = seconds < 60 ? 3 : seconds < 120 ? 2 : 1;
+  var titulo = seconds < 60 ? '¡Increíble!' : seconds < 120 ? '¡Excelente!' : '¡Lo lograste!';
+  document.getElementById('resultTitle').textContent = titulo;
+  document.getElementById('resultSub').textContent = 'Tiempo: ' + tiempo + ' — ¡Vuelve mañana!';
+  document.getElementById('resultPts').textContent = '⭐ +' + pts + (pts > 1 ? ' puntos ganados' : ' punto ganado');
+  card.classList.add('show');
+
+  // Registrar punto
+  if (sessionEmail) {
+    fetch('/api/galeria?action=registrarPunto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: sessionEmail, accion: 'juego_diario', puntos: pts })
+    }).then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.ok && window.petmiNotificarPunto) petmiNotificarPunto('juego_diario', pts);
+    }).catch(function() {});
+  }
+
+  // Actualizar racha
+  renderRacha();
+}
+
+// ── Racha ─────────────────────────────────────────────────────
+function calcularRacha() {
+  var streak = 0;
+  var key = 'juego_ultimo_' + (sessionEmail||'anon');
+  for (var i = 0; i < 30; i++) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    var dayKey = d.toISOString().split('T')[0];
+    if (localStorage.getItem(key) === dayKey || (i === 0 && gameOver)) {
+      streak++;
+    } else if (i > 0) {
+      break;
+    }
+  }
+  return streak;
+}
+
+function renderRacha() {
+  var streak = calcularRacha();
+  var DIAS = ['L','M','M','J','V','S','D'];
+  var hoyDia = new Date().getDay();
+  var html = '';
+  for (var i = 0; i < 7; i++) {
+    var isDone = i < streak - 1;
+    var isToday = i === streak - 1;
+    var lbl = DIAS[(hoyDia - (streak - 1 - i) + 7) % 7];
+    html += '<div class="racha-day">'
+      + '<div class="racha-dot ' + (isDone ? 'done' : isToday ? 'today' : '') + '">'
+      + (isDone ? '🔥' : isToday ? streak : (i + 1))
+      + '</div>'
+      + '<div class="racha-lbl">' + lbl + '</div>'
+      + '</div>';
+  }
+  document.getElementById('rachaDays').innerHTML = html;
+  document.getElementById('rachaLabel').textContent = streak + ' día' + (streak !== 1 ? 's' : '');
+}
+
+function mostrarToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+// ── Init ──────────────────────────────────────────────────────
+renderRacha();
+if (!checkYaJugado()) {
+  generarGrid();
+  renderPalabras();
+  renderGrid();
+  startTimer();
+}
+</script>
+</body>
+</html>
