@@ -133,6 +133,8 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('premium',this)"><span class="nav-icon">⭐</span>Premium</div>
       <div class="nav-item" onclick="showScreen('puntos',this)"><span class="nav-icon">🏆</span>Puntos</div>
       <div class="nav-item" onclick="showScreen('instalaciones',this)"><span class="nav-icon">📲</span>Instalaciones</div>
+      <div class="nav-item" onclick="showScreen('juegos',this)"><span class="nav-icon">🎮</span>Juegos</div>
+      <div class="nav-item" onclick="showScreen('amigos',this)"><span class="nav-icon">👥</span>Amigos</div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
@@ -364,6 +366,64 @@ tbody tr:last-child td{border-bottom:none}
         </div>
       </div>
 
+      <!-- ── SCREEN JUEGOS ─────────────────────────────────── -->
+      <div id="screenJuegos" class="screen" style="display:none">
+        <h2 class="screen-title">🎮 Estadísticas de Juegos</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+          <div class="stat-card"><div class="stat-num" id="jTotalPartidas">—</div><div class="stat-label">Total partidas</div></div>
+          <div class="stat-card"><div class="stat-num" id="jJugadoresUnicos">—</div><div class="stat-label">Jugadores únicos</div></div>
+          <div class="stat-card"><div class="stat-num" id="jHoy">—</div><div class="stat-label">Jugaron hoy</div></div>
+          <div class="stat-card"><div class="stat-num" id="jRacha">—</div><div class="stat-label">Racha más larga</div></div>
+        </div>
+        <div class="table-card" style="margin-bottom:16px">
+          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Partidas por día (últimos 14 días)</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Fecha</th><th>Partidas</th><th>Jugadores</th><th>Pts promedio</th></tr></thead>
+              <tbody id="jDiasBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="table-card">
+          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Ranking de jugadores</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Email</th><th>Partidas</th><th>Puntos totales</th><th>Última partida</th></tr></thead>
+              <tbody id="jRankingBody"><tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SCREEN AMIGOS ──────────────────────────────────── -->
+      <div id="screenAmigos" class="screen" style="display:none">
+        <h2 class="screen-title">👥 Estadísticas de Amigos</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+          <div class="stat-card"><div class="stat-num" id="aTotalAmigos">—</div><div class="stat-label">Total amistades</div></div>
+          <div class="stat-card"><div class="stat-num" id="aPendientes">—</div><div class="stat-label">Solicitudes pendientes</div></div>
+          <div class="stat-card"><div class="stat-num" id="aMensajes">—</div><div class="stat-label">Mensajes enviados</div></div>
+          <div class="stat-card"><div class="stat-num" id="aConversaciones">—</div><div class="stat-label">Conversaciones activas</div></div>
+        </div>
+        <div class="table-card" style="margin-bottom:16px">
+          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Usuarios más conectados</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Email</th><th>Amigos</th><th>Mensajes enviados</th></tr></thead>
+              <tbody id="aConectadosBody"><tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="table-card">
+          <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Solicitudes recientes</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>De</th><th>Para</th><th>Estado</th><th>Fecha</th></tr></thead>
+              <tbody id="aSolicitudesBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <h2 class="screen-title">⭐ Gestión Premium</h2>
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
         <input type="text" id="premiumEmail" placeholder="Email del usuario" style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;min-width:200px">
@@ -590,6 +650,135 @@ function loadInstalaciones(){
   });
 }
 
+
+// ── Juegos ────────────────────────────────────────────────────
+function loadJuegos(){
+  var hoy = new Date().toISOString().split('T')[0];
+  var hace14 = new Date(Date.now() - 14*86400000).toISOString();
+  fetch(SUPA_ADM + '/rest/v1/puntos?accion=eq.juego_diario&select=email,puntos,created_at&order=created_at.desc&limit=1000', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    if(!rows||!rows.length){
+      ['jDiasBody','jRankingBody'].forEach(function(id){document.getElementById(id).innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Sin datos</td></tr>';});
+      return;
+    }
+    // Stats generales
+    var emails = [...new Set(rows.map(function(r){return r.email;}))];
+    var hoyRows = rows.filter(function(r){return r.created_at && r.created_at.startsWith(hoy);});
+    document.getElementById('jTotalPartidas').textContent = rows.length;
+    document.getElementById('jJugadoresUnicos').textContent = emails.length;
+    document.getElementById('jHoy').textContent = hoyRows.length;
+
+    // Racha más larga (por email)
+    var maxRacha = 0;
+    emails.forEach(function(email){
+      var fechas = [...new Set(rows.filter(function(r){return r.email===email;}).map(function(r){return r.created_at.split('T')[0];}).sort())];
+      var racha = 1, maxR = 1;
+      for(var i=1;i<fechas.length;i++){
+        var diff = (new Date(fechas[i]) - new Date(fechas[i-1])) / 86400000;
+        if(diff===1){racha++; if(racha>maxR)maxR=racha;}else racha=1;
+      }
+      if(maxR>maxRacha) maxRacha=maxR;
+    });
+    document.getElementById('jRacha').textContent = maxRacha + ' días';
+
+    // Por día
+    var porDia = {};
+    rows.forEach(function(r){
+      var d = r.created_at.split('T')[0];
+      if(!porDia[d]) porDia[d]={total:0,emails:new Set(),pts:0};
+      porDia[d].total++;
+      porDia[d].emails.add(r.email);
+      porDia[d].pts += r.puntos||0;
+    });
+    var dias = Object.keys(porDia).sort().reverse().slice(0,14);
+    document.getElementById('jDiasBody').innerHTML = dias.map(function(d){
+      var x=porDia[d];
+      return '<tr><td>'+d+'</td><td>'+x.total+'</td><td>'+x.emails.size+'</td><td>'+(x.pts/x.total).toFixed(1)+'</td></tr>';
+    }).join('') || '<tr><td colspan="4" style="text-align:center;color:#aaa">Sin datos</td></tr>';
+
+    // Ranking
+    var byEmail = {};
+    rows.forEach(function(r){
+      if(!byEmail[r.email]) byEmail[r.email]={total:0,pts:0,ultima:r.created_at.split('T')[0]};
+      byEmail[r.email].total++;
+      byEmail[r.email].pts += r.puntos||0;
+      if(r.created_at.split('T')[0] > byEmail[r.email].ultima) byEmail[r.email].ultima = r.created_at.split('T')[0];
+    });
+    var sorted = Object.keys(byEmail).sort(function(a,b){return byEmail[b].total-byEmail[a].total;}).slice(0,20);
+    document.getElementById('jRankingBody').innerHTML = sorted.map(function(em,i){
+      var d=byEmail[em];
+      return '<tr><td>'+(i+1)+'</td><td>'+em+'</td><td>'+d.total+'</td><td>'+d.pts+'</td><td>'+d.ultima+'</td></tr>';
+    }).join('') || '<tr><td colspan="5" style="text-align:center;color:#aaa">Sin datos</td></tr>';
+  }).catch(function(){
+    document.getElementById('jDiasBody').innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa">Error</td></tr>';
+  });
+}
+
+// ── Amigos ────────────────────────────────────────────────────
+function loadAmigos(){
+  Promise.all([
+    fetch(SUPA_ADM + '/rest/v1/amigos?select=*&limit=500', {headers: SUPA_ADM_H}).then(function(r){return r.json();}),
+    fetch(SUPA_ADM + '/rest/v1/mensajes?select=*&limit=500&order=created_at.desc', {headers: SUPA_ADM_H}).then(function(r){return r.json();}),
+    fetch(SUPA_ADM + '/rest/v1/conversaciones?select=*&limit=200', {headers: SUPA_ADM_H}).then(function(r){return r.json();})
+  ]).then(function(results){
+    var amigos = results[0] || [];
+    var mensajes = results[1] || [];
+    var convs = results[2] || [];
+
+    // Detectar columnas de estado en amigos
+    var pendientes = amigos.filter(function(a){
+      return a.estado === 'pendiente' || a.status === 'pendiente' || a.aceptado === false;
+    });
+    var aceptados = amigos.filter(function(a){
+      return a.estado === 'aceptado' || a.status === 'aceptado' || a.aceptado === true;
+    });
+    if(!aceptados.length && !pendientes.length) aceptados = amigos;
+
+    document.getElementById('aTotalAmigos').textContent = aceptados.length;
+    document.getElementById('aPendientes').textContent = pendientes.length;
+    document.getElementById('aMensajes').textContent = mensajes.length;
+    document.getElementById('aConversaciones').textContent = convs.length;
+
+    // Usuarios más conectados
+    var emailConns = {};
+    aceptados.forEach(function(a){
+      var e1 = a.email_solicitante || a.email1 || a.emisor || a.from_email || '';
+      var e2 = a.email_receptor || a.email2 || a.receptor || a.to_email || '';
+      if(e1){emailConns[e1]=(emailConns[e1]||0)+1;}
+      if(e2){emailConns[e2]=(emailConns[e2]||0)+1;}
+    });
+    var emailMsgs = {};
+    mensajes.forEach(function(m){
+      var em = m.autor || m.email || m.from_email || '';
+      if(em) emailMsgs[em]=(emailMsgs[em]||0)+1;
+    });
+    var topEmails = Object.keys(emailConns).sort(function(a,b){return emailConns[b]-emailConns[a];}).slice(0,15);
+    document.getElementById('aConectadosBody').innerHTML = topEmails.length
+      ? topEmails.map(function(em){ return '<tr><td>'+em+'</td><td>'+emailConns[em]+'</td><td>'+(emailMsgs[em]||0)+'</td></tr>'; }).join('')
+      : '<tr><td colspan="3" style="text-align:center;color:#aaa">Sin datos</td></tr>';
+
+    // Solicitudes recientes
+    var ESTADO = function(a){ return a.estado || a.status || (a.aceptado===true?'aceptado':a.aceptado===false?'pendiente':'—'); };
+    var recent = amigos.slice(0,20);
+    document.getElementById('aSolicitudesBody').innerHTML = recent.length
+      ? recent.map(function(a){
+          var de = a.email_solicitante||a.email1||a.emisor||a.from_email||'—';
+          var para = a.email_receptor||a.email2||a.receptor||a.to_email||'—';
+          var fecha = a.created_at ? a.created_at.split('T')[0] : '—';
+          var estado = ESTADO(a);
+          var color = estado==='aceptado'?'#007a7a':estado==='pendiente'?'#856404':'#888';
+          return '<tr><td>'+de+'</td><td>'+para+'</td><td style="color:'+color+';font-weight:600">'+estado+'</td><td>'+fecha+'</td></tr>';
+        }).join('')
+      : '<tr><td colspan="4" style="text-align:center;color:#aaa">Sin datos</td></tr>';
+  }).catch(function(e){
+    console.error(e);
+    ['aConectadosBody','aSolicitudesBody'].forEach(function(id){
+      document.getElementById(id).innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa">Error al cargar</td></tr>';
+    });
+  });
+}
+
 function showScreen(name,el){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
@@ -603,6 +792,8 @@ function showScreen(name,el){
   if(name==='grupos') setTimeout(cargarAdminGrupos,100);
   if(name==='puntos') loadPuntos();
   if(name==='instalaciones') loadInstalaciones();
+  if(name==='juegos') loadJuegos();
+  if(name==='amigos') loadAmigos();
   if(name==='afiliados'){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
