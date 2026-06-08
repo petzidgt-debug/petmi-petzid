@@ -171,7 +171,7 @@ var ACCIONES = [
   { id: 'instalar_app',   ico: '📲', bg: '#EEEDFE',  nombre: 'Instalar la app', sub: 'Descarga PetMi a tu pantalla', pts: 3, link: null, accion: 'instalar' },
   { id: 'apoyar_asoc',    ico: '🤝', bg: '#FBEAF0',  nombre: 'Apoyar una asociación', sub: 'Próximamente disponible', pts: 5, link: null, pronto: true },
   { id: 'referir_amigo',  ico: '👥', bg: '#FFF8E1',  nombre: 'Referir un amigo', sub: 'Usa tu link único de referido', pts: 10, link: '#referido' },
-  { id: 'juego_diario',   ico: '🎮', bg: '#f0f0ee',  nombre: 'Juego diario', sub: 'Próximamente disponible', pts: 1, link: null, pronto: true },
+  { id: 'juego_diario',   ico: '🎮', bg: '#e8f4ff',  nombre: 'Juego diario', sub: 'Sopa de letras — razas de mascotas', pts: 1, link: '/juego.html' },
   { id: 'racha_7dias',    ico: '🔥', bg: '#FCEBEB',  nombre: 'Racha de 7 días', sub: 'Ingresa 7 días seguidos', pts: 3, link: null }
 ];
 
@@ -405,45 +405,43 @@ function renderHistorial(rows) {
   document.getElementById('historialLista').innerHTML = html;
 }
 
+function cerrarModalInstall() {
+  var m = document.getElementById('installModal');
+  if(m) document.body.removeChild(m);
+}
 function triggerInstall(e) {
   e.preventDefault();
-  // Ya instalada en modo standalone
   if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-    mostrarToastPuntos('📲 ¡La app ya está instalada!');
+    mostrarToastPuntos('📲 La app ya esta instalada');
     return;
   }
   if(window._pwaPrompt) {
     window._pwaPrompt.prompt();
     window._pwaPrompt.userChoice.then(function(r){
-      if(r.outcome === 'accepted') mostrarToastPuntos('📲 ¡App instalada! +3 puntos en camino...');
+      if(r.outcome === 'accepted') mostrarToastPuntos('📲 App instalada! +3 puntos en camino...');
     });
-  } else if(/iPhone|iPad/i.test(navigator.userAgent)) {
-    // Mostrar modal de instrucciones iOS
-    var m = document.createElement('div');
-    m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:flex-end;justify-content:center;padding:16px';
-    m.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:400px;margin-bottom:20px">'
-      + '<div style="font-size:18px;font-weight:700;color:#222;margin-bottom:12px">📲 Instalar en iPhone</div>'
-      + '<div style="font-size:14px;color:#555;line-height:1.8">'
-      + '1. Toca el botón <strong>Compartir</strong> ↑ en Safari<br>'
-      + '2. Selecciona <strong>"Agregar a pantalla de inicio"</strong><br>'
-      + '3. Toca <strong>Agregar</strong>'
-      + '</div>'
-      + '<button onclick="this.closest('div').parentElement.remove()" style="width:100%;margin-top:16px;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Entendido</button>'
-      + '</div>';
-    document.body.appendChild(m);
-  } else {
-    var m2 = document.createElement('div');
-    m2.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:flex-end;justify-content:center;padding:16px';
-    m2.innerHTML = '<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:400px;margin-bottom:20px">'
-      + '<div style="font-size:18px;font-weight:700;color:#222;margin-bottom:12px">📲 Instalar la app</div>'
-      + '<div style="font-size:14px;color:#555;line-height:1.8">'
-      + '1. Toca el menú <strong>⋮</strong> del navegador<br>'
-      + '2. Selecciona <strong>"Instalar app"</strong> o <br>&nbsp;&nbsp;&nbsp;<strong>"Añadir a pantalla de inicio"</strong>'
-      + '</div>'
-      + '<button onclick="this.closest('div').parentElement.remove()" style="width:100%;margin-top:16px;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">Entendido</button>'
-      + '</div>';
-    document.body.appendChild(m2);
+    return;
   }
+  var isIOS = /iPhone|iPad/i.test(navigator.userAgent);
+  var instrucciones = isIOS
+    ? '1. Toca el boton <strong>Compartir</strong> en Safari<br>2. Selecciona <strong>Agregar a pantalla de inicio</strong><br>3. Toca <strong>Agregar</strong>'
+    : '1. Toca el menu del navegador<br>2. Selecciona <strong>Instalar app</strong> o<br><strong>Anadir a pantalla de inicio</strong>';
+  var titulo = isIOS ? 'Instalar en iPhone' : 'Instalar la app';
+  var m = document.createElement('div');
+  m.id = 'installModal';
+  m.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:flex-end;justify-content:center;padding:16px';
+  var inner = document.createElement('div');
+  inner.style.cssText = 'background:#fff;border-radius:16px;padding:24px;width:100%;max-width:400px;margin-bottom:20px';
+  inner.innerHTML = '<div style="font-size:18px;font-weight:700;color:#222;margin-bottom:12px">📲 ' + titulo + '</div>'
+    + '<div style="font-size:14px;color:#555;line-height:1.8">' + instrucciones + '</div>';
+  var btn = document.createElement('button');
+  btn.textContent = 'Entendido';
+  btn.style.cssText = 'width:100%;margin-top:16px;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer';
+  btn.onclick = cerrarModalInstall;
+  inner.appendChild(btn);
+  m.appendChild(inner);
+  m.onclick = function(ev){ if(ev.target === m) cerrarModalInstall(); };
+  document.body.appendChild(m);
 }
 
 function mostrarToastPuntos(msg) {
