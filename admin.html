@@ -129,8 +129,8 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
       <div class="nav-item" onclick="showScreen('grupos',this)"><span class="nav-icon">👥</span>Grupos</div>
       <div class="nav-item" onclick="showScreen('campanas',this)"><span class="nav-icon">📧</span>Campanas</div>
-      <div class="nav-item" onclick="showScreen('afiliados',this)"><span class="nav-icon">🤝</span>Afiliados</div>
-      <div class="nav-item" onclick="showScreen('premium',this)"><span class="nav-icon">⭐</span>Premium</div>
+      <a class="nav-item" href="/admin-afiliados.html" style="text-decoration:none"><span class="nav-icon">🤝</span>Afiliados</a>
+      <a class="nav-item" href="/admin-premium.html" style="text-decoration:none"><span class="nav-icon">⭐</span>Premium</a>
       <div class="nav-item" onclick="showScreen('puntos',this)"><span class="nav-icon">🏆</span>Puntos</div>
       <div class="nav-item" onclick="showScreen('instalaciones',this)"><span class="nav-icon">📲</span>Instalaciones</div>
       <div class="nav-item" onclick="showScreen('juegos',this)"><span class="nav-icon">🎮</span>Juegos</div>
@@ -421,30 +421,7 @@ tbody tr:last-child td{border-bottom:none}
             </table>
           </div>
         </div>
-      </div>
-
-    <div class="screen" id="screenPremium">
-      <h2 class="screen-title">⭐ Gestión Premium</h2>
-      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-        <input type="text" id="premiumEmail" placeholder="Email del usuario" style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;min-width:200px">
-        <button onclick="activarPremium()" style="padding:10px 18px;background:#F5C842;color:#1a1a2e;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">⭐ Activar 1 año</button>
-        <button onclick="desactivarPremium()" style="padding:10px 18px;background:#fff0f0;color:#c0392b;border:1px solid #fcc;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">✗ Desactivar</button>
-      </div>
-      <div id="premiumMsg" style="font-size:13px;padding:10px;border-radius:8px;display:none;margin-bottom:12px"></div>
-      <div class="table-title" style="margin-top:8px">Usuarios Premium activos</div>
-      <div id="premiumLista"><div class="spinner"></div></div>
-    </div>
-
-    <!-- AFILIADOS -->
-    <div class="screen" id="screenAfiliados">
-      <h2 class="screen-title">🤝 Afiliados</h2>
-      <iframe id="iframeAfiliados" src="" style="width:100%;height:80vh;border:none;border-radius:14px;background:#fff" loading="lazy"></iframe>
-    </div>
-
-  </div>
-</div>
-
-<!-- MODAL EDITAR -->
+      </div><!-- AFILIADOS --><!-- MODAL EDITAR -->
 <div class="modal-overlay" id="modalEdit">
   <div class="modal">
     <div class="modal-title"><span id="modalEditTitle">Editar</span><button class="modal-close" onclick="closeModal('modalEdit')">✕</button></div>
@@ -883,13 +860,11 @@ function togglePausar(id, pausar) {
 
 function showScreen(name,el){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
+  var _sc=document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)); if(_sc) _sc.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   if(el) el.classList.add('active');
   if(name==='eventos'){cargarEventosAdmin();}
   if(name==='lugares') cargarLugaresAdmin();
-  if(name==='premium') cargarListaPremium();
-  if(name==='afiliados') cargarAfiliados();
   if(name==='reglas') setTimeout(cargarReglas,100);
   if(name==='grupos') setTimeout(cargarAdminGrupos,100);
   if(name==='puntos') loadPuntos();
@@ -900,7 +875,6 @@ function showScreen(name,el){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
   }
-  if(name==='premium') setTimeout(cargarPremiumAdmin,100);
 }
 
 // ── Carga de datos ────────────────────────────────────────────
