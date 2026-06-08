@@ -314,7 +314,7 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
     <!-- ── SCREEN PUNTOS ────────────────────────────────── -->
-      <div id="screenPuntos" class="screen" style="display:none">
+      <div id="screenPuntos" class="screen">
         <h2 class="screen-title">🏆 Sistema de Puntos</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px" id="puntosStats">
           <div class="stat-card"><div class="stat-num" id="ptsTotal">—</div><div class="stat-label">Usuarios con puntos</div></div>
@@ -346,7 +346,7 @@ tbody tr:last-child td{border-bottom:none}
       </div>
 
       <!-- ── SCREEN INSTALACIONES ──────────────────────────── -->
-      <div id="screenInstalaciones" class="screen" style="display:none">
+      <div id="screenInstalaciones" class="screen">
         <h2 class="screen-title">📲 Instalaciones de la App</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
           <div class="stat-card"><div class="stat-num" id="instTotal">—</div><div class="stat-label">Total instalaciones</div></div>
@@ -366,7 +366,7 @@ tbody tr:last-child td{border-bottom:none}
       </div>
 
       <!-- ── SCREEN JUEGOS ─────────────────────────────────── -->
-      <div id="screenJuegos" class="screen" style="display:none">
+      <div id="screenJuegos" class="screen">
         <h2 class="screen-title">🎮 Estadísticas de Juegos</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
           <div class="stat-card"><div class="stat-num" id="jTotalPartidas">—</div><div class="stat-label">Total partidas</div></div>
@@ -395,7 +395,7 @@ tbody tr:last-child td{border-bottom:none}
       </div>
 
       <!-- ── SCREEN AMIGOS ──────────────────────────────────── -->
-      <div id="screenAmigos" class="screen" style="display:none">
+      <div id="screenAmigos" class="screen">
         <h2 class="screen-title">👥 Estadísticas de Amigos</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
           <div class="stat-card"><div class="stat-num" id="aTotalAmigos">—</div><div class="stat-label">Total amistades</div></div>
@@ -888,7 +888,6 @@ function showScreen(name,el){
   if(el) el.classList.add('active');
   if(name==='eventos'){cargarEventosAdmin();}
   if(name==='lugares') cargarLugaresAdmin();
-  if(name==='avisos') setTimeout(cargarAvisosPendientes,100);
   if(name==='premium') cargarListaPremium();
   if(name==='afiliados') cargarAfiliados();
   if(name==='reglas') setTimeout(cargarReglas,100);
@@ -897,7 +896,7 @@ function showScreen(name,el){
   if(name==='instalaciones') loadInstalaciones();
   if(name==='juegos') loadJuegos();
   if(name==='amigos') loadAmigos();
-  if(name==='afiliados'){
+  if(name==='_unused'){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
   }
