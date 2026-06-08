@@ -313,8 +313,7 @@ tbody tr:last-child td{border-bottom:none}
         </div>
       </div>
     </div>
-    <div class="screen" id="screenPremium">
-      <!-- ── SCREEN PUNTOS ────────────────────────────────── -->
+    <!-- ── SCREEN PUNTOS ────────────────────────────────── -->
       <div id="screenPuntos" class="screen" style="display:none">
         <h2 class="screen-title">🏆 Sistema de Puntos</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px" id="puntosStats">
@@ -424,6 +423,7 @@ tbody tr:last-child td{border-bottom:none}
         </div>
       </div>
 
+    <div class="screen" id="screenPremium">
       <h2 class="screen-title">⭐ Gestión Premium</h2>
       <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
         <input type="text" id="premiumEmail" placeholder="Email del usuario" style="flex:1;padding:10px 14px;border:1.5px solid #eee;border-radius:10px;font-size:13px;outline:none;min-width:200px">
@@ -779,6 +779,108 @@ function loadAmigos(){
   });
 }
 
+// ── cargarListaPremium ────────────────────────────────────────
+function cargarListaPremium() {
+  var lista = document.getElementById('premiumLista');
+  if (lista) lista.innerHTML = '<div class="spinner"></div>';
+  fetch(SUPA_ADM + '/rest/v1/mascotas?premium=eq.true&select=nombre,email,zona,premium_hasta,premium_metodo&order=email.asc&limit=200', {headers: SUPA_ADM_H})
+  .then(function(r) { return r.json(); })
+  .then(function(rows) {
+    if (!lista) return;
+    if (!rows || !rows.length) { lista.innerHTML = '<p style="color:#aaa;padding:16px">No hay usuarios Premium activos</p>'; return; }
+    var hoy = new Date().toISOString().split('T')[0];
+    lista.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px">'
+      + '<thead><tr style="background:#f8f8f8"><th style="padding:8px 12px;text-align:left">Email</th><th style="padding:8px 12px;text-align:left">Nombre</th><th style="padding:8px 12px;text-align:left">Zona</th><th style="padding:8px 12px;text-align:left">Vence</th><th style="padding:8px 12px;text-align:left">Método</th></tr></thead>'
+      + '<tbody>' + rows.map(function(r) {
+          var vencido = r.premium_hasta && r.premium_hasta < hoy;
+          return '<tr style="border-top:0.5px solid #f0f0ee">'
+            + '<td style="padding:8px 12px">' + (r.email||'—') + '</td>'
+            + '<td style="padding:8px 12px">' + (r.nombre||'—') + '</td>'
+            + '<td style="padding:8px 12px">' + (r.zona||'—') + '</td>'
+            + '<td style="padding:8px 12px;color:' + (vencido?'#c0392b':'#007a7a') + '">' + (r.premium_hasta||'Sin fecha') + '</td>'
+            + '<td style="padding:8px 12px">' + (r.premium_metodo||'—') + '</td>'
+            + '</tr>';
+        }).join('') + '</tbody></table>';
+  }).catch(function() { if(lista) lista.innerHTML = '<p style="color:#aaa;padding:16px">Error al cargar</p>'; });
+}
+
+function activarPremium() {
+  var email = document.getElementById('premiumEmail').value.trim().toLowerCase();
+  if (!email) { mostrarPremiumMsg('Ingresa un email', 'error'); return; }
+  var vence = new Date(); vence.setFullYear(vence.getFullYear() + 1);
+  var venceISO = vence.toISOString().split('T')[0];
+  fetch(SUPA_ADM + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email), {
+    method: 'PATCH',
+    headers: Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'}, SUPA_ADM_H),
+    body: JSON.stringify({ premium: true, premium_hasta: venceISO, premium_metodo: 'admin' })
+  }).then(function(r) {
+    if (r.ok) { mostrarPremiumMsg('Premium activado hasta ' + venceISO, 'ok'); cargarListaPremium(); }
+    else mostrarPremiumMsg('Error al activar', 'error');
+  }).catch(function() { mostrarPremiumMsg('Error de conexión', 'error'); });
+}
+
+function desactivarPremium() {
+  var email = document.getElementById('premiumEmail').value.trim().toLowerCase();
+  if (!email) { mostrarPremiumMsg('Ingresa un email', 'error'); return; }
+  fetch(SUPA_ADM + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email), {
+    method: 'PATCH',
+    headers: Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'}, SUPA_ADM_H),
+    body: JSON.stringify({ premium: false })
+  }).then(function(r) {
+    if (r.ok) { mostrarPremiumMsg('Premium desactivado', 'ok'); cargarListaPremium(); }
+    else mostrarPremiumMsg('Error al desactivar', 'error');
+  }).catch(function() { mostrarPremiumMsg('Error de conexión', 'error'); });
+}
+
+function mostrarPremiumMsg(msg, tipo) {
+  var el = document.getElementById('premiumMsg');
+  if (!el) return;
+  el.textContent = msg; el.style.display = 'block';
+  el.style.background = tipo === 'ok' ? '#e0f7f7' : '#fbeaf0';
+  el.style.color = tipo === 'ok' ? '#007a7a' : '#993556';
+  setTimeout(function(){ el.style.display='none'; }, 3000);
+}
+
+// ── cargarAfiliados ───────────────────────────────────────────
+function cargarAfiliados() {
+  fetch(SUPA_ADM + '/rest/v1/actividades?es_afiliado=eq.true&select=id,afiliado_email,afiliado_plan,afiliado_vence,afiliado_periodo,titulo,tipo,activo,pausado,pausado_razon,created_at&order=created_at.desc&limit=100', {headers: SUPA_ADM_H})
+  .then(function(r) { return r.json(); })
+  .then(function(rows) {
+    var tbody = document.getElementById('afiliadosBody');
+    if (!tbody) return;
+    if (!rows || !rows.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Sin afiliados</td></tr>'; return; }
+    var hoy = new Date().toISOString().split('T')[0];
+    tbody.innerHTML = rows.map(function(r) {
+      var activo = r.activo && !r.pausado && (!r.afiliado_vence || r.afiliado_vence >= hoy);
+      return '<tr>'
+        + '<td style="padding:8px 12px">' + (r.afiliado_email||'—') + '</td>'
+        + '<td style="padding:8px 12px">' + (r.afiliado_plan||'—') + '</td>'
+        + '<td style="padding:8px 12px">' + (r.titulo||r.tipo||'—') + '</td>'
+        + '<td style="padding:8px 12px">' + (r.afiliado_vence||'—') + '</td>'
+        + '<td style="padding:8px 12px"><span style="color:' + (activo?'#007a7a':'#c0392b') + ';font-weight:600">' + (activo?'Activo':r.pausado?'Pausado':'Inactivo') + '</span></td>'
+        + '<td style="padding:8px 12px;font-size:12px;color:#888">' + (r.pausado_razon||'') + '</td>'
+        + '<td style="padding:8px 12px">'
+        + '<button data-id="' + r.id + '" onclick="togglePausarBtn(this)" style="padding:4px 10px;background:' + (r.pausado?'#e0f7f7':'#fbeaf0') + ';color:' + (r.pausado?'#007a7a':'#993556') + ';border:none;border-radius:6px;font-size:11px;cursor:pointer">' + (r.pausado?'Reactivar':'Pausar') + '</button>'
+        + '</td></tr>';
+    }).join('');
+  }).catch(function() {});
+}
+
+function togglePausarBtn(btn) {
+  var id = btn.getAttribute('data-id');
+  var pausar = btn.getAttribute('data-pausado') !== 'true';
+  togglePausar(id, pausar);
+}
+function togglePausar(id, pausar) {
+  var razon = pausar ? prompt('Razón de pausa (opcional):') : null;
+  fetch('/api/galeria?action=pausarPublicacion', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ id: id, pausado: pausar, pausado_razon: razon||null })
+  }).then(function(r){ return r.json(); })
+  .then(function(d){ if(d.ok) cargarAfiliados(); });
+}
+
+
 function showScreen(name,el){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
@@ -788,6 +890,7 @@ function showScreen(name,el){
   if(name==='lugares') cargarLugaresAdmin();
   if(name==='avisos') setTimeout(cargarAvisosPendientes,100);
   if(name==='premium') cargarListaPremium();
+  if(name==='afiliados') cargarAfiliados();
   if(name==='reglas') setTimeout(cargarReglas,100);
   if(name==='grupos') setTimeout(cargarAdminGrupos,100);
   if(name==='puntos') loadPuntos();
