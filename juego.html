@@ -479,6 +479,88 @@ function mostrarToast(msg) {
 }
 
 // ── Init ──────────────────────────────────────────────────────
+
+// ── Fotos de razas ────────────────────────────────────────────
+var RAZA_API = {
+  'GOLDEN':    { tipo: 'dog', breed: 'retriever/golden' },
+  'POODLE':    { tipo: 'dog', breed: 'poodle' },
+  'BEAGLE':    { tipo: 'dog', breed: 'beagle' },
+  'HUSKY':     { tipo: 'dog', breed: 'husky' },
+  'BOXER':     { tipo: 'dog', breed: 'boxer' },
+  'LABRADOR':  { tipo: 'dog', breed: 'labrador' },
+  'PITBULL':   { tipo: 'dog', breed: 'pitbull' },
+  'SCHNAUZER': { tipo: 'dog', breed: 'schnauzer' },
+  'MALTESE':   { tipo: 'dog', breed: 'maltese' },
+  'SHIH':      { tipo: 'dog', breed: 'shihtzu' },
+  'BULLDOG':   { tipo: 'dog', breed: 'bulldog' },
+  'DACHSHUND': { tipo: 'dog', breed: 'dachshund' },
+  'COLLIE':    { tipo: 'dog', breed: 'collie' },
+  'SETTER':    { tipo: 'dog', breed: 'setter/irish' },
+  'CORGI':     { tipo: 'dog', breed: 'corgi' },
+  'CHOW':      { tipo: 'dog', breed: 'chow' },
+  'DOBERMAN':  { tipo: 'dog', breed: 'doberman' },
+  'AKITA':     { tipo: 'dog', breed: 'akita' },
+  'SAMOYED':   { tipo: 'dog', breed: 'samoyed' },
+  'VIZSLA':    { tipo: 'dog', breed: 'vizsla' },
+  'PAPILLON':  { tipo: 'dog', breed: 'papillon' },
+  'BASENJI':   { tipo: 'dog', breed: 'basenji' },
+  'BORZOI':    { tipo: 'dog', breed: 'borzoi' },
+  'SALUKI':    { tipo: 'dog', breed: 'saluki' },
+  'RIDGEBACK': { tipo: 'dog', breed: 'ridgeback' },
+  'WEIMARANER':{ tipo: 'dog', breed: 'weimaraner' },
+  'POINTER':   { tipo: 'dog', breed: 'pointer' },
+  'SPANIEL':   { tipo: 'dog', breed: 'spaniel/cocker' },
+  'TERRIER':   { tipo: 'dog', breed: 'terrier' },
+  'BRIARD':    { tipo: 'dog', breed: 'briard' },
+  'KELPIE':    { tipo: 'dog', breed: 'kelpie' },
+  'SIAMES':    { tipo: 'cat', breed_id: 'siam' },
+  'PERSA':     { tipo: 'cat', breed_id: 'pers' },
+  'RAGDOLL':   { tipo: 'cat', breed_id: 'ragd' },
+  'BENGAL':    { tipo: 'cat', breed_id: 'beng' },
+  'SPHYNX':    { tipo: 'cat', breed_id: 'sphy' },
+  'MAINE':     { tipo: 'cat', breed_id: 'mcoo' },
+  'ABISINIO':  { tipo: 'cat', breed_id: 'abys' },
+  'BIRMAN':    { tipo: 'cat', breed_id: 'birm' },
+  'BURMESE':   { tipo: 'cat', breed_id: 'bure' },
+  'DEVON':     { tipo: 'cat', breed_id: 'dere' },
+  'ANGORA':    { tipo: 'cat', breed_id: 'tang' },
+  'BALINESE':  { tipo: 'cat', breed_id: 'bali' },
+  'BOMBAY':    { tipo: 'cat', breed_id: 'bomb' },
+  'MANX':      { tipo: 'cat', breed_id: 'manx' },
+  'SOMALI':    { tipo: 'cat', breed_id: 'soma' }
+};
+
+var _fotoTimer = null;
+
+function mostrarFotoRaza(raza) {
+  var info = RAZA_API[raza];
+  if (!info) return;
+  var card = document.getElementById('razaFotoCard');
+  var img  = document.getElementById('razaFotoImg');
+  var lbl  = document.getElementById('razaFotoName');
+  if (!card || !img || !lbl) return;
+  lbl.textContent = raza.charAt(0) + raza.slice(1).toLowerCase();
+  img.src = '';
+
+  function mostrarCard() {
+    card.classList.add('show');
+    clearTimeout(_fotoTimer);
+    _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 3500);
+  }
+
+  if (info.tipo === 'dog') {
+    fetch('https://dog.ceo/api/breed/' + info.breed + '/images/random')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d.status === 'success') { img.src = d.message; mostrarCard(); } })
+      .catch(function() {});
+  } else {
+    fetch('https://api.thecatapi.com/v1/images/search?breed_ids=' + info.breed_id + '&limit=1')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d && d[0] && d[0].url) { img.src = d[0].url; mostrarCard(); } })
+      .catch(function() {});
+  }
+}
+
 renderRacha();
 if (!checkYaJugado()) {
   generarGrid();
