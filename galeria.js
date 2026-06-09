@@ -835,6 +835,13 @@ export default async function handler(req, res) {
       if (!email || !accion || !puntos) return res.status(200).json({ ok: false });
       // Evitar duplicados en acciones únicas
       const UNICAS = ['perfil_completo', 'instalar_app'];
+      // juego_diario: max 1 por dia
+      const hoy = new Date().toISOString().split('T')[0];
+      if(accion === 'juego_diario'){
+        const checkDia = await fetch(SUPABASE_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(email) + '&accion=eq.juego_diario&created_at=gte.' + hoy + '&select=id&limit=1', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+        const diaRows = await checkDia.json();
+        if(Array.isArray(diaRows) && diaRows.length > 0) return res.status(200).json({ ok: false, msg: 'Ya jugaste hoy' });
+      }
       if (UNICAS.includes(accion)) {
         const check = await fetch(SUPABASE_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(email) + '&accion=eq.' + accion + '&select=id&limit=1', {
           headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
@@ -848,6 +855,72 @@ export default async function handler(req, res) {
         body: JSON.stringify({ email, accion, puntos, referencia: referencia || null })
       });
       return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── verificarLogin ────────────────────────────────────────
+    if (action === 'verificarLogin' && req.method === 'POST') {
+      const { email, nombreMascota } = req.body;
+      if (!email || !nombreMascota) return res.status(200).json({ ok: false, msg: 'Datos incompletos' });
+
+      const emailL  = email.trim().toLowerCase();
+      const nombreL = nombreMascota.trim().toLowerCase();
+
+      // Anti-brute force: max 5 intentos fallidos por email en 15 min
+      const hace15 = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const attR = await fetch(
+        SUPABASE_URL + '/rest/v1/login_attempts?email=eq.' + encodeURIComponent(emailL) +
+        '&exitoso=eq.false&created_at=gte.' + hace15 + '&select=id',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const atts = await attR.json();
+      if (Array.isArray(atts) && atts.length >= 5) {
+        return res.status(200).json({ ok: false, msg: 'Demasiados intentos. Espera 15 minutos.' });
+      }
+
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(emailL) +
+        '&select=uid,nombre,email,dueno,foto,especie,premium,premium_vence,angelito&limit=20',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const mascotas = await r.json();
+
+      if (!mascotas || !mascotas.length) {
+        // No revelar si el email existe o no
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
+      }
+
+      // Verificar nombre (acepta cualquier mascota del email)
+      const match = mascotas.find(m =>
+        m.nombre && m.nombre.trim().toLowerCase() === nombreL && !m.angelito
+      );
+
+      if (!match) {
+        // Registrar intento fallido
+        fetch(SUPABASE_URL + '/rest/v1/login_attempts', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ email: emailL, exitoso: false })
+        }).catch(() => {});
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
+      }
+
+      // Registrar intento exitoso
+      fetch(SUPABASE_URL + '/rest/v1/login_attempts', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ email: emailL, exitoso: true })
+      }).catch(() => {});
+
+      // Login exitoso — devolver datos de sesión
+      return res.status(200).json({
+        ok: true,
+        email: emailL,
+        dueno: mascotas[0].dueno || '',
+        mascotas: mascotas.map(m => ({
+          uid: m.uid, nombre: m.nombre, especie: m.especie,
+          foto: m.foto, premium: m.premium
+        }))
+      });
     }
 
     return res.status(200).json({ status: 'PetMi Supabase API activa' });

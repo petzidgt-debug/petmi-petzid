@@ -901,45 +901,74 @@ function openLoginModal(){
 }
 function closeLoginModal(){document.getElementById('loginOverlay').classList.remove('open');}
 
-function verificarEmail(){
+// ── Login seguro 2 pasos ─────────────────────────────────────
+function irAPaso2(){
   var email=document.getElementById('loginEmail').value.trim().toLowerCase();
-  if(!email||email.indexOf('@')<0){mostrarMsgLogin('Por favor ingresa un correo valido','error');return;}
+  if(!email||email.indexOf('@')<0){mostrarMsgLogin('Ingresa un correo valido','error');return;}
+  // Pasar a paso 2 sin confirmar si el email existe (no revela info)
+  document.getElementById('loginStep1').style.display='none';
+  document.getElementById('loginStep2').style.display='block';
+  setTimeout(function(){document.getElementById('loginNombre').focus();},100);
+}
+
+function volverPaso1(){
+  document.getElementById('loginStep2').style.display='none';
+  document.getElementById('loginStep1').style.display='block';
+  mostrarMsgLogin2('','');
+  document.getElementById('loginNombre').value='';
+}
+
+function verificarLogin(){
+  var email  = document.getElementById('loginEmail').value.trim().toLowerCase();
+  var nombre = document.getElementById('loginNombre').value.trim();
+  if(!nombre){mostrarMsgLogin2('Escribe el nombre de tu mascota','error');return;}
   var btn=document.getElementById('btnLogin');
   btn.disabled=true;btn.textContent='Verificando...';
-  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(d.found&&d.mascotas&&d.mascotas.length>0){
-        sessionEmail=email;
-        sessionDueno=d.mascotas[0].dueno||'';
-        localStorage.setItem('petzid_email',sessionEmail);
-        localStorage.setItem('petzid_dueno',sessionDueno);
-        mostrarMsgLogin('¡Bienvenido/a '+(sessionDueno||'')+'! '+d.mascotas.length+' mascota(s) encontrada(s).','success');
-        setTimeout(function(){
-          closeLoginModal();
-          shown=0;applyFilter();
-          if(currentModalPet) renderModalFooter(currentModalPet);
-          else closeModal();
-        },1500);
-      } else {
-        mostrarMsgLogin('No encontramos ese correo. ¿Quieres registrarte?','error');
-        btn.disabled=false;btn.textContent='Ingresar';
-      }
-    })
-    .catch(function(){
-      mostrarMsgLogin('Error de conexion. Intenta de nuevo.','error');
+  fetch('/api/galeria?action=verificarLogin',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email,nombreMascota:nombre})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      sessionEmail=d.email||email;
+      sessionDueno=d.dueno||'';
+      localStorage.setItem('petzid_email',sessionEmail);
+      localStorage.setItem('petzid_dueno',sessionDueno);
+      if(d.mascotas&&d.mascotas[0]&&d.mascotas[0].especie)
+        localStorage.setItem('petmi_especie',d.mascotas[0].especie);
+      mostrarMsgLogin2('¡Bienvenido/a '+(sessionDueno||'')+'!','success');
+      setTimeout(function(){
+        closeLoginModal();
+        shown=0;applyFilter();
+        if(currentModalPet) renderModalFooter(currentModalPet);
+        else closeModal();
+      },1200);
+    } else {
+      mostrarMsgLogin2(d.msg||'Datos incorrectos. Intenta de nuevo.','error');
       btn.disabled=false;btn.textContent='Ingresar';
-    });
+      // Limpiar campo nombre en caso de error
+      document.getElementById('loginNombre').value='';
+      document.getElementById('loginNombre').focus();
+    }
+  })
+  .catch(function(){
+    mostrarMsgLogin2('Error de conexion. Intenta de nuevo.','error');
+    btn.disabled=false;btn.textContent='Ingresar';
+  });
 }
 
 function mostrarMsgLogin(texto,tipo){
   var el=document.getElementById('loginMsg');
-  el.textContent=texto;el.className='login-msg '+tipo;el.style.display=texto?'block':'none';
+  if(!el)return;
+  el.textContent=texto;el.className='login-msg '+(tipo||'');el.style.display=texto?'block':'none';
 }
 
-document.getElementById('loginEmail').addEventListener('keydown',function(e){
-  if(e.key==='Enter')verificarEmail();
-});
+function mostrarMsgLogin2(texto,tipo){
+  var el=document.getElementById('loginMsg2');
+  if(!el)return;
+  el.textContent=texto;el.className='login-msg '+(tipo||'');el.style.display=texto?'block':'none';
+}
 
 // ── Formato de fecha ──────────────────────────────────────────
 function getMesFecha(val){
