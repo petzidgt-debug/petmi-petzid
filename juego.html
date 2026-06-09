@@ -57,6 +57,10 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 
 .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#F5C842;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
+.raza-foto-card{position:fixed;right:16px;bottom:80px;width:160px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.2);overflow:hidden;z-index:500;transform:translateX(200px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);border:2px solid #00B4B4}
+.raza-foto-card.show{transform:translateX(0)}
+.raza-foto-card img{width:160px;height:120px;object-fit:cover;display:block}
+.raza-foto-name{padding:7px 10px;font-size:12px;font-weight:700;color:#007a7a;text-align:center;background:#e0f7f7}
 </style>
 </head>
 <body>
@@ -112,6 +116,11 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 </div>
 
 <div class="toast" id="toast"></div>
+<!-- Tarjeta foto de raza -->
+<div class="raza-foto-card" id="razaFotoCard">
+  <img id="razaFotoImg" src="" alt="" width="160" height="120">
+  <div class="raza-foto-name" id="razaFotoName"></div>
+</div>
 <script src="/header.js"></script>
 <script>
 // ── Config ────────────────────────────────────────────────────
@@ -550,19 +559,31 @@ var RAZA_INFO = {
 var _fotoTimer = null;
 
 function mostrarFotoRaza(raza) {
+  // DEBUG: mostrar cada paso como toast
+  var pasos = [];
+  pasos.push('1:raza=' + raza);
+
   var info = RAZA_INFO[raza];
-  if (!info) return;
+  if (!info) { mostrarToast('DEBUG: sin info para ' + raza); return; }
+  pasos.push('2:info ok');
+
   var card = document.getElementById('razaFotoCard');
   var img  = document.getElementById('razaFotoImg');
   var lbl  = document.getElementById('razaFotoName');
-  if (!card || !img || !lbl) return;
+
+  if (!card) { mostrarToast('DEBUG: no hay #razaFotoCard'); return; }
+  if (!img)  { mostrarToast('DEBUG: no hay #razaFotoImg');  return; }
+  if (!lbl)  { mostrarToast('DEBUG: no hay #razaFotoName'); return; }
+  pasos.push('3:elementos ok');
 
   lbl.textContent = info.label;
 
-  // Canvas minimo — fondo de color + nombre
   var canvas = document.createElement('canvas');
   canvas.width = 160; canvas.height = 120;
   var ctx = canvas.getContext('2d');
+  if (!ctx) { mostrarToast('DEBUG: Canvas no soportado'); return; }
+  pasos.push('4:canvas ok');
+
   ctx.fillStyle = info.color;
   ctx.fillRect(0, 0, 160, 120);
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -573,15 +594,19 @@ function mostrarFotoRaza(raza) {
   ctx.textBaseline = 'middle';
   ctx.fillText(info.label.toUpperCase(), 80, 100);
   ctx.font = '44px serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
   ctx.fillText(info.emoji, 80, 44);
 
-  // Asignar directamente — data URLs cargan sincronamente
-  img.src = canvas.toDataURL('image/png');
+  var dataUrl = canvas.toDataURL('image/png');
+  pasos.push('5:dataUrl=' + (dataUrl ? dataUrl.substring(0,20) : 'null'));
+
+  img.src = dataUrl;
   card.classList.add('show');
+  pasos.push('6:show agregado, clases=' + card.className);
+
+  mostrarToast('DEBUG: ' + pasos.join(' | '));
+
   clearTimeout(_fotoTimer);
-  _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
+  _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 6000);
 }
 
 
