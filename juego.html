@@ -483,77 +483,129 @@ function mostrarToast(msg) {
 
 // ── Fotos de razas ────────────────────────────────────────────
 // Fotos — URLs curadas de Wikimedia Commons (sin API, sin CORS, siempre funciona)
-var RAZA_FOTOS = {
-  'GOLDEN':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Golden_Retriever_Dukedestiny01_drvd.jpg/240px-Golden_Retriever_Dukedestiny01_drvd.jpg',
-  'POODLE':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Full_attention_%288067543690%29.jpg/240px-Full_attention_%288067543690%29.jpg',
-  'BEAGLE':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/000_Beagle_apollo.jpg/240px-000_Beagle_apollo.jpg',
-  'HUSKY':     'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Siberian_Husky_bi-eyed_Flickr.jpg/240px-Siberian_Husky_bi-eyed_Flickr.jpg',
-  'BOXER':     'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Boxer_female_2years_old.JPG/240px-Boxer_female_2years_old.JPG',
-  'LABRADOR':  'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/YellowLabradorLooking_new.jpg/240px-YellowLabradorLooking_new.jpg',
-  'PITBULL':   'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Pit_bull_smiling.jpg/240px-Pit_bull_smiling.jpg',
-  'SCHNAUZER': 'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Miniature_Schnauzer_0864.jpg/240px-Miniature_Schnauzer_0864.jpg',
-  'MALTESE':   'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Maltese_dog_on_white_background.jpg/240px-Maltese_dog_on_white_background.jpg',
-  'SHIH':      'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/02_Shih_Tzu_Eddy.jpg/240px-02_Shih_Tzu_Eddy.jpg',
-  'BULLDOG':   'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Bulldogge.jpg/240px-Bulldogge.jpg',
-  'DACHSHUND': 'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Short-haired-Dachshund.jpg/240px-Short-haired-Dachshund.jpg',
-  'COLLIE':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Rough_Collie_Shetland.jpg/240px-Rough_Collie_Shetland.jpg',
-  'SETTER':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Irish_Setter.jpg/240px-Irish_Setter.jpg',
-  'CORGI':     'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Pembroke_Welsh_Corgi_600.jpg/240px-Pembroke_Welsh_Corgi_600.jpg',
-  'CHOW':      'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Chow_Chow.jpg/240px-Chow_Chow.jpg',
-  'DOBERMAN':  'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Dobermann_handling.jpg/240px-Dobermann_handling.jpg',
-  'AKITA':     'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Akita_Inu_dog.jpg/240px-Akita_Inu_dog.jpg',
-  'SAMOYED':   'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Samoyed_husky.jpg/240px-Samoyed_husky.jpg',
-  'VIZSLA':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Vizsla_wirehaired.jpg/240px-Vizsla_wirehaired.jpg',
-  'PAPILLON':  'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Papillon_portrait_wiki.jpg/240px-Papillon_portrait_wiki.jpg',
-  'BASENJI':   'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Basenji_600.jpg/240px-Basenji_600.jpg',
-  'BORZOI':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Borzoi_OB.jpg/240px-Borzoi_OB.jpg',
-  'SALUKI':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Saluki_dog_breed.jpg/240px-Saluki_dog_breed.jpg',
-  'RIDGEBACK': 'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Rhodesian_Ridgeback_puppy.jpg/240px-Rhodesian_Ridgeback_puppy.jpg',
-  'WEIMARANER':'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Weimaraner_wb.jpg/240px-Weimaraner_wb.jpg',
-  'POINTER':   'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Pointer_hunting_dog.jpg/240px-Pointer_hunting_dog.jpg',
-  'SPANIEL':   'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Cocker_Spaniel_-_golden.jpg/240px-Cocker_Spaniel_-_golden.jpg',
-  'TERRIER':   'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Yorkshire_Terrier_-_Floriane_Tellier.jpg/240px-Yorkshire_Terrier_-_Floriane_Tellier.jpg',
-  'BRIARD':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Briard.jpg/240px-Briard.jpg',
-  'KELPIE':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Australian_Kelpie.jpg/240px-Australian_Kelpie.jpg',
-  'KOMONDOR':  'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Komondor_delvin.jpg/240px-Komondor_delvin.jpg',
+// Info de razas para tarjeta canvas (sin APIs externas)
+var RAZA_INFO = {
+  // Perros
+  'GOLDEN':    { tipo: 'perro', emoji: '🐕', color: '#F5C842', label: 'Golden Retriever' },
+  'POODLE':    { tipo: 'perro', emoji: '🐩', color: '#E8A0E8', label: 'Poodle' },
+  'BEAGLE':    { tipo: 'perro', emoji: '🐕', color: '#D4A574', label: 'Beagle' },
+  'HUSKY':     { tipo: 'perro', emoji: '🐺', color: '#7BAFD4', label: 'Husky Siberiano' },
+  'BOXER':     { tipo: 'perro', emoji: '🐕', color: '#C4845C', label: 'Boxer' },
+  'LABRADOR':  { tipo: 'perro', emoji: '🐕', color: '#D4A030', label: 'Labrador' },
+  'PITBULL':   { tipo: 'perro', emoji: '🐕', color: '#8BA888', label: 'Pitbull' },
+  'SCHNAUZER': { tipo: 'perro', emoji: '🐕', color: '#888888', label: 'Schnauzer' },
+  'MALTESE':   { tipo: 'perro', emoji: '🐩', color: '#F0E8D0', label: 'Maltese' },
+  'SHIH':      { tipo: 'perro', emoji: '🐩', color: '#D4B896', label: 'Shih Tzu' },
+  'BULLDOG':   { tipo: 'perro', emoji: '🐕', color: '#C4A870', label: 'Bulldog' },
+  'DACHSHUND': { tipo: 'perro', emoji: '🌭', color: '#C47840', label: 'Dachshund' },
+  'COLLIE':    { tipo: 'perro', emoji: '🐕', color: '#D4A020', label: 'Collie' },
+  'SETTER':    { tipo: 'perro', emoji: '🐕', color: '#C84C20', label: 'Irish Setter' },
+  'CORGI':     { tipo: 'perro', emoji: '🦊', color: '#E87830', label: 'Corgi' },
+  'CHOW':      { tipo: 'perro', emoji: '🦁', color: '#C07830', label: 'Chow Chow' },
+  'DOBERMAN':  { tipo: 'perro', emoji: '🐕', color: '#402010', label: 'Doberman' },
+  'AKITA':     { tipo: 'perro', emoji: '🐕', color: '#E8B060', label: 'Akita' },
+  'SAMOYED':   { tipo: 'perro', emoji: '🐑', color: '#F0F0F0', label: 'Samoyed' },
+  'VIZSLA':    { tipo: 'perro', emoji: '🐕', color: '#C07040', label: 'Vizsla' },
+  'PAPILLON':  { tipo: 'perro', emoji: '🦋', color: '#F0D080', label: 'Papillon' },
+  'BASENJI':   { tipo: 'perro', emoji: '🐕', color: '#C86030', label: 'Basenji' },
+  'BORZOI':    { tipo: 'perro', emoji: '🐕', color: '#E8D8C0', label: 'Borzoi' },
+  'SALUKI':    { tipo: 'perro', emoji: '🐕', color: '#D4A870', label: 'Saluki' },
+  'RIDGEBACK': { tipo: 'perro', emoji: '🐕', color: '#B86040', label: 'Ridgeback' },
+  'WEIMARANER':{ tipo: 'perro', emoji: '🐕', color: '#9090A0', label: 'Weimaraner' },
+  'POINTER':   { tipo: 'perro', emoji: '🐕', color: '#D0C090', label: 'Pointer' },
+  'SPANIEL':   { tipo: 'perro', emoji: '🐕', color: '#C07830', label: 'Cocker Spaniel' },
+  'TERRIER':   { tipo: 'perro', emoji: '🐕', color: '#A07040', label: 'Terrier' },
+  'BRIARD':    { tipo: 'perro', emoji: '🐕', color: '#706040', label: 'Briard' },
+  'KELPIE':    { tipo: 'perro', emoji: '🐕', color: '#804020', label: 'Kelpie' },
+  'KOMONDOR':  { tipo: 'perro', emoji: '🧶', color: '#E8E8E0', label: 'Komondor' },
   // Gatos
-  'SIAMES':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Siam_lilacpoint.jpg/240px-Siam_lilacpoint.jpg',
-  'PERSA':     'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/White_Persian_Cat.jpg/240px-White_Persian_Cat.jpg',
-  'RAGDOLL':   'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Grumpy_Cat%2C_6th_Gen_%281%29.jpg/240px-Grumpy_Cat%2C_6th_Gen_%281%29.jpg',
-  'BENGAL':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Paintedcats_Red_Star_standing.jpg/240px-Paintedcats_Red_Star_standing.jpg',
-  'SPHYNX':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Bambino_cat_2009.jpg/240px-Bambino_cat_2009.jpg',
-  'MAINE':     'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/CoonCat.jpg/240px-CoonCat.jpg',
-  'ABISINIO':  'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Gustav_chocolate.jpg/240px-Gustav_chocolate.jpg',
-  'BIRMAN':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Birman_male.jpg/240px-Birman_male.jpg',
-  'BURMESE':   'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Gatto_europeo4.jpg/240px-Gatto_europeo4.jpg',
-  'DEVON':     'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Sweet_Leonidas.jpg/240px-Sweet_Leonidas.jpg',
-  'ANGORA':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Qgiorgi7_Angora_cat.jpg/240px-Qgiorgi7_Angora_cat.jpg',
-  'BALINESE':  'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Balinese_cat.jpg/240px-Balinese_cat.jpg',
-  'BOMBAY':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/BombayCatVideoStill.jpg/240px-BombayCatVideoStill.jpg',
-  'MANX':      'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Manxcat.jpg/240px-Manxcat.jpg',
-  'SOMALI':    'https://res.cloudinary.com/dh5wgqgmk/image/fetch/w_240,h_200,c_fill,g_auto/https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Somali_cat_-_young_specimen.jpg/240px-Somali_cat_-_young_specimen.jpg'
+  'SIAMES':    { tipo: 'gato', emoji: '🐱', color: '#B0C4DE', label: 'Siamés' },
+  'PERSA':     { tipo: 'gato', emoji: '😺', color: '#FFFFFF', label: 'Persa' },
+  'RAGDOLL':   { tipo: 'gato', emoji: '🐱', color: '#D0B8C8', label: 'Ragdoll' },
+  'BENGAL':    { tipo: 'gato', emoji: '🐆', color: '#C8A850', label: 'Bengalí' },
+  'SPHYNX':    { tipo: 'gato', emoji: '🐱', color: '#D4A882', label: 'Sphynx' },
+  'MAINE':     { tipo: 'gato', emoji: '🦁', color: '#A06830', label: 'Maine Coon' },
+  'ABISINIO':  { tipo: 'gato', emoji: '🐱', color: '#C87040', label: 'Abisinio' },
+  'BIRMAN':    { tipo: 'gato', emoji: '🐱', color: '#F0E8D8', label: 'Birmano' },
+  'BURMESE':   { tipo: 'gato', emoji: '🐱', color: '#806040', label: 'Burmés' },
+  'DEVON':     { tipo: 'gato', emoji: '🐱', color: '#B8A0C0', label: 'Devon Rex' },
+  'ANGORA':    { tipo: 'gato', emoji: '🐱', color: '#F8F0E0', label: 'Angora' },
+  'BALINESE':  { tipo: 'gato', emoji: '🐱', color: '#C8D8F0', label: 'Balinés' },
+  'BOMBAY':    { tipo: 'gato', emoji: '🐈‍⬛', color: '#202020', label: 'Bombay' },
+  'MANX':      { tipo: 'gato', emoji: '🐱', color: '#D0C0A8', label: 'Manx' },
+  'SOMALI':    { tipo: 'gato', emoji: '🦊', color: '#D07838', label: 'Somalí' }
 };
 
 var _fotoTimer = null;
 
 function mostrarFotoRaza(raza) {
-  var url = RAZA_FOTOS[raza];
-  if (!url) return;
+  var info = RAZA_INFO[raza];
+  if (!info) return;
   var card = document.getElementById('razaFotoCard');
   var img  = document.getElementById('razaFotoImg');
   var lbl  = document.getElementById('razaFotoName');
   if (!card || !img || !lbl) return;
 
-  lbl.textContent = raza.charAt(0) + raza.slice(1).toLowerCase();
-  card.classList.remove('show');
+  lbl.textContent = info.label;
 
+  // Dibujar tarjeta con Canvas (sin APIs, 100% confiable)
+  var canvas = document.createElement('canvas');
+  canvas.width = 160; canvas.height = 120;
+  var ctx = canvas.getContext('2d');
+
+  // Fondo con gradiente
+  var grad = ctx.createLinearGradient(0, 0, 160, 120);
+  var baseColor = info.color;
+  grad.addColorStop(0, baseColor);
+  grad.addColorStop(1, shadeColor(baseColor, -20));
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 160, 120);
+
+  // Patrón de puntos suaves
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  for (var i = 0; i < 5; i++) {
+    for (var j = 0; j < 4; j++) {
+      ctx.beginPath();
+      ctx.arc(16 + i * 32, 15 + j * 30, 12, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Emoji grande centrado
+  ctx.font = '52px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.fillText(info.emoji, 82, 57); // sombra
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.fillText(info.emoji, 80, 55);
+
+  // Badge tipo
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath();
+  ctx.roundRect(8, 8, info.tipo === 'perro' ? 48 : 42, 20, 10);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 11px Arial';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(info.tipo === 'perro' ? '🐾 Perro' : '🐾 Gato', 14, 18);
+
+  img.src = canvas.toDataURL('image/png');
   img.onload = function() {
     card.classList.add('show');
     clearTimeout(_fotoTimer);
     _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
   };
-  img.onerror = function() { card.classList.remove('show'); };
-  img.src = url;
+}
+
+function shadeColor(hex, percent) {
+  var num = parseInt(hex.replace('#',''), 16);
+  var amt = Math.round(2.55 * percent);
+  var R = Math.max(0, Math.min(255, (num >> 16) + amt));
+  var G = Math.max(0, Math.min(255, (num >> 8 & 0x00FF) + amt));
+  var B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+  return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
 }
 
 renderRacha();
