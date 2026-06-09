@@ -374,6 +374,7 @@ function checkWord() {
     var chip = document.getElementById('chip-' + match);
     if (chip) chip.classList.add('found');
     mostrarToast('✅ ' + match + ' encontrado!');
+    mostrarFotoRaza(match);
     // Check win
     if (found.length === palabrasHoy.length) {
       setTimeout(ganaste, 500);
