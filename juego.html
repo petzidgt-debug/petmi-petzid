@@ -539,25 +539,37 @@ function mostrarFotoRaza(raza) {
   var img  = document.getElementById('razaFotoImg');
   var lbl  = document.getElementById('razaFotoName');
   if (!card || !img || !lbl) return;
+
   lbl.textContent = raza.charAt(0) + raza.slice(1).toLowerCase();
+  card.classList.remove('show');
   img.src = '';
 
-  function mostrarCard() {
-    card.classList.add('show');
-    clearTimeout(_fotoTimer);
-    _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 3500);
-  }
+  var showCard = function(url) {
+    img.onload = function() {
+      card.classList.add('show');
+      clearTimeout(_fotoTimer);
+      _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
+    };
+    img.onerror = function() { card.classList.remove('show'); };
+    img.src = url;
+  };
 
   if (info.tipo === 'dog') {
-    fetch('https://dog.ceo/api/breed/' + info.breed + '/images/random')
+    var url = 'https://dog.ceo/api/breed/' + info.breed + '/images/random';
+    fetch(url)
       .then(function(r) { return r.json(); })
-      .then(function(d) { if (d.status === 'success') { img.src = d.message; mostrarCard(); } })
-      .catch(function() {});
+      .then(function(d) {
+        if (d && d.status === 'success' && d.message) showCard(d.message);
+      })
+      .catch(function(e) { console.warn('Dog API error:', e); });
   } else {
-    fetch('https://api.thecatapi.com/v1/images/search?breed_ids=' + info.breed_id + '&limit=1')
+    var url2 = 'https://api.thecatapi.com/v1/images/search?breed_ids=' + info.breed_id + '&limit=1';
+    fetch(url2)
       .then(function(r) { return r.json(); })
-      .then(function(d) { if (d && d[0] && d[0].url) { img.src = d[0].url; mostrarCard(); } })
-      .catch(function() {});
+      .then(function(d) {
+        if (d && d[0] && d[0].url) showCard(d[0].url);
+      })
+      .catch(function(e) { console.warn('Cat API error:', e); });
   }
 }
 
