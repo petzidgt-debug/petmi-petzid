@@ -13,7 +13,6 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 .hero-label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
 .hero-title{font-size:26px;font-weight:900;color:#fff;margin-bottom:4px}
 .hero-sub{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:14px}
-.hero-timer{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border-radius:99px;padding:6px 18px;font-size:18px;font-weight:700;color:#F5C842}
 
 .wrap{max-width:480px;margin:0 auto;padding:16px}
 
@@ -66,8 +65,9 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
   <div class="hero-label">🎮 Juego del día</div>
   <div class="hero-title">Encuentra al Peludo</div>
   <div class="hero-sub">Busca las 5 razas escondidas</div>
-  <div class="hero-timer" id="timerDisplay">⏱ 00:00</div>
 </div>
+<!-- Timer flotante -->
+<div id="timerDisplay" style="position:fixed;top:68px;right:14px;z-index:150;background:#1a1a2e;color:#F5C842;padding:6px 14px;border-radius:99px;font-size:15px;font-weight:700;box-shadow:0 2px 12px rgba(0,0,0,.3)">⏱ 00:00</div>
 
 <div class="wrap">
 
@@ -482,52 +482,52 @@ function mostrarToast(msg) {
 
 // ── Fotos de razas ────────────────────────────────────────────
 var RAZA_API = {
-  'GOLDEN':    { tipo: 'dog', breed: 'retriever/golden' },
-  'POODLE':    { tipo: 'dog', breed: 'poodle' },
-  'BEAGLE':    { tipo: 'dog', breed: 'beagle' },
-  'HUSKY':     { tipo: 'dog', breed: 'husky' },
-  'BOXER':     { tipo: 'dog', breed: 'boxer' },
-  'LABRADOR':  { tipo: 'dog', breed: 'labrador' },
-  'PITBULL':   { tipo: 'dog', breed: 'pitbull' },
-  'SCHNAUZER': { tipo: 'dog', breed: 'schnauzer' },
-  'MALTESE':   { tipo: 'dog', breed: 'maltese' },
-  'SHIH':      { tipo: 'dog', breed: 'shihtzu' },
-  'BULLDOG':   { tipo: 'dog', breed: 'bulldog' },
-  'DACHSHUND': { tipo: 'dog', breed: 'dachshund' },
-  'COLLIE':    { tipo: 'dog', breed: 'collie' },
-  'SETTER':    { tipo: 'dog', breed: 'setter/irish' },
-  'CORGI':     { tipo: 'dog', breed: 'corgi' },
-  'CHOW':      { tipo: 'dog', breed: 'chow' },
-  'DOBERMAN':  { tipo: 'dog', breed: 'doberman' },
-  'AKITA':     { tipo: 'dog', breed: 'akita' },
-  'SAMOYED':   { tipo: 'dog', breed: 'samoyed' },
-  'VIZSLA':    { tipo: 'dog', breed: 'vizsla' },
-  'PAPILLON':  { tipo: 'dog', breed: 'papillon' },
-  'BASENJI':   { tipo: 'dog', breed: 'basenji' },
-  'BORZOI':    { tipo: 'dog', breed: 'borzoi' },
-  'SALUKI':    { tipo: 'dog', breed: 'saluki' },
-  'RIDGEBACK': { tipo: 'dog', breed: 'ridgeback' },
-  'WEIMARANER':{ tipo: 'dog', breed: 'weimaraner' },
-  'POINTER':   { tipo: 'dog', breed: 'pointer' },
-  'SPANIEL':   { tipo: 'dog', breed: 'spaniel/cocker' },
-  'TERRIER':   { tipo: 'dog', breed: 'terrier' },
-  'BRIARD':    { tipo: 'dog', breed: 'briard' },
-  'KELPIE':    { tipo: 'dog', breed: 'kelpie' },
-  'SIAMES':    { tipo: 'cat', breed_id: 'siam' },
-  'PERSA':     { tipo: 'cat', breed_id: 'pers' },
-  'RAGDOLL':   { tipo: 'cat', breed_id: 'ragd' },
-  'BENGAL':    { tipo: 'cat', breed_id: 'beng' },
-  'SPHYNX':    { tipo: 'cat', breed_id: 'sphy' },
-  'MAINE':     { tipo: 'cat', breed_id: 'mcoo' },
-  'ABISINIO':  { tipo: 'cat', breed_id: 'abys' },
-  'BIRMAN':    { tipo: 'cat', breed_id: 'birm' },
-  'BURMESE':   { tipo: 'cat', breed_id: 'bure' },
-  'DEVON':     { tipo: 'cat', breed_id: 'dere' },
-  'ANGORA':    { tipo: 'cat', breed_id: 'tang' },
-  'BALINESE':  { tipo: 'cat', breed_id: 'bali' },
-  'BOMBAY':    { tipo: 'cat', breed_id: 'bomb' },
-  'MANX':      { tipo: 'cat', breed_id: 'manx' },
-  'SOMALI':    { tipo: 'cat', breed_id: 'soma' }
+  'GOLDEN':    { tipo: 'dog', query: 'golden retriever' },
+  'POODLE':    { tipo: 'dog', query: 'poodle dog' },
+  'BEAGLE':    { tipo: 'dog', query: 'beagle dog' },
+  'HUSKY':     { tipo: 'dog', query: 'siberian husky' },
+  'BOXER':     { tipo: 'dog', query: 'boxer dog' },
+  'LABRADOR':  { tipo: 'dog', query: 'labrador retriever' },
+  'PITBULL':   { tipo: 'dog', query: 'pitbull dog' },
+  'SCHNAUZER': { tipo: 'dog', query: 'schnauzer dog' },
+  'MALTESE':   { tipo: 'dog', query: 'maltese dog' },
+  'SHIH':      { tipo: 'dog', query: 'shih tzu dog' },
+  'BULLDOG':   { tipo: 'dog', query: 'bulldog dog' },
+  'DACHSHUND': { tipo: 'dog', query: 'dachshund dog' },
+  'COLLIE':    { tipo: 'dog', query: 'collie dog' },
+  'SETTER':    { tipo: 'dog', query: 'irish setter dog' },
+  'CORGI':     { tipo: 'dog', query: 'corgi dog' },
+  'CHOW':      { tipo: 'dog', query: 'chow chow dog' },
+  'DOBERMAN':  { tipo: 'dog', query: 'doberman dog' },
+  'AKITA':     { tipo: 'dog', query: 'akita dog' },
+  'SAMOYED':   { tipo: 'dog', query: 'samoyed dog' },
+  'VIZSLA':    { tipo: 'dog', query: 'vizsla dog' },
+  'PAPILLON':  { tipo: 'dog', query: 'papillon dog' },
+  'BASENJI':   { tipo: 'dog', query: 'basenji dog' },
+  'BORZOI':    { tipo: 'dog', query: 'borzoi dog' },
+  'SALUKI':    { tipo: 'dog', query: 'saluki dog' },
+  'RIDGEBACK': { tipo: 'dog', query: 'rhodesian ridgeback' },
+  'WEIMARANER':{ tipo: 'dog', query: 'weimaraner dog' },
+  'POINTER':   { tipo: 'dog', query: 'pointer dog' },
+  'SPANIEL':   { tipo: 'dog', query: 'cocker spaniel' },
+  'TERRIER':   { tipo: 'dog', query: 'terrier dog' },
+  'BRIARD':    { tipo: 'dog', query: 'briard dog' },
+  'KELPIE':    { tipo: 'dog', query: 'kelpie dog' },
+  'SIAMES':    { tipo: 'cat', query: 'siamese cat' },
+  'PERSA':     { tipo: 'cat', query: 'persian cat' },
+  'RAGDOLL':   { tipo: 'cat', query: 'ragdoll cat' },
+  'BENGAL':    { tipo: 'cat', query: 'bengal cat' },
+  'SPHYNX':    { tipo: 'cat', query: 'sphynx cat' },
+  'MAINE':     { tipo: 'cat', query: 'maine coon cat' },
+  'ABISINIO':  { tipo: 'cat', query: 'abyssinian cat' },
+  'BIRMAN':    { tipo: 'cat', query: 'birman cat' },
+  'BURMESE':   { tipo: 'cat', query: 'burmese cat' },
+  'DEVON':     { tipo: 'cat', query: 'devon rex cat' },
+  'ANGORA':    { tipo: 'cat', query: 'angora cat' },
+  'BALINESE':  { tipo: 'cat', query: 'balinese cat' },
+  'BOMBAY':    { tipo: 'cat', query: 'bombay cat' },
+  'MANX':      { tipo: 'cat', query: 'manx cat' },
+  'SOMALI':    { tipo: 'cat', query: 'somali cat' }
 };
 
 var _fotoTimer = null;
