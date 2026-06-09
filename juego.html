@@ -377,6 +377,7 @@ function checkWord() {
     mostrarFotoRaza(match);
     // Check win
     if (found.length === palabrasHoy.length) {
+      gameOver = true; // Bloquear inmediatamente, evitar doble llamada
       setTimeout(ganaste, 500);
     }
   }
@@ -411,11 +412,11 @@ function ganaste() {
 
   // Mostrar resultado
   var card = document.getElementById('resultCard');
-  var pts = seconds < 60 ? 3 : seconds < 120 ? 2 : 1;
-  var titulo = seconds < 60 ? '¡Increíble!' : seconds < 120 ? '¡Excelente!' : '¡Lo lograste!';
+  var pts = 1; // Siempre 1 punto por juego
+  var titulo = '¡Lo encontraste todo! 🎉';
   document.getElementById('resultTitle').textContent = titulo;
   document.getElementById('resultSub').textContent = 'Tiempo: ' + tiempo + ' — ¡Vuelve mañana!';
-  document.getElementById('resultPts').textContent = '⭐ +' + pts + (pts > 1 ? ' puntos ganados' : ' punto ganado');
+  document.getElementById('resultPts').textContent = '⭐ +1 punto ganado';
   card.classList.add('show');
 
   // Registrar punto
@@ -481,60 +482,11 @@ function mostrarToast(msg) {
 // ── Init ──────────────────────────────────────────────────────
 
 // ── Fotos de razas ────────────────────────────────────────────
-var RAZA_API = {
-  'GOLDEN':    { tipo: 'dog', query: 'golden retriever' },
-  'POODLE':    { tipo: 'dog', query: 'poodle dog' },
-  'BEAGLE':    { tipo: 'dog', query: 'beagle dog' },
-  'HUSKY':     { tipo: 'dog', query: 'siberian husky' },
-  'BOXER':     { tipo: 'dog', query: 'boxer dog' },
-  'LABRADOR':  { tipo: 'dog', query: 'labrador retriever' },
-  'PITBULL':   { tipo: 'dog', query: 'pitbull dog' },
-  'SCHNAUZER': { tipo: 'dog', query: 'schnauzer dog' },
-  'MALTESE':   { tipo: 'dog', query: 'maltese dog' },
-  'SHIH':      { tipo: 'dog', query: 'shih tzu dog' },
-  'BULLDOG':   { tipo: 'dog', query: 'bulldog dog' },
-  'DACHSHUND': { tipo: 'dog', query: 'dachshund dog' },
-  'COLLIE':    { tipo: 'dog', query: 'collie dog' },
-  'SETTER':    { tipo: 'dog', query: 'irish setter dog' },
-  'CORGI':     { tipo: 'dog', query: 'corgi dog' },
-  'CHOW':      { tipo: 'dog', query: 'chow chow dog' },
-  'DOBERMAN':  { tipo: 'dog', query: 'doberman dog' },
-  'AKITA':     { tipo: 'dog', query: 'akita dog' },
-  'SAMOYED':   { tipo: 'dog', query: 'samoyed dog' },
-  'VIZSLA':    { tipo: 'dog', query: 'vizsla dog' },
-  'PAPILLON':  { tipo: 'dog', query: 'papillon dog' },
-  'BASENJI':   { tipo: 'dog', query: 'basenji dog' },
-  'BORZOI':    { tipo: 'dog', query: 'borzoi dog' },
-  'SALUKI':    { tipo: 'dog', query: 'saluki dog' },
-  'RIDGEBACK': { tipo: 'dog', query: 'rhodesian ridgeback' },
-  'WEIMARANER':{ tipo: 'dog', query: 'weimaraner dog' },
-  'POINTER':   { tipo: 'dog', query: 'pointer dog' },
-  'SPANIEL':   { tipo: 'dog', query: 'cocker spaniel' },
-  'TERRIER':   { tipo: 'dog', query: 'terrier dog' },
-  'BRIARD':    { tipo: 'dog', query: 'briard dog' },
-  'KELPIE':    { tipo: 'dog', query: 'kelpie dog' },
-  'SIAMES':    { tipo: 'cat', query: 'siamese cat' },
-  'PERSA':     { tipo: 'cat', query: 'persian cat' },
-  'RAGDOLL':   { tipo: 'cat', query: 'ragdoll cat' },
-  'BENGAL':    { tipo: 'cat', query: 'bengal cat' },
-  'SPHYNX':    { tipo: 'cat', query: 'sphynx cat' },
-  'MAINE':     { tipo: 'cat', query: 'maine coon cat' },
-  'ABISINIO':  { tipo: 'cat', query: 'abyssinian cat' },
-  'BIRMAN':    { tipo: 'cat', query: 'birman cat' },
-  'BURMESE':   { tipo: 'cat', query: 'burmese cat' },
-  'DEVON':     { tipo: 'cat', query: 'devon rex cat' },
-  'ANGORA':    { tipo: 'cat', query: 'angora cat' },
-  'BALINESE':  { tipo: 'cat', query: 'balinese cat' },
-  'BOMBAY':    { tipo: 'cat', query: 'bombay cat' },
-  'MANX':      { tipo: 'cat', query: 'manx cat' },
-  'SOMALI':    { tipo: 'cat', query: 'somali cat' }
-};
+// Fotos via /api/breedphoto (servidor)
 
 var _fotoTimer = null;
 
 function mostrarFotoRaza(raza) {
-  var info = RAZA_API[raza];
-  if (!info) return;
   var card = document.getElementById('razaFotoCard');
   var img  = document.getElementById('razaFotoImg');
   var lbl  = document.getElementById('razaFotoName');
@@ -542,35 +494,21 @@ function mostrarFotoRaza(raza) {
 
   lbl.textContent = raza.charAt(0) + raza.slice(1).toLowerCase();
   card.classList.remove('show');
-  img.src = '';
 
-  var showCard = function(url) {
-    img.onload = function() {
-      card.classList.add('show');
-      clearTimeout(_fotoTimer);
-      _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
-    };
-    img.onerror = function() { card.classList.remove('show'); };
-    img.src = url;
-  };
-
-  if (info.tipo === 'dog') {
-    var url = 'https://dog.ceo/api/breed/' + info.breed + '/images/random';
-    fetch(url)
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        if (d && d.status === 'success' && d.message) showCard(d.message);
-      })
-      .catch(function(e) { console.warn('Dog API error:', e); });
-  } else {
-    var url2 = 'https://api.thecatapi.com/v1/images/search?breed_ids=' + info.breed_id + '&limit=1';
-    fetch(url2)
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        if (d && d[0] && d[0].url) showCard(d[0].url);
-      })
-      .catch(function(e) { console.warn('Cat API error:', e); });
-  }
+  // Llamar al proxy de Vercel — evita CORS y CSP
+  fetch('/api/breedphoto?raza=' + encodeURIComponent(raza))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.ok || !d.url) return;
+      img.onload = function() {
+        card.classList.add('show');
+        clearTimeout(_fotoTimer);
+        _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
+      };
+      img.onerror = function() { card.classList.remove('show'); };
+      img.src = d.url;
+    })
+    .catch(function() {});
 }
 
 renderRacha();
