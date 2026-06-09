@@ -533,7 +533,18 @@ var RAZA_INFO = {
   'BALINESE':  { tipo: 'gato', emoji: '🐱', color: '#C8D8F0', label: 'Balinés' },
   'BOMBAY':    { tipo: 'gato', emoji: '🐈‍⬛', color: '#202020', label: 'Bombay' },
   'MANX':      { tipo: 'gato', emoji: '🐱', color: '#D0C0A8', label: 'Manx' },
-  'SOMALI':    { tipo: 'gato', emoji: '🦊', color: '#D07838', label: 'Somalí' }
+  'SOMALI':    { tipo: 'gato', emoji: '🦊', color: '#D07838', label: 'Somalí' },
+  'KUVASZ':    { tipo: 'perro', emoji: '🐕', color: '#F0EEE0', label: 'Kuvasz' },
+  'PULI':      { tipo: 'perro', emoji: '🧶', color: '#404040', label: 'Puli' },
+  'LYKOI':     { tipo: 'gato', emoji: '🐱', color: '#707070', label: 'Lykoi' },
+  'OCICAT':    { tipo: 'gato', emoji: '🐆', color: '#D4A850', label: 'Ocicat' },
+  'PIXIEBOB':  { tipo: 'gato', emoji: '🐱', color: '#C09060', label: 'Pixiebob' },
+  'RAGAMUFFIN':{ tipo: 'gato', emoji: '😺', color: '#E0C8B0', label: 'Ragamuffin' },
+  'TONKINESE': { tipo: 'gato', emoji: '🐱', color: '#90A8C0', label: 'Tonkinese' },
+  'GALGO':     { tipo: 'perro', emoji: '🐕', color: '#C0A880', label: 'Galgo' },
+  'LEVRIERO':  { tipo: 'perro', emoji: '🐕', color: '#B0A898', label: 'Levriero' },
+  'PODENCO':   { tipo: 'perro', emoji: '🦊', color: '#D08040', label: 'Podenco' },
+  'SEGUGIO':   { tipo: 'perro', emoji: '🐕', color: '#C09060', label: 'Segugio' },
 };
 
 var _fotoTimer = null;
@@ -548,63 +559,31 @@ function mostrarFotoRaza(raza) {
 
   lbl.textContent = info.label;
 
-  // Dibujar tarjeta con Canvas (sin APIs, 100% confiable)
+  // Canvas minimo — fondo de color + nombre
   var canvas = document.createElement('canvas');
   canvas.width = 160; canvas.height = 120;
   var ctx = canvas.getContext('2d');
-
-  // Fondo con gradiente
-  var grad = ctx.createLinearGradient(0, 0, 160, 120);
-  var baseColor = info.color;
-  grad.addColorStop(0, baseColor);
-  grad.addColorStop(1, shadeColor(baseColor, -20));
-  ctx.fillStyle = grad;
+  ctx.fillStyle = info.color;
   ctx.fillRect(0, 0, 160, 120);
-
-  // Patrón de puntos suaves
-  ctx.fillStyle = 'rgba(255,255,255,0.08)';
-  for (var i = 0; i < 5; i++) {
-    for (var j = 0; j < 4; j++) {
-      ctx.beginPath();
-      ctx.arc(16 + i * 32, 15 + j * 30, 12, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // Emoji grande centrado
-  ctx.font = '52px serif';
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(0, 80, 160, 40);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 13px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = 'rgba(0,0,0,0.15)';
-  ctx.fillText(info.emoji, 82, 57); // sombra
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  ctx.fillText(info.emoji, 80, 55);
-
-  // Badge tipo
-  ctx.fillStyle = 'rgba(0,0,0,0.25)';
-  ctx.beginPath();
-  ctx.roundRect(8, 8, info.tipo === 'perro' ? 48 : 42, 20, 10);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 11px Arial';
-  ctx.textAlign = 'left';
+  ctx.fillText(info.label.toUpperCase(), 80, 100);
+  ctx.font = '44px serif';
+  ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(info.tipo === 'perro' ? '🐾 Perro' : '🐾 Gato', 14, 18);
+  ctx.fillText(info.emoji, 80, 44);
 
-  // onload ANTES de src — con dataURL la carga es sincrona
-  img.onload = function() {
-    card.classList.add('show');
-    clearTimeout(_fotoTimer);
-    _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
-  };
+  // Asignar directamente — data URLs cargan sincronamente
   img.src = canvas.toDataURL('image/png');
-  // Fallback: si ya cargó (sincrono), mostrar directamente
-  if (img.complete) {
-    card.classList.add('show');
-    clearTimeout(_fotoTimer);
-    _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
-  }
+  card.classList.add('show');
+  clearTimeout(_fotoTimer);
+  _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
 }
+
 
 function shadeColor(hex, percent) {
   var num = parseInt(hex.replace('#',''), 16);
