@@ -133,7 +133,15 @@
 
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
       '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">📖 Revista</a>' +
-      '<a href="https://www.revistapetmi.com/category/all-products" target="_blank" class="h-link">🛍️ Tienda</a>';
+      (function(){
+        var _esp = localStorage.getItem('petmi_especie') || '';
+        var _url = 'https://www.revistapetmi.com/tienda';
+        if (_esp.toLowerCase().indexOf('gato') >= 0)
+          _url = 'https://www.revistapetmi.com/tienda/coleccion/gatos';
+        else if (_esp.toLowerCase().indexOf('perro') >= 0)
+          _url = 'https://www.revistapetmi.com/tienda/coleccion/perros';
+        return '<a href="' + _url + '" target="_blank" class="h-link">🛍️ Tienda</a>';
+      })();
     // ── Right: avatar o botones ──────────────────────────────
     var userInitials = sessionDueno
       ? sessionDueno.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()
@@ -262,6 +270,10 @@
     }).then(function(r){return r.json();})
     .then(function(d){
       if(!d.found||!d.mascotas.length) return;
+      // Guardar especie de la primera mascota para link de tienda
+      if(d.mascotas && d.mascotas[0] && d.mascotas[0].especie) {
+        localStorage.setItem('petmi_especie', d.mascotas[0].especie);
+      }
       var promesas = d.mascotas.map(function(m){
         return fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(m.uid)).then(function(r){return r.json();}).then(function(da){return {uid:m.uid,data:da};});
       });
