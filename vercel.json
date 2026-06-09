@@ -72,6 +72,15 @@
           "value": "no-store, no-cache, must-revalidate"
         }
       ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; img-src 'self' data: blob: https: https://images.dog.ceo https://cdn2.thecatapi.com https://26.media.tumblr.com; connect-src 'self' https: wss:; font-src 'self' https: data:;"
+        }
+      ]
     }
   ],
   "redirects": [
