@@ -591,12 +591,19 @@ function mostrarFotoRaza(raza) {
   ctx.textBaseline = 'middle';
   ctx.fillText(info.tipo === 'perro' ? '🐾 Perro' : '🐾 Gato', 14, 18);
 
-  img.src = canvas.toDataURL('image/png');
+  // onload ANTES de src — con dataURL la carga es sincrona
   img.onload = function() {
     card.classList.add('show');
     clearTimeout(_fotoTimer);
     _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
   };
+  img.src = canvas.toDataURL('image/png');
+  // Fallback: si ya cargó (sincrono), mostrar directamente
+  if (img.complete) {
+    card.classList.add('show');
+    clearTimeout(_fotoTimer);
+    _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
+  }
 }
 
 function shadeColor(hex, percent) {
