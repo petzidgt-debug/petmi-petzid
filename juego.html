@@ -559,54 +559,54 @@ var RAZA_INFO = {
 var _fotoTimer = null;
 
 function mostrarFotoRaza(raza) {
-  // DEBUG: mostrar cada paso como toast
-  var pasos = [];
-  pasos.push('1:raza=' + raza);
-
   var info = RAZA_INFO[raza];
-  if (!info) { mostrarToast('DEBUG: sin info para ' + raza); return; }
-  pasos.push('2:info ok');
-
+  if (!info) return;
   var card = document.getElementById('razaFotoCard');
   var img  = document.getElementById('razaFotoImg');
   var lbl  = document.getElementById('razaFotoName');
-
-  if (!card) { mostrarToast('DEBUG: no hay #razaFotoCard'); return; }
-  if (!img)  { mostrarToast('DEBUG: no hay #razaFotoImg');  return; }
-  if (!lbl)  { mostrarToast('DEBUG: no hay #razaFotoName'); return; }
-  pasos.push('3:elementos ok');
+  if (!card || !img || !lbl) return;
 
   lbl.textContent = info.label;
 
   var canvas = document.createElement('canvas');
   canvas.width = 160; canvas.height = 120;
   var ctx = canvas.getContext('2d');
-  if (!ctx) { mostrarToast('DEBUG: Canvas no soportado'); return; }
-  pasos.push('4:canvas ok');
+  if (!ctx) return;
 
+  // Fondo con color de la raza
   ctx.fillStyle = info.color;
   ctx.fillRect(0, 0, 160, 120);
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.fillRect(0, 80, 160, 40);
+
+  // Patrón de puntos suaves
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  [[20,20],[60,15],[100,25],[140,20],[15,65],[50,75],[95,60],[140,70]].forEach(function(p){
+    ctx.beginPath(); ctx.arc(p[0],p[1],14,0,Math.PI*2); ctx.fill();
+  });
+
+  // Barra inferior oscura
+  ctx.fillStyle = 'rgba(0,0,0,0.28)';
+  ctx.fillRect(0, 82, 160, 38);
+
+  // Nombre de la raza
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 13px Arial';
+  ctx.font = 'bold 12px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(info.label.toUpperCase(), 80, 100);
-  ctx.font = '44px serif';
-  ctx.fillText(info.emoji, 80, 44);
+  ctx.fillText(info.label.toUpperCase(), 80, 101);
 
-  var dataUrl = canvas.toDataURL('image/png');
-  pasos.push('5:dataUrl=' + (dataUrl ? dataUrl.substring(0,20) : 'null'));
+  // Emoji grande
+  ctx.font = '46px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.fillText(info.emoji, 81, 43);
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.fillText(info.emoji, 80, 42);
 
-  img.src = dataUrl;
+  img.src = canvas.toDataURL('image/png');
   card.classList.add('show');
-  pasos.push('6:show agregado, clases=' + card.className);
-
-  mostrarToast('DEBUG: ' + pasos.join(' | '));
-
   clearTimeout(_fotoTimer);
-  _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 6000);
+  _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
 }
 
 
