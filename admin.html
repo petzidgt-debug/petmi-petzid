@@ -914,6 +914,7 @@ function showScreen(name,el){
   var _sc=document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)); if(_sc) _sc.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   if(el) el.classList.add('active');
+  var _cd=document.querySelector('.content'); if(_cd) _cd.scrollTop=0;
   if(name==='eventos'){cargarEventosAdmin();}
   if(name==='lugares') cargarLugaresAdmin();
   if(name==='reglas') setTimeout(cargarReglas,100);
