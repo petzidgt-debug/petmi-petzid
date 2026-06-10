@@ -452,13 +452,13 @@ tbody tr:last-child td{border-bottom:none}
       <!-- Lista de partidos -->
       <div class="table-card">
         <div style="padding:12px;border-bottom:0.5px solid #f0f0f0"><span style="font-size:13px;font-weight:700">Partidos y predicciones</span></div>
-        <div id="wcPartidosWrap"><div class="loading"><div class="spinner"></div></div></div>
+        <div id="wcPartidosWrap"><div style="padding:24px;text-align:center;color:#888"><div class="spinner" style="margin:0 auto 8px"></div>Cargando partidos...</div></div>
       </div>
 
       <!-- Ranking -->
       <div class="table-card" style="margin-top:16px">
         <div style="padding:12px;border-bottom:0.5px solid #f0f0f0"><span style="font-size:13px;font-weight:700">🏆 Ranking de participantes</span></div>
-        <div id="wcRankingWrap"><div class="loading"><div class="spinner"></div></div></div>
+        <div id="wcRankingWrap"><div style="padding:24px;text-align:center;color:#888"><div class="spinner" style="margin:0 auto 8px"></div>Cargando ranking...</div></div>
       </div>
     </div>
 
@@ -922,7 +922,7 @@ function showScreen(name,el){
   if(name==='instalaciones') loadInstalaciones();
   if(name==='juegos') loadJuegos();
   if(name==='amigos') loadAmigos();
-  if(name==='mundial') setTimeout(loadWCAdmin, 100);
+  if(name==='mundial') { try { loadWCAdmin(); } catch(e) { console.error('WC Error:', e); } }
   if(name==='_unused'){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
