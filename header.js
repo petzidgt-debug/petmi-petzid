@@ -259,7 +259,7 @@
     });
     setTimeout(function(){
       var loginInput = document.getElementById('petmiLoginEmail');
-      if(loginInput) loginInput.addEventListener('keydown', function(e){ if(e.key==='Enter') petmiVerificarLogin(); });
+      if(loginInput) loginInput.addEventListener('keydown', function(e){ if(e.key==='Enter') petmiIrPaso2(); });
     }, 500);
     if(sessionEmail) cargarNotifHeader(sessionEmail);
   }
@@ -308,6 +308,10 @@
   window.petmiLimpiarNotif = function(){ var b=document.getElementById('petmiNotifBadge'); if(b) b.style.display='none'; };
   window.petmiCerrarSesion = function(){ localStorage.removeItem('petzid_email'); localStorage.removeItem('petzid_dueno'); window.location.href='/galeria.html'; };
   window.petmiAbrirLogin = function(){
+    // Reset to step 1
+    var s1=document.getElementById('petmiStep1'),s2=document.getElementById('petmiStep2');
+    if(s1)s1.style.display='block';
+    if(s2)s2.style.display='none';
     var o=document.getElementById('petmiLoginOverlay'); if(o) o.classList.add('open');
     var regBtn=document.getElementById('petmiLoginRegBtn'); if(regBtn) regBtn.style.display='none';
     var msg=document.getElementById('petmiLoginMsg'); if(msg){msg.style.display='none';msg.textContent='';}
@@ -315,36 +319,57 @@
     var btn=document.getElementById('petmiLoginBtn'); if(btn){btn.disabled=false;btn.textContent='Ingresar';}
   };
   window.petmiCerrarLogin = function(){ var o=document.getElementById('petmiLoginOverlay'); if(o) o.classList.remove('open'); };
-  window.petmiVerificarLogin = function(){
+  // ── Login 2 pasos ──────────────────────────────────────────
+  window.petmiIrPaso2 = function(){
     var email=document.getElementById('petmiLoginEmail').value.trim().toLowerCase();
     if(!email||email.indexOf('@')<0){petmiLoginMsg('Ingresa un correo válido','error');return;}
-    var btn=document.getElementById('petmiLoginBtn');
+    document.getElementById('petmiStep1').style.display='none';
+    document.getElementById('petmiStep2').style.display='block';
+    setTimeout(function(){
+      var n=document.getElementById('petmiLoginNombre');
+      if(n){n.value='';n.focus();}
+    },100);
+  };
+
+  window.petmiVolverPaso1 = function(){
+    document.getElementById('petmiStep2').style.display='none';
+    document.getElementById('petmiStep1').style.display='block';
+    petmiLoginMsg2('','');
+  };
+
+  window.petmiVerificarLogin = function(){
+    var email  = document.getElementById('petmiLoginEmail').value.trim().toLowerCase();
+    var nombre = document.getElementById('petmiLoginNombre').value.trim();
+    if(!nombre){petmiLoginMsg2('Escribe el nombre de tu mascota','error');return;}
+    var btn=document.getElementById('petmiLoginBtn2');
     btn.disabled=true;btn.textContent='Verificando...';
-    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:email})})
+    fetch('/api/galeria?action=verificarLogin',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:email,nombreMascota:nombre})
+    })
     .then(function(r){return r.json();})
     .then(function(d){
-      if(d.found&&d.mascotas&&d.mascotas.length>0){
-        localStorage.setItem('petzid_email',email);
-        localStorage.setItem('petzid_dueno',d.mascotas[0].dueno||'');
-        petmiLoginMsg('Bienvenido/a! 🐾','success');
+      if(d.ok){
+        localStorage.setItem('petzid_email',d.email||email);
+        localStorage.setItem('petzid_dueno',d.dueno||'');
+        if(d.mascotas&&d.mascotas[0]&&d.mascotas[0].especie)
+          localStorage.setItem('petmi_especie',d.mascotas[0].especie);
+        petmiLoginMsg2('¡Bienvenido/a! 🐾','success');
         setTimeout(function(){window.location.reload();},1000);
       } else {
-        petmiLoginMsg('No encontramos ese correo. ¿Ya tienes una mascota registrada?','error');
+        petmiLoginMsg2(d.msg||'Datos incorrectos. Intenta de nuevo.','error');
         btn.disabled=false;btn.textContent='Ingresar';
-        var regBtn=document.getElementById('petmiLoginRegBtn');
-        if(!regBtn){
-          regBtn=document.createElement('a');regBtn.id='petmiLoginRegBtn';regBtn.href='/index.html';
-          regBtn.style.cssText='display:block;width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;text-align:center;text-decoration:none;box-sizing:border-box;font-family:Arial,sans-serif';
-          regBtn.textContent='🐾 Registrar mi mascota';
-          var cancelBtn=document.querySelector('.h-login-cancel');
-          if(cancelBtn) cancelBtn.parentNode.insertBefore(regBtn,cancelBtn);
-        }
-        regBtn.style.display='block';
+        document.getElementById('petmiLoginNombre').value='';
+        document.getElementById('petmiLoginNombre').focus();
       }
-    }).catch(function(){petmiLoginMsg('Error de conexión','error');btn.disabled=false;btn.textContent='Ingresar';});
+    }).catch(function(){
+      petmiLoginMsg2('Error de conexión','error');
+      btn.disabled=false;btn.textContent='Ingresar';
+    });
   };
 
   function petmiLoginMsg(txt,tipo){var el=document.getElementById('petmiLoginMsg');if(el){el.textContent=txt;el.className='h-login-msg '+tipo;el.style.display='block';}}
+  function petmiLoginMsg2(txt,tipo){var el=document.getElementById('petmiLoginMsg2');if(el){el.textContent=txt;el.className='h-login-msg '+(tipo||'');el.style.display=txt?'block':'none';}}
 
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initHeader);}else{initHeader();}
 })();
