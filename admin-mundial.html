@@ -78,9 +78,9 @@ tr:hover td{background:#fafff9}
         </select>
         <select id="wcSelectResultado" style="flex:1;min-width:140px">
           <option value="">Resultado...</option>
-          <option value="equipo1">Gana Equipo 1</option>
+          <option value="equipo1" id="optE1">Gana [Equipo 1]</option>
           <option value="empate">Empate</option>
-          <option value="equipo2">Gana Equipo 2</option>
+          <option value="equipo2" id="optE2">Gana [Equipo 2]</option>
         </select>
         <button class="btn btn-primary" onclick="marcarResultado()">✅ Confirmar</button>
       </div>
@@ -128,14 +128,33 @@ function loadPartidos() {
     // Populate select
     var sel = document.getElementById('wcSelectPartido');
     sel.innerHTML = '<option value="">Seleccionar partido...</option>';
+    sel.onchange = function() {
+      var opt = sel.options[sel.selectedIndex];
+      var e1 = opt.getAttribute('data-e1') || 'Equipo 1';
+      var e2 = opt.getAttribute('data-e2') || 'Equipo 2';
+      var locked = opt.getAttribute('data-locked') === '1';
+      document.getElementById('optE1').textContent = 'Gana [1] ' + e1;
+      document.getElementById('optE2').textContent = 'Gana [2] ' + e2;
+      document.getElementById('wcSelectResultado').disabled = locked;
+      document.querySelector('.btn-primary').disabled = locked;
+      if(locked) document.getElementById('resultMsg').textContent = '🔒 Este partido ya tiene resultado registrado';
+      else document.getElementById('resultMsg').textContent = '';
+      document.getElementById('resultMsg').style.display = locked ? 'block' : 'none';
+      document.getElementById('resultMsg').style.color = locked ? '#e53935' : '#888';
+    };
     rows.forEach(function(p){
       var fecha = new Date(p.fecha).toLocaleString('es-GT',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'America/Guatemala'});
       var opt = document.createElement('option');
       opt.value = p.id;
       opt.setAttribute('data-e1', p.equipo1);
       opt.setAttribute('data-e2', p.equipo2);
-      opt.textContent = (p.resultado ? '✅ ' : new Date(p.fecha)<now ? '⏳ ' : '🔜 ')
-        + 'Gr.'+p.grupo+' '+p.bandera1+p.equipo1+' vs '+p.bandera2+p.equipo2+' · '+fecha;
+      var locked = !!p.resultado;
+      opt.setAttribute('data-locked', locked ? '1' : '0');
+      opt.setAttribute('data-e1', p.equipo1);
+      opt.setAttribute('data-e2', p.equipo2);
+      opt.textContent = (locked ? '✅ ' : new Date(p.fecha)<now ? '⏳ ' : '🔜 ')
+        + 'Gr.'+p.grupo+' [1]'+p.bandera1+p.equipo1+' vs [2]'+p.bandera2+p.equipo2+' · '+fecha
+        + (locked ? ' → '+p.resultado : '');
       sel.appendChild(opt);
     });
 
@@ -204,7 +223,9 @@ function marcarResultado() {
   var opt = sel.options[sel.selectedIndex];
   var e1=opt.getAttribute('data-e1'), e2=opt.getAttribute('data-e2');
   var lbl=resultado==='equipo1'?'Gana '+e1:resultado==='equipo2'?'Gana '+e2:'Empate';
-  if(!confirm('Confirmar resultado: '+lbl+'\n\nEsto asignará +2 pts a quienes acertaron.')) return;
+  var locked = sel.options[sel.selectedIndex].getAttribute('data-locked');
+  if(locked === '1') { alert('Este partido ya tiene resultado registrado'); return; }
+  if(!confirm('Confirmar resultado: '+lbl+'\n\nEsto asignará +2 pts a quienes acertaron.\n\nNo se podrá cambiar después.')) return;
   var msg=document.getElementById('resultMsg');
   msg.textContent='Procesando...';msg.style.display='block';msg.style.color='#888';
   fetch('/api/galeria?action=wc_marcarResultado',{
