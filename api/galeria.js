@@ -866,7 +866,7 @@ export default async function handler(req, res) {
       const nombreL = nombreMascota.trim().toLowerCase();
 
       // Buscar todas las mascotas con ese email (case-insensitive)
-      const queryUrl = SUPABASE_URL + '/rest/v1/mascotas?select=uid,nombre,email,dueno,foto,especie,premium,premium_vence,angelito&limit=20&or=(email.eq.' + encodeURIComponent(emailL) + ',email.ilike.' + encodeURIComponent(emailL) + ')';
+      const queryUrl = SUPABASE_URL + '/rest/v1/mascotas?select=uid,nombre,email,dueno,foto,especie,premium,angelito&limit=20&email=eq.' + encodeURIComponent(emailL);
       const r = await fetch(queryUrl, {
         headers: {
           'apikey': SUPABASE_SERVICE_KEY,
@@ -880,14 +880,32 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: false, msg: 'Datos incorrectos', debug: { type: typeof mascotas, isArray: Array.isArray(mascotas), raw: JSON.stringify(mascotas).substring(0,100) }});
       }
 
-      // Buscar mascota que coincida — ignorar mayúsculas y espacios
-      const match = mascotas.find(m =>
-        m.nombre && m.nombre.trim().toLowerCase() === nombreL && !m.angelito
-      );
+      // Limpiar caracteres invisibles del nombre buscado
+      const limpiar = s => s
+        .normalize('NFD')           // separar acentos
+        .replace(/[\u0300-\u036f]/g, '') // quitar acentos
+        .replace(/[^a-z0-9\s]/g, '') // solo alfanuméricos
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const nombreNorm = limpiar(nombreL);
+
+      // Buscar mascota que coincida — angelito puede ser bool o string
+      const match = mascotas.find(m => {
+        if (!m.nombre) return false;
+        const esAngelito = m.angelito === true || m.angelito === 'true' || m.angelito === 1;
+        if (esAngelito) return false;
+        const nombreDB = limpiar(m.nombre.toLowerCase());
+        return nombreDB === nombreNorm;
+      });
 
       if (!match) {
-        const nombres = mascotas.filter(m => !m.angelito).map(m => m.nombre);
-        return res.status(200).json({ ok: false, msg: 'Datos incorrectos', debug: { nombreBuscado: nombreL, nombresEnDB: nombres }});
+        const nombres = mascotas.filter(m => !(m.angelito === true || m.angelito === 'true')).map(m => ({
+          raw: m.nombre,
+          normalizado: limpiar(m.nombre.toLowerCase()),
+          angelito: m.angelito
+        }));
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos', debug: { nombreBuscado: nombreL, nombreNorm, nombresEnDB: nombres }});
       }
 
       // ✅ Login exitoso
