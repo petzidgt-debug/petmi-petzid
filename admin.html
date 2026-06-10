@@ -1765,7 +1765,7 @@ function loadWCAdmin() {
     var sel = document.getElementById('wcSelectPartido');
     sel.innerHTML = '<option value="">Seleccionar partido...</option>';
     partidos.forEach(function(p) {
-      var fecha = new Date(p.fecha).toLocaleString('es-GT',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      var fecha = new Date(p.fecha).toLocaleString('es-GT',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'America/Guatemala'});
       var estado = p.resultado ? ('OK:'+p.resultado) : (new Date(p.fecha)<now?'PENDIENTE':'prox');
       var opt = document.createElement('option');
       opt.value = p.id; opt.setAttribute('data-e1',p.equipo1); opt.setAttribute('data-e2',p.equipo2);
@@ -1774,7 +1774,7 @@ function loadWCAdmin() {
     });
     var html='<table class="admin-table"><thead><tr><th>Fecha(GT)</th><th>Partido</th><th>Gr.</th><th>Resultado</th><th>Preds</th></tr></thead><tbody>';
     partidos.forEach(function(p){
-      var fecha=new Date(p.fecha).toLocaleString('es-GT',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      var fecha=new Date(p.fecha).toLocaleString('es-GT',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'America/Guatemala'});
       var res=p.resultado?('<b style="color:#2e7d32">'+p.resultado+'</b>'):(new Date(p.fecha)<now?'<span style="color:#f9a825">pendiente</span>':'-');
       html+='<tr><td style="font-size:11px">'+fecha+'</td><td>'+p.bandera1+p.equipo1+' vs '+p.bandera2+p.equipo2+'</td><td style="text-align:center">'+(p.grupo||p.fase||'-')+'</td><td>'+res+'</td><td style="text-align:center" id="preds-'+p.id+'">...</td></tr>';
     });
