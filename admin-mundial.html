@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — Mundial 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f5f5f0;min-height:100vh}
+.header{background:#1a1a2e;padding:14px 20px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50}
+.header a{color:#aaa;text-decoration:none;font-size:13px}
+.header h1{font-size:17px;font-weight:900;color:#fff;flex:1}
+.header span{color:#F5C842}
+.content{max-width:900px;margin:0 auto;padding:20px 16px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.page-title{font-size:22px;font-weight:900;color:#222}
+.page-sub{font-size:13px;color:#888;margin-top:2px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);text-align:center}
+.stat-num{font-size:28px;font-weight:900;color:#1a1a2e}
+.stat-lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden;margin-bottom:16px}
+.card-header{padding:14px 16px;border-bottom:0.5px solid #f0f0f0;font-size:14px;font-weight:700;color:#222;display:flex;align-items:center;justify-content:space-between}
+.card-body{padding:16px}
+select,input{padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;font-family:Arial,sans-serif;outline:none;background:#fff}
+select:focus,input:focus{border-color:#00B4B4}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif}
+.btn-primary{background:#00B4B4;color:#fff}
+.btn-sm{background:#f0f0f0;color:#555;padding:7px 14px;font-size:12px;border-radius:8px;border:none;cursor:pointer;font-family:Arial,sans-serif}
+.result-msg{margin-top:10px;font-size:13px;font-weight:600;display:none}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px;border-bottom:0.5px solid #f0f0f0;background:#fafafa}
+td{padding:10px 12px;border-bottom:0.5px solid #f5f5f5;font-size:13px;color:#333;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafff9}
+.badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700}
+.badge-ok{background:#e8f5e9;color:#2e7d32}
+.badge-pend{background:#fff8e1;color:#f9a825}
+.badge-prox{background:#f0f0f0;color:#999}
+.spinner{width:20px;height:20px;border:2px solid #e0e0e0;border-top-color:#00B4B4;border-radius:50%;animation:spin .7s linear infinite;margin:20px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-msg{text-align:center;padding:30px;color:#aaa;font-size:13px}
+@media(max-width:600px){.stats-grid{grid-template-columns:1fr 1fr}.page-header{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/admin.html">← Admin</a>
+  <h1>⚽ Mundial <span>2026</span></h1>
+  <button class="btn-sm" onclick="loadData()">🔄 Actualizar</button>
+</div>
+
+<div class="content">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Quiniela Mundial FIFA 2026</div>
+      <div class="page-sub">Gestión de partidos, resultados y ranking</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="wcTotal">—</div><div class="stat-lbl">Partidos</div></div>
+    <div class="stat-card"><div class="stat-num" id="wcPreds">—</div><div class="stat-lbl">Predicciones</div></div>
+    <div class="stat-card"><div class="stat-num" id="wcParticipantes">—</div><div class="stat-lbl">Participantes</div></div>
+    <div class="stat-card"><div class="stat-num" id="wcPendientes">—</div><div class="stat-lbl">Sin resultado</div></div>
+  </div>
+
+  <!-- Marcar resultado -->
+  <div class="card">
+    <div class="card-header">🏁 Marcar resultado de partido</div>
+    <div class="card-body">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+        <select id="wcSelectPartido" style="flex:2;min-width:220px">
+          <option value="">Cargando partidos...</option>
+        </select>
+        <select id="wcSelectResultado" style="flex:1;min-width:140px">
+          <option value="">Resultado...</option>
+          <option value="equipo1">Gana Equipo 1</option>
+          <option value="empate">Empate</option>
+          <option value="equipo2">Gana Equipo 2</option>
+        </select>
+        <button class="btn btn-primary" onclick="marcarResultado()">✅ Confirmar</button>
+      </div>
+      <div id="resultMsg" class="result-msg"></div>
+    </div>
+  </div>
+
+  <!-- Tabla partidos -->
+  <div class="card">
+    <div class="card-header">Lista de partidos <span id="partidoCount" style="font-size:12px;color:#aaa;font-weight:400"></span></div>
+    <div id="tablaPartidos"><div class="loading-msg"><div class="spinner"></div>Cargando...</div></div>
+  </div>
+
+  <!-- Ranking -->
+  <div class="card">
+    <div class="card-header">🏆 Ranking de participantes</div>
+    <div id="tablaRanking"><div class="loading-msg"><div class="spinner"></div>Cargando...</div></div>
+  </div>
+
+</div>
+
+<script>
+var SUPA = 'https://ilcreewilnkchvozicyp.supabase.co';
+var KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+var H    = {'apikey':KEY,'Authorization':'Bearer '+KEY};
+
+function loadData() {
+  loadPartidos();
+  loadRanking();
+}
+
+function loadPartidos() {
+  fetch(SUPA+'/rest/v1/wc_partidos?select=*&order=fecha.asc',{headers:H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    if(!Array.isArray(rows)){
+      document.getElementById('tablaPartidos').innerHTML='<div class="loading-msg" style="color:red">Error: '+JSON.stringify(rows).substring(0,100)+'</div>';
+      return;
+    }
+    var now = new Date();
+    document.getElementById('wcTotal').textContent = rows.length;
+    document.getElementById('partidoCount').textContent = rows.length+' partidos';
+    document.getElementById('wcPendientes').textContent = rows.filter(function(p){return !p.resultado && new Date(p.fecha)<now;}).length;
+
+    // Populate select
+    var sel = document.getElementById('wcSelectPartido');
+    sel.innerHTML = '<option value="">Seleccionar partido...</option>';
+    rows.forEach(function(p){
+      var fecha = new Date(p.fecha).toLocaleString('es-GT',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'America/Guatemala'});
+      var opt = document.createElement('option');
+      opt.value = p.id;
+      opt.setAttribute('data-e1', p.equipo1);
+      opt.setAttribute('data-e2', p.equipo2);
+      opt.textContent = (p.resultado ? '✅ ' : new Date(p.fecha)<now ? '⏳ ' : '🔜 ')
+        + 'Gr.'+p.grupo+' '+p.bandera1+p.equipo1+' vs '+p.bandera2+p.equipo2+' · '+fecha;
+      sel.appendChild(opt);
+    });
+
+    // Table
+    var html = '<table><thead><tr><th>Fecha (GT)</th><th>Partido</th><th>Gr</th><th>Resultado</th><th>Preds</th></tr></thead><tbody>';
+    rows.forEach(function(p){
+      var fecha = new Date(p.fecha).toLocaleString('es-GT',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'America/Guatemala'});
+      var badge = p.resultado
+        ? '<span class="badge badge-ok">'+p.resultado+'</span>'
+        : new Date(p.fecha)<now ? '<span class="badge badge-pend">pendiente</span>'
+        : '<span class="badge badge-prox">próximo</span>';
+      html += '<tr><td>'+fecha+'</td>'
+        +'<td><strong>'+p.bandera1+' '+p.equipo1+'</strong> vs '+p.bandera2+' '+p.equipo2+'</td>'
+        +'<td style="text-align:center">'+p.grupo+'</td>'
+        +'<td>'+badge+'</td>'
+        +'<td style="text-align:center" id="cnt-'+p.id+'">...</td></tr>';
+    });
+    document.getElementById('tablaPartidos').innerHTML = html+'</tbody></table>';
+
+    // Prediction counts
+    fetch(SUPA+'/rest/v1/wc_predicciones?select=partido_id,email',{headers:H})
+    .then(function(r){return r.json();})
+    .then(function(preds){
+      if(!Array.isArray(preds)) return;
+      document.getElementById('wcPreds').textContent = preds.length;
+      document.getElementById('wcParticipantes').textContent = new Set(preds.map(function(x){return x.email;})).size;
+      var cnt={};
+      preds.forEach(function(p){cnt[p.partido_id]=(cnt[p.partido_id]||0)+1;});
+      Object.keys(cnt).forEach(function(id){
+        var el=document.getElementById('cnt-'+id);
+        if(el) el.textContent=cnt[id];
+      });
+    });
+  }).catch(function(e){
+    document.getElementById('tablaPartidos').innerHTML='<div class="loading-msg" style="color:red">Error: '+e.message+'</div>';
+  });
+}
+
+function loadRanking() {
+  fetch('/api/galeria?action=wc_ranking')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.ranking||!d.ranking.length){
+      document.getElementById('tablaRanking').innerHTML='<div class="loading-msg">Sin datos aún</div>';
+      return;
+    }
+    var med=['🥇','🥈','🥉'];
+    var html='<table><thead><tr><th>Pos</th><th>Usuario</th><th>Puntos</th><th>Aciertos</th></tr></thead><tbody>';
+    d.ranking.forEach(function(u,i){
+      html+='<tr><td style="text-align:center;font-size:18px">'+(med[i]||'#'+(i+1))+'</td>'
+        +'<td><strong>'+(u.dueno||u.email.split('@')[0])+'</strong><br><span style="font-size:11px;color:#aaa">'+u.email+'</span></td>'
+        +'<td style="text-align:center;font-size:18px;font-weight:900;color:#00B4B4">'+u.puntos+'</td>'
+        +'<td style="text-align:center">'+u.aciertos+'</td></tr>';
+    });
+    document.getElementById('tablaRanking').innerHTML=html+'</tbody></table>';
+  }).catch(function(){
+    document.getElementById('tablaRanking').innerHTML='<div class="loading-msg">Error cargando ranking</div>';
+  });
+}
+
+function marcarResultado() {
+  var sel = document.getElementById('wcSelectPartido');
+  var partidoId = sel.value;
+  var resultado  = document.getElementById('wcSelectResultado').value;
+  if(!partidoId||!resultado){alert('Selecciona partido y resultado');return;}
+  var opt = sel.options[sel.selectedIndex];
+  var e1=opt.getAttribute('data-e1'), e2=opt.getAttribute('data-e2');
+  var lbl=resultado==='equipo1'?'Gana '+e1:resultado==='equipo2'?'Gana '+e2:'Empate';
+  if(!confirm('Confirmar resultado: '+lbl+'\n\nEsto asignará +2 pts a quienes acertaron.')) return;
+  var msg=document.getElementById('resultMsg');
+  msg.textContent='Procesando...';msg.style.display='block';msg.style.color='#888';
+  fetch('/api/galeria?action=wc_marcarResultado',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({partido_id:parseInt(partidoId),resultado:resultado,adminKey:'petmiadmin2026'})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      msg.textContent='✅ Listo — '+d.aciertos+' aciertos de '+d.procesados+' predicciones';
+      msg.style.color='#00C853';
+      loadData();
+    } else {
+      msg.textContent='❌ Error: '+(d.msg||'desconocido');
+      msg.style.color='#e53935';
+    }
+  }).catch(function(){msg.textContent='Error de conexión';msg.style.color='#e53935';});
+}
+
+loadData();
+</script>
+</body>
+</html>
