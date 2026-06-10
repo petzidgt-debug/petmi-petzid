@@ -877,7 +877,7 @@ export default async function handler(req, res) {
 
       // Si no es array o está vacío — email no existe
       if (!Array.isArray(mascotas) || mascotas.length === 0) {
-        return res.status(200).json({ ok: false, msg: 'Datos incorrectos', debug: { type: typeof mascotas, isArray: Array.isArray(mascotas), raw: JSON.stringify(mascotas).substring(0,100) }});
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
       }
 
       // Limpiar caracteres invisibles del nombre buscado
@@ -900,12 +900,7 @@ export default async function handler(req, res) {
       });
 
       if (!match) {
-        const nombres = mascotas.filter(m => !(m.angelito === true || m.angelito === 'true')).map(m => ({
-          raw: m.nombre,
-          normalizado: limpiar(m.nombre.toLowerCase()),
-          angelito: m.angelito
-        }));
-        return res.status(200).json({ ok: false, msg: 'Datos incorrectos', debug: { nombreBuscado: nombreL, nombreNorm, nombresEnDB: nombres }});
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
       }
 
       // ✅ Login exitoso
