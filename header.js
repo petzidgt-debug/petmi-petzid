@@ -308,47 +308,56 @@
   window.petmiLimpiarNotif = function(){ var b=document.getElementById('petmiNotifBadge'); if(b) b.style.display='none'; };
   window.petmiCerrarSesion = function(){ localStorage.removeItem('petzid_email'); localStorage.removeItem('petzid_dueno'); window.location.href='/galeria.html'; };
   window.petmiAbrirLogin = function(){
-    // Reset to step 1
-    var s1=document.getElementById('petmiStep1'),s2=document.getElementById('petmiStep2');
-    if(s1)s1.style.display='block';
-    if(s2)s2.style.display='none';
-    var o=document.getElementById('petmiLoginOverlay'); if(o) o.classList.add('open');
-    var regBtn=document.getElementById('petmiLoginRegBtn'); if(regBtn) regBtn.style.display='none';
-    var msg=document.getElementById('petmiLoginMsg'); if(msg){msg.style.display='none';msg.textContent='';}
-    var inp=document.getElementById('petmiLoginEmail'); if(inp) inp.value='';
-    var btn=document.getElementById('petmiLoginBtn'); if(btn){btn.disabled=false;btn.textContent='Ingresar';}
+    var o=document.getElementById('petmiLoginOverlay');
+    if(o){
+      o.classList.add('open');
+      var s1=document.getElementById('petmiStep1'),s2=document.getElementById('petmiStep2');
+      if(s1)s1.style.display='block';
+      if(s2)s2.style.display='none';
+      var btn=document.getElementById('petmiLoginBtn');
+      if(btn){btn.disabled=false;btn.textContent='Continuar →';}
+      var msg=document.getElementById('petmiLoginMsg');
+      if(msg)msg.style.display='none';
+      var msg2=document.getElementById('petmiLoginMsg2');
+      if(msg2)msg2.style.display='none';
+    }
   };
-  window.petmiCerrarLogin = function(){ var o=document.getElementById('petmiLoginOverlay'); if(o) o.classList.remove('open'); };
+  window.petmiCerrarLogin = function(){
+    var o=document.getElementById('petmiLoginOverlay');
+    if(o)o.classList.remove('open');
+  };
+
   // ── Login 2 pasos ──────────────────────────────────────────
   window.petmiIrPaso2 = function(){
-    var email=document.getElementById('petmiLoginEmail').value.trim().toLowerCase();
+    var emailEl=document.getElementById('petmiLoginEmail');
+    var step1=document.getElementById('petmiStep1');
+    var step2=document.getElementById('petmiStep2');
+    if(!step1||!step2){petmiAbrirLogin();return;}
+    var email=emailEl?emailEl.value.trim().toLowerCase():'';
     if(!email||email.indexOf('@')<0){petmiLoginMsg('Ingresa un correo válido','error');return;}
-    document.getElementById('petmiStep1').style.display='none';
-    document.getElementById('petmiStep2').style.display='block';
-    setTimeout(function(){
-      var n=document.getElementById('petmiLoginNombre');
-      if(n){n.value='';n.focus();}
-    },100);
+    step1.style.display='none';
+    step2.style.display='block';
+    setTimeout(function(){var n=document.getElementById('petmiLoginNombre');if(n){n.value='';n.focus();}},100);
   };
 
   window.petmiVolverPaso1 = function(){
-    document.getElementById('petmiStep2').style.display='none';
-    document.getElementById('petmiStep1').style.display='block';
+    var step1=document.getElementById('petmiStep1');
+    var step2=document.getElementById('petmiStep2');
+    if(step2)step2.style.display='none';
+    if(step1)step1.style.display='block';
     petmiLoginMsg2('','');
   };
 
   window.petmiVerificarLogin = function(){
-    var email  = document.getElementById('petmiLoginEmail');
-    var nombreEl = document.getElementById('petmiLoginNombre');
-    // Si no existe el paso 2, ir al paso 2 primero
-    if(!nombreEl || document.getElementById('petmiStep2').style.display === 'none') {
-      petmiIrPaso2(); return;
-    }
-    email  = email ? email.value.trim().toLowerCase() : '';
-    var nombre = nombreEl.value.trim();
+    var emailEl=document.getElementById('petmiLoginEmail');
+    var nombreEl=document.getElementById('petmiLoginNombre');
+    var step2=document.getElementById('petmiStep2');
+    if(!step2||!nombreEl||step2.style.display==='none'){petmiAbrirLogin();return;}
+    var email=emailEl?emailEl.value.trim().toLowerCase():'';
+    var nombre=nombreEl.value.trim();
     if(!nombre){petmiLoginMsg2('Escribe el nombre de tu mascota','error');return;}
     var btn=document.getElementById('petmiLoginBtn2');
-    btn.disabled=true;btn.textContent='Verificando...';
+    if(btn){btn.disabled=true;btn.textContent='Verificando...';}
     fetch('/api/galeria?action=verificarLogin',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({email:email,nombreMascota:nombre})
@@ -360,23 +369,21 @@
         localStorage.setItem('petzid_dueno',d.dueno||'');
         if(d.mascotas&&d.mascotas[0]&&d.mascotas[0].especie)
           localStorage.setItem('petmi_especie',d.mascotas[0].especie);
-        petmiLoginMsg2('¡Bienvenido/a! 🐾','success');
+        petmiLoginMsg2('¡Bienvenido/a!','success');
         setTimeout(function(){window.location.reload();},1000);
-      } else {
+      }else{
         petmiLoginMsg2(d.msg||'Datos incorrectos. Intenta de nuevo.','error');
-        btn.disabled=false;btn.textContent='Ingresar';
-        document.getElementById('petmiLoginNombre').value='';
-        document.getElementById('petmiLoginNombre').focus();
+        if(btn){btn.disabled=false;btn.textContent='Ingresar';}
+        if(nombreEl){nombreEl.value='';nombreEl.focus();}
       }
     }).catch(function(){
       petmiLoginMsg2('Error de conexión','error');
-      btn.disabled=false;btn.textContent='Ingresar';
+      if(btn){btn.disabled=false;btn.textContent='Ingresar';}
     });
   };
 
-  function petmiLoginMsg(txt,tipo){var el=document.getElementById('petmiLoginMsg');if(el){el.textContent=txt;el.className='h-login-msg '+tipo;el.style.display='block';}}
+  function petmiLoginMsg(txt,tipo){var el=document.getElementById('petmiLoginMsg');if(el){el.textContent=txt;el.className='h-login-msg '+(tipo||'');el.style.display=txt?'block':'none';}}
   function petmiLoginMsg2(txt,tipo){var el=document.getElementById('petmiLoginMsg2');if(el){el.textContent=txt;el.className='h-login-msg '+(tipo||'');el.style.display=txt?'block':'none';}}
-
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initHeader);}else{initHeader();}
 })();
 // ── Ocultar bottom nav cuando hay modal abierto ─────────────
