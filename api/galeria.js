@@ -865,53 +865,37 @@ export default async function handler(req, res) {
       const emailL  = email.trim().toLowerCase();
       const nombreL = nombreMascota.trim().toLowerCase();
 
-      // Buscar mascotas del email
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?email=ilike.' + encodeURIComponent(emailL) +
-        '&select=uid,nombre,email,dueno,foto,especie,premium,premium_vence,angelito&limit=20',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
+      // Buscar todas las mascotas con ese email (case-insensitive)
+      const queryUrl = SUPABASE_URL + '/rest/v1/mascotas?select=uid,nombre,email,dueno,foto,especie,premium,premium_vence,angelito&limit=20&or=(email.eq.' + encodeURIComponent(emailL) + ',email.ilike.' + encodeURIComponent(emailL) + ')';
+      const r = await fetch(queryUrl, {
+        headers: {
+          'apikey': SUPABASE_SERVICE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY
+        }
+      });
       const mascotas = await r.json();
 
-      // Debug temporal
-      console.log('[verificarLogin] email:', emailL, '| nombre:', nombreL);
-      console.log('[verificarLogin] mascotas response:', JSON.stringify(mascotas).substring(0, 200));
-
-      if (!Array.isArray(mascotas) || !mascotas.length) {
-        return res.status(200).json({ ok: false, msg: 'Datos incorrectos', _debug: 'no mascotas found' });
+      // Si no es array o está vacío — email no existe
+      if (!Array.isArray(mascotas) || mascotas.length === 0) {
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos', debug: { type: typeof mascotas, isArray: Array.isArray(mascotas), raw: JSON.stringify(mascotas).substring(0,100) }});
       }
 
-      // Verificar nombre (acepta cualquier mascota del email)
+      // Buscar mascota que coincida — ignorar mayúsculas y espacios
       const match = mascotas.find(m =>
         m.nombre && m.nombre.trim().toLowerCase() === nombreL && !m.angelito
       );
 
-      console.log('[verificarLogin] nombres en DB:', mascotas.map(m => m.nombre + '/' + m.angelito));
-      console.log('[verificarLogin] match:', match ? 'SI' : 'NO');
-
       if (!match) {
-        // Registrar intento fallido
-        fetch(SUPABASE_URL + '/rest/v1/login_attempts', {
-          method: 'POST',
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ email: emailL, exitoso: false })
-        }).catch(() => {});
-        return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
+        const nombres = mascotas.filter(m => !m.angelito).map(m => m.nombre);
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos', debug: { nombreBuscado: nombreL, nombresEnDB: nombres }});
       }
 
-      // Registrar intento exitoso
-      fetch(SUPABASE_URL + '/rest/v1/login_attempts', {
-        method: 'POST',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ email: emailL, exitoso: true })
-      }).catch(() => {});
-
-      // Login exitoso — devolver datos de sesión
+      // ✅ Login exitoso
       return res.status(200).json({
         ok: true,
         email: emailL,
         dueno: mascotas[0].dueno || '',
-        mascotas: mascotas.map(m => ({
+        mascotas: mascotas.filter(m => !m.angelito).map(m => ({
           uid: m.uid, nombre: m.nombre, especie: m.especie,
           foto: m.foto, premium: m.premium
         }))
