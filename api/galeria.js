@@ -865,18 +865,7 @@ export default async function handler(req, res) {
       const emailL  = email.trim().toLowerCase();
       const nombreL = nombreMascota.trim().toLowerCase();
 
-      // Anti-brute force: max 5 intentos fallidos por email en 15 min
-      const hace15 = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-      const attR = await fetch(
-        SUPABASE_URL + '/rest/v1/login_attempts?email=ilike.' + encodeURIComponent(emailL) +
-        '&exitoso=eq.false&created_at=gte.' + hace15 + '&select=id',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const atts = await attR.json();
-      if (Array.isArray(atts) && atts.length >= 5) {
-        return res.status(200).json({ ok: false, msg: 'Demasiados intentos. Espera 15 minutos.' });
-      }
-
+      // Buscar mascotas del email
       const r = await fetch(
         SUPABASE_URL + '/rest/v1/mascotas?email=ilike.' + encodeURIComponent(emailL) +
         '&select=uid,nombre,email,dueno,foto,especie,premium,premium_vence,angelito&limit=20',
@@ -884,15 +873,21 @@ export default async function handler(req, res) {
       );
       const mascotas = await r.json();
 
-      if (!mascotas || !mascotas.length) {
-        // No revelar si el email existe o no
-        return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
+      // Debug temporal
+      console.log('[verificarLogin] email:', emailL, '| nombre:', nombreL);
+      console.log('[verificarLogin] mascotas response:', JSON.stringify(mascotas).substring(0, 200));
+
+      if (!Array.isArray(mascotas) || !mascotas.length) {
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos', _debug: 'no mascotas found' });
       }
 
       // Verificar nombre (acepta cualquier mascota del email)
       const match = mascotas.find(m =>
         m.nombre && m.nombre.trim().toLowerCase() === nombreL && !m.angelito
       );
+
+      console.log('[verificarLogin] nombres en DB:', mascotas.map(m => m.nombre + '/' + m.angelito));
+      console.log('[verificarLogin] match:', match ? 'SI' : 'NO');
 
       if (!match) {
         // Registrar intento fallido
