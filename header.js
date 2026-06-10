@@ -212,6 +212,15 @@
             '<input type="text" class="h-login-input" id="petmiLoginNombre" placeholder="Nombre de tu mascota" autocomplete="off" onkeydown="if(event.key===\'Enter\')petmiVerificarLogin()">' +
             '<button class="h-login-ok" id="petmiLoginBtn2" onclick="petmiVerificarLogin()">Ingresar</button>' +
             '<button class="h-login-cancel" onclick="petmiVolverPaso1()">&#x2190; Cambiar correo</button>' +
+            '<button style="width:100%;padding:10px;background:none;border:none;color:#00B4B4;font-size:13px;cursor:pointer;margin-top:4px" onclick="petmiEnviarOTP()">&#x1F4E7; No recuerdo el nombre &mdash; enviar c&#xF3;digo</button>' +
+          '</div>' +
+          '<div id="petmiStep3" style="display:none">' +
+            '<div class="h-login-title">&#x1F4EC; Revisa tu correo</div>' +
+            '<div class="h-login-sub" id="petmiOTPSub">Enviamos un c&#xF3;digo de 6 d&#xED;gitos a tu correo.</div>' +
+            '<div class="h-login-msg" id="petmiLoginMsg3"></div>' +
+            '<input type="text" class="h-login-input" id="petmiLoginOTP" placeholder="000000" inputmode="numeric" maxlength="6" onkeydown="if(event.key===\'Enter\')petmiVerificarOTP()" style="letter-spacing:8px;font-size:22px;text-align:center">' +
+            '<button class="h-login-ok" id="petmiLoginBtn3" onclick="petmiVerificarOTP()">Verificar c&#xF3;digo</button>' +
+            '<button class="h-login-cancel" onclick="petmiVolverPaso2()">&#x2190; Volver</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -330,6 +339,9 @@
       if(msg)msg.style.display='none';
       var msg2=document.getElementById('petmiLoginMsg2');
       if(msg2)msg2.style.display='none';
+      var s3=document.getElementById('petmiStep3'),msg3=document.getElementById('petmiLoginMsg3');
+      if(s3)s3.style.display='none';
+      if(msg3)msg3.style.display='none';
     }
   };
   window.petmiCerrarLogin = function(){
@@ -348,6 +360,70 @@
     step1.style.display='none';
     step2.style.display='block';
     setTimeout(function(){var n=document.getElementById('petmiLoginNombre');if(n){n.value='';n.focus();}},100);
+  };
+
+  window.petmiVolverPaso2 = function(){
+    var s2=document.getElementById('petmiStep2'),s3=document.getElementById('petmiStep3');
+    if(s3)s3.style.display='none';
+    if(s2)s2.style.display='block';
+    petmiLoginMsg3('','');
+  };
+
+  window.petmiEnviarOTP = function(){
+    var emailEl=document.getElementById('petmiLoginEmail');
+    var email=emailEl?emailEl.value.trim().toLowerCase():'';
+    var btn=document.getElementById('petmiLoginBtn2');
+    if(btn){btn.disabled=true;}
+    fetch('/api/galeria?action=enviarOTP',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:email})
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(btn)btn.disabled=false;
+      if(d.ok){
+        var s2=document.getElementById('petmiStep2'),s3=document.getElementById('petmiStep3');
+        if(s2)s2.style.display='none';
+        if(s3)s3.style.display='block';
+        var sub=document.getElementById('petmiOTPSub');
+        if(sub)sub.textContent='Enviamos un código a '+email+'. Válido 10 minutos.';
+        setTimeout(function(){var o=document.getElementById('petmiLoginOTP');if(o){o.value='';o.focus();}},100);
+      } else {
+        petmiLoginMsg2(d.msg||'Error al enviar código','error');
+      }
+    }).catch(function(){if(btn)btn.disabled=false;petmiLoginMsg2('Error de conexión','error');});
+  };
+
+  window.petmiVerificarOTP = function(){
+    var emailEl=document.getElementById('petmiLoginEmail');
+    var otpEl=document.getElementById('petmiLoginOTP');
+    if(!otpEl)return;
+    var email=emailEl?emailEl.value.trim().toLowerCase():'';
+    var code=otpEl.value.trim();
+    if(!code||code.length!==6){petmiLoginMsg3('Ingresa el código de 6 dígitos','error');return;}
+    var btn=document.getElementById('petmiLoginBtn3');
+    if(btn){btn.disabled=true;btn.textContent='Verificando...';}
+    fetch('/api/galeria?action=verificarOTP',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:email,code:code})
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok){
+        localStorage.setItem('petzid_email',d.email||email);
+        localStorage.setItem('petzid_dueno',d.dueno||'');
+        if(d.mascotas&&d.mascotas[0]&&d.mascotas[0].especie)
+          localStorage.setItem('petmi_especie',d.mascotas[0].especie);
+        petmiLoginMsg3('¡Bienvenido/a!','success');
+        setTimeout(function(){window.location.reload();},1000);
+      } else {
+        petmiLoginMsg3(d.msg||'Código incorrecto','error');
+        if(btn){btn.disabled=false;btn.textContent='Verificar código';}
+      }
+    }).catch(function(){
+      petmiLoginMsg3('Error de conexión','error');
+      if(btn){btn.disabled=false;btn.textContent='Verificar código';}
+    });
   };
 
   window.petmiVolverPaso1 = function(){
@@ -394,6 +470,7 @@
 
   function petmiLoginMsg(txt,tipo){var el=document.getElementById('petmiLoginMsg');if(el){el.textContent=txt;el.className='h-login-msg '+(tipo||'');el.style.display=txt?'block':'none';}}
   function petmiLoginMsg2(txt,tipo){var el=document.getElementById('petmiLoginMsg2');if(el){el.textContent=txt;el.className='h-login-msg '+(tipo||'');el.style.display=txt?'block':'none';}}
+  function petmiLoginMsg3(txt,tipo){var el=document.getElementById('petmiLoginMsg3');if(el){el.textContent=txt;el.className='h-login-msg '+(tipo||'');el.style.display=txt?'block':'none';}}
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initHeader);}else{initHeader();}
 })();
 // ── Ocultar bottom nav cuando hay modal abierto ─────────────
