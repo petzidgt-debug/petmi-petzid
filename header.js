@@ -338,8 +338,14 @@
   };
 
   window.petmiVerificarLogin = function(){
-    var email  = document.getElementById('petmiLoginEmail').value.trim().toLowerCase();
-    var nombre = document.getElementById('petmiLoginNombre').value.trim();
+    var email  = document.getElementById('petmiLoginEmail');
+    var nombreEl = document.getElementById('petmiLoginNombre');
+    // Si no existe el paso 2, ir al paso 2 primero
+    if(!nombreEl || document.getElementById('petmiStep2').style.display === 'none') {
+      petmiIrPaso2(); return;
+    }
+    email  = email ? email.value.trim().toLowerCase() : '';
+    var nombre = nombreEl.value.trim();
     if(!nombre){petmiLoginMsg2('Escribe el nombre de tu mascota','error');return;}
     var btn=document.getElementById('petmiLoginBtn2');
     btn.disabled=true;btn.textContent='Verificando...';
