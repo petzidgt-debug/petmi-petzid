@@ -1035,6 +1035,12 @@ export default async function handler(req, res) {
       const { partido_id, resultado, adminKey } = req.body;
       if (adminKey !== 'petmiadmin2026') return res.status(200).json({ ok: false, msg: 'No autorizado' });
       if (!partido_id || !resultado) return res.status(200).json({ ok: false });
+      // Verificar que no tenga resultado ya
+      const chk = await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id + '&select=resultado,fecha', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const chkData = await chk.json();
+      if (chkData && chkData[0] && chkData[0].resultado) {
+        return res.status(200).json({ ok: false, msg: 'Este partido ya tiene resultado: ' + chkData[0].resultado });
+      }
       await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id, { method: 'PATCH', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ resultado }) });
       const pr = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?partido_id=eq.' + partido_id + '&select=id,email,prediccion', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
       const preds = await pr.json();
