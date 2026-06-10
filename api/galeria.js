@@ -997,6 +997,61 @@ export default async function handler(req, res) {
       });
     }
 
+
+    // ── wc_predecir ───────────────────────────────────────────
+    if (action === 'wc_predecir' && req.method === 'POST') {
+      const { email, partido_id, prediccion } = req.body;
+      if (!email || !partido_id || !prediccion) return res.status(200).json({ ok: false });
+      const emailL = email.trim().toLowerCase();
+      const pr = await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id + '&select=fecha', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const parts = await pr.json();
+      if (!parts || !parts[0]) return res.status(200).json({ ok: false, msg: 'Partido no encontrado' });
+      if (new Date(parts[0].fecha) <= new Date()) return res.status(200).json({ ok: false, msg: 'El partido ya comenzó' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?on_conflict=email,partido_id', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ email: emailL, partido_id, prediccion })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── wc_ranking ────────────────────────────────────────────
+    if (action === 'wc_ranking') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?select=email,puntos,acerto&acerto=not.is.null', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const preds = await r.json();
+      if (!Array.isArray(preds)) return res.status(200).json({ ranking: [] });
+      const byEmail = {};
+      preds.forEach(p => {
+        if (!byEmail[p.email]) byEmail[p.email] = { email: p.email, puntos: 0, aciertos: 0 };
+        byEmail[p.email].puntos += (p.puntos || 0);
+        byEmail[p.email].aciertos += (p.acerto ? 1 : 0);
+      });
+      const ranking = Object.values(byEmail).sort((a,b) => b.puntos-a.puntos || b.aciertos-a.aciertos).slice(0,50);
+      return res.status(200).json({ ranking });
+    }
+
+    // ── wc_marcarResultado (admin) ────────────────────────────
+    if (action === 'wc_marcarResultado' && req.method === 'POST') {
+      const { partido_id, resultado, adminKey } = req.body;
+      if (adminKey !== 'petmiadmin2026') return res.status(200).json({ ok: false, msg: 'No autorizado' });
+      if (!partido_id || !resultado) return res.status(200).json({ ok: false });
+      await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id, { method: 'PATCH', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ resultado }) });
+      const pr = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?partido_id=eq.' + partido_id + '&select=id,email,prediccion', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const preds = await pr.json();
+      if (!Array.isArray(preds)) return res.status(200).json({ ok: true, procesados: 0 });
+      let aciertos = 0;
+      for (const pred of preds) {
+        const acerto = pred.prediccion === resultado;
+        const puntos = acerto ? 2 : 0;
+        await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?id=eq.' + pred.id, { method: 'PATCH', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ acerto, puntos }) });
+        if (acerto) {
+          aciertos++;
+          await fetch(SUPABASE_URL + '/rest/v1/puntos', { method: 'POST', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ email: pred.email, accion: 'quiniela_mundial', puntos: 2, referencia: 'Partido ' + partido_id }) });
+        }
+      }
+      return res.status(200).json({ ok: true, procesados: preds.length, aciertos });
+    }
+
         return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
