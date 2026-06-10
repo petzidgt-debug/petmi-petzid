@@ -274,7 +274,7 @@ function renderActividades(){
       html+='<div class="adopcion-header-bar">';
       html+='<span style="font-size:18px">🏠</span>';
       html+='<span>EN ADOPCIÓN — '+a.titulo.replace('🏠 ','').replace('EN ADOPCIÓN ','')+'</span>';
-      if(esCreador) html+='<button class="btn-eliminar" style="margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer" onclick="eliminarActividad(''+a.id+'')">🗑️</button>';
+      if(esCreador) html+='<button class="btn-eliminar" style="margin-left:auto;background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer" data-id="'+a.id+'">&#x1F5D1;&#xFE0F;</button>';
       html+='</div>';
       if(a.imagen&&a.imagen.indexOf('http')>=0){
         html+='<img src="'+a.imagen+'" class="act-img" style="max-height:260px">';
@@ -288,9 +288,9 @@ function renderActividades(){
       if(a.ubicacion) html+='<div style="font-size:13px;font-weight:700;color:#2e7d32;margin-bottom:6px">📍 '+a.ubicacion+'</div>';
       html+='<div style="background:#e8f5e9;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#2e7d32;font-weight:600">🐾 Esta mascota busca un hogar lleno de amor</div>';
       html+='<div class="act-footer">';
-      html+='<button class="btn-wa" onclick="window.open('https://wa.me/?text='+shareText+'%20'+shareUrl+'','_blank')">📲 Compartir</button>';
+      html+='<button class="btn-wa" data-url="wa" data-txt="'+encodeURIComponent(shareText)+'" data-shareurl="'+encodeURIComponent(shareUrl)+'">&#x1F4F2; Compartir</button>';
       if(sessionEmail&&a.email_creador&&a.email_creador!==sessionEmail){
-        html+='<button class="btn-adoptar" onclick="contactarAdopcion(''+i+'')">🏠 Me interesa adoptar</button>';
+        html+='<button class="btn-adoptar" data-idx="'+i+'">&#x1F3E0; Me interesa adoptar</button>';
       }
       html+='</div></div>';
       return;
