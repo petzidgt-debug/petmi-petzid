@@ -325,12 +325,28 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <div class="login-modal-overlay" id="loginOverlay">
   <div class="login-modal" style="position:relative">
     <button onclick="closeLoginModal()" style="position:absolute;top:12px;right:12px;width:28px;height:28px;background:#f0f0ee;border:none;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
-    <div class="login-title">¿Ya tienes PetzID?</div>
-    <div class="login-sub">Ingresa tu correo registrado para ver y editar tus mascotas.</div>
-    <div class="login-msg" id="loginMsg"></div>
-    <input type="email" class="login-input" id="loginEmail" placeholder="tu@correo.com" inputmode="email">
-    <button class="btn-login" id="btnLogin" onclick="verificarEmail()">Ingresar</button>
-    <button class="btn-login-cancel" onclick="closeLoginModal()">Cancelar</button>
+
+    <!-- Paso 1: Email -->
+    <div id="loginStep1">
+      <div class="login-title">¿Ya tienes PetzID?</div>
+      <div class="login-sub">Ingresa tu correo para continuar.</div>
+      <div class="login-msg" id="loginMsg"></div>
+      <input type="email" class="login-input" id="loginEmail" placeholder="tu@correo.com" inputmode="email"
+        onkeydown="if(event.key==='Enter') irAPaso2()">
+      <button class="btn-login" id="btnPaso1" onclick="irAPaso2()">Continuar →</button>
+      <button class="btn-login-cancel" onclick="closeLoginModal()">Cancelar</button>
+    </div>
+
+    <!-- Paso 2: Nombre mascota -->
+    <div id="loginStep2" style="display:none">
+      <div class="login-title">🐾 ¿Cómo se llama?</div>
+      <div class="login-sub">Escribe el nombre de una de tus mascotas registradas.</div>
+      <div class="login-msg" id="loginMsg2"></div>
+      <input type="text" class="login-input" id="loginNombre" placeholder="Nombre de tu mascota"
+        autocomplete="off" onkeydown="if(event.key==='Enter') verificarLogin()">
+      <button class="btn-login" id="btnLogin" onclick="verificarLogin()">Ingresar</button>
+      <button class="btn-login-cancel" onclick="volverPaso1()">← Cambiar correo</button>
+    </div>
   </div>
 </div>
 

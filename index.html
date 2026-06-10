@@ -850,7 +850,10 @@ function triggerDownload(b64){
   document.body.removeChild(link);
 }
 
+var _isSubmitting = false;
 async function submitPetzID(){
+  if(_isSubmitting) return; // Evitar doble envio
+  _isSubmitting = true;
   var btn=document.getElementById('btnNext');
   btn.textContent='Procesando...';btn.disabled=true;
   document.getElementById('errorMsg').style.display='none';
@@ -920,7 +923,7 @@ async function submitPetzID(){
   try{
     showLoading('Guardando tu PetzID','Enviando correo de bienvenida...');
     await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(apiBody)});
-  }catch(e){console.log('submit error:',e);}
+  }catch(e){console.log('submit error:',e);_isSubmitting=false;btn.disabled=false;btn.textContent='Siguiente';}
 
   if(payload.email){
     localStorage.setItem('petzid_email',payload.email);
@@ -928,6 +931,7 @@ async function submitPetzID(){
   }
   document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
   hideLoading();
+  _isSubmitting = false;
   cur=4;showStep(4);updateProgress();
 }
 
