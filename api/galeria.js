@@ -857,7 +857,155 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
 
-    return res.status(200).json({ status: 'PetMi Supabase API activa' });
+    // ── verificarLogin ────────────────────────────────────────
+    if (action === 'verificarLogin' && req.method === 'POST') {
+      const { email, nombreMascota } = req.body;
+      if (!email || !nombreMascota) return res.status(200).json({ ok: false, msg: 'Datos incompletos' });
+
+      const emailL  = email.trim().toLowerCase();
+      const nombreL = nombreMascota.trim().toLowerCase();
+
+      // Anti-brute force: max 5 intentos fallidos por email en 15 min
+      const hace15 = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const attR = await fetch(
+        SUPABASE_URL + '/rest/v1/login_attempts?email=ilike.' + encodeURIComponent(emailL) +
+        '&exitoso=eq.false&created_at=gte.' + hace15 + '&select=id',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const atts = await attR.json();
+      if (Array.isArray(atts) && atts.length >= 5) {
+        return res.status(200).json({ ok: false, msg: 'Demasiados intentos. Espera 15 minutos.' });
+      }
+
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?email=ilike.' + encodeURIComponent(emailL) +
+        '&select=uid,nombre,email,dueno,foto,especie,premium,premium_vence,angelito&limit=20',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const mascotas = await r.json();
+
+      if (!mascotas || !mascotas.length) {
+        // No revelar si el email existe o no
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
+      }
+
+      // Verificar nombre (acepta cualquier mascota del email)
+      const match = mascotas.find(m =>
+        m.nombre && m.nombre.trim().toLowerCase() === nombreL && !m.angelito
+      );
+
+      if (!match) {
+        // Registrar intento fallido
+        fetch(SUPABASE_URL + '/rest/v1/login_attempts', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ email: emailL, exitoso: false })
+        }).catch(() => {});
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
+      }
+
+      // Registrar intento exitoso
+      fetch(SUPABASE_URL + '/rest/v1/login_attempts', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ email: emailL, exitoso: true })
+      }).catch(() => {});
+
+      // Login exitoso — devolver datos de sesión
+      return res.status(200).json({
+        ok: true,
+        email: emailL,
+        dueno: mascotas[0].dueno || '',
+        mascotas: mascotas.map(m => ({
+          uid: m.uid, nombre: m.nombre, especie: m.especie,
+          foto: m.foto, premium: m.premium
+        }))
+      });
+    }
+
+
+    // ── enviarOTP — fallback login sin nombre ──────────────────
+    if (action === 'enviarOTP' && req.method === 'POST') {
+      const { email } = req.body;
+      if (!email) return res.status(200).json({ ok: false });
+      const emailL = email.trim().toLowerCase();
+
+      // Verificar que el email existe
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?email=ilike.' + encodeURIComponent(emailL) +
+        '&select=uid,dueno&limit=1',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const rows = await r.json();
+      if (!rows || !rows.length) {
+        return res.status(200).json({ ok: false, msg: 'No encontramos ese correo' });
+      }
+
+      // Generar código 6 dígitos
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
+
+      // Guardar en Supabase
+      await fetch(SUPABASE_URL + '/rest/v1/otp_codes', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ email: emailL, code, expires_at: expires, used: false })
+      });
+
+      // Enviar via Apps Script
+      const scriptUrl = process.env.APPS_SCRIPT_URL || '';
+      if (scriptUrl) {
+        await fetch(scriptUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'enviarOTP', email: emailL, code, dueno: rows[0].dueno || '' })
+        }).catch(() => {});
+      }
+
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── verificarOTP ───────────────────────────────────────────
+    if (action === 'verificarOTP' && req.method === 'POST') {
+      const { email, code } = req.body;
+      if (!email || !code) return res.status(200).json({ ok: false });
+      const emailL = email.trim().toLowerCase();
+      const now = new Date().toISOString();
+
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/otp_codes?email=ilike.' + encodeURIComponent(emailL) +
+        '&code=eq.' + encodeURIComponent(code.trim()) +
+        '&used=eq.false&expires_at=gte.' + encodeURIComponent(now) +
+        '&select=id&order=created_at.desc&limit=1',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const rows = await r.json();
+      if (!rows || !rows.length) {
+        return res.status(200).json({ ok: false, msg: 'Código incorrecto o expirado' });
+      }
+
+      // Marcar como usado
+      await fetch(SUPABASE_URL + '/rest/v1/otp_codes?id=eq.' + rows[0].id, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ used: true })
+      });
+
+      // Devolver datos del usuario
+      const mr = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?email=ilike.' + encodeURIComponent(emailL) +
+        '&select=uid,nombre,email,dueno,foto,especie,premium&limit=20',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const mascotas = await mr.json();
+      return res.status(200).json({
+        ok: true, email: emailL,
+        dueno: mascotas[0]?.dueno || '',
+        mascotas: mascotas.map(m => ({ uid: m.uid, nombre: m.nombre, especie: m.especie, foto: m.foto, premium: m.premium }))
+      });
+    }
+
+        return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
     return res.status(500).json({ ok: false, error: err.message });
