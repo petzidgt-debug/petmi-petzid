@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiniela Mundial 2026 — PetMi</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00B4B4">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-top:56px;padding-bottom:72px}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,#1a1a2e 0%,#0d2847 50%,#1a3a1a 100%);padding:20px 16px 24px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='20' fill='none' stroke='rgba(255,255,255,.04)' stroke-width='8'/%3E%3C/svg%3E") repeat;pointer-events:none}
+.hero-badge{display:inline-block;background:rgba(245,200,66,.15);border:1px solid rgba(245,200,66,.4);color:#F5C842;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.hero-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-0.5px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px}
+.hero-stats{display:flex;justify-content:center;gap:24px}
+.hero-stat{text-align:center}
+.hero-stat-num{font-size:20px;font-weight:900;color:#F5C842}
+.hero-stat-lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.3px}
+
+/* Tabs */
+.tabs{display:flex;background:#fff;border-bottom:0.5px solid #e0e0e0;position:sticky;top:56px;z-index:40;overflow-x:auto}
+.tab{flex:1;min-width:70px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#888;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab.active{color:#00B4B4;border-bottom-color:#00B4B4}
+.tab-ico{font-size:16px;display:block;margin-bottom:2px}
+
+/* Sections */
+.section{display:none;padding:14px 12px}
+.section.active{display:block}
+
+/* Day divider */
+.day-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;padding:14px 4px 8px;display:flex;align-items:center;gap:8px}
+.day-label::after{content:'';flex:1;height:0.5px;background:#ddd}
+
+/* Match card */
+.match-card{background:#fff;border-radius:14px;margin-bottom:10px;overflow:hidden;border:0.5px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.match-card.locked{opacity:.85}
+.match-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8f8f8;border-bottom:0.5px solid #efefef}
+.match-grupo{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px}
+.match-time{font-size:11px;color:#aaa}
+.match-teams{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px}
+.team{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.team-flag{font-size:26px;line-height:1}
+.team-name{font-size:11px;font-weight:700;color:#333;text-align:center;max-width:70px}
+.vs-box{font-size:13px;font-weight:900;color:#ccc;padding:0 8px}
+.match-picks{display:flex;gap:6px;padding:0 10px 12px}
+.pick-btn{flex:1;padding:8px 4px;border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;font-size:11px;font-weight:700;color:#555;cursor:pointer;text-align:center;transition:all .2s;line-height:1.3}
+.pick-btn:hover{border-color:#00B4B4;color:#00B4B4;background:#e0f7f7}
+.pick-btn.selected{background:#00B4B4;border-color:#00B4B4;color:#fff}
+.pick-btn.selected.correct{background:#00C853;border-color:#00C853}
+.pick-btn.selected.wrong{background:#ff5252;border-color:#ff5252}
+.pick-btn.correct-ans{background:#e8f5e9;border-color:#00C853;color:#00C853}
+.pick-btn:disabled{cursor:default}
+.match-result-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;margin:0 10px 10px}
+.match-result-badge.win{background:#e8f5e9;color:#00C853}
+.match-result-badge.lose{background:#fce4ec;color:#e53935}
+.match-result-badge.pending{background:#fff8e1;color:#f9a825}
+
+/* Ranking */
+.ranking-card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:0.5px solid #e8e8e8}
+.rank-pos{font-size:15px;font-weight:900;color:#ccc;min-width:24px}
+.rank-pos.gold{color:#F5C842}
+.rank-pos.silver{color:#aaa}
+.rank-pos.bronze{color:#cd7f32}
+.rank-avatar{width:36px;height:36px;border-radius:50%;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1.5px solid #00B4B4}
+.rank-info{flex:1}
+.rank-name{font-size:13px;font-weight:700;color:#222}
+.rank-detail{font-size:11px;color:#888}
+.rank-pts{font-size:17px;font-weight:900;color:#00B4B4}
+
+/* Premio */
+.premio-box{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;border:0.5px solid #e8e8e8;text-align:center}
+.premio-ico{font-size:48px;margin-bottom:8px}
+.premio-title{font-size:18px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
+.premio-desc{font-size:13px;color:#666;line-height:1.6}
+.ruleta-wrap{background:linear-gradient(135deg,#1a1a2e,#0d2847);border-radius:16px;padding:24px;text-align:center;margin-bottom:12px}
+.ruleta-title{font-size:15px;font-weight:700;color:#F5C842;margin-bottom:4px}
+.ruleta-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:16px}
+canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
+.btn-spin{background:#F5C842;color:#1a1a2e;border:none;padding:12px 28px;border-radius:99px;font-size:15px;font-weight:900;cursor:pointer;margin-top:14px;display:block;width:100%}
+.btn-spin:disabled{background:#555;color:#888}
+
+/* CTA */
+.btn-primary{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
+.login-prompt{background:#fff;border-radius:14px;padding:20px;text-align:center;border:0.5px solid #e8e8e8}
+.login-prompt p{font-size:14px;color:#666;margin-bottom:12px}
+
+/* Misc */
+.empty-state{text-align:center;padding:40px 20px;color:#aaa}
+.empty-state div{font-size:36px;margin-bottom:8px}
+.toast-q{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;white-space:nowrap}
+.toast-q.show{opacity:1}
+.pts-badge{display:inline-block;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:900;padding:2px 6px;border-radius:99px}
+</style>
+</head>
+<body>
+<script src="/header.js"></script>
+
+<div class="hero">
+  <div class="hero-badge">⚽ Mundial 2026</div>
+  <div class="hero-title">Quiniela PetMi</div>
+  <div class="hero-sub">Predice los ganadores · Acumula puntos · Gana premios</div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-num" id="statPartidos">—</div><div class="hero-stat-lbl">Partidos</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statMisPts">—</div><div class="hero-stat-lbl">Mis puntos</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statAciertos">—</div><div class="hero-stat-lbl">Aciertos</div></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('partidos')"><span class="tab-ico">⚽</span>Partidos</div>
+  <div class="tab" onclick="showTab('miquiniela')"><span class="tab-ico">📋</span>Mi Quiniela</div>
+  <div class="tab" onclick="showTab('ranking')"><span class="tab-ico">🏆</span>Ranking</div>
+  <div class="tab" onclick="showTab('premio')"><span class="tab-ico">🎁</span>Premio</div>
+</div>
+
+<!-- PARTIDOS -->
+<div class="section active" id="sec-partidos">
+  <div id="listPartidos"><div class="empty-state"><div>⚽</div>Cargando partidos...</div></div>
+</div>
+
+<!-- MI QUINIELA -->
+<div class="section" id="sec-miquiniela">
+  <div id="listMiQuiniela"><div class="empty-state"><div>📋</div>Cargando...</div></div>
+</div>
+
+<!-- RANKING -->
+<div class="section" id="sec-ranking">
+  <div id="listRanking"><div class="empty-state"><div>🏆</div>Cargando ranking...</div></div>
+</div>
+
+<!-- PREMIO -->
+<div class="section" id="sec-premio">
+  <div class="premio-box">
+    <div class="premio-ico">🏆</div>
+    <div class="premio-title">¡El que más acierte gana!</div>
+    <div class="premio-desc">
+      Por cada partido que aciertes ganas <strong>+2 puntos</strong>.<br>
+      Al finalizar el Mundial (19 julio) el jugador con más puntos gana el premio.<br><br>
+      Si hay empate, se rifará con la <strong>Ruleta PetMi</strong> entre todos los ganadores empatados.
+    </div>
+  </div>
+  <div class="premio-box" id="premioActual">
+    <div class="premio-ico">🎁</div>
+    <div class="premio-title">Premio anunciado pronto</div>
+    <div class="premio-desc">El equipo PetMi confirmará el premio antes del primer partido.<br>¡Sigue participando!</div>
+  </div>
+  <div class="ruleta-wrap" id="ruletaSection" style="display:none">
+    <div class="ruleta-title">🎡 Ruleta de Ganadores</div>
+    <div class="ruleta-sub" id="ruletaInfo">Solo disponible al finalizar el mundial</div>
+    <canvas id="ruleta" width="260" height="260"></canvas>
+    <button class="btn-spin" id="btnSpin" onclick="girarRuleta()">🎡 Girar la Ruleta</button>
+  </div>
+</div>
+
+<div class="toast-q" id="toastQ"></div>
+
+<script>
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var H = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' };
+
+var sessionEmail = localStorage.getItem('petzid_email') || '';
+var partidos = [];
+var misPreds = {};
+
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(function(t,i){ t.classList.toggle('active', ['partidos','miquiniela','ranking','premio'][i]===id); });
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('sec-'+id).classList.add('active');
+  if(id==='ranking') loadRanking();
+}
+
+function toast(msg) {
+  var t = document.getElementById('toastQ');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+// ── Cargar partidos ───────────────────────────────────────────
+function loadPartidos() {
+  fetch(SUPA_URL + '/rest/v1/wc_partidos?select=*&order=fecha.asc', { headers: H })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    partidos = rows;
+    document.getElementById('statPartidos').textContent = rows.length;
+    if(sessionEmail) loadMisPreds(rows);
+    else renderPartidos(rows, {});
+  }).catch(function(){ document.getElementById('listPartidos').innerHTML = '<div class="empty-state"><div>⚠️</div>Error cargando partidos</div>'; });
+}
+
+function loadMisPreds(rows) {
+  var ids = rows.map(function(p){ return p.id; }).join(',');
+  fetch(SUPA_URL + '/rest/v1/wc_predicciones?email=eq.' + encodeURIComponent(sessionEmail) + '&select=*', { headers: H })
+  .then(function(r){ return r.json(); })
+  .then(function(preds){
+    preds.forEach(function(p){ misPreds[p.partido_id] = p; });
+    updateStats(preds);
+    renderPartidos(rows, misPreds);
+    renderMiQuiniela(rows, misPreds);
+  });
+}
+
+function updateStats(preds) {
+  var pts = preds.reduce(function(s,p){ return s + (p.puntos||0); }, 0);
+  var ok  = preds.filter(function(p){ return p.acerto === true; }).length;
+  document.getElementById('statMisPts').textContent = pts;
+  document.getElementById('statAciertos').textContent = ok;
+}
+
+// ── Renderizar partidos ───────────────────────────────────────
+function renderPartidos(rows, preds) {
+  var now = new Date();
+  var html = '';
+  var lastDay = '';
+
+  rows.forEach(function(p) {
+    var fecha = new Date(p.fecha);
+    var dayKey = fecha.toLocaleDateString('es-GT', {weekday:'long', month:'long', day:'numeric'});
+    if(dayKey !== lastDay) {
+      html += '<div class="day-label">' + dayKey + '</div>';
+      lastDay = dayKey;
+    }
+    html += renderMatchCard(p, preds[p.id], now, false);
+  });
+
+  document.getElementById('listPartidos').innerHTML = html || '<div class="empty-state"><div>⚽</div>Sin partidos disponibles</div>';
+}
+
+function renderMiQuiniela(rows, preds) {
+  if(!sessionEmail) {
+    document.getElementById('listMiQuiniela').innerHTML = '<div class="login-prompt"><p>Inicia sesión para ver tus predicciones</p><button class="btn-primary" onclick="petmiAbrirLogin()">Ingresar</button></div>';
+    return;
+  }
+  var now = new Date();
+  var played = rows.filter(function(p){ return preds[p.id]; });
+  if(!played.length) {
+    document.getElementById('listMiQuiniela').innerHTML = '<div class="empty-state"><div>📋</div>Aún no tienes predicciones.<br>Ve a la pestaña Partidos.</div>';
+    return;
+  }
+  var html = '';
+  played.forEach(function(p){ html += renderMatchCard(p, preds[p.id], now, true); });
+  document.getElementById('listMiQuiniela').innerHTML = html;
+}
+
+function renderMatchCard(p, pred, now, showAll) {
+  var fecha  = new Date(p.fecha);
+  var locked = fecha <= now;
+  var hora   = fecha.toLocaleTimeString('es-GT', {hour:'2-digit', minute:'2-digit'});
+  var fase   = p.grupo ? 'Grupo ' + p.grupo : p.fase.charAt(0).toUpperCase() + p.fase.slice(1);
+
+  // Pick buttons
+  var opts = [
+    { key: 'equipo1', label: p.bandera1 + '<br>' + p.equipo1 },
+    { key: 'empate',  label: 'Empate' },
+    { key: 'equipo2', label: p.bandera2 + '<br>' + p.equipo2 }
+  ];
+  if(p.fase !== 'grupos') opts.splice(1, 1); // No empate en eliminatorias
+
+  var picksHtml = '<div class="match-picks">';
+  opts.forEach(function(o) {
+    var cls = 'pick-btn';
+    var disabled = locked ? 'disabled' : '';
+    if(pred && pred.prediccion === o.key) {
+      cls += ' selected';
+      if(p.resultado) cls += (p.resultado === o.key ? ' correct' : ' wrong');
+    }
+    if(p.resultado && p.resultado === o.key && (!pred || pred.prediccion !== o.key)) cls += ' correct-ans';
+    picksHtml += '<button class="'+cls+'" '+disabled+' onclick="predecir('+p.id+',\''+o.key+'\')">'+o.label+'</button>';
+  });
+  picksHtml += '</div>';
+
+  // Result badge
+  var badgeHtml = '';
+  if(pred && p.resultado) {
+    if(pred.acerto) badgeHtml = '<div class="match-result-badge win">✅ +2 puntos</div>';
+    else badgeHtml = '<div class="match-result-badge lose">❌ No acertaste</div>';
+  } else if(pred && !p.resultado) {
+    badgeHtml = '<div class="match-result-badge pending">⏳ Esperando resultado</div>';
+  }
+
+  return '<div class="match-card'+(locked?' locked':'')+'" id="mc-'+p.id+'">'
+    + '<div class="match-header"><span class="match-grupo">'+fase+'</span><span class="match-time">'+hora+' (GT)</span></div>'
+    + '<div class="match-teams">'
+    + '<div class="team"><div class="team-flag">'+p.bandera1+'</div><div class="team-name">'+p.equipo1+'</div></div>'
+    + '<div class="vs-box">VS</div>'
+    + '<div class="team"><div class="team-flag">'+p.bandera2+'</div><div class="team-name">'+p.equipo2+'</div></div>'
+    + '</div>'
+    + picksHtml
+    + badgeHtml
+    + '</div>';
+}
+
+// ── Predecir ──────────────────────────────────────────────────
+function predecir(partidoId, opcion) {
+  if(!sessionEmail) { petmiAbrirLogin(); return; }
+
+  var partido = partidos.find(function(p){ return p.id === partidoId; });
+  if(!partido) return;
+  if(new Date(partido.fecha) <= new Date()) { toast('⏰ Este partido ya comenzó'); return; }
+
+  fetch('/api/galeria?action=wc_predecir', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: sessionEmail, partido_id: partidoId, prediccion: opcion })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.ok) {
+      misPreds[partidoId] = { partido_id: partidoId, prediccion: opcion, acerto: null, puntos: 0 };
+      var now = new Date();
+      var card = document.getElementById('mc-'+partidoId);
+      if(card) card.outerHTML = renderMatchCard(partido, misPreds[partidoId], now, false);
+      toast('✅ Predicción guardada!');
+    } else {
+      toast(d.msg || 'Error al guardar');
+    }
+  }).catch(function(){ toast('Error de conexión'); });
+}
+
+// ── Ranking ───────────────────────────────────────────────────
+function loadRanking() {
+  fetch('/api/galeria?action=wc_ranking', { headers: { 'Content-Type': 'application/json' } })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(!d.ranking || !d.ranking.length) {
+      document.getElementById('listRanking').innerHTML = '<div class="empty-state"><div>🏆</div>Sin datos aún</div>';
+      return;
+    }
+    var html = '';
+    var medallas = ['🥇','🥈','🥉'];
+    d.ranking.forEach(function(u, i) {
+      var posClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+      html += '<div class="ranking-card">'
+        + '<div class="rank-pos '+posClass+'">'+(medallas[i]||('#'+(i+1)))+'</div>'
+        + '<div class="rank-avatar">🐾</div>'
+        + '<div class="rank-info"><div class="rank-name">'+(u.dueno||u.email.split('@')[0])+'</div><div class="rank-detail">'+u.aciertos+' aciertos</div></div>'
+        + '<div class="rank-pts">'+u.puntos+'<span style="font-size:10px;font-weight:400;color:#aaa"> pts</span></div>'
+        + '</div>';
+    });
+    document.getElementById('listRanking').innerHTML = html;
+  }).catch(function(){ document.getElementById('listRanking').innerHTML = '<div class="empty-state"><div>⚠️</div>Error</div>'; });
+}
+
+// ── Ruleta ────────────────────────────────────────────────────
+var ruletaGanadores = [];
+var spining = false;
+var currentAngle = 0;
+
+function dibujarRuleta(ganadores, angle) {
+  var canvas = document.getElementById('ruleta');
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var cx = 130, cy = 130, r = 118;
+  var n = ganadores.length;
+  var arc = (2 * Math.PI) / n;
+  var colores = ['#00B4B4','#F5C842','#1a1a2e','#00C853','#e53935','#7B1FA2','#1565C0','#E65100'];
+
+  ctx.clearRect(0,0,260,260);
+  ganadores.forEach(function(g, i) {
+    var start = angle + i * arc;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,start+arc);
+    ctx.fillStyle = colores[i % colores.length]; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.save(); ctx.translate(cx,cy);
+    ctx.rotate(start + arc/2);
+    ctx.textAlign = 'right'; ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px Arial';
+    var nombre = (g.dueno || g.email.split('@')[0]).substring(0,12);
+    ctx.fillText(nombre, r-8, 4); ctx.restore();
+  });
+  // Centro
+  ctx.beginPath(); ctx.arc(cx,cy,18,0,Math.PI*2);
+  ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.fillStyle = '#00B4B4'; ctx.font = 'bold 16px Arial';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🐾',cx,cy);
+  // Flecha
+  ctx.beginPath(); ctx.moveTo(cx+122,cy); ctx.lineTo(cx+108,cy-8); ctx.lineTo(cx+108,cy+8);
+  ctx.fillStyle = '#F5C842'; ctx.fill();
+}
+
+function girarRuleta() {
+  if(spining || ruletaGanadores.length < 2) return;
+  spining = true;
+  document.getElementById('btnSpin').disabled = true;
+  var vueltas = 5 + Math.random()*5;
+  var extra   = Math.random() * 2 * Math.PI;
+  var target  = currentAngle + vueltas * 2 * Math.PI + extra;
+  var start   = null;
+  var dur     = 4000;
+
+  function frame(ts) {
+    if(!start) start = ts;
+    var progress = Math.min((ts - start) / dur, 1);
+    var ease     = 1 - Math.pow(1 - progress, 4);
+    currentAngle = currentAngle + (target - currentAngle) * ease;
+    dibujarRuleta(ruletaGanadores, currentAngle);
+    if(progress < 1) { requestAnimationFrame(frame); return; }
+    // Ganador
+    var arc = (2 * Math.PI) / ruletaGanadores.length;
+    var norm = ((2*Math.PI) - (currentAngle % (2*Math.PI))) % (2*Math.PI);
+    var idx  = Math.floor(norm / arc) % ruletaGanadores.length;
+    var ganador = ruletaGanadores[idx];
+    spining = false;
+    document.getElementById('btnSpin').disabled = false;
+    toast('🎉 ¡Ganador: ' + (ganador.dueno || ganador.email.split('@')[0]) + '!');
+  }
+  requestAnimationFrame(frame);
+}
+
+// ── Init ──────────────────────────────────────────────────────
+loadPartidos();
+</script>
+</body>
+</html>
