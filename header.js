@@ -196,13 +196,23 @@
     var loginHTML =
       '<div class="h-login-overlay" id="petmiLoginOverlay">' +
         '<div class="h-login-box">' +
-          '<button onclick="petmiCerrarLogin()" style="float:right;background:none;border:none;font-size:20px;cursor:pointer;margin-top:-8px">×</button>' +
-          '<div class="h-login-title">Ingresar a PetMi</div>' +
-          '<div class="h-login-sub">Escribe tu correo para acceder a tu cuenta</div>' +
-          '<div class="h-login-msg" id="petmiLoginMsg"></div>' +
-          '<input type="email" class="h-login-input" id="petmiLoginEmail" placeholder="tu@correo.com" inputmode="email">' +
-          '<button class="h-login-ok" id="petmiLoginBtn" onclick="petmiVerificarLogin()">Ingresar</button>' +
-          '<button class="h-login-cancel" onclick="petmiCerrarLogin()">Cancelar</button>' +
+          '<button onclick="petmiCerrarLogin()" style="float:right;background:none;border:none;font-size:20px;cursor:pointer;margin-top:-8px">&#x00D7;</button>' +
+          '<div id="petmiStep1">' +
+            '<div class="h-login-title">Ingresar a PetMi</div>' +
+            '<div class="h-login-sub">Escribe tu correo para continuar.</div>' +
+            '<div class="h-login-msg" id="petmiLoginMsg"></div>' +
+            '<input type="email" class="h-login-input" id="petmiLoginEmail" placeholder="tu@correo.com" inputmode="email" onkeydown="if(event.key===\'Enter\')petmiIrPaso2()">' +
+            '<button class="h-login-ok" id="petmiLoginBtn" onclick="petmiIrPaso2()">Continuar &#x2192;</button>' +
+            '<button class="h-login-cancel" onclick="petmiCerrarLogin()">Cancelar</button>' +
+          '</div>' +
+          '<div id="petmiStep2" style="display:none">' +
+            '<div class="h-login-title">&#x1F43E; &#xBF;C&#xF3;mo se llama?</div>' +
+            '<div class="h-login-sub">Escribe el nombre de una de tus mascotas.</div>' +
+            '<div class="h-login-msg" id="petmiLoginMsg2"></div>' +
+            '<input type="text" class="h-login-input" id="petmiLoginNombre" placeholder="Nombre de tu mascota" autocomplete="off" onkeydown="if(event.key===\'Enter\')petmiVerificarLogin()">' +
+            '<button class="h-login-ok" id="petmiLoginBtn2" onclick="petmiVerificarLogin()">Ingresar</button>' +
+            '<button class="h-login-cancel" onclick="petmiVolverPaso1()">&#x2190; Cambiar correo</button>' +
+          '</div>' +
         '</div>' +
       '</div>';
 
