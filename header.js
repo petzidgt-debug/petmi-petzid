@@ -201,29 +201,30 @@
             '<div class="h-login-title">Ingresar a PetMi</div>' +
             '<div class="h-login-sub">Escribe tu correo para continuar.</div>' +
             '<div class="h-login-msg" id="petmiLoginMsg"></div>' +
-            '<input type="email" class="h-login-input" id="petmiLoginEmail" placeholder="tu@correo.com" inputmode="email" onkeydown="if(event.key===\'Enter\')petmiIrPaso2()">' +
+            '<input type="email" class="h-login-input" id="petmiLoginEmail" placeholder="tu@correo.com" inputmode="email" id="petmiLoginEmail">' +
             '<button class="h-login-ok" id="petmiLoginBtn" onclick="petmiIrPaso2()">Continuar &#x2192;</button>' +
             '<button class="h-login-cancel" onclick="petmiCerrarLogin()">Cancelar</button>' +
           '</div>' +
           '<div id="petmiStep2" style="display:none">' +
-            '<div class="h-login-title">&#x1F43E; &#xBF;C&#xF3;mo se llama?</div>' +
+            '<div class="h-login-title">&#x1F43E; Como se llama?</div>' +
             '<div class="h-login-sub">Escribe el nombre de una de tus mascotas.</div>' +
             '<div class="h-login-msg" id="petmiLoginMsg2"></div>' +
-            '<input type="text" class="h-login-input" id="petmiLoginNombre" placeholder="Nombre de tu mascota" autocomplete="off" onkeydown="if(event.key===\'Enter\')petmiVerificarLogin()">' +
+            '<input type="text" class="h-login-input" id="petmiLoginNombre" placeholder="Nombre de tu mascota" autocomplete="off">' +
             '<button class="h-login-ok" id="petmiLoginBtn2" onclick="petmiVerificarLogin()">Ingresar</button>' +
             '<button class="h-login-cancel" onclick="petmiVolverPaso1()">&#x2190; Cambiar correo</button>' +
-            '<button style="width:100%;padding:10px;background:none;border:none;color:#00B4B4;font-size:13px;cursor:pointer;margin-top:4px" onclick="petmiEnviarOTP()">&#x1F4E7; No recuerdo el nombre &mdash; enviar c&#xF3;digo</button>' +
+            '<button style="width:100%;padding:10px;background:none;border:none;color:#00B4B4;font-size:13px;cursor:pointer;margin-top:4px" onclick="petmiEnviarOTP()">&#x1F4E7; No recuerdo el nombre</button>' +
           '</div>' +
           '<div id="petmiStep3" style="display:none">' +
             '<div class="h-login-title">&#x1F4EC; Revisa tu correo</div>' +
-            '<div class="h-login-sub" id="petmiOTPSub">Enviamos un c&#xF3;digo de 6 d&#xED;gitos a tu correo.</div>' +
+            '<div class="h-login-sub" id="petmiOTPSub">Enviamos un codigo de 6 digitos a tu correo.</div>' +
             '<div class="h-login-msg" id="petmiLoginMsg3"></div>' +
-            '<input type="text" class="h-login-input" id="petmiLoginOTP" placeholder="000000" inputmode="numeric" maxlength="6" onkeydown="if(event.key===\'Enter\')petmiVerificarOTP()" style="letter-spacing:8px;font-size:22px;text-align:center">' +
-            '<button class="h-login-ok" id="petmiLoginBtn3" onclick="petmiVerificarOTP()">Verificar c&#xF3;digo</button>' +
+            '<input type="text" class="h-login-input" id="petmiLoginOTP" placeholder="000000" inputmode="numeric" maxlength="6" style="letter-spacing:8px;font-size:22px;text-align:center">' +
+            '<button class="h-login-ok" id="petmiLoginBtn3" onclick="petmiVerificarOTP()">Verificar codigo</button>' +
             '<button class="h-login-cancel" onclick="petmiVolverPaso2()">&#x2190; Volver</button>' +
           '</div>' +
         '</div>' +
       '</div>';
+
 
     // ── Build header ──────────────────────────────────────────
     var header = document.createElement('header');
@@ -278,7 +279,13 @@
     });
     setTimeout(function(){
       var loginInput = document.getElementById('petmiLoginEmail');
-      if(loginInput) loginInput.addEventListener('keydown', function(e){ if(e.key==='Enter') petmiIrPaso2(); });
+      // Enter key listeners (added via JS to avoid quote escaping issues)
+      var loginEmail  = document.getElementById('petmiLoginEmail');
+      var loginNombre = document.getElementById('petmiLoginNombre');
+      var loginOTP    = document.getElementById('petmiLoginOTP');
+      if(loginEmail)  loginEmail.addEventListener('keydown',  function(e){ if(e.key==='Enter') petmiIrPaso2(); });
+      if(loginNombre) loginNombre.addEventListener('keydown', function(e){ if(e.key==='Enter') petmiVerificarLogin(); });
+      if(loginOTP)    loginOTP.addEventListener('keydown',    function(e){ if(e.key==='Enter') petmiVerificarOTP(); });
     }, 500);
     if(sessionEmail) cargarNotifHeader(sessionEmail);
   }
