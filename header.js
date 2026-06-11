@@ -465,7 +465,14 @@
           localStorage.setItem('petmi_especie',d.mascotas[0].especie);
         petmiLoginMsg2('¡Bienvenido/a!','success');
         setTimeout(function(){window.location.reload();},1000);
-      }else{
+      } else if(d.code==='NO_ACCOUNT') {
+        var el2=document.getElementById('petmiLoginMsg2');
+        if(el2){
+          el2.innerHTML='No tienes mascotas registradas. <a href="/index.html" style="color:#00B4B4;font-weight:700">Regístrate aquí →</a>';
+          el2.className='h-login-msg error';el2.style.display='block';
+        }
+        if(btn){btn.disabled=false;btn.textContent='Ingresar';}
+      } else {
         petmiLoginMsg2(d.msg||'Datos incorrectos. Intenta de nuevo.','error');
         if(btn){btn.disabled=false;btn.textContent='Ingresar';}
         if(nombreEl){nombreEl.value='';nombreEl.focus();}
