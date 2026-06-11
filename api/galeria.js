@@ -1006,7 +1006,8 @@ export default async function handler(req, res) {
       const pr = await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id + '&select=fecha', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
       const parts = await pr.json();
       if (!parts || !parts[0]) return res.status(200).json({ ok: false, msg: 'Partido no encontrado' });
-      if (new Date(parts[0].fecha) <= new Date()) return res.status(200).json({ ok: false, msg: 'El partido ya comenzó' });
+      const cierre = new Date(new Date(parts[0].fecha).getTime() - 30*60*1000);
+      if (cierre <= new Date()) return res.status(200).json({ ok: false, msg: 'Predicciones cerradas (30 min antes del partido)' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?on_conflict=email,partido_id', {
         method: 'POST',
         headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
@@ -1048,12 +1049,11 @@ export default async function handler(req, res) {
       let aciertos = 0;
       for (const pred of preds) {
         const acerto = pred.prediccion === resultado;
-        const puntos = acerto ? 2 : 0;
+        // 2pts por ganador, 1pt por empate acertado
+        const puntos = !acerto ? 0 : (resultado === 'empate' ? 1 : 2);
         await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?id=eq.' + pred.id, { method: 'PATCH', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ acerto, puntos }) });
-        if (acerto) {
-          aciertos++;
-          await fetch(SUPABASE_URL + '/rest/v1/puntos', { method: 'POST', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ email: pred.email, accion: 'quiniela_mundial', puntos: 2, referencia: 'Partido ' + partido_id }) });
-        }
+        if (acerto) aciertos++;
+        // Nota: quiniela es juego independiente, no suma a puntos globales
       }
       return res.status(200).json({ ok: true, procesados: preds.length, aciertos });
     }
