@@ -115,6 +115,7 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
   <div class="tab" onclick="showTab('miquiniela')"><span class="tab-ico">📋</span>Mi Quiniela</div>
   <div class="tab" onclick="showTab('ranking')"><span class="tab-ico">🏆</span>Ranking</div>
   <div class="tab" onclick="showTab('premio')"><span class="tab-ico">🎁</span>Premio</div>
+  <div class="tab" onclick="showTab('reglas')"><span class="tab-ico">📋</span>Reglas</div>
 </div>
 
 <!-- PARTIDOS -->
@@ -156,6 +157,66 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
   </div>
 </div>
 
+<!-- REGLAS -->
+<div class="section" id="sec-reglas">
+  <div style="background:#fff;border-radius:14px;padding:20px;border:0.5px solid #e8e8e8;margin-bottom:10px">
+    <div style="font-size:16px;font-weight:900;color:#1a1a2e;margin-bottom:14px">📋 Reglas de la Quiniela</div>
+
+    <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:16px">
+      Predice el resultado de cada partido del Mundial FIFA 2026 y acumula puntos.
+      <strong>La/El participante que más acierte al final del torneo gana el premio.</strong>
+    </div>
+
+    <div style="font-size:12px;font-weight:700;color:#00B4B4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">¿Cómo predecir?</div>
+    <div style="background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#444;line-height:1.8">
+      • Elige el equipo que crees que ganará (o empate en fase de grupos)<br>
+      • Tienes hasta <strong>30 minutos antes</strong> de que comience cada partido<br>
+      • Puedes cambiar tu predicción cuantas veces quieras antes del cierre<br>
+      • Una vez cerrado el partido, ya no puedes modificarla
+    </div>
+
+    <div style="font-size:12px;font-weight:700;color:#00B4B4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Puntuación</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;background:#e8f5e9;border-radius:8px;padding:10px 12px">
+        <span style="font-size:18px">✅</span>
+        <div><div style="font-size:13px;font-weight:700;color:#2e7d32">Aciertas el ganador</div><div style="font-size:11px;color:#555">+2 puntos</div></div>
+        <span style="margin-left:auto;font-size:20px;font-weight:900;color:#2e7d32">+2</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:#fff8e1;border-radius:8px;padding:10px 12px">
+        <span style="font-size:18px">🤝</span>
+        <div><div style="font-size:13px;font-weight:700;color:#f9a825">Aciertas el empate</div><div style="font-size:11px;color:#555">+1 punto</div></div>
+        <span style="margin-left:auto;font-size:20px;font-weight:900;color:#f9a825">+1</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:#f5f5f5;border-radius:8px;padding:10px 12px">
+        <span style="font-size:18px">❌</span>
+        <div><div style="font-size:13px;font-weight:700;color:#888">No aciertas</div><div style="font-size:11px;color:#555">0 puntos</div></div>
+        <span style="margin-left:auto;font-size:20px;font-weight:900;color:#ccc">0</span>
+      </div>
+    </div>
+
+    <div style="background:#e0f7f7;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#007a7a">
+      <strong>Nota:</strong> Esta quiniela es un juego independiente — los puntos <strong>no se suman</strong> a tus puntos generales de PetMi.
+    </div>
+
+    <div style="font-size:12px;font-weight:700;color:#00B4B4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Fases del torneo</div>
+    <div style="background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#444;line-height:1.8">
+      <strong>Fase de grupos:</strong> 3 opciones — Gana equipo 1, Empate, Gana equipo 2<br>
+      <strong>Eliminatorias:</strong> 2 opciones — Gana equipo 1, Gana equipo 2<br>
+      <span style="font-size:11px;color:#888">(No hay empate en eliminatorias — se juega hasta definir un ganador)</span>
+    </div>
+
+    <div style="font-size:12px;font-weight:700;color:#00B4B4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Premio</div>
+    <div style="background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#444;line-height:1.8">
+      La/El participante con más puntos al finalizar el Mundial (19 de julio) gana el premio.<br>
+      Si hay empate en puntos, se decide con la <strong>Ruleta PetMi</strong> en vivo. 🎡
+    </div>
+
+    <div style="background:#fff8e1;border-radius:10px;padding:12px;font-size:12px;color:#856404;line-height:1.7">
+      <strong>Importante:</strong> Los resultados son marcados por el equipo PetMi al terminar cada partido. En caso de cualquier discrepancia, la decisión del equipo PetMi es final.
+    </div>
+  </div>
+</div>
+
 <div class="toast-q" id="toastQ"></div>
 
 <script>
@@ -168,7 +229,7 @@ var partidos = [];
 var misPreds = {};
 
 function showTab(id) {
-  document.querySelectorAll('.tab').forEach(function(t,i){ t.classList.toggle('active', ['partidos','miquiniela','ranking','premio'][i]===id); });
+  document.querySelectorAll('.tab').forEach(function(t,i){ t.classList.toggle('active', ['partidos','miquiniela','ranking','premio','reglas'][i]===id); });
   document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById('sec-'+id).classList.add('active');
   if(id==='ranking') loadRanking();
@@ -219,7 +280,7 @@ function renderPartidos(rows, preds) {
 
   rows.forEach(function(p) {
     var fecha = new Date(p.fecha);
-    var dayKey = fecha.toLocaleDateString('es-GT', {weekday:'long', month:'long', day:'numeric'});
+    var dayKey = fecha.toLocaleDateString('es-GT', {weekday:'long', month:'long', day:'numeric', timeZone:'America/Guatemala'});
     if(dayKey !== lastDay) {
       html += '<div class="day-label">' + dayKey + '</div>';
       lastDay = dayKey;
@@ -248,8 +309,9 @@ function renderMiQuiniela(rows, preds) {
 
 function renderMatchCard(p, pred, now, showAll) {
   var fecha  = new Date(p.fecha);
-  var locked = fecha <= now;
-  var hora   = fecha.toLocaleTimeString('es-GT', {hour:'2-digit', minute:'2-digit'});
+  var treintaMin = new Date(fecha.getTime() - 30*60*1000);
+  var locked = treintaMin <= now;
+  var hora   = fecha.toLocaleTimeString('es-GT', {hour:'2-digit', minute:'2-digit', timeZone:'America/Guatemala'});
   var fase   = p.grupo ? 'Grupo ' + p.grupo : p.fase.charAt(0).toUpperCase() + p.fase.slice(1);
 
   // Pick buttons
@@ -300,7 +362,8 @@ function predecir(partidoId, opcion) {
 
   var partido = partidos.find(function(p){ return p.id === partidoId; });
   if(!partido) return;
-  if(new Date(partido.fecha) <= new Date()) { toast('⏰ Este partido ya comenzó'); return; }
+  var cierre = new Date(new Date(partido.fecha).getTime() - 30*60*1000);
+  if(cierre <= new Date()) { toast('⏰ Predicciones cerradas (30 min antes del partido)'); return; }
 
   fetch('/api/galeria?action=wc_predecir', {
     method: 'POST',
