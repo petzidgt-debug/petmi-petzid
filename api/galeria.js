@@ -877,7 +877,7 @@ export default async function handler(req, res) {
 
       // Si no es array o está vacío — email no existe
       if (!Array.isArray(mascotas) || mascotas.length === 0) {
-        return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos', code: 'NO_ACCOUNT' });
       }
 
       // Limpiar caracteres invisibles del nombre buscado
