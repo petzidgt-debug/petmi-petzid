@@ -1016,6 +1016,37 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
 
+
+    // ── wc_porcentajes ────────────────────────────────────────
+    if (action === 'wc_porcentajes') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?select=partido_id,prediccion', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const preds = await r.json();
+      if (!Array.isArray(preds)) return res.status(200).json({ porcentajes: {} });
+
+      const byPartido = {};
+      preds.forEach(p => {
+        if (!byPartido[p.partido_id]) byPartido[p.partido_id] = { equipo1: 0, empate: 0, equipo2: 0, total: 0 };
+        if (byPartido[p.partido_id][p.prediccion] !== undefined) {
+          byPartido[p.partido_id][p.prediccion]++;
+          byPartido[p.partido_id].total++;
+        }
+      });
+
+      const porcentajes = {};
+      Object.keys(byPartido).forEach(id => {
+        const d = byPartido[id];
+        if (d.total === 0) { porcentajes[id] = null; return; }
+        porcentajes[id] = {
+          total: d.total,
+          equipo1: Math.round((d.equipo1 / d.total) * 100),
+          empate:  Math.round((d.empate  / d.total) * 100),
+          equipo2: Math.round((d.equipo2 / d.total) * 100)
+        };
+      });
+
+      return res.status(200).json({ porcentajes });
+    }
+
     // ── wc_ranking ────────────────────────────────────────────
     if (action === 'wc_ranking') {
       const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?select=email,puntos,acerto&acerto=not.is.null', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
