@@ -94,6 +94,13 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
 .toast-q{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;white-space:nowrap}
 .toast-q.show{opacity:1}
 .pts-badge{display:inline-block;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:900;padding:2px 6px;border-radius:99px}
+.pct-row{display:flex;gap:6px;padding:0 10px 10px;margin-top:-4px}
+.pct-item{flex:1;text-align:center}
+.pct-bar-bg{height:5px;background:#eee;border-radius:99px;overflow:hidden;margin-bottom:3px}
+.pct-bar-fill{height:100%;background:#00B4B4;border-radius:99px;transition:width .6s ease}
+.pct-bar-fill.empate{background:#F5C842}
+.pct-label{font-size:10px;color:#999;font-weight:700}
+.pct-label.mine{color:#00B4B4}
 </style>
 </head>
 <body>
@@ -227,6 +234,7 @@ var H = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Ty
 var sessionEmail = localStorage.getItem('petzid_email') || '';
 var partidos = [];
 var misPreds = {};
+var porcentajes = {};
 
 function showTab(id) {
   document.querySelectorAll('.tab').forEach(function(t,i){ t.classList.toggle('active', ['partidos','miquiniela','ranking','premio','reglas'][i]===id); });
@@ -248,9 +256,22 @@ function loadPartidos() {
   .then(function(rows){
     partidos = rows;
     document.getElementById('statPartidos').textContent = rows.length;
+    loadPorcentajes();
     if(sessionEmail) loadMisPreds(rows);
     else renderPartidos(rows, {});
   }).catch(function(){ document.getElementById('listPartidos').innerHTML = '<div class="empty-state"><div>⚠️</div>Error cargando partidos</div>'; });
+}
+
+function loadPorcentajes() {
+  fetch('/api/galeria?action=wc_porcentajes')
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.porcentajes) {
+      porcentajes = d.porcentajes;
+      // Re-render to show percentages if already rendered
+      if(partidos.length) renderPartidos(partidos, misPreds);
+    }
+  }).catch(function(){});
 }
 
 function loadMisPreds(rows) {
@@ -344,6 +365,23 @@ function renderMatchCard(p, pred, now, showAll) {
     badgeHtml = '<div class="match-result-badge pending">⏳ Esperando resultado</div>';
   }
 
+  // Porcentajes — solo mostrar si el usuario ya predijo este partido
+  var pctHtml = '';
+  if(pred && porcentajes[p.id]) {
+    var pc = porcentajes[p.id];
+    pctHtml = '<div class="pct-row">'
+      + '<div class="pct-item"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:'+pc.equipo1+'%"></div></div>'
+      + '<div class="pct-label'+(pred.prediccion==='equipo1'?' mine':'')+'">'+pc.equipo1+'%</div></div>';
+    if(p.fase === 'grupos') {
+      pctHtml += '<div class="pct-item"><div class="pct-bar-bg"><div class="pct-bar-fill empate" style="width:'+pc.empate+'%"></div></div>'
+        + '<div class="pct-label'+(pred.prediccion==='empate'?' mine':'')+'">'+pc.empate+'%</div></div>';
+    }
+    pctHtml += '<div class="pct-item"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:'+pc.equipo2+'%"></div></div>'
+      + '<div class="pct-label'+(pred.prediccion==='equipo2'?' mine':'')+'">'+pc.equipo2+'%</div></div>'
+      + '</div>'
+      + '<div style="text-align:center;font-size:10px;color:#bbb;padding:0 10px 10px;margin-top:-6px">'+pc.total+' '+(pc.total===1?'predicción':'predicciones')+'</div>';
+  }
+
   return '<div class="match-card'+(locked?' locked':'')+'" id="mc-'+p.id+'">'
     + '<div class="match-header"><span class="match-grupo">'+fase+'</span><span class="match-time">'+hora+' (GT)</span></div>'
     + '<div class="match-teams">'
@@ -352,6 +390,7 @@ function renderMatchCard(p, pred, now, showAll) {
     + '<div class="team"><div class="team-flag">'+p.bandera2+'</div><div class="team-name">'+p.equipo2+'</div></div>'
     + '</div>'
     + picksHtml
+    + pctHtml
     + badgeHtml
     + '</div>';
 }
@@ -378,6 +417,7 @@ function predecir(partidoId, opcion) {
       var card = document.getElementById('mc-'+partidoId);
       if(card) card.outerHTML = renderMatchCard(partido, misPreds[partidoId], now, false);
       toast('✅ Predicción guardada!');
+      loadPorcentajes();
     } else {
       toast(d.msg || 'Error al guardar');
     }
