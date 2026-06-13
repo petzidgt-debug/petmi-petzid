@@ -94,6 +94,18 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
 .toast-q{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;white-space:nowrap}
 .toast-q.show{opacity:1}
 .pts-badge{display:inline-block;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:900;padding:2px 6px;border-radius:99px}
+.section-divider{display:flex;align-items:center;gap:8px;padding:18px 4px 8px;font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
+.section-divider::after{content:'';flex:1;height:0.5px;background:#ddd}
+.compact-card{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;border:0.5px solid #ececec;display:flex;align-items:center;gap:10px;opacity:.85}
+.compact-teams{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#555}
+.compact-team{display:flex;align-items:center;gap:5px;flex:1;justify-content:flex-end}
+.compact-team.right{justify-content:flex-start}
+.compact-team .flag{font-size:16px}
+.compact-team.winner .name{font-weight:900;color:#1a1a2e}
+.compact-vs{font-size:10px;color:#bbb;font-weight:700;padding:0 4px;min-width:24px;text-align:center}
+.compact-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:46px}
+.compact-grupo{font-size:9px;color:#aaa;text-transform:uppercase}
+.compact-badge{font-size:14px}
 .pct-row{display:flex;gap:6px;padding:0 10px 10px;margin-top:-4px}
 .pct-item{flex:1;text-align:center}
 .pct-bar-bg{height:5px;background:#eee;border-radius:99px;overflow:hidden;margin-bottom:3px}
@@ -302,10 +314,20 @@ function updateStats(preds) {
 // ── Renderizar partidos ───────────────────────────────────────
 function renderPartidos(rows, preds) {
   var now = new Date();
+
+  var proximos = [];
+  var pasados = [];
+  rows.forEach(function(p) {
+    var treintaMin = new Date(new Date(p.fecha).getTime() - 30*60*1000);
+    if (treintaMin <= now) pasados.push(p);
+    else proximos.push(p);
+  });
+
   var html = '';
   var lastDay = '';
 
-  rows.forEach(function(p) {
+  // Próximos partidos primero, con separador por día
+  proximos.forEach(function(p) {
     var fecha = new Date(p.fecha);
     var dayKey = fecha.toLocaleDateString('es-GT', {weekday:'long', month:'long', day:'numeric', timeZone:'America/Guatemala'});
     if(dayKey !== lastDay) {
@@ -315,7 +337,45 @@ function renderPartidos(rows, preds) {
     html += renderMatchCard(p, preds[p.id], now, false);
   });
 
+  // Partidos ya jugados, como tarjetas resumidas al final
+  if (pasados.length) {
+    html += '<div class="section-divider">⏱️ Partidos jugados</div>';
+    // Más reciente primero
+    pasados.slice().reverse().forEach(function(p) {
+      html += renderMatchCardCompact(p, preds[p.id]);
+    });
+  }
+
   document.getElementById('listPartidos').innerHTML = html || '<div class="empty-state"><div>⚽</div>Sin partidos disponibles</div>';
+}
+
+// ── Tarjeta resumida (partidos ya jugados) ─────────────────────
+function renderMatchCardCompact(p, pred) {
+  var fecha = new Date(p.fecha);
+  var fechaCorta = fecha.toLocaleDateString('es-GT', {day:'numeric', month:'short', timeZone:'America/Guatemala'});
+  var fase = p.grupo ? 'Gr.' + p.grupo : (p.fase.charAt(0).toUpperCase() + p.fase.slice(1));
+
+  var win1 = p.resultado === 'equipo1';
+  var win2 = p.resultado === 'equipo2';
+
+  var badge = '';
+  if (pred && p.resultado) {
+    badge = pred.acerto ? '<span class="compact-badge" title="Acertaste">✅</span>' : '<span class="compact-badge" title="No acertaste">❌</span>';
+  } else if (pred) {
+    badge = '<span class="compact-badge" title="Esperando resultado">⏳</span>';
+  } else if (!p.resultado) {
+    badge = '<span class="compact-badge" title="Sin resultado aún">⏳</span>';
+  }
+
+  return '<div class="compact-card">'
+    + '<div class="compact-meta"><div class="compact-grupo">'+fase+'</div><div style="font-size:10px;color:#bbb">'+fechaCorta+'</div></div>'
+    + '<div class="compact-teams">'
+    + '<div class="compact-team'+(win1?' winner':'')+'"><span class="name">'+p.equipo1+'</span><span class="flag">'+p.bandera1+'</span></div>'
+    + '<div class="compact-vs">'+(p.resultado ? (p.resultado==='empate' ? 'EMP' : 'VS') : 'VS')+'</div>'
+    + '<div class="compact-team right'+(win2?' winner':'')+'"><span class="flag">'+p.bandera2+'</span><span class="name">'+p.equipo2+'</span></div>'
+    + '</div>'
+    + badge
+    + '</div>';
 }
 
 function renderMiQuiniela(rows, preds) {
@@ -329,8 +389,23 @@ function renderMiQuiniela(rows, preds) {
     document.getElementById('listMiQuiniela').innerHTML = '<div class="empty-state"><div>📋</div>Aún no tienes predicciones.<br>Ve a la pestaña Partidos.</div>';
     return;
   }
+
+  var proximos = [];
+  var pasados = [];
+  played.forEach(function(p) {
+    var treintaMin = new Date(new Date(p.fecha).getTime() - 30*60*1000);
+    if (treintaMin <= now) pasados.push(p);
+    else proximos.push(p);
+  });
+
   var html = '';
-  played.forEach(function(p){ html += renderMatchCard(p, preds[p.id], now, true); });
+  proximos.forEach(function(p){ html += renderMatchCard(p, preds[p.id], now, true); });
+
+  if (pasados.length) {
+    html += '<div class="section-divider">⏱️ Partidos jugados</div>';
+    pasados.slice().reverse().forEach(function(p){ html += renderMatchCardCompact(p, preds[p.id]); });
+  }
+
   document.getElementById('listMiQuiniela').innerHTML = html;
 }
 
