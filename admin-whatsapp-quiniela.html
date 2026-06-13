@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WhatsApp Quiniela - Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f5f5f0;padding:16px;max-width:600px;margin:0 auto}
+h1{font-size:18px;color:#1a1a2e;margin-bottom:4px}
+.sub{font-size:12px;color:#888;margin-bottom:16px}
+.card{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;align-items:center;gap:12px}
+.card.sent{opacity:.4}
+.info{flex:1}
+.name{font-size:14px;font-weight:700;color:#222}
+.phone{font-size:11px;color:#999}
+.btn-wa{background:#25D366;color:#fff;border:none;padding:8px 16px;border-radius:99px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}
+.btn-wa.disabled{background:#ccc;pointer-events:none}
+.counter{position:sticky;top:0;background:#1a1a2e;color:#fff;padding:10px;border-radius:10px;text-align:center;font-weight:700;margin-bottom:12px;font-size:14px;z-index:10}
+.editor{background:#fff;border-radius:10px;padding:12px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.editor textarea{width:100%;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:13px;font-family:Arial,sans-serif;resize:vertical;min-height:100px}
+.editor label{font-size:11px;color:#888;font-weight:700;text-transform:uppercase}
+.empty{text-align:center;padding:30px;color:#aaa}
+</style>
+</head>
+<body>
+<h1>📲 Avisar por WhatsApp — Quiniela</h1>
+<div class="sub">Mensaje personalizado para cada jugador. Usa {nombre} para el nombre del dueño.</div>
+
+<div class="editor">
+  <label>Mensaje (se reemplaza {nombre})</label>
+  <textarea id="mensajeTxt">¡Hola {nombre}! 🐾⚽ Soy del equipo PetMi.
+
+Tuvimos que corregir el calendario de la Quiniela Mundial (¡error nuestro, disculpa! 🟨). Algunos partidos cambiaron de rival.
+
+Si ya habías hecho tu pronóstico, ¿puedes entrar y revisarlo de nuevo? 🙏
+
+👉 https://app.revistapetmi.com/quiniela.html
+
+¡Gracias y que gane el mejor! 🏆</textarea>
+</div>
+
+<div class="counter" id="counter">Cargando...</div>
+<div id="lista"><div class="empty">Cargando jugadores...</div></div>
+
+<script>
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+var H = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY };
+
+var sentSet = JSON.parse(localStorage.getItem('wa_quiniela_sent') || '[]');
+
+function limpiarTel(tel) {
+  var t = String(tel||'').replace(/[^0-9]/g,'');
+  if (!t) return '';
+  if (t.length === 8) t = '502' + t; // Guatemala
+  return t;
+}
+
+function buildMsg(nombre) {
+  var tpl = document.getElementById('mensajeTxt').value;
+  return tpl.replace(/\\{nombre\\}/g, nombre || 'amigo/a');
+}
+
+function markSent(email) {
+  if (sentSet.indexOf(email) < 0) {
+    sentSet.push(email);
+    localStorage.setItem('wa_quiniela_sent', JSON.stringify(sentSet));
+  }
+  render();
+}
+
+var jugadores = [];
+
+function render() {
+  var pendientes = jugadores.filter(function(j){ return sentSet.indexOf(j.email) < 0; });
+  document.getElementById('counter').textContent = 'Enviados: ' + sentSet.length + ' / ' + jugadores.length + ' (quedan ' + pendientes.length + ')';
+
+  var html = '';
+  jugadores.forEach(function(j) {
+    var sent = sentSet.indexOf(j.email) >= 0;
+    var tel = limpiarTel(j.whatsapp);
+    var msg = encodeURIComponent(buildMsg(j.dueno));
+    var waUrl = tel ? ('https://wa.me/' + tel + '?text=' + msg) : '';
+    html += '<div class="card' + (sent?' sent':'') + '">'
+      + '<div class="info"><div class="name">' + (j.dueno || j.email) + '</div><div class="phone">' + (tel || 'Sin WhatsApp') + ' · ' + j.email + '</div></div>'
+      + (tel
+          ? '<a class="btn-wa' + (sent?' disabled':'') + '" href="' + waUrl + '" target="_blank" data-email="' + j.email + '">' + (sent?'✓ Enviado':'Enviar') + '</a>'
+          : '<span class="btn-wa disabled">Sin tel.</span>'
+        )
+      + '</div>';
+  });
+  document.getElementById('lista').innerHTML = html || '<div class="empty">Sin jugadores</div>';
+}
+
+document.getElementById('lista').addEventListener('click', function(e) {
+  var btn = e.target.closest('.btn-wa[data-email]');
+  if (btn) markSent(btn.getAttribute('data-email'));
+});
+
+// Cargar jugadores con predicción
+fetch(SUPA_URL + '/rest/v1/wc_predicciones?select=email', { headers: H })
+  .then(function(r){ return r.json(); })
+  .then(function(preds){
+    var emails = Array.from(new Set(preds.map(function(p){ return p.email; })));
+    if (!emails.length) { document.getElementById('lista').innerHTML = '<div class="empty">Nadie ha hecho predicciones aún</div>'; document.getElementById('counter').textContent='0 jugadores'; return; }
+
+    var query = emails.map(function(e){ return '"'+e+'"'; }).join(',');
+    fetch(SUPA_URL + '/rest/v1/mascotas?select=email,dueno,whatsapp&email=in.(' + query + ')', { headers: H })
+      .then(function(r){ return r.json(); })
+      .then(function(mascotas){
+        var byEmail = {};
+        mascotas.forEach(function(m){
+          if (!byEmail[m.email]) byEmail[m.email] = m;
+          else if (!byEmail[m.email].whatsapp && m.whatsapp) byEmail[m.email] = m;
+        });
+        jugadores = emails.map(function(e){
+          var m = byEmail[e] || {};
+          return { email: e, dueno: m.dueno || '', whatsapp: m.whatsapp || '' };
+        }).sort(function(a,b){ return (a.dueno||a.email).localeCompare(b.dueno||b.email); });
+        render();
+      });
+  });
+
+document.getElementById('mensajeTxt').addEventListener('input', render);
+</script>
+</body>
+</html>
