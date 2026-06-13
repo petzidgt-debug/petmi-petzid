@@ -318,8 +318,7 @@ function renderPartidos(rows, preds) {
   var proximos = [];
   var pasados = [];
   rows.forEach(function(p) {
-    var treintaMin = new Date(new Date(p.fecha).getTime() - 30*60*1000);
-    if (treintaMin <= now) pasados.push(p);
+    if (p.resultado) pasados.push(p);
     else proximos.push(p);
   });
 
@@ -393,8 +392,7 @@ function renderMiQuiniela(rows, preds) {
   var proximos = [];
   var pasados = [];
   played.forEach(function(p) {
-    var treintaMin = new Date(new Date(p.fecha).getTime() - 30*60*1000);
-    if (treintaMin <= now) pasados.push(p);
+    if (p.resultado) pasados.push(p);
     else proximos.push(p);
   });
 
