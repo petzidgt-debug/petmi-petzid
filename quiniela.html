@@ -117,6 +117,12 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
   </div>
 </div>
 
+<div id="avisoActualizacion" style="background:#fff8e1;border-bottom:1px solid #f5e6a8;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;color:#856404">
+  <span style="font-size:18px">⚠️</span>
+  <div style="flex:1">Actualizamos el calendario de partidos para corregir errores. <strong>Si ya habías hecho tu quiniela, por favor vuelve a seleccionar tus pronósticos.</strong></div>
+  <button onclick="document.getElementById('avisoActualizacion').style.display='none'" style="background:none;border:none;font-size:16px;color:#856404;cursor:pointer;padding:4px">✕</button>
+</div>
+
 <div class="tabs">
   <div class="tab active" onclick="showTab('partidos')"><span class="tab-ico">⚽</span>Partidos</div>
   <div class="tab" onclick="showTab('miquiniela')"><span class="tab-ico">📋</span>Mi Quiniela</div>
