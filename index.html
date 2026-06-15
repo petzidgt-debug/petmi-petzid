@@ -853,6 +853,19 @@ function triggerDownload(b64){
 var _isSubmitting = false;
 async function submitPetzID(){
   if(_isSubmitting) return; // Evitar doble envio
+
+  // Evitar reenvío del mismo UID (recarga de página en paso intermedio)
+  var ultimoUID = localStorage.getItem('petmi_ultimo_uid');
+  var ultimoNombre = localStorage.getItem('petmi_ultimo_nombre');
+  if(ultimoUID && ultimoUID === uid) {
+    // Ya se envió este UID — ir directo al paso 4
+    document.getElementById('doneNombre').textContent = ultimoNombre || 'tu mascota';
+    cur=4; showStep(4); updateProgress();
+    localStorage.removeItem('petmi_ultimo_uid');
+    localStorage.removeItem('petmi_ultimo_nombre');
+    return;
+  }
+
   _isSubmitting = true;
   var btn=document.getElementById('btnNext');
   btn.textContent='Procesando...';btn.disabled=true;
@@ -922,16 +935,28 @@ async function submitPetzID(){
 
   try{
     showLoading('Guardando tu PetzID','Enviando correo de bienvenida...');
-    await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(apiBody)});
-  }catch(e){console.log('submit error:',e);_isSubmitting=false;btn.disabled=false;btn.textContent='Siguiente';}
+    var submitResp = await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(apiBody)});
+    var submitData = await submitResp.json().catch(function(){ return {}; });
+    if(submitData && submitData.ok === false && submitData.error) {
+      hideLoading();
+      _isSubmitting=false;btn.disabled=false;btn.textContent='Siguiente';
+      document.getElementById('errorMsg').textContent='Error al guardar. Intenta de nuevo.';
+      document.getElementById('errorMsg').style.display='block';
+      return;
+    }
+  }catch(e){console.log('submit error:',e);_isSubmitting=false;btn.disabled=false;btn.textContent='Siguiente';return;}
 
   if(payload.email){
     localStorage.setItem('petzid_email',payload.email);
     localStorage.setItem('petzid_dueno',payload.dueno||'');
+    // Marcar como enviado para evitar reenvío si recarga antes del paso 4
+    localStorage.setItem('petmi_ultimo_uid', uid);
+    localStorage.setItem('petmi_ultimo_nombre', payload.nombre||'');
   }
   document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
   hideLoading();
   _isSubmitting = false;
+  localStorage.removeItem('petmi_ultimo_uid');
   cur=4;showStep(4);updateProgress();
 }
 
