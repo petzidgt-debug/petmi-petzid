@@ -89,6 +89,16 @@ function onOpen() {
       .addItem('Reenviar todos los pendientes',  'reenviarPendientes')
       .addSeparator()
       .addItem('Enviar promo segmentada',        'enviarPromo')
+      .addItem('Enviar PROMO LANZAMIENTO 2M',     'enviarPromoLanzamiento')
+      .addItem('Enviar email de actualizacion',   'enviarEmailActualizacion')
+      .addItem('[TEST] Email a elsamoralesg',     'testEmailActualizacion')
+      .addItem('Enviar email Quiniela Mundial',    'enviarEmailMundial')
+      .addItem('[TEST] Email Mundial a elsamoralesg', 'testEmailMundial')
+      .addItem('Continuar envio Mundial (lote)',    'enviarEmailMundialLote')
+      .addItem('Resetear lista enviados Mundial',   'resetearEnvioMundial')
+      .addItem('Enviar correccion calendario (lote)', 'enviarEmailCorreccionQuiniela')
+      .addItem('[TEST] Correccion a elsamoralesg', 'testEmailCorreccionQuiniela')
+      .addItem('Resetear lista enviados (correccion)', 'resetearEnvioCorreccion')
       .addItem('Vista previa de segmento',       'vistaPrevia')
       .addSeparator()
       .addItem('Enviar feliz cumpleanos',        'enviarCumpleanosHoy')
@@ -356,6 +366,37 @@ function doPost(e) {
       return ok();
     }
 
+    // ── notificarPromoActivada ────────────────────────────
+    if (action === 'notificarPromoActivada') {
+      var emailDest = String(data.email||'').trim();
+      var meses     = data.meses || 2;
+      var vence     = data.vence || '';
+      if (emailDest) {
+        var html = emailHtml('#F5C842', LOGO_HEADER_YELLOW,
+          '<h2 style="color:#222;margin-top:0">Tu Premium esta activo</h2>'
+          + '<p style="color:#555;font-size:15px;line-height:1.7">Hola! Tu codigo de promo fue canjeado exitosamente.</p>'
+          + '<div style="background:#FFF8E1;border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid #F5C842">'
+          + '<div style="font-size:22px;font-weight:900;color:#1a1a2e">&#x2B50; ' + meses + ' meses Premium GRATIS</div>'
+          + (vence ? '<div style="font-size:13px;color:#888;margin-top:4px">Valido hasta: ' + vence + '</div>' : '')
+          + '</div>'
+          + '<p style="color:#555;font-size:14px;line-height:1.7">Ahora tienes acceso a:</p>'
+          + '<ul style="color:#555;font-size:14px;line-height:1.9;padding-left:20px">'
+          + '<li>3 disenos de carnet PetzID Premium</li>'
+          + '<li>Badge Premium en la galeria</li>'
+          + '<li>Perfil publico con QR descargable</li>'
+          + '<li>Opcion de ventas en avisos</li>'
+          + '<li>Descuento 10% en tienda PetMi</li>'
+          + '</ul>'
+          + '<div style="text-align:center;margin:24px 0">'
+          + '<a href="https://petmi-petzid.vercel.app/mis-ids.html" style="background:#00B4B4;color:#fff;padding:14px 28px;border-radius:24px;text-decoration:none;font-weight:700;font-size:15px">Ver mi carnet Premium</a>'
+          + '</div>');
+        try {
+          GmailApp.sendEmail(emailDest, 'Tu Premium PetMi esta activo — ' + meses + ' meses gratis!', '', {name:REMITENTE, htmlBody:html, charset:'UTF-8'});
+        } catch(mailErr) { Logger.log('notificarPromoActivada: ' + mailErr.message); }
+      }
+      return ok();
+    }
+
     if (action === 'notificarCumple') {
       var emailDueno  = String(data.emailDueno||'').trim();
       var tipoFecha   = String(data.tipoFecha||'nacimiento').trim();
@@ -396,7 +437,33 @@ function doPost(e) {
     // ── submit normal ──────────────────────────────────────
     var sheet = getOrCreateSheet();
     var uid   = data.uid || generateUID();
-    saveRow(sheet, uid, data);
+
+    // Anti-duplicado: verificar UID existente Y duplicado por email+nombre (reenvio por recarga)
+    var lastRow = sheet.getLastRow();
+    var uidExists = false;
+    var dupExists = false;
+    if (lastRow > 1) {
+      // Columnas: B=UID(2), C=Nombre(3), ... L=Email(12) -> offset 0..10 desde columna B
+      var existing = sheet.getRange(2, 2, lastRow - 1, 11).getValues();
+      var nombreNuevo = String(data.nombre||'').trim().toLowerCase();
+      var emailNuevo  = String(data.email||'').trim().toLowerCase();
+      for (var ei = 0; ei < existing.length; ei++) {
+        var existUid    = String(existing[ei][0]).trim().toLowerCase();
+        var existNombre = String(existing[ei][1]).trim().toLowerCase();
+        var existEmail  = String(existing[ei][10]).trim().toLowerCase();
+        if (existUid === uid.trim().toLowerCase()) {
+          uidExists = true;
+          Logger.log('doPost: UID ya existe, omitiendo appendRow: ' + uid);
+          break;
+        }
+        if (emailNuevo && nombreNuevo && existEmail === emailNuevo && existNombre === nombreNuevo) {
+          dupExists = true;
+          Logger.log('doPost: Duplicado por email+nombre, omitiendo appendRow: ' + emailNuevo + ' / ' + nombreNuevo);
+          break;
+        }
+      }
+    }
+    if (!uidExists && !dupExists) saveRow(sheet, uid, data);
 
     // Heredar Premium si el email ya lo tiene
     var premiumData = { premium: false, premium_hasta: null, premium_metodo: null };
@@ -520,6 +587,35 @@ function doGet(e) {
       });
     }
     return ContentService.createTextOutput(JSON.stringify({mensajes:mensajes})).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // ── enviarOTP ─────────────────────────────────────────────
+  if (data.action === 'enviarOTP' && data.email && data.code) {
+    var emailOTP = String(data.email).trim().toLowerCase();
+    var codeOTP  = String(data.code);
+    var dueno    = data.dueno || 'amigo/a';
+    var html =
+      '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">' +
+      '<div style="background:#1a1a2e;padding:16px;text-align:center;border-radius:12px 12px 0 0">' +
+      '<img src="https://app.revistapetmi.com/logopetmi.png" height="32" style="height:32px" alt="PetMi"></div>' +
+      '<div style="background:#fff;padding:24px">' +
+      '<p style="font-size:15px;color:#222">Hola <strong>' + dueno + '</strong>,</p>' +
+      '<p style="font-size:14px;color:#555">Tu c&#xF3;digo de acceso a PetMi es:</p>' +
+      '<div style="text-align:center;margin:20px 0">' +
+      '<span style="font-size:36px;font-weight:900;letter-spacing:8px;color:#1a1a2e;background:#f5f5f5;padding:14px 24px;border-radius:12px">' + codeOTP + '</span>' +
+      '</div>' +
+      '<p style="font-size:13px;color:#888">V&#xE1;lido por 10 minutos. No lo compartas con nadie.</p>' +
+      '<div style="text-align:center;margin-top:20px">' +
+      '<a href="https://app.revistapetmi.com" style="background:#00B4B4;color:#fff;padding:11px 28px;border-radius:99px;text-decoration:none;font-size:14px;font-weight:700">Ir a la app</a>' +
+      '</div></div>' +
+      '<div style="background:#F5C842;padding:10px;text-align:center;border-radius:0 0 12px 12px">' +
+      '<p style="font-size:11px;color:#555;margin:0">PetMi Guatemala</p></div></div>';
+    GmailApp.sendEmail(emailOTP,
+      'Tu código de acceso PetMi: ' + codeOTP,
+      'Tu código es: ' + codeOTP + '. Válido 10 minutos.',
+      { name: REMITENTE, htmlBody: html, charset: 'UTF-8' }
+    );
+    return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
   }
 
   return ContentService.createTextOutput(JSON.stringify({status:'PetMi API v12'})).setMimeType(ContentService.MimeType.JSON);
@@ -891,8 +987,9 @@ function getOrCreateSheet() {
 }
 
 function saveRow(sheet, uid, d) {
+  var uidUpper = String(uid||'').trim().toUpperCase();
   sheet.appendRow([
-    new Date(),uid,d.nombre||'',d.apodo||'',d.especie||'',d.sexo||'',d.raza||'',
+    new Date(),uidUpper,d.nombre||'',d.apodo||'',d.especie||'',d.sexo||'',d.raza||'',
     d.tipoFecha||'nacimiento',d.fecha||'',String(d.zona||''),d.dueno||'',d.email||'',d.whatsapp||'',
     d.veterinario||'',d.conviveCon||'',d.instagram||'',d.alimento||'',
     Array.isArray(d.tipoAlimento)?d.tipoAlimento.join(', '):(d.tipoAlimento||''),
@@ -917,7 +1014,7 @@ function sincronizarTodo() {
   var rows = sheet.getRange(2, 1, lastRow-1, 31).getValues();
   var ok = 0, err = 0;
   rows.forEach(function(r) {
-    var uid = String(r[1]||'').trim().toLowerCase();
+    var uid = String(r[1]||'').trim().toUpperCase();
     if (!uid) return;
     try {
       sbUpsert('mascotas', {
@@ -1009,6 +1106,620 @@ function columnLetter(n) {
   while(n>0){n--;s=String.fromCharCode(65+(n%26))+s;n=Math.floor(n/26);}
   return s;
 }
+
+
+// ============================================================
+// PROMO DE LANZAMIENTO — Email masivo
+// ============================================================
+function enviarPromoLanzamiento() {
+  var ui = SpreadsheetApp.getUi();
+  var sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) { ui.alert('No hay datos.'); return; }
+
+  // Confirmar envío
+  var resp = ui.alert(
+    'Promo de Lanzamiento',
+    'Se enviara el email de 2 meses Premium GRATIS a TODOS los usuarios registrados.\n\n¿Continuar?',
+    ui.ButtonSet.YES_NO
+  );
+  if (resp !== ui.Button.YES) return;
+
+  var rows = sheet.getRange(2, 1, lastRow - 1, 22).getValues();
+  var enviados = 0, omitidos = 0, errores = 0;
+
+  rows.forEach(function(row) {
+    var email  = String(row[11] || '').trim();
+    var dueno  = String(row[10] || '').trim() || 'Amigo PetMi';
+    var nombre = String(row[2]  || '').trim() || 'tu mascota';
+    var ofertas = String(row[20] || '').trim();
+
+    if (!email) { omitidos++; return; }
+    if (ofertas === 'No') { omitidos++; return; } // Respetar preferencia de no emails
+
+    try {
+      var html = buildPromoLanzamientoHTML(dueno, nombre);
+      GmailApp.sendEmail(
+        email,
+        '🎁 2 meses de PetMi Premium GRATIS — solo para ti, ' + dueno,
+        // Texto plano de respaldo
+        'Hola ' + dueno + '! Como miembro de PetMi te regalamos 2 meses de Premium gratis. Usa el codigo PETMI2M en app.revistapetmi.com/premium.html',
+        { name: REMITENTE, htmlBody: html, charset: 'UTF-8' }
+      );
+      enviados++;
+      Utilities.sleep(600); // Respetar limites de Gmail
+    } catch(err) {
+      Logger.log('Error enviando a ' + email + ': ' + err.message);
+      errores++;
+    }
+  });
+
+  // Registrar en campanas
+  registrarCampana('TODOS', '2 meses Premium GRATIS — PETMI2M', enviados, errores);
+  ui.alert('Resultado:\nEnviados: ' + enviados + '\nOmitidos: ' + omitidos + '\nErrores: ' + errores);
+}
+
+function buildPromoLanzamientoHTML(dueno, nombre) {
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+    + '</head><body style="margin:0;padding:0;background:#f0f0ee;font-family:Arial,sans-serif">'
+    + '<div style="max-width:520px;margin:0 auto;background:#f0f0ee;padding:20px 12px">'
+
+    // Header oscuro
+    + '<div style="background:#1a1a2e;padding:24px;text-align:center;border-radius:12px 12px 0 0">'
+    + '<p style="margin:0;font-size:28px;font-weight:900;color:#fff">petz<span style="color:#F5C842">ID</span> by PetMi</p>'
+    + '</div>'
+
+    // Hero amarillo
+    + '<div style="background:#F5C842;padding:28px 24px;text-align:center">'
+    + '<div style="display:inline-block;background:rgba(26,26,46,.12);border-radius:99px;padding:5px 14px;font-size:11px;font-weight:700;color:#1a1a2e;letter-spacing:.5px;margin-bottom:12px">PROMO DE LANZAMIENTO</div>'
+    + '<h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#1a1a2e;line-height:1.2">2 meses de Premium<br>completamente GRATIS</h1>'
+    + '<p style="margin:0;font-size:14px;color:rgba(26,26,46,.65)">Solo para miembros registrados &middot; Valido hasta el 31 de julio 2026</p>'
+    + '</div>'
+
+    // Body blanco
+    + '<div style="background:#fff;padding:28px 24px">'
+
+    // Saludo
+    + '<p style="font-size:15px;color:#333;line-height:1.7;margin:0 0 18px">Hola <strong>' + dueno + '</strong>,<br><br>'
+    + 'Como miembro de la comunidad PetMi, queremos darte acceso gratuito a <strong>2 meses de Premium</strong> &mdash; sin costo, sin tarjeta de credito.</p>'
+
+    // Beneficios
+    + '<div style="background:#f8f8f8;border-radius:10px;padding:16px 18px;margin:0 0 20px">'
+    + '<p style="margin:0 0 10px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px">Lo que incluye tu Premium</p>'
+    + '<table width="100%" cellpadding="0" cellspacing="0">'
+    + '<tr><td style="padding:6px 0;border-bottom:0.5px solid #eee"><table cellpadding="0" cellspacing="0"><tr>'
+    + '<td style="width:28px"><div style="width:28px;height:28px;background:#e0f7f7;border-radius:7px;text-align:center;line-height:28px;font-size:14px">&#x1F194;</div></td>'
+    + '<td style="padding-left:10px;font-size:14px;color:#333">3 disenos de carnet PetzID para elegir</td></tr></table></td></tr>'
+    + '<tr><td style="padding:6px 0;border-bottom:0.5px solid #eee"><table cellpadding="0" cellspacing="0"><tr>'
+    + '<td style="width:28px"><div style="width:28px;height:28px;background:#e0f7f7;border-radius:7px;text-align:center;line-height:28px;font-size:14px">&#x2B50;</div></td>'
+    + '<td style="padding-left:10px;font-size:14px;color:#333">Badge Premium en la galeria</td></tr></table></td></tr>'
+    + '<tr><td style="padding:6px 0;border-bottom:0.5px solid #eee"><table cellpadding="0" cellspacing="0"><tr>'
+    + '<td style="width:28px"><div style="width:28px;height:28px;background:#e0f7f7;border-radius:7px;text-align:center;line-height:28px;font-size:14px">&#x1F4F1;</div></td>'
+    + '<td style="padding-left:10px;font-size:14px;color:#333">Perfil publico con QR descargable</td></tr></table></td></tr>'
+    + '<tr><td style="padding:6px 0"><table cellpadding="0" cellspacing="0"><tr>'
+    + '<td style="width:28px"><div style="width:28px;height:28px;background:#e0f7f7;border-radius:7px;text-align:center;line-height:28px;font-size:14px">&#x1F3F7;</div></td>'
+    + '<td style="padding-left:10px;font-size:14px;color:#333">10% de descuento en tienda PetMi</td></tr></table></td></tr>'
+    + '</table></div>'
+
+    // Código de promo
+    + '<div style="border:2px dashed #F5C842;border-radius:10px;padding:18px;text-align:center;margin:0 0 20px;background:#FFFDF0">'
+    + '<p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#856404">Tu codigo de promo</p>'
+    + '<p style="margin:0 0 6px;font-size:32px;font-weight:900;color:#1a1a2e;letter-spacing:4px">PETMI2M</p>'
+    + '<p style="margin:0;font-size:12px;color:#856404">Copiar y usar en la app</p>'
+    + '</div>'
+
+    // Urgencia
+    + '<div style="border-left:3px solid #E24B4A;border-radius:0 8px 8px 0;background:#fff5f5;padding:10px 14px;margin:0 0 20px;font-size:13px;color:#333">'
+    + '&#x23F0; Solo <strong>500 lugares disponibles</strong> &mdash; valido hasta el 31 de julio de 2026'
+    + '</div>'
+
+    // CTA principal
+    + '<div style="text-align:center;margin:0 0 20px">'
+    + '<a href="https://app.revistapetmi.com/premium.html" style="display:inline-block;background:#00B4B4;color:#fff;padding:14px 36px;border-radius:99px;font-size:15px;font-weight:700;text-decoration:none">Activar mi Premium gratis &rarr;</a>'
+    + '</div>'
+
+    // Divisor
+    + '<hr style="border:none;border-top:0.5px solid #eee;margin:20px 0">'
+
+    // Pasos
+    + '<p style="font-size:13px;font-weight:700;color:#222;margin:0 0 10px">Como lo activo?</p>'
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px">'
+    + '<tr><td style="padding:5px 0"><table cellpadding="0" cellspacing="0"><tr>'
+    + '<td style="width:22px"><div style="width:22px;height:22px;border-radius:50%;background:#00B4B4;color:#fff;text-align:center;line-height:22px;font-size:11px;font-weight:700">1</div></td>'
+    + '<td style="padding-left:10px;font-size:13px;color:#555">Abre la app en <strong>app.revistapetmi.com</strong></td></tr></table></td></tr>'
+    + '<tr><td style="padding:5px 0"><table cellpadding="0" cellspacing="0"><tr>'
+    + '<td style="width:22px"><div style="width:22px;height:22px;border-radius:50%;background:#00B4B4;color:#fff;text-align:center;line-height:22px;font-size:11px;font-weight:700">2</div></td>'
+    + '<td style="padding-left:10px;font-size:13px;color:#555">Ve a tu perfil &rarr; <strong>Premium</strong></td></tr></table></td></tr>'
+    + '<tr><td style="padding:5px 0"><table cellpadding="0" cellspacing="0"><tr>'
+    + '<td style="width:22px"><div style="width:22px;height:22px;border-radius:50%;background:#00B4B4;color:#fff;text-align:center;line-height:22px;font-size:11px;font-weight:700">3</div></td>'
+    + '<td style="padding-left:10px;font-size:13px;color:#555">Ingresa el codigo <strong>PETMI2M</strong> y toca Canjear</td></tr></table></td></tr>'
+    + '</table>'
+
+    + '<p style="font-size:13px;color:#aaa;margin:0">Con amor, el equipo de PetMi &#x1F43E;</p>'
+    + '</div>'
+
+    // Footer amarillo
+    + '<div style="background:#F5C842;padding:14px;text-align:center;border-radius:0 0 12px 12px">'
+    + '<p style="margin:0 0 4px;font-size:12px;color:#555">PetMi Guatemala &middot; <a href="https://app.revistapetmi.com" style="color:#1a1a2e">app.revistapetmi.com</a></p>'
+    + '<p style="margin:0;font-size:11px;color:rgba(26,26,46,.5)">Recibiste este correo porque eres parte de la comunidad PetMi.</p>'
+    + '</div>'
+
+    + '</div></body></html>';
+}
+
+
+// ── Test email — correr directamente desde Apps Script editor ─
+function testEmailActualizacion() {
+  var emailPrueba = 'elsamoralesg@gmail.com';
+
+  // Buscar datos reales del Sheet
+  var sheet   = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+  var lastRow = sheet.getLastRow();
+  var dueno   = 'Elsa';
+  var nombre  = 'Rebecas';
+  var foto    = '';
+
+  for (var i = 2; i <= lastRow; i++) {
+    var rowEmail = String(sheet.getRange(i, 12).getValue()).trim().toLowerCase();
+    if (rowEmail === emailPrueba) {
+      dueno  = String(sheet.getRange(i, 11).getValue()).trim() || 'Elsa';
+      nombre = String(sheet.getRange(i,  3).getValue()).trim() || 'Rebecas';
+      foto   = String(sheet.getRange(i, COL_FOTO).getValue()).trim();
+      break;
+    }
+  }
+
+  Logger.log('Foto encontrada: ' + (foto ? foto.substring(0,60) : 'ninguna'));
+
+  var html = buildEmailActualizacion(dueno, nombre, foto);
+  GmailApp.sendEmail(
+    emailPrueba,
+    '[PRUEBA] Hay novedades en PetMi para ' + dueno + '!',
+    'Hola ' + dueno + '! Actualizamos la app. Visita app.revistapetmi.com',
+    { name: REMITENTE, htmlBody: html, charset: 'UTF-8' }
+  );
+  Logger.log('Email de prueba enviado a ' + emailPrueba);
+  SpreadsheetApp.getUi().alert('Email enviado a ' + emailPrueba + '\nFoto: ' + (foto ? 'SI' : 'NO encontrada'));
+}
+
+// ============================================================
+// EMAIL ACTUALIZACION — enviar a todos los usuarios
+// ============================================================
+function enviarEmailActualizacion() {
+  var ui = SpreadsheetApp.getUi();
+  var sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) { ui.alert('No hay datos.'); return; }
+
+  var resp = ui.alert(
+    'Email de Actualizacion',
+    'Se enviara el correo de novedades a TODOS los usuarios registrados.\n\n¿Continuar?',
+    ui.ButtonSet.YES_NO
+  );
+  if (resp !== ui.Button.YES) return;
+
+  var rows = sheet.getRange(2, 1, lastRow - 1, 22).getValues();
+  var enviados = 0, omitidos = 0, errores = 0;
+  var vistos = {};
+
+  rows.forEach(function(row) {
+    var email   = String(row[11] || '').trim();
+    var dueno   = String(row[10] || '').trim() || 'Amigo PetMi';
+    var nombre  = String(row[2]  || '').trim() || 'tu mascota';
+    var ofertas = String(row[20] || '').trim();
+    var foto    = String(row[27] || '').trim();
+
+    if (!email || ofertas === 'No') { omitidos++; return; }
+    if (vistos[email]) return; // Un email por persona
+    vistos[email] = true;
+
+    try {
+      var html = buildEmailActualizacion(dueno, nombre, foto);
+      GmailApp.sendEmail(
+        email,
+        '¡Hay novedades en PetMi para ' + (dueno || 'ti') + '!',
+        'Hola ' + dueno + '! Actualizamos la app con nuevas funciones. Visita app.revistapetmi.com',
+        { name: REMITENTE, htmlBody: html, charset: 'UTF-8' }
+      );
+      enviados++;
+      Utilities.sleep(600);
+    } catch(err) {
+      Logger.log('Error ' + email + ': ' + err.message);
+      errores++;
+    }
+  });
+
+  registrarCampana('TODOS', 'Email actualizacion PetMi 2026', enviados, errores);
+  ui.alert('Resultado:\nEnviados: ' + enviados + '\nOmitidos: ' + omitidos + '\nErrores: ' + errores);
+}
+
+function buildEmailActualizacion(dueno, nombre, foto) {
+  var BASE  = 'https://app.revistapetmi.com';
+  var LOGO  = BASE + '/logopetmi.png';
+  var IDIMG = BASE + '/IDimag.jpeg';
+
+  // Avatar email-safe: sin object-fit (no soportado en Outlook)
+  var avatarHTML = (foto && foto.indexOf('http') >= 0)
+    ? '<table cellpadding="0" cellspacing="0" style="border-radius:50%;overflow:hidden;border:2px solid #00B4B4"><tr><td style="padding:0">'
+      + '<img src="' + foto + '" width="48" height="48" style="display:block;width:48px;height:48px;border-radius:50%" alt="Mascota">'
+      + '</td></tr></table>'
+    : '<table cellpadding="0" cellspacing="0" style="border-radius:50%;background:#e0f7f7;border:2px solid #00B4B4;width:48px;height:48px"><tr>'
+      + '<td width="48" height="48" align="center" valign="middle" style="font-size:22px;text-align:center;vertical-align:middle">&#x1F43E;</td>'
+      + '</tr></table>';
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+    + '<body style="margin:0;padding:0;background:#f0f0ee;font-family:Arial,sans-serif">'
+    + '<div style="max-width:520px;margin:0 auto;padding:16px 12px">'
+
+    // Header blanco con logo
+    + '<div style="background:#ffffff;padding:16px 24px;text-align:center;border-radius:12px 12px 0 0;border-bottom:1px solid #eeeeee">'
+    + '<img src="' + LOGO + '" height="38" style="display:inline-block;height:38px" alt="PetMi">'
+    + '</div>'
+
+    // Imagen completa del carnet — email-safe (sin position:absolute)
+    // 1080x800px → a 520px de ancho, alto = 385px
+    + '<div style="background:#00B4B4;line-height:0">'
+    + '<img src="' + IDIMG + '" width="520" height="385" style="width:100%;height:auto;display:block;border:0" alt="PetzID">'
+    + '</div>'
+    + '<div style="background:#00B4B4;padding:14px 20px 18px">'
+    + '<div style="font-size:18px;font-weight:700;color:#ffffff;margin-bottom:2px">Muchas novedades te esperan</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,.85)">La app mejoro &mdash; entra y descubrelo</div>'
+    + '</div>'
+
+    // Body
+    + '<div style="background:#ffffff;padding:22px 24px">'
+
+    // Saludo con foto mascota
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px"><tr>'
+    + '<td width="56" valign="middle" style="vertical-align:middle">' + avatarHTML + '</td>'
+    + '<td style="padding-left:12px;vertical-align:middle">'
+    + '<p style="margin:0;font-size:14px;color:#222222;line-height:1.6">'
+    + 'Hola <strong>' + dueno + '</strong>,<br>'
+    + 'Actualizamos la app con funciones nuevas para ti y para <strong>' + nombre + '</strong>. '
+    + 'Completa tu perfil y empieza a ganar puntos.'
+    + '</p></td></tr></table>'
+
+    // Link al perfil
+    + '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px">'
+    + '<tr><td style="background:#e0f7f7;border-radius:8px;padding:10px 14px">'
+    + '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+    + '<td style="font-size:13px;color:#007a7a">Ver el perfil de ' + nombre + '</td>'
+    + '<td align="right"><a href="' + BASE + '/familia.html" style="display:inline-block;border:1.5px solid #00B4B4;color:#007a7a;padding:7px 14px;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none">Mi familia &rarr;</a></td>'
+    + '</tr></table></td></tr></table>'
+
+    // Titulo novedades
+    + '<p style="font-size:11px;font-weight:700;color:#999999;text-transform:uppercase;letter-spacing:.5px;margin:0 0 10px">Lo que hay de nuevo</p>'
+
+    // Items novedades — HTML entities para emojis
+    + buildItemRow('&#x1F4CB;', 'Carnet PetzID con QR', 'Nuevos disenos Premium con codigo QR y perfil publico')
+    + buildItemRow('&#x1F4CC;', 'Avisos, perdidos, lugares pet friendly y mas', 'Encuentra mascotas perdidas y lugares cerca de ti')
+    + buildItemRow('&#x1F382;', 'Cumpleaneros del mes', 'Celebramos a tu mascota en su dia especial')
+    + buildItemRow('&#x1F3C6;', 'Sistema de puntos y premios', 'Gana puntos y canjealos por beneficios exclusivos')
+    + buildItemRow('&#x2728;',  'y mucho mas!!', 'Juego del dia, grupos, eventos y sorpresas')
+
+    // Promo
+    + '<div style="border:1.5px dashed #F5C842;border-radius:10px;padding:14px;text-align:center;margin:16px 0;background:#FFFDF0">'
+    + '<p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#856404;text-transform:uppercase;letter-spacing:.5px">2 meses Premium gratis</p>'
+    + '<p style="margin:0;font-size:26px;font-weight:900;color:#1a1a2e;letter-spacing:3px">PETMI2M</p>'
+    + '<p style="margin:3px 0 0;font-size:11px;color:#856404">Valido hasta 31 julio 2026 &middot; solo 500 lugares</p>'
+    + '</div>'
+
+    // CTA
+    + '<div style="text-align:center;margin:16px 0">'
+    + '<a href="' + BASE + '" style="display:inline-block;background:#00B4B4;color:#ffffff;padding:12px 30px;border-radius:99px;font-size:15px;font-weight:700;text-decoration:none">Abrir la app ahora &rarr;</a>'
+    + '</div>'
+    + '<p style="font-size:11px;color:#aaaaaa;text-align:center;margin:0">' + BASE + '</p>'
+    + '</div>'
+
+    // Footer amarillo
+    + '<div style="background:#F5C842;padding:12px 24px;text-align:center;border-radius:0 0 12px 12px">'
+    + '<p style="margin:0;font-size:11px;color:#555555">PetMi Guatemala &middot; Con amor, el equipo PetMi<br>'
+    + 'Recibiste este correo porque eres parte de la comunidad.</p>'
+    + '</div>'
+    + '</div></body></html>';
+}
+
+
+function buildItemRow(ico, titulo, sub) {
+  return '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:7px"><tr>'
+    + '<td style="background:#f8f8f8;border-radius:8px;padding:0"><table width="100%" cellpadding="0" cellspacing="0"><tr>'
+    + '<td width="40" style="padding:9px 0 9px 12px;font-size:20px;vertical-align:middle;text-align:center">' + ico + '</td>'
+    + '<td style="padding:9px 12px 9px 8px;vertical-align:middle">'
+    + '<div style="font-size:13px;font-weight:700;color:#222222">' + titulo + '</div>'
+    + '<div style="font-size:11px;color:#888888;margin-top:2px">' + sub + '</div>'
+    + '</td></tr></table></td></tr></table>';
+}
+
+// ── Enviar Mundial en lotes (para cuentas con límite diario) ──
+function enviarEmailMundialLote() {
+  var props   = PropertiesService.getScriptProperties();
+  var yaEnviados = JSON.parse(props.getProperty('mundial_enviados') || '[]');
+  var sheet   = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+
+  var rows     = sheet.getRange(2, 1, lastRow - 1, 22).getValues();
+  var enviados = 0, omitidos = 0, errores = 0, saltados = 0;
+  var vistos   = {};
+
+  rows.forEach(function(row) {
+    var email   = String(row[11] || '').trim();
+    var dueno   = String(row[10] || '').trim() || 'Amigo PetMi';
+    var nombre  = String(row[2]  || '').trim() || 'tu mascota';
+    var ofertas = String(row[20] || '').trim();
+
+    if (!email || ofertas === 'No') { omitidos++; return; }
+    if (vistos[email]) return;
+    vistos[email] = true;
+
+    // Saltar si ya fue enviado
+    if (yaEnviados.indexOf(email) >= 0) { saltados++; return; }
+
+    try {
+      var html = buildEmailMundial(dueno, nombre);
+      GmailApp.sendEmail(email,
+        '\u26BD En PetMi entramos en modo mundialista!',
+        'Hola ' + dueno + '! El Mundial ya empezo. Visita app.revistapetmi.com/quiniela.html',
+        { name: REMITENTE, htmlBody: html, charset: 'UTF-8' });
+      yaEnviados.push(email);
+      enviados++;
+      if (enviados % 20 === 0) {
+        props.setProperty('mundial_enviados', JSON.stringify(yaEnviados));
+        Logger.log('Progreso: ' + enviados + ' enviados hoy, ' + saltados + ' ya enviados antes');
+      }
+      Utilities.sleep(350);
+    } catch(err) {
+      Logger.log('Error ' + email + ': ' + err.message);
+      errores++;
+      if (err.message.indexOf('too many times') >= 0) {
+        props.setProperty('mundial_enviados', JSON.stringify(yaEnviados));
+        Logger.log('Limite alcanzado. Enviados hoy: ' + enviados + '. Total acumulado: ' + yaEnviados.length);
+        return;
+      }
+    }
+  });
+
+  props.setProperty('mundial_enviados', JSON.stringify(yaEnviados));
+  var msg = 'Hoy: ' + enviados + ' enviados, ' + errores + ' errores\nYa enviados antes: ' + saltados + '\nTotal acumulado: ' + yaEnviados.length;
+  Logger.log(msg);
+  try { SpreadsheetApp.getUi().alert(msg); } catch(e) {}
+}
+
+function resetearEnvioMundial() {
+  PropertiesService.getScriptProperties().deleteProperty('mundial_enviados');
+  try { SpreadsheetApp.getUi().alert('Lista de enviados reseteada.'); } catch(e) {}
+}
+
+
+// ── Email Corrección Calendario Quiniela ───────────────────────
+function enviarEmailCorreccionQuiniela() {
+  var props   = PropertiesService.getScriptProperties();
+  var yaEnviados = JSON.parse(props.getProperty('correccion_enviados') || '[]');
+  var sheet   = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+
+  var rows     = sheet.getRange(2, 1, lastRow - 1, 22).getValues();
+  var enviados = 0, omitidos = 0, errores = 0, saltados = 0;
+  var vistos   = {};
+
+  rows.forEach(function(row) {
+    var email   = String(row[11] || '').trim();
+    var dueno   = String(row[10] || '').trim() || 'Amigo PetMi';
+    var ofertas = String(row[20] || '').trim();
+
+    if (!email || ofertas === 'No') { omitidos++; return; }
+    if (vistos[email]) return;
+    vistos[email] = true;
+    if (yaEnviados.indexOf(email) >= 0) { saltados++; return; }
+
+    try {
+      var html = buildEmailCorreccionQuiniela(dueno);
+      GmailApp.sendEmail(email,
+        '¡FUERA DE LUGAR! El gato cambió la quiniela ⚽',
+        'Hola ' + dueno + '! El gato cambio la quiniela - corregimos el calendario de partidos. Si ya hiciste tu prediccion, vuelve a revisarla en app.revistapetmi.com/quiniela.html',
+        { name: REMITENTE, htmlBody: html, charset: 'UTF-8' });
+      yaEnviados.push(email);
+      enviados++;
+      if (enviados % 20 === 0) {
+        props.setProperty('correccion_enviados', JSON.stringify(yaEnviados));
+        Logger.log('Progreso correccion: ' + enviados + ' enviados');
+      }
+      Utilities.sleep(350);
+    } catch(err) {
+      Logger.log('Error ' + email + ': ' + err.message);
+      errores++;
+      if (err.message.indexOf('too many times') >= 0) {
+        props.setProperty('correccion_enviados', JSON.stringify(yaEnviados));
+        Logger.log('Limite alcanzado. Total acumulado: ' + yaEnviados.length);
+        return;
+      }
+    }
+  });
+
+  props.setProperty('correccion_enviados', JSON.stringify(yaEnviados));
+  var msg = 'Hoy: ' + enviados + ' enviados, ' + errores + ' errores\nYa enviados antes: ' + saltados + '\nTotal acumulado: ' + yaEnviados.length;
+  Logger.log(msg);
+  try { SpreadsheetApp.getUi().alert(msg); } catch(e) {}
+}
+
+function testEmailCorreccionQuiniela() {
+  var email = 'elsamoralesg@gmail.com';
+  var html  = buildEmailCorreccionQuiniela('Elsa');
+  GmailApp.sendEmail(email,
+    '[TEST] ¡FUERA DE LUGAR! El gato cambió la quiniela ⚽',
+    'Hola! Corregimos el calendario de la Quiniela. Visita app.revistapetmi.com/quiniela.html',
+    { name: REMITENTE, htmlBody: html, charset: 'UTF-8' });
+  Logger.log('Enviado a ' + email);
+  try { SpreadsheetApp.getUi().alert('Enviado a ' + email); } catch(e) {}
+}
+
+function resetearEnvioCorreccion() {
+  PropertiesService.getScriptProperties().deleteProperty('correccion_enviados');
+  try { SpreadsheetApp.getUi().alert('Lista de enviados (correccion) reseteada.'); } catch(e) {}
+}
+
+function buildEmailCorreccionQuiniela(dueno) {
+  var APP  = 'https://app.revistapetmi.com';
+  var LINK = APP + '/quiniela.html';
+  var LOGO = APP + '/logopetmi.png';
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+    + '<body style="margin:0;padding:0;background:#f0f0ee;font-family:Arial,sans-serif">'
+    + '<div style="max-width:520px;margin:0 auto;padding:16px 12px">'
+
+    // Header con logo
+    + '<div style="background:#ffffff;padding:16px 24px;text-align:center;border-radius:12px 12px 0 0;border-bottom:1px solid #eeeeee">'
+    + '<img src="' + LOGO + '" height="38" style="display:inline-block;height:38px" alt="PetMi"></div>'
+
+    // Body
+    + '<div style="background:#ffffff;padding:24px;border-radius:0 0 12px 12px">'
+
+    + '<div style="display:inline-block;background:#fff8e1;color:#856404;font-size:11px;font-weight:900;padding:4px 12px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">&#x1F6A8; &iexcl;Fuera de lugar! &#x26BD;</div>'
+
+    + '<p style="font-size:17px;font-weight:900;color:#1a1a2e;margin:0 0 14px;line-height:1.4">El gato cambi&oacute; la quiniela. Necesitamos que ajustes tu pron&oacute;stico &#x1F431;</p>'
+
+    + '<p style="font-size:14px;color:#333333;line-height:1.7;margin:0 0 14px">Hola <strong>' + dueno + '</strong>,<br>'
+    + 'Tuvimos que sacarle la tarjeta amarilla a nuestro propio calendario &#x1F7E8; \u2014 corregimos algunos enfrentamientos y fechas de la Quiniela para que todo est\u00E9 en orden.</p>'
+
+    + '<div style="background:#f8f8f8;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;color:#444444;line-height:1.7">'
+    + '&#x1F4CB; <strong>&iquest;Ya hab&iacute;as hecho tu pron&oacute;stico?</strong><br>'
+    + '&iexcl;Rev&iacute;salo cuanto antes! Algunos partidos cambiaron de rival y tu predicci\u00F3n anterior pudo quedar fuera de juego.'
+    + '</div>'
+
+    + '<div style="text-align:center;margin:16px 0">'
+    + '<a href="' + LINK + '" style="display:inline-block;background:#F5C842;color:#1a1a2e;padding:13px 32px;border-radius:99px;font-size:15px;font-weight:900;text-decoration:none">&#x26BD; Revisar mi quiniela AHORA</a>'
+    + '</div>'
+    + '<p style="font-size:11px;color:#aaaaaa;text-align:center;margin:0 0 14px">' + LINK + '</p>'
+
+    + '<p style="font-size:14px;color:#333333;text-align:center;font-weight:700;margin:0">&iexcl;El Mundial no para y nosotros tampoco! &#x1F3C6;&#x1F43E;</p>'
+    + '</div>'
+    + '</div></body></html>';
+}
+
+
+// ── Email Quiniela Mundial ─────────────────────────────────────
+function enviarEmailMundial() {
+  var ui;
+  try { ui = SpreadsheetApp.getUi(); } catch(e) { ui = null; }
+  if (ui) {
+    var resp = ui.alert('Email Quiniela Mundial',
+      'Se enviara el correo de la Quiniela Mundial a TODOS los usuarios.\n\n¿Continuar?',
+      ui.ButtonSet.YES_NO);
+    if (resp !== ui.Button.YES) return;
+  }
+
+  var sheet   = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) { ui.alert('No hay datos.'); return; }
+
+  var rows    = sheet.getRange(2, 1, lastRow - 1, 22).getValues();
+  var enviados = 0, omitidos = 0, errores = 0;
+  var vistos  = {};
+
+  rows.forEach(function(row) {
+    var email   = String(row[11] || '').trim();
+    var dueno   = String(row[10] || '').trim() || 'Amigo PetMi';
+    var nombre  = String(row[2]  || '').trim() || 'tu mascota';
+    var ofertas = String(row[20] || '').trim();
+    if (!email || ofertas === 'No') { omitidos++; return; }
+    if (vistos[email]) return;
+    vistos[email] = true;
+    try {
+      var html = buildEmailMundial(dueno, nombre);
+      GmailApp.sendEmail(
+        email,
+        '\u26BD En PetMi entramos en modo mundialista!',
+        'Hola ' + dueno + '! El Mundial ya empezo y tenemos una quiniela especial para ti. Visita app.revistapetmi.com/quiniela.html',
+        { name: REMITENTE, htmlBody: html, charset: 'UTF-8' }
+      );
+      enviados++;
+      enviados++;
+      if(enviados % 50 === 0) Logger.log('Progreso Mundial: ' + enviados + ' enviados...');
+      Utilities.sleep(350);
+    } catch(err) {
+      Logger.log('Error ' + email + ': ' + err.message);
+      errores++;
+    }
+  });
+
+  ui.alert('Resultado:\nEnviados: ' + enviados + '\nOmitidos: ' + omitidos + '\nErrores: ' + errores);
+}
+
+function testEmailMundial() {
+  var email = 'elsamoralesg@gmail.com';
+  var html  = buildEmailMundial('Elsa', 'Rebeca');
+  GmailApp.sendEmail(email,
+    '[TEST] \u26BD En PetMi entramos en modo mundialista!',
+    'Hola! El Mundial ya empezo. Visita app.revistapetmi.com/quiniela.html',
+    { name: REMITENTE, htmlBody: html, charset: 'UTF-8' });
+  Logger.log('Email de prueba enviado a ' + email);
+  try { SpreadsheetApp.getUi().alert('Email enviado a ' + email); } catch(e) { Logger.log('Listo (sin UI)'); }
+}
+
+function buildEmailMundial(dueno, nombre) {
+  var APP   = 'https://app.revistapetmi.com';
+  var LINK  = APP + '/quiniela.html';
+  var LOGO  = APP + '/logopetmi.png';
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+    + '<body style="margin:0;padding:0;background:#f0f0ee;font-family:Arial,sans-serif">'
+    + '<div style="max-width:520px;margin:0 auto;padding:16px 12px">'
+
+    // Header blanco con logo
+    + '<div style="background:#ffffff;padding:16px 24px;text-align:center;border-radius:12px 12px 0 0;border-bottom:1px solid #eeeeee">'
+    + '<img src="' + LOGO + '" height="38" style="display:inline-block;height:38px" alt="PetMi"></div>'
+
+    // Imagen quiniela (1200x628 → ratio: 520 × 272px en email)
+    + '<div style="background:#1a1a2e;line-height:0">'
+    + '<img src="https://app.revistapetmi.com/QUINIELA.png" width="520" height="272" style="width:100%;height:auto;display:block;border:0" alt="Quiniela PetMi Mundial 2026">'
+    + '</div>'
+
+    // Body
+    + '<div style="background:#ffffff;padding:22px 24px">'
+
+    // Saludo
+    + '<p style="font-size:14px;color:#333333;line-height:1.7;margin:0 0 18px">Hola <strong>' + dueno + '</strong>,<br>'
+    + 'El Mundial ya empez&#xF3; y tenemos una quiniela especial para ti y para <strong>' + nombre + '</strong> en PetMi. &#xA1;Es gratis y puedes ganar premios!</p>'
+
+    // Pasos
+    + buildPaso('1','<a href="' + LINK + '" style="color:#00B4B4;font-weight:700">Ingresa a la NUEVA App PetMi</a> y ve a la secci&#xF3;n &#x26BD; Mundial')
+    + buildPaso('2','<strong>Haz tu quiniela</strong> y elige el equipo que creas ganar&#xE1;')
+    + buildPaso('3','<strong>Gana +2 puntos</strong> por cada partido que aciertes')
+    + buildPaso('4','<strong>Quien m&#xE1;s acierte</strong> al final del Mundial se lleva un premio')
+
+    // Premio
+    + '<div style="background:linear-gradient(135deg,#1a1a2e,#0d3a1a);border-radius:10px;padding:16px;text-align:center;margin:16px 0">'
+    + '<p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#F5C842;text-transform:uppercase;letter-spacing:.5px">&#x1F3C6; Premio Final</p>'
+    + '<p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:500">El ganador ser&#xE1; anunciado el 19 de julio</p>'
+    + '<p style="margin:0;font-size:11px;color:rgba(255,255,255,.5)">Si hay empate se decide con la Ruleta PetMi &#x1F3A1;</p>'
+    + '</div>'
+
+    // CTA
+    + '<div style="text-align:center;margin:16px 0">'
+    + '<a href="' + LINK + '" style="display:inline-block;background:#F5C842;color:#1a1a2e;padding:13px 32px;border-radius:99px;font-size:15px;font-weight:900;text-decoration:none">&#x26BD; Jugar ahora</a>'
+    + '</div>'
+    + '<p style="font-size:11px;color:#aaaaaa;text-align:center;margin:0">' + LINK + '</p>'
+    + '</div>'
+
+    // Footer
+    + '<div style="background:#00B4B4;padding:12px 24px;text-align:center;border-radius:0 0 12px 12px">'
+    + '<p style="margin:0;font-size:11px;color:rgba(255,255,255,.85)">PetMi Guatemala &middot; &#xA1;No te pierdas ning&#xFA;n partido!<br>'
+    + 'Recibiste esto porque eres parte de la comunidad PetMi.</p>'
+    + '</div>'
+    + '</div></body></html>';
+}
+
+function buildPaso(num, texto) {
+  return '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px"><tr>'
+    + '<td width="34" valign="top" style="padding-top:1px">'
+    + '<div style="width:24px;height:24px;border-radius:50%;background:#00B4B4;color:#ffffff;font-size:12px;font-weight:900;text-align:center;line-height:24px">' + num + '</div>'
+    + '</td>'
+    + '<td style="background:#f8f8f8;border-radius:10px;padding:10px 12px;font-size:13px;color:#333333;line-height:1.5">' + texto + '</td>'
+    + '</tr></table>';
+}
+
 
 // ============================================================
 // GENERAR PNG — CR80
