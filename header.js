@@ -133,16 +133,8 @@
 
       '<a href="/quiniela.html" class="h-link' + (currentPath.indexOf('quiniela') >= 0 ? ' active' : '') + '" style="color:#F5C842!important;font-weight:700">⚽ Mundial</a>' +
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">📖 Revista</a>' +
-      (function(){
-        var _esp = localStorage.getItem('petmi_especie') || '';
-        var _url = 'https://www.revistapetmi.com/tienda';
-        if (_esp.toLowerCase().indexOf('gato') >= 0)
-          _url = 'https://www.revistapetmi.com/tienda/coleccion/gatos';
-        else if (_esp.toLowerCase().indexOf('perro') >= 0)
-          _url = 'https://www.revistapetmi.com/tienda/coleccion/perros';
-        return '<a href="' + _url + '" target="_blank" class="h-link">🛍️ Tienda</a>';
-      })();
+      '<a href="https://app.revistapetmi.com" target="_blank" class="h-link">📖 Revista</a>' +
+      '';
     // ── Right: avatar o botones ──────────────────────────────
     var userInitials = sessionDueno
       ? sessionDueno.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()
@@ -190,7 +182,7 @@
         '<span class="h-btab-lbl">Mundial</span>' +
         '<span style="font-size:8px;color:#F5C842;font-weight:700;line-height:1;display:block">¡Ya!</span>' +
       '</a>' +
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-btab">' +
+      '<a href="https://app.revistapetmi.com" target="_blank" class="h-btab">' +
         '<span class="h-btab-ico">📖</span>' +
         '<span class="h-btab-lbl">Revista</span>' +
       '</a>';
@@ -231,12 +223,12 @@
     var header = document.createElement('header');
     header.className = 'site-header';
     header.innerHTML =
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-logo">' +
+      '<a href="https://app.revistapetmi.com" target="_blank" class="h-logo">' +
         '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="34" onerror="this.style.display=\'none\'">' +
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
       '<div class="h-right">' +
-        '<a href="https://www.revistapetmi.com/home" target="_blank" class="h-search" aria-label="Qué es PetzID" style="text-decoration:none;padding:4px"><img src="https://app.revistapetmi.com/ID.png" alt="PetzID" style="width:22px;height:22px;object-fit:contain;display:block"></a>' +
+        '<a href="https://app.revistapetmi.com" target="_blank" class="h-search" aria-label="Qué es PetzID" style="text-decoration:none;padding:4px"><img src="https://app.revistapetmi.com/ID.png" alt="PetzID" style="width:22px;height:22px;object-fit:contain;display:block"></a>' +
         rightHTML +
       '</div>';
     document.body.insertBefore(header, document.body.firstChild);
