@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎂 Oferta Cumpleañeros — FREEDOG × PetzID</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow:  #F5C842;
+    --teal:    #00B4B4;
+    --pink:    #E05090;
+    --dark:    #1a1a2e;
+    --white:   #FFFFFF;
+    --cream:   #FEFCF9;
+    --border:  #EDE9E3;
+    --mid:     #666;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--dark);
+    padding: 0 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--yellow); }
+
+  .nav-tag {
+    background: var(--yellow);
+    color: var(--dark);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.72rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* ── HERO CUMPLEAÑOS ── */
+  .hero {
+    background: var(--yellow);
+    padding: 56px 5% 48px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '🎂';
+    font-size: 160px;
+    position: absolute;
+    right: -20px; top: -20px;
+    opacity: 0.12;
+    line-height: 1;
+  }
+
+  .hero::after {
+    content: '🐾';
+    font-size: 140px;
+    position: absolute;
+    left: -10px; bottom: -20px;
+    opacity: 0.1;
+    line-height: 1;
+  }
+
+  .badge-exclusive {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--dark);
+    color: var(--yellow);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    color: var(--dark);
+    line-height: 1.1;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero h1 .accent { color: var(--pink); }
+
+  .hero-sub {
+    color: rgba(26,26,46,0.65);
+    font-size: 1rem;
+    max-width: 480px;
+    margin: 0 auto 28px;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* descuento pill grande */
+  .big-badge {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--pink);
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    border-radius: 20px;
+    padding: 14px 32px;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .big-badge .pct { font-size: 3.2rem; line-height: 1; }
+  .big-badge .off { font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9; }
+
+  .hero-note {
+    font-size: 0.78rem;
+    color: rgba(26,26,46,0.55);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* shipping banner */
+  .ship-bar {
+    background: var(--teal);
+    color: var(--white);
+    text-align: center;
+    padding: 10px 5%;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+  }
+  .ship-bar span { opacity: 0.75; font-weight: 400; margin-left: 8px; font-size: 0.8rem; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    text-align: center;
+    padding: 44px 5% 0;
+  }
+  .section-header h2 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .section-header p { color: var(--mid); font-size: 0.9rem; }
+
+  /* ── CATEGORY LABEL ── */
+  .cat-wrap { padding: 24px 5% 0; max-width: 1180px; margin: 0 auto; }
+  .cat-label {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cat-line { flex: 1; height: 1.5px; background: var(--border); }
+
+  /* ── GRID ── */
+  .products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+    gap: 22px;
+    padding: 20px 5% 12px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--white);
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.22s, box-shadow 0.22s;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 36px rgba(26,26,46,0.1);
+  }
+
+  .card-img {
+    height: 220px;
+    position: relative;
+    overflow: hidden;
+    background: #f0f0ee;
+  }
+  .card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s;
+  }
+  .card:hover .card-img img {
+    transform: scale(1.04);
+  }
+
+  /* color placeholders */
+  .img-teal  { background: linear-gradient(135deg, #b2ebf2, #80deea); }
+  .img-red   { background: linear-gradient(135deg, #ffcdd2, #ef9a9a); }
+  .img-pink  { background: linear-gradient(135deg, #f8bbd0, #f48fb1); }
+  .img-cream { background: linear-gradient(135deg, #fff8e1, #ffecb3); }
+  .img-green { background: linear-gradient(135deg, #dcedc8, #c5e1a5); }
+  .img-gray  { background: linear-gradient(135deg, #eceff1, #cfd8dc); }
+
+  /* 50% off ribbon */
+  .ribbon {
+    position: absolute;
+    top: 0; right: 0;
+    background: var(--pink);
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 0.9rem;
+    padding: 6px 14px 6px 10px;
+    border-radius: 0 0 0 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-type {
+    position: absolute;
+    top: 12px; left: 12px;
+    background: var(--dark);
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .badge-stock {
+    position: absolute;
+    bottom: 10px; right: 10px;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+    color: #c0392b;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+
+  /* ship pill inside card */
+  .ship-pill {
+    position: absolute;
+    bottom: 10px; left: 10px;
+    background: var(--teal);
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .card-body { padding: 18px 18px 0; flex: 1; }
+
+  .card-body h3 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--dark);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+
+  .card-body .dims { font-size: 0.8rem; color: var(--mid); margin-bottom: 10px; }
+
+  /* price row */
+  .price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .price-now {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 1.6rem;
+    color: var(--pink);
+  }
+  .price-orig {
+    font-size: 0.9rem;
+    color: #aaa;
+    text-decoration: line-through;
+    font-weight: 500;
+  }
+  .price-save {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.72rem;
+    color: var(--teal);
+    background: #e0f7f7;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  /* variants */
+  .variants { margin: 8px 0 2px; display: flex; flex-direction: column; gap: 5px; }
+  .variant-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--cream);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 0.82rem;
+  }
+  .variant-row .v-size { color: var(--mid); font-weight: 500; }
+  .v-prices { display: flex; align-items: baseline; gap: 6px; }
+  .v-now { font-family: 'Nunito', sans-serif; font-weight: 900; color: var(--pink); font-size: 0.95rem; }
+  .v-orig { font-size: 0.72rem; color: #bbb; text-decoration: line-through; }
+  .variant-row .v-stock { font-size: 0.7rem; color: #aaa; }
+
+  .card-footer { padding: 14px 18px 18px; }
+
+  /* WA button */
+  .btn-wa {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: #25D366;
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 13px 18px;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: filter 0.18s, transform 0.18s;
+  }
+  .btn-wa:hover { filter: brightness(0.9); transform: scale(1.01); }
+
+  /* ── TIMER BANNER ── */
+  .timer-bar {
+    background: var(--dark);
+    padding: 18px 5%;
+    text-align: center;
+    margin: 40px 0 0;
+  }
+  .timer-bar p {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .timer-bar .digits {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 1.8rem;
+    color: var(--yellow);
+    letter-spacing: 2px;
+  }
+
+  /* ── CTA BOTTOM ── */
+  .cta-bottom {
+    margin: 0 5% 60px;
+    max-width: 1180px;
+    margin-left: auto;
+    margin-right: auto;
+    background: var(--yellow);
+    border-radius: 24px;
+    padding: 40px 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .cta-bottom h3 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .cta-bottom p { color: rgba(26,26,46,0.6); font-size: 0.9rem; line-height: 1.5; }
+  .btn-register {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--dark);
+    color: var(--yellow);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    padding: 13px 26px;
+    border-radius: 50px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.2s;
+  }
+  .btn-register:hover { transform: scale(1.03); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--dark);
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    padding: 24px 5%;
+    font-size: 0.8rem;
+    line-height: 1.8;
+  }
+  footer .y { color: var(--yellow); font-weight: 700; }
+  footer .t { color: var(--teal); }
+
+  @media (max-width: 640px) {
+    .products { grid-template-columns: 1fr; padding: 16px 4% 8px; }
+    .cta-bottom { padding: 28px 22px; }
+    .hero { padding: 44px 4% 36px; }
+    nav { padding: 0 4%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">petz<span>ID</span></div>
+  <div class="nav-tag">🎂 Cumpleañeros</div>
+</nav>
+
+<!-- SHIPPING BAR -->
+<div class="ship-bar">
+  🚚 Envío incluido en todos los productos
+  <span>solo para miembros con beneficio de cumpleaños</span>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="badge-exclusive">🐾 Beneficio exclusivo PetzID · Solo hoy</div>
+  <h1>
+    ¡Feliz cumpleaños<br>
+    <span class="accent">para tu mejor amigo!</span>
+  </h1>
+  <p class="hero-sub">
+    Como parte de la comunidad PetzID, este mes celebramos junto a ti.<br>
+    Escoge la cama o colchón perfecto para tu peludo con un descuento especial.
+  </p>
+  <div class="big-badge">
+    <div class="pct">50%</div>
+    <div class="off">de descuento · Sólo este mes</div>
+  </div>
+  <p class="hero-note">Precios ya reflejan el 50% off · Envío gratis incluido 🎁<br>Válido solo tu mes de cumpleaños · Mientras duren existencias</p>
+</section>
+
+<!-- PRODUCTOS -->
+<div class="section-header">
+  <h2>Elige su regalo 🛏️</h2>
+  <p>Productos FREEDOG disponibles con tu beneficio de cumpleañero</p>
+</div>
+
+<!-- CAMAS DOUNT -->
+<div class="cat-wrap">
+  <div class="cat-label">🛏️ Camas Dount <div class="cat-line"></div></div>
+</div>
+<div class="products">
+
+  <!-- DOUNT TEAL -->
+  <div class="card">
+    <div class="card-img img-teal">
+      <img src="https://raw.githubusercontent.com/petmi-petzid/petmi-petzid/main/img/Donnut_teal.jpeg" alt="Cama Dount Teal" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Dount</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 2 disponibles</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Cama Dount — Azul Teal</h3>
+      <p class="dims">100 × 100 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q327</span>
+        <span class="price-orig">Q654</span>
+        <span class="price-save">Ahorras Q327</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20la%20Cama%20Dount%20Azul%20100x100cm%20al%2050%25%20off%20(Q327)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
+  </div>
+
+  <!-- DOUNT RED -->
+  <div class="card">
+    <div class="card-img img-red">
+      <img src="https://raw.githubusercontent.com/petmi-petzid/petmi-petzid/main/img/Donut-red.jpeg" alt="Cama Dount Rojo" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Dount</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 2 disponibles</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Cama Dount — Rojo</h3>
+      <p class="dims">100 × 100 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q327</span>
+        <span class="price-orig">Q654</span>
+        <span class="price-save">Ahorras Q327</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20la%20Cama%20Dount%20Roja%20100x100cm%20al%2050%25%20off%20(Q327)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
+  </div>
+
+  <!-- DOUNT PINK MULTI -->
+  <div class="card">
+    <div class="card-img img-pink">
+      <img src="https://raw.githubusercontent.com/petmi-petzid/petmi-petzid/main/img/Donut-pink.jpeg" alt="Cama Dount Rosa" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Dount</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Cama Dount — Rosa</h3>
+      <p class="dims">Disponible en 3 tamaños</p>
+      <div class="variants">
+        <div class="variant-row">
+          <span class="v-size">100×100 cm</span>
+          <div class="v-prices"><span class="v-now">Q327</span><span class="v-orig">Q654</span></div>
+          <span class="v-stock">2 disp.</span>
+        </div>
+        <div class="variant-row">
+          <span class="v-size">80×80 cm</span>
+          <div class="v-prices"><span class="v-now">Q262</span><span class="v-orig">Q524</span></div>
+          <span class="v-stock">3 disp.</span>
+        </div>
+        <div class="variant-row">
+          <span class="v-size">50×50 cm</span>
+          <div class="v-prices"><span class="v-now">Q165</span><span class="v-orig">Q329</span></div>
+          <span class="v-stock">1 disp.</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20la%20Cama%20Dount%20Rosa%20al%2050%25%20off%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE%20%C2%BFQu%C3%A9%20tama%C3%B1os%20tienen?" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Elegir talla con descuento
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- CUNAS ECO -->
+<div class="cat-wrap" style="margin-top:8px;">
+  <div class="cat-label">🛌 Cunas Eco Line Shufu <div class="cat-line"></div></div>
+</div>
+<div class="products">
+
+  <!-- CUNA CREMA -->
+  <div class="card">
+    <div class="card-img img-cream">
+      <img src="https://raw.githubusercontent.com/petmi-petzid/petmi-petzid/main/img/Shufu-cream.jpeg" alt="Cuna Shufu Crema" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Eco Line</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 1 disponible</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Cuna Eco Line Shufu — Crema</h3>
+      <p class="dims">75 × 58 × 19 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q355</span>
+        <span class="price-orig">Q709</span>
+        <span class="price-save">Ahorras Q354</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20la%20Cuna%20Shufu%20Crema%2075x58cm%20al%2050%25%20off%20(Q355)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
+  </div>
+
+  <!-- CUNA VERDE -->
+  <div class="card">
+    <div class="card-img img-green">
+      <img src="https://raw.githubusercontent.com/petmi-petzid/petmi-petzid/main/img/shufu-verde.jpeg" alt="Cuna Shufu Verde" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Eco Line</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 1 disponible</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Cuna Eco Line Shufu — Verde</h3>
+      <p class="dims">75 × 58 × 19 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q305</span>
+        <span class="price-orig">Q609</span>
+        <span class="price-save">Ahorras Q304</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20la%20Cuna%20Shufu%20Verde%2075x58cm%20al%2050%25%20off%20(Q305)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- COLCHONES -->
+<div class="cat-wrap" style="margin-top:8px;">
+  <div class="cat-label">🐾 Colchones <div class="cat-line"></div></div>
+</div>
+<div class="products">
+
+  <!-- ARTIC -->
+  <div class="card">
+    <div class="card-img img-gray">
+      <img src="https://raw.githubusercontent.com/petmi-petzid/petmi-petzid/main/img/artic-gris.jpeg" alt="Colchon Artic Gris" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Artic</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 1 disponible</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Colchón Artic — Gris Oscuro</h3>
+      <p class="dims">88 × 76 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q210</span>
+        <span class="price-orig">Q419</span>
+        <span class="price-save">Ahorras Q209</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20el%20Colch%C3%B3n%20Artic%20Gris%2088x76cm%20al%2050%25%20off%20(Q210)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
+  </div>
+
+  <!-- ECO VERDE -->
+  <div class="card">
+    <div class="card-img img-green">
+      <img src="https://raw.githubusercontent.com/petmi-petzid/petmi-petzid/main/img/colchon-shufu-verde.jpeg" alt="Colchon Shufu Verde" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Eco Line</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 1 disponible</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Colchón Eco Line Shufu — Verde</h3>
+      <p class="dims">91 × 61 × 14 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q380</span>
+        <span class="price-orig">Q759</span>
+        <span class="price-save">Ahorras Q379</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20el%20Colch%C3%B3n%20Eco%20Verde%2091x61cm%20al%2050%25%20off%20(Q380)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- TIMER -->
+<div class="timer-bar">
+  <p>🕐 Oferta válida solo durante tu mes de cumpleaños</p>
+  <div class="digits">¡Válido este mes · hasta agotar stock! 🎂</div>
+</div>
+
+<!-- CTA GALERÍA -->
+<div style="padding: 0 5% 60px; max-width:1180px; margin: 40px auto 0;">
+  <div class="cta-bottom">
+    <div>
+      <h3>🎂 ¡Deséale feliz cumpleaños a otros amigos PetzID!</h3>
+      <p>Entra a la galería de la comunidad y celebra junto a todos<br>los cumpleañeros del mes. ¡Ellos también te esperan!</p>
+    </div>
+    <a href="https://app.revistapetmi.com/galeria.html" target="_blank" class="btn-register">
+      Ver comunidad 🐾
+    </a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p><span class="y">petz</span><span class="t">ID</span> × FREEDOG — Guatemala City 🇬🇹</p>
+  <p>Oferta exclusiva para miembros PetzID cumpleañeros · Válida durante tu mes · Sujeto a existencias · Precios en Quetzales (Q)</p>
+  <p style="margin-top:6px;font-size:0.72rem;">Recibiste este link porque eres miembro de la comunidad PetMi y es tu mes especial 🎁</p>
+</footer>
+
+</body>
+</html>
