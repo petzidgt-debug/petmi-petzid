@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>PetzID — La identidad digital de tu mascota | PetMi Guatemala</title>
+<meta name="description" content="Crea el perfil digital de tu mascota gratis. PetzID es la plataforma de identidad para mascotas en Guatemala. Únete a la comunidad pet lover más grande del país.">
+<script src="/header.js" defer></script>
+<style>
+/* ── RESET & BASE ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:Arial,sans-serif;background:#FEF7ED;overflow-x:hidden;color:#1a1a2e}
+
+/* ── PALETA ── */
+/* cream:  #FEF7ED  |  blue: #3A54B4  |  red: #FF4040  |  dark: #1a1a2e */
+
+/* ── UTILIDADES ── */
+.sec{max-width:900px;margin:0 auto;padding:clamp(40px,6vw,72px) clamp(16px,4vw,32px)}
+.badge{display:inline-block;font-size:clamp(11px,1.5vw,13px);font-weight:700;padding:5px 14px;border-radius:999px;margin-bottom:14px;letter-spacing:.4px}
+.badge-blue{background:#3A54B4;color:#fff}
+.badge-cream{background:rgba(254,247,237,.22);color:#FEF7ED;border:1px solid rgba(254,247,237,.35)}
+.badge-red{background:#FF4040;color:#fff}
+.badge-dark{background:rgba(255,64,64,.15);color:#FF4040;border:1px solid rgba(255,64,64,.3)}
+.titulo{font-size:clamp(26px,4.5vw,42px);font-weight:900;font-family:'Arial Black',Arial,sans-serif;line-height:1.15;margin-bottom:clamp(12px,2vw,18px)}
+.titulo span{color:#3A54B4}
+.titulo-w{color:#fff}
+.titulo-w span{color:#FEF7ED;opacity:.9}
+.subtitulo{font-size:clamp(14px,2vw,16px);line-height:1.75;margin-bottom:clamp(20px,3vw,32px);max-width:580px}
+.sub-muted{color:#666}
+.sub-white{color:rgba(255,255,255,.82)}
+.btn{display:inline-block;font-size:clamp(14px,2vw,16px);font-weight:700;padding:clamp(12px,1.8vw,15px) clamp(22px,3.5vw,36px);border-radius:12px;text-decoration:none;border:none;cursor:pointer;transition:filter .15s,transform .1s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-blue{background:#3A54B4;color:#fff}
+.btn-blue:hover{filter:brightness(1.1)}
+.btn-cream{background:#FEF7ED;color:#3A54B4}
+.btn-cream:hover{filter:brightness(.96)}
+.btn-red{background:#FF4040;color:#fff}
+.btn-red:hover{filter:brightness(1.1)}
+.btn-outline-blue{background:transparent;color:#3A54B4;border:2px solid #3A54B4}
+.btn-outline-blue:hover{background:#3A54B4;color:#fff}
+.divider-cream{width:48px;height:4px;background:#3A54B4;border-radius:2px;margin:0 0 20px}
+
+/* ── HERO ── */
+.hero{background:#FEF7ED;padding:0;overflow:hidden}
+.hero-vip{background:#3A54B4;padding:9px 20px;text-align:center;font-size:clamp(12px,1.5vw,13px);font-weight:700;color:#fff;letter-spacing:.3px}
+.hero-vip span{color:#F5C842;margin:0 6px}
+.hero-inner{max-width:900px;margin:0 auto;padding:clamp(32px,5vw,64px) clamp(16px,4vw,32px);display:flex;align-items:center;gap:clamp(20px,4vw,48px)}
+.hero-text{flex:1;min-width:0}
+.hero-titulo{font-size:clamp(30px,5.5vw,52px);font-weight:900;font-family:'Arial Black',Arial,sans-serif;line-height:1.1;margin-bottom:clamp(12px,2vw,18px);color:#1a1a2e}
+.hero-titulo span{color:#3A54B4}
+.hero-sub{font-size:clamp(14px,2vw,16px);color:#555;line-height:1.75;margin-bottom:clamp(20px,3vw,28px);max-width:480px}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.hero-link{font-size:13px;font-weight:700;color:#3A54B4;text-decoration:none;display:flex;align-items:center;gap:4px}
+.hero-link:hover{text-decoration:underline}
+.hero-card{flex-shrink:0;width:clamp(140px,18vw,200px)}
+.hero-card-wrap img{width:100%;display:block}
+
+/* ── COMUNIDAD STATS ── */
+.stats-sec{background:#fff;padding:clamp(36px,5vw,64px) clamp(16px,4vw,32px)}
+.stats-inner{max-width:900px;margin:0 auto}
+.stats-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:clamp(20px,3vw,32px);flex-wrap:wrap;gap:12px}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(8px,1.5vw,16px);margin-bottom:clamp(24px,3vw,36px)}
+.stat-card{background:#FEF7ED;border-radius:14px;padding:clamp(14px,2vw,22px);text-align:center;border:1px solid #e8ddd0}
+.stat-n{font-size:clamp(26px,4vw,40px);font-weight:900;color:#3A54B4;font-family:'Arial Black',Arial,sans-serif;line-height:1;margin-bottom:4px}
+.stat-n.loading{color:#ccc}
+.stat-l{font-size:clamp(11px,1.4vw,13px);color:#888;line-height:1.4}
+.nuevos-label{font-size:clamp(13px,1.8vw,15px);font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.fotos-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:clamp(6px,1vw,10px);margin-bottom:clamp(16px,2.5vw,24px)}
+@media(max-width:500px){.fotos-grid{grid-template-columns:repeat(4,1fr)}}
+.foto-slot{border-radius:clamp(8px,1.2vw,14px);overflow:hidden;aspect-ratio:1;background:#e8ddd0;position:relative;cursor:pointer}
+.foto-slot img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
+.foto-slot:hover img{transform:scale(1.05)}
+.foto-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(26,26,46,.72));padding:5px 6px 5px}
+.foto-overlay-name{font-size:clamp(8px,1.1vw,10px);font-weight:700;color:#fff;line-height:1.2;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foto-slot-empty{background:#e8ddd0;border-radius:clamp(8px,1.2vw,14px);aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#c8bfb4;font-size:clamp(18px,3vw,28px)}
+.ver-galeria-wrap{text-align:center;margin-top:4px}
+
+/* ── QUÉ ES PETZID ── */
+.features-sec{background:#FEF7ED;padding:clamp(40px,6vw,72px) clamp(16px,4vw,32px)}
+.features-inner{max-width:900px;margin:0 auto}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:clamp(10px,1.5vw,16px);margin-top:clamp(24px,3.5vw,40px)}
+.feat-card{background:#fff;border-radius:16px;padding:clamp(18px,2.5vw,26px);border:1px solid #e8ddd0;transition:border-color .2s,box-shadow .2s}
+.feat-card:hover{border-color:#3A54B4;box-shadow:0 4px 20px rgba(58,84,180,.1)}
+.feat-ico{font-size:clamp(26px,3.5vw,34px);margin-bottom:12px;display:block}
+.feat-t{font-size:clamp(14px,1.8vw,16px);font-weight:700;color:#1a1a2e;margin-bottom:6px}
+.feat-d{font-size:clamp(12px,1.5vw,14px);color:#777;line-height:1.65}
+
+/* ── CÓMO FUNCIONA ── */
+.como-sec{background:#fff;padding:clamp(40px,6vw,72px) clamp(16px,4vw,32px)}
+.como-inner{max-width:900px;margin:0 auto}
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:flex;align-items:flex-start;gap:clamp(14px,2.5vw,24px);padding:clamp(16px,2.5vw,24px);background:#fff;border-radius:16px;border:1px solid #e8ddd0;transition:border-color .2s}
+.step:hover{border-color:#3A54B4}
+.step-num{width:clamp(40px,5vw,52px);height:clamp(40px,5vw,52px);border-radius:50%;background:#3A54B4;color:#fff;font-size:clamp(16px,2.2vw,20px);font-weight:900;font-family:'Arial Black',Arial,sans-serif;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-body{flex:1}
+.step-title{font-size:clamp(14px,1.8vw,16px);font-weight:700;color:#1a1a2e;margin-bottom:5px}
+.step-desc{font-size:clamp(12px,1.5vw,14px);color:#777;line-height:1.65}
+.step-ico{font-size:clamp(22px,3vw,30px);flex-shrink:0;align-self:center;margin-left:auto}
+.step-connector{width:2px;height:clamp(10px,1.5vw,16px);background:#e8ddd0;margin-left:calc(clamp(40px,5vw,52px)/2 + clamp(16px,4vw,32px) - 1px)}
+.cta-wrap{margin-top:clamp(28px,4vw,40px);text-align:center}
+
+/* ── ÚNETE COMUNIDAD ── */
+.join-sec{background:#3A54B4;padding:clamp(48px,7vw,80px) clamp(16px,4vw,32px);text-align:center}
+.join-inner{max-width:700px;margin:0 auto}
+.join-avatars{display:flex;justify-content:center;gap:clamp(6px,1.2vw,12px);margin:clamp(16px,2.5vw,28px) 0;flex-wrap:wrap}
+.join-av{width:clamp(44px,6vw,60px);height:clamp(44px,6vw,60px);border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:clamp(20px,3vw,28px);overflow:hidden;flex-shrink:0}
+.join-av img{width:100%;height:100%;object-fit:cover}
+.join-count{font-size:clamp(12px,1.5vw,14px);color:rgba(255,255,255,.7);margin-top:-8px;margin-bottom:clamp(20px,3vw,28px)}
+
+/* ── PLANES ── */
+.planes-sec{background:#FEF7ED;padding:clamp(40px,6vw,72px) clamp(16px,4vw,32px)}
+.planes-inner{max-width:900px;margin:0 auto}
+.planes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:clamp(12px,2vw,20px);margin-top:clamp(24px,3.5vw,40px)}
+.plan-card{background:#fff;border:1.5px solid #e8ddd0;border-radius:20px;padding:clamp(20px,3vw,30px);position:relative;transition:border-color .2s,box-shadow .2s}
+.plan-card:hover{border-color:#3A54B4}
+.plan-card.featured{border-color:#3A54B4;background:#f0f4ff;box-shadow:0 8px 32px rgba(58,84,180,.14)}
+.plan-tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:#3A54B4;color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:999px;white-space:nowrap}
+.plan-name{font-size:clamp(18px,2.5vw,22px);font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#1a1a2e;margin-bottom:6px}
+.plan-price{font-size:clamp(32px,5vw,48px);font-weight:900;color:#3A54B4;font-family:'Arial Black',Arial,sans-serif;line-height:1;margin-bottom:4px}
+.plan-price-sub{font-size:clamp(12px,1.5vw,14px);color:#888;margin-bottom:16px}
+.plan-soon{display:inline-block;background:#FF4040;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px;margin-bottom:14px}
+.plan-features{list-style:none;margin-bottom:clamp(18px,2.5vw,26px)}
+.plan-features li{font-size:clamp(12px,1.5vw,14px);color:#555;padding:7px 0;border-bottom:1px solid #f0f0f0;display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+.plan-features li:last-child{border-bottom:none}
+.check{color:#3A54B4;font-weight:700;flex-shrink:0}
+.btn-plan{width:100%;padding:clamp(12px,1.8vw,14px);border:none;border-radius:12px;font-size:clamp(13px,1.8vw,15px);font-weight:700;cursor:pointer;transition:filter .15s}
+.btn-plan-blue{background:#3A54B4;color:#fff}
+.btn-plan-blue:hover{filter:brightness(1.1)}
+.btn-plan-ghost{background:#FEF7ED;color:#3A54B4;border:2px solid #3A54B4}
+.btn-plan-ghost:hover{background:#3A54B4;color:#fff}
+.btn-plan-soon{background:#FF4040;color:#fff;cursor:default;opacity:.75}
+
+/* ── NEGOCIOS ── */
+.negocios-sec{background:#1a1a2e;padding:clamp(48px,6vw,80px) clamp(16px,4vw,32px)}
+.negocios-inner{max-width:900px;margin:0 auto}
+.negocios-titulo{font-size:clamp(26px,4.5vw,42px);font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#FEF7ED;line-height:1.15;margin-bottom:clamp(12px,2vw,18px)}
+.negocios-titulo span{color:#FF4040}
+.negocios-sub{font-size:clamp(14px,2vw,16px);color:rgba(254,247,237,.72);line-height:1.75;margin-bottom:clamp(16px,2.5vw,28px);max-width:560px}
+.neg-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:clamp(20px,3vw,32px)}
+.neg-chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:999px;padding:8px 16px;font-size:clamp(12px,1.5vw,13px);color:rgba(254,247,237,.82);display:flex;align-items:center;gap:6px}
+
+/* ── FORM EXPANDIBLE (negocios) ── */
+.neg-expandable{max-height:0;overflow:hidden;transition:max-height .5s ease}
+.neg-expandable.open{max-height:600px}
+.neg-form-wrap{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:clamp(18px,3vw,28px);margin-top:20px}
+.neg-form-title{font-size:clamp(15px,2vw,18px);font-weight:700;color:#FEF7ED;margin-bottom:6px}
+.neg-form-sub{font-size:clamp(12px,1.5vw,14px);color:rgba(254,247,237,.6);margin-bottom:16px;line-height:1.6}
+.neg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:10px}
+.neg-input{width:100%;padding:clamp(10px,1.5vw,13px) 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;font-size:clamp(13px,1.8vw,14px);color:#fff;outline:none;font-family:Arial,sans-serif;-webkit-appearance:none}
+.neg-input::placeholder{color:rgba(255,255,255,.35)}
+.neg-input:focus{border-color:#FF4040}
+.neg-form-ok{display:none;text-align:center;padding:16px;color:#F5C842;font-size:14px;font-weight:700}
+.btn-expand{display:inline-flex;align-items:center;gap:8px;background:#FF4040;color:#fff;border:none;border-radius:12px;padding:clamp(12px,1.8vw,15px) clamp(20px,3vw,28px);font-size:clamp(14px,2vw,15px);font-weight:700;cursor:pointer;transition:filter .15s}
+.btn-expand:hover{filter:brightness(1.12)}
+.btn-expand .arr{transition:transform .3s;display:inline-block}
+.btn-expand.open .arr{transform:rotate(180deg)}
+
+/* ── FOOTER ── */
+.footer{background:#3A54B4;padding:clamp(36px,5vw,60px) clamp(16px,4vw,32px) clamp(20px,3vw,32px)}
+.footer-inner{max-width:900px;margin:0 auto}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:clamp(16px,3vw,32px);margin-bottom:clamp(28px,4vw,44px)}
+@media(max-width:640px){.footer-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:380px){.footer-grid{grid-template-columns:1fr}}
+.footer-brand{font-size:clamp(18px,2.5vw,22px);font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#FEF7ED;margin-bottom:10px}
+.footer-tagline{font-size:clamp(12px,1.4vw,13px);color:rgba(254,247,237,.62);line-height:1.65;max-width:220px}
+.footer-col-title{font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#FEF7ED;margin-bottom:10px;letter-spacing:.3px}
+.footer-link{display:block;font-size:clamp(12px,1.4vw,13px);color:rgba(254,247,237,.6);text-decoration:none;padding:3px 0;transition:color .15s}
+.footer-link:hover{color:#FEF7ED}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:clamp(16px,2.5vw,24px);border-top:1px solid rgba(255,255,255,.18);flex-wrap:wrap;gap:10px}
+.footer-copy{font-size:clamp(11px,1.3vw,12px);color:rgba(254,247,237,.45)}
+.footer-social{display:flex;gap:10px}
+.footer-social a{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:14px;text-decoration:none;color:#FEF7ED;transition:background .15s}
+.footer-social a:hover{background:rgba(255,255,255,.25)}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .hero-inner{flex-direction:column-reverse;align-items:center}
+  .hero-card{width:clamp(160px,55vw,220px)}
+  .hero-text{text-align:center}
+  .hero-ctas{justify-content:center}
+  .stats-grid{grid-template-columns:repeat(3,1fr)}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .planes-grid{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:400px){
+  .feat-grid{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr}
+}
+
+/* ── ANIMACIÓN SCROLL ── */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .5s ease,transform .5s ease}
+.reveal.visible{opacity:1;transform:none}
+
+/* ── PADDING BOTTOM PARA NAV MÓVIL DEL HEADER ── */
+@media(max-width:768px){body{padding-bottom:70px}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     BLOQUE 1 — HERO
+════════════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-vip">⭐ <span>¡Solo para mascotas VIP!</span> Crea el carnet digital de tu peludo — completamente gratis</div>
+  <div class="hero-inner">
+    <div class="hero-text reveal">
+      <div class="badge badge-blue" style="margin-bottom:16px">PetzID · Identidad digital</div>
+      <h1 class="hero-titulo">Únete a la<br><span>comunidad</span><br>pet lover de<br>Guatemala</h1>
+      <p class="hero-sub">Crea el perfil digital de tu mascota, descarga su carnet PetzID y conecta con cientos de dueños responsables en todo el país.</p>
+      <div class="hero-ctas">
+        <a href="/registro.html" class="btn btn-blue">Crear mi PetzID gratis →</a>
+        <a href="#como" class="hero-link">¿Cómo funciona? ↓</a>
+      </div>
+    </div>
+    <div class="hero-card reveal" style="transition-delay:.12s">
+      <img src="https://app.revistapetmi.com/IDimag.jpeg" alt="Ejemplo de PetzID" loading="eager"
+        style="width:100%;display:block;aspect-ratio:1080/800;object-fit:contain"
+        onerror="this.style.display='none'">
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOQUE 2 — CONOCE LA COMUNIDAD
+════════════════════════════════════════════ -->
+<div class="stats-sec">
+  <div class="stats-inner">
+    <div class="stats-head reveal">
+      <div>
+        <div class="badge badge-blue">Comunidad PetMi</div>
+        <h2 class="titulo" style="margin-bottom:4px">Conoce a la <span>comunidad</span></h2>
+        <p style="font-size:14px;color:#888">Mascotas de Guatemala ya con su identidad digital</p>
+      </div>
+      <a href="/galeria.html" class="btn btn-outline-blue" style="align-self:flex-end;font-size:13px;padding:10px 20px">Ver galería completa →</a>
+    </div>
+    <div class="stats-grid reveal">
+      <div class="stat-card">
+        <div class="stat-n loading" id="countMascotas">—</div>
+        <div class="stat-l">Mascotas registradas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-n" id="countGrupos">12+</div>
+        <div class="stat-l">Grupos activos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-n" id="countEspecies">3</div>
+        <div class="stat-l">Tipos de mascotas</div>
+      </div>
+    </div>
+
+    <div class="nuevos-label reveal">Últimos registros</div>
+    <div class="fotos-grid reveal" id="fotosGrid">
+      <!-- Placeholders mientras carga -->
+      <div class="foto-slot-empty">🐾</div>
+      <div class="foto-slot-empty">🐾</div>
+      <div class="foto-slot-empty">🐾</div>
+      <div class="foto-slot-empty">🐾</div>
+      <div class="foto-slot-empty">🐾</div>
+      <div class="foto-slot-empty">🐾</div>
+    </div>
+    <div class="ver-galeria-wrap reveal">
+      <a href="/galeria.html" class="btn btn-blue" style="font-size:14px;padding:11px 24px">Ver todas las mascotas en la galería →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOQUE 3 — QUÉ ES PETZID
+════════════════════════════════════════════ -->
+<div class="features-sec">
+  <div class="features-inner">
+    <div class="reveal">
+      <div class="badge badge-blue">¿Qué es PetzID?</div>
+      <h2 class="titulo">Más que un registro,<br><span>una comunidad</span></h2>
+      <p class="subtitulo sub-muted">PetzID es la plataforma de identidad digital para mascotas en Guatemala. Registra a tu peludo, descarga su carnet digital y conecta con cientos de dueños responsables en todo el país.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card reveal" style="transition-delay:.05s">
+        <span class="feat-ico">🆔</span>
+        <div class="feat-t">Identidad digital</div>
+        <div class="feat-d">Perfil único con foto, datos completos y código de identificación. Siempre disponible en tu teléfono.</div>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:.10s">
+        <span class="feat-ico">🐾</span>
+        <div class="feat-t">Comunidad pet lover</div>
+        <div class="feat-d">Conecta con cientos de dueños de mascotas en Guatemala. Haz amigos, comparte fotos y experiencias.</div>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:.15s">
+        <span class="feat-ico">📢</span>
+        <div class="feat-t">Avisos organizados</div>
+        <div class="feat-d">Mascotas perdidas, adopciones y búsquedas en un solo lugar. Rápido y fácil de compartir.</div>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:.05s">
+        <span class="feat-ico">👥</span>
+        <div class="feat-t">Grupos de mascotas</div>
+        <div class="feat-d">Comunidades organizadas por tipo de mascota en Guatemala. Salchichas GT, Westies GT y muchos más.</div>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:.10s">
+        <span class="feat-ico">🎂</span>
+        <div class="feat-t">Cumpleañeros del mes</div>
+        <div class="feat-d">Celebra con la comunidad. Cada mes destacamos las mascotas que cumplen años o llegaron a casa.</div>
+      </div>
+      <div class="feat-card reveal" style="transition-delay:.15s">
+        <span class="feat-ico">🎁</span>
+        <div class="feat-t">Promos y descuentos</div>
+        <div class="feat-d">Accede a promociones exclusivas de veterinarias, pet shops y servicios para mascotas en Guatemala.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOQUE 4 — CÓMO FUNCIONA
+════════════════════════════════════════════ -->
+<div class="como-sec" id="como">
+  <div class="como-inner">
+    <div class="reveal">
+      <div class="badge badge-blue">Fácil y gratis</div>
+      <h2 class="titulo">¿Cómo <span>funciona</span>?</h2>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Registra a tu mascota</div>
+          <div class="step-desc">Sube su foto, completa sus datos básicos — nombre, especie, raza — y crea su perfil en minutos. Es completamente gratis.</div>
+        </div>
+        <div class="step-ico">📱</div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Descarga su PetzID</div>
+          <div class="step-desc">Obtén el carnet digital de tu mascota con su foto, datos y código único de identificación. Compártelo por WhatsApp o guárdalo en tu teléfono.</div>
+        </div>
+        <div class="step-ico">🆔</div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Únete a la comunidad</div>
+          <div class="step-desc">Explora la galería, agrega amigos, únete a grupos de tu tipo de mascota y participa en los avisos y eventos de la comunidad.</div>
+        </div>
+        <div class="step-ico">🐾</div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Activa Premium <span style="font-size:12px;color:#888;font-weight:400">(opcional)</span></div>
+          <div class="step-desc">Por solo Q100/año desbloquea alertas de zona, WhatsApp en tus avisos, perfil destacado y descuentos exclusivos con partners.</div>
+        </div>
+        <div class="step-ico">⭐</div>
+      </div>
+    </div>
+    <div class="cta-wrap reveal">
+      <a href="/registro.html" class="btn btn-blue">Crear mi PetzID gratis →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOQUE 5 — ÚNETE A LA COMUNIDAD
+════════════════════════════════════════════ -->
+<div class="join-sec">
+  <div class="join-inner">
+    <div class="reveal">
+      <div class="badge badge-cream">Comunidad PetMi</div>
+      <h2 class="titulo titulo-w">Únete a la comunidad<br>pet lover de Guatemala</h2>
+      <p class="subtitulo sub-white">Más de 500 mascotas ya tienen su PetzID. ¡La tuya también merece su identidad! Regístrate gratis y sé parte de la comunidad más grande de Guatemala.</p>
+    </div>
+    <div class="join-avatars reveal" id="joinAvatars">
+      <div class="join-av">🐶</div>
+      <div class="join-av">🐱</div>
+      <div class="join-av">🐰</div>
+      <div class="join-av">🐶</div>
+      <div class="join-av">🐱</div>
+      <div class="join-av">🐾</div>
+    </div>
+    <p class="join-count" id="joinCount">Más de 500 mascotas ya registradas</p>
+    <a href="/registro.html" class="btn btn-cream reveal">Registrar mi mascota gratis →</a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOQUE 6 — PLANES
+════════════════════════════════════════════ -->
+<div class="planes-sec">
+  <div class="planes-inner">
+    <div class="reveal">
+      <div class="badge badge-blue">Planes</div>
+      <h2 class="titulo">Gratis para siempre,<br><span>Premium cuando quieras</span></h2>
+    </div>
+    <div class="planes-grid">
+      <div class="plan-card reveal" style="transition-delay:.05s">
+        <div class="plan-name">Gratis</div>
+        <div class="plan-price">Q0</div>
+        <div class="plan-price-sub">Para siempre</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Perfil digital de tu mascota</li>
+          <li><span class="check">✓</span> Carnet PetzID descargable</li>
+          <li><span class="check">✓</span> Galería de la comunidad</li>
+          <li><span class="check">✓</span> Avisos de comunidad</li>
+          <li><span class="check">✓</span> Juegos y puntos para premios</li>
+          <li><span class="check">✓</span> Mensajes entre mascotas</li>
+        </ul>
+        <button class="btn-plan btn-plan-ghost" onclick="location.href='/registro.html'">Comenzar gratis</button>
+      </div>
+      <div class="plan-card featured reveal" style="transition-delay:.10s">
+        <div class="plan-tag">⭐ Recomendado</div>
+        <div class="plan-name">Premium</div>
+        <div class="plan-price">Q100</div>
+        <div class="plan-price-sub">por año · menos de Q9/mes</div>
+        <div class="plan-soon">Muy pronto</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Todo lo del plan gratis +</li>
+          <li><span class="check">✓</span> Alertas de mascotas perdidas en tu zona</li>
+          <li><span class="check">✓</span> Descuento en ID Impreso</li>
+          <li><span class="check">✓</span> Avisos de ventas activos</li>
+          <li><span class="check">✓</span> Descuentos exclusivos con partners</li>
+        </ul>
+        <button class="btn-plan btn-plan-soon" disabled>Muy pronto</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOQUE 7 — PARA NEGOCIOS
+════════════════════════════════════════════ -->
+<div class="negocios-sec">
+  <div class="negocios-inner">
+    <div class="reveal">
+      <div class="badge badge-dark">Para negocios pet friendly</div>
+      <h2 class="negocios-titulo">Llega a cientos de dueños<br>de mascotas en <span>Guatemala</span></h2>
+      <p class="negocios-sub">Afíliate a PetMi y conecta tu negocio con la comunidad pet lover más activa de Guatemala.</p>
+    </div>
+    <div class="neg-chips reveal">
+      <span class="neg-chip">🏪 Negocios pet friendly</span>
+      <span class="neg-chip">🐕 Patrocinio de grupos</span>
+      <span class="neg-chip">🤝 Alianzas estratégicas</span>
+      <span class="neg-chip">📍 Directorio de lugares</span>
+    </div>
+    <button class="btn-expand reveal" id="btnExpand" onclick="toggleNeg()">
+      Me interesa saber más <span class="arr">▾</span>
+    </button>
+    <div class="neg-expandable" id="negExpandable">
+      <div class="neg-form-wrap">
+        <div class="neg-form-title">Cuéntanos de tu negocio</div>
+        <div class="neg-form-sub">Déjanos tus datos y te contactamos para presentarte los beneficios exclusivos para negocios.</div>
+        <div class="neg-grid">
+          <input class="neg-input" id="fNombre" type="text" placeholder="Nombre de tu negocio">
+          <input class="neg-input" id="fWA" type="text" placeholder="WhatsApp" inputmode="tel">
+        </div>
+        <input class="neg-input" id="fTipo" type="text" placeholder="Tipo de negocio (vet, pet shop, grooming, kennel...)" style="margin-bottom:12px">
+        <button class="btn btn-red" style="width:100%;justify-content:center" onclick="enviarNeg()">Enviar información →</button>
+        <div class="neg-form-ok" id="negOk">✅ ¡Recibido! Te escribimos pronto por WhatsApp.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOQUE 8 — FOOTER
+════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">PetMi</div>
+        <p class="footer-tagline">La plataforma de identidad digital para mascotas en Guatemala. Registra a tu peludo gratis.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">PetzID</div>
+        <a href="#" class="footer-link">¿Qué es PetzID?</a>
+        <a href="#como" class="footer-link">¿Cómo funciona?</a>
+        <a href="#planes" class="footer-link">Planes</a>
+        <a href="#negocios" class="footer-link">Para negocios</a>
+        <a href="/registro.html" class="footer-link">Registrar mascota</a>
+      </div>
+      <div>
+        <div class="footer-col-title">Comunidad</div>
+        <a href="/galeria.html" class="footer-link">Galería</a>
+        <a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="footer-link">Avisos</a>
+        <a href="/galeria.html#grupos" class="footer-link">Grupos</a>
+        <a href="/lugares.html" class="footer-link">Lugares</a>
+        <a href="/quiniela.html" class="footer-link" style="color:#F5C842">⚽ Mundial</a>
+      </div>
+      <div>
+        <div class="footer-col-title">PetMi</div>
+        <a href="https://www.revistapetmi.com/" target="_blank" class="footer-link">Revista PetMi</a>
+        <a href="https://www.revistapetmi.com/tienda" target="_blank" class="footer-link">Tienda</a>
+        <a href="https://www.instagram.com/revistapetmi" target="_blank" class="footer-link">Instagram</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2025 PetMi Guatemala · Todos los derechos reservados</span>
+      <div class="footer-social">
+        <a href="https://www.instagram.com/revistapetmi" target="_blank" title="Instagram">📸</a>
+        <a href="https://wa.me/50200000000" target="_blank" title="WhatsApp">💬</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════ -->
+<script>
+// ── Supabase ─────────────────────────────────────────────────
+var SB_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var SB_HDR = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+
+// ── Cargar fotos y conteos ────────────────────────────────────
+(function loadComunidad() {
+  // Conteo total
+  fetch(SB_URL + '/rest/v1/mascotas?select=uid', {
+    headers: Object.assign({}, SB_HDR, { 'Prefer': 'count=exact', 'Range': '0-0' })
+  }).then(function(r) {
+    var cr = r.headers.get('Content-Range');
+    if (!cr) return;
+    var total = parseInt((cr.split('/')[1]) || '0');
+    if (!isNaN(total) && total > 0) {
+      var el = document.getElementById('countMascotas');
+      if (el) { el.textContent = total + '+'; el.classList.remove('loading'); }
+      var jc = document.getElementById('joinCount');
+      if (jc) jc.textContent = 'Más de ' + total + ' mascotas ya registradas';
+    }
+  }).catch(function() {});
+
+  // Últimas 12 fotos (grid muestra 6, en móvil 4 — tomamos 12 para tener margen)
+  fetch(SB_URL + '/rest/v1/mascotas?select=uid,nombre,foto,especie&order=created_at.desc&limit=12', {
+    headers: SB_HDR
+  }).then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data || !data.length) return;
+    var conFoto = data.filter(function(m) { return m.foto && m.foto.indexOf('http') >= 0; });
+    var items   = conFoto.length >= 6 ? conFoto.slice(0, 6) : data.slice(0, 6);
+    var grid    = document.getElementById('fotosGrid');
+    if (!grid) return;
+
+    // Avatares de "únete" — usar fotos reales
+    var joinRow = document.getElementById('joinAvatars');
+    if (joinRow) {
+      var avItems = conFoto.slice(0, 6);
+      if (avItems.length >= 3) {
+        joinRow.innerHTML = avItems.map(function(m) {
+          return '<div class="join-av"><img src="' + m.foto + '" alt="' + (m.nombre || '') + '" loading="lazy" onerror="this.parentNode.innerHTML=\'🐾\'"></div>';
+        }).join('');
+      }
+    }
+
+    var emojiMap = { 'perro': '🐶', 'gato': '🐱', 'conejo': '🐰', 'ave': '🐦', 'pez': '🐟' };
+    function getEmoji(esp) {
+      if (!esp) return '🐾';
+      var e = esp.toLowerCase();
+      for (var k in emojiMap) { if (e.indexOf(k) >= 0) return emojiMap[k]; }
+      return '🐾';
+    }
+
+    grid.innerHTML = items.map(function(m) {
+      var name = (m.nombre || '').split(' ')[0];
+      if (m.foto && m.foto.indexOf('http') >= 0) {
+        return '<a href="/galeria.html" class="foto-slot" title="' + name + '">'
+          + '<img src="' + m.foto + '" alt="' + name + '" loading="lazy" '
+          + 'onerror="this.style.display=\'none\';this.parentNode.style.background=\'#e8ddd0\';this.parentNode.innerHTML+=\'<span style=\\\'font-size:22px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)\\\'>\'+ getEmoji(m.especie) +\'</span>\'">'
+          + '<div class="foto-overlay"><span class="foto-overlay-name">' + name + '</span></div>'
+          + '</a>';
+      }
+      return '<a href="/galeria.html" class="foto-slot-empty" title="' + name + '">' + getEmoji(m.especie) + '</a>';
+    }).join('');
+  }).catch(function() {});
+})();
+
+// ── Negocios expandible ───────────────────────────────────────
+function toggleNeg() {
+  var el  = document.getElementById('negExpandable');
+  var btn = document.getElementById('btnExpand');
+  var open = el.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  btn.querySelector('.arr').textContent = open ? '▴' : '▾';
+  if (open) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function enviarNeg() {
+  var nombre = (document.getElementById('fNombre').value || '').trim();
+  var wa     = (document.getElementById('fWA').value || '').trim();
+  var tipo   = (document.getElementById('fTipo').value || '').trim();
+  if (!nombre || !wa) { alert('Por favor completa nombre y WhatsApp.'); return; }
+  var msg = 'Hola PetMi! Quiero ser afiliado.\n\nNegocio: ' + nombre + '\nWhatsApp: ' + wa + '\nTipo: ' + (tipo || '—');
+  window.open('https://wa.me/50200000000?text=' + encodeURIComponent(msg), '_blank');
+  document.getElementById('negOk').style.display = 'block';
+  document.getElementById('fNombre').value = '';
+  document.getElementById('fWA').value = '';
+  document.getElementById('fTipo').value = '';
+}
+
+// ── Scroll reveal ─────────────────────────────────────────────
+(function initReveal() {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.reveal').forEach(function(el) { el.classList.add('visible'); });
+    return;
+  }
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
+})();
+
+// ── Añadir id's para footer links internos ────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var planesEl = document.querySelector('.planes-sec');
+  if (planesEl) planesEl.id = 'planes';
+  var negEl = document.querySelector('.negocios-sec');
+  if (negEl) negEl.id = 'negocios';
+});
+</script>
+</body>
+</html>
