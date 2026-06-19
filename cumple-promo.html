@@ -8,29 +8,49 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-22PYV5237N');
+  </script>
 
-    // Detectar visita desde email PetMi y disparar evento
+  <!-- Tracking UTMs email PetMi — va separado para ejecutar sin esperar async -->
+  <script>
     (function(){
       var p = new URLSearchParams(window.location.search);
-      if (p.get('utm_source') === 'email') {
-        window.addEventListener('load', function(){
-          gtag('event', 'email_click', {
-            campaign: p.get('utm_campaign') || 'sin_campana',
-            content:  p.get('utm_content')  || 'link',
-            medium:   'petmi_email',
-            page:     window.location.pathname
-          });
-          // Trackear clics en botones WhatsApp
-          document.querySelectorAll('.btn-wa, .btn-wazu').forEach(function(btn){
-            btn.addEventListener('click', function(){
-              gtag('event', 'whatsapp_click', {
-                campaign: p.get('utm_campaign') || 'sin_campana',
-                label:    btn.textContent.trim().substring(0, 40)
-              });
-            });
-          });
+      if (p.get('utm_source') !== 'email') return;
+
+      var camp = p.get('utm_campaign') || 'sin_campana';
+      var cont = p.get('utm_content')  || 'link';
+
+      // Disparar email_click apenas el DOM esté listo
+      // No depende de que gtag.js haya cargado — usa la cola dataLayer
+      function fireEmailClick() {
+        gtag('event', 'email_click', {
+          campaign: camp,
+          content:  cont,
+          medium:   'petmi_email',
+          page:     window.location.pathname
         });
+        console.log('[PetMi GA4] email_click disparado — campaña: ' + camp);
       }
+
+      // Ejecutar apenas el DOM esté listo (no esperar load completo)
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fireEmailClick);
+      } else {
+        // DOM ya listo — disparar con pequeño delay para que gtag.js cargue
+        setTimeout(fireEmailClick, 800);
+      }
+
+      // Trackear clics en botones WhatsApp (productos + Wazu)
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-wa, .btn-wazu');
+        if (!btn) return;
+        gtag('event', 'whatsapp_click', {
+          campaign: camp,
+          content:  cont,
+          label:    btn.textContent.trim().substring(0, 50)
+        });
+        console.log('[PetMi GA4] whatsapp_click — ' + btn.textContent.trim().substring(0, 30));
+      });
+
     })();
   </script>
 <meta charset="UTF-8">
