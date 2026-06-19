@@ -1,19 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  function initHeader(){
-
-    // ★ ── Google Analytics GA4 — PetMi ───────────────────── ★
-    (function(){
-      var gScript = document.createElement('script');
-      gScript.async = true;
-      gScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-22PYV5237N';
-      document.head.appendChild(gScript);
-      ...
-    })();
-    // ★ ─────────────────────────────────────────────────────── ★
-
-    var sessionEmail = ...  // ← todo lo demás sin cambios
+  <!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎂 Oferta Cumpleañeros — FREEDOG × PetzID</title>
