@@ -136,13 +136,14 @@ var BANCO = [
   ['BULLDOG','DACHSHUND','COLLIE','SETTER','CORGI'],
   ['CHOW','DOBERMAN','AKITA','SAMOYED','VIZSLA'],
   ['PAPILLON','BASENJI','BORZOI','SALUKI','KUVASZ'],
-  ['RIDGEBACK','WEIMARANER','POINTER','SPANIEL','TERRIER'],
+  ['RIDGEBACK','WEIMARANER','POINTER','SPANIEL','WESTIE'],
   ['SIAMES','PERSA','RAGDOLL','BENGAL','SPHYNX'],
   ['MAINE','ABISINIO','BIRMAN','BURMESE','DEVON'],
   ['ANGORA','RAGAMUFFIN','TONKINESE','BALINESE','BOMBAY'],
   ['MANX','OCICAT','SOMALI','PIXIEBOB','LYKOI'],
   ['BOXER','BRIARD','PULI','KOMONDOR','KELPIE'],
-  ['VIZSLA','SEGUGIO','GALGO','LEVRIERO','PODENCO']
+  ['VIZSLA','SEGUGIO','GALGO','LEVRIERO','PODENCO'],
+  ['PASTOR','CHIHUAHUA','BOSTON','BRIARD','KOMONDOR']
 ];
 
 // Palabras del día según día del año
@@ -495,65 +496,68 @@ function mostrarToast(msg) {
 // Info de razas para tarjeta canvas (sin APIs externas)
 var RAZA_INFO = {
   // Perros
-  'GOLDEN':    { tipo: 'perro', emoji: '🐕', color: '#F5C842', label: 'Golden Retriever' },
-  'POODLE':    { tipo: 'perro', emoji: '🐩', color: '#E8A0E8', label: 'Poodle' },
-  'BEAGLE':    { tipo: 'perro', emoji: '🐕', color: '#D4A574', label: 'Beagle' },
-  'HUSKY':     { tipo: 'perro', emoji: '🐺', color: '#7BAFD4', label: 'Husky Siberiano' },
-  'BOXER':     { tipo: 'perro', emoji: '🐕', color: '#C4845C', label: 'Boxer' },
-  'LABRADOR':  { tipo: 'perro', emoji: '🐕', color: '#D4A030', label: 'Labrador' },
-  'PITBULL':   { tipo: 'perro', emoji: '🐕', color: '#8BA888', label: 'Pitbull' },
-  'SCHNAUZER': { tipo: 'perro', emoji: '🐕', color: '#888888', label: 'Schnauzer' },
-  'MALTESE':   { tipo: 'perro', emoji: '🐩', color: '#F0E8D0', label: 'Maltese' },
-  'SHIH':      { tipo: 'perro', emoji: '🐩', color: '#D4B896', label: 'Shih Tzu' },
-  'BULLDOG':   { tipo: 'perro', emoji: '🐕', color: '#C4A870', label: 'Bulldog' },
-  'DACHSHUND': { tipo: 'perro', emoji: '🌭', color: '#C47840', label: 'Dachshund' },
-  'COLLIE':    { tipo: 'perro', emoji: '🐕', color: '#D4A020', label: 'Collie' },
-  'SETTER':    { tipo: 'perro', emoji: '🐕', color: '#C84C20', label: 'Irish Setter' },
-  'CORGI':     { tipo: 'perro', emoji: '🦊', color: '#E87830', label: 'Corgi' },
-  'CHOW':      { tipo: 'perro', emoji: '🦁', color: '#C07830', label: 'Chow Chow' },
-  'DOBERMAN':  { tipo: 'perro', emoji: '🐕', color: '#402010', label: 'Doberman' },
-  'AKITA':     { tipo: 'perro', emoji: '🐕', color: '#E8B060', label: 'Akita' },
-  'SAMOYED':   { tipo: 'perro', emoji: '🐑', color: '#F0F0F0', label: 'Samoyed' },
-  'VIZSLA':    { tipo: 'perro', emoji: '🐕', color: '#C07040', label: 'Vizsla' },
-  'PAPILLON':  { tipo: 'perro', emoji: '🦋', color: '#F0D080', label: 'Papillon' },
-  'BASENJI':   { tipo: 'perro', emoji: '🐕', color: '#C86030', label: 'Basenji' },
-  'BORZOI':    { tipo: 'perro', emoji: '🐕', color: '#E8D8C0', label: 'Borzoi' },
-  'SALUKI':    { tipo: 'perro', emoji: '🐕', color: '#D4A870', label: 'Saluki' },
+  'GOLDEN': { tipo: 'perro', emoji: '🐕', color: '#F5C842', label: 'Golden Retriever' , foto: 'https://static.wixstatic.com/media/11a62b_67081e3d4c5f4d2c9eb0b6a7297ce498~mv2.png'},
+  'POODLE': { tipo: 'perro', emoji: '🐩', color: '#E8A0E8', label: 'Poodle', foto: 'https://static.wixstatic.com/media/11a62b_0fb22e2a28764d028f9232d7ff09905b~mv2.png'},
+  'BEAGLE': { tipo: 'perro', emoji: '🐕', color: '#D4A574', label: 'Beagle', foto: 'https://static.wixstatic.com/media/11a62b_3123d3b257314161b6e86a52e3dd23a9~mv2.png'},
+  'HUSKY': { tipo: 'perro', emoji: '🐺', color: '#7BAFD4', label: 'Husky Siberiano', foto: 'https://static.wixstatic.com/media/11a62b_d371529105c5411c93f4c32090765787~mv2.png'},
+  'BOXER': { tipo: 'perro', emoji: '🐕', color: '#C4845C', label: 'Boxer', foto: 'https://static.wixstatic.com/media/11a62b_1418221184c34724acd9fdd430d63c47~mv2.png'},
+  'LABRADOR': { tipo: 'perro', emoji: '🐕', color: '#D4A030', label: 'Labrador', foto: 'https://static.wixstatic.com/media/11a62b_aa9a8516a51840149c48972622d343f7~mv2.png'},
+  'PITBULL': { tipo: 'perro', emoji: '🐕', color: '#8BA888', label: 'Pitbull', foto: 'https://static.wixstatic.com/media/11a62b_df3627a3b0b246508fc918cc33f35de8~mv2.png'},
+  'SCHNAUZER': { tipo: 'perro', emoji: '🐕', color: '#888888', label: 'Schnauzer', foto: 'https://static.wixstatic.com/media/11a62b_dffe8741de6f43529747075f9eccc7f1~mv2.png'},
+  'MALTESE': { tipo: 'perro', emoji: '🐩', color: '#F0E8D0', label: 'Maltese', foto: 'https://static.wixstatic.com/media/11a62b_e936c581c68b4eca9d5407da57c6203a~mv2.png'},
+  'CHIHUAHUA': { tipo: 'perro', emoji: '🐕', color: '#D4A870', label: 'Chihuahua', foto: 'https://static.wixstatic.com/media/11a62b_a9bbc0a1d7574ff398835b3b5f3f4903~mv2.png'},
+  'SHIH': { tipo: 'perro', emoji: '🐩', color: '#D4B896', label: 'Shih Tzu', foto: 'https://static.wixstatic.com/media/11a62b_3b638388073f4905bf9106d87bbb0ffb~mv2.png'},
+  'BULLDOG': { tipo: 'perro', emoji: '🐕', color: '#C4A870', label: 'Bulldog', foto: 'https://static.wixstatic.com/media/11a62b_0ab8dd2eed914bb087244d148f1afd0e~mv2.png'},
+  'DACHSHUND': { tipo: 'perro', emoji: '🌭', color: '#C47840', label: 'Dachshund', foto: 'https://static.wixstatic.com/media/11a62b_5dcbf02fbc7344beba23435e525b9be9~mv2.png'},
+  'COLLIE': { tipo: 'perro', emoji: '🐕', color: '#D4A020', label: 'Collie', foto: 'https://static.wixstatic.com/media/11a62b_bb10f773dfc84469a99744c4639e2b16~mv2.png'},
+  'SETTER': { tipo: 'perro', emoji: '🐕', color: '#C84C20', label: 'Irish Setter', foto: 'https://static.wixstatic.com/media/11a62b_a601dbf4526048b886d46e1c7ec76efd~mv2.png'},
+  'CORGI': { tipo: 'perro', emoji: '🦊', color: '#E87830', label: 'Corgi', foto: 'https://static.wixstatic.com/media/11a62b_32a7eb11b5c24b148baa59054a63018a~mv2.png'},
+  'CHOW': { tipo: 'perro', emoji: '🦁', color: '#C07830', label: 'Chow Chow', foto: 'https://static.wixstatic.com/media/11a62b_64873bf9a4b64cb7ac695cf55e18bc36~mv2.png'},
+  'DOBERMAN': { tipo: 'perro', emoji: '🐕', color: '#402010', label: 'Doberman', foto: 'https://static.wixstatic.com/media/11a62b_b25a29ef890f4d67b9ff283dc6e29834~mv2.png'},
+  'AKITA': { tipo: 'perro', emoji: '🐕', color: '#E8B060', label: 'Akita', foto: 'https://static.wixstatic.com/media/11a62b_b569e5729de747d0a936d61167f4c4e7~mv2.png'},
+  'SAMOYED': { tipo: 'perro', emoji: '🐑', color: '#F0F0F0', label: 'Samoyed', foto: 'https://static.wixstatic.com/media/11a62b_0992ddb5de884aed8f2e93902b739960~mv2.png'},
+  'VIZSLA': { tipo: 'perro', emoji: '🐕', color: '#C07040', label: 'Vizsla' },
+  'PAPILLON': { tipo: 'perro', emoji: '🦋', color: '#F0D080', label: 'Papillon' , foto: 'https://static.wixstatic.com/media/11a62b_c9874289840b452aa635c59af449a7af~mv2.png'},
+  'BASENJI': { tipo: 'perro', emoji: '🐕', color: '#C86030', label: 'Basenji' , foto: 'https://static.wixstatic.com/media/11a62b_367ffbfcec674ef791ceaab08e1b0a7f~mv2.png'},
+  'BORZOI': { tipo: 'perro', emoji: '🐕', color: '#E8D8C0', label: 'Borzoi' , foto: 'https://static.wixstatic.com/media/11a62b_13c224eeaa364763a686124b491d90d9~mv2.png'},
+  'SALUKI': { tipo: 'perro', emoji: '🐕', color: '#D4A870', label: 'Saluki' , foto: 'https://static.wixstatic.com/media/11a62b_f3d1cb866f534284a33fb906d9644e8f~mv2.jpg'},
   'RIDGEBACK': { tipo: 'perro', emoji: '🐕', color: '#B86040', label: 'Ridgeback' },
-  'WEIMARANER':{ tipo: 'perro', emoji: '🐕', color: '#9090A0', label: 'Weimaraner' },
-  'POINTER':   { tipo: 'perro', emoji: '🐕', color: '#D0C090', label: 'Pointer' },
-  'SPANIEL':   { tipo: 'perro', emoji: '🐕', color: '#C07830', label: 'Cocker Spaniel' },
-  'TERRIER':   { tipo: 'perro', emoji: '🐕', color: '#A07040', label: 'Terrier' },
-  'BRIARD':    { tipo: 'perro', emoji: '🐕', color: '#706040', label: 'Briard' },
-  'KELPIE':    { tipo: 'perro', emoji: '🐕', color: '#804020', label: 'Kelpie' },
-  'KOMONDOR':  { tipo: 'perro', emoji: '🧶', color: '#E8E8E0', label: 'Komondor' },
+  'WEIMARANER': { tipo: 'perro', emoji: '🐕', color: '#9090A0', label: 'Weimaraner', foto: 'https://static.wixstatic.com/media/11a62b_e8d00cd4511c45598d171a978baeb74a~mv2.png'},
+  'POINTER': { tipo: 'perro', emoji: '🐕', color: '#D0C090', label: 'Pointer', foto: 'https://static.wixstatic.com/media/11a62b_6fea3c23b8034fd7ba278d26ff74f860~mv2.png'},
+  'SPANIEL': { tipo: 'perro', emoji: '🐕', color: '#C07830', label: 'Cocker Spaniel', foto: 'https://static.wixstatic.com/media/11a62b_c624d2b893e4452a9e8cd743f608b531~mv2.png'},
+  'WESTIE': { tipo: 'perro', emoji: '🐕', color: '#F0F0E8', label: 'West Highland Terrier', foto: 'https://static.wixstatic.com/media/11a62b_8b6b2410985b4a23ae1016794689392c~mv2.png'},
+  'BOSTON': { tipo: 'perro', emoji: '🐕', color: '#202020', label: 'Boston Terrier', foto: 'https://static.wixstatic.com/media/11a62b_9a2ee06653f845d2a21cff203e8cec7a~mv2.png'},
+  'BRIARD': { tipo: 'perro', emoji: '🐕', color: '#706040', label: 'Briard', foto: 'https://static.wixstatic.com/media/11a62b_1de7ada355df499dbbb931c3467471d4~mv2.png'},
+  'KELPIE': { tipo: 'perro', emoji: '🐕', color: '#804020', label: 'Kelpie', foto: 'https://static.wixstatic.com/media/11a62b_bb2dc345bd2d45a6a899b3538cd75198~mv2.png'},
+  'KOMONDOR': { tipo: 'perro', emoji: '🧶', color: '#E8E8E0', label: 'Komondor', foto: 'https://static.wixstatic.com/media/11a62b_4276d0f1031049e18960b9d19573470b~mv2.png'},
   // Gatos
-  'SIAMES':    { tipo: 'gato', emoji: '🐱', color: '#B0C4DE', label: 'Siamés' },
-  'PERSA':     { tipo: 'gato', emoji: '😺', color: '#FFFFFF', label: 'Persa' },
-  'RAGDOLL':   { tipo: 'gato', emoji: '🐱', color: '#D0B8C8', label: 'Ragdoll' },
-  'BENGAL':    { tipo: 'gato', emoji: '🐆', color: '#C8A850', label: 'Bengalí' },
-  'SPHYNX':    { tipo: 'gato', emoji: '🐱', color: '#D4A882', label: 'Sphynx' },
-  'MAINE':     { tipo: 'gato', emoji: '🦁', color: '#A06830', label: 'Maine Coon' },
-  'ABISINIO':  { tipo: 'gato', emoji: '🐱', color: '#C87040', label: 'Abisinio' },
-  'BIRMAN':    { tipo: 'gato', emoji: '🐱', color: '#F0E8D8', label: 'Birmano' },
-  'BURMESE':   { tipo: 'gato', emoji: '🐱', color: '#806040', label: 'Burmés' },
-  'DEVON':     { tipo: 'gato', emoji: '🐱', color: '#B8A0C0', label: 'Devon Rex' },
-  'ANGORA':    { tipo: 'gato', emoji: '🐱', color: '#F8F0E0', label: 'Angora' },
-  'BALINESE':  { tipo: 'gato', emoji: '🐱', color: '#C8D8F0', label: 'Balinés' },
-  'BOMBAY':    { tipo: 'gato', emoji: '🐈‍⬛', color: '#202020', label: 'Bombay' },
-  'MANX':      { tipo: 'gato', emoji: '🐱', color: '#D0C0A8', label: 'Manx' },
-  'SOMALI':    { tipo: 'gato', emoji: '🦊', color: '#D07838', label: 'Somalí' },
-  'KUVASZ':    { tipo: 'perro', emoji: '🐕', color: '#F0EEE0', label: 'Kuvasz' },
-  'PULI':      { tipo: 'perro', emoji: '🧶', color: '#404040', label: 'Puli' },
-  'LYKOI':     { tipo: 'gato', emoji: '🐱', color: '#707070', label: 'Lykoi' },
-  'OCICAT':    { tipo: 'gato', emoji: '🐆', color: '#D4A850', label: 'Ocicat' },
-  'PIXIEBOB':  { tipo: 'gato', emoji: '🐱', color: '#C09060', label: 'Pixiebob' },
-  'RAGAMUFFIN':{ tipo: 'gato', emoji: '😺', color: '#E0C8B0', label: 'Ragamuffin' },
-  'TONKINESE': { tipo: 'gato', emoji: '🐱', color: '#90A8C0', label: 'Tonkinese' },
-  'GALGO':     { tipo: 'perro', emoji: '🐕', color: '#C0A880', label: 'Galgo' },
-  'LEVRIERO':  { tipo: 'perro', emoji: '🐕', color: '#B0A898', label: 'Levriero' },
-  'PODENCO':   { tipo: 'perro', emoji: '🦊', color: '#D08040', label: 'Podenco' },
-  'SEGUGIO':   { tipo: 'perro', emoji: '🐕', color: '#C09060', label: 'Segugio' },
+  'SIAMES': { tipo: 'gato', emoji: '🐱', color: '#B0C4DE', label: 'Siamés', foto: 'https://static.wixstatic.com/media/11a62b_a680a78b6ca149e8ab6357014121f641~mv2.png'},
+  'PERSA': { tipo: 'gato', emoji: '😺', color: '#FFFFFF', label: 'Persa', foto: 'https://static.wixstatic.com/media/11a62b_5fb24e50ab224e84ace41673bdeac629~mv2.png'},
+  'RAGDOLL': { tipo: 'gato', emoji: '🐱', color: '#D0B8C8', label: 'Ragdoll', foto: 'https://static.wixstatic.com/media/11a62b_c8f519ccd17846d48f26e1a2a628704b~mv2.png'},
+  'BENGAL': { tipo: 'gato', emoji: '🐆', color: '#C8A850', label: 'Bengalí', foto: 'https://static.wixstatic.com/media/11a62b_df570f3075a34dac90fddfc40318c54e~mv2.png'},
+  'SPHYNX': { tipo: 'gato', emoji: '🐱', color: '#D4A882', label: 'Sphynx' },
+  'MAINE': { tipo: 'gato', emoji: '🦁', color: '#A06830', label: 'Maine Coon', foto: 'https://static.wixstatic.com/media/11a62b_fa60da3f1bfc4d37b71cba0e6300c79c~mv2.png'},
+  'ABISINIO': { tipo: 'gato', emoji: '🐱', color: '#C87040', label: 'Abisinio', foto: 'https://static.wixstatic.com/media/11a62b_576b9591ce094678a79cbeea2eb3bdb4~mv2.png'},
+  'BIRMAN': { tipo: 'gato', emoji: '🐱', color: '#F0E8D8', label: 'Birmano', foto: 'https://static.wixstatic.com/media/11a62b_b4a7a0263333418aac26e9175b183d00~mv2.png'},
+  'BURMESE': { tipo: 'gato', emoji: '🐱', color: '#806040', label: 'Burmés', foto: 'https://static.wixstatic.com/media/11a62b_3866877b01d44e64bc6b2d5ae7e198f1~mv2.png'},
+  'DEVON': { tipo: 'gato', emoji: '🐱', color: '#B8A0C0', label: 'Devon Rex', foto: 'https://static.wixstatic.com/media/11a62b_bfefcf48ec8840a184581ad87d0b89e0~mv2.png'},
+  'ANGORA': { tipo: 'gato', emoji: '🐱', color: '#F8F0E0', label: 'Angora', foto: 'https://static.wixstatic.com/media/11a62b_7de234ddeca74191810f259056d1c873~mv2.png'},
+  'BALINESE': { tipo: 'gato', emoji: '🐱', color: '#C8D8F0', label: 'Balinés', foto: 'https://static.wixstatic.com/media/11a62b_845e826a7ed643729845660a484eb624~mv2.png'},
+  'BOMBAY': { tipo: 'gato', emoji: '🐈‍⬛', color: '#202020', label: 'Bombay', foto: 'https://static.wixstatic.com/media/11a62b_e4c856cabcdd460c9653f6a6497f8d75~mv2.png'},
+  'MANX': { tipo: 'gato', emoji: '🐱', color: '#D0C0A8', label: 'Manx', foto: 'https://static.wixstatic.com/media/11a62b_7f0e4cfa08ec4461a195fba0ea6f3fc3~mv2.png'},
+  'SOMALI': { tipo: 'gato', emoji: '🦊', color: '#D07838', label: 'Somalí', foto: 'https://static.wixstatic.com/media/11a62b_c6d19c1e0f1040379aa484e92cc694ba~mv2.png'},
+  'KUVASZ': { tipo: 'perro', emoji: '🐕', color: '#F0EEE0', label: 'Kuvasz', foto: 'https://static.wixstatic.com/media/11a62b_aac67ab3460c4da7b250240cf4a98fd1~mv2.png'},
+  'PULI': { tipo: 'perro', emoji: '🧶', color: '#404040', label: 'Puli', foto: 'https://static.wixstatic.com/media/11a62b_dadbdea1cfa3479fb72a5368d658d64a~mv2.png'},
+  'LYKOI': { tipo: 'gato', emoji: '🐱', color: '#707070', label: 'Lykoi', foto: 'https://static.wixstatic.com/media/11a62b_875f9dcd8ad642cf9a96b5be6670bca0~mv2.png'},
+  'OCICAT': { tipo: 'gato', emoji: '🐆', color: '#D4A850', label: 'Ocicat', foto: 'https://static.wixstatic.com/media/11a62b_38da939ee854469188bd145cd7e8cac8~mv2.png'},
+  'PIXIEBOB': { tipo: 'gato', emoji: '🐱', color: '#C09060', label: 'Pixiebob', foto: 'https://static.wixstatic.com/media/11a62b_d50463c087cd437dbaeb2af2d88fc972~mv2.png'},
+  'RAGAMUFFIN': { tipo: 'gato', emoji: '😺', color: '#E0C8B0', label: 'Ragamuffin', foto: 'https://static.wixstatic.com/media/11a62b_07f572ade0a34517a0c604b81b4eaa6a~mv2.png'},
+  'TONKINESE': { tipo: 'gato', emoji: '🐱', color: '#90A8C0', label: 'Tonkinese', foto: 'https://static.wixstatic.com/media/11a62b_7437cb9d56c44092a4feeca9a208ee23~mv2.png'},
+  'PASTOR': { tipo: 'perro', emoji: '🐕', color: '#8B6914', label: 'Pastor Alemán', foto: 'https://static.wixstatic.com/media/11a62b_5481c212b02e4f5a87e5d107ee9b6da0~mv2.png'},
+  'GALGO': { tipo: 'perro', emoji: '🐕', color: '#C0A880', label: 'Galgo', foto: 'https://static.wixstatic.com/media/11a62b_0b7d08c1f06c4a1bb596490d72756767~mv2.png'},
+  'LEVRIERO': { tipo: 'perro', emoji: '🐕', color: '#B0A898', label: 'Levriero', foto: 'https://static.wixstatic.com/media/11a62b_541da5140b8e4d2b9b40f0f153fa0b6a~mv2.png'},
+  'PODENCO': { tipo: 'perro', emoji: '🦊', color: '#D08040', label: 'Podenco'},
+  'SEGUGIO': { tipo: 'perro', emoji: '🐕', color: '#C09060', label: 'Segugio', foto: 'https://static.wixstatic.com/media/11a62b_73a66689026543e08f26c775f43b3ee5~mv2.png'},
 };
 
 var _fotoTimer = null;
@@ -568,45 +572,53 @@ function mostrarFotoRaza(raza) {
 
   lbl.textContent = info.label;
 
-  var canvas = document.createElement('canvas');
-  canvas.width = 160; canvas.height = 120;
-  var ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  function showCard() {
+    card.classList.add('show');
+    clearTimeout(_fotoTimer);
+    _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
+  }
 
-  // Fondo con color de la raza
-  ctx.fillStyle = info.color;
-  ctx.fillRect(0, 0, 160, 120);
+  // Si tiene foto real de Wix CDN — úsala
+  if (info.foto) {
+    img.onload  = null;
+    img.onerror = null;
+    img.src = '';
+    setTimeout(function() {
+      img.onload  = function() { showCard(); };
+      img.onerror = function() { dibujarCanvas(); };
+      img.src = info.foto;
+    }, 0);
+    return;
+  }
 
-  // Patrón de puntos suaves
-  ctx.fillStyle = 'rgba(255,255,255,0.1)';
-  [[20,20],[60,15],[100,25],[140,20],[15,65],[50,75],[95,60],[140,70]].forEach(function(p){
-    ctx.beginPath(); ctx.arc(p[0],p[1],14,0,Math.PI*2); ctx.fill();
-  });
+  // Fallback: canvas con color + emoji
+  dibujarCanvas();
 
-  // Barra inferior oscura
-  ctx.fillStyle = 'rgba(0,0,0,0.28)';
-  ctx.fillRect(0, 82, 160, 38);
-
-  // Nombre de la raza
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 12px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(info.label.toUpperCase(), 80, 101);
-
-  // Emoji grande
-  ctx.font = '46px serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = 'rgba(0,0,0,0.12)';
-  ctx.fillText(info.emoji, 81, 43);
-  ctx.fillStyle = 'rgba(255,255,255,0.92)';
-  ctx.fillText(info.emoji, 80, 42);
-
-  img.src = canvas.toDataURL('image/png');
-  card.classList.add('show');
-  clearTimeout(_fotoTimer);
-  _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
+  function dibujarCanvas() {
+    var canvas = document.createElement('canvas');
+    canvas.width = 160; canvas.height = 120;
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = info.color;
+    ctx.fillRect(0, 0, 160, 120);
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    [[20,20],[60,15],[100,25],[140,20],[15,65],[50,75],[95,60],[140,70]].forEach(function(p){
+      ctx.beginPath(); ctx.arc(p[0],p[1],14,0,Math.PI*2); ctx.fill();
+    });
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.fillRect(0, 82, 160, 38);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(info.label.toUpperCase(), 80, 101);
+    ctx.font = '46px serif';
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.fillText(info.emoji, 81, 43);
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.fillText(info.emoji, 80, 42);
+    img.src = canvas.toDataURL('image/png');
+    showCard();
+  }
 }
 
 
