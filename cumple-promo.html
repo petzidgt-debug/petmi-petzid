@@ -1,643 +1,773 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <!-- Google Analytics GA4 — PetMi -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-22PYV5237N"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-22PYV5237N');
+
+    // Detectar visita desde email PetMi y disparar evento
+    (function(){
+      var p = new URLSearchParams(window.location.search);
+      if (p.get('utm_source') === 'email') {
+        window.addEventListener('load', function(){
+          gtag('event', 'email_click', {
+            campaign: p.get('utm_campaign') || 'sin_campana',
+            content:  p.get('utm_content')  || 'link',
+            medium:   'petmi_email',
+            page:     window.location.pathname
+          });
+          // Trackear clics en botones WhatsApp
+          document.querySelectorAll('.btn-wa, .btn-wazu').forEach(function(btn){
+            btn.addEventListener('click', function(){
+              gtag('event', 'whatsapp_click', {
+                campaign: p.get('utm_campaign') || 'sin_campana',
+                label:    btn.textContent.trim().substring(0, 40)
+              });
+            });
+          });
+        });
+      }
+    })();
+  </script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Juego del Día — PetMi</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎂 Oferta Cumpleañeros — FREEDOG × PetzID</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:80px}
+  :root {
+    --yellow:  #F5C842;
+    --teal:    #00B4B4;
+    --pink:    #E05090;
+    --dark:    #1a1a2e;
+    --white:   #FFFFFF;
+    --cream:   #FEFCF9;
+    --border:  #EDE9E3;
+    --mid:     #666;
+  }
 
-.hero{background:linear-gradient(135deg,#1a1a2e,#00B4B4);padding:24px 20px 20px;text-align:center}
-.hero-label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-.hero-title{font-size:26px;font-weight:900;color:#fff;margin-bottom:4px}
-.hero-sub{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:14px}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-.wrap{max-width:480px;margin:0 auto;padding:16px}
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    overflow-x: hidden;
+  }
 
-/* Palabras objetivo */
-.palabras-wrap{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:0.5px solid #eee}
-.palabras-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-.palabras-grid{display:flex;flex-wrap:wrap;gap:8px}
-.palabra-chip{padding:6px 14px;border-radius:99px;font-size:13px;font-weight:700;border:1.5px solid #ddd;color:#555;background:#f8f8f8;transition:all .2s}
-.palabra-chip.found{border-color:#00B4B4;background:#e0f7f7;color:#007a7a;text-decoration:line-through}
+  /* ── NAV ── */
+  nav {
+    background: var(--white);
+    border-bottom: 1.5px solid var(--border);
+    padding: 0 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
 
-/* Grid sopa de letras */
-.sopa-wrap{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;border:0.5px solid #eee;overflow-x:auto}
-.sopa-grid{display:inline-grid;gap:3px;user-select:none;margin:0 auto;display:flex;flex-direction:column;align-items:center}
-.sopa-row{display:flex;gap:3px}
-.sopa-cell{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;border-radius:8px;cursor:pointer;color:#333;background:#f8f7f4;border:0.5px solid #e8e8e8;transition:all .15s;flex-shrink:0}
-.sopa-cell.sel{background:#00B4B4;color:#fff;border-color:#00B4B4;transform:scale(1.05)}
-.sopa-cell.found{background:#e0f7f7;color:#007a7a;border-color:#b2dede}
-.sopa-cell.found-flash{background:#F5C842;color:#1a1a2e;border-color:#F5C842}
+  .logo {
+    display: flex;
+    align-items: center;
+  }
+  .logo img { height: 36px; display: block; }
 
-/* Resultado */
-.result-card{background:#fff;border-radius:14px;padding:20px;margin-bottom:14px;border:0.5px solid #eee;text-align:center;display:none}
-.result-card.show{display:block}
-.result-ico{font-size:52px;margin-bottom:8px}
-.result-title{font-size:20px;font-weight:700;color:#222;margin-bottom:4px}
-.result-sub{font-size:13px;color:#888;margin-bottom:16px}
-.result-pts{display:inline-flex;align-items:center;gap:6px;background:#e0f7f7;color:#007a7a;padding:8px 20px;border-radius:99px;font-size:14px;font-weight:700;margin-bottom:16px}
-.result-btn{display:block;width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none}
+  .nav-tag {
+    background: var(--yellow);
+    color: var(--dark);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.72rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
 
-/* Ya jugado hoy */
-.ya-jugado{background:#fff;border-radius:14px;padding:24px 20px;text-align:center;border:0.5px solid #eee;margin-bottom:14px;display:none}
-.ya-jugado.show{display:block}
+  /* ── HERO CUMPLEAÑOS ── */
+  .hero {
+    background: var(--yellow);
+    padding: 56px 5% 48px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
 
-/* Racha */
-.racha-wrap{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:0.5px solid #eee}
-.racha-title{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
-.racha-days{display:flex;gap:6px;justify-content:space-between}
-.racha-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
-.racha-dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:#f5f5f5;color:#ccc;border:0.5px solid #eee}
-.racha-dot.done{background:#e0f7f7;color:#00B4B4;border-color:#00B4B4;font-size:16px}
-.racha-dot.today{background:#00B4B4;color:#fff;font-weight:700;font-size:12px}
-.racha-lbl{font-size:9px;color:#aaa;font-weight:600}
+  .hero::before {
+    content: '🎂';
+    font-size: 160px;
+    position: absolute;
+    right: -20px; top: -20px;
+    opacity: 0.12;
+    line-height: 1;
+  }
 
-.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#F5C842;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1}
-.raza-foto-card{position:fixed;right:16px;bottom:80px;width:160px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.2);overflow:hidden;z-index:500;transform:translateX(200px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);border:2px solid #00B4B4}
-.raza-foto-card.show{transform:translateX(0)}
-.raza-foto-card img{width:160px;height:120px;object-fit:cover;display:block}
-.raza-foto-name{padding:7px 10px;font-size:12px;font-weight:700;color:#007a7a;text-align:center;background:#e0f7f7}
+  .hero::after {
+    content: '🐾';
+    font-size: 140px;
+    position: absolute;
+    left: -10px; bottom: -20px;
+    opacity: 0.1;
+    line-height: 1;
+  }
+
+  .badge-exclusive {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--dark);
+    color: var(--yellow);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    color: var(--dark);
+    line-height: 1.1;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero h1 .accent { color: var(--pink); }
+
+  .hero-sub {
+    color: rgba(26,26,46,0.65);
+    font-size: 1rem;
+    max-width: 480px;
+    margin: 0 auto 28px;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* descuento pill grande */
+  .big-badge {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--pink);
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    border-radius: 20px;
+    padding: 14px 32px;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .big-badge .pct { font-size: 3.2rem; line-height: 1; }
+  .big-badge .off { font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9; }
+
+  .hero-note {
+    font-size: 0.78rem;
+    color: rgba(26,26,46,0.55);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* shipping banner */
+  .ship-bar {
+    background: var(--teal);
+    color: var(--white);
+    text-align: center;
+    padding: 10px 5%;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+  }
+  .ship-bar span { opacity: 0.75; font-weight: 400; margin-left: 8px; font-size: 0.8rem; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    text-align: center;
+    padding: 44px 5% 0;
+  }
+  .section-header h2 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .section-header p { color: var(--mid); font-size: 0.9rem; }
+
+  /* ── CATEGORY LABEL ── */
+  .cat-wrap { padding: 24px 5% 0; max-width: 1180px; margin: 0 auto; }
+  .cat-label {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cat-line { flex: 1; height: 1.5px; background: var(--border); }
+
+  /* ── GRID ── */
+  .products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+    gap: 22px;
+    padding: 20px 5% 12px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--white);
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.22s, box-shadow 0.22s;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 36px rgba(26,26,46,0.1);
+  }
+
+  .card-img {
+    height: 220px;
+    position: relative;
+    overflow: hidden;
+    background: #f0f0ee;
+  }
+  .card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s;
+  }
+  .card:hover .card-img img {
+    transform: scale(1.04);
+  }
+
+  /* color placeholders */
+  .img-teal  { background: linear-gradient(135deg, #b2ebf2, #80deea); }
+  .img-red   { background: linear-gradient(135deg, #ffcdd2, #ef9a9a); }
+  .img-pink  { background: linear-gradient(135deg, #f8bbd0, #f48fb1); }
+  .img-cream { background: linear-gradient(135deg, #fff8e1, #ffecb3); }
+  .img-green { background: linear-gradient(135deg, #dcedc8, #c5e1a5); }
+  .img-gray  { background: linear-gradient(135deg, #eceff1, #cfd8dc); }
+
+  /* 50% off ribbon */
+  .ribbon {
+    position: absolute;
+    top: 0; right: 0;
+    background: var(--pink);
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 0.9rem;
+    padding: 6px 14px 6px 10px;
+    border-radius: 0 0 0 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-type {
+    position: absolute;
+    top: 12px; left: 12px;
+    background: var(--dark);
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .badge-stock {
+    position: absolute;
+    bottom: 10px; right: 10px;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+    color: #c0392b;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+
+  /* ship pill inside card */
+  .ship-pill {
+    position: absolute;
+    bottom: 10px; left: 10px;
+    background: var(--teal);
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .card-body { padding: 18px 18px 0; flex: 1; }
+
+  .card-body h3 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--dark);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+
+  .card-body .dims { font-size: 0.8rem; color: var(--mid); margin-bottom: 10px; }
+
+  /* price row */
+  .price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .price-now {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 1.6rem;
+    color: var(--pink);
+  }
+  .price-orig {
+    font-size: 0.9rem;
+    color: #aaa;
+    text-decoration: line-through;
+    font-weight: 500;
+  }
+  .price-save {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.72rem;
+    color: var(--teal);
+    background: #e0f7f7;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  /* variants */
+  .variants { margin: 8px 0 2px; display: flex; flex-direction: column; gap: 5px; }
+  .variant-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--cream);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 0.82rem;
+  }
+  .variant-row .v-size { color: var(--mid); font-weight: 500; }
+  .v-prices { display: flex; align-items: baseline; gap: 6px; }
+  .v-now { font-family: 'Nunito', sans-serif; font-weight: 900; color: var(--pink); font-size: 0.95rem; }
+  .v-orig { font-size: 0.72rem; color: #bbb; text-decoration: line-through; }
+  .variant-row .v-stock { font-size: 0.7rem; color: #aaa; }
+
+  .card-footer { padding: 14px 18px 18px; }
+
+  /* WA button */
+  .btn-wa {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: #25D366;
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 13px 18px;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: filter 0.18s, transform 0.18s;
+  }
+  .btn-wa:hover { filter: brightness(0.9); transform: scale(1.01); }
+
+  /* ── TIMER BANNER ── */
+  .timer-bar {
+    background: var(--dark);
+    padding: 18px 5%;
+    text-align: center;
+    margin: 40px 0 0;
+  }
+  .timer-bar p {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .timer-bar .digits {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 1.8rem;
+    color: var(--yellow);
+    letter-spacing: 2px;
+  }
+
+  /* ── CTA BOTTOM ── */
+  .cta-bottom {
+    margin: 0 5% 60px;
+    max-width: 1180px;
+    margin-left: auto;
+    margin-right: auto;
+    background: var(--yellow);
+    border-radius: 24px;
+    padding: 40px 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .cta-bottom h3 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .cta-bottom p { color: rgba(26,26,46,0.6); font-size: 0.9rem; line-height: 1.5; }
+  .btn-register {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--dark);
+    color: var(--yellow);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    padding: 13px 26px;
+    border-radius: 50px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.2s;
+  }
+  .btn-register:hover { transform: scale(1.03); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--dark);
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    padding: 24px 5%;
+    font-size: 0.8rem;
+    line-height: 1.8;
+  }
+  footer .y { color: var(--yellow); font-weight: 700; }
+  footer .t { color: var(--teal); }
+
+  @media (max-width: 640px) {
+    .products { grid-template-columns: 1fr; padding: 16px 4% 8px; }
+    .cta-bottom { padding: 28px 22px; }
+    .hero { padding: 44px 4% 36px; }
+    nav { padding: 0 4%; }
+  }
 </style>
 </head>
 <body>
 
-<div class="hero">
-  <div class="hero-label">🎮 Juego del día</div>
-  <div class="hero-title">Encuentra al Peludo</div>
-  <div class="hero-sub">Busca las 5 razas escondidas</div>
+<!-- NAV -->
+<nav>
+  <div class="logo"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi" style="height:36px;display:block;"></div>
+  <div class="nav-tag">🎂 Cumpleañeros</div>
+</nav>
+
+<!-- SHIPPING BAR -->
+<div class="ship-bar">
+  🚚 Envío incluido en todos los productos
+  <span>solo para miembros con beneficio de cumpleaños</span>
 </div>
-<!-- Timer flotante -->
-<div id="timerDisplay" style="position:fixed;top:68px;right:14px;z-index:150;background:#1a1a2e;color:#F5C842;padding:6px 14px;border-radius:99px;font-size:15px;font-weight:700;box-shadow:0 2px 12px rgba(0,0,0,.3)">⏱ 00:00</div>
 
-<div class="wrap">
-
-  <!-- Ya jugado hoy -->
-  <div class="ya-jugado" id="yaJugado">
-    <div style="font-size:48px;margin-bottom:10px">✅</div>
-    <div style="font-size:17px;font-weight:700;color:#222;margin-bottom:4px">¡Ya jugaste hoy!</div>
-    <div style="font-size:13px;color:#888;margin-bottom:14px">Vuelve mañana para una nueva sopa de letras</div>
-    <div id="yaJugadoTiempo" style="font-size:13px;color:#00B4B4;font-weight:600;margin-bottom:14px"></div>
-    <a href="/puntos.html" style="display:block;padding:11px;background:#00B4B4;color:#fff;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none">Ver mis puntos</a>
+<!-- HERO -->
+<section class="hero">
+  <div class="badge-exclusive">🐾 Beneficio exclusivo PetzID · Solo hoy</div>
+  <h1>
+    ¡Feliz cumpleaños<br>
+    <span class="accent">para tu mejor amigo!</span>
+  </h1>
+  <p class="hero-sub">
+    Como parte de la comunidad PetzID, este mes celebramos junto a ti.<br>
+    Escoge la cama o colchón perfecto para tu peludo con un descuento especial.
+  </p>
+  <div class="big-badge">
+    <div class="pct">50%</div>
+    <div class="off">de descuento · Sólo este mes</div>
   </div>
+  <p class="hero-note">Precios ya reflejan el 50% off · Envío gratis incluido 🎁<br>Válido solo tu mes de cumpleaños · Mientras duren existencias</p>
+</section>
 
-  <!-- Racha -->
-  <div class="racha-wrap">
-    <div class="racha-title">
-      <span>🔥 Racha diaria</span>
-      <span id="rachaLabel" style="font-size:12px;color:#00B4B4;font-weight:600"></span>
+<!-- PRODUCTOS -->
+<div class="section-header">
+  <h2>Elige su regalo 🛏️</h2>
+  <p>Productos FREEDOG disponibles con tu beneficio de cumpleañero</p>
+</div>
+
+<!-- CAMAS DOUNT -->
+<div class="cat-wrap">
+  <div class="cat-label">🛏️ Camas Dount <div class="cat-line"></div></div>
+</div>
+<div class="products">
+
+  <!-- DOUNT TEAL -->
+  <div class="card">
+    <div class="card-img img-teal">
+      <img src="https://app.revistapetmi.com/img/Donnut_teal.jpeg" alt="Cama Dount Teal" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Dount</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 2 disponibles</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
     </div>
-    <div class="racha-days" id="rachaDays"></div>
+    <div class="card-body">
+      <h3>Cama Dount — Azul Teal</h3>
+      <p class="dims">100 × 100 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q327</span>
+        <span class="price-orig">Q654</span>
+        <span class="price-save">Ahorras Q327</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20la%20Cama%20Dount%20Azul%20100x100cm%20al%2050%25%20off%20(Q327)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
   </div>
 
-  <!-- Palabras objetivo -->
-  <div class="palabras-wrap" id="palabrasWrap">
-    <div class="palabras-title">Encuentra estas razas</div>
-    <div class="palabras-grid" id="palabrasGrid"></div>
+  <!-- DOUNT RED -->
+  <div class="card">
+    <div class="card-img img-red">
+      <img src="https://app.revistapetmi.com/img/Donut-red.jpeg" alt="Cama Dount Rojo" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Dount</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 2 disponibles</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Cama Dount — Rojo</h3>
+      <p class="dims">100 × 100 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q327</span>
+        <span class="price-orig">Q654</span>
+        <span class="price-save">Ahorras Q327</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20la%20Cama%20Dount%20Roja%20100x100cm%20al%2050%25%20off%20(Q327)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
   </div>
 
-  <!-- Grid sopa -->
-  <div class="sopa-wrap" id="sopaWrap">
-    <div class="sopa-grid" id="sopaGrid"></div>
-  </div>
-
-  <!-- Resultado -->
-  <div class="result-card" id="resultCard">
-    <div class="result-ico">🏆</div>
-    <div class="result-title" id="resultTitle">¡Excelente!</div>
-    <div class="result-sub" id="resultSub">Encontraste todas las razas</div>
-    <div class="result-pts" id="resultPts">⭐ +1 punto ganado</div>
-    <a href="/puntos.html" class="result-btn">Ver mis puntos →</a>
+  <!-- DOUNT PINK MULTI -->
+  <div class="card">
+    <div class="card-img img-pink">
+      <img src="https://app.revistapetmi.com/img/Donut-pink.jpeg" alt="Cama Dount Rosa" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Dount</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Cama Dount — Rosa</h3>
+      <p class="dims">Disponible en 3 tamaños</p>
+      <div class="variants">
+        <div class="variant-row">
+          <span class="v-size">100×100 cm</span>
+          <div class="v-prices"><span class="v-now">Q327</span><span class="v-orig">Q654</span></div>
+          <span class="v-stock">2 disp.</span>
+        </div>
+        <div class="variant-row">
+          <span class="v-size">80×80 cm</span>
+          <div class="v-prices"><span class="v-now">Q262</span><span class="v-orig">Q524</span></div>
+          <span class="v-stock">3 disp.</span>
+        </div>
+        <div class="variant-row">
+          <span class="v-size">50×50 cm</span>
+          <div class="v-prices"><span class="v-now">Q165</span><span class="v-orig">Q329</span></div>
+          <span class="v-stock">1 disp.</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20la%20Cama%20Dount%20Rosa%20al%2050%25%20off%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE%20%C2%BFQu%C3%A9%20tama%C3%B1os%20tienen?" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Elegir talla con descuento
+      </a>
+    </div>
   </div>
 
 </div>
 
-<div class="toast" id="toast"></div>
-<!-- Tarjeta foto de raza -->
-<div class="raza-foto-card" id="razaFotoCard">
-  <img id="razaFotoImg" src="" alt="" width="160" height="120">
-  <div class="raza-foto-name" id="razaFotoName"></div>
+<!-- CUNAS ECO -->
+<div class="cat-wrap" style="margin-top:8px;">
+  <div class="cat-label">🛌 Cunas Eco Line Shufu <div class="cat-line"></div></div>
 </div>
-<script src="/header.js"></script>
-<script>
-// ── Config ────────────────────────────────────────────────────
-var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
-var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-var sessionEmail = localStorage.getItem('petzid_email') || sessionStorage.getItem('petmiEmail') || '';
-var GRID_SIZE = 10;
+<div class="products">
 
-// ── Banco de palabras (razas) ─────────────────────────────────
-var BANCO = [
-  ['GOLDEN','POODLE','BEAGLE','HUSKY','BOXER'],
-  ['LABRADOR','PITBULL','SCHNAUZER','MALTESE','SHIHTZU'],
-  ['BULLDOG','DACHSHUND','COLLIE','SETTER','CORGI'],
-  ['CHOW','DOBERMAN','AKITA','SAMOYED','VIZSLA'],
-  ['PAPILLON','BASENJI','BORZOI','SALUKI','KUVASZ'],
-  ['RIDGEBACK','WEIMARANER','POINTER','SPANIEL','WESTIE'],
-  ['SIAMES','PERSA','RAGDOLL','BENGAL','SPHYNX'],
-  ['MAINE','ABISINIO','BIRMAN','BURMESE','DEVON'],
-  ['ANGORA','RAGAMUFFIN','TONKINESE','BALINESE','BOMBAY'],
-  ['MANX','OCICAT','SOMALI','PIXIEBOB','LYKOI'],
-  ['BOXER','BRIARD','PULI','KOMONDOR','KELPIE'],
-  ['VIZSLA','SEGUGIO','GALGO','LEVRIERO','PODENCO'],
-  ['PASTOR','CHIHUAHUA','BOSTON','BRIARD','KOMONDOR']
-];
+  <!-- CUNA CREMA -->
+  <div class="card">
+    <div class="card-img img-cream">
+      <img src="https://app.revistapetmi.com/img/Shufu-cream.jpeg" alt="Cuna Shufu Crema" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Eco Line</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 1 disponible</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Cuna Eco Line Shufu — Crema</h3>
+      <p class="dims">75 × 58 × 19 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q355</span>
+        <span class="price-orig">Q709</span>
+        <span class="price-save">Ahorras Q354</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20la%20Cuna%20Shufu%20Crema%2075x58cm%20al%2050%25%20off%20(Q355)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
+  </div>
 
-// Palabras del día según día del año
-function getPalabrasHoy() {
-  var now = new Date();
-  var start = new Date(now.getFullYear(), 0, 0);
-  var diff = now - start;
-  var dayOfYear = Math.floor(diff / 86400000);
-  return BANCO[dayOfYear % BANCO.length];
-}
+  <!-- CUNA VERDE -->
+  <div class="card">
+    <div class="card-img img-green">
+      <img src="https://app.revistapetmi.com/img/shufu-verde.jpeg" alt="Cuna Shufu Verde" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Eco Line</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 1 disponible</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Cuna Eco Line Shufu — Verde</h3>
+      <p class="dims">75 × 58 × 19 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q305</span>
+        <span class="price-orig">Q609</span>
+        <span class="price-save">Ahorras Q304</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20la%20Cuna%20Shufu%20Verde%2075x58cm%20al%2050%25%20off%20(Q305)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
+  </div>
 
-// ── Estado ────────────────────────────────────────────────────
-var palabrasHoy = getPalabrasHoy();
-var grid = [];
-var found = [];
-var selecting = false;
-var selStart = null;
-var selCells = [];
-var timerInterval = null;
-var seconds = 0;
-var gameOver = false;
-var hoy = new Date().toISOString().split('T')[0];
+</div>
 
-// ── Verificar si ya jugó hoy ──────────────────────────────────
-function checkYaJugado() {
-  var lastPlay = localStorage.getItem('juego_ultimo_' + (sessionEmail||'anon'));
-  var lastTime = localStorage.getItem('juego_tiempo_' + (sessionEmail||'anon'));
-  if (lastPlay === hoy) {
-    document.getElementById('yaJugado').classList.add('show');
-    document.getElementById('palabrasWrap').style.display = 'none';
-    document.getElementById('sopaWrap').style.display = 'none';
-    document.getElementById('timerDisplay').style.display = 'none';
-    if (lastTime) document.getElementById('yaJugadoTiempo').textContent = 'Tu tiempo de ayer: ' + lastTime;
-    return true;
-  }
-  return false;
-}
+<!-- COLCHONES -->
+<div class="cat-wrap" style="margin-top:8px;">
+  <div class="cat-label">🐾 Colchones <div class="cat-line"></div></div>
+</div>
+<div class="products">
 
-// ── Generar grid ──────────────────────────────────────────────
-function generarGrid() {
-  // Init empty grid
-  grid = [];
-  for (var i = 0; i < GRID_SIZE; i++) {
-    grid.push([]);
-    for (var j = 0; j < GRID_SIZE; j++) {
-      grid[i].push({ letter: '', word: null, dir: null });
-    }
-  }
+  <!-- ARTIC -->
+  <div class="card">
+    <div class="card-img img-gray">
+      <img src="https://app.revistapetmi.com/img/artic-gris.jpeg" alt="Colchon Artic Gris" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Artic</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 1 disponible</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Colchón Artic — Gris Oscuro</h3>
+      <p class="dims">88 × 76 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q210</span>
+        <span class="price-orig">Q419</span>
+        <span class="price-save">Ahorras Q209</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20el%20Colch%C3%B3n%20Artic%20Gris%2088x76cm%20al%2050%25%20off%20(Q210)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
+  </div>
 
-  var DIRS = [
-    [0, 1],   // horizontal →
-    [1, 0],   // vertical ↓
-    [1, 1],   // diagonal ↘
-    [0, -1],  // horizontal ←
-    [-1, 0],  // vertical ↑
-  ];
+  <!-- ECO VERDE -->
+  <div class="card">
+    <div class="card-img img-green">
+      <img src="https://app.revistapetmi.com/img/colchon-shufu-verde.jpeg" alt="Colchon Shufu Verde" style="width:100%;height:100%;object-fit:cover;display:block;">
+      <span class="badge-type">Eco Line</span>
+      <span class="ribbon">50% OFF</span>
+      <span class="badge-stock">⚡ 1 disponible</span>
+      <span class="ship-pill">🚚 Envío gratis</span>
+    </div>
+    <div class="card-body">
+      <h3>Colchón Eco Line Shufu — Verde</h3>
+      <p class="dims">91 × 61 × 14 cm</p>
+      <div class="price-row">
+        <span class="price-now">Q380</span>
+        <span class="price-orig">Q759</span>
+        <span class="price-save">Ahorras Q379</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <a href="https://wa.me/50237673927?text=Hola%20PetzID!%20Soy%20cumple%C3%B1ero%20del%20mes%20%F0%9F%8E%82%20y%20quiero%20el%20Colch%C3%B3n%20Eco%20Verde%2091x61cm%20al%2050%25%20off%20(Q380)%20con%20env%C3%ADo%20incluido%20%F0%9F%90%BE" target="_blank" class="btn-wa">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Pedir con mi descuento
+      </a>
+    </div>
+  </div>
 
-  palabrasHoy.forEach(function(word) {
-    var placed = false;
-    var attempts = 0;
-    while (!placed && attempts < 200) {
-      attempts++;
-      var dir = DIRS[Math.floor(Math.random() * DIRS.length)];
-      var dr = dir[0], dc = dir[1];
-      var maxR = GRID_SIZE - (dr >= 0 ? word.length * dr : 0);
-      var maxC = GRID_SIZE - (dc >= 0 ? word.length * dc : 0);
-      var minR = dr < 0 ? (word.length - 1) * Math.abs(dr) : 0;
-      var minC = dc < 0 ? (word.length - 1) * Math.abs(dc) : 0;
-      var startR = minR + Math.floor(Math.random() * (maxR - minR + 1));
-      var startC = minC + Math.floor(Math.random() * (maxC - minC + 1));
-      // Check fit
-      var ok = true;
-      for (var k = 0; k < word.length; k++) {
-        var r = startR + k * dr;
-        var c = startC + k * dc;
-        if (r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE) { ok = false; break; }
-        if (grid[r][c].letter && grid[r][c].letter !== word[k]) { ok = false; break; }
-      }
-      if (ok) {
-        for (var k = 0; k < word.length; k++) {
-          var r = startR + k * dr;
-          var c = startC + k * dc;
-          grid[r][c].letter = word[k];
-          grid[r][c].word = word;
-        }
-        placed = true;
-      }
-    }
-  });
+</div>
 
-  // Fill remaining with random letters
-  var LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  for (var i = 0; i < GRID_SIZE; i++) {
-    for (var j = 0; j < GRID_SIZE; j++) {
-      if (!grid[i][j].letter) {
-        grid[i][j].letter = LETRAS[Math.floor(Math.random() * LETRAS.length)];
-      }
-    }
-  }
-}
+<!-- TIMER -->
+<div class="timer-bar">
+  <p>🕐 Oferta válida solo durante tu mes de cumpleaños</p>
+  <div class="digits">¡Válido este mes · hasta agotar stock! 🎂</div>
+</div>
 
-// ── Render ────────────────────────────────────────────────────
-function renderPalabras() {
-  var html = palabrasHoy.map(function(p) {
-    return '<div class="palabra-chip" id="chip-' + p + '">' + p + '</div>';
-  }).join('');
-  document.getElementById('palabrasGrid').innerHTML = html;
-}
+<!-- CTA GALERÍA -->
+<div style="padding: 0 5% 60px; max-width:1180px; margin: 40px auto 0;">
+  <div class="cta-bottom">
+    <div>
+      <h3>🎂 ¡Deséale feliz cumpleaños a otros amigos PetzID!</h3>
+      <p>Entra a la galería de la comunidad y celebra junto a todos<br>los cumpleañeros del mes. ¡Ellos también te esperan!</p>
+    </div>
+    <a href="https://app.revistapetmi.com/galeria.html" target="_blank" class="btn-register">
+      Ver comunidad 🐾
+    </a>
+  </div>
+</div>
 
-function renderGrid() {
-  var g = document.getElementById('sopaGrid');
-  g.innerHTML = '';
-  for (var i = 0; i < GRID_SIZE; i++) {
-    var row = document.createElement('div');
-    row.className = 'sopa-row';
-    for (var j = 0; j < GRID_SIZE; j++) {
-      var cell = document.createElement('div');
-      cell.className = 'sopa-cell';
-      cell.textContent = grid[i][j].letter;
-      cell.dataset.r = i;
-      cell.dataset.c = j;
-      cell.addEventListener('mousedown', onCellStart);
-      cell.addEventListener('mouseover', onCellOver);
-      cell.addEventListener('touchstart', onTouchStart, {passive:true});
-      cell.addEventListener('touchmove', onTouchMove, {passive:false});
-      row.appendChild(cell);
-    }
-    g.appendChild(row);
-  }
-  document.addEventListener('mouseup', onCellEnd);
-  document.addEventListener('touchend', onCellEnd);
-}
+<!-- FOOTER -->
+<footer>
+  <p><span class="y">petz</span><span class="t">ID</span> × FREEDOG — Guatemala City 🇬🇹</p>
+  <p>Oferta exclusiva para miembros PetzID cumpleañeros · Válida durante tu mes · Sujeto a existencias · Precios en Quetzales (Q)</p>
+  <p style="margin-top:6px;font-size:0.72rem;">Recibiste este link porque eres miembro de la comunidad PetMi y es tu mes especial 🎁</p>
+</footer>
 
-function getCell(r, c) {
-  return document.querySelector('.sopa-cell[data-r="' + r + '"][data-c="' + c + '"]');
-}
-
-// ── Selección ─────────────────────────────────────────────────
-function onCellStart(e) {
-  if (gameOver) return;
-  selecting = true;
-  selStart = { r: parseInt(e.target.dataset.r), c: parseInt(e.target.dataset.c) };
-  clearSel();
-  addSel(selStart.r, selStart.c);
-}
-
-function onCellOver(e) {
-  if (!selecting || gameOver) return;
-  var r = parseInt(e.target.dataset.r);
-  var c = parseInt(e.target.dataset.c);
-  updateSel(r, c);
-}
-
-function onTouchStart(e) {
-  if (gameOver) return;
-  var t = e.touches[0];
-  var el = document.elementFromPoint(t.clientX, t.clientY);
-  if (el && el.classList.contains('sopa-cell')) {
-    selecting = true;
-    selStart = { r: parseInt(el.dataset.r), c: parseInt(el.dataset.c) };
-    clearSel();
-    addSel(selStart.r, selStart.c);
-  }
-}
-
-function onTouchMove(e) {
-  if (!selecting || gameOver) return;
-  e.preventDefault();
-  var t = e.touches[0];
-  var el = document.elementFromPoint(t.clientX, t.clientY);
-  if (el && el.classList.contains('sopa-cell')) {
-    updateSel(parseInt(el.dataset.r), parseInt(el.dataset.c));
-  }
-}
-
-function onCellEnd() {
-  if (!selecting) return;
-  selecting = false;
-  checkWord();
-  clearSel();
-}
-
-function updateSel(r, c) {
-  clearSel();
-  if (!selStart) return;
-  var dr = r - selStart.r;
-  var dc = c - selStart.c;
-  // Only allow straight lines
-  var straight = (dr === 0 || dc === 0 || Math.abs(dr) === Math.abs(dc));
-  if (!straight) { addSel(selStart.r, selStart.c); return; }
-  var len = Math.max(Math.abs(dr), Math.abs(dc));
-  if (len === 0) { addSel(selStart.r, selStart.c); return; }
-  var sr = dr === 0 ? 0 : (dr > 0 ? 1 : -1);
-  var sc = dc === 0 ? 0 : (dc > 0 ? 1 : -1);
-  selCells = [];
-  for (var i = 0; i <= len; i++) {
-    var nr = selStart.r + i * sr;
-    var nc = selStart.c + i * sc;
-    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
-      addSel(nr, nc);
-    }
-  }
-}
-
-function addSel(r, c) {
-  var el = getCell(r, c);
-  if (el && !el.classList.contains('found')) {
-    el.classList.add('sel');
-    selCells.push({ r: r, c: c });
-  }
-}
-
-function clearSel() {
-  document.querySelectorAll('.sopa-cell.sel').forEach(function(el) {
-    el.classList.remove('sel');
-  });
-  selCells = [];
-}
-
-// ── Verificar palabra ─────────────────────────────────────────
-function checkWord() {
-  if (!selCells.length) return;
-  var word = selCells.map(function(s) { return grid[s.r][s.c].letter; }).join('');
-  var wordRev = word.split('').reverse().join('');
-  var match = palabrasHoy.find(function(p) { return p === word || p === wordRev; });
-  if (match && found.indexOf(match) < 0) {
-    found.push(match);
-    // Mark cells as found
-    selCells.forEach(function(s) {
-      var el = getCell(s.r, s.c);
-      if (el) {
-        el.classList.remove('sel');
-        el.classList.add('found', 'found-flash');
-        setTimeout(function(e) { e.classList.remove('found-flash'); }.bind(null, el), 600);
-      }
-    });
-    // Mark chip
-    var chip = document.getElementById('chip-' + match);
-    if (chip) chip.classList.add('found');
-    mostrarToast('✅ ' + match + ' encontrado!');
-    mostrarFotoRaza(match);
-    // Check win
-    if (found.length === palabrasHoy.length) {
-      gameOver = true; // Bloquear inmediatamente, evitar doble llamada
-      setTimeout(ganaste, 500);
-    }
-  }
-}
-
-// ── Timer ─────────────────────────────────────────────────────
-function startTimer() {
-  timerInterval = setInterval(function() {
-    seconds++;
-    var m = Math.floor(seconds / 60);
-    var s = seconds % 60;
-    document.getElementById('timerDisplay').textContent =
-      '⏱ ' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-  }, 1000);
-}
-
-function formatTime(s) {
-  var m = Math.floor(s / 60);
-  var sec = s % 60;
-  return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
-}
-
-// ── Ganaste ───────────────────────────────────────────────────
-function ganaste() {
-  gameOver = true;
-  clearInterval(timerInterval);
-  var tiempo = formatTime(seconds);
-
-  // Guardar en localStorage
-  localStorage.setItem('juego_ultimo_' + (sessionEmail||'anon'), hoy);
-  localStorage.setItem('juego_tiempo_' + (sessionEmail||'anon'), tiempo);
-
-  // Mostrar resultado
-  var card = document.getElementById('resultCard');
-  var pts = 1; // Siempre 1 punto por juego
-  var titulo = '¡Lo encontraste todo! 🎉';
-  document.getElementById('resultTitle').textContent = titulo;
-  document.getElementById('resultSub').textContent = 'Tiempo: ' + tiempo + ' — ¡Vuelve mañana!';
-  document.getElementById('resultPts').textContent = '⭐ +1 punto ganado';
-  card.classList.add('show');
-
-  // Registrar punto
-  if (sessionEmail) {
-    fetch('/api/galeria?action=registrarPunto', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: sessionEmail, accion: 'juego_diario', puntos: pts })
-    }).then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (d && d.ok && window.petmiNotificarPunto) petmiNotificarPunto('juego_diario', pts);
-    }).catch(function() {});
-  }
-
-  // Actualizar racha
-  renderRacha();
-}
-
-// ── Racha ─────────────────────────────────────────────────────
-function calcularRacha() {
-  var streak = 0;
-  var key = 'juego_ultimo_' + (sessionEmail||'anon');
-  for (var i = 0; i < 30; i++) {
-    var d = new Date();
-    d.setDate(d.getDate() - i);
-    var dayKey = d.toISOString().split('T')[0];
-    if (localStorage.getItem(key) === dayKey || (i === 0 && gameOver)) {
-      streak++;
-    } else if (i > 0) {
-      break;
-    }
-  }
-  return streak;
-}
-
-function renderRacha() {
-  var streak = calcularRacha();
-  var DIAS = ['L','M','M','J','V','S','D'];
-  var hoyDia = new Date().getDay();
-  var html = '';
-  for (var i = 0; i < 7; i++) {
-    var isDone = i < streak - 1;
-    var isToday = i === streak - 1;
-    var lbl = DIAS[(hoyDia - (streak - 1 - i) + 7) % 7];
-    html += '<div class="racha-day">'
-      + '<div class="racha-dot ' + (isDone ? 'done' : isToday ? 'today' : '') + '">'
-      + (isDone ? '🔥' : isToday ? streak : (i + 1))
-      + '</div>'
-      + '<div class="racha-lbl">' + lbl + '</div>'
-      + '</div>';
-  }
-  document.getElementById('rachaDays').innerHTML = html;
-  document.getElementById('rachaLabel').textContent = streak + ' día' + (streak !== 1 ? 's' : '');
-}
-
-function mostrarToast(msg) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 2000);
-}
-
-// ── Init ──────────────────────────────────────────────────────
-
-// ── Fotos de razas ────────────────────────────────────────────
-// Fotos — URLs curadas de Wikimedia Commons (sin API, sin CORS, siempre funciona)
-// Info de razas para tarjeta canvas (sin APIs externas)
-var RAZA_INFO = {
-  // Perros
-  'GOLDEN': { tipo: 'perro', emoji: '🐕', color: '#F5C842', label: 'Golden Retriever' , foto: 'https://static.wixstatic.com/media/11a62b_67081e3d4c5f4d2c9eb0b6a7297ce498~mv2.png'},
-  'POODLE': { tipo: 'perro', emoji: '🐩', color: '#E8A0E8', label: 'Poodle', foto: 'https://static.wixstatic.com/media/11a62b_0fb22e2a28764d028f9232d7ff09905b~mv2.png'},
-  'BEAGLE': { tipo: 'perro', emoji: '🐕', color: '#D4A574', label: 'Beagle', foto: 'https://static.wixstatic.com/media/11a62b_3123d3b257314161b6e86a52e3dd23a9~mv2.png'},
-  'HUSKY': { tipo: 'perro', emoji: '🐺', color: '#7BAFD4', label: 'Husky Siberiano', foto: 'https://static.wixstatic.com/media/11a62b_d371529105c5411c93f4c32090765787~mv2.png'},
-  'BOXER': { tipo: 'perro', emoji: '🐕', color: '#C4845C', label: 'Boxer', foto: 'https://static.wixstatic.com/media/11a62b_1418221184c34724acd9fdd430d63c47~mv2.png'},
-  'LABRADOR': { tipo: 'perro', emoji: '🐕', color: '#D4A030', label: 'Labrador', foto: 'https://static.wixstatic.com/media/11a62b_aa9a8516a51840149c48972622d343f7~mv2.png'},
-  'PITBULL': { tipo: 'perro', emoji: '🐕', color: '#8BA888', label: 'Pitbull', foto: 'https://static.wixstatic.com/media/11a62b_df3627a3b0b246508fc918cc33f35de8~mv2.png'},
-  'SCHNAUZER': { tipo: 'perro', emoji: '🐕', color: '#888888', label: 'Schnauzer', foto: 'https://static.wixstatic.com/media/11a62b_dffe8741de6f43529747075f9eccc7f1~mv2.png'},
-  'MALTESE': { tipo: 'perro', emoji: '🐩', color: '#F0E8D0', label: 'Maltese', foto: 'https://static.wixstatic.com/media/11a62b_e936c581c68b4eca9d5407da57c6203a~mv2.png'},
-  'CHIHUAHUA': { tipo: 'perro', emoji: '🐕', color: '#D4A870', label: 'Chihuahua', foto: 'https://static.wixstatic.com/media/11a62b_a9bbc0a1d7574ff398835b3b5f3f4903~mv2.png'},
-  'SHIHTZU': { tipo: 'perro', emoji: '🐩', color: '#D4B896', label: 'Shih Tzu', foto: 'https://static.wixstatic.com/media/11a62b_3b638388073f4905bf9106d87bbb0ffb~mv2.png'},
-  'BULLDOG': { tipo: 'perro', emoji: '🐕', color: '#C4A870', label: 'Bulldog', foto: 'https://static.wixstatic.com/media/11a62b_0ab8dd2eed914bb087244d148f1afd0e~mv2.png'},
-  'DACHSHUND': { tipo: 'perro', emoji: '🌭', color: '#C47840', label: 'Dachshund', foto: 'https://static.wixstatic.com/media/11a62b_5dcbf02fbc7344beba23435e525b9be9~mv2.png'},
-  'COLLIE': { tipo: 'perro', emoji: '🐕', color: '#D4A020', label: 'Collie', foto: 'https://static.wixstatic.com/media/11a62b_bb10f773dfc84469a99744c4639e2b16~mv2.png'},
-  'SETTER': { tipo: 'perro', emoji: '🐕', color: '#C84C20', label: 'Irish Setter', foto: 'https://static.wixstatic.com/media/11a62b_a601dbf4526048b886d46e1c7ec76efd~mv2.png'},
-  'CORGI': { tipo: 'perro', emoji: '🦊', color: '#E87830', label: 'Corgi', foto: 'https://static.wixstatic.com/media/11a62b_32a7eb11b5c24b148baa59054a63018a~mv2.png'},
-  'CHOW': { tipo: 'perro', emoji: '🦁', color: '#C07830', label: 'Chow Chow', foto: 'https://static.wixstatic.com/media/11a62b_64873bf9a4b64cb7ac695cf55e18bc36~mv2.png'},
-  'DOBERMAN': { tipo: 'perro', emoji: '🐕', color: '#402010', label: 'Doberman', foto: 'https://static.wixstatic.com/media/11a62b_b25a29ef890f4d67b9ff283dc6e29834~mv2.png'},
-  'AKITA': { tipo: 'perro', emoji: '🐕', color: '#E8B060', label: 'Akita', foto: 'https://static.wixstatic.com/media/11a62b_b569e5729de747d0a936d61167f4c4e7~mv2.png'},
-  'SAMOYED': { tipo: 'perro', emoji: '🐑', color: '#F0F0F0', label: 'Samoyed', foto: 'https://static.wixstatic.com/media/11a62b_0992ddb5de884aed8f2e93902b739960~mv2.png'},
-  'VIZSLA': { tipo: 'perro', emoji: '🐕', color: '#C07040', label: 'Vizsla' },
-  'PAPILLON': { tipo: 'perro', emoji: '🦋', color: '#F0D080', label: 'Papillon' , foto: 'https://static.wixstatic.com/media/11a62b_c9874289840b452aa635c59af449a7af~mv2.png'},
-  'BASENJI': { tipo: 'perro', emoji: '🐕', color: '#C86030', label: 'Basenji' , foto: 'https://static.wixstatic.com/media/11a62b_367ffbfcec674ef791ceaab08e1b0a7f~mv2.png'},
-  'BORZOI': { tipo: 'perro', emoji: '🐕', color: '#E8D8C0', label: 'Borzoi' , foto: 'https://static.wixstatic.com/media/11a62b_13c224eeaa364763a686124b491d90d9~mv2.png'},
-  'SALUKI': { tipo: 'perro', emoji: '🐕', color: '#D4A870', label: 'Saluki' , foto: 'https://static.wixstatic.com/media/11a62b_f3d1cb866f534284a33fb906d9644e8f~mv2.jpg'},
-  'RIDGEBACK': { tipo: 'perro', emoji: '🐕', color: '#B86040', label: 'Ridgeback' },
-  'WEIMARANER': { tipo: 'perro', emoji: '🐕', color: '#9090A0', label: 'Weimaraner', foto: 'https://static.wixstatic.com/media/11a62b_e8d00cd4511c45598d171a978baeb74a~mv2.png'},
-  'POINTER': { tipo: 'perro', emoji: '🐕', color: '#D0C090', label: 'Pointer', foto: 'https://static.wixstatic.com/media/11a62b_6fea3c23b8034fd7ba278d26ff74f860~mv2.png'},
-  'SPANIEL': { tipo: 'perro', emoji: '🐕', color: '#C07830', label: 'Cocker Spaniel', foto: 'https://static.wixstatic.com/media/11a62b_c624d2b893e4452a9e8cd743f608b531~mv2.png'},
-  'WESTIE': { tipo: 'perro', emoji: '🐕', color: '#F0F0E8', label: 'West Highland Terrier', foto: 'https://static.wixstatic.com/media/11a62b_8b6b2410985b4a23ae1016794689392c~mv2.png'},
-  'BOSTON': { tipo: 'perro', emoji: '🐕', color: '#202020', label: 'Boston Terrier', foto: 'https://static.wixstatic.com/media/11a62b_9a2ee06653f845d2a21cff203e8cec7a~mv2.png'},
-  'BRIARD': { tipo: 'perro', emoji: '🐕', color: '#706040', label: 'Briard', foto: 'https://static.wixstatic.com/media/11a62b_1de7ada355df499dbbb931c3467471d4~mv2.png'},
-  'KELPIE': { tipo: 'perro', emoji: '🐕', color: '#804020', label: 'Kelpie', foto: 'https://static.wixstatic.com/media/11a62b_bb2dc345bd2d45a6a899b3538cd75198~mv2.png'},
-  'KOMONDOR': { tipo: 'perro', emoji: '🧶', color: '#E8E8E0', label: 'Komondor', foto: 'https://static.wixstatic.com/media/11a62b_4276d0f1031049e18960b9d19573470b~mv2.png'},
-  // Gatos
-  'SIAMES': { tipo: 'gato', emoji: '🐱', color: '#B0C4DE', label: 'Siamés', foto: 'https://static.wixstatic.com/media/11a62b_a680a78b6ca149e8ab6357014121f641~mv2.png'},
-  'PERSA': { tipo: 'gato', emoji: '😺', color: '#FFFFFF', label: 'Persa', foto: 'https://static.wixstatic.com/media/11a62b_5fb24e50ab224e84ace41673bdeac629~mv2.png'},
-  'RAGDOLL': { tipo: 'gato', emoji: '🐱', color: '#D0B8C8', label: 'Ragdoll', foto: 'https://static.wixstatic.com/media/11a62b_c8f519ccd17846d48f26e1a2a628704b~mv2.png'},
-  'BENGAL': { tipo: 'gato', emoji: '🐆', color: '#C8A850', label: 'Bengalí', foto: 'https://static.wixstatic.com/media/11a62b_df570f3075a34dac90fddfc40318c54e~mv2.png'},
-  'SPHYNX': { tipo: 'gato', emoji: '🐱', color: '#D4A882', label: 'Sphynx' },
-  'MAINE': { tipo: 'gato', emoji: '🦁', color: '#A06830', label: 'Maine Coon', foto: 'https://static.wixstatic.com/media/11a62b_fa60da3f1bfc4d37b71cba0e6300c79c~mv2.png'},
-  'ABISINIO': { tipo: 'gato', emoji: '🐱', color: '#C87040', label: 'Abisinio', foto: 'https://static.wixstatic.com/media/11a62b_576b9591ce094678a79cbeea2eb3bdb4~mv2.png'},
-  'BIRMAN': { tipo: 'gato', emoji: '🐱', color: '#F0E8D8', label: 'Birmano', foto: 'https://static.wixstatic.com/media/11a62b_b4a7a0263333418aac26e9175b183d00~mv2.png'},
-  'BURMESE': { tipo: 'gato', emoji: '🐱', color: '#806040', label: 'Burmés', foto: 'https://static.wixstatic.com/media/11a62b_3866877b01d44e64bc6b2d5ae7e198f1~mv2.png'},
-  'DEVON': { tipo: 'gato', emoji: '🐱', color: '#B8A0C0', label: 'Devon Rex', foto: 'https://static.wixstatic.com/media/11a62b_bfefcf48ec8840a184581ad87d0b89e0~mv2.png'},
-  'ANGORA': { tipo: 'gato', emoji: '🐱', color: '#F8F0E0', label: 'Angora', foto: 'https://static.wixstatic.com/media/11a62b_7de234ddeca74191810f259056d1c873~mv2.png'},
-  'BALINESE': { tipo: 'gato', emoji: '🐱', color: '#C8D8F0', label: 'Balinés', foto: 'https://static.wixstatic.com/media/11a62b_845e826a7ed643729845660a484eb624~mv2.png'},
-  'BOMBAY': { tipo: 'gato', emoji: '🐈‍⬛', color: '#202020', label: 'Bombay', foto: 'https://static.wixstatic.com/media/11a62b_e4c856cabcdd460c9653f6a6497f8d75~mv2.png'},
-  'MANX': { tipo: 'gato', emoji: '🐱', color: '#D0C0A8', label: 'Manx', foto: 'https://static.wixstatic.com/media/11a62b_7f0e4cfa08ec4461a195fba0ea6f3fc3~mv2.png'},
-  'SOMALI': { tipo: 'gato', emoji: '🦊', color: '#D07838', label: 'Somalí', foto: 'https://static.wixstatic.com/media/11a62b_c6d19c1e0f1040379aa484e92cc694ba~mv2.png'},
-  'KUVASZ': { tipo: 'perro', emoji: '🐕', color: '#F0EEE0', label: 'Kuvasz', foto: 'https://static.wixstatic.com/media/11a62b_aac67ab3460c4da7b250240cf4a98fd1~mv2.png'},
-  'PULI': { tipo: 'perro', emoji: '🧶', color: '#404040', label: 'Puli', foto: 'https://static.wixstatic.com/media/11a62b_dadbdea1cfa3479fb72a5368d658d64a~mv2.png'},
-  'LYKOI': { tipo: 'gato', emoji: '🐱', color: '#707070', label: 'Lykoi', foto: 'https://static.wixstatic.com/media/11a62b_875f9dcd8ad642cf9a96b5be6670bca0~mv2.png'},
-  'OCICAT': { tipo: 'gato', emoji: '🐆', color: '#D4A850', label: 'Ocicat', foto: 'https://static.wixstatic.com/media/11a62b_38da939ee854469188bd145cd7e8cac8~mv2.png'},
-  'PIXIEBOB': { tipo: 'gato', emoji: '🐱', color: '#C09060', label: 'Pixiebob', foto: 'https://static.wixstatic.com/media/11a62b_d50463c087cd437dbaeb2af2d88fc972~mv2.png'},
-  'RAGAMUFFIN': { tipo: 'gato', emoji: '😺', color: '#E0C8B0', label: 'Ragamuffin', foto: 'https://static.wixstatic.com/media/11a62b_07f572ade0a34517a0c604b81b4eaa6a~mv2.png'},
-  'TONKINESE': { tipo: 'gato', emoji: '🐱', color: '#90A8C0', label: 'Tonkinese', foto: 'https://static.wixstatic.com/media/11a62b_7437cb9d56c44092a4feeca9a208ee23~mv2.png'},
-  'PASTOR': { tipo: 'perro', emoji: '🐕', color: '#8B6914', label: 'Pastor Alemán', foto: 'https://static.wixstatic.com/media/11a62b_5481c212b02e4f5a87e5d107ee9b6da0~mv2.png'},
-  'GALGO': { tipo: 'perro', emoji: '🐕', color: '#C0A880', label: 'Galgo', foto: 'https://static.wixstatic.com/media/11a62b_0b7d08c1f06c4a1bb596490d72756767~mv2.png'},
-  'LEVRIERO': { tipo: 'perro', emoji: '🐕', color: '#B0A898', label: 'Levriero', foto: 'https://static.wixstatic.com/media/11a62b_541da5140b8e4d2b9b40f0f153fa0b6a~mv2.png'},
-  'PODENCO': { tipo: 'perro', emoji: '🦊', color: '#D08040', label: 'Podenco'},
-  'SEGUGIO': { tipo: 'perro', emoji: '🐕', color: '#C09060', label: 'Segugio', foto: 'https://static.wixstatic.com/media/11a62b_73a66689026543e08f26c775f43b3ee5~mv2.png'},
-};
-
-var _fotoTimer = null;
-
-function mostrarFotoRaza(raza) {
-  var info = RAZA_INFO[raza];
-  if (!info) return;
-  var card = document.getElementById('razaFotoCard');
-  var img  = document.getElementById('razaFotoImg');
-  var lbl  = document.getElementById('razaFotoName');
-  if (!card || !img || !lbl) return;
-
-  lbl.textContent = info.label;
-
-  function showCard() {
-    card.classList.add('show');
-    clearTimeout(_fotoTimer);
-    _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
-  }
-
-  // Si tiene foto real de Wix CDN — úsala
-  if (info.foto) {
-    img.onload  = null;
-    img.onerror = null;
-    img.src = '';
-    setTimeout(function() {
-      img.onload  = function() { showCard(); };
-      img.onerror = function() { dibujarCanvas(); };
-      img.src = info.foto;
-    }, 0);
-    return;
-  }
-
-  // Fallback: canvas con color + emoji
-  dibujarCanvas();
-
-  function dibujarCanvas() {
-    var canvas = document.createElement('canvas');
-    canvas.width = 160; canvas.height = 120;
-    var ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.fillStyle = info.color;
-    ctx.fillRect(0, 0, 160, 120);
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-    [[20,20],[60,15],[100,25],[140,20],[15,65],[50,75],[95,60],[140,70]].forEach(function(p){
-      ctx.beginPath(); ctx.arc(p[0],p[1],14,0,Math.PI*2); ctx.fill();
-    });
-    ctx.fillStyle = 'rgba(0,0,0,0.28)';
-    ctx.fillRect(0, 82, 160, 38);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 12px Arial';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(info.label.toUpperCase(), 80, 101);
-    ctx.font = '46px serif';
-    ctx.fillStyle = 'rgba(0,0,0,0.12)';
-    ctx.fillText(info.emoji, 81, 43);
-    ctx.fillStyle = 'rgba(255,255,255,0.92)';
-    ctx.fillText(info.emoji, 80, 42);
-    img.src = canvas.toDataURL('image/png');
-    showCard();
-  }
-}
-
-
-function shadeColor(hex, percent) {
-  var num = parseInt(hex.replace('#',''), 16);
-  var amt = Math.round(2.55 * percent);
-  var R = Math.max(0, Math.min(255, (num >> 16) + amt));
-  var G = Math.max(0, Math.min(255, (num >> 8 & 0x00FF) + amt));
-  var B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
-  return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
-}
-
-renderRacha();
-if (!checkYaJugado()) {
-  generarGrid();
-  renderPalabras();
-  renderGrid();
-  startTimer();
-}
-</script>
 </body>
 </html>
