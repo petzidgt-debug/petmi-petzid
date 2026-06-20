@@ -36,34 +36,6 @@
 // header.js — Header compartido PetMi v5
 (function(){
   function initHeader(){
-
-    // ★ ── Google Analytics GA4 — PetMi ───────────────────── ★
-    (function(){
-      var gScript = document.createElement('script');
-      gScript.async = true;
-      gScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-22PYV5237N';
-      document.head.appendChild(gScript);
-
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      window.gtag = gtag;
-
-      gtag('js', new Date());
-      gtag('config', 'G-22PYV5237N');
-
-      // Detectar visita desde email PetMi (UTMs)
-      var p = new URLSearchParams(window.location.search);
-      if (p.get('utm_source') === 'email') {
-        gtag('event', 'email_click', {
-          campaign: p.get('utm_campaign') || 'sin_campana',
-          content:  p.get('utm_content')  || 'link',
-          medium:   'petmi_email',
-          page:     window.location.pathname
-        });
-      }
-    })();
-    // ★ ─────────────────────────────────────────────────────── ★
-
     var sessionEmail = localStorage.getItem('petzid_email') || '';
     var sessionDueno = localStorage.getItem('petzid_dueno') || '';
     var currentPath  = window.location.pathname;
@@ -101,6 +73,7 @@
       '.h-btn-in:hover{background:#e0f7f7}',
       // Avisos badge
       '.h-avisos-badge{display:none;background:#E24B4A;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:3px}',
+
       // Bottom nav mobile
       '.h-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #f0f0ee;z-index:50;padding:8px 4px 10px;box-shadow:0 -2px 10px rgba(0,0,0,.06)}',
       '@media(max-width:768px){.h-bottom-nav{display:flex;justify-content:space-around;align-items:center}}',
@@ -157,10 +130,19 @@
     var navHTML =
       '<a href="/galeria.html" class="h-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">🐾 Galería</a>' +
       '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-link' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
+
       '<a href="/quiniela.html" class="h-link' + (currentPath.indexOf('quiniela') >= 0 ? ' active' : '') + '" style="color:#F5C842!important;font-weight:700">⚽ Mundial</a>' +
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
-      '<a href="https://app.revistapetmi.com" target="_blank" class="h-link">📖 Revista</a>';
-
+      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">📖 Revista</a>' +
+      (function(){
+        var _esp = localStorage.getItem('petmi_especie') || '';
+        var _url = 'https://www.revistapetmi.com/tienda';
+        if (_esp.toLowerCase().indexOf('gato') >= 0)
+          _url = 'https://www.revistapetmi.com/tienda/coleccion/gatos';
+        else if (_esp.toLowerCase().indexOf('perro') >= 0)
+          _url = 'https://www.revistapetmi.com/tienda/coleccion/perros';
+        return '<a href="' + _url + '" target="_blank" class="h-link">🛍️ Tienda</a>';
+      })();
     // ── Right: avatar o botones ──────────────────────────────
     var userInitials = sessionDueno
       ? sessionDueno.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()
@@ -186,9 +168,8 @@
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
         '</div>'
-      : '<a href="/index.html" class="h-btn-reg">Registrar mascota</a>' +
+      : '<a href="/registro.html" class="h-btn-reg">Registrar mascota</a>' +
         '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>';
-
     // ── Bottom nav mobile ─────────────────────────────────────
     var bottomNavHTML =
       '<a href="/galeria.html" class="h-btab' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">' +
@@ -200,7 +181,7 @@
         '<span class="h-btab-bdg" id="hAvisosCountMob"></span>' +
         '<span class="h-btab-lbl">Avisos</span>' +
       '</a>' +
-      '<a href="/index.html" class="h-fab-tab">' +
+      '<a href="/registro.html" class="h-fab-tab">' +
         '<div class="h-fab-circle">➕</div>' +
         '<span class="h-fab-lbl">Crear PetzID</span>' +
       '</a>' +
@@ -209,11 +190,10 @@
         '<span class="h-btab-lbl">Mundial</span>' +
         '<span style="font-size:8px;color:#F5C842;font-weight:700;line-height:1;display:block">¡Ya!</span>' +
       '</a>' +
-      '<a href="https://app.revistapetmi.com" target="_blank" class="h-btab">' +
+      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-btab">' +
         '<span class="h-btab-ico">📖</span>' +
         '<span class="h-btab-lbl">Revista</span>' +
       '</a>';
-
     var loginHTML =
       '<div class="h-login-overlay" id="petmiLoginOverlay">' +
         '<div class="h-login-box">' +
@@ -222,7 +202,7 @@
             '<div class="h-login-title">Ingresar a PetMi</div>' +
             '<div class="h-login-sub">Escribe tu correo para continuar.</div>' +
             '<div class="h-login-msg" id="petmiLoginMsg"></div>' +
-            '<input type="email" class="h-login-input" id="petmiLoginEmail" placeholder="tu@correo.com" inputmode="email">' +
+            '<input type="email" class="h-login-input" id="petmiLoginEmail" placeholder="tu@correo.com" inputmode="email" id="petmiLoginEmail">' +
             '<button class="h-login-ok" id="petmiLoginBtn" onclick="petmiIrPaso2()">Continuar &#x2192;</button>' +
             '<button class="h-login-cancel" onclick="petmiCerrarLogin()">Cancelar</button>' +
           '</div>' +
@@ -246,19 +226,21 @@
         '</div>' +
       '</div>';
 
+
     // ── Build header ──────────────────────────────────────────
     var header = document.createElement('header');
     header.className = 'site-header';
     header.innerHTML =
-      '<a href="https://app.revistapetmi.com" target="_blank" class="h-logo">' +
+      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-logo">' +
         '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="34" onerror="this.style.display=\'none\'">' +
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
       '<div class="h-right">' +
-        '<a href="https://app.revistapetmi.com" target="_blank" class="h-search" aria-label="Qué es PetzID" style="text-decoration:none;padding:4px"><img src="https://app.revistapetmi.com/ID.png" alt="PetzID" style="width:22px;height:22px;object-fit:contain;display:block"></a>' +
+        '<a href="https://www.revistapetmi.com/home" target="_blank" class="h-search" aria-label="Qué es PetzID" style="text-decoration:none;padding:4px"><img src="https://app.revistapetmi.com/ID.png" alt="PetzID" style="width:22px;height:22px;object-fit:contain;display:block"></a>' +
         rightHTML +
       '</div>';
     document.body.insertBefore(header, document.body.firstChild);
+
 
     // PWA install banner
     var pwaBanner = document.createElement('div');
@@ -296,8 +278,9 @@
         document.querySelectorAll('.h-drop-menu.open, .h-avatar-dd.open').forEach(function(m){ m.classList.remove('open'); });
       }
     });
-
     setTimeout(function(){
+      var loginInput = document.getElementById('petmiLoginEmail');
+      // Enter key listeners (added via JS to avoid quote escaping issues)
       var loginEmail  = document.getElementById('petmiLoginEmail');
       var loginNombre = document.getElementById('petmiLoginNombre');
       var loginOTP    = document.getElementById('petmiLoginOTP');
@@ -305,7 +288,6 @@
       if(loginNombre) loginNombre.addEventListener('keydown', function(e){ if(e.key==='Enter') petmiVerificarLogin(); });
       if(loginOTP)    loginOTP.addEventListener('keydown',    function(e){ if(e.key==='Enter') petmiVerificarOTP(); });
     }, 500);
-
     if(sessionEmail) cargarNotifHeader(sessionEmail);
   }
 
@@ -316,6 +298,7 @@
     }).then(function(r){return r.json();})
     .then(function(d){
       if(!d.found||!d.mascotas.length) return;
+      // Guardar especie de la primera mascota para link de tienda
       if(d.mascotas && d.mascotas[0] && d.mascotas[0].especie) {
         localStorage.setItem('petmi_especie', d.mascotas[0].especie);
       }
@@ -346,12 +329,11 @@
     }).catch(function(){});
   }
 
-  window.petmiTogglePF    = function(e){ e.stopPropagation(); var m=document.getElementById('pfMenu'); if(m) m.classList.toggle('open'); };
-  window.petmiToggleMenu  = function(e){ e.stopPropagation(); var m=document.getElementById('petmiMenuDropdown'); if(m) m.classList.toggle('open'); };
-  window.petmiToggleHam   = function(){ var m=document.getElementById('petmiMobMenu'); if(m) m.classList.toggle('open'); };
-  window.petmiLimpiarNotif= function(){ var b=document.getElementById('petmiNotifBadge'); if(b) b.style.display='none'; };
-  window.petmiCerrarSesion= function(){ localStorage.removeItem('petzid_email'); localStorage.removeItem('petzid_dueno'); window.location.href='/galeria.html'; };
-
+  window.petmiTogglePF = function(e){ e.stopPropagation(); var m=document.getElementById('pfMenu'); if(m) m.classList.toggle('open'); };
+  window.petmiToggleMenu = function(e){ e.stopPropagation(); var m=document.getElementById('petmiMenuDropdown'); if(m) m.classList.toggle('open'); };
+  window.petmiToggleHam = function(){ var m=document.getElementById('petmiMobMenu'); if(m) m.classList.toggle('open'); };
+  window.petmiLimpiarNotif = function(){ var b=document.getElementById('petmiNotifBadge'); if(b) b.style.display='none'; };
+  window.petmiCerrarSesion = function(){ localStorage.removeItem('petzid_email'); localStorage.removeItem('petzid_dueno'); window.location.href='/galeria.html'; };
   window.petmiAbrirLogin = function(){
     var o=document.getElementById('petmiLoginOverlay');
     if(o){
@@ -370,8 +352,12 @@
       if(msg3)msg3.style.display='none';
     }
   };
-  window.petmiCerrarLogin = function(){ var o=document.getElementById('petmiLoginOverlay'); if(o)o.classList.remove('open'); };
+  window.petmiCerrarLogin = function(){
+    var o=document.getElementById('petmiLoginOverlay');
+    if(o)o.classList.remove('open');
+  };
 
+  // ── Login 2 pasos ──────────────────────────────────────────
   window.petmiIrPaso2 = function(){
     var emailEl=document.getElementById('petmiLoginEmail');
     var step1=document.getElementById('petmiStep1');
@@ -482,7 +468,7 @@
       } else if(d.code==='NO_ACCOUNT') {
         var el2=document.getElementById('petmiLoginMsg2');
         if(el2){
-          el2.innerHTML='No tienes mascotas registradas. <a href="/index.html" style="color:#00B4B4;font-weight:700">Regístrate aquí →</a>';
+          el2.innerHTML='No tienes mascotas registradas. <a href="/registro.html" style="color:#00B4B4;font-weight:700">Regístrate aquí →</a>';
           el2.className='h-login-msg error';el2.style.display='block';
         }
         if(btn){btn.disabled=false;btn.textContent='Ingresar';}
@@ -500,10 +486,8 @@
   function petmiLoginMsg(txt,tipo){var el=document.getElementById('petmiLoginMsg');if(el){el.textContent=txt;el.className='h-login-msg '+(tipo||'');el.style.display=txt?'block':'none';}}
   function petmiLoginMsg2(txt,tipo){var el=document.getElementById('petmiLoginMsg2');if(el){el.textContent=txt;el.className='h-login-msg '+(tipo||'');el.style.display=txt?'block':'none';}}
   function petmiLoginMsg3(txt,tipo){var el=document.getElementById('petmiLoginMsg3');if(el){el.textContent=txt;el.className='h-login-msg '+(tipo||'');el.style.display=txt?'block':'none';}}
-
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initHeader);}else{initHeader();}
 })();
-
 // ── Ocultar bottom nav cuando hay modal abierto ─────────────
 (function(){
   var bottomNav = null;
@@ -513,6 +497,8 @@
     var nav = getNav();
     if(!nav) return;
     var anyOpen = false;
+
+    // 1. Clases conocidas de modales/overlays en todas las páginas
     var selectors = [
       '.modal-overlay', '.login-overlay', '.login-modal-overlay',
       '.confirm-overlay', '.h-login-overlay', '.foto-modal',
@@ -523,6 +509,8 @@
       var st = window.getComputedStyle(m);
       if(st.display !== 'none' && st.visibility !== 'hidden') anyOpen = true;
     });
+
+    // 2. Cualquier div fixed con z-index alto (modales creados dinámicamente)
     if(!anyOpen){
       document.querySelectorAll('div, section').forEach(function(el){
         if(anyOpen) return;
@@ -534,6 +522,7 @@
         }
       });
     }
+
     nav.style.display = anyOpen ? 'none' : '';
   }
 
@@ -545,9 +534,11 @@
     });
     checkModals();
   });
-  document.addEventListener('click',    function(){ setTimeout(checkModals, 60); }, true);
+  // Escuchar clicks y touch
+  document.addEventListener('click',   function(){ setTimeout(checkModals, 60); }, true);
   document.addEventListener('touchend', function(){ setTimeout(checkModals, 60); }, true);
 
+  // Ocultar bottom nav si la pagina tiene su propio nav-bar fijo (ej: index.html)
   document.addEventListener('DOMContentLoaded', function(){
     if(document.querySelector('.nav-bar')){
       var bn = document.querySelector('.h-bottom-nav');
@@ -562,14 +553,16 @@
   var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
   var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 
-  var isMobile     = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  // Solo móvil y si no está instalada ya
+  var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   var lastDismissed = localStorage.getItem('pwa_dismissed_at');
-  var dismissed    = lastDismissed && (Date.now() - parseInt(lastDismissed)) < 7*24*60*60*1000;
+  var dismissed = lastDismissed && (Date.now() - parseInt(lastDismissed)) < 7*24*60*60*1000;
 
+  // Capturar el evento beforeinstallprompt
   window.addEventListener('beforeinstallprompt', function(e){
     deferredPrompt = e;
-    window._pwaPrompt = e;
+    window._pwaPrompt = e; // Accesible desde puntos.html
     if(isMobile && !isStandalone && !dismissed){
       setTimeout(function(){
         var banner = document.getElementById('pwaBanner');
@@ -578,23 +571,28 @@
     }
   });
 
+  // Botón instalar
   document.addEventListener('click', function(e){
     if(e.target && e.target.id === 'pwaBtnInstall'){
       if(deferredPrompt){
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(function(result){
-          if(result.outcome === 'accepted') registrarInstall('aceptada');
+          if(result.outcome === 'accepted'){
+            registrarInstall('aceptada');
+          }
           deferredPrompt = null;
           var banner = document.getElementById('pwaBanner');
           if(banner) banner.classList.remove('show');
         });
       } else {
+        // iOS — mostrar instrucciones
         alert('En iPhone: toca el botón compartir y selecciona "Agregar a pantalla de inicio"');
         registrarInstall('ios-manual');
       }
     }
   });
 
+  // Detectar cuando se instala
   window.addEventListener('appinstalled', function(){
     registrarInstall('instalada');
     var banner = document.getElementById('pwaBanner');
@@ -602,15 +600,17 @@
   });
 
   function registrarInstall(tipo){
-    var ua   = navigator.userAgent;
+    var ua = navigator.userAgent;
     var plat = /iPhone|iPad/i.test(ua) ? 'iOS' : /Android/i.test(ua) ? 'Android' : 'Desktop';
     var email = '';
-    try { email = localStorage.getItem('petzid_email') || ''; } catch(err){}
+    try { email = sessionStorage.getItem('petmiEmail') || localStorage.getItem('petmiEmail') || ''; } catch(err){}
+    // Registrar en pwa_installs
     fetch(SUPA_URL + '/rest/v1/pwa_installs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ email: email || null, dispositivo: tipo, plataforma: plat })
     }).catch(function(){});
+    // Registrar punto si hay email
     if(email && tipo !== 'ios-manual'){
       fetch('/api/galeria?action=registrarPunto', {
         method: 'POST',
@@ -634,6 +634,7 @@ function petmiNotificarPunto(accion, pts) {
     apoyar_asoc:     '🤝 +' + pts + ' pts por apoyar una asociación'
   };
   var msg = MENSAJES[accion] || '⭐ +' + pts + ' puntos ganados';
+  // Buscar o crear toast de puntos
   var t = document.getElementById('petmiPuntoToast');
   if (!t) {
     t = document.createElement('div');
@@ -643,7 +644,9 @@ function petmiNotificarPunto(accion, pts) {
   }
   t.textContent = msg;
   t.style.opacity = '1';
-  setTimeout(function() { t.style.opacity = '0'; }, 3500);
+  setTimeout(function() {
+    t.style.opacity = '0';
+  }, 3500);
 }
 window.petmiNotificarPunto = petmiNotificarPunto;
 
