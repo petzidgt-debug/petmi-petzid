@@ -4,91 +4,149 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guadalajara 2026 🌵</title>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', system-ui, sans-serif; background: #FDF6E3; color: #1A1209; }
-a { color: inherit; }
-button { font-family: inherit; cursor: pointer; }
-::-webkit-scrollbar { height: 4px; }
-::-webkit-scrollbar-track { background: rgba(0,0,0,.1); }
-::-webkit-scrollbar-thumb { background: #C9972B; border-radius: 99px; }
+::-webkit-scrollbar { height: 4px; } ::-webkit-scrollbar-thumb { background: #C9972B; border-radius: 99px; }
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script>
+window.addEventListener("load", function() {
 const { useState } = React;
 const e = React.createElement;
+const ALBUM_URL = "https://photos.google.com/album/AF1QipNqVuAtXLaUqwYUP09NGMO1HlFwfbHWeGSmC5im";
+const AGAVE="#2D5016", GOLD="#C9972B", CREAM="#FDF6E3";
 
-const ALBUM_URL = "https://photos.google.com/share/AF1QipOhA5XOMQKE18avZesnViQWGsOTXPAQqC3sKiWHeun67OapOkfew3UD5e4QYHqxNw";
-const AGAVE = "#2D5016", GOLD = "#C9972B", CREAM = "#FDF6E3";
+// Partidos por día (hora GDL = CDT = ET-1)
+const MATCHES = {
+  "24": [
+    { time:"15:00", teams:"Suiza 🇨🇭 vs 🇨🇦 Canadá", note:"" },
+    { time:"15:00", teams:"Bosnia 🇧🇦 vs 🇶🇦 Qatar", note:"" },
+    { time:"18:00", teams:"Escocia 🏴󠁧󠁢󠁳󠁣󠁴󠁿 vs 🇧🇷 Brasil", note:"" },
+    { time:"18:00", teams:"Marruecos 🇲🇦 vs 🇭🇹 Haití", note:"" },
+    { time:"21:00", teams:"🇲🇽 México vs Chequia 🇨🇿", note:"⭐ VER EN FAN FEST", highlight:true },
+    { time:"21:00", teams:"Sudáfrica 🇿🇦 vs 🇰🇷 Corea del Sur", note:"" },
+  ],
+  "25": [
+    { time:"15:00", teams:"Alemania 🇩🇪 vs 🇪🇨 Ecuador", note:"" },
+    { time:"15:00", teams:"Curazao 🇨🇼 vs 🇨🇮 Costa de Marfil", note:"" },
+    { time:"18:00", teams:"Japón 🇯🇵 vs 🇸🇪 Suecia", note:"" },
+    { time:"18:00", teams:"Túnez 🇹🇳 vs 🇳🇱 Países Bajos", note:"" },
+    { time:"21:00", teams:"Turquía 🇹🇷 vs 🇺🇸 USA", note:"" },
+    { time:"21:00", teams:"Paraguay 🇵🇾 vs 🇦🇺 Australia", note:"" },
+  ],
+  "26": [
+    { time:"14:00", teams:"Noruega 🇳🇴 vs 🇫🇷 Francia", note:"" },
+    { time:"14:00", teams:"Senegal 🇸🇳 vs 🇮🇶 Irak", note:"" },
+    { time:"19:00", teams:"🇪🇸 España vs Uruguay 🇺🇾", note:"⭐ VER EN FAN FEST", highlight:true },
+    { time:"19:00", teams:"Cabo Verde 🇨🇻 vs 🇸🇦 Arabia Saudita", note:"" },
+    { time:"22:00", teams:"Egipto 🇪🇬 vs 🇮🇷 Irán", note:"" },
+    { time:"22:00", teams:"Nueva Zelanda 🇳🇿 vs 🇧🇪 Bélgica", note:"" },
+  ],
+  "27": [
+    { time:"16:00", teams:"Panamá 🇵🇦 vs 🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra", note:"" },
+    { time:"16:00", teams:"Croacia 🇭🇷 vs 🇬🇭 Ghana", note:"" },
+    { time:"18:30", teams:"Colombia 🇨🇴 vs 🇵🇹 Portugal", note:"" },
+    { time:"18:30", teams:"DR Congo 🇨🇩 vs 🇺🇿 Uzbekistán", note:"" },
+    { time:"21:00", teams:"Argelia 🇩🇿 vs 🇦🇹 Austria", note:"" },
+    { time:"21:00", teams:"Argentina 🇦🇷 vs 🇯🇴 Jordania", note:"⭐ Clasicazo" },
+  ],
+  "28": [
+    { time:"14:00", teams:"16avos: 2A vs 2B", note:"Fase eliminatoria comienza 🔥" },
+  ],
+  "29": [
+    { time:"12:00", teams:"16avos: 1C vs 2F", note:"" },
+    { time:"14:30", teams:"16avos: 1E vs 3°", note:"" },
+    { time:"20:00", teams:"16avos: 1F vs 2C", note:"⭐ Sede: Estadio Guadalajara", highlight:true },
+  ],
+  "30": [
+    { time:"12:00", teams:"16avos: 2E vs 2I", note:"" },
+    { time:"16:00", teams:"16avos: 1I vs 3°", note:"" },
+    { time:"21:00", teams:"16avos: 1L vs 3°", note:"" },
+  ],
+  "1": [
+    { time:"12:00", teams:"16avos: 1J vs 3°", note:"" },
+    { time:"16:00", teams:"16avos: 1K vs 2L", note:"" },
+    { time:"21:00", teams:"16avos: 1B vs 2A", note:"" },
+  ],
+};
 
 const DAYS = [
   { num:"24", label:"Mié · Jun", title:"Llegada a Guadalajara", badge:"🛬 Llegada", color:"#2D5016",
     activities:[
       { time:"6:00 PM", icon:"🏠", name:"Check-in Casa del Patio", desc:"Calle Escorza 417, Col. Americana. Boutique hotel tranquilo y bien ubicado.", tags:[] },
-      { time:"7:30 PM", icon:"🍽️", name:"Cena en la Americana", desc:"Av. Chapultepec a pasos. La Tequila Cocina o cualquier restaurante del barrio.", tags:["food"], mapsUrl:"https://maps.google.com/?cid=13134601285460284810" },
+      { time:"7:00 PM", icon:"🍽️", name:"Cena rápida en la Americana", desc:"Cena ligera cerca del hotel antes del partido.", tags:["food"], mapsUrl:"https://maps.google.com/?cid=13134601285460284810" },
+      { time:"9:00 PM", icon:"⚽", name:"🇲🇽 México vs Chequia — Fan Fest", desc:"¡Primer partido de México en el Fan Fest! Plaza Liberación, gratis, ambiente de locura total con 60,000 personas.", tags:["event","free"], mapsUrl:"https://maps.google.com/?cid=8165146298086361182" },
     ]},
   { num:"25", label:"Jue · Jun", title:"Centro Histórico + 🎸 Alejandro Fdz", badge:"🎸 Concierto", color:"#4A7C59",
     activities:[
       { time:"10:00 AM", icon:"🏛️", name:"Instituto Cultural Cabañas", desc:"UNESCO. Murales de Orozco en la cúpula — impresionantes. ~$80 MXN. Uber ~$50.", tags:["must"], mapsUrl:"https://maps.google.com/?cid=5197980866120828450" },
-      { time:"12:00 PM", icon:"⚽", name:"FIFA Fan Fest — Plaza Liberación", desc:"Gratis. Transmisión en vivo de todos los partidos del Mundial. 60,000 personas/día.", tags:["free"], mapsUrl:"https://maps.google.com/?cid=8165146298086361182" },
+      { time:"12:00 PM", icon:"⚽", name:"FIFA Fan Fest — Plaza Liberación", desc:"Gratis. Ver Alemania vs Ecuador (3pm) o Japón vs Suecia (6pm) en la plaza.", tags:["free"], mapsUrl:"https://maps.google.com/?cid=8165146298086361182" },
       { time:"2:00 PM", icon:"🍲", name:"La Chata de Guadalajara", desc:"80 años. 4.6★ · 23,000 reseñas. Torta ahogada, pozole, enchiladas tapatías.", tags:["must","food"], mapsUrl:"https://maps.google.com/?cid=7852885374401021280" },
       { time:"3:30 PM", icon:"⛪", name:"Catedral y Plaza de Armas", desc:"Paseo por el centro. Teatro Degollado, Plaza Tapatía, ambiente mundialista.", tags:[], mapsUrl:"https://maps.google.com/maps?q=Catedral+de+Guadalajara" },
-      { time:"Noche", icon:"🎸", name:"Alejandro Fernández — Glorieta La Minerva", desc:"Concierto al aire libre. Llegar temprano — se espera mucha gente. Uber ~10 min desde centro.", tags:["event"], mapsUrl:"https://maps.google.com/?cid=4849993490534301966" },
+      { time:"Noche", icon:"🎸", name:"Alejandro Fernández — Glorieta La Minerva", desc:"Concierto al aire libre. Llegar temprano. Uber desde centro ~10 min.", tags:["event"], mapsUrl:"https://maps.google.com/?cid=4849993490534301966" },
     ]},
-  { num:"26", label:"Vie · Jun", title:"Acuario + ⚽ Uruguay vs España 6pm", badge:"⚽ Mundial", color:"#1565C0",
+  { num:"26", label:"Vie · Jun", title:"🕌 Zapopan + ⚽ España 7pm", badge:"⚽ España", color:"#1565C0",
     activities:[
-      { time:"11:00 AM", icon:"🐠", name:"Acuario Michin", desc:"4.6★ · 26,000 reseñas. Reserva online. Capibaras, aves, cabras interactivas. Metro Juárez o Uber ~$50.", tags:["must"], mapsUrl:"https://maps.google.com/?cid=2124888181077620162" },
-      { time:"2:00 PM", icon:"🥩", name:"Karne Garibaldi", desc:"Récord Guinness: carne en su jugo en 40 seg. 4.6★ · 33,000 reseñas. Cerca del hotel.", tags:["must","food"], mapsUrl:"https://maps.google.com/?cid=14423620267480614218" },
-      { time:"5:30 PM", icon:"⚽", name:"Uruguay vs España — Fan Fest", desc:"60,000 personas en Plaza Liberación. Partido 66 del Mundial. Llegar 30 min antes. ¡Gratis!", tags:["event","free"], mapsUrl:"https://maps.google.com/?cid=8165146298086361182" },
+      { time:"10:30 AM", icon:"🕌", name:"Basílica de Zapopan", desc:"4.8★. Basílica colonial impresionante. Toca la campana y pide un deseo. Macrobús L1 desde Av. Federalismo ~$12 MXN / 35 min.", tags:["must"], mapsUrl:"https://maps.google.com/?cid=15492390400401168095" },
+      { time:"11:30 AM", icon:"🏺", name:"Museo Huichol de Arte Indígena", desc:"Arte wixáritari (huichol) con diseños de chaquira increíbles. Entrada gratuita. Junto a la Basílica.", tags:["must"], mapsUrl:"https://maps.google.com/maps?q=Museo+Huichol+Zapopan" },
+      { time:"1:00 PM", icon:"🌽", name:"Esquites y antojitos en la Plaza", desc:"Los esquites de Zapopan son legendarios. Antojeros frente a la Basílica — elotes, churros, aguas frescas.", tags:["food"] },
+      { time:"2:00 PM", icon:"🏛️", name:"Arcos de Zapopan y Centro", desc:"Recorre los arcos coloniales, el andador peatonal y el mercado de artesanías. Ambiente muy familiar.", tags:[], mapsUrl:"https://maps.google.com/maps?q=Arcos+de+Zapopan" },
+      { time:"4:00 PM", icon:"🛍️", name:"Museo Trompo Mágico (opcional)", desc:"Si les gusta la ciencia interactiva — muy bien valorado. A 10 min en Uber desde el centro de Zapopan.", tags:[], mapsUrl:"https://maps.google.com/maps?q=Trompo+Magico+Zapopan" },
+      { time:"6:00 PM", icon:"🚕", name:"Regreso a GDL para el partido", desc:"Uber de regreso ~25 min. Ir directo al Fan Fest o ver el partido en un bar de la Americana.", tags:["alert"] },
+      { time:"7:00 PM", icon:"⚽", name:"🇪🇸 España vs Uruguay — Fan Fest", desc:"¡El partido! Plaza Liberación con 60,000 personas. Llegar 30 min antes. Gratis y épico.", tags:["event","free"], mapsUrl:"https://maps.google.com/?cid=8165146298086361182" },
     ]},
   { num:"27", label:"Sáb · Jun", title:"🚂 Tren Tequila Express", badge:"🌵 Todo el día", color:"#795548",
     activities:[
-      { time:"7:15 AM", icon:"🚂", name:"Salida hacia estación — Tren 8am", desc:"⚠️ Salir 7:15am. Uber ~15 min desde hotel. No desayunar fuerte — hay comida a bordo. Música en vivo, tequila artesanal, hacienda, campos de agave UNESCO. Regreso ~6–7pm.", tags:["alert"], mapsUrl:"https://maps.google.com/?cid=2142371822430279900" },
+      { time:"7:15 AM", icon:"🚂", name:"Salida hacia estación — Tren 8am", desc:"⚠️ Salir 7:15am. Uber ~15 min. No desayunar fuerte — hay comida a bordo. Música en vivo, tequila artesanal, hacienda, campos de agave UNESCO. Regreso ~6–7pm.", tags:["alert"], mapsUrl:"https://maps.google.com/?cid=2142371822430279900" },
+      { time:"9:00 PM", icon:"⚽", name:"Argentina vs Jordania — en hotel o bar", desc:"Al regresar del tren, Argentina juega a las 9pm. Perfecto para verlo relajados desde casa.", tags:["event"] },
     ]},
   { num:"28", label:"Dom · Jun", title:"😴 Día de descanso", badge:"🛋️ Free day", color:"#6A6A6A",
     activities:[
-      { time:"Todo el día", icon:"☕", name:"Sin planes fijos", desc:"Brunch en la Americana, Parque Revolución, FIFA Fan Fest por la tarde (siempre gratis). La Tequila Cocina abre desde 1pm.", tags:[] },
+      { time:"Todo el día", icon:"☕", name:"Sin planes fijos", desc:"Brunch en la Americana, Parque Revolución, paseo por Av. Chapultepec. La Tequila Cocina abre desde 1pm.", tags:[] },
+      { time:"2:00 PM", icon:"⚽", name:"16avos de final — Fan Fest", desc:"Empieza la fase eliminatoria. Ver los partidos del día en el Fan Fest (gratis) o en un bar.", tags:["free","event"] },
     ]},
   { num:"29", label:"Lun · Jun", title:"🛍️ Tlaquepaque", badge:"🛍️ Artesanías", color:"#E65100",
     activities:[
       { time:"10:30 AM", icon:"🛍️", name:"Tlaquepaque — Calle Independencia", desc:"Galerías, artesanías, El Parián con mariachis. Todo abierto. Uber ~20 min, ~$80 MXN.", tags:["must"], mapsUrl:"https://maps.google.com/?cid=16886086056187464546" },
       { time:"1:00 PM", icon:"🌺", name:"Casa Fuerte Tlaquepaque", desc:"4.7★. Patio jardín colonial espectacular. Mole de camarones, enmoladas oaxaqueñas.", tags:["must","food"], mapsUrl:"https://maps.google.com/?cid=17307205063851710412" },
       { time:"Tarde", icon:"🎶", name:"El Parián — Mariachis en vivo", desc:"Plaza central de Tlaquepaque. Mariachis desde el mediodía. Copa y ambiente tapatío.", tags:[] },
+      { time:"8:00 PM", icon:"⚽", name:"16avos: Partido en Estadio Guadalajara 🔥", desc:"¡Partido de 16avos a las 8pm en el Estadio Akron en Zapopan! Verificar equipos conforme avance el torneo. Uber ~30 min.", tags:["event","alert"] },
     ]},
   { num:"30", label:"Mar · Jun", title:"🕌 Zapopan + 🥊 Luchas", badge:"🥊 Gran noche", color:"#6A1B9A",
     activities:[
-      { time:"10:30 AM", icon:"🕌", name:"Basílica de Zapopan + Plaza", desc:"4.8★. Basílica, Museo Huichol, esquites en plaza. Macrobús L1 ~$12 MXN / 35 min, o Uber ~$80.", tags:["must"], mapsUrl:"https://maps.google.com/?cid=15492390400401168095" },
+      { time:"10:30 AM", icon:"🕌", name:"Basílica de Zapopan + Plaza", desc:"4.8★. Basílica, Museo Huichol, esquites. Macrobús L1 ~$12 MXN / 35 min, o Uber ~$80.", tags:["must"], mapsUrl:"https://maps.google.com/?cid=15492390400401168095" },
       { time:"2:30 PM", icon:"🍷", name:"Alcalde Restaurante", desc:"Uno de los mejores de México. 4.6★. Cocina mexicana de autor. Reserva en alcalde.com.mx. ~$3,000 MXN degustación o a la carta.", tags:["must","food"], mapsUrl:"https://maps.google.com/?cid=16447800704257734701" },
       { time:"8:30 PM", icon:"🥊", name:"Arena Coliseo de Guadalajara — Lucha Libre", desc:"4.7★ · 5,000 reseñas. ¡Martes = Lucha Libre CMLL! Funciones ~9pm. Uber obligatorio. Cervezas baratas, ambiente de locura total.", tags:["must","event"], mapsUrl:"https://maps.google.com/?cid=9049096705661470274" },
     ]},
   { num:"1", label:"Mié · Jul", title:"✈️ Mañana libre + Regreso", badge:"🛫 Vuelo tarde", color:"#37474F",
     activities:[
-      { time:"Mañana", icon:"🛒", name:"Mercado Libertad — últimas compras", desc:"Souvenirs y comida de mercado. El mercado cubierto más grande de Latinoamérica.", tags:[], mapsUrl:"https://maps.google.com/maps?q=Mercado+Libertad+Guadalajara" },
-      { time:"~2:00 PM", icon:"🚕", name:"Uber al Aeropuerto GDL", desc:"⚠️ Salir 2.5 hrs antes del vuelo. ~$200–250 MXN, 25–40 min según tráfico.", tags:["alert"] },
+      { time:"Mañana", icon:"🛒", name:"Mercado Libertad — últimas compras", desc:"Souvenirs y comida de mercado. El más grande de Latinoamérica.", tags:[], mapsUrl:"https://maps.google.com/maps?q=Mercado+Libertad+Guadalajara" },
+      { time:"~2:00 PM", icon:"🚕", name:"Uber al Aeropuerto GDL", desc:"⚠️ Salir 2.5 hrs antes del vuelo. ~$200–250 MXN, 25–40 min.", tags:["alert"] },
     ]},
 ];
 
 const RESTOS = [
-  { emoji:"🍲", name:"La Chata de Guadalajara", stars:"4.6★ · 23,000 reseñas", desc:"80 años de historia. Torta ahogada, pozole y enchiladas tapatías. Institución del centro histórico. Abre 7am–12am.", zone:"Centro · Jue 25", mapsUrl:"https://maps.google.com/?cid=7852885374401021280" },
+  { emoji:"🍲", name:"La Chata de Guadalajara", stars:"4.6★ · 23,000 reseñas", desc:"80 años. Torta ahogada, pozole y enchiladas tapatías. Institución del centro histórico. Abre 7am–12am.", zone:"Centro · Jue 25", mapsUrl:"https://maps.google.com/?cid=7852885374401021280" },
   { emoji:"🥩", name:"Karne Garibaldi", stars:"4.6★ · 33,000 reseñas", desc:"Récord Guinness: carne en su jugo en 40 segundos. Frijoles de la olla increíbles. Cerca del hotel.", zone:"Santa Teresita · Vie 26", mapsUrl:"https://maps.google.com/?cid=14423620267480614218" },
   { emoji:"🌮", name:"La Tequila Cocina", stars:"4.7★ · 7,800 reseñas", desc:"Cocina mexicana de excelencia. Tacos, molcajetes, mole y cocteles de tequila memorables. Desde 1pm.", zone:"Col. Americana · Mié 24", mapsUrl:"https://maps.google.com/?cid=13134601285460284810" },
-  { emoji:"🍷", name:"Alcalde Restaurante", stars:"4.6★ · 1,700 reseñas", desc:"Uno de los mejores de México. Cocina mexicana de autor. Reserva previa obligatoria en alcalde.com.mx.", zone:"Vallarta Norte · Mar 30", mapsUrl:"https://maps.google.com/?cid=16447800704257734701" },
-  { emoji:"🌺", name:"Casa Fuerte Tlaquepaque", stars:"4.7★ · 400 reseñas", desc:"Patio jardín colonial espectacular. Mole de camarones, enmoladas oaxaqueñas. Experiencia imperdible.", zone:"Tlaquepaque · Lun 29", mapsUrl:"https://maps.google.com/?cid=17307205063851710412" },
+  { emoji:"🍷", name:"Alcalde Restaurante", stars:"4.6★ · 1,700 reseñas", desc:"Uno de los mejores de México. Cocina de autor. Reserva previa obligatoria en alcalde.com.mx.", zone:"Vallarta Norte · Mar 30", mapsUrl:"https://maps.google.com/?cid=16447800704257734701" },
+  { emoji:"🌺", name:"Casa Fuerte Tlaquepaque", stars:"4.7★ · 400 reseñas", desc:"Patio jardín colonial espectacular. Mole de camarones, enmoladas oaxaqueñas.", zone:"Tlaquepaque · Lun 29", mapsUrl:"https://maps.google.com/?cid=17307205063851710412" },
   { emoji:"🥗", name:"Mercado Libertad", stars:"⭐ Clásico tapatío", desc:"El mercado cubierto más grande de Latinoamérica. Birria, tamales, jugos desde $50 MXN.", zone:"Centro · Mié 1 Jul", mapsUrl:"https://maps.google.com/maps?q=Mercado+Libertad+Guadalajara" },
 ];
 
 const MOBILITY = [
   { icon:"📱", title:"Uber — Primera opción", desc:"Funciona excelente en GDL. $40–120 MXN la mayoría de trayectos. Recomendado de noche, Tlaquepaque, Arena y aeropuerto.", url:"https://www.uber.com/mx/es/", urlLabel:"Abrir Uber" },
-  { icon:"🚲", title:"MiBici — Bicicletas públicas", desc:"300+ estaciones en la ciudad. Ideal para la Col. Americana y el centro histórico. Pase diario ~$50 MXN. App MiBici para ver estaciones en tiempo real.", url:"https://mibici.net", urlLabel:"mibici.net" },
-  { icon:"🚇", title:"Metro + Tren Ligero", desc:"Líneas TL-1 y TL-2. Estación Juárez cerca de la Americana. ~$12 MXN por viaje. Descarga Moovit para rutas.", url:"https://moovitapp.com", urlLabel:"Ver en Moovit" },
-  { icon:"🚌", title:"Macrobús", desc:"Línea 1 para Zapopan (~35 min desde Av. Federalismo). ~$12 MXN. Rápido y cómodo para distancias largas.", url:"https://www.siteur.gob.mx", urlLabel:"siteur.gob.mx" },
+  { icon:"🚲", title:"MiBici — Bicicletas públicas", desc:"300+ estaciones. Ideal para la Col. Americana y el centro. Pase diario ~$50 MXN. App MiBici para estaciones en tiempo real.", url:"https://mibici.net", urlLabel:"mibici.net" },
+  { icon:"🚇", title:"Metro + Tren Ligero", desc:"Líneas TL-1 y TL-2. Estación Juárez cerca de la Americana. ~$12 MXN/viaje. App Moovit para rutas.", url:"https://moovitapp.com", urlLabel:"Ver en Moovit" },
+  { icon:"🚌", title:"Macrobús", desc:"Línea 1 para Zapopan (~35 min desde Av. Federalismo). ~$12 MXN. Rápido y cómodo.", url:"https://www.siteur.gob.mx", urlLabel:"siteur.gob.mx" },
   { icon:"🚶", title:"A pie desde el hotel", desc:"La Col. Americana tiene todo caminando: Av. Chapultepec, Parque Revolución, restaurantes y cafés.", url:null },
-  { icon:"🚕", title:"Tlaquepaque y Tren Tequila", desc:"Solo Uber o taxi — sin metro directo. Tlaquepaque ~$80 MXN. Estación del tren ~$50–70 MXN desde el hotel.", url:null },
+  { icon:"🚕", title:"Tlaquepaque y Tren Tequila", desc:"Solo Uber o taxi — sin metro directo. Tlaquepaque ~$80 MXN. Estación del tren ~$50–70 MXN.", url:null },
 ];
 
 const PLACES = [
@@ -97,26 +155,25 @@ const PLACES = [
   { lat:20.677004,  lng:-103.346344,  emoji:"⚽", title:"FIFA Fan Fest", sub:"Todos los días · Gratis", color:"#4A7C59", day:"25", mapsUrl:"https://maps.google.com/?cid=8165146298086361182" },
   { lat:20.674693,  lng:-103.346653,  emoji:"🍲", title:"La Chata", sub:"Jue 25 · 2pm", color:"#4A7C59", day:"25", mapsUrl:"https://maps.google.com/?cid=7852885374401021280" },
   { lat:20.6743943, lng:-103.387413,  emoji:"🎸", title:"La Minerva · Alejandro Fdz", sub:"Jue 25 · noche", color:"#4A7C59", day:"25", mapsUrl:"https://maps.google.com/?cid=4849993490534301966" },
+  { lat:20.759162,  lng:-103.431396,  emoji:"🕌", title:"Basílica Zapopan", sub:"Vie 26 & Mar 30", color:"#1565C0", day:"26", mapsUrl:"https://maps.google.com/?cid=15492390400401168095" },
   { lat:20.692824,  lng:-103.351358,  emoji:"🐠", title:"Acuario Michin", sub:"Vie 26 · 11am", color:"#1565C0", day:"26", mapsUrl:"https://maps.google.com/?cid=2124888181077620162" },
-  { lat:20.681390,  lng:-103.366382,  emoji:"🥩", title:"Karne Garibaldi", sub:"Vie 26 · 2pm", color:"#1565C0", day:"26", mapsUrl:"https://maps.google.com/?cid=14423620267480614218" },
+  { lat:20.681390,  lng:-103.366382,  emoji:"🥩", title:"Karne Garibaldi", sub:"antes / después", color:"#C9972B", day:"base", mapsUrl:"https://maps.google.com/?cid=14423620267480614218" },
   { lat:20.6563625, lng:-103.3523101, emoji:"🚂", title:"Tren Tequila Express", sub:"Sáb 27 · 8am", color:"#795548", day:"27", mapsUrl:"https://maps.google.com/?cid=2142371822430279900" },
   { lat:20.638374,  lng:-103.312374,  emoji:"🛍️", title:"Tlaquepaque", sub:"Lun 29 · 10:30am", color:"#E65100", day:"29", mapsUrl:"https://maps.google.com/?cid=16886086056187464546" },
   { lat:20.639415,  lng:-103.314189,  emoji:"🌺", title:"Casa Fuerte", sub:"Lun 29 · 1pm", color:"#E65100", day:"29", mapsUrl:"https://maps.google.com/?cid=17307205063851710412" },
-  { lat:20.759162,  lng:-103.431396,  emoji:"🕌", title:"Basílica Zapopan", sub:"Mar 30 · 10:30am", color:"#6A1B9A", day:"30", mapsUrl:"https://maps.google.com/?cid=15492390400401168095" },
   { lat:20.679327,  lng:-103.389796,  emoji:"🍷", title:"Alcalde", sub:"Mar 30 · 2:30pm", color:"#6A1B9A", day:"30", mapsUrl:"https://maps.google.com/?cid=16447800704257734701" },
   { lat:20.671229,  lng:-103.342762,  emoji:"🥊", title:"Arena Coliseo · Luchas", sub:"Mar 30 · 8:30pm", color:"#6A1B9A", day:"30", mapsUrl:"https://maps.google.com/?cid=9049096705661470274" },
 ];
 
 const DAY_FILTERS = [
-  { id:"all", label:"Todos" },
+  { id:"all",  label:"Todos" },
   { id:"base", label:"🏠 Hotel" },
-  { id:"25", label:"Jue 25" },
-  { id:"26", label:"Vie 26" },
-  { id:"27", label:"Sáb 27" },
-  { id:"29", label:"Lun 29" },
-  { id:"30", label:"Mar 30" },
+  { id:"25",   label:"Jue 25" },
+  { id:"26",   label:"Vie 26" },
+  { id:"27",   label:"Sáb 27" },
+  { id:"29",   label:"Lun 29" },
+  { id:"30",   label:"Mar 30" },
 ];
-
 const DAY_COLORS = { base:"#2D5016","25":"#4A7C59","26":"#1565C0","27":"#795548","29":"#E65100","30":"#6A1B9A" };
 
 const TAG_STYLES = {
@@ -128,244 +185,216 @@ const TAG_STYLES = {
 };
 
 function Tag({ type }) {
-  const s = TAG_STYLES[type]; if (!s) return null;
-  return e('span', { style:{ background:s.bg, color:s.color, fontSize:9, fontWeight:700, borderRadius:4, padding:"1px 6px", whiteSpace:"nowrap", letterSpacing:".04em" } }, s.label);
+  const s=TAG_STYLES[type]; if(!s)return null;
+  return e('span',{style:{background:s.bg,color:s.color,fontSize:9,fontWeight:700,borderRadius:4,padding:"1px 6px",whiteSpace:"nowrap",letterSpacing:".04em"}},s.label);
 }
 
-function DayCard({ day, isOpen, onToggle }) {
-  return e('div', { style:{ borderRadius:14, overflow:"hidden", border:"1px solid rgba(0,0,0,.08)", boxShadow:isOpen?"0 4px 20px rgba(0,0,0,.1)":"0 1px 6px rgba(0,0,0,.05)", marginBottom:10 } },
-    e('div', { onClick:onToggle, style:{ display:"flex", alignItems:"center", gap:12, padding:"13px 16px", background:day.color, cursor:"pointer", userSelect:"none" } },
-      e('div', { style:{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:28, fontWeight:900, color:GOLD, lineHeight:1, minWidth:38 } }, day.num),
-      e('div', { style:{ flex:1 } },
-        e('div', { style:{ fontSize:10, letterSpacing:".1em", textTransform:"uppercase", color:"rgba(255,255,255,.5)", marginBottom:1 } }, day.label),
-        e('div', { style:{ fontSize:14, fontWeight:600, color:"#fff" } }, day.title)
-      ),
-      e('div', { style:{ background:"rgba(201,151,43,.25)", color:GOLD, borderRadius:99, padding:"2px 10px", fontSize:11, fontWeight:600, whiteSpace:"nowrap" } }, day.badge),
-      e('div', { style:{ color:"rgba(255,255,255,.6)", fontSize:14, marginLeft:4 } }, isOpen ? "▲" : "▼")
-    ),
-    isOpen && e('div', { style:{ background:"#fff", padding:"10px 16px" } },
-      day.activities.map((a, i) =>
-        e('div', { key:i, style:{ display:"flex", gap:12, padding:"10px 0", borderBottom:i<day.activities.length-1?"1px solid rgba(0,0,0,.06)":"none" } },
-          e('div', { style:{ fontSize:11, fontWeight:600, color:"#9A8A70", minWidth:50, paddingTop:2 } }, a.time),
-          e('div', { style:{ flex:1 } },
-            e('div', { style:{ display:"flex", alignItems:"center", gap:5, flexWrap:"wrap", marginBottom:3 } },
-              e('span', { style:{ fontSize:14, fontWeight:600, color:"#1A1209" } }, a.icon + " " + a.name),
-              ...a.tags.map(t => e(Tag, { key:t, type:t }))
-            ),
-            e('div', { style:{ fontSize:12, color:"#7A6A50", lineHeight:1.5 } }, a.desc),
-            a.mapsUrl && e('a', { href:a.mapsUrl, target:"_blank", rel:"noopener noreferrer",
-              style:{ display:"inline-flex", alignItems:"center", gap:4, marginTop:5, fontSize:11, color:"#1A73E8", fontWeight:600, textDecoration:"none" } },
-              "📍 Ver en Google Maps"
-            )
-          )
+function MatchBlock({ dayKey }) {
+  const matches = MATCHES[dayKey];
+  if(!matches||!matches.length) return null;
+  return e('div',{style:{background:"#1A1A2E",borderRadius:10,padding:"10px 14px",marginTop:10}},
+    e('div',{style:{fontSize:10,letterSpacing:".12em",textTransform:"uppercase",color:GOLD,fontWeight:700,marginBottom:8}},"⚽ Partidos del día (hora GDL)"),
+    matches.map((m,i)=>
+      e('div',{key:i,style:{display:"flex",gap:8,alignItems:"center",padding:"5px 0",borderBottom:i<matches.length-1?"1px solid rgba(255,255,255,.07)":"none"}},
+        e('span',{style:{fontSize:11,fontWeight:700,color:GOLD,minWidth:44,flexShrink:0}},m.time),
+        e('span',{style:{fontSize:12,color:m.highlight?"#FFF176":"rgba(255,255,255,.8)",fontWeight:m.highlight?700:400,flex:1}}),
+        e('div',{style:{flex:1}},
+          e('div',{style:{fontSize:12,color:m.highlight?"#FFF176":"rgba(255,255,255,.8)",fontWeight:m.highlight?700:400}},m.teams),
+          m.note&&e('div',{style:{fontSize:10,color:GOLD,marginTop:1}},m.note)
         )
       )
     )
   );
 }
 
-function MapView() {
-  const [active, setActive] = useState(null);
-  const [dayFilter, setDayFilter] = useState("all");
-  const filtered = PLACES.filter(p => dayFilter === "all" || p.day === dayFilter);
-
-  const toXY = (lat, lng) => ({
-    x: ((lng - (-103.46)) / ((-103.28) - (-103.46))) * 100,
-    y: ((20.775 - lat) / (20.775 - 20.62)) * 100,
-  });
-
-  return e('div', null,
-    // Filter chips
-    e('div', { style:{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:12 } },
-      DAY_FILTERS.map(f =>
-        e('button', { key:f.id, onClick:() => { setDayFilter(f.id); setActive(null); },
-          style:{ padding:"5px 13px", borderRadius:99, fontSize:12, fontWeight:600, border:`1.5px solid ${dayFilter===f.id?"transparent":"rgba(0,0,0,.1)"}`,
-            background:dayFilter===f.id?(DAY_COLORS[f.id]||AGAVE):"#fff",
-            color:dayFilter===f.id?"#fff":"#5A4A30" }
-        }, f.label)
-      )
+function DayCard({ day, isOpen, onToggle }) {
+  return e('div',{style:{borderRadius:14,overflow:"hidden",border:"1px solid rgba(0,0,0,.08)",boxShadow:isOpen?"0 4px 20px rgba(0,0,0,.1)":"0 1px 6px rgba(0,0,0,.05)",marginBottom:10}},
+    e('div',{onClick:onToggle,style:{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",background:day.color,cursor:"pointer",userSelect:"none"}},
+      e('div',{style:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:28,fontWeight:900,color:GOLD,lineHeight:1,minWidth:38}},day.num),
+      e('div',{style:{flex:1}},
+        e('div',{style:{fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:"rgba(255,255,255,.5)",marginBottom:1}},day.label),
+        e('div',{style:{fontSize:14,fontWeight:600,color:"#fff"}},day.title)
+      ),
+      e('div',{style:{background:"rgba(201,151,43,.25)",color:GOLD,borderRadius:99,padding:"2px 10px",fontSize:11,fontWeight:600,whiteSpace:"nowrap"}},day.badge),
+      e('div',{style:{color:"rgba(255,255,255,.6)",fontSize:14,marginLeft:4}},isOpen?"▲":"▼")
     ),
-    // SVG Map
-    e('div', { style:{ position:"relative", background:"#E8F0DC", borderRadius:14, overflow:"hidden", border:"2px solid rgba(0,0,0,.1)" } },
-      e('svg', { viewBox:"0 0 100 100", style:{ width:"100%", display:"block" } },
-        e('rect', { width:100, height:100, fill:"#EEF3E5" }),
-        ...[15,25,35,45,55,65,75,85].map(v => e('line', { key:"h"+v, x1:0, y1:v, x2:100, y2:v, stroke:"rgba(255,255,255,.5)", strokeWidth:".25" })),
-        ...[15,25,35,45,55,65,75,85].map(v => e('line', { key:"v"+v, x1:v, y1:0, x2:v, y2:100, stroke:"rgba(255,255,255,.5)", strokeWidth:".25" })),
-        ...filtered.map((p, i) => {
-          const { x, y } = toXY(p.lat, p.lng);
-          const isAct = active === i;
-          return e('g', { key:i, style:{ cursor:"pointer" }, onClick:() => setActive(active===i?null:i) },
-            e('circle', { cx:x, cy:y, r:isAct?4:3, fill:p.color, stroke:"#fff", strokeWidth:isAct?1.5:.8 }),
-            e('text', { x, y:y-4.5, textAnchor:"middle", fontSize:"3.2", style:{ pointerEvents:"none", userSelect:"none" } }, p.emoji)
+    isOpen&&e('div',{style:{background:"#fff",padding:"10px 16px"}},
+      day.activities.map((a,i)=>
+        e('div',{key:i,style:{display:"flex",gap:12,padding:"10px 0",borderBottom:i<day.activities.length-1?"1px solid rgba(0,0,0,.06)":"none"}},
+          e('div',{style:{fontSize:11,fontWeight:600,color:"#9A8A70",minWidth:50,paddingTop:2}},a.time),
+          e('div',{style:{flex:1}},
+            e('div',{style:{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",marginBottom:3}},
+              e('span',{style:{fontSize:14,fontWeight:600,color:"#1A1209"}},a.icon+" "+a.name),
+              ...a.tags.map(t=>e(Tag,{key:t,type:t}))
+            ),
+            e('div',{style:{fontSize:12,color:"#7A6A50",lineHeight:1.5}},a.desc),
+            a.mapsUrl&&e('a',{href:a.mapsUrl,target:"_blank",rel:"noopener noreferrer",
+              style:{display:"inline-flex",alignItems:"center",gap:4,marginTop:5,fontSize:11,color:"#1A73E8",fontWeight:600,textDecoration:"none"}},
+              "📍 Ver en Google Maps"
+            )
+          )
+        )
+      ),
+      e(MatchBlock,{dayKey:day.num})
+    )
+  );
+}
+
+function MapView() {
+  const [active,setActive]=useState(null);
+  const [dayFilter,setDayFilter]=useState("all");
+  const filtered=PLACES.filter(p=>dayFilter==="all"||p.day===dayFilter);
+  const toXY=(lat,lng)=>({x:((lng-(-103.46))/((-103.28)-(-103.46)))*100,y:((20.775-lat)/(20.775-20.62))*100});
+
+  return e('div',null,
+    e('div',{style:{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}},
+      DAY_FILTERS.map(f=>e('button',{key:f.id,onClick:()=>{setDayFilter(f.id);setActive(null);},
+        style:{padding:"5px 13px",borderRadius:99,fontSize:12,fontWeight:600,border:`1.5px solid ${dayFilter===f.id?"transparent":"rgba(0,0,0,.1)"}`,
+          background:dayFilter===f.id?(DAY_COLORS[f.id]||AGAVE):"#fff",color:dayFilter===f.id?"#fff":"#5A4A30"}},f.label))
+    ),
+    e('div',{style:{position:"relative",background:"#E8F0DC",borderRadius:14,overflow:"hidden",border:"2px solid rgba(0,0,0,.1)"}},
+      e('svg',{viewBox:"0 0 100 100",style:{width:"100%",display:"block"}},
+        e('rect',{width:100,height:100,fill:"#EEF3E5"}),
+        ...[15,25,35,45,55,65,75,85].map(v=>e('line',{key:"h"+v,x1:0,y1:v,x2:100,y2:v,stroke:"rgba(255,255,255,.5)",strokeWidth:".25"})),
+        ...[15,25,35,45,55,65,75,85].map(v=>e('line',{key:"v"+v,x1:v,y1:0,x2:v,y2:100,stroke:"rgba(255,255,255,.5)",strokeWidth:".25"})),
+        ...filtered.map((p,i)=>{
+          const{x,y}=toXY(p.lat,p.lng);
+          const isAct=active===i;
+          return e('g',{key:i,style:{cursor:"pointer"},onClick:()=>setActive(active===i?null:i)},
+            e('circle',{cx:x,cy:y,r:isAct?4:3,fill:p.color,stroke:"#fff",strokeWidth:isAct?1.5:.8}),
+            e('text',{x,y:y-4.5,textAnchor:"middle",fontSize:"3.2",style:{pointerEvents:"none",userSelect:"none"}},p.emoji)
           );
         })
       ),
-      active !== null && filtered[active] && e('div', {
-        style:{ position:"absolute", bottom:12, left:12, right:12, background:"#fff", borderRadius:10,
-          padding:"10px 14px", boxShadow:"0 4px 16px rgba(0,0,0,.2)", borderLeft:`4px solid ${filtered[active].color}` }
-      },
-        e('div', { style:{ fontSize:14, fontWeight:700 } }, filtered[active].emoji + " " + filtered[active].title),
-        e('div', { style:{ fontSize:12, color:"#7A6A50", marginTop:2, marginBottom:6 } }, filtered[active].sub),
-        filtered[active].mapsUrl && e('a', { href:filtered[active].mapsUrl, target:"_blank", rel:"noopener noreferrer",
-          style:{ fontSize:11.5, color:"#1A73E8", fontWeight:600, textDecoration:"none" } }, "📍 Abrir en Google Maps →")
+      active!==null&&filtered[active]&&e('div',{style:{position:"absolute",bottom:12,left:12,right:12,background:"#fff",borderRadius:10,padding:"10px 14px",boxShadow:"0 4px 16px rgba(0,0,0,.2)",borderLeft:`4px solid ${filtered[active].color}`}},
+        e('div',{style:{fontSize:14,fontWeight:700}},filtered[active].emoji+" "+filtered[active].title),
+        e('div',{style:{fontSize:12,color:"#7A6A50",marginTop:2,marginBottom:6}},filtered[active].sub),
+        filtered[active].mapsUrl&&e('a',{href:filtered[active].mapsUrl,target:"_blank",rel:"noopener noreferrer",style:{fontSize:11.5,color:"#1A73E8",fontWeight:600,textDecoration:"none"}},"📍 Abrir en Google Maps →")
       )
     ),
-    // Legend
-    e('div', { style:{ display:"flex", flexWrap:"wrap", gap:6, marginTop:10 } },
-      [["#2D5016","Hotel"],["#4A7C59","Jue 25"],["#1565C0","Vie 26"],["#795548","Sáb 27"],["#E65100","Lun 29"],["#6A1B9A","Mar 30"]].map(([color,label]) =>
-        e('div', { key:label, style:{ display:"flex", alignItems:"center", gap:5, background:"#fff", borderRadius:8, padding:"4px 10px", border:"1px solid rgba(0,0,0,.08)", fontSize:11, color:"#5A4A30" } },
-          e('div', { style:{ width:9, height:9, borderRadius:"50%", background:color, flexShrink:0 } }),
-          label
+    e('div',{style:{display:"flex",flexWrap:"wrap",gap:6,marginTop:10}},
+      [["#2D5016","Hotel"],["#4A7C59","Jue 25"],["#1565C0","Vie 26"],["#795548","Sáb 27"],["#E65100","Lun 29"],["#6A1B9A","Mar 30"],["#C9972B","Restaurantes"]].map(([color,label])=>
+        e('div',{key:label,style:{display:"flex",alignItems:"center",gap:5,background:"#fff",borderRadius:8,padding:"4px 10px",border:"1px solid rgba(0,0,0,.08)",fontSize:11,color:"#5A4A30"}},
+          e('div',{style:{width:9,height:9,borderRadius:"50%",background:color,flexShrink:0}}),label
         )
       )
     ),
-    e('p', { style:{ fontSize:11, color:"#9A8A70", marginTop:8, textAlign:"center" } }, "Toca cada punto · filtra por día arriba")
+    e('p',{style:{fontSize:11,color:"#9A8A70",marginTop:8,textAlign:"center"}},"Toca cada punto · filtra por día arriba")
   );
 }
 
 function App() {
-  const [tab, setTab] = useState("itinerario");
-  const [openDay, setOpenDay] = useState(0);
+  const [tab,setTab]=useState("itinerario");
+  const [openDay,setOpenDay]=useState(0);
+  const tabs=[{id:"itinerario",label:"📅 Itinerario"},{id:"mapa",label:"🗺️ Mapa"},{id:"comer",label:"🍽️ A comer"},{id:"movilidad",label:"🚇 Movilidad"},{id:"fotos",label:"📸 Fotos"}];
+  const ST=(title)=>e('div',{style:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:"1.3rem",color:AGAVE,margin:"28px 0 14px",paddingBottom:8,borderBottom:`2px solid ${GOLD}`}},title);
 
-  const tabs = [
-    { id:"itinerario", label:"📅 Itinerario" },
-    { id:"mapa",       label:"🗺️ Mapa" },
-    { id:"comer",      label:"🍽️ A comer" },
-    { id:"movilidad",  label:"🚇 Movilidad" },
-    { id:"fotos",      label:"📸 Fotos" },
-  ];
-
-  const SectionTitle = (title) => e('div', { style:{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:"1.3rem", color:AGAVE, margin:"28px 0 14px", paddingBottom:8, borderBottom:`2px solid ${GOLD}` } }, title);
-
-  return e('div', { style:{ fontFamily:"Inter,system-ui,sans-serif", background:CREAM, minHeight:"100vh", color:"#1A1209" } },
-
+  return e('div',{style:{fontFamily:"Inter,system-ui,sans-serif",background:CREAM,minHeight:"100vh",color:"#1A1209"}},
     // HERO
-    e('div', { style:{ background:AGAVE, color:"#fff", padding:"40px 20px 34px", textAlign:"center", position:"relative", overflow:"hidden" } },
-      e('div', { style:{ position:"absolute", inset:0, background:"radial-gradient(ellipse at 70% 0%, rgba(201,151,43,.2) 0%, transparent 65%)", pointerEvents:"none" } }),
-      e('div', { style:{ fontSize:10, letterSpacing:".18em", textTransform:"uppercase", color:GOLD, fontWeight:700, marginBottom:10 } }, "🌵 Viaje · Mundial 2026"),
-      e('div', { style:{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:"clamp(1.8rem,5vw,3rem)", fontWeight:900, lineHeight:1.1, marginBottom:8 } },
-        "Guadalajara", e('br'), e('span', { style:{ color:GOLD } }, "24 Jun – 1 Jul 2026")
+    e('div',{style:{background:AGAVE,color:"#fff",padding:"40px 20px 34px",textAlign:"center",position:"relative",overflow:"hidden"}},
+      e('div',{style:{position:"absolute",inset:0,background:"radial-gradient(ellipse at 70% 0%, rgba(201,151,43,.2) 0%, transparent 65%)",pointerEvents:"none"}}),
+      e('div',{style:{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:GOLD,fontWeight:700,marginBottom:10}},"🌵 Viaje · Mundial 2026"),
+      e('div',{style:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:"clamp(1.8rem,5vw,3rem)",fontWeight:900,lineHeight:1.1,marginBottom:8}},
+        "Guadalajara",e('br'),e('span',{style:{color:GOLD}},"24 Jun – 1 Jul 2026")
       ),
-      e('div', { style:{ fontSize:13, color:"rgba(255,255,255,.65)", marginBottom:20 } }, "Casa del Patio · Calle Escorza 417, Col. Americana"),
-      e('div', { style:{ display:"flex", flexWrap:"wrap", gap:6, justifyContent:"center" } },
-        ["🚂 Tren Tequila","⚽ Uruguay vs España","🥊 Lucha Libre","🎸 Alejandro Fdz","🐠 Acuario","🛍️ Tlaquepaque"].map(p =>
-          e('span', { key:p, style:{ background:"rgba(255,255,255,.1)", border:"1px solid rgba(255,255,255,.2)", borderRadius:99, padding:"4px 12px", fontSize:11.5, color:"rgba(255,255,255,.85)" } }, p)
+      e('div',{style:{fontSize:13,color:"rgba(255,255,255,.65)",marginBottom:20}},"Casa del Patio · Calle Escorza 417, Col. Americana"),
+      e('div',{style:{display:"flex",flexWrap:"wrap",gap:6,justifyContent:"center"}},
+        ["🚂 Tren Tequila","⚽ España & México","🥊 Lucha Libre","🎸 Alejandro Fdz","🕌 Zapopan","🛍️ Tlaquepaque"].map(p=>
+          e('span',{key:p,style:{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.2)",borderRadius:99,padding:"4px 12px",fontSize:11.5,color:"rgba(255,255,255,.85)"}},p)
         )
       )
     ),
-
     // TABS
-    e('div', { style:{ display:"flex", gap:4, background:AGAVE, padding:"8px 12px", position:"sticky", top:0, zIndex:100, overflowX:"auto" } },
-      tabs.map(t => e('button', { key:t.id, onClick:() => setTab(t.id),
-        style:{ flexShrink:0, padding:"7px 15px", borderRadius:99, fontSize:12.5, fontWeight:600, border:"none",
-          background:tab===t.id?GOLD:"rgba(255,255,255,.1)", color:tab===t.id?"#1A1209":"rgba(255,255,255,.75)" }
-      }, t.label))
+    e('div',{style:{display:"flex",gap:4,background:AGAVE,padding:"8px 12px",position:"sticky",top:0,zIndex:100,overflowX:"auto"}},
+      tabs.map(t=>e('button',{key:t.id,onClick:()=>setTab(t.id),style:{flexShrink:0,padding:"7px 15px",borderRadius:99,fontSize:12.5,fontWeight:600,border:"none",background:tab===t.id?GOLD:"rgba(255,255,255,.1)",color:tab===t.id?"#1A1209":"rgba(255,255,255,.75)"}},t.label))
     ),
-
-    e('div', { style:{ maxWidth:860, margin:"0 auto", padding:"0 16px 60px" } },
+    e('div',{style:{maxWidth:860,margin:"0 auto",padding:"0 16px 60px"}},
 
       // ITINERARIO
-      tab === "itinerario" && e('div', null,
-        SectionTitle("📅 Día a día"),
-        DAYS.map((day, i) => e(DayCard, { key:i, day, isOpen:openDay===i, onToggle:() => setOpenDay(openDay===i?-1:i) }))
+      tab==="itinerario"&&e('div',null,
+        ST("📅 Día a día"),
+        DAYS.map((day,i)=>e(DayCard,{key:i,day,isOpen:openDay===i,onToggle:()=>setOpenDay(openDay===i?-1:i)}))
       ),
 
       // MAPA
-      tab === "mapa" && e('div', null,
-        SectionTitle("🗺️ Mapa del viaje"),
-        e(MapView)
-      ),
+      tab==="mapa"&&e('div',null, ST("🗺️ Mapa del viaje"), e(MapView)),
 
       // A COMER
-      tab === "comer" && e('div', null,
-        SectionTitle("🍽️ Must Eats — No te los puedes perder"),
-        e('div', { style:{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:12 } },
-          RESTOS.map((r, i) => e('div', { key:i, style:{ background:"#fff", border:"1px solid rgba(0,0,0,.08)", borderRadius:12, padding:16, display:"flex", flexDirection:"column" } },
-            e('div', { style:{ fontSize:22, marginBottom:8 } }, r.emoji),
-            e('div', { style:{ fontSize:14, fontWeight:700, marginBottom:2 } }, r.name),
-            e('div', { style:{ fontSize:11.5, color:GOLD, marginBottom:6 } }, r.stars),
-            e('p', { style:{ fontSize:12, color:"#7A6A50", lineHeight:1.5, marginBottom:8, flex:1 } }, r.desc),
-            e('div', { style:{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:6 } },
-              e('span', { style:{ fontSize:10.5, fontWeight:700, color:AGAVE, borderBottom:`1.5px solid ${GOLD}`, paddingBottom:1 } }, r.zone),
-              e('a', { href:r.mapsUrl, target:"_blank", rel:"noopener noreferrer", style:{ fontSize:11, color:"#1A73E8", fontWeight:600, textDecoration:"none" } }, "📍 Maps")
+      tab==="comer"&&e('div',null,
+        ST("🍽️ Must Eats — No te los puedes perder"),
+        e('div',{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:12}},
+          RESTOS.map((r,i)=>e('div',{key:i,style:{background:"#fff",border:"1px solid rgba(0,0,0,.08)",borderRadius:12,padding:16,display:"flex",flexDirection:"column"}},
+            e('div',{style:{fontSize:22,marginBottom:8}},r.emoji),
+            e('div',{style:{fontSize:14,fontWeight:700,marginBottom:2}},r.name),
+            e('div',{style:{fontSize:11.5,color:GOLD,marginBottom:6}},r.stars),
+            e('p',{style:{fontSize:12,color:"#7A6A50",lineHeight:1.5,marginBottom:8,flex:1}},r.desc),
+            e('div',{style:{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}},
+              e('span',{style:{fontSize:10.5,fontWeight:700,color:AGAVE,borderBottom:`1.5px solid ${GOLD}`,paddingBottom:1}},r.zone),
+              e('a',{href:r.mapsUrl,target:"_blank",rel:"noopener noreferrer",style:{fontSize:11,color:"#1A73E8",fontWeight:600,textDecoration:"none"}},"📍 Maps")
             )
           ))
         )
       ),
 
       // MOVILIDAD
-      tab === "movilidad" && e('div', null,
-        SectionTitle("🚇 Movilidad en Guadalajara"),
-        // Aeropuerto box
-        e('div', { style:{ background:AGAVE, color:"#fff", borderRadius:14, padding:20, marginBottom:16 } },
-          e('div', { style:{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:16, color:GOLD, marginBottom:6 } }, "✈️ Aeropuerto GDL → Casa del Patio"),
-          e('p', { style:{ fontSize:12.5, color:"rgba(255,255,255,.75)", marginBottom:14 } }, "~18 km al hotel. Uber es la mejor opción — opera libremente desde la sala de llegadas."),
-          e('div', { style:{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(185px,1fr))", gap:8 } },
-            [
-              { label:"⭐ Recomendado", title:"📱 Uber", desc:"Pídelo en baggage claim. 4–8 min. Sin negociación. Directo al hotel.", price:"~$200–250 MXN · 20–30 min", hi:true },
-              { label:"Oficial", title:"🚕 Taxi aeroportuario", desc:"Caja oficial en terminal. Precio fijo. Evita taxistas con chaleco.", price:"~$350–450 MXN · 20 min", hi:false },
-              { label:"Económico", title:"🚌 Autobús + Tren", desc:"350 m caminando al paradero. C98 → TL-1 → estación Juárez.", price:"~$30 MXN · 55–70 min", hi:false },
-            ].map(c => e('div', { key:c.title, style:{ background:c.hi?"rgba(201,151,43,.15)":"rgba(255,255,255,.07)", border:`1px solid ${c.hi?GOLD:"rgba(255,255,255,.15)"}`, borderRadius:10, padding:12 } },
-              e('div', { style:{ fontSize:9.5, letterSpacing:".1em", textTransform:"uppercase", color:GOLD, fontWeight:700, marginBottom:2 } }, c.label),
-              e('div', { style:{ fontSize:13, fontWeight:700, marginBottom:3 } }, c.title),
-              e('div', { style:{ fontSize:11, color:"rgba(255,255,255,.65)", lineHeight:1.5, marginBottom:7 } }, c.desc),
-              e('span', { style:{ background:"rgba(201,151,43,.25)", borderRadius:6, padding:"2px 7px", fontSize:10.5, color:GOLD, fontWeight:600 } }, c.price)
+      tab==="movilidad"&&e('div',null,
+        ST("🚇 Movilidad en Guadalajara"),
+        e('div',{style:{background:AGAVE,color:"#fff",borderRadius:14,padding:20,marginBottom:16}},
+          e('div',{style:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:16,color:GOLD,marginBottom:6}},"✈️ Aeropuerto GDL → Casa del Patio"),
+          e('p',{style:{fontSize:12.5,color:"rgba(255,255,255,.75)",marginBottom:14}},"~18 km al hotel. Uber es la mejor opción — opera libremente desde la sala de llegadas."),
+          e('div',{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(185px,1fr))",gap:8}},
+            [{label:"⭐ Recomendado",title:"📱 Uber",desc:"Pídelo en baggage claim. 4–8 min. Sin negociación.",price:"~$200–250 MXN · 20–30 min",hi:true},
+             {label:"Oficial",title:"🚕 Taxi aeroportuario",desc:"Caja oficial en terminal. Precio fijo. Evita taxistas con chaleco.",price:"~$350–450 MXN · 20 min",hi:false},
+             {label:"Económico",title:"🚌 Autobús + Tren",desc:"350 m al paradero. C98 → TL-1 → estación Juárez.",price:"~$30 MXN · 55–70 min",hi:false}
+            ].map(c=>e('div',{key:c.title,style:{background:c.hi?"rgba(201,151,43,.15)":"rgba(255,255,255,.07)",border:`1px solid ${c.hi?GOLD:"rgba(255,255,255,.15)"}`,borderRadius:10,padding:12}},
+              e('div',{style:{fontSize:9.5,letterSpacing:".1em",textTransform:"uppercase",color:GOLD,fontWeight:700,marginBottom:2}},c.label),
+              e('div',{style:{fontSize:13,fontWeight:700,marginBottom:3}},c.title),
+              e('div',{style:{fontSize:11,color:"rgba(255,255,255,.65)",lineHeight:1.5,marginBottom:7}},c.desc),
+              e('span',{style:{background:"rgba(201,151,43,.25)",borderRadius:6,padding:"2px 7px",fontSize:10.5,color:GOLD,fontWeight:600}},c.price)
             ))
           ),
-          e('p', { style:{ marginTop:10, fontSize:11, color:"rgba(255,255,255,.4)" } }, "⚠️ Regreso mié 1 Jul: salir 2.5 hrs antes del vuelo. Uber ~25–40 min según tráfico.")
+          e('p',{style:{marginTop:10,fontSize:11,color:"rgba(255,255,255,.4)"}},"⚠️ Regreso mié 1 Jul: salir 2.5 hrs antes. Uber ~25–40 min según tráfico.")
         ),
-        e('div', { style:{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:10 } },
-          MOBILITY.map((m, i) => e('div', { key:i, style:{ background:"#fff", border:"1px solid rgba(0,0,0,.08)", borderRadius:12, padding:16, display:"flex", flexDirection:"column" } },
-            e('div', { style:{ fontSize:24, marginBottom:6 } }, m.icon),
-            e('div', { style:{ fontSize:13.5, fontWeight:700, marginBottom:4 } }, m.title),
-            e('p', { style:{ fontSize:12, color:"#7A6A50", lineHeight:1.5, flex:1 } }, m.desc),
-            m.url && e('a', { href:m.url, target:"_blank", rel:"noopener noreferrer",
-              style:{ display:"inline-block", marginTop:8, fontSize:11.5, color:"#1A73E8", fontWeight:600, textDecoration:"none" } },
-              "🔗 " + m.urlLabel
-            )
+        e('div',{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:10}},
+          MOBILITY.map((m,i)=>e('div',{key:i,style:{background:"#fff",border:"1px solid rgba(0,0,0,.08)",borderRadius:12,padding:16,display:"flex",flexDirection:"column"}},
+            e('div',{style:{fontSize:24,marginBottom:6}},m.icon),
+            e('div',{style:{fontSize:13.5,fontWeight:700,marginBottom:4}},m.title),
+            e('p',{style:{fontSize:12,color:"#7A6A50",lineHeight:1.5,flex:1}},m.desc),
+            m.url&&e('a',{href:m.url,target:"_blank",rel:"noopener noreferrer",style:{display:"inline-block",marginTop:8,fontSize:11.5,color:"#1A73E8",fontWeight:600,textDecoration:"none"}},"🔗 "+m.urlLabel)
           ))
         )
       ),
 
       // FOTOS
-      tab === "fotos" && e('div', null,
-        SectionTitle("📸 Álbum compartido del viaje"),
-        e('div', { style:{ background:"linear-gradient(135deg,#1A73E8 0%,#0D47A1 100%)", borderRadius:16, padding:26, color:"#fff" } },
-          e('div', { style:{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:"1.2rem", marginBottom:6 } }, "📷 Álbum Google Fotos — Guadalajara 2026"),
-          e('p', { style:{ fontSize:13, color:"rgba(255,255,255,.8)", marginBottom:22 } }, "El álbum ya está creado. Toca el botón para abrirlo y agregar tus fotos."),
-          e('a', { href:ALBUM_URL, target:"_blank", rel:"noopener noreferrer",
-            style:{ display:"inline-flex", alignItems:"center", gap:8, background:"#fff", color:"#1A73E8", borderRadius:99, padding:"11px 24px", fontSize:14, fontWeight:700, textDecoration:"none", boxShadow:"0 2px 10px rgba(0,0,0,.2)" }
-          }, "📷 Abrir álbum compartido"),
-          e('div', { style:{ marginTop:22, display:"flex", flexDirection:"column", gap:12 } },
-            [
-              { num:"1", title:"Abre el álbum", desc:"Toca el botón de arriba. Se abre directamente en Google Fotos." },
-              { num:"2", title:"Agrega tus fotos", desc:"Toca + y selecciona de tu galería. Puedes subir varias a la vez." },
-              { num:"3", title:"Comparte el link", desc:"Manda el link por WhatsApp a tu compañero para que también suba las suyas." },
-              { num:"4", title:"Activa sincronización", desc:"En Google Fotos activa 'Contribuciones automáticas' para subida automática." },
-            ].map(s => e('div', { key:s.num, style:{ display:"flex", gap:12, alignItems:"flex-start" } },
-              e('div', { style:{ background:"rgba(255,255,255,.15)", borderRadius:"50%", width:26, height:26, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, flexShrink:0 } }, s.num),
-              e('div', null,
-                e('div', { style:{ fontSize:13.5, fontWeight:600, marginBottom:1 } }, s.title),
-                e('div', { style:{ fontSize:12, color:"rgba(255,255,255,.7)", lineHeight:1.5 } }, s.desc)
-              )
+      tab==="fotos"&&e('div',null,
+        ST("📸 Álbum compartido del viaje"),
+        e('div',{style:{background:"linear-gradient(135deg,#1A73E8 0%,#0D47A1 100%)",borderRadius:16,padding:26,color:"#fff"}},
+          e('div',{style:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:"1.2rem",marginBottom:6}},"📷 Álbum Google Fotos — Guadalajara 2026"),
+          e('p',{style:{fontSize:13,color:"rgba(255,255,255,.8)",marginBottom:22}},"El álbum ya está creado. Toca el botón para abrirlo y agregar tus fotos."),
+          e('a',{href:ALBUM_URL,target:"_blank",rel:"noopener noreferrer",style:{display:"inline-flex",alignItems:"center",gap:8,background:"#fff",color:"#1A73E8",borderRadius:99,padding:"11px 24px",fontSize:14,fontWeight:700,textDecoration:"none",boxShadow:"0 2px 10px rgba(0,0,0,.2)"}},"📷 Abrir álbum compartido"),
+          e('div',{style:{marginTop:22,display:"flex",flexDirection:"column",gap:12}},
+            [{num:"1",title:"Abre el álbum",desc:"Toca el botón de arriba. Se abre en Google Fotos."},
+             {num:"2",title:"Agrega tus fotos",desc:"Toca + y selecciona de tu galería. Varias a la vez."},
+             {num:"3",title:"Comparte el link",desc:"Manda por WhatsApp a tu compañero para que también suba."},
+             {num:"4",title:"Activa sincronización",desc:"En Google Fotos activa 'Contribuciones automáticas'."},
+            ].map(s=>e('div',{key:s.num,style:{display:"flex",gap:12,alignItems:"flex-start"}},
+              e('div',{style:{background:"rgba(255,255,255,.15)",borderRadius:"50%",width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,flexShrink:0}},s.num),
+              e('div',null,e('div',{style:{fontSize:13.5,fontWeight:600,marginBottom:1}},s.title),e('div',{style:{fontSize:12,color:"rgba(255,255,255,.7)",lineHeight:1.5}},s.desc))
             ))
           ),
-          e('div', { style:{ marginTop:16, padding:"10px 14px", background:"rgba(255,255,255,.1)", borderRadius:10, fontSize:12, color:"rgba(255,255,255,.7)", lineHeight:1.5 } },
+          e('div',{style:{marginTop:16,padding:"10px 14px",background:"rgba(255,255,255,.1)",borderRadius:10,fontSize:12,color:"rgba(255,255,255,.7)",lineHeight:1.5}},
             "💡 Cualquier persona con el link puede ver y agregar fotos, aunque no tenga cuenta de Google."
           )
         )
       )
     ),
-
-    // FOOTER
-    e('div', { style:{ background:AGAVE, color:"rgba(255,255,255,.4)", textAlign:"center", padding:"20px 16px", fontSize:11.5 } },
-      e('strong', { style:{ color:GOLD } }, "Guadalajara 2026"),
-      " · Casa del Patio, Calle Escorza 417 · 24 Jun – 1 Jul"
+    e('div',{style:{background:AGAVE,color:"rgba(255,255,255,.4)",textAlign:"center",padding:"20px 16px",fontSize:11.5}},
+      e('strong',{style:{color:GOLD}},"Guadalajara 2026")," · Casa del Patio, Calle Escorza 417 · 24 Jun – 1 Jul"
     )
   );
 }
-
 ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+}); // end load
 </script>
 </body>
 </html>
