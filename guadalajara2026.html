@@ -12,6 +12,8 @@
 body { font-family: 'Inter', system-ui, sans-serif; background: #FDF6E3; color: #1A1209; }
 ::-webkit-scrollbar { height: 4px; } ::-webkit-scrollbar-thumb { background: #C9972B; border-radius: 99px; }
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 <div id="root"></div>
@@ -241,45 +243,65 @@ function DayCard({ day, isOpen, onToggle }) {
 }
 
 function MapView() {
-  const [active,setActive]=useState(null);
   const [dayFilter,setDayFilter]=useState("all");
-  const filtered=PLACES.filter(p=>dayFilter==="all"||p.day===dayFilter);
-  const toXY=(lat,lng)=>({x:((lng-(-103.46))/((-103.28)-(-103.46)))*100,y:((20.775-lat)/(20.775-20.62))*100});
+  const mapRef = React.useRef(null);
+  const leafletMap = React.useRef(null);
+  const markersLayer = React.useRef(null);
+
+  const allPlaces = [...PLACES,
+    { lat:20.6731, lng:-103.4671, emoji:"🏟️", title:"Estadio Akron", sub:"Casa de las Chivas · sede Mundial", color:"#B71C1C", day:"extra", mapsUrl:"https://maps.google.com/?cid=3456789012345678" }
+  ];
+
+  React.useEffect(()=>{
+    if(!window.L||leafletMap.current) return;
+    const map = window.L.map(mapRef.current,{center:[20.690,-103.370],zoom:12});
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:19
+    }).addTo(map);
+    leafletMap.current = map;
+    markersLayer.current = window.L.layerGroup().addTo(map);
+  },[]);
+
+  React.useEffect(()=>{
+    if(!leafletMap.current||!window.L) return;
+    markersLayer.current.clearLayers();
+    const filtered = allPlaces.filter(p=>dayFilter==="all"||p.day===dayFilter||p.day==="extra");
+    filtered.forEach(p=>{
+      const icon = window.L.divIcon({
+        className:"",
+        html:`<div style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:${p.color};border-radius:50%;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:16px">${p.emoji}</div>`,
+        iconSize:[34,34],iconAnchor:[17,17],popupAnchor:[0,-18]
+      });
+      const popup = `<div style="font-family:Inter,sans-serif;min-width:180px">
+        <strong style="font-size:13px;color:#1A1209">${p.emoji} ${p.title}</strong>
+        <div style="font-size:11px;color:#7A6A50;margin:4px 0">${p.sub}</div>
+        ${p.mapsUrl?`<a href="${p.mapsUrl}" target="_blank" style="font-size:11px;color:#1A73E8;font-weight:600;text-decoration:none">📍 Abrir en Google Maps →</a>`:""}
+      </div>`;
+      window.L.marker([p.lat,p.lng],{icon}).addTo(markersLayer.current).bindPopup(popup);
+    });
+    if(dayFilter!=="all"&&filtered.length>0){
+      const group=window.L.featureGroup(markersLayer.current.getLayers());
+      if(group.getLayers().length>0) leafletMap.current.fitBounds(group.getBounds().pad(0.3));
+    } else {
+      leafletMap.current.setView([20.700,-103.390],11);
+    }
+  },[dayFilter]);
 
   return e('div',null,
     e('div',{style:{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}},
-      DAY_FILTERS.map(f=>e('button',{key:f.id,onClick:()=>{setDayFilter(f.id);setActive(null);},
+      [...DAY_FILTERS,{id:"extra",label:"🏟️ Akron"}].map(f=>e('button',{key:f.id,onClick:()=>setDayFilter(f.id),
         style:{padding:"5px 13px",borderRadius:99,fontSize:12,fontWeight:600,border:`1.5px solid ${dayFilter===f.id?"transparent":"rgba(0,0,0,.1)"}`,
           background:dayFilter===f.id?(DAY_COLORS[f.id]||AGAVE):"#fff",color:dayFilter===f.id?"#fff":"#5A4A30"}},f.label))
     ),
-    e('div',{style:{position:"relative",background:"#E8F0DC",borderRadius:14,overflow:"hidden",border:"2px solid rgba(0,0,0,.1)"}},
-      e('svg',{viewBox:"0 0 100 100",style:{width:"100%",display:"block"}},
-        e('rect',{width:100,height:100,fill:"#EEF3E5"}),
-        ...[15,25,35,45,55,65,75,85].map(v=>e('line',{key:"h"+v,x1:0,y1:v,x2:100,y2:v,stroke:"rgba(255,255,255,.5)",strokeWidth:".25"})),
-        ...[15,25,35,45,55,65,75,85].map(v=>e('line',{key:"v"+v,x1:v,y1:0,x2:v,y2:100,stroke:"rgba(255,255,255,.5)",strokeWidth:".25"})),
-        ...filtered.map((p,i)=>{
-          const{x,y}=toXY(p.lat,p.lng);
-          const isAct=active===i;
-          return e('g',{key:i,style:{cursor:"pointer"},onClick:()=>setActive(active===i?null:i)},
-            e('circle',{cx:x,cy:y,r:isAct?4:3,fill:p.color,stroke:"#fff",strokeWidth:isAct?1.5:.8}),
-            e('text',{x,y:y-4.5,textAnchor:"middle",fontSize:"3.2",style:{pointerEvents:"none",userSelect:"none"}},p.emoji)
-          );
-        })
-      ),
-      active!==null&&filtered[active]&&e('div',{style:{position:"absolute",bottom:12,left:12,right:12,background:"#fff",borderRadius:10,padding:"10px 14px",boxShadow:"0 4px 16px rgba(0,0,0,.2)",borderLeft:`4px solid ${filtered[active].color}`}},
-        e('div',{style:{fontSize:14,fontWeight:700}},filtered[active].emoji+" "+filtered[active].title),
-        e('div',{style:{fontSize:12,color:"#7A6A50",marginTop:2,marginBottom:6}},filtered[active].sub),
-        filtered[active].mapsUrl&&e('a',{href:filtered[active].mapsUrl,target:"_blank",rel:"noopener noreferrer",style:{fontSize:11.5,color:"#1A73E8",fontWeight:600,textDecoration:"none"}},"📍 Abrir en Google Maps →")
-      )
-    ),
+    e('div',{ref:mapRef,style:{width:"100%",height:480,borderRadius:14,overflow:"hidden",border:"2px solid rgba(0,0,0,.1)",zIndex:1}}),
     e('div',{style:{display:"flex",flexWrap:"wrap",gap:6,marginTop:10}},
-      [["#2D5016","Hotel"],["#4A7C59","Jue 25"],["#1565C0","Vie 26"],["#795548","Sáb 27"],["#E65100","Lun 29"],["#6A1B9A","Mar 30"],["#C9972B","Restaurantes"]].map(([color,label])=>
+      [["#2D5016","Hotel"],["#4A7C59","Jue 25"],["#1565C0","Vie 26"],["#795548","Sáb 27"],["#E65100","Lun 29"],["#6A1B9A","Mar 30"],["#C9972B","Restaurantes"],["#B71C1C","Estadio Akron"]].map(([color,label])=>
         e('div',{key:label,style:{display:"flex",alignItems:"center",gap:5,background:"#fff",borderRadius:8,padding:"4px 10px",border:"1px solid rgba(0,0,0,.08)",fontSize:11,color:"#5A4A30"}},
           e('div',{style:{width:9,height:9,borderRadius:"50%",background:color,flexShrink:0}}),label
         )
       )
     ),
-    e('p',{style:{fontSize:11,color:"#9A8A70",marginTop:8,textAlign:"center"}},"Toca cada punto · filtra por día arriba")
+    e('p',{style:{fontSize:11,color:"#9A8A70",marginTop:8,textAlign:"center"}},"Toca cada marcador · filtra por día arriba · mapa real OpenStreetMap")
   );
 }
 
