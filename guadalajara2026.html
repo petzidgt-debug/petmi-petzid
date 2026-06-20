@@ -27,36 +27,36 @@ const AGAVE="#2D5016", GOLD="#C9972B", CREAM="#FDF6E3";
 // Partidos por día (hora GDL = CDT = ET-1)
 const MATCHES = {
   "24": [
-    { time:"15:00", teams:"Suiza 🇨🇭 vs 🇨🇦 Canadá", note:"" },
-    { time:"15:00", teams:"Bosnia 🇧🇦 vs 🇶🇦 Qatar", note:"" },
-    { time:"18:00", teams:"Escocia 🏴󠁧󠁢󠁳󠁣󠁴󠁿 vs 🇧🇷 Brasil", note:"" },
-    { time:"18:00", teams:"Marruecos 🇲🇦 vs 🇭🇹 Haití", note:"" },
-    { time:"21:00", teams:"🇲🇽 México vs Chequia 🇨🇿", note:"⭐ VER EN FAN FEST", highlight:true },
-    { time:"21:00", teams:"Sudáfrica 🇿🇦 vs 🇰🇷 Corea del Sur", note:"" },
+    { time:"15:00", teams:"Suiza SUI vs CAN Canadá", note:"" },
+    { time:"15:00", teams:"Bosnia BIH vs QAT Qatar", note:"" },
+    { time:"18:00", teams:"Escocia SCO vs BRA Brasil", note:"" },
+    { time:"18:00", teams:"Marruecos MAR vs HAI Haití", note:"" },
+    { time:"21:00", teams:"MEX México vs Chequia CHE", note:"⭐ VER EN FAN FEST", highlight:true },
+    { time:"21:00", teams:"Sudáfrica RSA vs KOR Corea del Sur", note:"" },
   ],
   "25": [
-    { time:"15:00", teams:"Alemania 🇩🇪 vs 🇪🇨 Ecuador", note:"" },
-    { time:"15:00", teams:"Curazao 🇨🇼 vs 🇨🇮 Costa de Marfil", note:"" },
-    { time:"18:00", teams:"Japón 🇯🇵 vs 🇸🇪 Suecia", note:"" },
-    { time:"18:00", teams:"Túnez 🇹🇳 vs 🇳🇱 Países Bajos", note:"" },
-    { time:"21:00", teams:"Turquía 🇹🇷 vs 🇺🇸 USA", note:"" },
-    { time:"21:00", teams:"Paraguay 🇵🇾 vs 🇦🇺 Australia", note:"" },
+    { time:"15:00", teams:"Alemania GER vs ECU Ecuador", note:"" },
+    { time:"15:00", teams:"Curazao CUW vs CIV Costa de Marfil", note:"" },
+    { time:"18:00", teams:"Japón JPN vs SWE Suecia", note:"" },
+    { time:"18:00", teams:"Túnez TUN vs NED Países Bajos", note:"" },
+    { time:"21:00", teams:"Turquía TUR vs USA USA", note:"" },
+    { time:"21:00", teams:"Paraguay PAR vs AUS Australia", note:"" },
   ],
   "26": [
-    { time:"14:00", teams:"Noruega 🇳🇴 vs 🇫🇷 Francia", note:"" },
-    { time:"14:00", teams:"Senegal 🇸🇳 vs 🇮🇶 Irak", note:"" },
-    { time:"19:00", teams:"🇪🇸 España vs Uruguay 🇺🇾", note:"⭐ VER EN FAN FEST", highlight:true },
-    { time:"19:00", teams:"Cabo Verde 🇨🇻 vs 🇸🇦 Arabia Saudita", note:"" },
-    { time:"22:00", teams:"Egipto 🇪🇬 vs 🇮🇷 Irán", note:"" },
-    { time:"22:00", teams:"Nueva Zelanda 🇳🇿 vs 🇧🇪 Bélgica", note:"" },
+    { time:"14:00", teams:"Noruega NOR vs FRA Francia", note:"" },
+    { time:"14:00", teams:"Senegal SEN vs IRQ Irak", note:"" },
+    { time:"19:00", teams:"ESP España vs Uruguay URU", note:"⭐ VER EN FAN FEST", highlight:true },
+    { time:"19:00", teams:"Cabo Verde CPV vs KSA Arabia Saudita", note:"" },
+    { time:"22:00", teams:"Egipto EGY vs IRI Irán", note:"" },
+    { time:"22:00", teams:"Nueva Zelanda NZL vs BEL Bélgica", note:"" },
   ],
   "27": [
-    { time:"16:00", teams:"Panamá 🇵🇦 vs 🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra", note:"" },
-    { time:"16:00", teams:"Croacia 🇭🇷 vs 🇬🇭 Ghana", note:"" },
-    { time:"18:30", teams:"Colombia 🇨🇴 vs 🇵🇹 Portugal", note:"" },
-    { time:"18:30", teams:"DR Congo 🇨🇩 vs 🇺🇿 Uzbekistán", note:"" },
-    { time:"21:00", teams:"Argelia 🇩🇿 vs 🇦🇹 Austria", note:"" },
-    { time:"21:00", teams:"Argentina 🇦🇷 vs 🇯🇴 Jordania", note:"⭐ Clasicazo" },
+    { time:"16:00", teams:"Panamá PAN vs ENG Inglaterra", note:"" },
+    { time:"16:00", teams:"Croacia CRO vs GHA Ghana", note:"" },
+    { time:"18:30", teams:"Colombia COL vs POR Portugal", note:"" },
+    { time:"18:30", teams:"DR Congo COD vs UZB Uzbekistán", note:"" },
+    { time:"21:00", teams:"Argelia ALG vs AUT Austria", note:"" },
+    { time:"21:00", teams:"Argentina ARG vs JOR Jordania", note:"⭐ Clasicazo" },
   ],
   "28": [
     { time:"14:00", teams:"16avos: 2A vs 2B", note:"Fase eliminatoria comienza 🔥" },
@@ -83,7 +83,7 @@ const DAYS = [
     activities:[
       { time:"6:00 PM", icon:"🏠", name:"Check-in Casa del Patio", desc:"Calle Escorza 417, Col. Americana. Boutique hotel tranquilo y bien ubicado.", tags:[] },
       { time:"7:00 PM", icon:"🍽️", name:"Cena rápida en la Americana", desc:"Cena ligera cerca del hotel antes del partido.", tags:["food"], mapsUrl:"https://maps.google.com/?cid=13134601285460284810" },
-      { time:"9:00 PM", icon:"⚽", name:"🇲🇽 México vs Chequia — Fan Fest", desc:"¡Primer partido de México en el Fan Fest! Plaza Liberación, gratis, ambiente de locura total con 60,000 personas.", tags:["event","free"], mapsUrl:"https://maps.google.com/?cid=8165146298086361182" },
+      { time:"9:00 PM", icon:"⚽", name:"MEX México vs Chequia — Fan Fest", desc:"¡Primer partido de México en el Fan Fest! Plaza Liberación, gratis, ambiente de locura total con 60,000 personas.", tags:["event","free"], mapsUrl:"https://maps.google.com/?cid=8165146298086361182" },
     ]},
   { num:"25", label:"Jue · Jun", title:"Centro Histórico + 🎸 Alejandro Fdz", badge:"🎸 Concierto", color:"#4A7C59",
     activities:[
@@ -101,7 +101,7 @@ const DAYS = [
       { time:"2:00 PM", icon:"🏛️", name:"Arcos de Zapopan y Centro", desc:"Recorre los arcos coloniales, el andador peatonal y el mercado de artesanías. Ambiente muy familiar.", tags:[], mapsUrl:"https://maps.google.com/maps?q=Arcos+de+Zapopan" },
       { time:"4:00 PM", icon:"🛍️", name:"Museo Trompo Mágico (opcional)", desc:"Si les gusta la ciencia interactiva — muy bien valorado. A 10 min en Uber desde el centro de Zapopan.", tags:[], mapsUrl:"https://maps.google.com/maps?q=Trompo+Magico+Zapopan" },
       { time:"6:00 PM", icon:"🚕", name:"Regreso a GDL para el partido", desc:"Uber de regreso ~25 min. Ir directo al Fan Fest o ver el partido en un bar de la Americana.", tags:["alert"] },
-      { time:"7:00 PM", icon:"⚽", name:"🇪🇸 España vs Uruguay — Fan Fest", desc:"¡El partido! Plaza Liberación con 60,000 personas. Llegar 30 min antes. Gratis y épico.", tags:["event","free"], mapsUrl:"https://maps.google.com/?cid=8165146298086361182" },
+      { time:"7:00 PM", icon:"⚽", name:"ESP España vs Uruguay — Fan Fest", desc:"¡El partido! Plaza Liberación con 60,000 personas. Llegar 30 min antes. Gratis y épico.", tags:["event","free"], mapsUrl:"https://maps.google.com/?cid=8165146298086361182" },
     ]},
   { num:"27", label:"Sáb · Jun", title:"🚂 Tren Tequila Express", badge:"🌵 Todo el día", color:"#795548",
     activities:[
@@ -120,10 +120,11 @@ const DAYS = [
       { time:"Tarde", icon:"🎶", name:"El Parián — Mariachis en vivo", desc:"Plaza central de Tlaquepaque. Mariachis desde el mediodía. Copa y ambiente tapatío.", tags:[] },
       { time:"8:00 PM", icon:"⚽", name:"16avos: Partido en Estadio Guadalajara 🔥", desc:"¡Partido de 16avos a las 8pm en el Estadio Akron en Zapopan! Verificar equipos conforme avance el torneo. Uber ~30 min.", tags:["event","alert"] },
     ]},
-  { num:"30", label:"Mar · Jun", title:"🕌 Zapopan + 🥊 Luchas", badge:"🥊 Gran noche", color:"#6A1B9A",
+  { num:"30", label:"Mar · Jun", title:"🐠 Acuario + 🕌 Zapopan + 🥊 Luchas", badge:"🥊 Gran día", color:"#6A1B9A",
     activities:[
-      { time:"10:30 AM", icon:"🕌", name:"Basílica de Zapopan + Plaza", desc:"4.8★. Basílica, Museo Huichol, esquites. Macrobús L1 ~$12 MXN / 35 min, o Uber ~$80.", tags:["must"], mapsUrl:"https://maps.google.com/?cid=15492390400401168095" },
-      { time:"2:30 PM", icon:"🍷", name:"Alcalde Restaurante", desc:"Uno de los mejores de México. 4.6★. Cocina mexicana de autor. Reserva en alcalde.com.mx. ~$3,000 MXN degustación o a la carta.", tags:["must","food"], mapsUrl:"https://maps.google.com/?cid=16447800704257734701" },
+      { time:"11:00 AM", icon:"🐠", name:"Acuario Michin", desc:"4.6★ · 26,000 reseñas. Reserva online. Capíbaras, aves, cabras interactivas. Metro Juárez o Uber ~$50. Abre 11am.", tags:["must"], mapsUrl:"https://maps.google.com/?cid=2124888181077620162" },
+      { time:"2:00 PM", icon:"🥩", name:"Karne Garibaldi", desc:"Récord Guinness: carne en su jugo en 40 seg. 4.6★ · 33,000 reseñas. Cerca del hotel.", tags:["must","food"], mapsUrl:"https://maps.google.com/?cid=14423620267480614218" },
+      { time:"4:30 PM", icon:"🕌", name:"Basílica de Zapopan + Plaza", desc:"4.8★. Basílica, Museo Huichol, esquites. Tarde tranquila en la plaza. Macrobús L1 ~$12 MXN o Uber ~$80.", tags:["must"], mapsUrl:"https://maps.google.com/?cid=15492390400401168095" },
       { time:"8:30 PM", icon:"🥊", name:"Arena Coliseo de Guadalajara — Lucha Libre", desc:"4.7★ · 5,000 reseñas. ¡Martes = Lucha Libre CMLL! Funciones ~9pm. Uber obligatorio. Cervezas baratas, ambiente de locura total.", tags:["must","event"], mapsUrl:"https://maps.google.com/?cid=9049096705661470274" },
     ]},
   { num:"1", label:"Mié · Jul", title:"✈️ Mañana libre + Regreso", badge:"🛫 Vuelo tarde", color:"#37474F",
@@ -308,7 +309,7 @@ function MapView() {
 function App() {
   const [tab,setTab]=useState("itinerario");
   const [openDay,setOpenDay]=useState(0);
-  const tabs=[{id:"itinerario",label:"📅 Itinerario"},{id:"mapa",label:"🗺️ Mapa"},{id:"comer",label:"🍽️ A comer"},{id:"movilidad",label:"🚇 Movilidad"},{id:"fotos",label:"📸 Fotos"}];
+  const tabs=[{id:"itinerario",label:"📅 Itinerario"},{id:"mapa",label:"🗺️ Mapa"},{id:"comer",label:"🍽️ A comer"},{id:"movilidad",label:"🚇 Movilidad"},{id:"fotos",label:"📸 Fotos"},{id:"emergencias",label:"🚨 Emergencias"}];
   const ST=(title)=>e('div',{style:{fontFamily:"'Playfair Display',Georgia,serif",fontSize:"1.3rem",color:AGAVE,margin:"28px 0 14px",paddingBottom:8,borderBottom:`2px solid ${GOLD}`}},title);
 
   return e('div',{style:{fontFamily:"Inter,system-ui,sans-serif",background:CREAM,minHeight:"100vh",color:"#1A1209"}},
@@ -384,6 +385,89 @@ function App() {
             e('p',{style:{fontSize:12,color:"#7A6A50",lineHeight:1.5,flex:1}},m.desc),
             m.url&&e('a',{href:m.url,target:"_blank",rel:"noopener noreferrer",style:{display:"inline-block",marginTop:8,fontSize:11.5,color:"#1A73E8",fontWeight:600,textDecoration:"none"}},"🔗 "+m.urlLabel)
           ))
+        )
+      ),
+
+      // EMERGENCIAS
+      tab==="emergencias"&&e('div',null,
+        ST("🚨 Emergencias y Asistencia"),
+        e('div',{style:{display:"flex",flexDirection:"column",gap:14}},
+
+          // SOS Banner
+          e('div',{style:{background:"#B71C1C",color:"#fff",borderRadius:14,padding:"16px 20px",display:"flex",alignItems:"center",gap:14}},
+            e('div',{style:{fontSize:36}}),
+            e('div',null,
+              e('div',{style:{fontFamily:"Georgia,serif",fontSize:17,fontWeight:700,marginBottom:3}},"Emergencias Mexico"),
+              e('div',{style:{fontSize:13,opacity:.85}},"Policia / Bomberos / Ambulancia"),
+              e('a',{href:"tel:911",style:{display:"inline-block",marginTop:8,background:"#fff",color:"#B71C1C",borderRadius:99,padding:"6px 18px",fontSize:14,fontWeight:700,textDecoration:"none"}},"Llamar 911")
+            )
+          ),
+
+          // Desde Guatemala
+          e('div',{style:{background:"#fff",border:"1px solid rgba(0,0,0,.08)",borderRadius:14,padding:18}},
+            e('div',{style:{fontSize:12,letterSpacing:".1em",textTransform:"uppercase",color:"#B71C1C",fontWeight:700,marginBottom:10}},"Desde Guatemala (antes de viajar)"),
+            e('div',{style:{display:"flex",flexDirection:"column",gap:10}},
+              e('div',{style:{display:"flex",gap:12,alignItems:"flex-start"}},
+                e('span',{style:{fontSize:20,flexShrink:0}}),
+                e('div',null,
+                  e('div',{style:{fontSize:13,fontWeight:700,marginBottom:2}},"BAC Credomatic — Linea directa"),
+                  e('a',{href:"tel:+50222786735",style:{fontSize:15,fontWeight:700,color:"#B71C1C",textDecoration:"none"}},"+502 2278-6735"),
+                  e('div',{style:{fontSize:11,color:"#7A6A50",marginTop:2}},"Linea directa local Mastercard BAC")
+                )
+              ),
+              e('div',{style:{display:"flex",gap:12,alignItems:"flex-start"}},
+                e('span',{style:{fontSize:20,flexShrink:0}}),
+                e('div',null,
+                  e('div',{style:{fontSize:13,fontWeight:700,marginBottom:2}},"Asistencia Global Gratuita"),
+                  e('a',{href:"tel:18009991480",style:{fontSize:15,fontWeight:700,color:"#B71C1C",textDecoration:"none"}},"1-800-999-1480"),
+                  e('div',{style:{fontSize:11,color:"#7A6A50",marginTop:2}},"Linea gratuita de Asistencia Global en Guatemala")
+                )
+              )
+            )
+          ),
+
+          // Seguro MasterAssist Black
+          e('div',{style:{background:"#1A1A2E",color:"#fff",borderRadius:14,padding:18}},
+            e('div',{style:{fontSize:12,letterSpacing:".1em",textTransform:"uppercase",color:GOLD,fontWeight:700,marginBottom:12}},"Seguro de Viaje Incluido — MasterAssist Black"),
+            e('p',{style:{fontSize:12,color:"rgba(255,255,255,.7)",marginBottom:14,lineHeight:1.6}},"El seguro viene incluido con tu tarjeta BAC, incluso si realizas el pago total o parcial con puntos/millas."),
+            e('div',{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10}},
+              [
+                {icon:"",title:"Gastos Medicos",amount:"hasta US $150,000",desc:"Emergencias medicas o accidentes fuera de tu pais. Incluye COVID-19."},
+                {icon:"",title:"Cancelacion de Viaje",amount:"hasta US $3,000",desc:"Reembolso por cancelacion + hasta $200 por demora mayor a 4 horas."},
+                {icon:"",title:"Equipaje",amount:"hasta US $3,000",desc:"Compensacion por perdida o retraso de maletas."},
+                {icon:"",title:"Auto Alquilado (CDW)",amount:"hasta US $75,000",desc:"Proteccion global contra danos en vehiculos rentados."},
+              ].map(b=>e('div',{key:b.title,style:{background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:10,padding:14}},
+                e('div',{style:{fontSize:20,marginBottom:6}},b.icon),
+                e('div',{style:{fontSize:12,fontWeight:700,color:GOLD,marginBottom:2}},b.title),
+                e('div',{style:{fontSize:15,fontWeight:700,color:"#fff",marginBottom:4}},b.amount),
+                e('div',{style:{fontSize:11,color:"rgba(255,255,255,.6)",lineHeight:1.5}},b.desc)
+              ))
+            ),
+            e('div',{style:{marginTop:14,padding:"10px 14px",background:"rgba(201,151,43,.15)",border:"1px solid rgba(201,151,43,.3)",borderRadius:10,fontSize:12,color:"rgba(255,255,255,.8)",lineHeight:1.6}},
+              "Guarda estos numeros en tu celular antes de salir de Guatemala. En caso de emergencia medica, llama primero al 911 (Mexico) y luego notifica a BAC al +502 2278-6735."
+            )
+          ),
+
+          // Numeros utiles en GDL
+          e('div',{style:{background:"#fff",border:"1px solid rgba(0,0,0,.08)",borderRadius:14,padding:18}},
+            e('div',{style:{fontSize:12,letterSpacing:".1em",textTransform:"uppercase",color:AGAVE,fontWeight:700,marginBottom:12}},"Numeros Utiles en Guadalajara"),
+            e('div',{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:8}},
+              [
+                {icon:"",label:"Emergencias generales",num:"911"},
+                {icon:"",label:"Cruz Roja Guadalajara",num:"33 3613-1550"},
+                {icon:"",label:"Hospital Mexico Americano",num:"33 3648-3333"},
+                {icon:"",label:"Hospital del Carmen",num:"33 3813-0042"},
+                {icon:"",label:"Locatel Guadalajara",num:"33 3668-0800"},
+                {icon:"",label:"Embajada Guatemala en MX",num:"55 5540-7520"},
+              ].map(n=>e('div',{key:n.label,style:{display:"flex",gap:10,alignItems:"center",padding:"8px 10px",background:"#F9F5EE",borderRadius:8}},
+                e('span',{style:{fontSize:18,flexShrink:0}},n.icon),
+                e('div',null,
+                  e('div',{style:{fontSize:11,color:"#7A6A50",marginBottom:1}},n.label),
+                  e('a',{href:`tel:${n.num.replace(/\s/g,"")}`,style:{fontSize:14,fontWeight:700,color:"#B71C1C",textDecoration:"none"}},n.num)
+                )
+              ))
+            )
+          )
         )
       ),
 
