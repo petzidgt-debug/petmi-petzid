@@ -395,13 +395,20 @@ export default async function handler(req, res) {
     // ── Enviar evento a revisión (usuarios) ─────────────────────
     if (action === 'enviarEvento' && req.method === 'POST') {
       const { titulo, tipo, fecha, hora, lugar, direccion, descripcion, imagen, link, email } = req.body;
-      if (!titulo || !fecha) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      if (!titulo || !fecha) return res.status(200).json({ ok: false, error: 'Faltan titulo y fecha' });
+      const payload = { titulo, tipo: tipo||'evento', fecha, hora: hora||null, lugar: lugar||null, direccion: direccion||null, descripcion: descripcion||null, imagen: imagen||null, link: link||null, creado_por: email||null, activo: false };
       const r = await fetch(SUPABASE_URL + '/rest/v1/eventos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ titulo, tipo: tipo||'evento', fecha, hora, lugar, direccion, descripcion, imagen: imagen||null, link, creado_por: email, activo: false })
+        body: JSON.stringify(payload)
       });
-      return res.status(200).json({ ok: r.ok });
+      if (!r.ok) {
+        let errBody = '';
+        try { errBody = JSON.stringify(await r.json()); } catch(e) { errBody = await r.text().catch(()=>'sin detalle'); }
+        console.error('[enviarEvento] Supabase error', r.status, errBody);
+        return res.status(200).json({ ok: false, error: errBody, status: r.status });
+      }
+      return res.status(200).json({ ok: true });
     }
 
     // ── Enviar lugar a revisión (usuarios) ───────────────────────
