@@ -102,7 +102,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <button class="filtro-btn" onclick="setFiltro('busco',this)">🔍 Busco</button>
     <button class="filtro-btn" onclick="setFiltro('adopcion',this)">🏠 Adopción</button>
     <button class="filtro-btn" onclick="setFiltro('venta',this)">💰 Venta</button>
-    <a href="/eventos.html" class="filtro-btn" style="text-decoration:none">🎪 Eventos</a>
+    <button class="filtro-btn" onclick="setFiltro('evento',this)">🎪 Eventos</button>
   </div>
 </div>
 
@@ -118,6 +118,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <div class="tipo-option selected" onclick="selTipo('perdido',this)">🚨<br>Perdido</div>
       <div class="tipo-option" onclick="selTipo('busco',this)">🔍<br>Busco</div>
       <div class="tipo-option" onclick="selTipo('adopcion',this)">🏠<br>Adopción</div>
+      <div class="tipo-option" id="tipoEventoBtn" onclick="selTipo('evento',this)" style="border-color:#00B4B4;color:#006060">🎪<br>Evento</div>
       <div class="tipo-option" id="tipoVentaBtn" onclick="selTipo('venta',this)" style="display:none;border-color:#F5C842;color:#856404">💰<br>Vender</div>
     </div>
     <label class="form-label">Título *</label>
@@ -178,6 +179,19 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <input type="tel" class="form-input" id="pubTelefono" placeholder="Ej: 5555 1234" maxlength="15">
       <label class="form-label">Recompensa (opcional)</label>
       <input type="text" class="form-input" id="pubRecompensa" placeholder="Ej: Q 500">
+    </div>
+
+    <!-- Campos adicionales para evento -->
+    <div id="camposEvento" style="display:none;border-top:1.5px dashed #b2ece5;padding-top:14px;margin-top:4px">
+      <div style="background:#e0f7f7;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#006060">🎪 Los eventos requieren aprobación del admin antes de publicarse</div>
+      <label class="form-label">Fecha del evento *</label>
+      <input type="date" class="form-input" id="eventoFecha">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-input" id="eventoHora">
+      <label class="form-label">Lugar</label>
+      <input type="text" class="form-input" id="eventoLugar" placeholder="Ej: Parque Cayalá, Zona 10">
+      <label class="form-label">Link del evento (opcional)</label>
+      <input type="url" class="form-input" id="eventoLink" placeholder="https://...">
     </div>
 
     <button class="btn-publicar" onclick="publicar()">Publicar aviso</button>
@@ -623,6 +637,8 @@ function cerrarPublicar(){
   var p=document.querySelector('[onclick*="selTipo(\'perdido"]');if(p)p.classList.add('selected');
   document.getElementById('camposPerdido').classList.remove('visible');
   var ca=document.getElementById('camposAdopcion');if(ca)ca.style.display='none';
+  var ce=document.getElementById('camposEvento');if(ce)ce.style.display='none';
+  var pf=document.getElementById('pubFecha');if(pf)pf.style.display='';
   // Reset foto adopcion
   adopcionFotoBase64=null;adopcionFotoMime=null;
   var aprev=document.getElementById('adopcionFotoPreview');
@@ -685,12 +701,18 @@ function selTipo(tipo,el){
   // Mostrar/ocultar foto de adopcion
   var ca=document.getElementById('camposAdopcion');
   if(ca) ca.style.display=(tipo==='adopcion')?'block':'none';
+  // Mostrar/ocultar campos de evento
+  var ce=document.getElementById('camposEvento');
+  if(ce) ce.style.display=(tipo==='evento')?'block':'none';
+  // Ocultar fecha general si es evento (tiene su propia fecha con fecha obligatoria)
+  var fechaWrap=document.getElementById('pubFecha');
+  if(fechaWrap){ fechaWrap.style.display=(tipo==='evento')?'none':''; }
   // Placeholder dinamico segun tipo
   var PLACEHOLDERS={
     perdido:'Ej: Se perdio Cami en Zona 10',
-
     busco:'Ej: Busco kennel para mi perro el fin de semana',
-    adopcion:'Ej: Doy en adopcion a Rocky, 3 anos muy cariñoso'
+    adopcion:'Ej: Doy en adopcion a Rocky, 3 anos muy cariñoso',
+    evento:'Ej: Jornada de vacunacion gratuita para mascotas'
   };
   var tituloInput=document.getElementById('pubTitulo');
   if(tituloInput) tituloInput.placeholder=PLACEHOLDERS[tipo]||'Escribe el titulo del aviso';
@@ -750,6 +772,18 @@ function publicar(){
     }
   }
 
+  // Validaciones para evento
+  if(tipoSel==='evento'){
+    var evFecha=document.getElementById('eventoFecha').value;
+    if(!evFecha){mostrarToast('La fecha del evento es obligatoria');document.getElementById('eventoFecha').focus();return;}
+    extraData={
+      fecha:evFecha,
+      hora:document.getElementById('eventoHora').value||null,
+      ubicacion:document.getElementById('eventoLugar').value.trim(),
+      link:document.getElementById('eventoLink').value.trim()||null
+    };
+  }
+
   // Verificar cuota de ventas para Premium
   if(tipoSel==='venta'){
     if(ventasUsadas>=ventasLimite){
@@ -764,7 +798,12 @@ function publicar(){
   var btn=document.querySelector('.btn-publicar');
   btn.disabled=true;btn.textContent='Publicando...';
   // perdido=activo inmediato, resto requiere aprobacion admin
+  // perdido=inmediato, venta=inmediato(premium), resto requiere aprobacion
   var activo=tipoSel==='perdido'||tipoSel==='venta';
+
+  // Para evento usar fecha y ubicacion de los campos propios
+  var fechaGeneral = tipoSel==='evento' ? null : (document.getElementById('pubFecha').value||null);
+  var ubicGeneral  = tipoSel==='evento' ? '' : document.getElementById('pubUbicacion').value.trim();
 
   var payload=Object.assign({
     uid_creador:miMascota.uid,
@@ -776,8 +815,8 @@ function publicar(){
     tipo:tipoSel,
     titulo:titulo,
     descripcion:document.getElementById('pubDesc').value.trim(),
-    fecha:document.getElementById('pubFecha').value||null,
-    ubicacion:document.getElementById('pubUbicacion').value.trim(),
+    fecha:fechaGeneral,
+    ubicacion:ubicGeneral,
     activo_override:activo
   }, extraData);
 
@@ -814,7 +853,8 @@ function publicar(){
       setTimeout(function(){
         ocultarModalJefe();
         if(tipoSel==='venta') ventasUsadas++;
-        mostrarToast(tipoSel==='adopcion'?'Enviado para revision':'Aviso publicado!');
+        var mensajeOk=tipoSel==='adopcion'||tipoSel==='evento'?'Enviado para revision':'Aviso publicado!';
+          mostrarToast(mensajeOk);
         cargar();
       },3000);
       cargar();
