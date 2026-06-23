@@ -852,8 +852,7 @@ function publicar(){
       btn.textContent='Subiendo foto...';
       try{
         var fd=new FormData();
-        var blob=await fetch('data:'+(adopcionFotoMime||'image/jpeg')+';base64,'+adopcionFotoBase64).then(function(r){return r.blob();});
-        fd.append('file',blob);fd.append('upload_preset','petzid');fd.append('folder','petzid/adopcion');
+        fd.append('file','data:'+(adopcionFotoMime||'image/jpeg')+';base64,'+adopcionFotoBase64);fd.append('upload_preset','petzid');fd.append('folder','petzid/adopcion');
         var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
         var data=await res.json();fotoUrl=data.secure_url||'';
       }catch(e){console.log('Cloudinary adopcion:',e);}
@@ -861,8 +860,7 @@ function publicar(){
       btn.textContent='Subiendo foto...';
       try{
         var fd=new FormData();
-        var blob=await fetch('data:'+(eventoFotoMime||'image/jpeg')+';base64,'+eventoFotoBase64).then(function(r){return r.blob();});
-        fd.append('file',blob);fd.append('upload_preset','petzid');fd.append('folder','petzid/eventos');
+        fd.append('file','data:'+(eventoFotoMime||'image/jpeg')+';base64,'+eventoFotoBase64);fd.append('upload_preset','petzid');fd.append('folder','petzid/eventos');
         var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
         var data=await res.json();fotoUrl=data.secure_url||'';
       }catch(e){console.log('Cloudinary evento:',e);}
@@ -965,8 +963,7 @@ async function uploadFotoPerdido(){
   if(!perdidoFotoBase64) return null;
   try{
     var fd=new FormData();
-    var blob=await fetch('data:'+perdidoFotoMime+';base64,'+perdidoFotoBase64).then(function(r){return r.blob();});
-    fd.append('file',blob,'foto_perdido.jpg');
+    fd.append('file','data:'+perdidoFotoMime+';base64,'+perdidoFotoBase64);
     fd.append('upload_preset',UPLOAD_PRESET);
     fd.append('folder','petzid/perdidos');
     var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
@@ -1157,8 +1154,7 @@ function descargarPoster(id){
       try{
         var b64=dataUrl.split(',')[1];
         var fd=new FormData();
-        var blob=await fetch('data:image/png;base64,'+b64).then(function(r){return r.blob();});
-        fd.append('file',blob);
+        fd.append('file','data:image/png;base64,'+b64);
         fd.append('upload_preset','petzid');
         fd.append('folder','petzid_perdidos');
         var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
