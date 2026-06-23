@@ -2,1818 +2,1253 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="icon" href="/favico.jpg" type="image/jpeg">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Panel Admin — PetMi</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<title>Avisos — PetMi</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#00B4B4}
-.login-box{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.15)}
-.login-logo{font-size:28px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#00B4B4;text-align:center;margin-bottom:8px}
-.login-logo span{color:#E05090}
-.login-sub{text-align:center;font-size:13px;color:#888;margin-bottom:24px}
-.login-box input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:15px;margin-bottom:12px;outline:none}
-.login-box input:focus{border-color:#00B4B4}
-.login-btn{width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
-.login-err{color:#E05090;font-size:13px;text-align:center;margin-top:8px;display:none}
-.app{display:none;min-height:100vh;flex-direction:row}
-.sidebar{width:220px;background:#1a1a2e;position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100}
-.sidebar-logo{padding:20px;font-size:20px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;border-bottom:1px solid rgba(255,255,255,.1)}
-.sidebar-logo span{color:#F5C842}
-.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
-.nav-item{display:flex;align-items:center;gap:10px;padding:12px 20px;color:rgba(255,255,255,.7);cursor:pointer;font-size:14px;font-weight:600;transition:all .15s;border-left:3px solid transparent}
-.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
-.nav-item.active{background:rgba(0,180,180,.2);color:#00B4B4;border-left-color:#00B4B4}
-.nav-icon{font-size:16px;width:20px;text-align:center}
-.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
-.logout-btn{color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;background:none;border:none}
-.content{margin-left:220px;padding:24px;min-height:100vh}
-.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-.page-title{font-size:22px;font-weight:900;color:#222}
-.page-sub{font-size:13px;color:#888;margin-top:2px}
-.btn-primary{padding:9px 18px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
-.stat-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.stat-num{font-size:32px;font-weight:900;color:#222;margin-bottom:4px}
-.stat-lbl{font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.stat-icon{font-size:24px;margin-bottom:8px}
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
-.chart-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.chart-title{font-size:14px;font-weight:700;color:#333;margin-bottom:16px}
-.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.bar-label{font-size:12px;color:#555;width:80px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-track{flex:1;background:#f0f0ee;border-radius:4px;height:22px;overflow:hidden}
-.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:700;color:#fff;min-width:30px}
-.search-bar{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.search-bar input,.search-bar select{padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none;background:#fff}
-.search-bar input{min-width:160px}
-.search-bar input:focus,.search-bar select:focus{border-color:#00B4B4}
-.btn-search{padding:8px 14px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
-.btn-clear{padding:8px 14px;background:#f0f0ee;color:#666;border:none;border-radius:8px;font-size:13px;cursor:pointer}
-.table-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{background:#f8f8f8;padding:11px 12px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #eee;white-space:nowrap}
-tbody td{padding:10px 12px;border-bottom:1px solid #f5f5f5;color:#333;vertical-align:middle}
-tbody tr:hover{background:#fafafa}
-tbody tr:last-child td{border-bottom:none}
-.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
-.badge-perro{background:#e0f7f7;color:#007a7a}
-.badge-gato{background:#fbeaf0;color:#993556}
-.badge-si{background:#d4edda;color:#155724}
-.badge-no{background:#f8d7da;color:#721c24}
-.badge-pending{background:#fff3cd;color:#856404}
-.btn-sm{padding:5px 9px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;white-space:nowrap;margin-right:3px}
-.btn-view{background:#e0f7f7;color:#007a7a}
-.btn-edit{background:#fff3cd;color:#856404}
-.btn-send{background:#d4edda;color:#155724}
-.pagination{display:flex;align-items:center;padding:12px 16px;border-top:1px solid #f0f0f0;gap:8px;flex-wrap:wrap}
-.page-info{font-size:13px;color:#888;flex:1}
-.page-btn{padding:6px 12px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:13px;cursor:pointer;background:#fff;font-weight:600}
-.page-btn:hover{border-color:#00B4B4;color:#00B4B4}
-.page-btn:disabled{opacity:.4;cursor:not-allowed}
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.hero{background:linear-gradient(135deg,#764ba2,#E05090);padding:24px 20px 20px;text-align:center}
+.hero h1{font-size:22px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.hero p{font-size:13px;color:rgba(255,255,255,.75)}
+.filtros-wrap{background:#fff;padding:10px 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:80}
+.filtros-scroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.filtros-scroll::-webkit-scrollbar{display:none}
+.filtro-btn{padding:7px 14px;border:1.5px solid #ddd;border-radius:20px;font-size:12px;font-weight:600;color:#888;background:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s}
+.filtro-btn.active{border-color:#764ba2;background:#f3e8ff;color:#5a3d8a}
+.wrap{max-width:600px;margin:0 auto;padding:16px}
+.act-card{background:#fff;border-radius:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.07);overflow:hidden}
+.act-card.perdido-card{border:2px solid #c0392b}
+.act-card.adopcion-card{border:2px solid #2e7d32}
+.act-card-header{height:4px}
+.act-card-body{padding:14px}
+.act-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;margin-bottom:8px}
+.act-nombre{font-size:13px;font-weight:700;color:#555;margin-bottom:2px}
+.act-titulo{font-size:15px;font-weight:900;color:#222;margin-bottom:6px;line-height:1.3}
+.act-meta{font-size:12px;color:#aaa;line-height:1.6;margin-bottom:10px}
+.act-img{width:100%;height:160px;object-fit:cover}
+.act-footer{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn-apuntar{padding:8px 18px;background:#764ba2;color:#fff;border:none;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-apuntar.apuntado{background:#f3e8ff;color:#764ba2}
+.btn-aparecio{padding:8px 16px;background:#1a7a1a;color:#fff;border:none;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-interesa{padding:8px 16px;background:#2e7d32;color:#fff;border:none;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-wa{padding:8px 14px;background:#f0f0ee;color:#555;border:none;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-dl{padding:8px 18px;background:#1a1a1a;color:#fff;border:none;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.btn-descargar{padding:8px 18px;background:#1a1a1a;color:#fff;border:none;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.btn-info{padding:8px 16px;background:#c0392b;color:#fff;border:none;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer}
+.apuntes-wrap{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.apunte-avatar{width:24px;height:24px;border-radius:6px;object-fit:cover;border:1.5px solid #fff}
+.apuntados-count{font-size:11px;color:#aaa;margin-left:auto}
+.fab-pill{position:fixed;bottom:24px;right:20px;display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:99px;color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:70;text-decoration:none}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .modal-overlay.open{display:flex}
-.modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
-.modal-title{font-size:18px;font-weight:900;color:#222;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
-.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:#888}
-.modal label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;display:block;margin-bottom:4px;margin-top:12px}
-.modal input,.modal select,.modal textarea{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none}
-.modal input:focus,.modal select:focus{border-color:#00B4B4}
-.modal-footer{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
-.btn-save{padding:10px 24px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
-.btn-cancel{padding:10px 24px;background:#f0f0ee;color:#666;border:none;border-radius:8px;font-size:14px;cursor:pointer}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
-.loading{text-align:center;padding:60px;color:#888}
-.foto-drop{border:2px dashed #ddd;border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:border .2s;margin:12px 0}
-.foto-drop:hover{border-color:#00B4B4}
-.foto-preview{width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px;display:none}
-.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto}
+.modal-handle{width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px}
+.modal-titulo{font-size:18px;font-weight:900;color:#222;margin-bottom:16px}
+.form-label{font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.form-input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:12px;font-family:Arial,sans-serif}
+.form-input:focus{border-color:#764ba2}
+.tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.campos-perdido{display:none;border-top:1.5px dashed #f0e0e0;padding-top:14px;margin-top:4px}
+.foto-upload-perdido{border:2px dashed #e0e0e0;border-radius:12px;padding:12px;text-align:center;cursor:pointer;margin-bottom:12px;transition:all .2s;position:relative}
+.foto-upload-perdido:hover{border-color:#c0392b;background:#fff8f8}
+.foto-upload-perdido input{display:none}
+.foto-upload-perdido img{width:100%;height:160px;object-fit:cover;border-radius:8px;display:block}
+.foto-upload-label{font-size:13px;color:#aaa;padding:16px 0;display:block}
+.foto-upload-label span{color:#c0392b;font-weight:600}
+.campos-perdido.visible{display:block}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-select{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:12px;background:#fff;font-family:Arial,sans-serif;cursor:pointer}
+.form-select:focus{border-color:#c0392b}
+.campo-requerido{color:#c0392b;font-size:11px;margin-bottom:4px;display:none}
+.campo-requerido.visible{display:block}
+.form-input.error{border-color:#c0392b}
+.perdido-tip{background:#fff8f8;border-left:3px solid #c0392b;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#c0392b;margin-bottom:14px;line-height:1.5}
+.tipo-option{padding:12px;border:1.5px solid #e0e0e0;border-radius:12px;text-align:center;cursor:pointer;transition:all .2s;font-size:13px;font-weight:600;color:#555}
+.tipo-option.selected{border-color:#764ba2;background:#f3e8ff;color:#764ba2}
+.btn-publicar{width:100%;padding:14px;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
+.empty{text-align:center;padding:48px 20px}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-txt{font-size:14px;color:#888}
+.spinner{width:36px;height:36px;border:3px solid #f0f0f0;border-top-color:#764ba2;border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
-.screen{display:none}
-.screen.active{display:block}
-@media(max-width:768px){
-  .sidebar{width:100%;height:56px;flex-direction:row;position:fixed;bottom:0;top:auto}
-  .sidebar-logo,.sidebar-footer{display:none}
-  .sidebar-nav{display:flex;flex-direction:row;padding:0;overflow-x:auto}
-  .nav-item{flex-direction:column;gap:2px;padding:6px 12px;font-size:10px;border-left:none;border-top:3px solid transparent;min-width:60px;justify-content:center}
-  .nav-item.active{border-top-color:#00B4B4;border-left:none}
-  .content{margin-left:0;padding:14px;padding-bottom:70px}
-  .stats-grid{grid-template-columns:1fr 1fr}
-  .charts-grid{grid-template-columns:1fr}
-}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.modal-contacto-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.modal-contacto-overlay.open{display:flex}
+.modal-contacto-sheet{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:600px}
+.modal-contacto-handle{width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px}
+.modal-contacto-titulo{font-size:17px;font-weight:900;color:#222;margin-bottom:4px}
+.modal-contacto-sub{font-size:13px;color:#888;margin-bottom:16px}
+.modal-contacto-input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:8px;font-family:Arial,sans-serif;resize:none}
+.modal-contacto-input:focus{border-color:#c0392b}
+.modal-contacto-nombre{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;margin-bottom:12px;font-family:Arial,sans-serif}
+.modal-contacto-nombre:focus{border-color:#c0392b}
+.btn-enviar-contacto{width:100%;padding:14px;background:#c0392b;color:#fff;border:none;border-radius:99px;font-size:15px;font-weight:700;cursor:pointer}
+.btn-cancelar-contacto{width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:99px;font-size:14px;cursor:pointer;margin-top:8px}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
 
-<div class="login-wrap" id="loginWrap">
-  <div class="login-box">
-    <div class="login-logo">petz<span>ID</span></div>
-    <div class="login-sub">Panel de administracion PetMi</div>
-    <input type="password" id="loginPass" placeholder="Contrasena" onkeydown="if(event.key==='Enter'&&window.doLogin)doLogin()">
-    <button class="login-btn" onclick="window.doLogin&&doLogin()">Ingresar</button>
-    <div class="login-err" id="loginErr">Contrasena incorrecta</div>
+<div class="hero">
+  <h1>📢 Avisos</h1>
+  <p>Mascotas perdidas, busco y adopciones de la comunidad</p>
+</div>
+
+<div class="filtros-wrap">
+  <div class="filtros-scroll">
+    <button class="filtro-btn active" onclick="setFiltro('',this)">Todos</button>
+    <button class="filtro-btn" onclick="setFiltro('perdido',this)">🚨 Perdidos</button>
+    <button class="filtro-btn" onclick="setFiltro('busco',this)">🔍 Busco</button>
+    <button class="filtro-btn" onclick="setFiltro('adopcion',this)">🏠 Adopción</button>
+    <button class="filtro-btn" onclick="setFiltro('venta',this)">💰 Venta</button>
+    <button class="filtro-btn" onclick="setFiltro('evento',this)">🎪 Eventos</button>
   </div>
 </div>
 
-<div class="app" id="appWrap">
-  <div class="sidebar">
-    <div class="sidebar-logo">petz<span>ID</span></div>
-    <nav class="sidebar-nav">
-      <div class="nav-item active" onclick="showScreen('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
-      <a class="nav-item" href="/admin-mundial.html" style="text-decoration:none;background:rgba(245,200,66,.12);color:#F5C842;border-left:3px solid #F5C842"><span class="nav-icon">⚽</span>Mundial 2026</a>
-      <div class="nav-item" onclick="showScreen('mascotas',this)"><span class="nav-icon">🐾</span>Mascotas</div>
-      <div class="nav-item" onclick="showScreen('familias',this)"><span class="nav-icon">🏠</span>Familias</div>
-      <div class="nav-item" onclick="showScreen('eventos',this)"><span class="nav-icon">🎉</span>Eventos y Avisos</div>
-      <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
-      <div class="nav-item" onclick="showScreen('grupos',this)"><span class="nav-icon">👥</span>Grupos</div>
-      <div class="nav-item" onclick="showScreen('campanas',this)"><span class="nav-icon">📧</span>Campanas</div>
-      <a class="nav-item" href="/admin-afiliados.html" style="text-decoration:none"><span class="nav-icon">🤝</span>Afiliados</a>
-      <a class="nav-item" href="/admin-premium.html" style="text-decoration:none"><span class="nav-icon">⭐</span>Premium</a>
-      <div class="nav-item" onclick="showScreen('puntos',this)"><span class="nav-icon">🏆</span>Puntos</div>
-      <div class="nav-item" onclick="showScreen('instalaciones',this)"><span class="nav-icon">📲</span>Instalaciones</div>
-      <div class="nav-item" onclick="showScreen('juegos',this)"><span class="nav-icon">🎮</span>Juegos</div>
-      <div class="nav-item" onclick="showScreen('amigos',this)"><span class="nav-icon">👥</span>Amigos</div>
-    </nav>
-    <div class="sidebar-footer">
-      <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
+<div class="wrap" id="contenido"><div class="spinner"></div></div>
+
+<button class="fab-pill" id="btnPublicar" style="background:#764ba2" onclick="abrirPublicar()"><i class="ti ti-plus" aria-hidden="true"></i>Publicar aviso</button>
+
+<div class="modal-overlay" id="modalPublicar">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-titulo">Publicar aviso</div>
+    <div class="tipo-grid">
+      <div class="tipo-option selected" onclick="selTipo('perdido',this)">🚨<br>Perdido</div>
+      <div class="tipo-option" onclick="selTipo('busco',this)">🔍<br>Busco</div>
+      <div class="tipo-option" onclick="selTipo('adopcion',this)">🏠<br>Adopción</div>
+      <div class="tipo-option" id="tipoEventoBtn" onclick="selTipo('evento',this)" style="border-color:#00B4B4;color:#006060">🎪<br>Evento</div>
+      <div class="tipo-option" id="tipoVentaBtn" onclick="selTipo('venta',this)" style="display:none;border-color:#F5C842;color:#856404">💰<br>Vender</div>
     </div>
-  </div>
+    <label class="form-label">Título *</label>
+    <input type="text" class="form-input" id="pubTitulo" placeholder="Ej: Se perdió Cami en Zona 10">
+    <label class="form-label">Descripción</label>
+    <textarea class="form-input" id="pubDesc" rows="3" placeholder="Más detalles..." style="resize:none"></textarea>
+    <label class="form-label">Fecha (opcional)</label>
+    <input type="date" class="form-input" id="pubFecha">
+    <label class="form-label">Ubicación</label>
+    <input type="text" class="form-input" id="pubUbicacion" placeholder="Zona 10, Guatemala">
 
-  <div class="content">
-
-    <div class="screen active" id="screenDashboard">
-      <div class="page-header">
-        <div><div class="page-title">Dashboard</div><div class="page-sub">Resumen general</div></div>
-        <button class="btn-primary" onclick="loadData()">Actualizar</button>
-      </div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon">🐾</div><div class="stat-num" id="statTotal">-</div><div class="stat-lbl">Total registros</div></div>
-        <div class="stat-card"><div class="stat-icon">🐶</div><div class="stat-num" id="statPerros">-</div><div class="stat-lbl">Perros</div></div>
-        <div class="stat-card"><div class="stat-icon">🐱</div><div class="stat-num" id="statGatos">-</div><div class="stat-lbl">Gatos</div></div>
-        <div class="stat-card"><div class="stat-icon">📧</div><div class="stat-num" id="statEnviados">-</div><div class="stat-lbl">IDs enviados</div></div>
-      </div>
-      <div class="charts-grid">
-        <div class="chart-card"><div class="chart-title">Top Zonas</div><div id="chartZonas"><div class="loading"><div class="spinner"></div></div></div></div>
-        <div class="chart-card"><div class="chart-title">Registros por mes</div><div id="chartMeses"><div class="loading"><div class="spinner"></div></div></div></div>
-      </div>
-      <div class="charts-grid">
-        <div class="chart-card"><div class="chart-title">Top Alimentos</div><div id="chartAlimentos"><div class="loading"><div class="spinner"></div></div></div></div>
-        <div class="chart-card"><div class="chart-title">Estado envios</div><div id="chartEnvios"><div class="loading"><div class="spinner"></div></div></div></div>
-      </div>
-      <div class="charts-grid" style="grid-template-columns:1fr 1fr 1fr">
-        <div class="chart-card"><div class="chart-title">🐕 Top Razas</div><div id="chartRazas"></div></div>
-        <div class="chart-card"><div class="chart-title">📷 Estado fotos</div><div id="chartFotos"></div></div>
-        <div class="chart-card"><div class="chart-title">🎂 Cumpleaños por mes</div><div id="chartCumples"></div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
-        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Sin foto</div><div id="statSinFoto" style="font-size:28px;font-weight:900;color:#E05090">-</div></div>
-        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Angelitos</div><div id="statAngelitos" style="font-size:28px;font-weight:900;color:#764ba2">-</div></div>
-        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Familias únicas</div><div id="statFamilias" style="font-size:28px;font-weight:900;color:#00B4B4">-</div></div>
-        <div class="stat-card" style="text-align:center;padding:14px"><div style="font-size:11px;font-weight:700;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Este mes</div><div id="statEsteMes" style="font-size:28px;font-weight:900;color:#F5C842">-</div></div>
+    <!-- Foto para adopcion -->
+    <div id="camposAdopcion" style="display:none;border-top:1.5px dashed #e0f0e0;padding-top:14px;margin-top:4px">
+      <div style="background:#e8f5e9;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#2e7d32">🏠 Los avisos de adopción requieren aprobación del admin antes de publicarse</div>
+      <label class="form-label">Foto de la mascota en adopción</label>
+      <div class="foto-upload-perdido" id="fotoAdopcionWrap" onclick="document.getElementById('adopcionFotoInput').click()">
+        <img id="adopcionFotoPreview" style="display:none">
+        <div class="foto-upload-label" id="adopcionFotoLabel">📷 Toca para agregar una foto · <span style="color:#2e7d32">Recomendado</span></div>
+        <input type="file" id="adopcionFotoInput" accept="image/*" onchange="previsualizarFotoAdopcion(this)">
       </div>
     </div>
 
-    <div class="screen" id="screenMascotas">
-      <div class="page-header">
-        <div><div class="page-title">Mascotas</div><div class="page-sub" id="tableInfo">Cargando...</div></div>
+    <!-- Campos adicionales para perdido -->
+    <div class="campos-perdido" id="camposPerdido">
+      <div class="perdido-tip">🚨 Para avisos de perdido necesitamos más datos para el póster</div>
+
+      <label class="form-label">Foto de la mascota</label>
+      <div class="foto-upload-perdido" id="fotoUploadWrap" onclick="document.getElementById('perdidoFotoInput').click()">
+        <img id="perdidoFotoPreview" style="display:none">
+        <div class="foto-upload-label" id="perdidoFotoLabel">📷 Toca para agregar una foto · <span>Recomendado</span></div>
+        <input type="file" id="perdidoFotoInput" accept="image/*" onchange="previsualizarFotoPerdido(this)">
       </div>
-      <div class="search-bar">
-        <input type="text" id="searchNombre" placeholder="Nombre mascota...">
-        <input type="text" id="searchDueno" placeholder="Nombre dueno...">
-        <select id="filterEspecie"><option value="">Todas</option><option>Perro</option><option>Gato</option></select>
-        <input type="text" id="filterZona" placeholder="Zona...">
-        <select id="filterFoto">
-          <option value="">Todas las fotos</option>
-          <option value="sin_foto">Sin foto</option>
-          <option value="con_foto">Con foto</option>
-        </select>
-        <select id="filterEnviado">
-          <option value="">Todos los estados</option>
-          <option value="Si">Enviado</option>
-          <option value="Pendiente">Pendiente</option>
-          <option value="migraci">Migracion</option>
-        </select>
-        <button class="btn-search" onclick="applyFilters()">Buscar</button>
-        <button class="btn-clear" onclick="clearFilters()">Limpiar</button>
-        <button class="btn-primary" onclick="syncSupabase()" id="btnSync" style="background:#764ba2;margin-left:8px">🔄 Sync Supabase</button>
-      </div>
-      <div id="syncStatus" style="display:none;background:#e0f7f7;border:1px solid #00B4B4;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#007a7a"></div>
-      <div class="table-card">
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>Foto</th><th>Mascota</th><th>Especie</th><th>Zona</th>
-              <th>Dueno</th><th>Email</th><th>Alimento</th><th>Fecha</th><th>Estado</th><th>Premium</th><th>Acciones</th>
-            </tr></thead>
-            <tbody id="tableBody"><tr><td colspan="10"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
-          </table>
+
+      <label class="form-label">Nombre de la mascota *</label>
+      <input type="text" class="form-input" id="pubNombreMascota" placeholder="Ej: Cami, Oso, Luna...">
+      <div class="form-row">
+        <div>
+          <label class="form-label">Especie *</label>
+          <select class="form-select" id="pubEspecie">
+            <option value="">Selecciona...</option>
+            <option value="Perro">Perro</option>
+            <option value="Gato">Gato</option>
+            <option value="Otro">Otro</option>
+          </select>
         </div>
-        <div class="pagination">
-          <span class="page-info" id="pageInfo">-</span>
-          <button class="page-btn" id="btnPrev" onclick="changePage(-1)">← Anterior</button>
-          <button class="page-btn" id="btnNext" onclick="changePage(1)">Siguiente →</button>
+        <div>
+          <label class="form-label">Sexo *</label>
+          <select class="form-select" id="pubSexo">
+            <option value="">Selecciona...</option>
+            <option value="Macho">Macho</option>
+            <option value="Hembra">Hembra</option>
+          </select>
         </div>
       </div>
+      <label class="form-label">Raza</label>
+      <input type="text" class="form-input" id="pubRaza" placeholder="Ej: Labrador, Mestizo, Poodle...">
+      <label class="form-label">Teléfono de contacto *</label>
+      <input type="tel" class="form-input" id="pubTelefono" placeholder="Ej: 5555 1234" maxlength="15">
+      <label class="form-label">Recompensa (opcional)</label>
+      <input type="text" class="form-input" id="pubRecompensa" placeholder="Ej: Q 500">
     </div>
 
-    <div class="screen" id="screenFamilias">
-      <div class="page-header">
-        <div><div class="page-title">Grupos Familiares</div><div class="page-sub" id="familiaInfo">Cargando...</div></div>
-        <input type="text" id="searchFamilia" placeholder="Buscar familia..." oninput="renderFamilias()" style="padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none;min-width:200px">
-      </div>
-      <div id="familiasGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
-        <div class="loading"><div class="spinner"></div></div>
-      </div>
+    <!-- Campos adicionales para evento -->
+    <div id="camposEvento" style="display:none;border-top:1.5px dashed #b2ece5;padding-top:14px;margin-top:4px">
+      <div style="background:#e0f7f7;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#006060">🎪 Los eventos requieren aprobación del admin antes de publicarse</div>
+      <label class="form-label">Fecha del evento *</label>
+      <input type="date" class="form-input" id="eventoFecha">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-input" id="eventoHora">
+      <label class="form-label">Lugar</label>
+      <input type="text" class="form-input" id="eventoLugar" placeholder="Ej: Parque Cayalá, Zona 10">
+      <label class="form-label">Link del evento (opcional)</label>
+      <input type="url" class="form-input" id="eventoLink" placeholder="https://...">
     </div>
 
-    <div class="screen" id="screenCampanas">
-      <div class="page-header">
-        <div><div class="page-title">Campanas</div><div class="page-sub">Historial de envios</div></div>
-      </div>
-      <div class="table-card">
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Fecha</th><th>Segmento</th><th>Asunto</th><th>Enviados</th><th>Errores</th></tr></thead>
-            <tbody id="campanaBody"><tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div id="screenPuntos" class="screen">
-      <h2 class="screen-title">🏆 Sistema de Puntos</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px" id="puntosStats">
-        <div class="stat-card"><div class="stat-num" id="ptsTotal">—</div><div class="stat-lbl">Usuarios con puntos</div></div>
-        <div class="stat-card"><div class="stat-num" id="ptsTotalSum">—</div><div class="stat-lbl">Puntos totales entregados</div></div>
-        <div class="stat-card"><div class="stat-num" id="ptsPerfiles">—</div><div class="stat-lbl">Perfiles completos</div></div>
-        <div class="stat-card"><div class="stat-num" id="ptsInstalaciones">—</div><div class="stat-lbl">Apps instaladas</div></div>
-      </div>
-      <div class="table-card">
-        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee;display:flex;align-items:center;justify-content:space-between">
-          Ranking de puntos por usuario
-          <button onclick="exportPuntos()" style="padding:6px 14px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer">⬇ Exportar CSV</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>#</th><th>Email</th><th>Total pts</th><th>Perfiles</th><th>App</th><th>Referidos</th><th>Racha</th><th>Juego</th></tr></thead>
-            <tbody id="puntosBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="table-card" style="margin-top:16px">
-        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Historial reciente de puntos</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Email</th><th>Acción</th><th>Pts</th><th>Fecha</th></tr></thead>
-            <tbody id="puntosHistBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    <div id="screenInstalaciones" class="screen">
-      <h2 class="screen-title">📲 Instalaciones de la App</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
-        <div class="stat-card"><div class="stat-num" id="instTotal">—</div><div class="stat-lbl">Total instalaciones</div></div>
-        <div class="stat-card"><div class="stat-num" id="instAndroid">—</div><div class="stat-lbl">Android</div></div>
-        <div class="stat-card"><div class="stat-num" id="instIOS">—</div><div class="stat-lbl">iOS</div></div>
-        <div class="stat-card"><div class="stat-num" id="instHoy">—</div><div class="stat-lbl">Hoy</div></div>
-      </div>
-      <div class="table-card">
-        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Detalle de instalaciones</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Email</th><th>Plataforma</th><th>Dispositivo</th><th>Fecha</th></tr></thead>
-            <tbody id="instBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    <div id="screenJuegos" class="screen">
-      <h2 class="screen-title">🎮 Estadísticas de Juegos</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
-        <div class="stat-card"><div class="stat-num" id="jTotalPartidas">—</div><div class="stat-lbl">Total partidas</div></div>
-        <div class="stat-card"><div class="stat-num" id="jJugadoresUnicos">—</div><div class="stat-lbl">Jugadores únicos</div></div>
-        <div class="stat-card"><div class="stat-num" id="jHoy">—</div><div class="stat-lbl">Jugaron hoy</div></div>
-        <div class="stat-card"><div class="stat-num" id="jRacha">—</div><div class="stat-lbl">Racha más larga</div></div>
-      </div>
-      <div class="table-card" style="margin-bottom:16px">
-        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Partidas por día (últimos 14 días)</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Fecha</th><th>Partidas</th><th>Jugadores</th><th>Pts promedio</th></tr></thead>
-            <tbody id="jDiasBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="table-card">
-        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Ranking de jugadores</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>#</th><th>Email</th><th>Partidas</th><th>Puntos totales</th><th>Última partida</th></tr></thead>
-            <tbody id="jRankingBody"><tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    <div id="screenAmigos" class="screen">
-      <h2 class="screen-title">👥 Estadísticas de Amigos</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
-        <div class="stat-card"><div class="stat-num" id="aTotalAmigos">—</div><div class="stat-lbl">Total amistades</div></div>
-        <div class="stat-card"><div class="stat-num" id="aPendientes">—</div><div class="stat-lbl">Solicitudes pendientes</div></div>
-        <div class="stat-card"><div class="stat-num" id="aMensajes">—</div><div class="stat-lbl">Mensajes enviados</div></div>
-        <div class="stat-card"><div class="stat-num" id="aConversaciones">—</div><div class="stat-lbl">Conversaciones activas</div></div>
-      </div>
-      <div class="table-card" style="margin-bottom:16px">
-        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Usuarios más conectados</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Email</th><th>Amigos</th><th>Mensajes enviados</th></tr></thead>
-            <tbody id="aConectadosBody"><tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="table-card">
-        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Solicitudes recientes</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>De</th><th>Para</th><th>Estado</th><th>Fecha</th></tr></thead>
-            <tbody id="aSolicitudesBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="screen" id="screenEventos">
-      <div class="page-header">
-        <div><div class="page-title">Eventos y Avisos</div><div class="page-sub" id="subEventos">-</div></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn-primary" style="background:#764ba2" onclick="cargarAvisosTipo('plan')">🐾 Planes</button>
-          <button class="btn-primary" style="background:#2e7d32" onclick="cargarAvisosTipo('busco')">🔍 Busco</button>
-          <button class="btn-primary" style="background:#2e7d32" onclick="cargarAvisosTipo('adopcion')">🏠 Adopcion</button>
-          <button class="btn-primary" style="background:#f0a500" onclick="filtrarEventosPendientes()">⏳ Eventos</button>
-          <button class="btn-primary" onclick="cargarEventosAdmin()">Todos eventos</button>
-          <button class="btn-primary" onclick="window.location.href='/admin-evento.html'">+ Nuevo</button>
-        </div>
-      </div>
-      <div class="table-card"><div id="eventosAdminWrap"><div class="loading"><div class="spinner"></div></div></div></div>
-    </div>
-
-    <div class="screen" id="screenLugares">
-      <div class="page-header">
-        <div><div class="page-title">Lugares Pet-Friendly</div><div class="page-sub" id="subLugares">-</div></div>
-        <button class="btn-primary" onclick="window.location.href='/admin-lugar.html'">+ Nuevo Lugar</button>
-      </div>
-      <div class="table-card"><div id="lugaresAdminWrap"><div class="loading"><div class="spinner"></div></div></div>
-
-    <div class="screen" id="screenReglas">
-      <div class="page-header">
-        <div><div class="page-title">Aceptacion de reglas</div><div class="page-sub" id="subReglas">Cargando...</div></div>
-        <button class="btn-primary" onclick="cargarReglas()">🔄 Actualizar</button>
-      </div>
-      <div class="table-card">
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Email</th><th>Fecha</th><th>Version</th></tr></thead>
-            <tbody id="reglasBody"><tr><td colspan="3"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-    <div class="screen" id="screenGrupos">
-      <div class="page-header">
-        <div><div class="page-title">Grupos</div><div class="page-sub" id="subGrupos">Cargando...</div></div>
-        <button class="btn-primary" onclick="cargarAdminGrupos()">🔄 Actualizar</button>
-      </div>
-
-      <!-- Solicitudes pendientes -->
-      <div style="margin-bottom:16px">
-        <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:8px">📥 Solicitudes pendientes</div>
-        <div class="table-card" id="solicitudesGruposWrap">
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Nombre</th><th>Solicitante</th><th>Fecha</th><th>Acciones</th></tr></thead>
-              <tbody id="solicitudesGruposBody"><tr><td colspan="4"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Grupos activos -->
-      <div>
-        <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:8px">✅ Grupos activos</div>
-        <div class="table-card">
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Sponsor</th><th>Miembros</th><th>Acciones</th></tr></thead>
-              <tbody id="gruposActivosBody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- ── SCREEN MUNDIAL ───────────────────────────────── -->
-    <div id="screenMundial" class="screen">
-      <div class="page-header"><div><div class="page-title">⚽ Quiniela Mundial 2026</div><div class="page-sub">Partidos y predicciones del Mundial FIFA 2026</div></div><button class="btn-primary" onclick="loadWCAdmin()">🔄 Actualizar</button></div>
-
-      <!-- Stats -->
-      <div class="stats-grid" style="margin-bottom:16px">
-        <div class="stat-card"><div class="stat-num" id="wcTotal">—</div><div class="stat-lbl">Partidos</div></div>
-        <div class="stat-card"><div class="stat-num" id="wcPreds">—</div><div class="stat-lbl">Predicciones</div></div>
-        <div class="stat-card"><div class="stat-num" id="wcParticipantes">—</div><div class="stat-lbl">Participantes</div></div>
-        <div class="stat-card"><div class="stat-num" id="wcPendientes">—</div><div class="stat-lbl">Pendientes</div></div>
-      </div>
-
-      <!-- Marcar resultado -->
-      <div class="table-card" style="margin-bottom:16px">
-        <div style="padding:16px">
-          <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:14px">🏁 Marcar resultado de partido</div>
-          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-            <select id="wcSelectPartido" style="flex:1;min-width:200px;padding:10px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px">
-              <option value="">Seleccionar partido...</option>
-            </select>
-            <select id="wcSelectResultado" style="flex:1;min-width:160px;padding:10px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px">
-              <option value="">Resultado...</option>
-              <option value="equipo1">Gana Equipo 1</option>
-              <option value="empate">Empate</option>
-              <option value="equipo2">Gana Equipo 2</option>
-            </select>
-            <button class="btn-primary" onclick="wcMarcarResultado()" style="padding:10px 20px">✅ Confirmar</button>
-          </div>
-          <div id="wcResultMsg" style="font-size:13px;color:#00B4B4;display:none"></div>
-        </div>
-      </div>
-
-      <!-- Lista de partidos -->
-      <div class="table-card">
-        <div style="padding:12px;border-bottom:0.5px solid #f0f0f0"><span style="font-size:13px;font-weight:700">Partidos y predicciones</span></div>
-        <div id="wcPartidosWrap"><div style="padding:24px;text-align:center;color:#888"><div class="spinner" style="margin:0 auto 8px"></div>Cargando partidos...</div></div>
-      </div>
-
-      <!-- Ranking -->
-      <div class="table-card" style="margin-top:16px">
-        <div style="padding:12px;border-bottom:0.5px solid #f0f0f0"><span style="font-size:13px;font-weight:700">🏆 Ranking de participantes</span></div>
-        <div id="wcRankingWrap"><div style="padding:24px;text-align:center;color:#888"><div class="spinner" style="margin:0 auto 8px"></div>Cargando ranking...</div></div>
-      </div>
-    </div>
-
-    <!-- ── SCREEN PUNTOS ────────────────────────────────── -->
-
-
-      <!-- ── SCREEN INSTALACIONES ──────────────────────────── -->
-
-
-      <!-- ── SCREEN JUEGOS ─────────────────────────────────── -->
-
-
-      <!-- ── SCREEN AMIGOS ──────────────────────────────────── -->
-<!-- AFILIADOS --><!-- MODAL EDITAR -->
-<div class="modal-overlay" id="modalEdit">
-  <div class="modal">
-    <div class="modal-title"><span id="modalEditTitle">Editar</span><button class="modal-close" onclick="closeModal('modalEdit')">✕</button></div>
-    <div id="modalEditBody"></div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('modalEdit')">Cancelar</button>
-      <button class="btn-save" onclick="saveEdit()">Guardar</button>
-    </div>
+    <button class="btn-publicar" onclick="publicar()">Publicar aviso</button>
+    <button onclick="cerrarPublicar()" style="width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer;margin-top:8px">Cancelar</button>
   </div>
 </div>
 
-<!-- MODAL VER ID -->
-<div class="modal-overlay" id="modalID">
-  <div class="modal" style="max-width:540px">
-    <div class="modal-title"><span>PetzID</span><button class="modal-close" onclick="closeModal('modalID')">✕</button></div>
-    <div id="modalIDBody"></div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('modalID')">Cerrar</button>
-      <button class="btn-save" onclick="downloadID()">Descargar PNG</button>
-    </div>
+<div class="modal-contacto-overlay" id="modalContacto">
+  <div class="modal-contacto-sheet">
+    <div class="modal-contacto-handle"></div>
+    <div class="modal-contacto-titulo" id="contactoTitulo">Tengo información</div>
+    <div class="modal-contacto-sub" id="contactoSub">Cuéntanos lo que sabes sobre esta mascota</div>
+    <input type="text" class="modal-contacto-nombre" id="contactoNombre" placeholder="Tu nombre">
+    <textarea class="modal-contacto-input" id="contactoMsg" rows="4" placeholder="Escribe aquí la información que tienes..."></textarea>
+    <button class="btn-enviar-contacto" id="btnEnviarContacto" onclick="enviarContacto()">📞 Enviar información</button>
+    <button class="btn-cancelar-contacto" onclick="cerrarContacto()">Cancelar</button>
   </div>
 </div>
-
-<!-- MODAL FAMILIA -->
-<div class="modal-overlay" id="modalFamilia">
-  <div class="modal">
-    <div class="modal-title"><span id="modalFamiliaTitle">Familia</span><button class="modal-close" onclick="closeModal('modalFamilia')">✕</button></div>
-    <div id="modalFamiliaBody"></div>
-    <div class="modal-footer"><button class="btn-cancel" onclick="closeModal('modalFamilia')">Cerrar</button></div>
-  </div>
-</div>
-
-<!-- MODAL FOTO -->
-<div class="modal-overlay" id="modalFoto">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-title">
-      <span>📷 Cambiar foto</span>
-      <button class="modal-close" onclick="closeModal('modalFoto')">✕</button>
-    </div>
-    <p id="fotoMascotaInfo" style="font-size:13px;color:#888;margin-bottom:16px"></p>
-    <div style="display:flex;gap:6px;background:#f0f0ee;border-radius:10px;padding:4px;margin-bottom:16px">
-      <div id="tabUpload" onclick="switchFotoTab('upload')" style="flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)">Subir foto</div>
-      <div id="tabLink"   onclick="switchFotoTab('link')"   style="flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer">Link URL</div>
-    </div>
-    <div id="panelUpload">
-      <div class="foto-drop" onclick="document.getElementById('adminFileInput').click()">
-        <div style="font-size:28px;margin-bottom:8px">📸</div>
-        <div style="font-size:13px;color:#888">Toca para seleccionar una imagen</div>
-      </div>
-      <input type="file" id="adminFileInput" accept="image/*" style="display:none" onchange="onAdminFotoChange(event)">
-      <img id="fotoPreviewImg" style="display:none;width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px">
-    </div>
-    <div id="panelLink" style="display:none">
-      <label style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px">URL de la foto</label>
-      <input type="text" id="fotoLinkInput" placeholder="https://..." oninput="onLinkChange()" style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none">
-      <img id="fotoLinkPreview" style="display:none;width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-top:10px" onload="this.style.display='block'">
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal('modalFoto')">Cancelar</button>
-      <button class="btn-save" id="btnSubirFoto" onclick="subirFotoAdmin()" disabled>Guardar foto</button>
-    </div>
-  </div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
-// Stub seguro para doLogin — se sobreescribe cuando carga el script principal
-function doLogin(){
-  var pass=document.getElementById('loginPass');
-  if(!pass)return;
-  if(pass.value==='petmi2024'){
-    localStorage.setItem('petmi_admin','1');
-    var lw=document.getElementById('loginWrap');
-    var aw=document.getElementById('appWrap');
-    if(lw)lw.style.display='none';
-    if(aw)aw.style.display='flex';
-    if(typeof cargarDashboard==='function') cargarDashboard();
-  } else {
-    var err=document.getElementById('loginErr');
-    if(err){err.textContent='Contraseña incorrecta';err.style.display='block';}
-  }
-}
-</script>
-<script>
-// ── Configuración ─────────────────────────────────────────────
-// Las llamadas a Supabase van siempre a través de /api/galeria (servidor)
-// NUNCA incluir service_role key en el cliente
-var PASSWORD    = 'petmi2024';
-var CLOUD_NAME  = 'dh5wgqgmk';
-var UPLOAD_PRESET = 'petzid';
+var sessionEmail = localStorage.getItem('petzid_email')||'';
+var miMascota    = null;
+var esAfiliado   = false;
+var afiliadoPlan = null;
+var ventasLimite = 3;  // base Premium
+var ventasUsadas = 0;
+var ventasExtraVence = null;
+var filtroActual = '';
+var avisosData   = [];
+var tipoSel      = 'perdido';
 
-var allData = [], filtered = [], familias = {}, campanas = [];
-var page = 1, perPage = 25, editIdx = null;
-var adminFotoBase64 = null, adminFotoUID = null, adminFotoTab = 'upload';
-var editingEventoId = null, editingLugarId = null;
+var TIPO_COLORS = {
+  perdido:  {bg:'#ffebee',color:'#c0392b',header:'#c0392b'},
 
-// ── Auth ──────────────────────────────────────────────────────
-function doLogin(){
-  if(document.getElementById('loginPass').value === PASSWORD){
-    document.getElementById('loginWrap').style.display='none';
-    document.getElementById('appWrap').style.display='flex';
-    loadData();
-  } else {
-    document.getElementById('loginErr').style.display='block';
-  }
-}
-function doLogout(){
-  document.getElementById('loginWrap').style.display='flex';
-  document.getElementById('appWrap').style.display='none';
-  document.getElementById('loginPass').value='';
-}
+  busco:    {bg:'#e8f5e9',color:'#2e7d32',header:'#2e7d32'},
+  adopcion: {bg:'#e8f5e9',color:'#2e7d32',header:'#2e7d32'}
+};
+var TIPO_LABELS = {perdido:'🚨 Perdido',busco:'🔍 Busco',adopcion:'🏠 Adopción',venta:'💰 Venta'};
 
-// ── Navegación ────────────────────────────────────────────────
-// ── Puntos Admin ──────────────────────────────────────────
-var SUPA_ADM = 'https://ilcreewilnkchvozicyp.supabase.co';
-var SUPA_ADM_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
-var SUPA_ADM_H = {'apikey': SUPA_ADM_KEY, 'Authorization': 'Bearer ' + SUPA_ADM_KEY};
-
-function loadPuntos(){
-  fetch(SUPA_ADM + '/rest/v1/puntos?select=email,accion,puntos,created_at&order=created_at.desc&limit=500', {headers: SUPA_ADM_H})
-  .then(function(r){return r.json();})
-  .then(function(rows){
-    if(!rows||!rows.length){
-      document.getElementById('puntosBody').innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Sin registros</td></tr>';
-      return;
-    }
-    // Aggregate by email
-    var byEmail = {};
-    rows.forEach(function(r){
-      if(!byEmail[r.email]) byEmail[r.email]={total:0,perfil:0,app:0,ref:0,racha:0,juego:0};
-      byEmail[r.email].total += r.puntos;
-      if(r.accion==='perfil_completo') byEmail[r.email].perfil += r.puntos;
-      if(r.accion==='instalar_app')    byEmail[r.email].app    += r.puntos;
-      if(r.accion==='referir_amigo')   byEmail[r.email].ref    += r.puntos;
-      if(r.accion==='racha_7dias')     byEmail[r.email].racha  += r.puntos;
-      if(r.accion==='juego_diario')    byEmail[r.email].juego  += r.puntos;
-    });
-    var sorted = Object.keys(byEmail).sort(function(a,b){return byEmail[b].total - byEmail[a].total;});
-    var totalSum = rows.reduce(function(s,r){return s+r.puntos;},0);
-    var perfiles = rows.filter(function(r){return r.accion==='perfil_completo';}).length;
-    var apps     = rows.filter(function(r){return r.accion==='instalar_app';}).length;
-
-    document.getElementById('ptsTotal').textContent = sorted.length;
-    document.getElementById('ptsTotalSum').textContent = totalSum;
-    document.getElementById('ptsPerfiles').textContent = perfiles;
-    document.getElementById('ptsInstalaciones').textContent = apps;
-
-    var html = sorted.map(function(em,i){
-      var d = byEmail[em];
-      return '<tr>'
-        +'<td>'+(i+1)+'</td>'
-        +'<td>'+em+'</td>'
-        +'<td><strong style="color:#00B4B4">'+d.total+'</strong></td>'
-        +'<td>'+(d.perfil||'')+'</td>'
-        +'<td>'+(d.app||'')+'</td>'
-        +'<td>'+(d.ref||'')+'</td>'
-        +'<td>'+(d.racha||'')+'</td>'
-        +'<td>'+(d.juego||'')+'</td>'
-        +'</tr>';
-    }).join('');
-    document.getElementById('puntosBody').innerHTML = html;
-
-    // Historial
-    var histHTML = rows.slice(0,50).map(function(r){
-      var LABELS = {perfil_completo:'🐾 Perfil completo',instalar_app:'📲 App instalada',referir_amigo:'👥 Referido',racha_7dias:'🔥 Racha 7 días',juego_diario:'🎮 Juego'};
-      return '<tr><td>'+r.email+'</td><td>'+(LABELS[r.accion]||r.accion)+'</td><td>+'+r.puntos+'</td><td>'+new Date(r.created_at).toLocaleDateString('es-GT')+'</td></tr>';
-    }).join('');
-    document.getElementById('puntosHistBody').innerHTML = histHTML || '<tr><td colspan="4" style="text-align:center;color:#aaa">Sin historial</td></tr>';
-  }).catch(function(e){ console.error(e); });
-}
-
-function exportPuntos(){
-  fetch(SUPA_ADM + '/rest/v1/puntos?select=email,accion,puntos,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
-  .then(function(r){return r.json();})
-  .then(function(rows){
-    var csv = 'email,accion,puntos,fecha\n' + rows.map(function(r){
-      return r.email+','+r.accion+','+r.puntos+','+r.created_at.split('T')[0];
-    }).join('\n');
-    var a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'puntos-petmi.csv'; a.click();
-  });
-}
-
-function loadInstalaciones(){
-  fetch(SUPA_ADM + '/rest/v1/pwa_installs?select=email,dispositivo,plataforma,created_at&order=created_at.desc&limit=200', {headers: SUPA_ADM_H})
-  .then(function(r){return r.json();})
-  .then(function(rows){
-    if(!rows||!rows.length){
-      document.getElementById('instBody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Sin instalaciones registradas</td></tr>';
-      return;
-    }
-    var hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('instTotal').textContent = rows.length;
-    document.getElementById('instAndroid').textContent = rows.filter(function(r){return r.plataforma==='Android';}).length;
-    document.getElementById('instIOS').textContent = rows.filter(function(r){return r.plataforma==='iOS';}).length;
-    document.getElementById('instHoy').textContent = rows.filter(function(r){return r.created_at && r.created_at.startsWith(hoy);}).length;
-    var html = rows.map(function(r){
-      return '<tr><td>'+(r.email||'Anónimo')+'</td><td>'+(r.plataforma||'—')+'</td><td>'+(r.dispositivo||'—')+'</td><td>'+new Date(r.created_at).toLocaleDateString('es-GT')+'</td></tr>';
-    }).join('');
-    document.getElementById('instBody').innerHTML = html;
-  }).catch(function(){
-    document.getElementById('instBody').innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa">Error al cargar</td></tr>';
-  });
-}
-
-
-// ── Juegos ────────────────────────────────────────────────────
-function loadJuegos(){
-  var hoy = new Date().toISOString().split('T')[0];
-  var hace14 = new Date(Date.now() - 14*86400000).toISOString();
-  fetch(SUPA_ADM + '/rest/v1/puntos?accion=eq.juego_diario&select=email,puntos,created_at&order=created_at.desc&limit=1000', {headers: SUPA_ADM_H})
-  .then(function(r){return r.json();})
-  .then(function(rows){
-    if(!rows||!rows.length){
-      ['jDiasBody','jRankingBody'].forEach(function(id){document.getElementById(id).innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Sin datos</td></tr>';});
-      return;
-    }
-    // Stats generales
-    var emails = [...new Set(rows.map(function(r){return r.email;}))];
-    var hoyRows = rows.filter(function(r){return r.created_at && r.created_at.startsWith(hoy);});
-    document.getElementById('jTotalPartidas').textContent = rows.length;
-    document.getElementById('jJugadoresUnicos').textContent = emails.length;
-    document.getElementById('jHoy').textContent = hoyRows.length;
-
-    // Racha más larga (por email)
-    var maxRacha = 0;
-    emails.forEach(function(email){
-      var fechas = [...new Set(rows.filter(function(r){return r.email===email;}).map(function(r){return r.created_at.split('T')[0];}).sort())];
-      var racha = 1, maxR = 1;
-      for(var i=1;i<fechas.length;i++){
-        var diff = (new Date(fechas[i]) - new Date(fechas[i-1])) / 86400000;
-        if(diff===1){racha++; if(racha>maxR)maxR=racha;}else racha=1;
+if(sessionEmail){
+  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
+    .then(function(r){return r.json();}).then(function(d){if(d.found&&d.mascotas.length)miMascota=d.mascotas[0];});
+  // Verificar si usuario es Premium (para mostrar opcion venta)
+  var SUPA_URL3='https://ilcreewilnkchvozicyp.supabase.co';
+  var SUPA_KEY3='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+  fetch(SUPA_URL3+'/rest/v1/mascotas?email=eq.'+encodeURIComponent(sessionEmail)+'&premium=eq.true&select=premium,ventas_extra_mes,ventas_extra_vence&limit=1',{
+    headers:{'apikey':SUPA_KEY3,'Authorization':'Bearer '+SUPA_KEY3}
+  }).then(function(r){return r.json();}).then(function(rows){
+    if(rows&&rows.length){
+      var btn=document.getElementById('tipoVentaBtn');
+      if(btn) btn.style.display='';
+      // Calcular limite con extras
+      var extra = parseInt(rows[0].ventas_extra_mes)||0;
+      var extraVence = rows[0].ventas_extra_vence ? new Date(rows[0].ventas_extra_vence) : null;
+      if(extra>0 && extraVence && extraVence >= new Date()){
+        ventasLimite = 3 + extra;
+        ventasExtraVence = extraVence;
       }
-      if(maxR>maxRacha) maxRacha=maxR;
-    });
-    document.getElementById('jRacha').textContent = maxRacha + ' días';
-
-    // Por día
-    var porDia = {};
-    rows.forEach(function(r){
-      var d = r.created_at.split('T')[0];
-      if(!porDia[d]) porDia[d]={total:0,emails:new Set(),pts:0};
-      porDia[d].total++;
-      porDia[d].emails.add(r.email);
-      porDia[d].pts += r.puntos||0;
-    });
-    var dias = Object.keys(porDia).sort().reverse().slice(0,14);
-    document.getElementById('jDiasBody').innerHTML = dias.map(function(d){
-      var x=porDia[d];
-      return '<tr><td>'+d+'</td><td>'+x.total+'</td><td>'+x.emails.size+'</td><td>'+(x.pts/x.total).toFixed(1)+'</td></tr>';
-    }).join('') || '<tr><td colspan="4" style="text-align:center;color:#aaa">Sin datos</td></tr>';
-
-    // Ranking
-    var byEmail = {};
-    rows.forEach(function(r){
-      if(!byEmail[r.email]) byEmail[r.email]={total:0,pts:0,ultima:r.created_at.split('T')[0]};
-      byEmail[r.email].total++;
-      byEmail[r.email].pts += r.puntos||0;
-      if(r.created_at.split('T')[0] > byEmail[r.email].ultima) byEmail[r.email].ultima = r.created_at.split('T')[0];
-    });
-    var sorted = Object.keys(byEmail).sort(function(a,b){return byEmail[b].total-byEmail[a].total;}).slice(0,20);
-    document.getElementById('jRankingBody').innerHTML = sorted.map(function(em,i){
-      var d=byEmail[em];
-      return '<tr><td>'+(i+1)+'</td><td>'+em+'</td><td>'+d.total+'</td><td>'+d.pts+'</td><td>'+d.ultima+'</td></tr>';
-    }).join('') || '<tr><td colspan="5" style="text-align:center;color:#aaa">Sin datos</td></tr>';
-  }).catch(function(){
-    document.getElementById('jDiasBody').innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa">Error</td></tr>';
-  });
-}
-
-// ── Amigos ────────────────────────────────────────────────────
-function loadAmigos(){
-  Promise.all([
-    fetch(SUPA_ADM + '/rest/v1/amigos?select=*&limit=500', {headers: SUPA_ADM_H}).then(function(r){return r.json();}),
-    fetch(SUPA_ADM + '/rest/v1/mensajes?select=*&limit=500&order=created_at.desc', {headers: SUPA_ADM_H}).then(function(r){return r.json();}),
-    fetch(SUPA_ADM + '/rest/v1/conversaciones?select=*&limit=200', {headers: SUPA_ADM_H}).then(function(r){return r.json();})
-  ]).then(function(results){
-    var amigos = results[0] || [];
-    var mensajes = results[1] || [];
-    var convs = results[2] || [];
-
-    // Detectar columnas de estado en amigos
-    var pendientes = amigos.filter(function(a){
-      return a.estado === 'pendiente' || a.status === 'pendiente' || a.aceptado === false;
-    });
-    var aceptados = amigos.filter(function(a){
-      return a.estado === 'aceptado' || a.status === 'aceptado' || a.aceptado === true;
-    });
-    if(!aceptados.length && !pendientes.length) aceptados = amigos;
-
-    document.getElementById('aTotalAmigos').textContent = aceptados.length;
-    document.getElementById('aPendientes').textContent = pendientes.length;
-    document.getElementById('aMensajes').textContent = mensajes.length;
-    document.getElementById('aConversaciones').textContent = convs.length;
-
-    // Usuarios más conectados
-    var emailConns = {};
-    aceptados.forEach(function(a){
-      var e1 = a.email_solicitante || a.email1 || a.emisor || a.from_email || '';
-      var e2 = a.email_receptor || a.email2 || a.receptor || a.to_email || '';
-      if(e1){emailConns[e1]=(emailConns[e1]||0)+1;}
-      if(e2){emailConns[e2]=(emailConns[e2]||0)+1;}
-    });
-    var emailMsgs = {};
-    mensajes.forEach(function(m){
-      var em = m.autor || m.email || m.from_email || '';
-      if(em) emailMsgs[em]=(emailMsgs[em]||0)+1;
-    });
-    var topEmails = Object.keys(emailConns).sort(function(a,b){return emailConns[b]-emailConns[a];}).slice(0,15);
-    document.getElementById('aConectadosBody').innerHTML = topEmails.length
-      ? topEmails.map(function(em){ return '<tr><td>'+em+'</td><td>'+emailConns[em]+'</td><td>'+(emailMsgs[em]||0)+'</td></tr>'; }).join('')
-      : '<tr><td colspan="3" style="text-align:center;color:#aaa">Sin datos</td></tr>';
-
-    // Solicitudes recientes
-    var ESTADO = function(a){ return a.estado || a.status || (a.aceptado===true?'aceptado':a.aceptado===false?'pendiente':'—'); };
-    var recent = amigos.slice(0,20);
-    document.getElementById('aSolicitudesBody').innerHTML = recent.length
-      ? recent.map(function(a){
-          var de = a.email_solicitante||a.email1||a.emisor||a.from_email||'—';
-          var para = a.email_receptor||a.email2||a.receptor||a.to_email||'—';
-          var fecha = a.created_at ? a.created_at.split('T')[0] : '—';
-          var estado = ESTADO(a);
-          var color = estado==='aceptado'?'#007a7a':estado==='pendiente'?'#856404':'#888';
-          return '<tr><td>'+de+'</td><td>'+para+'</td><td style="color:'+color+';font-weight:600">'+estado+'</td><td>'+fecha+'</td></tr>';
-        }).join('')
-      : '<tr><td colspan="4" style="text-align:center;color:#aaa">Sin datos</td></tr>';
-  }).catch(function(e){
-    console.error(e);
-    ['aConectadosBody','aSolicitudesBody'].forEach(function(id){
-      document.getElementById(id).innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa">Error al cargar</td></tr>';
-    });
-  });
-}
-
-// ── cargarListaPremium ────────────────────────────────────────
-function cargarListaPremium() {
-  var lista = document.getElementById('premiumLista');
-  if (lista) lista.innerHTML = '<div class="spinner"></div>';
-  fetch(SUPA_ADM + '/rest/v1/mascotas?premium=eq.true&select=nombre,email,zona,premium_hasta,premium_metodo&order=email.asc&limit=200', {headers: SUPA_ADM_H})
-  .then(function(r) { return r.json(); })
-  .then(function(rows) {
-    if (!lista) return;
-    if (!rows || !rows.length) { lista.innerHTML = '<p style="color:#aaa;padding:16px">No hay usuarios Premium activos</p>'; return; }
-    var hoy = new Date().toISOString().split('T')[0];
-    lista.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px">'
-      + '<thead><tr style="background:#f8f8f8"><th style="padding:8px 12px;text-align:left">Email</th><th style="padding:8px 12px;text-align:left">Nombre</th><th style="padding:8px 12px;text-align:left">Zona</th><th style="padding:8px 12px;text-align:left">Vence</th><th style="padding:8px 12px;text-align:left">Método</th></tr></thead>'
-      + '<tbody>' + rows.map(function(r) {
-          var vencido = r.premium_hasta && r.premium_hasta < hoy;
-          return '<tr style="border-top:0.5px solid #f0f0ee">'
-            + '<td style="padding:8px 12px">' + (r.email||'—') + '</td>'
-            + '<td style="padding:8px 12px">' + (r.nombre||'—') + '</td>'
-            + '<td style="padding:8px 12px">' + (r.zona||'—') + '</td>'
-            + '<td style="padding:8px 12px;color:' + (vencido?'#c0392b':'#007a7a') + '">' + (r.premium_hasta||'Sin fecha') + '</td>'
-            + '<td style="padding:8px 12px">' + (r.premium_metodo||'—') + '</td>'
-            + '</tr>';
-        }).join('') + '</tbody></table>';
-  }).catch(function() { if(lista) lista.innerHTML = '<p style="color:#aaa;padding:16px">Error al cargar</p>'; });
-}
-
-function activarPremium() {
-  var email = document.getElementById('premiumEmail').value.trim().toLowerCase();
-  if (!email) { mostrarPremiumMsg('Ingresa un email', 'error'); return; }
-  var vence = new Date(); vence.setFullYear(vence.getFullYear() + 1);
-  var venceISO = vence.toISOString().split('T')[0];
-  fetch(SUPA_ADM + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email), {
-    method: 'PATCH',
-    headers: Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'}, SUPA_ADM_H),
-    body: JSON.stringify({ premium: true, premium_hasta: venceISO, premium_metodo: 'admin' })
-  }).then(function(r) {
-    if (r.ok) { mostrarPremiumMsg('Premium activado hasta ' + venceISO, 'ok'); cargarListaPremium(); }
-    else mostrarPremiumMsg('Error al activar', 'error');
-  }).catch(function() { mostrarPremiumMsg('Error de conexión', 'error'); });
-}
-
-function desactivarPremium() {
-  var email = document.getElementById('premiumEmail').value.trim().toLowerCase();
-  if (!email) { mostrarPremiumMsg('Ingresa un email', 'error'); return; }
-  fetch(SUPA_ADM + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email), {
-    method: 'PATCH',
-    headers: Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'}, SUPA_ADM_H),
-    body: JSON.stringify({ premium: false })
-  }).then(function(r) {
-    if (r.ok) { mostrarPremiumMsg('Premium desactivado', 'ok'); cargarListaPremium(); }
-    else mostrarPremiumMsg('Error al desactivar', 'error');
-  }).catch(function() { mostrarPremiumMsg('Error de conexión', 'error'); });
-}
-
-function mostrarPremiumMsg(msg, tipo) {
-  var el = document.getElementById('premiumMsg');
-  if (!el) return;
-  el.textContent = msg; el.style.display = 'block';
-  el.style.background = tipo === 'ok' ? '#e0f7f7' : '#fbeaf0';
-  el.style.color = tipo === 'ok' ? '#007a7a' : '#993556';
-  setTimeout(function(){ el.style.display='none'; }, 3000);
-}
-
-// ── cargarAfiliados ───────────────────────────────────────────
-function cargarAfiliados() {
-  fetch(SUPA_ADM + '/rest/v1/actividades?es_afiliado=eq.true&select=id,afiliado_email,afiliado_plan,afiliado_vence,afiliado_periodo,titulo,tipo,activo,pausado,pausado_razon,created_at&order=created_at.desc&limit=100', {headers: SUPA_ADM_H})
-  .then(function(r) { return r.json(); })
-  .then(function(rows) {
-    var tbody = document.getElementById('afiliadosBody');
-    if (!tbody) return;
-    if (!rows || !rows.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Sin afiliados</td></tr>'; return; }
-    var hoy = new Date().toISOString().split('T')[0];
-    tbody.innerHTML = rows.map(function(r) {
-      var activo = r.activo && !r.pausado && (!r.afiliado_vence || r.afiliado_vence >= hoy);
-      return '<tr>'
-        + '<td style="padding:8px 12px">' + (r.afiliado_email||'—') + '</td>'
-        + '<td style="padding:8px 12px">' + (r.afiliado_plan||'—') + '</td>'
-        + '<td style="padding:8px 12px">' + (r.titulo||r.tipo||'—') + '</td>'
-        + '<td style="padding:8px 12px">' + (r.afiliado_vence||'—') + '</td>'
-        + '<td style="padding:8px 12px"><span style="color:' + (activo?'#007a7a':'#c0392b') + ';font-weight:600">' + (activo?'Activo':r.pausado?'Pausado':'Inactivo') + '</span></td>'
-        + '<td style="padding:8px 12px;font-size:12px;color:#888">' + (r.pausado_razon||'') + '</td>'
-        + '<td style="padding:8px 12px">'
-        + '<button data-id="' + r.id + '" onclick="togglePausarBtn(this)" style="padding:4px 10px;background:' + (r.pausado?'#e0f7f7':'#fbeaf0') + ';color:' + (r.pausado?'#007a7a':'#993556') + ';border:none;border-radius:6px;font-size:11px;cursor:pointer">' + (r.pausado?'Reactivar':'Pausar') + '</button>'
-        + '</td></tr>';
-    }).join('');
-  }).catch(function() {});
-}
-
-function togglePausarBtn(btn) {
-  var id = btn.getAttribute('data-id');
-  var pausar = btn.getAttribute('data-pausado') !== 'true';
-  togglePausar(id, pausar);
-}
-function togglePausar(id, pausar) {
-  var razon = pausar ? prompt('Razón de pausa (opcional):') : null;
-  fetch('/api/galeria?action=pausarPublicacion', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ id: id, pausado: pausar, pausado_razon: razon||null })
-  }).then(function(r){ return r.json(); })
-  .then(function(d){ if(d.ok) cargarAfiliados(); });
-}
-
-
-function showScreen(name,el){
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  var _sc=document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)); if(_sc) _sc.classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
-  if(el) el.classList.add('active');
-  var _cd=document.querySelector('.content'); if(_cd) _cd.scrollTop=0;
-  if(name==='eventos'){cargarEventosAdmin();}
-  if(name==='lugares') cargarLugaresAdmin();
-  if(name==='reglas') setTimeout(cargarReglas,100);
-  if(name==='grupos') setTimeout(cargarAdminGrupos,100);
-  if(name==='puntos') loadPuntos();
-  if(name==='instalaciones') loadInstalaciones();
-  if(name==='juegos') loadJuegos();
-  if(name==='amigos') loadAmigos();
-  if(name==='mundial') { try { loadWCAdmin(); } catch(e) { console.error('WC Error:', e); } }
-  if(name==='_unused'){
-    var ifr=document.getElementById('iframeAfiliados');
-    if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
-  }
-}
-
-// ── Carga de datos ────────────────────────────────────────────
-function loadData(){
-  fetch('/api/admin?action=getData')
-  .then(function(r){return r.json();})
-  .then(function(d){
-    allData=d.rows||[]; campanas=d.campanas||[];
-    filtered=allData.slice();
-    buildFamilias(); renderDashboard(); renderTable(); renderFamilias(); renderCampanas();
-  }).catch(function(e){console.log('Error:',e);});
-}
-
-function buildFamilias(){
-  familias={};
-  allData.forEach(function(r){
-    var email=String(r[11]||'').trim().toLowerCase();
-    if(!email) return;
-    if(!familias[email]){familias[email]={dueno:String(r[10]||'').trim(),email:email,whatsapp:String(r[12]||'').trim(),zona:String(r[9]||'').trim(),mascotas:[]};}
-    familias[email].mascotas.push({nombre:String(r[2]||'').trim(),apodo:String(r[3]||'').trim(),especie:String(r[4]||'').trim(),sexo:String(r[5]||'').trim(),uid:String(r[1]||'').trim(),row:r});
-  });
-}
-
-// ── Dashboard ─────────────────────────────────────────────────
-function renderDashboard(){
-  var total=allData.length;
-  var perros=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('perro')>=0;}).length;
-  var gatos=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('gato')>=0;}).length;
-  var enviados=allData.filter(function(r){return String(r[24])==='Si';}).length;
-  document.getElementById('statTotal').textContent=total;
-  document.getElementById('statPerros').textContent=perros;
-  document.getElementById('statGatos').textContent=gatos;
-  document.getElementById('statEnviados').textContent=enviados;
-
-  var zonas={};allData.forEach(function(r){var z=String(r[9]||'Sin zona').toUpperCase();zonas[z]=(zonas[z]||0)+1;});
-  renderBars('chartZonas',zonas,6,'#00B4B4');
-  var mn=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  var meses={};allData.forEach(function(r){if(!r[0])return;var d=new Date(r[0]);var k=mn[d.getMonth()]+' '+d.getFullYear();meses[k]=(meses[k]||0)+1;});
-  renderBars('chartMeses',meses,6,'#E05090');
-  var alimentos={};allData.forEach(function(r){var a=String(r[16]||'Sin registrar').trim()||'Sin registrar';alimentos[a]=(alimentos[a]||0)+1;});
-  renderBars('chartAlimentos',alimentos,6,'#534AB7');
-  renderBars('chartEnvios',{'Enviado':enviados,'Pendiente':total-enviados},2,'#3B6D11');
-
-  var razas={};allData.forEach(function(r){var raza=String(r[6]||'Sin registrar').trim()||'Sin registrar';razas[raza]=(razas[raza]||0)+1;});
-  renderBars('chartRazas',razas,8,'#00B4B4');
-  var conFoto=allData.filter(function(r){return String(r[27]||'').indexOf('http')>=0;}).length;
-  renderBars('chartFotos',{'Con foto':conFoto,'Sin foto':total-conFoto},2,'#E05090');
-
-  var cumples={};mn.forEach(function(m){cumples[m]=0;});
-  allData.forEach(function(r){
-    var fecha=String(r[8]||'').trim();if(!fecha)return;
-    var mes=null;
-    var m=fecha.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if(m)mes=parseInt(m[2],10)-1;
-    else{var p=fecha.split('/');if(p.length===3)mes=parseInt(p[1],10)-1;}
-    if(mes!==null&&mes>=0&&mes<=11)cumples[mn[mes]]=(cumples[mn[mes]]||0)+1;
-  });
-  renderBars('chartCumples',cumples,12,'#F5C842');
-
-  document.getElementById('statSinFoto').textContent=total-conFoto;
-  document.getElementById('statAngelitos').textContent=allData.filter(function(r){return String(r[28]||'').toLowerCase()==='si';}).length;
-  var emails={};allData.forEach(function(r){var e=String(r[11]||'').trim().toLowerCase();if(e)emails[e]=1;});
-  document.getElementById('statFamilias').textContent=Object.keys(emails).length;
-  var mesActual=new Date().getMonth();
-  document.getElementById('statEsteMes').textContent=allData.filter(function(r){
-    if(!r[0])return false;
-    return new Date(r[0]).getMonth()===mesActual&&new Date(r[0]).getFullYear()===new Date().getFullYear();
-  }).length;
-}
-
-function renderBars(id,obj,top,color){
-  var keys=Object.keys(obj).sort(function(a,b){return obj[b]-obj[a];}).slice(0,top);
-  var max=obj[keys[0]]||1;
-  document.getElementById(id).innerHTML=keys.map(function(k){
-    var pct=Math.round(obj[k]/max*100);
-    return '<div class="bar-row"><div class="bar-label" title="'+k+'">'+k+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+color+'">'+obj[k]+'</div></div></div>';
-  }).join('')||'<p style="color:#888;font-size:13px">Sin datos</p>';
-}
-
-// ── Filtros y tabla ───────────────────────────────────────────
-function applyFilters(){
-  var n=document.getElementById('searchNombre').value.toLowerCase();
-  var du=document.getElementById('searchDueno').value.toLowerCase();
-  var es=document.getElementById('filterEspecie').value.toLowerCase();
-  var zo=document.getElementById('filterZona').value.toLowerCase();
-  var en=document.getElementById('filterEnviado').value.toLowerCase();
-  var ft=document.getElementById('filterFoto').value.toLowerCase();
-  filtered=allData.filter(function(r){
-    if(n&&String(r[2]).toLowerCase().indexOf(n)<0)return false;
-    if(du&&String(r[10]).toLowerCase().indexOf(du)<0)return false;
-    if(es&&String(r[4]).toLowerCase().indexOf(es)<0)return false;
-    if(zo&&String(r[9]).toLowerCase().indexOf(zo)<0)return false;
-    if(en&&String(r[24]).toLowerCase().indexOf(en)<0)return false;
-    var tieneFoto=String(r[27]||'').indexOf('http')>=0;
-    if(ft==='sin_foto'&&tieneFoto)return false;
-    if(ft==='con_foto'&&!tieneFoto)return false;
-    return true;
-  });
-  page=1; renderTable();
-}
-function clearFilters(){
-  ['searchNombre','searchDueno','filterZona'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('filterEspecie').value='';
-  document.getElementById('filterEnviado').value='';
-  document.getElementById('filterFoto').value='';
-  filtered=allData.slice(); page=1; renderTable();
-}
-function changePage(dir){var max=Math.ceil(filtered.length/perPage);page=Math.max(1,Math.min(max,page+dir));renderTable();}
-
-function renderTable(){
-  var start=(page-1)*perPage; var rows=filtered.slice(start,start+perPage);
-  var max=Math.ceil(filtered.length/perPage);
-  document.getElementById('tableInfo').textContent=filtered.length+' mascotas';
-  document.getElementById('pageInfo').textContent='Pag '+page+'/'+max+' ('+filtered.length+' total)';
-  document.getElementById('btnPrev').disabled=page<=1;
-  document.getElementById('btnNext').disabled=page>=max;
-  var html=rows.map(function(r,i){
-    var idx=start+i;
-    var esp=String(r[4]).toLowerCase().indexOf('gato')>=0?'<span class="badge badge-gato">Gato</span>':'<span class="badge badge-perro">Perro</span>';
-    var est=String(r[24]);
-    var estB=est==='Si'?'<span class="badge badge-si">Enviado</span>':est.indexOf('migraci')>=0?'<span class="badge badge-pending">Migracion</span>':'<span class="badge badge-no">Pendiente</span>';
-    var fecha=r[0]?new Date(r[0]).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'-';
-    var fotoSrc=String(r[27]||'');
-    var foto=fotoSrc.indexOf('http')>=0?'<img src="'+fotoSrc+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.style.display=\'none\'">':'<div style="width:40px;height:40px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px">🐾</div>';
-    return '<tr><td>'+foto+'</td><td><strong>'+String(r[2]||'-')+'</strong><br><span style="font-size:11px;color:#888">'+String(r[3]||'')+'</span></td><td>'+esp+'</td><td style="font-size:12px">'+String(r[9]||'-')+'</td><td style="font-size:12px">'+String(r[10]||'-')+'</td><td style="font-size:11px;color:#534AB7">'+String(r[11]||'-')+'</td><td style="font-size:12px">'+String(r[16]||'-')+'</td><td style="font-size:11px;color:#888">'+fecha+'</td><td>'+estB+'</td>'
-    // Premium badge + toggle
-    +'<td id="prem-'+idx+'">'
-    +'<span style="display:inline-flex;align-items:center;gap:4px">'
-    +'<span id="prem-badge-'+idx+'" style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(String(r[31]||'')===String(true)||r[31]===true?'#f3e8ff':'#f0f0ee')+';color:'+(String(r[31]||'')===String(true)||r[31]===true?'#534AB7':'#888')+'">'+(String(r[31]||'')===String(true)||r[31]===true?'⭐ Activo':'—')+'</span>'
-    +'<button class="btn-sm" style="font-size:10px" onclick="togglePremium('+idx+')">'+(String(r[31]||'')===String(true)||r[31]===true?'Quitar':'Dar')+'</button>'
-    +'</span>'
-    +'</td>'
-    +'<td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
-  }).join('');
-  document.getElementById('tableBody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
-}
-
-// ── Familias ──────────────────────────────────────────────────
-function renderFamilias(){
-  var buscar=(document.getElementById('searchFamilia')?document.getElementById('searchFamilia').value||'':'').toLowerCase();
-  var keys=Object.keys(familias).filter(function(k){var f=familias[k];return !buscar||f.dueno.toLowerCase().indexOf(buscar)>=0||k.indexOf(buscar)>=0;}).sort(function(a,b){return familias[b].mascotas.length-familias[a].mascotas.length;});
-  document.getElementById('familiaInfo').textContent=keys.length+' familias registradas';
-  var html=keys.map(function(k){
-    var f=familias[k];
-    var mascotas=f.mascotas.map(function(m){return '<span style="background:#e0f7f7;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;color:#007a7a;margin-right:4px;margin-bottom:4px;display:inline-block">'+m.nombre+' ('+m.especie+')</span>';}).join('');
-    var ek=k.replace(/'/g,"\\'");
-    return '<div onclick="viewFamilia(\''+ek+'\')" style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-size:15px;font-weight:700;color:#222">'+f.dueno+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+f.email+'</div></div><div style="background:#00B4B4;color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700">'+f.mascotas.length+' mascota'+(f.mascotas.length>1?'s':'')+'</div></div><div style="font-size:11px;color:#888;margin-bottom:8px">Zona: '+f.zona+'</div><div>'+mascotas+'</div></div>';
-  }).join('');
-  document.getElementById('familiasGrid').innerHTML=html||'<p style="color:#888">Sin familias</p>';
-}
-function viewFamilia(email){
-  var f=familias[email];if(!f)return;
-  document.getElementById('modalFamiliaTitle').textContent='Familia de '+f.dueno;
-  var html='<div style="margin-bottom:16px"><div style="font-size:13px;color:#555"><strong>Email:</strong> '+f.email+'</div><div style="font-size:13px;color:#555"><strong>WhatsApp:</strong> '+f.whatsapp+'</div><div style="font-size:13px;color:#555"><strong>Zona:</strong> '+f.zona+'</div></div><div style="font-size:12px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Mascotas ('+f.mascotas.length+')</div>';
-  f.mascotas.forEach(function(m){html+='<div style="background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700;color:#222">'+m.nombre+'</div><div style="font-size:12px;color:#888">'+m.especie+' · '+m.sexo+(m.apodo?' · "'+m.apodo+'"':'')+'</div></div><div style="font-size:10px;font-family:monospace;color:#bbb">'+m.uid.substring(0,16)+'...</div></div>';});
-  document.getElementById('modalFamiliaBody').innerHTML=html;
-  document.getElementById('modalFamilia').classList.add('open');
-}
-
-// ── Ver ID ────────────────────────────────────────────────────
-function viewID(idx){
-  var r=filtered[idx];
-  var foto=String(r[27]||'').indexOf('http')>=0?'<img src="'+r[27]+'" style="width:140px;height:175px;object-fit:cover">':'<div style="width:140px;height:175px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">🐾</div>';
-  var html='<div id="pngPreview" style="font-family:Arial,sans-serif;border-radius:12px;overflow:hidden">'
-    +'<div style="background:#00B4B4;display:flex;align-items:stretch"><div style="flex-shrink:0;overflow:hidden">'+foto+'</div>'
-    +'<div style="flex:1;padding:16px 20px 14px;display:flex;flex-direction:column;justify-content:flex-end"><div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.7);margin-bottom:4px">NOMBRE</div>'
-    +'<div style="font-size:24px;font-weight:900;color:#fff;font-family:Arial Black,Arial,sans-serif">"'+String(r[2]||'').toUpperCase()+'"</div>'
-    +'<div style="margin-top:8px;display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;align-self:flex-start">'+String(r[3]||'-').toUpperCase()+'</div></div></div>'
-    +'<div style="background:#fff;padding:14px 18px">'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:10px">'
-    +'<div><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Especie</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[4]||'-')+'</div></div>'
-    +'<div style="text-align:right"><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Sexo</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[5]||'-')+'</div></div></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:10px">'
-    +'<div><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Zona</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[9]||'-')+'</div></div>'
-    +'<div style="text-align:right"><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Veterinario</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[13]||'-')+'</div></div></div>'
-    +'<div><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Responsable</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[10]||'-')+'</div></div></div>'
-    +'<div style="background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:8px 14px">'
-    +'<div style="width:30px;height:30px;background:#E05090;border-radius:6px 6px 6px 0;display:flex;align-items:center;justify-content:center;font-size:14px">🐾</div>'
-    +'<div style="font-size:18px;font-weight:900;font-family:Arial Black,Arial,sans-serif;color:#1a1a1a">petz<span style="color:#E05090">ID</span></div></div></div>';
-  document.getElementById('modalIDBody').innerHTML=html;
-  document.getElementById('modalID').classList.add('open');
-}
-function downloadID(){
-  var el=document.getElementById('pngPreview');
-  if(!el){alert('No hay ID para descargar');return;}
-  html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#fff'}).then(function(canvas){
-    var a=document.createElement('a');a.download='PetzID.png';a.href=canvas.toDataURL('image/png');a.click();
-  });
-}
-
-// ── Editar mascota ────────────────────────────────────────────
-function openEdit(idx){
-  editIdx=idx; var r=filtered[idx];
-  document.getElementById('modalEditTitle').textContent='Editar: '+String(r[2]||'');
-  document.getElementById('modalEditBody').innerHTML=
-    '<div class="two-col"><div><label>Nombre</label><input id="eNombre" value="'+String(r[2]||'')+'"></div><div><label>Apodo</label><input id="eApodo" value="'+String(r[3]||'')+'"></div></div>'
-    +'<div class="two-col"><div><label>Especie</label><select id="eEspecie"><option '+(String(r[4]).toLowerCase().indexOf('perro')>=0?'selected':'')+'>Perro</option><option '+(String(r[4]).toLowerCase().indexOf('gato')>=0?'selected':'')+'>Gato</option></select></div>'
-    +'<div><label>Sexo</label><select id="eSexo"><option '+(String(r[5]).toLowerCase().indexOf('hembra')>=0?'selected':'')+'>Hembra</option><option '+(String(r[5]).toLowerCase().indexOf('macho')>=0?'selected':'')+'>Macho</option></select></div></div>'
-    +'<div class="two-col"><div><label>Zona</label><input id="eZona" value="'+String(r[9]||'')+'"></div><div><label>Veterinario</label><input id="eVet" value="'+String(r[13]||'')+'"></div></div>'
-    +'<label>Dueno</label><input id="eDueno" value="'+String(r[10]||'')+'">'
-    +'<label>Email</label><input id="eEmail" value="'+String(r[11]||'')+'">'
-    +'<label>WhatsApp</label><input id="eWA" value="'+String(r[12]||'')+'">'
-    +'<label>Alimento</label><input id="eAlimento" value="'+String(r[16]||'')+'">';
-  document.getElementById('modalEdit').classList.add('open');
-}
-function saveEdit(){
-  if(editIdx===null) return;
-  var r=filtered[editIdx];
-  r[2]=document.getElementById('eNombre').value; r[3]=document.getElementById('eApodo').value;
-  r[4]=document.getElementById('eEspecie').value; r[5]=document.getElementById('eSexo').value;
-  r[9]=document.getElementById('eZona').value; r[10]=document.getElementById('eDueno').value;
-  r[11]=document.getElementById('eEmail').value; r[12]=document.getElementById('eWA').value;
-  r[13]=document.getElementById('eVet').value; r[16]=document.getElementById('eAlimento').value;
-  fetch('/api/admin?action=updateRow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:r[1],data:r})})
-  .then(function(){buildFamilias();renderTable();renderFamilias();closeModal('modalEdit');alert('Guardado!');})
-  .catch(function(){buildFamilias();renderTable();renderFamilias();closeModal('modalEdit');});
-}
-
-function reenviarID(idx){
-  var r=filtered[idx];
-  if(!confirm('Reenviar PetzID a '+String(r[11])+'?')) return;
-  fetch('/api/admin?action=reenviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:r[1],email:r[11],nombre:r[2]})})
-  .then(function(){alert('Reenviado a '+String(r[11]));}).catch(function(){alert('Error al reenviar');});
-}
-
-// ── Eliminar mascota ──────────────────────────────────────────
-// Corregido: usa /api/submit (proxy al Apps Script)
-// action: 'deleteMascota' borra UNA sola mascota por uid
-function eliminarMascota(idx){
-  var r=filtered[idx];
-  if(!r) return;
-  var nombre=String(r[2]||'');
-  var uid=String(r[1]||'').trim();
-  if(!uid){alert('UID no encontrado');return;}
-  if(!confirm('¿Eliminar a '+nombre+'? Esta acción no se puede deshacer.')) return;
-
-  fetch('/api/submit',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'deleteMascota',uid:uid})
-  }).then(function(r){return r.json();})
-  .then(function(d){
-    if(d.ok){
-      allData=allData.filter(function(r){return String(r[1]).trim()!==uid;});
-      filtered=filtered.filter(function(r){return String(r[1]).trim()!==uid;});
-      renderTable();
-      alert('✅ Mascota eliminada');
-    } else {
-      alert('Error al eliminar');
+      // Contar ventas del mes actual
+      var mesInicio = new Date();mesInicio.setDate(1);mesInicio.setHours(0,0,0,0);
+      fetch(SUPA_URL3+'/rest/v1/actividades?email_creador=eq.'+encodeURIComponent(sessionEmail)+'&tipo=eq.venta&created_at=gte.'+mesInicio.toISOString()+'&select=id',{
+        headers:{'apikey':SUPA_KEY3,'Authorization':'Bearer '+SUPA_KEY3}
+      }).then(function(r){return r.json();}).then(function(ventas){
+        ventasUsadas = (ventas||[]).length;
+      }).catch(function(){});
     }
-  }).catch(function(){alert('Error de conexión');});
-}
-
-// ── Campañas ──────────────────────────────────────────────────
-function renderCampanas(){
-  var html=campanas.map(function(c){
-    var f=c[0]?new Date(c[0]).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'-';
-    return '<tr><td>'+f+'</td><td><span style="background:#e0f7f7;padding:2px 8px;border-radius:4px;font-size:12px">'+String(c[1]||'TODOS')+'</span></td><td>'+String(c[2]||'-')+'</td><td><strong style="color:#155724">'+String(c[3]||0)+'</strong></td><td style="color:#721c24">'+String(c[4]||0)+'</td></tr>';
-  }).join('');
-  document.getElementById('campanaBody').innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:#888">Sin campanas</td></tr>';
-}
-
-// ── Modal foto ────────────────────────────────────────────────
-function abrirSubirFoto(idx){
-  var r=filtered[idx]; if(!r) return;
-  adminFotoUID=String(r[1]||'').trim();
-  adminFotoBase64=null;
-  document.getElementById('fotoMascotaInfo').textContent=String(r[2]||'')+' — '+String(r[11]||'');
-  document.getElementById('fotoPreviewImg').style.display='none';
-  document.getElementById('fotoLinkInput').value='';
-  document.getElementById('fotoLinkPreview').style.display='none';
-  document.getElementById('btnSubirFoto').disabled=true;
-  switchFotoTab('upload');
-  document.getElementById('modalFoto').classList.add('open');
-}
-function switchFotoTab(tab){
-  adminFotoTab=tab; adminFotoBase64=null;
-  document.getElementById('panelUpload').style.display=tab==='upload'?'block':'none';
-  document.getElementById('panelLink').style.display=tab==='link'?'block':'none';
-  document.getElementById('tabUpload').style.cssText=tab==='upload'
-    ?'flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)'
-    :'flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer';
-  document.getElementById('tabLink').style.cssText=tab==='link'
-    ?'flex:1;padding:8px;text-align:center;border-radius:8px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08)'
-    :'flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:600;color:#888;cursor:pointer';
-  document.getElementById('btnSubirFoto').disabled=true;
-}
-function onLinkChange(){
-  var url=document.getElementById('fotoLinkInput').value.trim();
-  var preview=document.getElementById('fotoLinkPreview');
-  if(url.indexOf('http')===0){
-    preview.src=url;
-    document.getElementById('btnSubirFoto').disabled=false;
-  } else {
-    preview.style.display='none';
-    document.getElementById('btnSubirFoto').disabled=true;
-  }
-}
-function onAdminFotoChange(e){
-  var file=e.target.files[0]; if(!file) return;
-  var reader=new FileReader();
-  reader.onload=function(ev){
-    var dataUrl=ev.target.result;
-    var preview=document.getElementById('fotoPreviewImg');
-    preview.src=dataUrl; preview.style.display='block';
-    var canvas=document.createElement('canvas'), img=new Image();
-    img.onload=function(){
-      var MAX=800,w=img.width,h=img.height;
-      if(w>MAX){h=h*(MAX/w);w=MAX;}
-      if(h>MAX){w=w*(MAX/h);h=MAX;}
-      canvas.width=w; canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      adminFotoBase64=canvas.toDataURL('image/jpeg',0.85).split(',')[1];
-      document.getElementById('btnSubirFoto').disabled=false;
-    };
-    img.src=dataUrl;
-  };
-  reader.readAsDataURL(file);
-}
-async function subirFotoAdmin(){
-  var btn=document.getElementById('btnSubirFoto');
-  btn.disabled=true;
-  var url=null;
-  if(adminFotoTab==='link'){
-    url=document.getElementById('fotoLinkInput').value.trim();
-    if(!url){alert('Ingresa un link válido');btn.disabled=false;return;}
-  } else {
-    if(!adminFotoBase64){alert('Selecciona una foto');btn.disabled=false;return;}
-    btn.textContent='Subiendo...';
-    var fd=new FormData();
-    fd.append('file','data:image/jpeg;base64,'+adminFotoBase64);
-    fd.append('upload_preset',UPLOAD_PRESET);
-    fd.append('folder','petzid');
-    try{
-      var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
-      var data=await res.json();
-      url=data.secure_url;
-      if(!url) throw new Error('Sin URL de Cloudinary');
-    }catch(err){alert('Error subiendo foto: '+err.message);btn.disabled=false;btn.textContent='Guardar foto';return;}
-  }
-  btn.textContent='Guardando...';
-  try{
-    var resp=await fetch('/api/submit',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'updateRow',uid:adminFotoUID,data:{foto:url}})
-    });
-    var result=await resp.json();
-    if(result.ok){
-      alert('✅ Foto guardada!');
-      closeModal('modalFoto');
-      allData.forEach(function(r){if(String(r[1]).trim()===adminFotoUID)r[27]=url;});
-      renderTable();
-    } else {
-      alert('Error al guardar');
-    }
-  }catch(err){alert('Error: '+err.message);}
-  btn.disabled=false; btn.textContent='Guardar foto';
-}
-
-// ── Sync Supabase ─────────────────────────────────────────────
-// Usa /api/galeria para no exponer la service_role key en el cliente
-async function syncSupabase(){
-  var btn=document.getElementById('btnSync');
-  var status=document.getElementById('syncStatus');
-  btn.disabled=true; btn.textContent='⏳ Sincronizando...';
-  status.style.display='block'; status.textContent='Preparando datos...';
-
-  var payloads=[];
-  allData.forEach(function(r){
-    var uid=String(r[1]||'').trim(), nombre=String(r[2]||'').trim();
-    if(!uid||!nombre) return;
-    payloads.push({
-      uid:uid, nombre:nombre, apodo:String(r[3]||'').trim(),
-      especie:String(r[4]||'').trim(), sexo:String(r[5]||'').trim(),
-      raza:String(r[6]||'').trim(), tipo_fecha:String(r[7]||'').trim(),
-      fecha:String(r[8]||'').trim(), zona:String(r[9]||'').trim(),
-      dueno:String(r[10]||'').trim(), email:String(r[11]||'').trim().toLowerCase(),
-      whatsapp:String(r[12]||'').trim(), veterinario:String(r[13]||'').trim(),
-      instagram:String(r[15]||'').trim(), alimento:String(r[16]||'').trim(),
-      actividades:String(r[18]||'').trim(), especial:String(r[23]||'').trim(),
-      foto:String(r[27]||'').trim(),
-      angelito:String(r[28]||'').trim().toLowerCase()==='si',
-      fecha_angelito:String(r[29]||'').trim(),
-      notif_mensajes:String(r[30]||'').trim()!=='No',
-      ofertas:String(r[20]||'').trim()!=='No',
-      correo_enviado:String(r[24]||'').trim()
-    });
-  });
-
-  // Enviar en lotes a través del servidor (sin exponer keys)
-  var LOTE=50, migradas=0, errores=0, total=payloads.length;
-  for(var i=0;i<payloads.length;i+=LOTE){
-    var lote=payloads.slice(i,i+LOTE);
-    status.textContent='Sincronizando '+Math.min(i+LOTE,total)+' de '+total+'...';
-    try{
-      var res=await fetch('/api/galeria?action=syncMascotas',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action:'syncMascotas',mascotas:lote})
-      });
-      var d=await res.json();
-      if(d.ok){migradas+=lote.length;}else{errores+=lote.length;}
-    }catch(e){errores+=lote.length;}
-  }
-  btn.disabled=false; btn.textContent='🔄 Sync Supabase';
-  status.style.background=errores>0?'#fbeaf0':'#e0f7f7';
-  status.style.borderColor=errores>0?'#f4c0d1':'#00B4B4';
-  status.style.color=errores>0?'#993556':'#007a7a';
-  status.textContent='✅ Sync completado — '+migradas+' actualizadas, '+errores+' errores';
-  setTimeout(function(){status.style.display='none';},5000);
-}
-
-// ── Eventos y Lugares (vía /api/galeria, sin keys en cliente) ─
-function cargarEventosAdmin(){
-  fetch('/api/galeria?action=getEventosAdmin')
-  .then(function(r){return r.json();})
-  .then(function(data){
-    data=data.eventos||data||[];
-    document.getElementById('subEventos').textContent=data.length+' eventos';
-    if(!data.length){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay eventos. <a href="/admin-evento.html" style="color:#00B4B4;font-weight:700">Crear el primero</a></div>';return;}
-    window._eventosData=data;
-    var html='<div class="table-wrap"><table><thead><tr><th>Titulo</th><th>Tipo</th><th>Fecha</th><th>Lugar</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
-    data.forEach(function(e,i){
-      html+='<tr><td style="font-weight:700">'+e.titulo+'</td><td>'+e.tipo+'</td><td>'+(e.fecha||'-')+'</td><td>'+(e.lugar||'-')+'</td>';
-      html+='<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(e.activo?'#e0f7f7':'#fbeaf0')+';color:'+(e.activo?'#007a7a':'#c0392b')+'">'+(e.activo?'Activo':'Inactivo')+'</span></td>';
-      html+='<td style="display:flex;gap:4px">';
-      html+='<button class="btn-sm" style="background:'+(e.activo?'#fbeaf0':'#e0f7f7')+';color:'+(e.activo?'#c0392b':'#007a7a')+'" onclick="toggleActivoEvento('+i+')">'+(e.activo?'Desactivar':'Activar')+'</button>';
-      html+='<button class="btn-sm btn-edit" onclick="editarEvento('+i+')">Editar</button>';
-      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarEvento('+i+')">Eliminar</button></td></tr>';
-    });
-    html+='</tbody></table></div>';
-    document.getElementById('eventosAdminWrap').innerHTML=html;
-  }).catch(function(e){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
-}
-
-function filtrarEventosPendientes(){
-  fetch('/api/galeria?action=getEventosPendientes')
-  .then(function(r){return r.json();})
-  .then(function(data){
-    data=data.eventos||data||[];
-    document.getElementById('subEventos').textContent=data.length+' pendientes de aprobacion';
-    if(!data.length){document.getElementById('eventosAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay eventos pendientes</div>';return;}
-    window._eventosData=data;
-    var html='<div class="table-wrap"><table><thead><tr><th>Titulo</th><th>Tipo</th><th>Fecha</th><th>Enviado por</th><th>Acciones</th></tr></thead><tbody>';
-    data.forEach(function(e,i){
-      html+='<tr><td style="font-weight:700">'+e.titulo+'</td><td>'+e.tipo+'</td><td>'+(e.fecha||'-')+'</td><td style="font-size:12px;color:#888">'+(e.creado_por||'-')+'</td>';
-      html+='<td style="display:flex;gap:6px">';
-      html+='<button class="btn-sm" style="background:#e0f7f7;color:#007a7a" onclick="aprobarEvento('+i+')">✓ Aprobar</button>';
-      html+='<button class="btn-sm btn-edit" onclick="editarEvento('+i+')">Editar</button>';
-      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarEvento('+i+')">🗑️</button>';
-      html+='</td></tr>';
-    });
-    html+='</tbody></table></div>';
-    document.getElementById('eventosAdminWrap').innerHTML=html;
-  });
-}
-
-function toggleActivoEvento(i){
-  var e=window._eventosData[i]; if(!e) return;
-  fetch('/api/galeria?action=toggleEvento',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'toggleEvento',id:e.id,activo:!e.activo})
-  }).then(function(){cargarEventosAdmin();});
-}
-function aprobarEvento(i){
-  var e=window._eventosData[i]; if(!e) return;
-  fetch('/api/galeria?action=toggleEvento',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'toggleEvento',id:e.id,activo:true})
-  }).then(function(){filtrarEventosPendientes();});
-}
-function editarEvento(i){location.href='/admin-evento.html?id='+(window._eventosData[i]||{}).id;}
-function eliminarEvento(i){
-  if(!confirm('Eliminar?')) return;
-  var id=(window._eventosData[i]||{}).id;
-  fetch('/api/galeria?action=eliminarEvento',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'eliminarEvento',id:id})
-  }).then(function(){cargarEventosAdmin();});
-}
-
-function cargarLugaresAdmin(){
-  fetch('/api/galeria?action=getLugaresAdmin')
-  .then(function(r){return r.json();})
-  .then(function(data){
-    data=data.lugares||data||[];
-    document.getElementById('subLugares').textContent=data.length+' lugares';
-    if(!data.length){document.getElementById('lugaresAdminWrap').innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay lugares. <a href="/admin-lugar.html" style="color:#E05090;font-weight:700">Crear el primero</a></div>';return;}
-    window._lugaresData=data;
-    var html='<div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Tipo</th><th>Zona</th><th>Rating</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
-    data.forEach(function(l,i){
-      html+='<tr><td style="font-weight:700">'+l.nombre+'</td><td>'+l.tipo+'</td><td>'+(l.zona?'Z.'+l.zona:'-')+'</td><td>'+(l.rating||'-')+'</td>';
-      html+='<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(l.activo?'#e0f7f7':'#fbeaf0')+';color:'+(l.activo?'#007a7a':'#c0392b')+'">'+(l.activo?'Activo':'Inactivo')+'</span></td>';
-      html+='<td style="display:flex;gap:4px">';
-      html+='<button class="btn-sm" style="background:'+(l.activo?'#fbeaf0':'#e0f7f7')+';color:'+(l.activo?'#c0392b':'#007a7a')+'" onclick="toggleActivoLugar('+i+')">'+(l.activo?'Desactivar':'Activar')+'</button>';
-      html+='<button class="btn-sm btn-edit" onclick="editarLugar('+i+')">Editar</button>';
-      html+='<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarLugar('+i+')">Eliminar</button></td></tr>';
-    });
-    html+='</tbody></table></div>';
-    document.getElementById('lugaresAdminWrap').innerHTML=html;
-  }).catch(function(e){document.getElementById('lugaresAdminWrap').innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
-}
-function toggleActivoLugar(i){
-  var l=window._lugaresData[i]; if(!l) return;
-  fetch('/api/galeria?action=toggleLugar',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'toggleLugar',id:l.id,activo:!l.activo})
-  }).then(function(){cargarLugaresAdmin();});
-}
-function editarLugar(i){location.href='/admin-lugar.html?id='+(window._lugaresData[i]||{}).id;}
-function eliminarLugar(i){
-  if(!confirm('Eliminar?')) return;
-  var id=(window._lugaresData[i]||{}).id;
-  fetch('/api/galeria?action=eliminarLugar',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'eliminarLugar',id:id})
-  }).then(function(){cargarLugaresAdmin();});
-}
-
-function togglePremium(idx){
-  var r=filtered[idx];
-  if(!r) return;
-  var uid=String(r[1]||'').trim();
-  var esPremium=r[31]===true||String(r[31])==='true';
-  var action=esPremium?'desactivarPremium':'activarPremium';
-  var meses=esPremium?0:12;
-  if(!confirm((esPremium?'¿Quitar Premium a ':'¿Activar Premium (12 meses) a ')+String(r[2]||'')+'?')) return;
-  fetch('/api/galeria?action='+action,{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({uid:uid,meses:meses})
-  }).then(function(res){return res.json();})
-  .then(function(d){
-    if(d.ok){
-      r[31]=!esPremium;
-      var badge=document.getElementById('prem-badge-'+idx);
-      var btn=document.querySelector('#prem-'+idx+' button');
-      if(badge){
-        badge.textContent=!esPremium?'⭐ Activo':'—';
-        badge.style.background=!esPremium?'#f3e8ff':'#f0f0ee';
-        badge.style.color=!esPremium?'#534AB7':'#888';
+  }).catch(function(){});
+  // Verificar si es afiliado activo
+  var SUPA_URL2='https://ilcreewilnkchvozicyp.supabase.co';
+  var SUPA_KEY2='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+  fetch(SUPA_URL2+'/rest/v1/actividades?es_afiliado=eq.true&afiliado_email=eq.'+encodeURIComponent(sessionEmail)+'&activo=eq.true&select=afiliado_plan,afiliado_vence&limit=1',{
+    headers:{'apikey':SUPA_KEY2,'Authorization':'Bearer '+SUPA_KEY2}
+  }).then(function(r){return r.json();}).then(function(rows){
+    if(rows&&rows.length){
+      var vence=rows[0].afiliado_vence?new Date(rows[0].afiliado_vence):null;
+      if(!vence||vence>=new Date()){
+        esAfiliado=true;
+        afiliadoPlan=rows[0].afiliado_plan||'basico';
+        // Mostrar badge en FAB
+        var fab=document.getElementById('btnPublicar');
+        if(fab){fab.style.background='linear-gradient(135deg,#00B4B4,#F5C842)';fab.innerHTML='<i class="ti ti-star" aria-hidden="true"></i> Publicar como Partner';}
       }
-      if(btn) btn.textContent=!esPremium?'Quitar':'Dar';
-      alert(esPremium?'Premium desactivado':'⭐ Premium activado hasta '+d.premium_hasta);
-    } else { alert('Error al cambiar premium'); }
-  }).catch(function(){ alert('Error de conexión'); });
-}
-
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-
-// ── Avisos pendientes ─────────────────────────────────────────
-var SUPA_ADMIN='https://ilcreewilnkchvozicyp.supabase.co';
-var SUPA_ADMIN_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
-
-function cargarAvisosTipo(tipo){
-  var LABELS={plan:'Planes',busco:'Busco',adopcion:'Adopciones'};
-  var COLORS={plan:'#764ba2',busco:'#2e7d32',adopcion:'#2e7d32'};
-  var wrap=document.getElementById('eventosAdminWrap');
-  var sub=document.getElementById('subEventos');
-  wrap.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  fetch('/api/galeria?action=getAvisosPendientes')
-  .then(function(r){return r.json();})
-  .then(function(d){
-    var rows=(d.avisos||[]).filter(function(a){return a.tipo===tipo;});
-    var label=LABELS[tipo]||tipo;
-    sub.textContent=rows.length+' '+label.toLowerCase()+' pendiente(s)';
-    if(!rows.length){
-      wrap.innerHTML='<div style="padding:24px;text-align:center;color:#aaa">No hay '+label.toLowerCase()+' pendientes</div>';
-      return;
     }
-    var color=COLORS[tipo]||'#888';
-    var foto=tipo==='adopcion';
-    var html='<div class="table-wrap"><table><thead><tr>'
-      +(foto?'<th>Foto</th>':'')
-      +'<th>Titulo</th><th>Creador</th><th>Fecha</th><th>Descripcion</th><th>Acciones</th></tr></thead><tbody>';
-    rows.forEach(function(a){
-      var fotoSrc=a.imagen&&a.imagen.indexOf('http')>=0?a.imagen:(a.foto_creador&&a.foto_creador.indexOf('http')>=0?a.foto_creador:null);
-      html+='<tr>'
-        +(foto?'<td>'+(fotoSrc?'<img src="'+fotoSrc+'" style="width:48px;height:48px;object-fit:cover;border-radius:6px">':'—')+'</td>':'')
-        +'<td style="font-weight:700">'+a.titulo+'</td>'
-        +'<td style="font-size:12px">'+a.nombre_creador+'</td>'
-        +'<td style="font-size:12px">'+(a.fecha||'-')+'</td>'
-        +'<td style="font-size:12px;color:#888;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(a.descripcion||'-')+'</td>'
-        +'<td><div style="display:flex;gap:6px">'
-        +'<button class="btn-sm" style="background:#e0f7f7;color:#007a7a" data-id="'+a.id+'" onclick="aprobarAvisoGeneral(this)">Aprobar</button>'
-        +'<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" data-id="'+a.id+'" onclick="rechazarAvisoGeneral(this)">Rechazar</button>'
-        +'</div></td></tr>';
-    });
-    html+='</tbody></table></div>';
-    wrap.innerHTML=html;
-  }).catch(function(e){wrap.innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
-}
-
-function aprobarAvisoGeneral(btn){
-  var id=btn.getAttribute('data-id');
-  btn.disabled=true;btn.textContent='Aprobando...';
-  fetch('/api/galeria?action=aprobarAviso',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'aprobarAviso',id:id})
-  }).then(function(){
-    btn.closest('tr').remove();
-    mostrarToastAdmin('Aprobado y publicado');
-  }).catch(function(){btn.disabled=false;btn.textContent='Aprobar';});
-}
-
-function rechazarAvisoGeneral(btn){
-  var id=btn.getAttribute('data-id');
-  if(!confirm('Eliminar este aviso?')) return;
-  btn.disabled=true;btn.textContent='Eliminando...';
-  fetch('/api/galeria?action=rechazarAviso',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'rechazarAviso',id:id})
-  }).then(function(){
-    btn.closest('tr').remove();
-    mostrarToastAdmin('Eliminado');
-  }).catch(function(){btn.disabled=false;btn.textContent='Rechazar';});
-}
-
-function cargarAvisosPendientes(){
-  var wrap=document.getElementById('avisosAdminWrap');
-  var sub=document.getElementById('subAvisos');
-  wrap.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  fetch('/api/galeria?action=getAvisosPendientes')
-  .then(function(r){return r.json();})
-  .then(function(d){return d.avisos||[];})
-  .then(function(rows){
-    sub.textContent=(rows||[]).length+' pendiente(s)';
-    if(!rows.length){
-      wrap.innerHTML='<div style="text-align:center;padding:40px;color:#aaa">No hay avisos pendientes de aprobacion</div>';
-      return;
-    }
-    var COLORS={perdido:'#c0392b',plan:'#764ba2',busco:'#2e7d32',adopcion:'#2e7d32'};
-    var LABELS={perdido:'Perdido',plan:'Plan',busco:'Busco',adopcion:'Adopcion'};
-    var ICONS={perdido:'🚨',plan:'🐾',busco:'🔍',adopcion:'🏠'};
-    var html='<div style="padding:16px;display:flex;flex-direction:column;gap:10px">';
-    rows.forEach(function(a){
-      var color=COLORS[a.tipo]||'#888';
-      var label=ICONS[a.tipo]+' '+LABELS[a.tipo];
-      var foto=a.imagen&&a.imagen.indexOf('http')>=0?a.imagen:(a.foto_creador&&a.foto_creador.indexOf('http')>=0?a.foto_creador:null);
-      html+='<div style="border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden;background:#fff">'
-        +'<div style="background:'+color+';padding:7px 14px;display:flex;align-items:center;gap:8px">'
-        +'<span style="font-size:12px;font-weight:700;color:#fff">'+label+'</span>'
-        +'<span style="font-size:11px;color:rgba(255,255,255,.7);margin-left:auto">'+new Date(a.created_at).toLocaleDateString('es-GT')+'</span>'
-        +'</div>'
-        +'<div style="display:flex;gap:12px;padding:12px">'
-        +(foto?'<img src="'+foto+'" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0">':'')
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:13px;font-weight:700;color:#222;margin-bottom:3px">'+a.titulo+'</div>'
-        +'<div style="font-size:12px;color:#666;margin-bottom:3px">Por: <strong>'+a.nombre_creador+'</strong></div>'
-        +(a.descripcion?'<div style="font-size:12px;color:#888;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">'+a.descripcion+'</div>':'')
-        +(a.ubicacion?'<div style="font-size:11px;color:#aaa;margin-top:3px">📍 '+a.ubicacion+'</div>':'')
-        +'</div></div>'
-        +'<div style="padding:8px 12px;border-top:0.5px solid #f0f0f0;display:flex;gap:8px">'
-        +'<button data-id="'+a.id+'" onclick="aprobarAviso(this)" style="flex:1;padding:8px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Aprobar</button>'
-        +'<button data-id="'+a.id+'" onclick="rechazarAviso(this)" style="flex:1;padding:8px;background:#fff0f0;color:#c0392b;border:1px solid #fcc;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Rechazar</button>'
-        +'</div>'
-        +'</div>';
-    });
-    html+='</div>';
-    wrap.innerHTML=html;
-  }).catch(function(e){wrap.innerHTML='<div style="padding:24px;color:red">Error: '+e.message+'</div>';});
-}
-
-function aprobarAviso(btn){
-  var id=btn.getAttribute('data-id');
-  btn.disabled=true;btn.textContent='Aprobando...';
-  fetch('/api/galeria?action=aprobarAviso',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'aprobarAviso',id:id})
-  }).then(function(){
-    var card=btn.closest('[style*="border:0.5px solid #e0e0e0"]');
-    if(card) card.remove();
-    var n=document.querySelectorAll('#avisosAdminWrap [style*="border:0.5px solid #e0e0e0"]').length;
-    document.getElementById('subAvisos').textContent=n+' pendiente(s)';
-    mostrarToastAdmin('Aviso aprobado y publicado');
-  }).catch(function(){btn.disabled=false;btn.textContent='Aprobar';});
-}
-
-function rechazarAviso(btn){
-  var id=btn.getAttribute('data-id');
-  if(!confirm('Eliminar este aviso?')) return;
-  btn.disabled=true;btn.textContent='Eliminando...';
-  fetch('/api/galeria?action=rechazarAviso',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'rechazarAviso',id:id})
-  }).then(function(){
-    var card=btn.closest('[style*="border:0.5px solid #e0e0e0"]');
-    if(card) card.remove();
-    var n=document.querySelectorAll('#avisosAdminWrap [style*="border:0.5px solid #e0e0e0"]').length;
-    document.getElementById('subAvisos').textContent=n+' pendiente(s)';
-    mostrarToastAdmin('Aviso eliminado');
-  }).catch(function(){btn.disabled=false;btn.textContent='Rechazar';});
-}
-
-function cargarReglas(){
-  var tbody=document.getElementById('reglasBody');
-  var sub=document.getElementById('subReglas');
-  tbody.innerHTML='<tr><td colspan="3"><div class="loading"><div class="spinner"></div></div></td></tr>';
-  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/reglas_aceptadas?order=fecha.desc&select=email,fecha,version',{
-    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}
-  }).then(function(r){return r.json();})
-  .then(function(rows){
-    sub.textContent=rows.length+' usuario(s) han aceptado';
-    if(!rows.length){
-      tbody.innerHTML='<tr><td colspan="3" style="text-align:center;padding:40px;color:#aaa">Nadie ha aceptado aun</td></tr>';
-      return;
-    }
-    tbody.innerHTML=rows.map(function(r){
-      var f=r.fecha?new Date(r.fecha).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'-';
-      return '<tr><td style="font-weight:600">'+r.email+'</td><td style="font-size:12px;color:#888">'+f+'</td><td><span class="badge badge-si">v'+r.version+'</span></td></tr>';
-    }).join('');
-  }).catch(function(e){
-    tbody.innerHTML='<tr><td colspan="3" style="color:red;padding:20px">Error: '+e.message+'</td></tr>';
-  });
-}
-
-function cargarAdminGrupos(){
-  var sub=document.getElementById('subGrupos');
-  if(sub) sub.textContent='Cargando...';
-
-  // Cargar solicitudes pendientes (activo=false)
-  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?activo=eq.false&select=*&order=created_at.desc',{
-    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}
-  }).then(function(r){return r.json();})
-  .then(function(rows){
-    var tbody=document.getElementById('solicitudesGruposBody');
-    if(!rows||!rows.length){
-      tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Sin solicitudes pendientes</td></tr>';
-    }else{
-      tbody.innerHTML=rows.map(function(g){
-        var f=g.created_at?new Date(g.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
-        return '<tr>'
-          +'<td style="font-weight:600">'+g.nombre+'</td>'
-          +'<td style="font-size:12px;color:#888">'+(g.admin_email||'—')+'</td>'
-          +'<td style="font-size:12px;color:#888">'+f+'</td>'
-          +'<td style="display:flex;gap:6px;padding:8px 12px">'
-          +'<button class="badge badge-si" style="cursor:pointer;border:none" data-id="'+g.id+'" data-nombre="'+g.nombre+'" onclick="aprobarGrupo(this.dataset.id,this.dataset.nombre)">✓ Aprobar</button>'
-          +'<button class="badge badge-no" style="cursor:pointer;border:none" data-id="'+g.id+'" data-nombre="'+g.nombre+'" onclick="rechazarGrupo(this.dataset.id,this.dataset.nombre)">✗ Rechazar</button>'
-          +'</td>'
-          +'</tr>';
-      }).join('');
-    }
-  }).catch(function(){document.getElementById('solicitudesGruposBody').innerHTML='<tr><td colspan="4" style="color:red;padding:12px">Error</td></tr>';});
-
-  // Cargar grupos activos + conteo miembros
-  Promise.all([
-    fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?activo=eq.true&select=*&order=nombre.asc',{headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}}).then(function(r){return r.json();}),
-    fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/miembros_grupo?select=grupo_id',{headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}}).then(function(r){return r.json();})
-  ]).then(function(res){
-    var grupos=res[0]||[];var membs=res[1]||[];
-    var counts={};membs.forEach(function(m){counts[m.grupo_id]=(counts[m.grupo_id]||0)+1;});
-    if(sub) sub.textContent=grupos.length+' grupo(s) activo(s)';
-    var tbody=document.getElementById('gruposActivosBody');
-    if(!grupos.length){
-      tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">No hay grupos activos</td></tr>';return;
-    }
-    tbody.innerHTML=grupos.map(function(g){
-      var tr=document.createElement('tr');
-      tr.innerHTML='<td style="font-size:12px;font-weight:700;color:#00B4B4">'+g.id+'</td>'
-        +'<td style="font-weight:600">'+g.nombre+'</td>'
-        +'<td style="font-size:12px;color:#888;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(g.descripcion||'—')+'</td>'
-        +'<td style="font-size:12px">'+(g.sponsor||'—')+'</td>'
-        +'<td><span class="badge badge-si">'+(counts[g.id]||0)+'</span></td>'
-        +'<td style="display:flex;gap:6px;padding:8px 12px">'
-        +'<button class="badge" style="background:#e0f0ff;color:#0056b3;cursor:pointer;border:none">Editar</button>'
-        +'<button class="badge badge-no" style="cursor:pointer;border:none">Desactivar</button>'
-        +'</td>';
-      tr.querySelectorAll('button')[0].onclick=function(){editarGrupoAdmin(g.id);};
-      tr.querySelectorAll('button')[1].onclick=function(){desactivarGrupo(g.id,g.nombre);};
-      return tr.outerHTML;
-    }).join('');
-  }).catch(function(){document.getElementById('gruposActivosBody').innerHTML='<tr><td colspan="6" style="color:red;padding:12px">Error</td></tr>';});
-}
-
-function aprobarGrupo(id,nombre){
-  if(!confirm('¿Aprobar el grupo "'+nombre+'"?'))return;
-  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
-    method:'PATCH',
-    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Content-Type':'application/json','Prefer':'return=minimal'},
-    body:JSON.stringify({activo:true})
-  }).then(function(){mostrarToastAdmin('Grupo "'+nombre+'" aprobado ✓');cargarAdminGrupos();})
-  .catch(function(){mostrarToastAdmin('Error al aprobar');});
-}
-
-function rechazarGrupo(id,nombre){
-  if(!confirm('¿Rechazar y eliminar la solicitud de "'+nombre+'"?'))return;
-  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
-    method:'DELETE',
-    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8'}
-  }).then(function(){mostrarToastAdmin('Solicitud rechazada');cargarAdminGrupos();})
-  .catch(function(){mostrarToastAdmin('Error al rechazar');});
-}
-
-function desactivarGrupo(id,nombre){
-  if(!confirm('¿Desactivar el grupo "'+nombre+'"? Dejará de aparecer en la galería.'))return;
-  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
-    method:'PATCH',
-    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Content-Type':'application/json','Prefer':'return=minimal'},
-    body:JSON.stringify({activo:false})
-  }).then(function(){mostrarToastAdmin('Grupo desactivado');cargarAdminGrupos();})
-  .catch(function(){mostrarToastAdmin('Error al desactivar');});
-}
-
-function editarGrupoAdmin(id){
-  var nombre=prompt('Nuevo nombre para el grupo (dejar vacío para no cambiar):');
-  var sponsor=prompt('Sponsor del grupo (dejar vacío para no cambiar):');
-  var desc=prompt('Descripción (dejar vacío para no cambiar):');
-  var data={};
-  if(nombre&&nombre.trim()) data.nombre=nombre.trim();
-  if(sponsor!==null) data.sponsor=sponsor.trim()||null;
-  if(desc&&desc.trim()) data.descripcion=desc.trim();
-  if(!Object.keys(data).length)return;
-  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
-    method:'PATCH',
-    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Content-Type':'application/json','Prefer':'return=minimal'},
-    body:JSON.stringify(data)
-  }).then(function(){mostrarToastAdmin('Grupo actualizado ✓');cargarAdminGrupos();})
-  .catch(function(){mostrarToastAdmin('Error al actualizar');});
-}
-
-function mostrarToastAdmin(msg){
-  var el=document.getElementById('toastAdmin');
-  if(!el){el=document.createElement('div');el.id='toastAdmin';
-  el.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none';
-  document.body.appendChild(el);}
-  el.textContent=msg;el.style.opacity='1';
-  clearTimeout(el._t);el._t=setTimeout(function(){el.style.opacity='0';},2500);
-}
-
-// ── Mundial Admin ─────────────────────────────────────────────
-function loadWCAdmin() {
-  var H = SUPA_ADM_H;
-  var SUPA = SUPA_ADM;
-  fetch(SUPA + '/rest/v1/wc_partidos?select=*&order=fecha.asc', { headers: H })
-  .then(function(r){ return r.json(); })
-  .then(function(partidos){
-    if(!Array.isArray(partidos)) { document.getElementById('wcPartidosWrap').innerHTML='<p style="padding:16px;color:red">Error cargando - verifica que corriste el SQL de las tablas</p>'; return; }
-    document.getElementById('wcTotal').textContent = partidos.length;
-    var now = new Date();
-    document.getElementById('wcPendientes').textContent = partidos.filter(function(p){ return !p.resultado && new Date(p.fecha) < now; }).length;
-    var sel = document.getElementById('wcSelectPartido');
-    sel.innerHTML = '<option value="">Seleccionar partido...</option>';
-    partidos.forEach(function(p) {
-      var fecha = new Date(p.fecha).toLocaleString('es-GT',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'America/Guatemala'});
-      var estado = p.resultado ? ('OK:'+p.resultado) : (new Date(p.fecha)<now?'PENDIENTE':'prox');
-      var opt = document.createElement('option');
-      opt.value = p.id; opt.setAttribute('data-e1',p.equipo1); opt.setAttribute('data-e2',p.equipo2);
-      opt.textContent = estado+' | Gr.'+(p.grupo||'?')+' '+p.bandera1+p.equipo1+' vs '+p.bandera2+p.equipo2+' - '+fecha;
-      sel.appendChild(opt);
-    });
-    var html='<table class="admin-table"><thead><tr><th>Fecha(GT)</th><th>Partido</th><th>Gr.</th><th>Resultado</th><th>Preds</th></tr></thead><tbody>';
-    partidos.forEach(function(p){
-      var fecha=new Date(p.fecha).toLocaleString('es-GT',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'America/Guatemala'});
-      var res=p.resultado?('<b style="color:#2e7d32">'+p.resultado+'</b>'):(new Date(p.fecha)<now?'<span style="color:#f9a825">pendiente</span>':'-');
-      html+='<tr><td style="font-size:11px">'+fecha+'</td><td>'+p.bandera1+p.equipo1+' vs '+p.bandera2+p.equipo2+'</td><td style="text-align:center">'+(p.grupo||p.fase||'-')+'</td><td>'+res+'</td><td style="text-align:center" id="preds-'+p.id+'">...</td></tr>';
-    });
-    document.getElementById('wcPartidosWrap').innerHTML=html+'</tbody></table>';
-    fetch(SUPA+'/rest/v1/wc_predicciones?select=partido_id,email',{headers:H}).then(function(r){return r.json();}).then(function(preds){
-      if(!Array.isArray(preds)) return;
-      document.getElementById('wcPreds').textContent=preds.length;
-      document.getElementById('wcParticipantes').textContent=new Set(preds.map(function(p){return p.email;})).size;
-      var bc={};preds.forEach(function(p){bc[p.partido_id]=(bc[p.partido_id]||0)+1;});
-      Object.keys(bc).forEach(function(id){var el=document.getElementById('preds-'+id);if(el)el.textContent=bc[id];});
-    });
-  }).catch(function(e){document.getElementById('wcPartidosWrap').innerHTML='<p style="padding:16px;color:red">Error: '+e.message+'</p>';});
-  fetch('/api/galeria?action=wc_ranking').then(function(r){return r.json();}).then(function(d){
-    if(!d.ranking||!d.ranking.length){document.getElementById('wcRankingWrap').innerHTML='<p style="padding:16px;color:#aaa;font-size:13px">Sin datos aun</p>';return;}
-    var html='<table class="admin-table"><thead><tr><th>Pos</th><th>Usuario</th><th>Pts</th><th>Aciertos</th></tr></thead><tbody>';
-    d.ranking.forEach(function(u,i){html+='<tr><td>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</td><td>'+(u.dueno||u.email.split('@')[0])+'</td><td style="font-weight:700;color:#00B4B4">'+u.puntos+'</td><td>'+u.aciertos+'</td></tr>';});
-    document.getElementById('wcRankingWrap').innerHTML=html+'</tbody></table>';
   }).catch(function(){});
 }
 
-function wcMarcarResultado() {
-  var partidoId=document.getElementById('wcSelectPartido').value;
-  var resultado=document.getElementById('wcSelectResultado').value;
-  if(!partidoId||!resultado){alert('Selecciona partido y resultado');return;}
-  var opt=document.getElementById('wcSelectPartido').options[document.getElementById('wcSelectPartido').selectedIndex];
-  var e1=opt.getAttribute('data-e1');var e2=opt.getAttribute('data-e2');
-  var lbl=resultado==='equipo1'?('Gana '+e1):resultado==='equipo2'?('Gana '+e2):'Empate';
-  if(!confirm('Confirmar: '+lbl+'\n\nEsto asignara +2 pts a quienes acertaron.')) return;
-  var msg=document.getElementById('wcResultMsg');
-  msg.textContent='Procesando...';msg.style.display='block';msg.style.color='#888';
-  fetch('/api/galeria?action=wc_marcarResultado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({partido_id:parseInt(partidoId),resultado:resultado,adminKey:'petmiadmin2026'})})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(d.ok){msg.textContent='OK: '+d.aciertos+' aciertos de '+d.procesados+' predicciones';msg.style.color='#00C853';loadWCAdmin();}
-    else{msg.textContent='Error: '+(d.msg||'desconocido');msg.style.color='#e53935';}
-  }).catch(function(){msg.textContent='Error de conexion';msg.style.color='#e53935';});
+cargar();
+
+// ── Detectar ?tipo=perdido desde familia.html ──────────────
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  if(params.get('tipo')!=='perdido') return;
+  function intentarAbrir(n){
+    if(sessionEmail&&!miMascota&&n<20){setTimeout(function(){intentarAbrir(n+1);},300);return;}
+    tipoSel='perdido';
+    document.querySelectorAll('.tipo-option').forEach(function(o){o.classList.remove('selected');});
+    var btn=document.querySelector('[onclick*="selTipo(\'perdido"]');
+    if(btn) btn.classList.add('selected');
+    var cp=document.getElementById('camposPerdido');
+    if(cp) cp.classList.add('visible');
+    if(miMascota) _preLlenar(miMascota);
+    document.getElementById('modalPublicar').classList.add('open');
+  }
+  setTimeout(function(){intentarAbrir(0);},900);
+})();
+
+function _preLlenar(m){
+  if(!m)return;
+  var campos={pubNombreMascota:m.nombre,pubEspecie:m.especie,pubSexo:m.sexo,pubRaza:m.raza,pubTelefono:m.whatsapp};
+  Object.keys(campos).forEach(function(id){
+    var el=document.getElementById(id);
+    if(el&&campos[id]) el.value=campos[id];
+  });
+  var t=document.getElementById('pubTitulo');
+  if(t&&m.nombre) t.value='🚨 SE PERDIÓ '+m.nombre.toUpperCase();
 }
 
+function scrollToAviso(){
+  var urlId=new URLSearchParams(window.location.search).get('id');
+  if(!urlId)return;
+  setTimeout(function(){
+    var card=document.getElementById('card-'+urlId);
+    if(card){
+      card.scrollIntoView({behavior:'smooth',block:'center'});
+      card.style.outline='3px solid #00B4B4';
+      setTimeout(function(){card.style.outline='';},3000);
+    }
+  },600);
+}
+function cargar(){
+  document.getElementById('contenido').innerHTML='<div class="spinner"></div>';
+  fetch('/api/galeria?action=getActividades')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      avisosData=d.actividades||[];
+      renderLista();
+    }).catch(function(){
+      document.getElementById('contenido').innerHTML='<div class="empty"><div class="empty-icon">😕</div><div class="empty-txt">Error al cargar</div></div>';
+    });
+}
+
+function setFiltro(tipo,el){
+  filtroActual=tipo;
+  document.querySelectorAll('.filtro-btn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  renderLista();
+}
+
+function renderLista(){
+  var lista=filtroActual?avisosData.filter(function(a){return a.tipo===filtroActual;}):avisosData;
+  // Afiliados primero
+  lista=lista.slice().sort(function(a,b){
+    if(a.es_afiliado&&!b.es_afiliado) return -1;
+    if(!a.es_afiliado&&b.es_afiliado) return 1;
+    return 0;
+  });
+  if(!lista.length){
+    document.getElementById('contenido').innerHTML='<div class="empty"><div class="empty-icon">📢</div><div class="empty-txt">No hay avisos aún</div></div>';
+    return;
+  }
+  var html='';
+  lista.forEach(function(a,i){html+=renderAviso(a,i);});
+  document.getElementById('contenido').innerHTML=html;
+  lista.forEach(function(a){cargarApuntes(a.id);});
+}
+
+function renderAviso(a,i){
+  var esCreador=sessionEmail&&a.email_creador&&a.email_creador.toLowerCase()===sessionEmail.toLowerCase();
+  var esAfiliadoAviso=a.es_afiliado===true||a.es_afiliado==='true';
+  var sUrl='https://worker-js.petzid-gt.workers.dev/s/a/'+a.id;
+  var HEADER_COLORS={perdido:'#c0392b',busco:'#2e7d32',adopcion:'#2e7d32',venta:'#856404'};
+  var LABELS={perdido:'Perdido',busco:'Busco',adopcion:'Adopcion',venta:'Venta'};
+  var ICONS={perdido:'🚨',busco:'🔍',adopcion:'🏠',venta:'💰'};
+  var BORDER={perdido:'2px solid #c0392b',adopcion:'1.5px solid #2e7d32'};
+  var headerColor=HEADER_COLORS[a.tipo]||'#888';
+  var label=ICONS[a.tipo]+' '+LABELS[a.tipo];
+  var border=esAfiliadoAviso?'2px solid #F5C842':(BORDER[a.tipo]||'0.5px solid #eee');
+  var partnerBadge=esAfiliadoAviso?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;background:#F5C842;color:#1a1a2e;padding:3px 10px;border-radius:99px;margin-bottom:6px">Partner PetMi ✓</span><br>':'';
+
+  // Foto: busco NO tiene, resto usa imagen o foto_creador
+  var fotoSrc = a.tipo==='busco' ? null
+    : (a.imagen&&a.imagen.indexOf('http')>=0 ? a.imagen
+    : (a.foto_creador&&a.foto_creador.indexOf('http')>=0 ? a.foto_creador : null));
+
+  // Avatar autor
+  var autorAvatar=a.foto_creador&&a.foto_creador.indexOf('http')>=0
+    ?('<img src="'+a.foto_creador+'" style="width:22px;height:22px;border-radius:5px;object-fit:cover">')
+    :('<div style="width:22px;height:22px;border-radius:5px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:11px">'+ICONS[a.tipo]+'</div>');
+
+  // Badge pendiente solo para creador
+  var pendienteBadge = (esCreador&&!a.activo)
+    ? '<div style="display:inline-flex;align-items:center;gap:4px;background:#fff3e0;color:#e65100;font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;margin-bottom:6px">Pendiente de aprobacion</div>'
+    : '';
+
+  var html='<div class="act-card" id="card-'+a.id+'" style="border:'+border+';border-radius:14px;overflow:hidden;margin-bottom:10px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.06)">';
+
+  // Header
+  html+='<div style="background:'+headerColor+';padding:7px 12px;display:flex;align-items:center;gap:8px">'
+    +'<span style="font-size:11px;font-weight:700;color:#fff;letter-spacing:.5px">'+label+'</span>'
+    +'<span style="font-size:11px;color:rgba(255,255,255,.7);margin-left:auto">'+tiempoRelativo(a.created_at)+'</span>'
+    +'</div>';
+
+  // Body con o sin foto izquierda
+  if(fotoSrc){
+    html+='<div style="display:flex">'
+      +'<div style="width:110px;flex-shrink:0;overflow:hidden">'
+      +'<img src="'+fotoSrc+'" style="width:110px;height:100%;min-height:130px;object-fit:cover;display:block">'
+      +'</div>'
+      +'<div style="flex:1;padding:10px 12px;min-width:0">';
+  } else {
+    html+='<div style="padding:10px 12px">';
+  }
+
+  html+=pendienteBadge;
+  html+='<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'
+    +autorAvatar
+    +'<span style="font-size:11px;color:#666">'+a.nombre_creador+'</span></div>';
+
+  var tituloColor=a.tipo==='perdido'?'#c0392b':'#222';
+  if(esAfiliadoAviso) html+=partnerBadge;
+  html+='<div style="font-size:14px;font-weight:700;color:'+tituloColor+';margin-bottom:3px;line-height:1.3">'+a.titulo+'</div>';
+
+  if(a.ubicacion) html+='<div style="font-size:11px;color:#888;margin-bottom:2px">📍 '+a.ubicacion+'</div>';
+  if(a.fecha){
+    var fd=new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'short',day:'2-digit',month:'short'});
+    html+='<div style="font-size:11px;color:#aaa;margin-bottom:3px">📅 '+fd+'</div>';
+  }
+  if(a.descripcion) html+='<div style="font-size:12px;color:#777;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">'+a.descripcion+'</div>';
+
+  html+= fotoSrc ? '</div></div>' : '</div>';
+
+  // Apuntes
+  html+='<div id="apuntes-'+a.id+'" style="padding:0 12px 6px;display:flex;gap:4px;flex-wrap:wrap;align-items:center"></div>';
+
+  // Footer botones
+  html+='<div style="border-top:0.5px solid #f0f0ee;padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
+
+  if(a.tipo==='perdido'){
+    var wa=a.whatsapp||'';
+    var em=a.email_creador||'';
+    var tit=a.titulo||'';
+    var aid=a.id||'';
+    var anc=a.nombre_creador||'';
+    if(!esCreador&&sessionEmail) html+='<button class="btn-interesa" data-email="'+em+'" data-titulo="'+tit+'" data-tipo="perdido" onclick="contactarDesdeBtn(this)">❤️ Quiero ayudar</button>';
+  if(!esCreador&&!sessionEmail) html+='<button class="btn-interesa" onclick="petmiAbrirLogin()">❤️ Quiero ayudar</button>';
+    if(esCreador) html+='<button class="btn-aparecio" data-id="'+aid+'" data-nombre="'+anc+'" onclick="aparecioDesdeBtn(this)">🎉 Aparecio!</button>';
+    html+='<button class="btn-dl" data-id="'+aid+'" onclick="posterDesdeBtn(this)">⬇ Poster</button>';
+  }
+  if(a.tipo==='busco'&&!esCreador){
+    var em2=a.email_creador||'';var tit2=a.titulo||'';
+    if(sessionEmail) html+='<button class="btn-info" style="background:#1565c0" data-email="'+em2+'" data-titulo="'+tit2+'" data-tipo="busco" onclick="contactarDesdeBtn(this)">🔍 Me interesa</button>';
+    else html+='<button class="btn-info" style="background:#1565c0" onclick="petmiAbrirLogin()">🔍 Me interesa</button>';
+  }
+  if(a.tipo==='adopcion'&&!esCreador){
+    var em3=a.email_creador||'';var tit3=a.titulo||'';
+    if(sessionEmail) html+='<button class="btn-interesa" data-email="'+em3+'" data-titulo="'+tit3+'" data-tipo="adopcion" onclick="contactarDesdeBtn(this)">🏠 Me interesa</button>';
+    else html+='<button class="btn-interesa" onclick="petmiAbrirLogin()">🏠 Me interesa</button>';
+  }
+  if(esCreador&&a.tipo!=='perdido'){var aid3=a.id||'';html+='<button style="padding:6px 10px;background:#f0f0ee;color:#888;border:none;border-radius:99px;font-size:11px;cursor:pointer" data-id="'+aid3+'" onclick="eliminarDesdeBtn(this)">🗑️</button>';}
+  if(a.tipo==='adopcion'){
+    html+='<button class="btn-wa" style="display:inline-flex;align-items:center;gap:5px;margin-left:auto" data-titulo="'+a.titulo+'" data-url="'+sUrl+'" data-tipo="'+a.tipo+'" onclick="compartirDesdeBtn(this)">'
+      +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Compartir</button>';
+  }
+
+  html+='</div></div>';
+  return html;
+}
+function cargarApuntes(actId){
+  fetch('/api/galeria?action=getApuntes&actividad_id='+encodeURIComponent(actId))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var el=document.getElementById('apuntes-'+actId);
+      if(!el)return;
+      var ap=d.apuntes||[];
+      if(!ap.length){el.innerHTML='';return;}
+      var html='';
+      ap.slice(0,8).forEach(function(x){
+        html+=x.foto_mascota&&x.foto_mascota.indexOf('http')>=0
+          ?'<img src="'+x.foto_mascota+'" class="apunte-avatar" title="'+x.nombre_mascota+'">'
+          :'<div class="apunte-avatar" style="background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:12px">🐾</div>';
+      });
+      if(ap.length>8) html+='<span style="font-size:11px;color:#aaa">+'+( ap.length-8)+'</span>';
+      html+='<span class="apuntados-count">'+ap.length+' apuntado'+(ap.length!==1?'s':'')+'</span>';
+      el.innerHTML=html;
+      if(miMascota){
+        var ya=ap.some(function(x){return x.uid_mascota===miMascota.uid;});
+        var btn=document.getElementById('btn-ap-'+actId);
+        if(btn&&ya){btn.textContent='✓ Apuntado';btn.className='btn-apuntar apuntado';}
+      }
+    });
+}
+
+function apuntarse(actId){
+  if(!sessionEmail||!miMascota){mostrarToast('Inicia sesión para apuntarte');return;}
+  var btn=document.getElementById('btn-ap-'+actId);
+  var ya=btn&&btn.classList.contains('apuntado');
+  fetch('/api/galeria?action='+(ya?'desapuntarse':'apuntarse'),{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({actividad_id:actId,uid_mascota:miMascota.uid,nombre_mascota:miMascota.nombre,foto_mascota:miMascota.foto||''})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.ok){
+      if(btn){btn.textContent=ya?'🐾 Apuntarse':'✓ Apuntado';btn.className='btn-apuntar'+(ya?'':' apuntado');}
+      cargarApuntes(actId);
+      if(!ya)mostrarToast('🐾 ¡Te apuntaste!');
+    }
+  });
+}
+
+function marcarAparecio(id,nombre){
+  if(!confirm('🎉 ¿Confirmar que '+nombre+' ya apareció?'))return;
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px';
+  ov.innerHTML='<div style="font-size:80px">🎉</div><div style="font-size:22px;font-weight:900;color:#fff;text-align:center">¡'+nombre+' apareció!</div>';
+  document.body.appendChild(ov);
+  fetch('/api/galeria?action=marcarAparecio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actividad_id:id})})
+    .then(function(){setTimeout(function(){document.body.removeChild(ov);cargar();mostrarToast('🎉 ¡'+nombre+' apareció!');},2500);});
+}
+
+function eliminar(id){
+  if(!confirm('¿Eliminar este aviso?'))return;
+  fetch('/api/galeria?action=eliminarActividad',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actividad_id:id})})
+    .then(function(){cargar();mostrarToast('Aviso eliminado');});
+}
+
+// Variables del modal de contacto
+var _contactoEmail='', _contactoTitulo='', _contactoTipo='';
+
+function contactar(email, titulo, tipo, telefono){
+  // Para perdidos — abrir WhatsApp directo si hay telefono
+  if(tipo==='perdido' && telefono){
+    var tel=telefono.replace(/[^0-9]/g,'');
+    // Agregar prefijo Guatemala si es numero local de 8 digitos
+    if(tel.length===8) tel='502'+tel;
+    var msg='Hola! Vi tu aviso en PetMi sobre *'+titulo+'*. '+'Tengo informacion que puede ayudarte '+'\n\n'+'_Enviado desde petmi-petzid.vercel.app_';
+    window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg),'_blank');
+    return;
+  }
+  // Para adopcion o sin telefono — usar modal
+  _contactoEmail=email;
+  _contactoTitulo=titulo;
+  _contactoTipo=tipo;
+  var nombrePre=localStorage.getItem('petzid_dueno')||'';
+  document.getElementById('contactoNombre').value=nombrePre;
+  document.getElementById('contactoMsg').value='';
+  document.getElementById('contactoTitulo').textContent='Me interesa 🏠';
+  document.getElementById('contactoSub').textContent='Escribe un mensaje al publicador de esta adopción';
+  document.getElementById('btnEnviarContacto').textContent='🏠 Enviar mensaje';
+  document.getElementById('modalContacto').classList.add('open');
+}
+
+function cerrarContacto(){
+  document.getElementById('modalContacto').classList.remove('open');
+}
+
+function enviarContacto(){
+  var nombre=document.getElementById('contactoNombre').value.trim();
+  var msg=document.getElementById('contactoMsg').value.trim();
+  if(!nombre){mostrarToast('Escribe tu nombre');return;}
+  if(!msg){mostrarToast('Escribe un mensaje');return;}
+  var btn=document.getElementById('btnEnviarContacto');
+  btn.disabled=true;btn.textContent='Enviando...';
+  var action=_contactoTipo==='adopcion'?'notificarInteres':'notificarInfoPerdido';
+  fetch('/api/submit',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      action:action,
+      emailCreador:_contactoEmail,
+      tituloAnuncio:_contactoTitulo,
+      nombreContacto:nombre,
+      mensaje:msg,
+      emailInteresado:sessionEmail||'',
+      nombreMascota:miMascota?miMascota.nombre:'Alguien'
+    })
+  }).then(function(r){return r.json();})
+  .then(function(){
+    btn.disabled=false;
+    cerrarContacto();
+    mostrarToast(_contactoTipo==='adopcion'?'🏠 Mensaje enviado!':'📞 Información enviada al dueño!');
+  }).catch(function(){
+    btn.disabled=false;btn.textContent='Enviar';
+    mostrarToast('Error al enviar');
+  });
+}
+
+function abrirPublicar(){
+  // Verificar si ya acepto las reglas
+  var _email=localStorage.getItem('petzid_email')||'';
+  var _key='reglas_aceptadas'+(_email?'_'+_email.replace(/[^a-z0-9]/gi,''):'');
+  if(!localStorage.getItem('reglas_aceptadas')&&!localStorage.getItem(_key)){
+    document.getElementById('modalReglas').style.display='flex';
+    return;
+  }
+  if(!sessionEmail){mostrarToast('Inicia sesión para publicar');return;}
+  // Si miMascota aún no cargó, esperar
+  if(!miMascota){
+    mostrarToast('Cargando tu perfil...');
+    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.found&&d.mascotas.length){
+          miMascota=d.mascotas[0];
+          abrirFormulario();
+        } else {
+          mostrarToast('No encontramos tu mascota. ¿Ya registraste tu PetzID?');
+        }
+      });
+    return;
+  }
+  abrirFormulario();
+}
+
+function abrirFormulario(){
+  // Pre-llenar campos de perdido si hay datos en el perfil
+  if(miMascota){
+    var n=document.getElementById('pubNombreMascota');
+    var e=document.getElementById('pubEspecie');
+    var s=document.getElementById('pubSexo');
+    var r=document.getElementById('pubRaza');
+    var t=document.getElementById('pubTelefono');
+    if(n&&!n.value&&miMascota.nombre) n.value=miMascota.nombre;
+    if(e&&!e.value&&miMascota.especie) e.value=miMascota.especie;
+    if(s&&!s.value&&miMascota.sexo) s.value=miMascota.sexo;
+    if(r&&!r.value&&miMascota.raza) r.value=miMascota.raza;
+    if(t&&!t.value&&miMascota.whatsapp) t.value=miMascota.whatsapp;
+  }
+  // Asegurar que los campos perdido sean visibles si tipo es perdido
+  if(tipoSel==='perdido'){
+    document.getElementById('camposPerdido').classList.add('visible');
+  }
+  document.getElementById('modalPublicar').classList.add('open');
+}
+function cerrarPublicar(){
+  document.getElementById('modalPublicar').classList.remove('open');
+  // Reset todos los campos
+  ['pubTitulo','pubDesc','pubFecha','pubUbicacion','pubNombreMascota','pubRaza','pubTelefono','pubRecompensa'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  ['pubEspecie','pubSexo'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  // Reset tipo a perdido
+  tipoSel='perdido';
+  document.querySelectorAll('.tipo-option').forEach(function(o){o.classList.remove('selected');});
+  var p=document.querySelector('[onclick*="selTipo(\'perdido"]');if(p)p.classList.add('selected');
+  document.getElementById('camposPerdido').classList.remove('visible');
+  var ca=document.getElementById('camposAdopcion');if(ca)ca.style.display='none';
+  var ce=document.getElementById('camposEvento');if(ce)ce.style.display='none';
+  var pf=document.getElementById('pubFecha');if(pf)pf.style.display='';
+  // Reset foto adopcion
+  adopcionFotoBase64=null;adopcionFotoMime=null;
+  var aprev=document.getElementById('adopcionFotoPreview');
+  if(aprev){aprev.src='';aprev.style.display='none';}
+  var albl=document.getElementById('adopcionFotoLabel');
+  if(albl)albl.style.display='block';
+  var awrap=document.getElementById('fotoAdopcionWrap');
+  if(awrap)awrap.style.borderColor='';
+  // Limpiar foto perdido
+  perdidoFotoBase64=null;perdidoFotoMime=null;
+  var prev=document.getElementById('perdidoFotoPreview');
+  var lbl=document.getElementById('perdidoFotoLabel');
+  var wrap=document.getElementById('fotoUploadWrap');
+  if(prev){prev.style.display='none';prev.src='';}
+  if(lbl) lbl.style.display='block';
+  if(wrap){wrap.style.borderColor='#e0e0e0';wrap.style.background='';}
+  var inp=document.getElementById('perdidoFotoInput');
+  if(inp) inp.value='';
+}
+
+var adopcionFotoBase64=null, adopcionFotoMime=null;
+function previsualizarFotoAdopcion(input){
+  var file=input.files[0];if(!file)return;
+  adopcionFotoMime=file.type;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    adopcionFotoBase64=e.target.result.split(',')[1];
+    var prev=document.getElementById('adopcionFotoPreview');
+    prev.src=e.target.result;prev.style.display='block';
+    document.getElementById('adopcionFotoLabel').style.display='none';
+    document.getElementById('fotoAdopcionWrap').style.borderColor='#2e7d32';
+  };
+  reader.readAsDataURL(file);
+}
+
+function selTipo(tipo,el){
+  tipoSel=tipo;
+  document.querySelectorAll('.tipo-option').forEach(function(o){o.classList.remove('selected');});
+  el.classList.add('selected');
+  // Mostrar campos extra solo para perdido
+  var cp=document.getElementById('camposPerdido');
+  if(tipo==='perdido'){
+    cp.classList.add('visible');
+    // Pre-llenar con datos del perfil
+    if(miMascota){
+      var n=document.getElementById('pubNombreMascota');
+      var e=document.getElementById('pubEspecie');
+      var s=document.getElementById('pubSexo');
+      var r=document.getElementById('pubRaza');
+      var t=document.getElementById('pubTelefono');
+      if(n&&miMascota.nombre) n.value=miMascota.nombre;
+      if(e&&miMascota.especie) e.value=miMascota.especie;
+      if(s&&miMascota.sexo) s.value=miMascota.sexo;
+      if(r&&miMascota.raza) r.value=miMascota.raza;
+      if(t&&miMascota.whatsapp) t.value=miMascota.whatsapp;
+    }
+  } else {
+    cp.classList.remove('visible');
+  }
+  // Mostrar/ocultar foto de adopcion
+  var ca=document.getElementById('camposAdopcion');
+  if(ca) ca.style.display=(tipo==='adopcion')?'block':'none';
+  // Mostrar/ocultar campos de evento
+  var ce=document.getElementById('camposEvento');
+  if(ce) ce.style.display=(tipo==='evento')?'block':'none';
+  // Ocultar fecha general si es evento (tiene su propia fecha con fecha obligatoria)
+  var fechaWrap=document.getElementById('pubFecha');
+  if(fechaWrap){ fechaWrap.style.display=(tipo==='evento')?'none':''; }
+  // Placeholder dinamico segun tipo
+  var PLACEHOLDERS={
+    perdido:'Ej: Se perdio Cami en Zona 10',
+    busco:'Ej: Busco kennel para mi perro el fin de semana',
+    adopcion:'Ej: Doy en adopcion a Rocky, 3 anos muy cariñoso',
+    evento:'Ej: Jornada de vacunacion gratuita para mascotas'
+  };
+  var tituloInput=document.getElementById('pubTitulo');
+  if(tituloInput) tituloInput.placeholder=PLACEHOLDERS[tipo]||'Escribe el titulo del aviso';
+}
+
+function publicar(){
+  if(!sessionEmail||!miMascota){mostrarToast('Inicia sesión primero');return;}
+  var titulo=document.getElementById('pubTitulo').value.trim();
+  if(!titulo){mostrarToast('El título es obligatorio');return;}
+
+  // Validaciones extra para perdido
+  var extraData={};
+  if(tipoSel==='perdido'){
+    var nombre=document.getElementById('pubNombreMascota').value.trim();
+    var especie=document.getElementById('pubEspecie').value;
+    var sexo=document.getElementById('pubSexo').value;
+    var raza=document.getElementById('pubRaza').value.trim();
+    var tel=document.getElementById('pubTelefono').value.trim();
+    var recomp=document.getElementById('pubRecompensa').value.trim();
+
+    // Limpiar errores anteriores
+    ['pubNombreMascota','pubEspecie','pubSexo','pubTelefono'].forEach(function(id){
+      document.getElementById(id).classList.remove('error');
+    });
+
+    var errores=[];
+    if(!nombre){document.getElementById('pubNombreMascota').classList.add('error');errores.push('nombre');}
+    if(!especie){document.getElementById('pubEspecie').classList.add('error');errores.push('especie');}
+    if(!sexo){document.getElementById('pubSexo').classList.add('error');errores.push('sexo');}
+    if(!tel){document.getElementById('pubTelefono').classList.add('error');errores.push('teléfono');}
+    // Validar formato telefono: 8 digitos
+    else if(tel.replace(/[\s\-]/g,'').match(/[^0-9]/)){
+      document.getElementById('pubTelefono').classList.add('error');
+      mostrarToast('El teléfono solo debe tener números');return;
+    }
+
+    if(errores.length){
+      mostrarToast('Completa: '+errores.join(', '));
+      // Scroll al primer error
+      var firstErr=document.querySelector('.form-input.error,.form-select.error');
+      if(firstErr)firstErr.scrollIntoView({behavior:'smooth',block:'center'});
+      return;
+    }
+
+    extraData={
+      nombre_creador:nombre,
+      especie:especie,
+      sexo:sexo,
+      raza:raza||'-',
+      whatsapp:tel,
+      recompensa:recomp||''
+    };
+    // Auto-generar titulo si no lo cambió
+    if(titulo===''||titulo===document.getElementById('pubTitulo').placeholder){
+      titulo='🚨 SE PERDIÓ '+nombre.toUpperCase();
+      document.getElementById('pubTitulo').value=titulo;
+    }
+  }
+
+  // Validaciones para evento
+  if(tipoSel==='evento'){
+    var evFecha=document.getElementById('eventoFecha').value;
+    if(!evFecha){mostrarToast('La fecha del evento es obligatoria');document.getElementById('eventoFecha').focus();return;}
+    extraData={
+      fecha:evFecha,
+      hora:document.getElementById('eventoHora').value||null,
+      ubicacion:document.getElementById('eventoLugar').value.trim(),
+      link:document.getElementById('eventoLink').value.trim()||null
+    };
+  }
+
+  // Verificar cuota de ventas para Premium
+  if(tipoSel==='venta'){
+    if(ventasUsadas>=ventasLimite){
+      var msg = 'Has usado '+ventasUsadas+' de '+ventasLimite+' ventas este mes.';
+      if(ventasLimite===3) msg += ' Agrega un pack adicional (Q25 → 3 más) contactando al admin.';
+      else msg += ' Has alcanzado el límite máximo.';
+      mostrarToast(msg);
+      return;
+    }
+  }
+
+  var btn=document.querySelector('.btn-publicar');
+  btn.disabled=true;btn.textContent='Publicando...';
+  // perdido=activo inmediato, resto requiere aprobacion admin
+  // perdido=inmediato, venta=inmediato(premium), resto requiere aprobacion
+  var activo=tipoSel==='perdido'||tipoSel==='venta';
+
+  // Para evento usar fecha y ubicacion de los campos propios
+  var fechaGeneral = tipoSel==='evento' ? null : (document.getElementById('pubFecha').value||null);
+  var ubicGeneral  = tipoSel==='evento' ? '' : document.getElementById('pubUbicacion').value.trim();
+
+  var payload=Object.assign({
+    uid_creador:miMascota.uid,
+    nombre_creador:extraData.nombre_creador||miMascota.nombre,
+    foto_creador:miMascota.foto||'',
+    email_creador:sessionEmail,
+    es_afiliado:esAfiliado,
+    afiliado_email:esAfiliado?sessionEmail:null,
+    tipo:tipoSel,
+    titulo:titulo,
+    descripcion:document.getElementById('pubDesc').value.trim(),
+    fecha:fechaGeneral,
+    ubicacion:ubicGeneral,
+    activo_override:activo
+  }, extraData);
+
+  // Subir foto de perdido a Cloudinary si hay una nueva
+  async function doPublicar(){
+    var fotoUrl='';
+    if(tipoSel==='perdido'&&perdidoFotoBase64){
+      btn.textContent='Subiendo foto...';
+      fotoUrl=await uploadFotoPerdido();
+    } else if(tipoSel==='adopcion'&&adopcionFotoBase64){
+      btn.textContent='Subiendo foto...';
+      try{
+        var fd=new FormData();
+        var blob=await fetch('data:'+(adopcionFotoMime||'image/jpeg')+';base64,'+adopcionFotoBase64).then(function(r){return r.blob();});
+        fd.append('file',blob);fd.append('upload_preset','petzid');fd.append('folder','petzid/adopcion');
+        var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
+        var data=await res.json();fotoUrl=data.secure_url||'';
+      }catch(e){console.log('Cloudinary adopcion:',e);}
+    }
+    // Para adopcion usar imagen, para otros foto_creador
+    if(fotoUrl){
+      if(tipoSel==='adopcion') payload.imagen=fotoUrl;
+      else payload.foto_creador=fotoUrl;
+    }
+    fetch('/api/galeria?action=publicarActividad',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    }).then(function(r){return r.json();})
+  .then(function(d){
+    btn.disabled=false;btn.textContent='Publicar aviso';
+    if(d.ok){
+      cerrarPublicar();
+      mostrarModalJefe();
+      setTimeout(function(){
+        ocultarModalJefe();
+        if(tipoSel==='venta') ventasUsadas++;
+        var mensajeOk=tipoSel==='adopcion'||tipoSel==='evento'?'Enviado para revision':'Aviso publicado!';
+          mostrarToast(mensajeOk);
+        cargar();
+      },3000);
+      cargar();
+    }
+    }).catch(function(){btn.disabled=false;btn.textContent='Publicar aviso';mostrarToast('Error al publicar');});
+  }
+  doPublicar();
+}
+
+function compartirDesdeBtn(btn){
+  var titulo=btn.getAttribute('data-titulo')||'';
+  var url=btn.getAttribute('data-url')||'';
+  var tipo=btn.getAttribute('data-tipo')||'';
+  var nl='\n';
+  var msg;
+  if(tipo==='perdido'){
+    // Para perdidos compartir imagen del afiche si existe, sino link
+  if(tipo==='perdido'){
+    msg=titulo+' SE PERDIO!'+nl+'Ayudemos que regrese a casa!'+nl+nl+'Si lo ves, comunicate con la familia:'+nl+url;
+  }
+
+
+
+    msg=titulo+' esta en adopcion'+nl+'Le das un hogar? Mas informacion aqui:'+nl+url;
+  } else if(tipo==='busco'){
+    msg='BUSCO: '+titulo+nl+'Alguien lo tiene o sabe donde encontrarlo?'+nl+url;
+  } else {
+    msg=titulo+nl+url;
+  }
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+function contactarDesdeBtn(btn){
+  var email=btn.getAttribute('data-email');
+  var titulo=btn.getAttribute('data-titulo');
+  var tipo=btn.getAttribute('data-tipo');
+  var wa=btn.getAttribute('data-wa');
+  contactar(email,titulo,tipo,wa||'');
+}
+function aparecioDesdeBtn(btn){
+  marcarAparecio(btn.getAttribute('data-id'),btn.getAttribute('data-nombre'));
+}
+function posterDesdeBtn(btn){ descargarPoster(btn.getAttribute('data-id')); }
+function apuntarseDesdeBtn(btn){ apuntarse(btn.getAttribute('data-id')); }
+function eliminarDesdeBtn(btn){ eliminar(btn.getAttribute('data-id')); }
+
+function tiempoRelativo(ts){
+  if(!ts)return'';
+  var d=Date.now()-new Date(ts).getTime();
+  var m=Math.floor(d/60000);
+  if(m<1)return'ahora';if(m<60)return m+'min';
+  var h=Math.floor(m/60);if(h<24)return h+'h';
+  return Math.floor(h/24)+'d';
+}
+
+var CLOUD_NAME    = 'dh5wgqgmk';
+var UPLOAD_PRESET = 'petzid';
+var perdidoFotoBase64 = null;
+var perdidoFotoMime   = null;
+
+function previsualizarFotoPerdido(input){
+  var file=input.files[0];if(!file)return;
+  perdidoFotoMime=file.type;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    perdidoFotoBase64=e.target.result.split(',')[1];
+    var prev=document.getElementById('perdidoFotoPreview');
+    var lbl=document.getElementById('perdidoFotoLabel');
+    prev.src=e.target.result;prev.style.display='block';
+    lbl.style.display='none';
+    document.getElementById('fotoUploadWrap').style.borderColor='#c0392b';
+    document.getElementById('fotoUploadWrap').style.background='#fff8f8';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadFotoPerdido(){
+  if(!perdidoFotoBase64) return null;
+  try{
+    var fd=new FormData();
+    var blob=await fetch('data:'+perdidoFotoMime+';base64,'+perdidoFotoBase64).then(function(r){return r.blob();});
+    fd.append('file',blob,'foto_perdido.jpg');
+    fd.append('upload_preset',UPLOAD_PRESET);
+    fd.append('folder','petzid/perdidos');
+    var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
+    var data=await res.json();
+    return data.secure_url||null;
+  }catch(e){console.log('Cloudinary perdido:',e);return null;}
+}
+
+var LOGO_URL = 'https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/logopetmi.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9nb3BldG1pLnBuZyIsImlhdCI6MTc3OTE1NDkzMiwiZXhwIjoyMDk0NTE0OTMyfQ.tN_IuOOnsgXO0atFGtWZQQ4KLRnZW4Nqelb4JTVYlwU';
+
+function descargarPoster(id){
+  var a=avisosData.find(function(x){return x.id===id;});
+  if(!a){mostrarToast('Error al generar póster');return;}
+  mostrarToast('Generando póster...');
+
+  var W=900,BRD=12,GAP=10;
+  var HEADER_H=190;
+  var chipH=72,uH=110,descH=110;
+  var INFO_H=chipH+GAP+chipH+GAP+uH+GAP+descH;
+  var FECHA_H=90,RECOMP_H=90,TEL_H=100,MSG_H=62;
+  var LOGO_H=52,LOGO_PAD=16,LOGO_BLOCK=LOGO_H+LOGO_PAD*2;
+  var FIXED_H=BRD+HEADER_H+GAP+GAP+FECHA_H+GAP+RECOMP_H+GAP+TEL_H+GAP+MSG_H+GAP+LOGO_BLOCK+BRD;
+  var FOTO_H=700; // altura fija — foto recorta para llenar
+  var H=FIXED_H+FOTO_H+GAP;
+
+  var canvas=document.createElement('canvas');
+  canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+
+  function rr(x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  }
+  function wt(text,x,y,mw,lh,ml){
+    var words=text.split(' '),line='',lc=0;ml=ml||99;
+    for(var i=0;i<words.length;i++){
+      var t=line+words[i]+' ';
+      if(ctx.measureText(t).width>mw&&i>0){
+        if(++lc>=ml){ctx.fillText(line.trim()+'...',x,y);return;}
+        ctx.fillText(line.trim(),x,y);line=words[i]+' ';y+=lh;
+      } else line=t;
+    }
+    ctx.fillText(line.trim(),x,y);
+  }
+  function chip(label,val,x,y,w,h){
+    ctx.fillStyle='#fff';rr(x,y,w,h,10);ctx.fill();
+    ctx.strokeStyle='#e0e0e0';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='#999';ctx.font='16px Arial';ctx.textAlign='center';
+    ctx.fillText(label,x+w/2,y+24);
+    ctx.fillStyle='#222';ctx.font='bold 26px Arial';
+    ctx.fillText(val.toUpperCase(),x+w/2,y+62);
+  }
+
+  // Extraer nombre limpio del titulo
+  var _tit=(a.titulo||'');
+  var _nom=a.nombre_creador||_tit;
+  var _m=_tit.match(/se perdi/i);
+  if(_m){var _p=_tit.replace(/.*se perdi[oó]\s*/i,'');if(_p)_nom=_p;}
+  else if(_tit.length<30)_nom=_tit;
+
+  // Extraer telefono de descripcion o titulo
+  var telMatch=(a.descripcion||a.titulo||'').match(/[0-9]{8}/);
+  var tel=telMatch?telMatch[0]:'';
+
+  // Extraer recompensa
+  var recompMatch=(a.descripcion||a.titulo||'').match(/[Qq]\.?\s*[\d,]+/);
+  var recomp=recompMatch?recompMatch[0].trim():'';
+
+  async function drawPoster(fi,li){
+    var IW=W-BRD*2,IX=BRD;
+    ctx.fillStyle='#a93226';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#f5f5f3';rr(BRD,BRD,IW,H-BRD*2,16);ctx.fill();
+
+    var y=BRD;
+
+    // HEADER
+    ctx.fillStyle='#c0392b';rr(IX,y,IW,HEADER_H,16);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 60px Arial';ctx.textAlign='center';
+    ctx.fillText('🚨  SE BUSCA!!!!!',W/2,y+72);
+    ctx.fillStyle='#F5C842';ctx.font='bold 92px Arial';
+    ctx.fillText(_nom.toUpperCase(),W/2,y+172);
+    y+=HEADER_H+GAP;
+
+    // CUERPO
+    var FOTO_W=Math.floor(IW*0.62);
+    var INFO_X=IX+FOTO_W+GAP;
+    var INFO_W=IW-FOTO_W-GAP;
+    var BODY_Y=y;
+
+    // FOTO
+    ctx.fillStyle='#ccc';rr(IX,y,FOTO_W,FOTO_H,12);ctx.fill();
+    if(fi){
+      ctx.save();rr(IX,y,FOTO_W,FOTO_H,12);ctx.clip();
+      var sc=Math.max(FOTO_W/fi.width,FOTO_H/fi.height);
+      ctx.drawImage(fi,IX+(FOTO_W-fi.width*sc)/2,y+(FOTO_H-fi.height*sc)/2,fi.width*sc,fi.height*sc);
+      ctx.restore();
+    }
+
+    // INFO derecha
+    var iy=y;
+    chip('RAZA',a.raza||'-',INFO_X,iy,INFO_W,chipH); iy+=chipH+GAP;
+    chip('SEXO',a.sexo||'-',INFO_X,iy,INFO_W,chipH); iy+=chipH+GAP;
+
+    ctx.fillStyle='#FFF9E6';rr(INFO_X,iy,INFO_W,uH,10);ctx.fill();
+    ctx.strokeStyle='#F5C842';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#856404';ctx.font='bold 16px Arial';ctx.textAlign='center';
+    ctx.fillText('📍  ÚLTIMA VEZ VISTO',INFO_X+INFO_W/2,iy+24);
+    ctx.fillStyle='#333';ctx.font='bold 22px Arial';
+    ctx.fillText(a.ubicacion||'-',INFO_X+INFO_W/2,iy+58);
+    ctx.fillStyle='#a08000';ctx.font='15px Arial';
+    ctx.fillText('Podría estar en cualquier lugar',INFO_X+INFO_W/2,iy+86);
+    iy+=uH+GAP;
+
+    var desc=(a.descripcion||'').replace(/[📍🏆📞📅🎁]/g,'').trim();
+    if(desc){
+      ctx.fillStyle='#fff';rr(INFO_X,iy,INFO_W,descH,10);ctx.fill();
+      ctx.strokeStyle='#eee';ctx.lineWidth=1;ctx.stroke();
+      ctx.fillStyle='#888';ctx.font='16px Arial';ctx.textAlign='center';
+      ctx.fillText('DESCRIPCIÓN',INFO_X+INFO_W/2,iy+24);
+      ctx.fillStyle='#333';ctx.font='19px Arial';ctx.textAlign='left';
+      wt(desc,INFO_X+12,iy+54,INFO_W-24,26,3);
+      iy+=descH+GAP;
+    }
+
+    var infoRest=FOTO_H-(iy-y);
+    if(infoRest>0){ctx.fillStyle='#f0f0ee';rr(INFO_X,iy,INFO_W,infoRest,10);ctx.fill();}
+
+    y=BODY_Y+FOTO_H+GAP;
+
+    // FECHA
+    ctx.fillStyle='#1a1a1a';rr(IX,y,IW,FECHA_H,10);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.55)';ctx.font='17px Arial';ctx.textAlign='center';
+    ctx.fillText('📅  PERDIDO EL',W/2,y+26);
+    ctx.fillStyle='#fff';ctx.font='bold 36px Arial';
+    var fd=a.fecha?new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}):'-';
+    ctx.fillText(fd,W/2,y+72);
+    y+=FECHA_H+GAP;
+
+    // RECOMPENSA
+    if(recomp){
+      ctx.fillStyle='#c0392b';rr(IX,y,IW,RECOMP_H,10);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.7)';ctx.font='17px Arial';ctx.textAlign='center';
+      ctx.fillText('🏆  RECOMPENSA',W/2,y+26);
+      ctx.fillStyle='#F5C842';ctx.font='bold 52px Arial';
+      ctx.fillText(recomp,W/2,y+80);
+      y+=RECOMP_H+GAP;
+    }
+
+    // TELEFONO
+    if(tel){
+      ctx.fillStyle='#c0392b';rr(IX,y,IW,TEL_H,10);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.7)';ctx.font='17px Arial';ctx.textAlign='center';
+      ctx.fillText('📞  SI LO VES LLAMA AL',W/2,y+26);
+      ctx.fillStyle='#fff';ctx.font='bold 62px Arial';
+      ctx.fillText(tel,W/2,y+90);
+      y+=TEL_H+GAP;
+    }
+
+    // MENSAJE
+    ctx.fillStyle='#fff';rr(IX,y,IW,MSG_H,10);ctx.fill();
+    ctx.strokeStyle='#eee';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle='#c0392b';ctx.font='bold 22px Arial';ctx.textAlign='center';
+    ctx.fillText('¡Ayúdanos a compartir y que '+_nom+' regrese a casa!',W/2,y+40);
+    y+=MSG_H+GAP;
+
+    // LOGO
+    ctx.fillStyle='#1a1a1a';rr(IX,y,IW,LOGO_BLOCK,14);ctx.fill();
+    if(li){
+      var lw=li.width*(LOGO_H/li.height);
+      ctx.drawImage(li,W/2-lw/2,y+LOGO_PAD,lw,LOGO_H);
+    } else {
+      ctx.fillStyle='#fff';ctx.font='bold 28px Arial';ctx.textAlign='center';
+      ctx.fillText('PETmi',W/2,y+LOGO_BLOCK/2+10);
+    }
+
+    // Descargar
+    var link=document.createElement('a');
+    link.download='poster-perdido-'+_nom.replace(/[^a-z0-9]/gi,'-').toLowerCase()+'.png';
+    var dataUrl=canvas.toDataURL('image/png');
+    link.href=dataUrl;
+    link.click();
+    mostrarToast('✅ Póster descargado!');
+
+    // Subir afiche a Cloudinary y actualizar imagen en Supabase
+    if(a.id){
+      try{
+        var b64=dataUrl.split(',')[1];
+        var fd=new FormData();
+        var blob=await fetch('data:image/png;base64,'+b64).then(function(r){return r.blob();});
+        fd.append('file',blob);
+        fd.append('upload_preset','petzid');
+        fd.append('folder','petzid_perdidos');
+        var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
+        var cData=await res.json();
+        if(cData.secure_url){
+          fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/actividades?id=eq.'+a.id,{
+            method:'PATCH',
+            headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Content-Type':'application/json','Prefer':'return=minimal'},
+            body:JSON.stringify({imagen:cData.secure_url})
+          }).catch(function(){});
+        }
+      }catch(e){console.log('Afiche upload error:',e);}
+    }
+  }
+
+  var fi=null,li=null,done=0;
+  function check(){if(++done===2)drawPoster(fi,li);}
+  var urlFoto=a.imagen&&a.imagen.indexOf('http')>=0?a.imagen:(a.foto_creador&&a.foto_creador.indexOf('http')>=0?a.foto_creador:null);
+  if(urlFoto){var img=new Image();img.crossOrigin='anonymous';img.onload=function(){fi=img;check();};img.onerror=check;img.src=urlFoto;}else{check();}
+  var logo=new Image();logo.crossOrigin='anonymous';logo.onload=function(){li=logo;check();};logo.onerror=check;logo.src=LOGO_URL;
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function wrapText(ctx,text,x,y,maxW,lineH,maxLines){
+  var words=text.split(' ');
+  var line='';var lineCount=0;
+  maxLines=maxLines||99;
+  for(var i=0;i<words.length;i++){
+    var test=line+words[i]+' ';
+    if(ctx.measureText(test).width>maxW&&i>0){
+      lineCount++;
+      if(lineCount>=maxLines){ctx.fillText(line+'...',x,y);return;}
+      ctx.fillText(line,x,y);
+      line=words[i]+' ';
+      y+=lineH;
+    } else { line=test; }
+  }
+  ctx.fillText(line,x,y);
+}
+
+function mostrarToast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2500);
+}
 </script>
+<!-- MODAL REGLAS -->
+<div id="modalReglas" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:950;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:340px;text-align:center">
+    <div style="font-size:32px;margin-bottom:10px">📋</div>
+    <div style="font-size:17px;font-weight:700;color:#222;margin-bottom:6px">Reglas de convivencia</div>
+    <div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:16px">Antes de publicar, acepta las reglas de la comunidad PetMi para mantener un espacio seguro y positivo.</div>
+    <a href="/reglas.html" target="_blank" style="display:block;padding:10px;background:#f0f0ee;color:#00B4B4;font-weight:700;border-radius:10px;text-decoration:none;font-size:13px;margin-bottom:12px">Leer las reglas completas →</a>
+    <button onclick="aceptarReglas()" style="width:100%;padding:13px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Acepto las reglas</button>
+    <button onclick="document.getElementById('modalReglas').style.display='none'" style="width:100%;padding:11px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+<script>
+window.aceptarReglas=function(){
+  var email=localStorage.getItem('petzid_email')||'';
+  var key='reglas_aceptadas'+(email?'_'+email.replace(/[^a-z0-9]/gi,''):'');
+  localStorage.setItem('reglas_aceptadas','1');
+  if(email) localStorage.setItem(key,'1');
+  // Registrar en Supabase
+  fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/reglas_aceptadas',{
+    method:'POST',
+    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({email:(email||'anonimo').toLowerCase(),version:'1.0',dispositivo:navigator.userAgent.substring(0,100)})
+  }).catch(function(){});
+  document.getElementById('modalReglas').style.display='none';
+  abrirPublicar();
+};
+window._publicarOriginal=window.abrirPublicar;
+</script>
+
+<!-- MODAL JEFE REVISANDO -->
+<div id="modalJefe" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:900;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;padding:28px 24px;text-align:center;max-width:280px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+    <div style="position:relative;width:110px;height:110px;margin:0 auto 16px">
+      <img id="jefeModalImg" style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #F5C842" src="" alt="Jefe">
+      <div style="position:absolute;bottom:2px;right:2px;background:#F5C842;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:15px;border:2px solid #fff">⭐</div>
+    </div>
+    <div style="font-size:17px;font-weight:700;color:#222;margin-bottom:6px">El Jefe está revisando</div>
+    <div style="font-size:13px;color:#888;line-height:1.5">Tu aviso estará disponible en la comunidad muy pronto</div>
+    <div style="margin-top:14px">
+      <span style="display:inline-block;animation:blink 1.4s infinite;font-size:18px;color:#00B4B4;margin:0 2px">●</span>
+      <span style="display:inline-block;animation:blink 1.4s .25s infinite;font-size:18px;color:#00B4B4;margin:0 2px">●</span>
+      <span style="display:inline-block;animation:blink 1.4s .5s infinite;font-size:18px;color:#00B4B4;margin:0 2px">●</span>
+    </div>
+  </div>
+</div>
+<style>@keyframes blink{0%,80%,100%{opacity:0}40%{opacity:1}}</style>
+
+<script>
+var JEFE_FOTOS=[
+  'https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe1.png',
+  'https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe2.jpg',
+  'https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/jefe3.jpg'
+];
+function mostrarModalJefe(){
+  var img=document.getElementById('jefeModalImg');
+  img.src=JEFE_FOTOS[Math.floor(Math.random()*JEFE_FOTOS.length)];
+  document.getElementById('modalJefe').style.display='flex';
+}
+function ocultarModalJefe(){
+  document.getElementById('modalJefe').style.display='none';
+}
+</script>
+<script src="/header.js"></script>
 </body>
 </html>
