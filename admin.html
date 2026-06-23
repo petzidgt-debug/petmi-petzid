@@ -351,9 +351,11 @@ tbody tr:last-child td{border-bottom:none}
         <div><div class="page-title">Eventos y Avisos</div><div class="page-sub" id="subEventos">-</div></div>
         <div style="display:flex;gap:8px">
           <button class="btn-primary" style="background:#764ba2" onclick="cargarAvisosTipo('plan')">🐾 Planes</button>
+          <button class="btn-primary" style="background:#c0392b" onclick="cargarAvisosTipo('perdido')">🚨 Perdidos</button>
           <button class="btn-primary" style="background:#2e7d32" onclick="cargarAvisosTipo('busco')">🔍 Busco</button>
           <button class="btn-primary" style="background:#2e7d32" onclick="cargarAvisosTipo('adopcion')">🏠 Adopcion</button>
-          <button class="btn-primary" style="background:#f0a500" onclick="filtrarEventosPendientes()">⏳ Eventos</button>
+          <button class="btn-primary" style="background:#00B4B4" onclick="cargarAvisosTipo('evento')">🎪 Eventos (avisos)</button>
+          <button class="btn-primary" style="background:#f0a500" onclick="filtrarEventosPendientes()">⏳ Eventos (sistema)</button>
           <button class="btn-primary" onclick="cargarEventosAdmin()">Todos eventos</button>
           <button class="btn-primary" onclick="window.location.href='/admin-evento.html'">+ Nuevo</button>
         </div>
