@@ -192,6 +192,12 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
       <input type="text" class="form-input" id="eventoLugar" placeholder="Ej: Parque Cayalá, Zona 10">
       <label class="form-label">Link del evento (opcional)</label>
       <input type="url" class="form-input" id="eventoLink" placeholder="https://...">
+      <label class="form-label">Foto del evento (opcional)</label>
+      <div class="foto-upload-perdido" id="fotoEventoWrap" onclick="document.getElementById('eventoFotoInput').click()">
+        <img id="eventoFotoPreview" style="display:none">
+        <div class="foto-upload-label" id="eventoFotoLabel">📷 Toca para agregar una foto</div>
+        <input type="file" id="eventoFotoInput" accept="image/*" onchange="previsualizarFotoEvento(this)">
+      </div>
     </div>
 
     <button class="btn-publicar" onclick="publicar()">Publicar aviso</button>
@@ -639,6 +645,9 @@ function cerrarPublicar(){
   var ca=document.getElementById('camposAdopcion');if(ca)ca.style.display='none';
   var ce=document.getElementById('camposEvento');if(ce)ce.style.display='none';
   var pf=document.getElementById('pubFecha');if(pf)pf.style.display='';
+  eventoFotoBase64=null;eventoFotoMime=null;
+  var eprev=document.getElementById('eventoFotoPreview');if(eprev){eprev.src='';eprev.style.display='none';}
+  var elbl=document.getElementById('eventoFotoLabel');if(elbl)elbl.style.display='';
   // Reset foto adopcion
   adopcionFotoBase64=null;adopcionFotoMime=null;
   var aprev=document.getElementById('adopcionFotoPreview');
@@ -660,6 +669,19 @@ function cerrarPublicar(){
 }
 
 var adopcionFotoBase64=null, adopcionFotoMime=null;
+var eventoFotoBase64=null, eventoFotoMime=null;
+function previsualizarFotoEvento(input){
+  var file=input.files[0];if(!file)return;
+  eventoFotoMime=file.type;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    eventoFotoBase64=e.target.result.split(',')[1];
+    var prev=document.getElementById('eventoFotoPreview');
+    prev.src=e.target.result;prev.style.display='block';
+    document.getElementById('eventoFotoLabel').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
 function previsualizarFotoAdopcion(input){
   var file=input.files[0];if(!file)return;
   adopcionFotoMime=file.type;
@@ -835,10 +857,19 @@ function publicar(){
         var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
         var data=await res.json();fotoUrl=data.secure_url||'';
       }catch(e){console.log('Cloudinary adopcion:',e);}
+    } else if(tipoSel==='evento'&&eventoFotoBase64){
+      btn.textContent='Subiendo foto...';
+      try{
+        var fd=new FormData();
+        var blob=await fetch('data:'+(eventoFotoMime||'image/jpeg')+';base64,'+eventoFotoBase64).then(function(r){return r.blob();});
+        fd.append('file',blob);fd.append('upload_preset','petzid');fd.append('folder','petzid/eventos');
+        var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
+        var data=await res.json();fotoUrl=data.secure_url||'';
+      }catch(e){console.log('Cloudinary evento:',e);}
     }
-    // Para adopcion usar imagen, para otros foto_creador
+    // Para adopcion y evento usar imagen, para otros foto_creador
     if(fotoUrl){
-      if(tipoSel==='adopcion') payload.imagen=fotoUrl;
+      if(tipoSel==='adopcion'||tipoSel==='evento') payload.imagen=fotoUrl;
       else payload.foto_creador=fotoUrl;
     }
     fetch('/api/galeria?action=publicarActividad',{
