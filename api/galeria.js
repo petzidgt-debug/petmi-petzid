@@ -488,8 +488,13 @@ export default async function handler(req, res) {
       // Calcular expiración: planes expiran en la fecha del plan, anuncios en 7 días
       let expires_at = null;
       if (tipo === 'plan' && fecha) {
+        // Planes de afiliado expiran en la fecha del plan
+        expires_at = new Date(fecha + 'T23:59:59').toISOString();
+      } else if (tipo === 'evento' && fecha) {
+        // Eventos expiran al final de su dia
         expires_at = new Date(fecha + 'T23:59:59').toISOString();
       } else if (tipo !== 'plan') {
+        // Avisos normales expiran en 7 dias
         const d = new Date(); d.setDate(d.getDate() + 7);
         expires_at = d.toISOString();
       }
