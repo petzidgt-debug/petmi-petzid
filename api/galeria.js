@@ -1061,14 +1061,29 @@ export default async function handler(req, res) {
 
     // ── wc_ranking ────────────────────────────────────────────
     if (action === 'wc_ranking') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?select=email,puntos,acerto&acerto=not.is.null&limit=10000', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Range-Unit': 'items', 'Range': '0-9999' } });
-      const preds = await r.json();
-      if (!Array.isArray(preds)) return res.status(200).json({ ranking: [] });
+      // Paginar para evitar el límite de 1000 filas por defecto de Supabase
+      const PAGE = 1000;
+      let allPreds = [];
+      let offset   = 0;
+      let keepGoing = true;
+      while (keepGoing) {
+        const r = await fetch(
+          SUPABASE_URL + '/rest/v1/wc_predicciones?select=email,puntos,acerto&acerto=not.is.null&limit=' + PAGE + '&offset=' + offset,
+          { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'count=none' } }
+        );
+        const page = await r.json();
+        if (!Array.isArray(page) || page.length === 0) { keepGoing = false; break; }
+        allPreds = allPreds.concat(page);
+        if (page.length < PAGE) keepGoing = false;
+        offset += PAGE;
+      }
+      if (!allPreds.length) return res.status(200).json({ ranking: [] });
       const byEmail = {};
-      preds.forEach(p => {
-        if (!byEmail[p.email]) byEmail[p.email] = { email: p.email, puntos: 0, aciertos: 0 };
-        byEmail[p.email].puntos += (p.puntos || 0);
-        byEmail[p.email].aciertos += (p.acerto ? 1 : 0);
+      allPreds.forEach(p => {
+        if (!byEmail[p.email]) byEmail[p.email] = { email: p.email, puntos: 0, aciertos: 0, predicciones: 0 };
+        byEmail[p.email].puntos      += (p.puntos || 0);
+        byEmail[p.email].aciertos    += (p.acerto ? 1 : 0);
+        byEmail[p.email].predicciones += 1;
       });
       const ranking = Object.values(byEmail).sort((a,b) => b.puntos-a.puntos || b.aciertos-a.aciertos).slice(0,50);
       return res.status(200).json({ ranking });
