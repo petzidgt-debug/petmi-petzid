@@ -1061,7 +1061,7 @@ export default async function handler(req, res) {
 
     // ── wc_ranking ────────────────────────────────────────────
     if (action === 'wc_ranking') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?select=email,puntos,acerto&acerto=not.is.null', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?select=email,puntos,acerto&acerto=not.is.null&limit=10000', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Range-Unit': 'items', 'Range': '0-9999' } });
       const preds = await r.json();
       if (!Array.isArray(preds)) return res.status(200).json({ ranking: [] });
       const byEmail = {};
