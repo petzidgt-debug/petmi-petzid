@@ -603,7 +603,7 @@
     var ua = navigator.userAgent;
     var plat = /iPhone|iPad/i.test(ua) ? 'iOS' : /Android/i.test(ua) ? 'Android' : 'Desktop';
     var email = '';
-    try { email = sessionStorage.getItem('petmiEmail') || localStorage.getItem('petmiEmail') || ''; } catch(err){}
+    try { email = localStorage.getItem('petzid_email') || sessionStorage.getItem('petzid_email') || ''; } catch(err){}
     // Registrar en pwa_installs
     fetch(SUPA_URL + '/rest/v1/pwa_installs', {
       method: 'POST',
