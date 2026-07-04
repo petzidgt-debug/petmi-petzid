@@ -1095,11 +1095,14 @@ export default async function handler(req, res) {
       if (adminKey !== 'petmiadmin2026') return res.status(200).json({ ok: false, msg: 'No autorizado' });
       if (!partido_id || !resultado) return res.status(200).json({ ok: false });
       // Verificar que no tenga resultado ya
-      const chk = await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id + '&select=resultado,fecha', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const chk = await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id + '&select=resultado,fecha,fase', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
       const chkData = await chk.json();
       if (chkData && chkData[0] && chkData[0].resultado) {
         return res.status(200).json({ ok: false, msg: 'Este partido ya tiene resultado: ' + chkData[0].resultado });
       }
+      const fase = (chkData && chkData[0] && chkData[0].fase) || 'grupos';
+      const fasesBonus = ['ronda16', 'cuartos', 'semis', 'final', 'bronze'];
+      const esBonus = fasesBonus.includes(fase);
       await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id, { method: 'PATCH', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ resultado }) });
       const pr = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?partido_id=eq.' + partido_id + '&select=id,email,prediccion', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
       const preds = await pr.json();
@@ -1107,13 +1110,12 @@ export default async function handler(req, res) {
       let aciertos = 0;
       for (const pred of preds) {
         const acerto = pred.prediccion === resultado;
-        // 2pts por ganador, 1pt por empate acertado
-        const puntos = !acerto ? 0 : (resultado === 'empate' ? 1 : 2);
+        // Ronda 16+: 5pts por acierto. Grupos/R32: 2pts ganador, 1pt empate
+        const puntos = !acerto ? 0 : (esBonus ? 5 : (resultado === 'empate' ? 1 : 2));
         await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?id=eq.' + pred.id, { method: 'PATCH', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ acerto, puntos }) });
         if (acerto) aciertos++;
-        // Nota: quiniela es juego independiente, no suma a puntos globales
       }
-      return res.status(200).json({ ok: true, procesados: preds.length, aciertos });
+      return res.status(200).json({ ok: true, procesados: preds.length, aciertos, fase, esBonus });
     }
 
         return res.status(200).json({ status: 'PetMi Supabase API activa' });
