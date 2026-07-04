@@ -659,7 +659,15 @@ function loadInstalaciones(){
   fetch(SUPA_ADM + '/rest/v1/pwa_installs?select=email,dispositivo,plataforma,created_at&order=created_at.desc&limit=200', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
   .then(function(rows){
-    if(!rows||!rows.length){
+    // Detectar error de Supabase (devuelve objeto con message en vez de array)
+    if(!Array.isArray(rows)){
+      var errMsg = (rows && rows.message) ? rows.message : JSON.stringify(rows);
+      document.getElementById('instBody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#e53935">Error Supabase: '+errMsg+'</td></tr>';
+      document.getElementById('instTotal').textContent = 'ERR';
+      console.error('[pwa_installs]', rows);
+      return;
+    }
+    if(!rows.length){
       document.getElementById('instBody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Sin instalaciones registradas</td></tr>';
       return;
     }
