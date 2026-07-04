@@ -140,6 +140,11 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
 
 <!-- PARTIDOS -->
 <div class="section active" id="sec-partidos">
+<div style="background:linear-gradient(135deg,#1a1a2e,#0D2B2B);border:2px solid #F5C842;border-radius:14px;padding:14px 16px;margin-bottom:12px;text-align:center">
+  <div style="color:#F5C842;font-size:22px;font-weight:900">⭐ RONDA DE 16 — BONUS</div>
+  <div style="color:#fff;font-size:16px;font-weight:700;margin:4px 0">¡Cada acierto vale 5 puntos!</div>
+  <div style="color:#aaa;font-size:11px;line-height:1.5">Grupos y Ronda de 32: +2 pts · <strong style="color:#F5C842">Ronda de 16 en adelante: +5 pts</strong></div>
+</div>
   <div id="listPartidos"><div class="empty-state"><div>⚽</div>Cargando partidos...</div></div>
 </div>
 
@@ -230,8 +235,8 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
     <div class="premio-ico">🏆</div>
     <div class="premio-title">¡El que más acierte gana!</div>
     <div class="premio-desc">
-      Por cada partido que aciertes ganas <strong>+2 puntos</strong>.<br>
-      Al finalizar el Mundial (19 julio) el jugador con más puntos gana el premio.<br><br>
+      Por cada partido que aciertes en grupos/R32 ganas <strong>+2 puntos</strong>. Desde la <strong style="color:#F5C842">Ronda de 16 en adelante cada acierto vale ⭐ +5 puntos</strong>.<br><br>
+      Al finalizar el Mundial (19 julio) el jugador con más puntos gana el premio.<br>
       Si hay empate, se rifará con la <strong>Ruleta PetMi</strong> entre todos los ganadores empatados.
     </div>
   </div>
@@ -284,7 +289,7 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:10px;background:#e8f5e9;border-radius:8px;padding:10px 12px">
         <span style="font-size:18px">✅</span>
-        <div><div style="font-size:13px;font-weight:700;color:#2e7d32">Aciertas el ganador</div><div style="font-size:11px;color:#555">+2 puntos</div></div>
+        <div><div style="font-size:13px;font-weight:700;color:#2e7d32">Aciertas el ganador (grupos)</div><div style="font-size:11px;color:#555">+2 puntos</div></div><div style="margin-top:6px"><div style="font-size:13px;font-weight:700;color:#856404">⭐ Aciertas R16 en adelante</div><div style="font-size:11px;color:#555">+5 puntos</div></div>
         <span style="margin-left:auto;font-size:20px;font-weight:900;color:#2e7d32">+2</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px;background:#fff8e1;border-radius:8px;padding:10px 12px">
@@ -500,7 +505,10 @@ function renderMatchCard(p, pred, now, showAll) {
   var treintaMin = new Date(fecha.getTime() - 30*60*1000);
   var locked = treintaMin <= now;
   var hora   = fecha.toLocaleTimeString('es-GT', {hour:'2-digit', minute:'2-digit', timeZone:'America/Guatemala'});
-  var fase   = p.grupo ? 'Grupo ' + p.grupo : p.fase.charAt(0).toUpperCase() + p.fase.slice(1);
+  var fase    = p.grupo ? 'Grupo ' + p.grupo : p.fase.charAt(0).toUpperCase() + p.fase.slice(1);
+  var esBonus = ['ronda16','cuartos','semis','final','bronze'].indexOf(p.fase) >= 0;
+  var ptsGanar = esBonus ? 5 : 2;
+  var ptsEmpate = esBonus ? 0 : 1;
 
   // Pick buttons
   var opts = [
@@ -510,7 +518,9 @@ function renderMatchCard(p, pred, now, showAll) {
   ];
   if(p.fase !== 'grupos') opts.splice(1, 1); // No empate en eliminatorias
 
-  var picksHtml = '<div class="match-picks">';
+  // Badge de bonus puntos para eliminatorias
+  var bonusBadge = esBonus ? '<div style="background:linear-gradient(135deg,#F5C842,#f0a500);color:#1a1a2e;font-size:11px;font-weight:900;text-align:center;padding:5px 0;border-radius:8px 8px 0 0;letter-spacing:0.3px">⭐ +5 PUNTOS si aciertas este partido</div>' : '';
+  var picksHtml = bonusBadge + '<div class="match-picks">';
   opts.forEach(function(o) {
     var cls = 'pick-btn';
     var disabled = locked ? 'disabled' : '';
@@ -526,7 +536,7 @@ function renderMatchCard(p, pred, now, showAll) {
   // Result badge
   var badgeHtml = '';
   if(pred && p.resultado) {
-    if(pred.acerto) badgeHtml = '<div class="match-result-badge win">✅ +2 puntos</div>';
+    if(pred.acerto) badgeHtml = '<div class="match-result-badge win">' + (esBonus ? '⭐ +5 puntos BONUS!' : '✅ +2 puntos') + '</div>';
     else badgeHtml = '<div class="match-result-badge lose">❌ No acertaste</div>';
   } else if(pred && !p.resultado) {
     badgeHtml = '<div class="match-result-badge pending">⏳ Esperando resultado</div>';
@@ -550,7 +560,7 @@ function renderMatchCard(p, pred, now, showAll) {
   }
 
   return '<div class="match-card'+(locked?' locked':'')+'" id="mc-'+p.id+'">'
-    + '<div class="match-header"><span class="match-grupo">'+fase+'</span><span class="match-time">'+hora+' (GT)</span></div>'
+    + '<div class="match-header"><span class="match-grupo">'+fase+'</span>'+(esBonus?'<span style="background:#F5C842;color:#1a1a2e;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;margin-left:4px">⭐ BONUS</span>':'')+' <span class="match-time">'+hora+' (GT)</span></div>'
     + '<div class="match-teams">'
     + '<div class="team"><div class="team-flag">'+p.bandera1+'</div><div class="team-name">'+p.equipo1+'</div></div>'
     + '<div class="vs-box">VS</div>'
