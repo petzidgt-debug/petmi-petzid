@@ -559,6 +559,14 @@
   var lastDismissed = localStorage.getItem('pwa_dismissed_at');
   var dismissed = lastDismissed && (Date.now() - parseInt(lastDismissed)) < 7*24*60*60*1000;
 
+  // Si ya está instalada en modo standalone → registrar una sola vez
+  if (isStandalone && !localStorage.getItem('pwa_install_registrado')) {
+    setTimeout(function() {
+      registrarInstall('standalone');
+      localStorage.setItem('pwa_install_registrado', '1');
+    }, 2000); // 2s para que el email de sesión esté cargado
+  }
+
   // Capturar el evento beforeinstallprompt
   window.addEventListener('beforeinstallprompt', function(e){
     deferredPrompt = e;
