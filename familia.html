@@ -459,9 +459,17 @@ function confirmarAngelito(uid, nombre){
     fetch('/api/galeria?action=markAngel',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({uid:uid,esAngel:true,fechaAngelito:hoy})
-    }).then(function(){
-      alert('🌈 '+nombre+' fue marcado como angelito. Descansa en paz 🐾');
-      location.reload();
+    }).then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok){
+        alert('🌈 '+nombre+' fue marcado como angelito. Descansa en paz 🐾');
+        location.reload();
+      } else {
+        alert('Error al guardar. Por favor intenta de nuevo. (' + (d.error||'sin detalle') + ')');
+      }
+    }).catch(function(e){
+      alert('Error de conexión al marcar angelito.');
+      console.error('[markAngel]',e);
     });
   }
 }
