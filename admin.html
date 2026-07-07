@@ -462,6 +462,26 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
 
+<!-- ── Screen: Corregir Emails ────────────────────────────── -->
+<div class="screen" id="screenEmailfix">
+  <div class="page-header">
+    <div>
+      <div class="page-title">✉️ Corregir Emails</div>
+      <div class="page-sub">Detecta y corrige emails mal escritos en mascotas</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn-primary" onclick="emailfixDetectar()">🔍 Detectar sospechosos</button>
+    <button class="btn-primary" style="background:#555" onclick="emailfixBuscar()">🔎 Buscar email</button>
+    <button class="btn-primary" style="background:#1a1a2e" onclick="emailfixTodos()">📋 Ver todos</button>
+  </div>
+  <div id="emailfixStats" style="display:none;background:#E0F7F7;border:1px solid #b2ece5;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#006060;font-weight:600"></div>
+  <div id="emailfixWrap">
+    <div style="text-align:center;padding:40px;color:#aaa;font-size:14px">
+      Haz clic en "Detectar sospechosos" para buscar emails con posibles errores tipográficos,<br>o en "Buscar email" para encontrar uno específico.
+    </div>
+  </div>
+</div>
     <!-- ── SCREEN PUNTOS ────────────────────────────────── -->
 
 
@@ -505,26 +525,6 @@ tbody tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<!-- ── Screen: Corregir Emails ────────────────────────────── -->
-<div class="screen" id="screenEmailfix">
-  <div class="page-header">
-    <div>
-      <div class="page-title">✉️ Corregir Emails</div>
-      <div class="page-sub">Detecta y corrige emails mal escritos en mascotas</div>
-    </div>
-  </div>
-  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-    <button class="btn-primary" onclick="emailfixDetectar()">🔍 Detectar sospechosos</button>
-    <button class="btn-primary" style="background:#555" onclick="emailfixBuscar()">🔎 Buscar email</button>
-    <button class="btn-primary" style="background:#1a1a2e" onclick="emailfixTodos()">📋 Ver todos</button>
-  </div>
-  <div id="emailfixStats" style="display:none;background:#E0F7F7;border:1px solid #b2ece5;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#006060;font-weight:600"></div>
-  <div id="emailfixWrap">
-    <div style="text-align:center;padding:40px;color:#aaa;font-size:14px">
-      Haz clic en "Detectar sospechosos" para buscar emails con posibles errores tipográficos,<br>o en "Buscar email" para encontrar uno específico.
-    </div>
-  </div>
-</div>
 
 
 <!-- MODAL FOTO -->
