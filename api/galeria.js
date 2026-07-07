@@ -1118,6 +1118,37 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, procesados: preds.length, aciertos, fase, esBonus });
     }
 
+    // ── markAngel ─────────────────────────────────────────────
+    if (action === 'markAngel' && req.method === 'POST') {
+      const { uid, esAngel, fechaAngelito } = req.body;
+      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
+
+      const patch = { angelito: true };
+      if (fechaAngelito) patch.fecha_angelito = fechaAngelito;
+
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid.toUpperCase()),
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_SERVICE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(patch)
+        }
+      );
+      if (!r.ok) {
+        let errMsg = '';
+        try { errMsg = JSON.stringify(await r.json()); } catch(e) { errMsg = await r.text().catch(()=>''); }
+        console.error('[markAngel] Supabase error', r.status, errMsg);
+        return res.status(200).json({ ok: false, error: errMsg });
+      }
+      console.log('[markAngel] OK — uid:', uid, 'fecha:', fechaAngelito);
+      return res.status(200).json({ ok: true });
+    }
+
         return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
