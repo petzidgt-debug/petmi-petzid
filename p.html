@@ -19,6 +19,14 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .foto-raza{font-size:13px;color:rgba(255,255,255,.7);margin-top:4px}
 .badge-premium{position:absolute;top:14px;right:14px;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:700;padding:5px 12px;border-radius:999px}
 
+/* ANGELITO — tratamiento de memorial */
+.foto-wrap.es-angelito{filter:grayscale(35%)}
+.badge-angelito{position:absolute;top:14px;left:14px;background:rgba(107,91,140,.92);color:#fff;font-size:10px;font-weight:700;padding:5px 12px;border-radius:999px}
+.memorial-card{background:#F5F3F9;border:1.5px solid #E8E4F0;border-radius:14px;padding:16px;margin-bottom:16px;text-align:center}
+.memorial-titulo{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:6px}
+.memorial-texto{font-size:12.5px;color:#666;line-height:1.7}
+.btn-condolencias{width:100%;padding:14px;background:#6B5B8C;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+
 /* INFO CARD */
 .info-card{background:#fff;border-radius:20px 20px 0 0;margin-top:-20px;position:relative;z-index:2;padding:20px 16px 0}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
@@ -108,7 +116,7 @@ function cargarPerfil(){
   });
 }
 
-function calcEdad(fecha){
+function calcEdad(fecha, esAngelito){
   if(!fecha) return null;
   var d=new Date(fecha);
   if(isNaN(d.getTime())) return null;
@@ -125,7 +133,8 @@ function calcEdad(fecha){
 
 function renderNoPremium(m){
   var emoji=m.especie&&m.especie.toLowerCase().indexOf('gato')>=0?'🐱':'🐶';
-  var html='<div class="foto-wrap">';
+  var esAngelito=m.angelito===true||m.angelito==='true'||m.angelito==='Si'||m.angelito==='si';
+  var html='<div class="foto-wrap'+(esAngelito?' es-angelito':'')+'">';
   if(m.foto&&m.foto.indexOf('http')>=0){
     html+='<img src="'+m.foto+'" alt="'+m.nombre+'">';
   } else {
@@ -136,9 +145,14 @@ function renderNoPremium(m){
   html+='</div></div>';
   html+='<div class="info-card" style="padding:24px 16px">';
   html+='<div style="text-align:center;padding:20px 0">';
-  html+='<div style="font-size:15px;font-weight:700;color:#222;margin-bottom:8px">'+m.nombre+' no tiene perfil público activado</div>';
-  html+='<div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px">El perfil público es un beneficio Premium.<br>Si eres el dueño, activa Premium para compartir este perfil.</div>';
-  html+='<a href="/premium.html" style="display:inline-block;padding:12px 28px;background:#00B4B4;color:#fff;border-radius:24px;font-size:14px;font-weight:700;text-decoration:none">Ver plan Premium</a>';
+  if(esAngelito){
+    html+='<div style="font-size:15px;font-weight:700;color:#222;margin-bottom:8px">'+m.nombre+' siempre será parte de la familia PetMi</div>';
+    html+='<div style="font-size:13px;color:#888;line-height:1.6">Las huellas que dejan quienes amamos no desaparecen. 🕊️</div>';
+  } else {
+    html+='<div style="font-size:15px;font-weight:700;color:#222;margin-bottom:8px">'+m.nombre+' no tiene perfil público activado</div>';
+    html+='<div style="font-size:13px;color:#888;line-height:1.6;margin-bottom:20px">El perfil público es un beneficio Premium.<br>Si eres el dueño, activa Premium para compartir este perfil.</div>';
+    html+='<a href="/premium.html" style="display:inline-block;padding:12px 28px;background:#00B4B4;color:#fff;border-radius:24px;font-size:14px;font-weight:700;text-decoration:none">Ver plan Premium</a>';
+  }
   html+='</div></div>';
   html+=renderBrand();
   document.getElementById('root').innerHTML=html;
@@ -148,14 +162,19 @@ function renderPerfil(m){
   var emoji=m.especie&&m.especie.toLowerCase().indexOf('gato')>=0?'🐱':'🐶';
   var edad=calcEdad(m.fecha);
   var perfilUrl=window.location.origin+'/p/'+m.uid;
+  var esAngelito=m.angelito===true||m.angelito==='true'||m.angelito==='Si'||m.angelito==='si';
 
-  var html='<div class="foto-wrap">';
+  var html='<div class="foto-wrap'+(esAngelito?' es-angelito':'')+'">';
   if(m.foto&&m.foto.indexOf('http')>=0){
     html+='<img src="'+m.foto+'" alt="'+m.nombre+'">';
   } else {
     html+='<div class="foto-ph">'+emoji+'</div>';
   }
-  html+='<div class="badge-premium">⭐ PetMi Premium</div>';
+  if(esAngelito){
+    html+='<div class="badge-angelito">🕊️ En memoria</div>';
+  } else if(m.premium){
+    html+='<div class="badge-premium">⭐ PetMi Premium</div>';
+  }
   html+='<div class="foto-overlay"><div class="foto-nombre">'+m.nombre+'</div>';
   if(m.apodo) html+='<div class="foto-apodo">"'+m.apodo+'"</div>';
   if(m.raza) html+='<div class="foto-raza">'+m.raza+(m.sexo?' · '+m.sexo:'')+'</div>';
@@ -163,11 +182,18 @@ function renderPerfil(m){
 
   html+='<div class="info-card">';
 
+  if(esAngelito){
+    html+='<div class="memorial-card">';
+    html+='<div class="memorial-titulo">'+m.nombre+' siempre será parte de la familia PetMi</div>';
+    html+='<div class="memorial-texto">Las huellas que dejan quienes amamos no desaparecen. Este espacio queda como un recuerdo especial de su vida.</div>';
+    html+='</div>';
+  }
+
   // Grid de datos
   html+='<div class="info-grid">';
   html+='<div class="info-item"><div class="info-label">Especie</div><div class="info-valor">'+(m.especie||'—')+'</div></div>';
   html+='<div class="info-item"><div class="info-label">Raza</div><div class="info-valor">'+(m.raza||'—')+'</div></div>';
-  if(edad) html+='<div class="info-item"><div class="info-label">Edad</div><div class="info-valor">'+edad+'</div></div>';
+  if(edad) html+='<div class="info-item"><div class="info-label">'+(esAngelito?'Vivió':'Edad')+'</div><div class="info-valor">'+edad+'</div></div>';
   if(m.zona) html+='<div class="info-item"><div class="info-label">Zona</div><div class="info-valor">'+m.zona+', GT</div></div>';
   html+='</div>';
 
@@ -184,7 +210,12 @@ function renderPerfil(m){
   if(m.whatsapp){
     var waNum=m.whatsapp.replace(/[^0-9]/g,'');
     if(waNum.length===8) waNum='502'+waNum;
-    html+='<button class="btn-contactar" onclick="window.open(\'https://wa.me/'+waNum+'?text='+encodeURIComponent('Hola! Vi el perfil de '+m.nombre+' en PetMi.')+'\',\'_blank\')">💬 Contactar responsable</button>';
+    if(esAngelito){
+      var msjCondolencias='Hola, quiero enviar mis condolencias a la familia de '+m.nombre+'. 🕊️';
+      html+='<button class="btn-condolencias" onclick="window.open(\'https://wa.me/'+waNum+'?text='+encodeURIComponent(msjCondolencias)+'\',\'_blank\')">💜 Enviar condolencias</button>';
+    } else {
+      html+='<button class="btn-contactar" onclick="window.open(\'https://wa.me/'+waNum+'?text='+encodeURIComponent('Hola! Vi el perfil de '+m.nombre+' en PetMi.')+'\',\'_blank\')">💬 Contactar responsable</button>';
+    }
   }
   html+='<a href="/galeria.html" class="btn-petmi">Ver en PetMi 🐾</a>';
   html+='</div>';
