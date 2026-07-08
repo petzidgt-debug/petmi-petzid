@@ -11,12 +11,9 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 /* Fondo de marca detrás de la tarjeta (solo visible en pantallas anchas) */
 .page-bg{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
-.page-logo{padding:28px 0 8px;text-align:center}
-.page-logo img{height:32px;display:inline-block}
 
 @media (min-width:600px){
   .page-bg{background:linear-gradient(160deg,#00B4B4 0%,#00B4B4 35%,#f0f0ee 35%,#f0f0ee 100%)}
-  .page-logo img{height:40px}
   .wrap{box-shadow:0 20px 60px rgba(0,0,0,.18);border-radius:20px;overflow:hidden;margin-top:12px}
 }
 
@@ -88,7 +85,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </head>
 <body>
 <div class="page-bg">
-  <div class="page-logo"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi"></div>
   <div class="wrap" id="root">
     <div class="spinner-wrap"><div class="spinner"></div></div>
   </div>
@@ -323,5 +319,6 @@ function renderBrand(){
   return '<div class="footer"><div class="footer-brand">petz<span>ID</span></div><div class="footer-sub">PetMi Guatemala — Comunidad de mascotas</div></div>';
 }
 </script>
+<script src="/header.js"></script>
 </body>
 </html>
