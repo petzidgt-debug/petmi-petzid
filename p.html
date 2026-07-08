@@ -25,8 +25,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .memorial-card{background:#F5F3F9;border:1.5px solid #E8E4F0;border-radius:14px;padding:16px;margin-bottom:16px;text-align:center}
 .memorial-titulo{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:6px}
 .memorial-texto{font-size:12.5px;color:#666;line-height:1.7}
-.btn-condolencias{width:100%;padding:14px;background:#6B5B8C;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
-
 /* MURO DE CONDOLENCIAS */
 .condolencias-titulo{font-size:14px;font-weight:700;color:#222;margin:4px 0 10px}
 .condolencia-form{background:#F5F3F9;border-radius:14px;padding:14px;margin-bottom:14px}
@@ -224,21 +222,20 @@ function renderPerfil(m){
 
   // Botones
   html+='<div class="btns">';
-  if(m.whatsapp && esAngelito && !esVisitanteDueno){
-    var waNum=m.whatsapp.replace(/[^0-9]/g,'');
-    if(waNum.length===8) waNum='502'+waNum;
-    var msjCondolencias='Hola, quiero enviar mis condolencias a la familia de '+m.nombre+'. 🕊️';
-    html+='<button class="btn-condolencias" onclick="window.open(\'https://wa.me/'+waNum+'?text='+encodeURIComponent(msjCondolencias)+'\',\'_blank\')">💜 Enviar condolencias</button>';
-  } else if(m.whatsapp && !esAngelito){
+  if(m.whatsapp && !esAngelito){
     var waNum2=m.whatsapp.replace(/[^0-9]/g,'');
     if(waNum2.length===8) waNum2='502'+waNum2;
     html+='<button class="btn-contactar" onclick="window.open(\'https://wa.me/'+waNum2+'?text='+encodeURIComponent('Hola! Vi el perfil de '+m.nombre+' en PetMi.')+'\',\'_blank\')">💬 Contactar responsable</button>';
   }
   html+='</div>';
 
-  // Muro de condolencias (solo para angelito)
+  // Muro de mensajes (solo para angelito) — usa el sistema real /api/galeria,
+  // la misma tabla "mensajes" que usa perfil.html (antes usaba una tabla
+  // "condolencias" aparte, por eso lo que se mandaba desde otras pantallas
+  // no aparecía aquí)
   if(esAngelito){
     html+='<div class="condolencias-titulo">Mensajes para '+m.nombre+'</div>';
+    html+='<div id="listaCondolencias"><div class="condolencias-vacio">Cargando mensajes...</div></div>';
     if(!esVisitanteDueno){
       html+='<div class="condolencia-form">';
       html+='<input type="text" id="cNombre" placeholder="Tu nombre">';
@@ -246,7 +243,6 @@ function renderPerfil(m){
       html+='<button class="btn-enviar-msj" onclick="enviarCondolencia(\''+m.uid+'\',\''+m.nombre.replace(/'/g,"\\'")+'\')">Enviar mensaje</button>';
       html+='</div>';
     }
-    html+='<div id="listaCondolencias"><div class="condolencias-vacio">Cargando mensajes...</div></div>';
   }
 
   // QR del perfil
@@ -266,24 +262,25 @@ function renderPerfil(m){
   if(esAngelito) cargarCondolencias(m.uid);
 }
 
-// ── Muro de condolencias ─────────────────────────────────────
+// ── Muro de mensajes — usa /api/galeria (misma tabla "mensajes" que perfil.html) ──
 function cargarCondolencias(uidMascota){
-  fetch(SUPA_URL+'/rest/v1/condolencias?uid_mascota=eq.'+encodeURIComponent(uidMascota.toUpperCase())+'&select=nombre_persona,mensaje,fecha&order=fecha.desc',{headers:H})
+  fetch('/api/galeria?action=getMensajes&uid='+encodeURIComponent(uidMascota.toUpperCase()))
   .then(function(r){return r.json();})
-  .then(function(rows){
+  .then(function(data){
+    var rows = (data && data.mensajes) || [];
     var el=document.getElementById('listaCondolencias');
     if(!el) return;
-    if(!rows||!rows.length){
+    if(!rows.length){
       el.innerHTML='<div class="condolencias-vacio">Sé el primero en dejar un mensaje. 🕊️</div>';
       return;
     }
     var html='';
     rows.forEach(function(c){
       var fecha=new Date(c.fecha);
-      var fechaStr=fecha.toLocaleDateString('es-GT',{day:'numeric',month:'short'});
+      var fechaStr=isNaN(fecha.getTime())?'':fecha.toLocaleDateString('es-GT',{day:'numeric',month:'short'});
       html+='<div class="condolencia-item">';
-      html+='<span class="condolencia-nombre">'+c.nombre_persona+'</span><span class="condolencia-fecha">'+fechaStr+'</span>';
-      html+='<div class="condolencia-msj">'+c.mensaje+'</div>';
+      html+='<span class="condolencia-nombre">'+(c.autor||'Alguien')+'</span><span class="condolencia-fecha">'+fechaStr+'</span>';
+      html+='<div class="condolencia-msj">'+(c.mensaje||'')+'</div>';
       html+='</div>';
     });
     el.innerHTML=html;
@@ -300,15 +297,21 @@ function enviarCondolencia(uidMascota, nombreMascota){
     alert('Por favor escribe tu nombre y un mensaje.');
     return;
   }
-  fetch(SUPA_URL+'/rest/v1/condolencias',{
+  fetch('/api/galeria?action=addMensajePublico',{
     method:'POST',
-    headers:Object.assign({},H,{'Content-Type':'application/json','Prefer':'return=minimal'}),
-    body:JSON.stringify({uid_mascota:uidMascota.toUpperCase(),nombre_persona:nombre,mensaje:mensaje})
-  }).then(function(r){
-    if(r.ok){
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid:uidMascota.toUpperCase(), autor:nombre, mensaje:mensaje, nombreMascota:nombreMascota})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d && d.ok){
       document.getElementById('cNombre').value='';
       document.getElementById('cMensaje').value='';
       cargarCondolencias(uidMascota);
+      // Notificar al dueño por correo (no bloqueante)
+      fetch('/api/submit',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'addMensaje', uid:uidMascota.toUpperCase(), autor:nombre, mensaje:mensaje, nombreMascota:nombreMascota})
+      }).catch(function(){});
     } else {
       alert('No se pudo enviar el mensaje. Intenta de nuevo.');
     }
