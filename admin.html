@@ -473,6 +473,7 @@ tbody tr:last-child td{border-bottom:none}
 
       <!-- ── SCREEN AMIGOS ──────────────────────────────────── -->
 
+    </div>
     <!-- ── SCREEN CORREGIR EMAILS ─────────────────────────── -->
     <div class="screen" id="screenEmailfix">
       <div class="page-header">
@@ -1850,6 +1851,198 @@ function wcMarcarResultado() {
     if(d.ok){msg.textContent='OK: '+d.aciertos+' aciertos de '+d.procesados+' predicciones';msg.style.color='#00C853';loadWCAdmin();}
     else{msg.textContent='Error: '+(d.msg||'desconocido');msg.style.color='#e53935';}
   }).catch(function(){msg.textContent='Error de conexion';msg.style.color='#e53935';});
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// Email Fix — Detección y corrección de emails mal escritos
+// ══════════════════════════════════════════════════════════════
+var _efAllRows = [];
+
+function _efEsSospechoso(email) {
+  if (!email || email.indexOf('@') < 0) return true;
+  var e = email.toLowerCase().trim();
+  var partes = e.split('@');
+  if (partes.length !== 2) return true;
+  var dom = partes[1] || '';
+  if (!dom.length) return true;
+  if (dom.indexOf('.') < 0) return true;
+  if (dom.indexOf('..') >= 0) return true;
+  if (/\.com\.com$/.test(dom)) return true;
+  if (/\.comm+$/.test(dom) && !/\.com$/.test(dom)) return true;
+  if (/\.cmo$/.test(dom)) return true;
+  if (/\.ocm$/.test(dom)) return true;
+  if (/\.con$/.test(dom)) return true;
+  if (/\.coml$/.test(dom)) return true;
+  if (/gmai[^l]\./.test(dom)) return true;
+  if (/gmali\./.test(dom)) return true;
+  if (/gnail\./.test(dom)) return true;
+  if (/gamil\./.test(dom)) return true;
+  if (/htmail\./.test(dom)) return true;
+  if (/homail\./.test(dom)) return true;
+  if (/hotmial\./.test(dom)) return true;
+  var tld = dom.split('.').pop();
+  if (tld.length < 2 || tld.length > 6) return true;
+  if (/\s/.test(e)) return true;
+  return false;
+}
+
+function _efSugerir(email) {
+  if (!email) return '';
+  var e = email.toLowerCase().trim().replace(/\s/g, '');
+  var partes = e.split('@');
+  if (partes.length !== 2) return e;
+  var local = partes[0], dom = partes[1];
+  dom = dom
+    .replace(/\.comm+$/, '.com').replace(/\.cmo$/, '.com')
+    .replace(/\.ocm$/, '.com').replace(/\.con$/, '.com')
+    .replace(/\.coml$/, '.com').replace(/\.com\.com$/, '.com')
+    .replace('gmali.com','gmail.com').replace('gnail.com','gmail.com')
+    .replace('gamil.com','gmail.com').replace('gmai.com','gmail.com')
+    .replace('htmail.com','hotmail.com').replace('homail.com','hotmail.com')
+    .replace('hotmial.com','hotmail.com');
+  return local + '@' + dom;
+}
+
+function _efRenderLista(rows, titulo) {
+  var wrap  = document.getElementById('emailfixWrap');
+  var stats = document.getElementById('emailfixStats');
+  if (!wrap) return;
+  stats.style.display = 'block';
+  stats.textContent = titulo || (rows.length + ' resultados');
+
+  if (!rows.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:40px;color:#2e7d32;font-size:15px;font-weight:700">&#x2705; No se encontraron emails con problemas.</div>';
+    return;
+  }
+
+  var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
+    + '<tr style="background:#1a1a2e;color:#fff">'
+    + '<th style="padding:8px 10px;text-align:left">Mascota</th>'
+    + '<th style="padding:8px 10px;text-align:left">Email actual</th>'
+    + '<th style="padding:8px 10px;text-align:left">Sugerencia</th>'
+    + '<th style="padding:8px 10px;text-align:left">Acci&oacute;n</th></tr>';
+
+  rows.forEach(function(m, i) {
+    var raw     = (m.email || '').trim();
+    var sug     = _efSugerir(raw);
+    var esMalo  = _efEsSospechoso(raw);
+    var hasSug  = sug && sug !== raw.toLowerCase();
+    var bg      = i % 2 === 0 ? '#fff' : '#fafafa';
+    var uid     = (m.uid || '').toUpperCase();
+    var rawSafe = raw.replace(/"/g, '&quot;');
+    var sugSafe = sug.replace(/"/g, '&quot;');
+
+    html += '<tr style="background:' + bg + ';border-bottom:1px solid #eee" id="efrow-' + uid + '">'
+      + '<td style="padding:8px 10px"><strong>' + (m.nombre || '&#x2014;') + '</strong>'
+        + (m.dueno ? '<br><span style="color:#aaa;font-size:11px">' + m.dueno + '</span>' : '')
+        + '</td>'
+      + '<td style="padding:8px 10px"><span style="color:' + (esMalo ? '#c0392b' : '#2e7d32')
+        + ';font-weight:700;font-family:monospace">' + (rawSafe || '<em>vac&iacute;o</em>') + '</span></td>'
+      + '<td style="padding:8px 10px">'
+        + (hasSug ? '<span style="color:#2e7d32;font-family:monospace">' + sugSafe + '</span>'
+                  : '<span style="color:#bbb;font-size:11px">sin sugerencia</span>')
+        + '</td>'
+      + '<td style="padding:8px 10px;white-space:nowrap">'
+        + (hasSug ? '<button data-uid="' + uid + '" data-email="' + sugSafe + '" onclick="emailfixAplicarBtn(this)"'
+            + ' style="background:#00B4B4;color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;margin-right:4px;font-weight:700">&#x2705; Aplicar</button>' : '')
+        + '<button data-uid="' + uid + '" data-email="' + rawSafe + '" onclick="emailfixEditarBtn(this)"'
+          + ' style="background:#555;color:#fff;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-weight:600">&#x270F; Editar</button>'
+      + '</td></tr>';
+  });
+  html += '</table></div>';
+  wrap.innerHTML = html;
+}
+
+async function emailfixCargar() {
+  var wrap = document.getElementById('emailfixWrap');
+  if (!wrap) return null;
+  wrap.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa">Cargando...</div>';
+  try {
+    var all = [], offset = 0, batch = 1000;
+    while (true) {
+      var r = await fetch(SUPA_ADM + '/rest/v1/mascotas?select=uid,nombre,email,dueno&order=email.asc&limit=' + batch + '&offset=' + offset, {headers: SUPA_ADM_H});
+      var rows = await r.json();
+      if (!Array.isArray(rows)) {
+        wrap.innerHTML = '<div style="color:#c0392b;padding:20px">Error Supabase: ' + JSON.stringify(rows) + '</div>';
+        return null;
+      }
+      all = all.concat(rows);
+      if (rows.length < batch) break;
+      offset += batch;
+    }
+    _efAllRows = all;
+    return all;
+  } catch(e) {
+    if (wrap) wrap.innerHTML = '<div style="color:#c0392b;padding:20px">Error: ' + e.message + '</div>';
+    return null;
+  }
+}
+
+async function emailfixDetectar() {
+  var all = _efAllRows.length ? _efAllRows : await emailfixCargar();
+  if (!all) return;
+  var sosp = all.filter(function(m){ return _efEsSospechoso(m.email); });
+  _efRenderLista(sosp, sosp.length + ' emails sospechosos de ' + all.length + ' mascotas');
+}
+
+async function emailfixTodos() {
+  var all = await emailfixCargar();
+  if (!all) return;
+  _efRenderLista(all, all.length + ' mascotas en total');
+}
+
+function emailfixBuscar() {
+  var q = prompt('Escribe el email o parte del email a buscar:');
+  if (!q) return;
+  q = q.toLowerCase().trim();
+  if (!_efAllRows.length) {
+    emailfixCargar().then(function(all){
+      if (!all) return;
+      var found = all.filter(function(m){ return m.email && m.email.toLowerCase().indexOf(q) >= 0; });
+      _efRenderLista(found, found.length + ' resultado(s) para: "' + q + '"');
+    });
+    return;
+  }
+  var found = _efAllRows.filter(function(m){ return m.email && m.email.toLowerCase().indexOf(q) >= 0; });
+  _efRenderLista(found, found.length + ' resultado(s) para: "' + q + '"');
+}
+
+async function emailfixAplicar(uid, nuevoEmail, btn) {
+  if (!confirm('\u00BFCambiar email a: ' + nuevoEmail + '?')) return;
+  btn.disabled = true; btn.textContent = '...';
+  try {
+    var r = await fetch(SUPA_ADM + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid),
+      { method: 'PATCH',
+        headers: Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'}, SUPA_ADM_H),
+        body: JSON.stringify({email: nuevoEmail.toLowerCase().trim()}) });
+    if (r.ok) {
+      btn.textContent = '&#x2705; OK'; btn.style.background = '#2e7d32';
+      var m = _efAllRows.find(function(x){ return (x.uid||'').toUpperCase() === uid; });
+      if (m) m.email = nuevoEmail.toLowerCase().trim();
+      var tr = btn.closest ? btn.closest('tr') : null;
+      if (tr) tr.style.opacity = '0.5';
+    } else {
+      btn.textContent = '&#x274C; Error'; btn.style.background = '#c0392b'; btn.disabled = false;
+    }
+  } catch(e) {
+    btn.textContent = '&#x274C; Error'; btn.style.background = '#c0392b'; btn.disabled = false;
+  }
+}
+
+function emailfixAplicarBtn(btn) {
+  emailfixAplicar(btn.getAttribute('data-uid'), btn.getAttribute('data-email'), btn);
+}
+function emailfixEditarBtn(btn) {
+  var uid = btn.getAttribute('data-uid');
+  var actual = btn.getAttribute('data-email');
+  var nuevo = prompt('Email correcto para esta mascota:', actual);
+  if (!nuevo || nuevo.trim() === actual) return;
+  nuevo = nuevo.toLowerCase().trim();
+  if (nuevo.indexOf('@') < 0 || nuevo.indexOf('.') < 0) {
+    alert('El email no parece v\u00E1lido.'); return;
+  }
+  emailfixAplicar(uid, nuevo, btn);
 }
 
 </script>
