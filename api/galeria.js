@@ -123,7 +123,8 @@ export default async function handler(req, res) {
         notifMensajes:m.notif_mensajes ? 'Si' : 'No',
         ofertas:      m.ofertas        ? 'Si' : 'No',
         premium:      m.premium        === true,
-        premium_hasta:m.premium_hasta  || null
+        premium_hasta:m.premium_hasta  || null,
+        slug:         m.slug           || ''
       }));
       return res.status(200).json({ found: mascotas.length > 0, mascotas });
     }
