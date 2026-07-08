@@ -423,6 +423,7 @@ fetch('/api/galeria?action=getBasic')
         foto:         String(r[10]||'').trim(),
         angelito:     String(r[11]||'').trim().toLowerCase()==='si',
         fechaAngelito:String(r[12]||'').trim(),
+        slug:         String(r[13]||'').trim(),
         createdAt:    String(r[0]||'').trim(),
         actividades:'', especial:'', comentario:'', alimento:'', zona:'', notifMensajes:''
       };
@@ -478,6 +479,7 @@ fetch('/api/galeria?action=getBasic')
             foto:         String(r[27]||'').trim(),
             angelito:     String(r[28]||'').trim().toLowerCase()==='si',
             fechaAngelito:String(r[29]||'').trim(),
+            slug:         '', // este camino de respaldo lee del Sheet, que no tiene slug
             actividades:  String(r[18]||'').trim(),
             especial:     String(r[23]||'').trim(),
             comentario:   '',
@@ -694,9 +696,10 @@ function renderGallery(append){
 function openModal(idx){
   var p=filtered[idx];
   if(!p)return;
-  // Angelitos abren su pagina de perfil para mensajes publicos
+  // Angelitos abren su perfil de memorial (p.html) — la misma página
+  // que usa el correo de condolencias, para una experiencia consistente
   if(p.angelito){
-    window.location.href='/perfil.html?uid='+p.uid;
+    window.location.href='/p/'+(p.slug||p.uid);
     return;
   }
   _renderModal(p);
@@ -705,9 +708,9 @@ function openModal(idx){
 function openModalByUID(uid){
   var p=allPets.find(function(x){return x.uid===uid;});
   if(!p)return;
-  // Angelitos abren su pagina de perfil para mensajes publicos
+  // Angelitos abren su perfil de memorial (p.html)
   if(p.angelito){
-    window.location.href='/perfil.html?uid='+uid;
+    window.location.href='/p/'+(p.slug||uid);
     return;
   }
   _renderModal(p);
