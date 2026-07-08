@@ -145,6 +145,32 @@ tbody tr:last-child td{border-bottom:none}
 
   <div class="content">
 
+    <!--
+    ╔══════════════════════════════════════════════════════════════╗
+    ║  REGLA: Cómo agregar un nuevo screen al admin               ║
+    ╠══════════════════════════════════════════════════════════════╣
+    ║  1. INSERTAR antes de: <!-- AFILIADOS --><!-- MODAL EDITAR ► ║
+    ║  2. VERIFICAR que el screen anterior cierra bien (balance=0)║
+    ║     Si balance=1, agregar </div> antes de tu nuevo screen   ║
+    ║  3. INDENT: 4 espacios (igual que screenDashboard/Mascotas) ║
+    ║  4. ESTRUCTURA obligatoria:                                  ║
+    ║       <div class="screen" id="screenNombreExacto">          ║
+    ║         <div class="page-header">                           ║
+    ║           <div>                                             ║
+    ║             <div class="page-title">Título</div>            ║
+    ║             <div class="page-sub">Subtítulo</div>           ║
+    ║           </div>                                            ║
+    ║         </div>                                              ║
+    ║         ...contenido...                                     ║
+    ║       </div>                                                ║
+    ║  5. El id debe ser: "screen" + PrimeraMayuscula + resto     ║
+    ║     Ej: showScreen('emailfix') → id="screenEmailfix"        ║
+    ║  6. NAV ITEM: onclick="showScreen('nombreexacto', this)"    ║
+    ║  7. Si necesita auto-carga, agregar en showScreen():        ║
+    ║     if(name==='nombreexacto') setTimeout(miFuncion, 100);   ║
+    ║  8. JS del screen: agregar en el bloque <script> principal  ║
+    ╚══════════════════════════════════════════════════════════════╝
+    -->
     <div class="screen active" id="screenDashboard">
       <div class="page-header">
         <div><div class="page-title">Dashboard</div><div class="page-sub">Resumen general</div></div>
