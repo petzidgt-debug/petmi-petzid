@@ -250,7 +250,7 @@ export default async function handler(req, res) {
       let mascotasAmigos = [];
       if (uidsAmigos.length > 0) {
         const r3 = await fetch(
-          SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uidsAmigos.map(u => '"'+u+'"').join(',') + ')&select=uid,nombre,apodo,especie,foto,angelito',
+          SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uidsAmigos.map(u => '"'+u+'"').join(',') + ')&select=uid,nombre,apodo,especie,foto,angelito,slug',
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
         );
         mascotasAmigos = await r3.json();
