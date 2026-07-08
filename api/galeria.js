@@ -544,10 +544,13 @@ export default async function handler(req, res) {
       const { actividad_id, uid_creador } = req.body;
       // Eliminar solo por id (RLS de Supabase protege el acceso)
       // No filtrar por uid_creador para que "apareció" funcione desde familia.html
+      // Usa SUPABASE_SERVICE_KEY (no la anon key) — con RLS activo en "actividades",
+      // la anon key devolvía "éxito" sin borrar nada de verdad.
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id), {
         method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
       });
+      if (!r.ok) console.error('eliminarActividad failed:', r.status, await r.text().catch(() => ''));
       return res.status(200).json({ ok: r.ok });
     }
 
@@ -557,10 +560,12 @@ export default async function handler(req, res) {
     if (action === 'marcarAparecio' && req.method === 'POST') {
       const { actividad_id } = req.body;
       if (!actividad_id) return res.status(200).json({ ok: false, error: 'actividad_id requerido' });
+      // Misma corrección: usar SUPABASE_SERVICE_KEY para que el DELETE sí aplique con RLS activo
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id), {
         method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
       });
+      if (!r.ok) console.error('marcarAparecio failed:', r.status, await r.text().catch(() => ''));
       return res.status(200).json({ ok: r.ok });
     }
 
