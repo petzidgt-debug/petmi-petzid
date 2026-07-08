@@ -259,6 +259,57 @@ export default async function handler(req, res) {
       return res.status(200).json({ amigos, pendientes, mascotasAmigos });
     }
 
+    // ── getConversaciones (lista, para el inbox) ──────────────
+    if (action === 'getConversaciones') {
+      const uid = (req.query.uid || '').toUpperCase();
+      if (!uid) return res.status(200).json({ conversaciones: [] });
+
+      const response = await fetch(
+        SUPABASE_URL + '/rest/v1/conversaciones?or=(uid_emisor.eq.' + encodeURIComponent(uid) + ',uid_receptor.eq.' + encodeURIComponent(uid) + ')&order=created_at.desc&limit=300',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+      );
+      const msgs = await response.json();
+      if (!msgs || !msgs.length) return res.status(200).json({ conversaciones: [] });
+
+      // Agrupar por el "otro" uid — quedarnos con el mensaje más reciente
+      // de cada conversación y contar los no leídos que me tocan a mí.
+      const porUid = {};
+      msgs.forEach(m => {
+        const otro = m.uid_emisor === uid ? m.uid_receptor : m.uid_emisor;
+        if (!porUid[otro]) {
+          porUid[otro] = { otroUid: otro, ultimoMensaje: m.mensaje, ultimaFecha: m.created_at, noLeidos: 0, ultimoEsMio: m.uid_emisor === uid };
+        }
+        if (m.uid_receptor === uid && !m.leido) porUid[otro].noLeidos++;
+      });
+
+      const uids = Object.keys(porUid);
+      let mascotasInfo = {};
+      if (uids.length) {
+        const rMasc = await fetch(
+          SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uids.map(u => '"' + u + '"').join(',') + ')&select=uid,nombre,foto,angelito',
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+        );
+        const rows = await rMasc.json();
+        (rows || []).forEach(r => { mascotasInfo[r.uid] = r; });
+      }
+
+      const conversaciones = uids.map(u => {
+        const info = mascotasInfo[u] || {};
+        return {
+          otroUid: u,
+          otroNombre: info.nombre || 'Mascota',
+          otroFoto: info.foto || '',
+          otroAngelito: !!info.angelito,
+          ultimoMensaje: porUid[u].ultimoMensaje,
+          ultimaFecha: porUid[u].ultimaFecha,
+          ultimoEsMio: porUid[u].ultimoEsMio,
+          noLeidos: porUid[u].noLeidos
+        };
+      }).sort((a, b) => new Date(b.ultimaFecha) - new Date(a.ultimaFecha));
+
+      return res.status(200).json({ conversaciones });
+    }
+
     // ── getConversacion ──────────────────────────────────────
     if (action === 'getConversacion') {
       const uid1 = req.query.uid1 || '';
