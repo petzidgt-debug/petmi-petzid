@@ -614,10 +614,18 @@ function enviarMensajePublico(){
   fetch('/api/galeria?action=publicarMensaje',{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({uid_destinatario:overlay._uid,email_emisor:sessionEmail,mensaje:txt,tipo:overlay._tipo})
-  }).catch(function(){});
-  document.getElementById('mpForm').style.display='none';
-  document.getElementById('mpOk').style.display='block';
-  setTimeout(function(){overlay.style.display='none';},2000);
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d && d.ok){
+      document.getElementById('mpForm').style.display='none';
+      document.getElementById('mpOk').style.display='block';
+      setTimeout(function(){overlay.style.display='none';},2000);
+    } else {
+      alert('No se pudo enviar el mensaje. Intenta de nuevo.');
+    }
+  }).catch(function(){
+    alert('No se pudo enviar el mensaje. Revisa tu conexión e intenta de nuevo.');
+  });
 }
 function applyFilter(){
   var searchEl=document.getElementById('searchInput');
@@ -1745,8 +1753,8 @@ document.addEventListener('keydown', function(e){
 <script>
 function irACrear(){
   var email=localStorage.getItem('petzid_email');
-  if(email) window.location.href='/index.html?agregar=1';
-  else window.location.href='/index.html';
+  if(email) window.location.href='https://app.revistapetmi.com/registro.html?agregar=1';
+  else window.location.href='https://app.revistapetmi.com/registro.html';
 }
 </script>
 <script src="/header.js"></script>
