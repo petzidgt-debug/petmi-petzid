@@ -519,7 +519,7 @@ function renderCumpleaneros(){
       ?'<img src="'+p.foto+'" onerror="this.style.display=\'none\'">'
       :'<div style="width:130px;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px;background:#fff3cd">'+(esGato?'🐱':'🐶')+'</div>';
     var hoy=new Date().getMonth()===mesActual;
-    var fechaLabel=p.tipoFecha==='llegada'?'Llegó a casa':'Cumpleaños';
+    var fechaLabel=(p.tipoFecha==='llegada'||p.tipoFecha==='casa')?'Llegó a casa':'Cumpleaños';
     var badgeHoy=hoy?'<div style="position:absolute;top:5px;left:5px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px;background:#c0392b;color:#fff">Hoy</div>':'';
     return '<div class="cumple-card">'
       +'<div class="cumple-foto" style="position:relative">'+fotoHTML+badgeHoy+'<div class="cumple-badge">🎂</div></div>'
@@ -739,7 +739,7 @@ function _renderModal(p){
   var fechaLbl=document.getElementById('modalFechaLbl');
   var fechaVal=document.getElementById('modalFecha');
   if(fechaLbl&&fechaVal){
-    fechaLbl.textContent=p.tipoFecha==='llegada'?'Llegó a casa':'Nacimiento';
+    fechaLbl.textContent=(p.tipoFecha==='llegada'||p.tipoFecha==='casa')?'Llegó a casa':'Nacimiento';
     fechaVal.textContent=formatFecha(p.fecha);
   }
   var comentarioEl=document.getElementById('modalComentario');
