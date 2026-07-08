@@ -9,6 +9,17 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
+/* Fondo de marca detrás de la tarjeta (solo visible en pantallas anchas) */
+.page-bg{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
+.page-logo{padding:28px 0 8px;text-align:center}
+.page-logo img{height:32px;display:inline-block}
+
+@media (min-width:600px){
+  .page-bg{background:linear-gradient(160deg,#00B4B4 0%,#00B4B4 35%,#f0f0ee 35%,#f0f0ee 100%)}
+  .page-logo img{height:40px}
+  .wrap{box-shadow:0 20px 60px rgba(0,0,0,.18);border-radius:20px;overflow:hidden;margin-top:12px}
+}
+
 /* HERO FOTO */
 .foto-wrap{position:relative;height:320px;background:#e0f7f7;overflow:hidden}
 .foto-wrap img{width:100%;height:100%;object-fit:cover}
@@ -72,12 +83,15 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .spinner{width:40px;height:40px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.wrap{max-width:480px;margin:0 auto}
+.wrap{max-width:480px;width:100%;margin:0 auto;background:#f0f0ee}
 </style>
 </head>
 <body>
-<div class="wrap" id="root">
-  <div class="spinner-wrap"><div class="spinner"></div></div>
+<div class="page-bg">
+  <div class="page-logo"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi"></div>
+  <div class="wrap" id="root">
+    <div class="spinner-wrap"><div class="spinner"></div></div>
+  </div>
 </div>
 
 <script>
