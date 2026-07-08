@@ -570,7 +570,21 @@ function marcarAparecio(id,nombre){
   ov.innerHTML='<div style="font-size:80px">🎉</div><div style="font-size:22px;font-weight:900;color:#fff;text-align:center">¡'+nombre+' apareció!</div>';
   document.body.appendChild(ov);
   fetch('/api/galeria?action=marcarAparecio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actividad_id:id})})
-    .then(function(){setTimeout(function(){document.body.removeChild(ov);cargar();mostrarToast('🎉 ¡'+nombre+' apareció!');},2500);});
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.ok){
+        setTimeout(function(){document.body.removeChild(ov);cargar();mostrarToast('&#x1F389; &#xA1;'+nombre+' apareci&#xF3;!');},2500);
+      } else {
+        document.body.removeChild(ov);
+        mostrarToast('Error al actualizar el aviso. Int&#xE9;ntalo de nuevo.');
+        console.error('[marcarAparecio]',d.error);
+      }
+    })
+    .catch(function(e){
+      document.body.removeChild(ov);
+      mostrarToast('Error de conexi&#xF3;n.');
+      console.error('[marcarAparecio]',e);
+    });
 }
 
 function eliminar(id){
