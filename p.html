@@ -55,24 +55,17 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .btn-contactar{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-petmi{width:100%;padding:12px;background:#f0f0ee;color:#555;border:none;border-radius:14px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
 
-/* QR */
-.qr-card{background:#fff;border-radius:14px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
-.qr-box{width:72px;height:72px;flex-shrink:0}
-.qr-info-titulo{font-size:13px;font-weight:700;color:#222;margin-bottom:4px}
-.qr-info-sub{font-size:12px;color:#888;line-height:1.5}
-
-/* BRAND FOOTER */
-.brand-footer{background:#1a1a2e;padding:20px 16px;text-align:center}
-.brand-logo{font-size:18px;font-weight:900;color:#00B4B4;margin-bottom:4px}
-.brand-logo span{color:#F5C842}
-.brand-sub{font-size:11px;color:rgba(255,255,255,.4)}
-.brand-link{display:inline-block;margin-top:10px;padding:10px 24px;background:#00B4B4;color:#fff;border-radius:24px;font-size:13px;font-weight:700;text-decoration:none}
-
 /* NO PREMIUM */
 .no-premium{text-align:center;padding:48px 20px;background:#f0f0ee;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .no-premium-ico{font-size:64px;margin-bottom:16px}
 .no-premium-titulo{font-size:20px;font-weight:900;color:#222;margin-bottom:8px}
 .no-premium-sub{font-size:14px;color:#888;line-height:1.7;margin-bottom:24px}
+
+/* FOOTER (igual a galeria.html) */
+.footer{background:#1a1a2e;padding:24px;text-align:center;margin-top:40px}
+.footer-brand{font-size:18px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;margin-bottom:8px}
+.footer-brand span{color:#F5C842}
+.footer-sub{font-size:12px;color:rgba(255,255,255,.4)}
 
 /* SPINNER */
 .spinner-wrap{min-height:60vh;display:flex;align-items:center;justify-content:center}
@@ -87,7 +80,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <div class="spinner-wrap"><div class="spinner"></div></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
@@ -110,25 +102,28 @@ if(!uid){
 }
 
 function cargarPerfil(){
-  fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toUpperCase())+'&select=uid,nombre,apodo,especie,raza,sexo,fecha,zona,dueno,foto,whatsapp,premium,angelito',{headers:H})
+  var campos = 'uid,nombre,apodo,especie,raza,sexo,fecha,zona,dueno,foto,whatsapp,premium,angelito,slug';
+  // Primero busca por slug (links nuevos, ej. /p/pepe)
+  fetch(SUPA_URL+'/rest/v1/mascotas?slug=eq.'+encodeURIComponent(uid.toLowerCase())+'&select='+campos,{headers:H})
   .then(function(r){return r.json();})
   .then(function(rows){
-    if(!rows||!rows.length){
-      document.getElementById('root').innerHTML='<div class="no-premium"><div class="no-premium-ico">🐾</div><div class="no-premium-titulo">Mascota no encontrada</div><div class="no-premium-sub">Este perfil no existe o fue eliminado.</div><a href="/galeria.html" style="color:#00B4B4;font-weight:700">Ver galería →</a></div>';
-      return;
-    }
-    var m=rows[0];
-    var esAngelito=m.angelito===true||m.angelito==='true'||m.angelito==='Si'||m.angelito==='si';
-    if(!m.premium && !esAngelito){
-      // No premium y no es angelito — mostrar info básica con CTA de Premium
-      renderNoPremium(m);
-    } else {
-      // Premium, o angelito (el perfil de memorial siempre está disponible)
-      renderPerfil(m);
-    }
+    if(rows && rows.length){ mostrarMascota(rows[0]); return; }
+    // No encontrado por slug — probar como uid (links viejos ya enviados)
+    return fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toUpperCase())+'&select='+campos,{headers:H})
+    .then(function(r2){return r2.json();})
+    .then(function(rows2){ mostrarMascota(rows2 && rows2[0]); });
   }).catch(function(){
     document.getElementById('root').innerHTML='<div class="no-premium"><div class="no-premium-ico">😕</div><div class="no-premium-titulo">Error al cargar</div><a href="/galeria.html" style="color:#00B4B4;font-weight:700">Volver →</a></div>';
   });
+}
+
+function mostrarMascota(m){
+  if(!m){
+    document.getElementById('root').innerHTML='<div class="no-premium"><div class="no-premium-ico">🐾</div><div class="no-premium-titulo">Mascota no encontrada</div><div class="no-premium-sub">Este perfil no existe o fue eliminado.</div><a href="/galeria.html" style="color:#00B4B4;font-weight:700">Ver galería →</a></div>';
+    return;
+  }
+  var esAngelito=m.angelito===true||m.angelito==='true'||m.angelito==='Si'||m.angelito==='si';
+  if(!m.premium && !esAngelito){ renderNoPremium(m); } else { renderPerfil(m); }
 }
 
 function calcEdad(fecha, esAngelito){
@@ -176,7 +171,6 @@ function renderNoPremium(m){
 function renderPerfil(m){
   var emoji=m.especie&&m.especie.toLowerCase().indexOf('gato')>=0?'🐱':'🐶';
   var edad=calcEdad(m.fecha);
-  var perfilUrl=window.location.origin+'/p/'+m.uid;
   var esAngelito=m.angelito===true||m.angelito==='true'||m.angelito==='Si'||m.angelito==='si';
 
   var html='<div class="foto-wrap'+(esAngelito?' es-angelito':'')+'">';
@@ -245,19 +239,10 @@ function renderPerfil(m){
     }
   }
 
-  // QR del perfil
-  html+='<div class="qr-card"><div class="qr-box" id="qrPerfil"></div><div><div class="qr-info-titulo">Código QR del perfil</div><div class="qr-info-sub">Escanea para ver este perfil en cualquier dispositivo.</div></div></div>';
-
   html+='</div>';
   html+=renderBrand();
 
   document.getElementById('root').innerHTML=html;
-
-  // Generar QR
-  setTimeout(function(){
-    var el=document.getElementById('qrPerfil');
-    if(el) new QRCode(el,{text:perfilUrl,width:66,height:66,colorDark:'#1a1a2e',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
-  },200);
 
   if(esAngelito) cargarCondolencias(m.uid);
 }
@@ -321,7 +306,7 @@ function enviarCondolencia(uidMascota, nombreMascota){
 }
 
 function renderBrand(){
-  return '<div class="brand-footer"><div class="brand-logo">petz<span>ID</span></div><div class="brand-sub">La comunidad pet lover de Guatemala</div><a href="/galeria.html" class="brand-link">Únete a PetMi</a></div>';
+  return '<div class="footer"><div class="footer-brand">petz<span>ID</span></div><div class="footer-sub">PetMi Guatemala — Comunidad de mascotas</div></div>';
 }
 </script>
 </body>
