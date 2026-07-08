@@ -129,7 +129,7 @@ export default async function handler(req, res) {
 
     // ── getMensajes ───────────────────────────────────────────
     if (action === 'getMensajes') {
-      const uid = req.query.uid || '';
+      const uid = (req.query.uid || '').toUpperCase();
       if (!uid) return res.status(200).json({ mensajes: [] });
 
       const response = await fetch(
@@ -395,13 +395,20 @@ export default async function handler(req, res) {
     // ── Enviar evento a revisión (usuarios) ─────────────────────
     if (action === 'enviarEvento' && req.method === 'POST') {
       const { titulo, tipo, fecha, hora, lugar, direccion, descripcion, imagen, link, email } = req.body;
-      if (!titulo || !fecha) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      if (!titulo || !fecha) return res.status(200).json({ ok: false, error: 'Faltan titulo y fecha' });
+      const payload = { titulo, tipo: tipo||'evento', fecha, hora: hora||null, lugar: lugar||null, direccion: direccion||null, descripcion: descripcion||null, imagen: imagen||null, link: link||null, creado_por: email||null, activo: false };
       const r = await fetch(SUPABASE_URL + '/rest/v1/eventos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ titulo, tipo: tipo||'evento', fecha, hora, lugar, direccion, descripcion, imagen: imagen||null, link, creado_por: email, activo: false })
+        body: JSON.stringify(payload)
       });
-      return res.status(200).json({ ok: r.ok });
+      if (!r.ok) {
+        let errBody = '';
+        try { errBody = JSON.stringify(await r.json()); } catch(e) { errBody = await r.text().catch(()=>'sin detalle'); }
+        console.error('[enviarEvento] Supabase error', r.status, errBody);
+        return res.status(200).json({ ok: false, error: errBody, status: r.status });
+      }
+      return res.status(200).json({ ok: true });
     }
 
     // ── Enviar lugar a revisión (usuarios) ───────────────────────
@@ -481,8 +488,13 @@ export default async function handler(req, res) {
       // Calcular expiración: planes expiran en la fecha del plan, anuncios en 7 días
       let expires_at = null;
       if (tipo === 'plan' && fecha) {
+        // Planes de afiliado expiran en la fecha del plan
+        expires_at = new Date(fecha + 'T23:59:59').toISOString();
+      } else if (tipo === 'evento' && fecha) {
+        // Eventos expiran al final de su dia
         expires_at = new Date(fecha + 'T23:59:59').toISOString();
       } else if (tipo !== 'plan') {
+        // Avisos normales expiran en 7 dias
         const d = new Date(); d.setDate(d.getDate() + 7);
         expires_at = d.toISOString();
       }
@@ -776,12 +788,44 @@ export default async function handler(req, res) {
     // ── addMensajePublico ─────────────────────────────────────
     // Guarda mensaje publico directamente en Supabase (para angelitos/cumpleanos)
     if (action === 'addMensajePublico' && req.method === 'POST') {
-      const { uid, autor, mensaje, nombreMascota } = req.body;
+      const { uid: uidRaw, autor, mensaje, nombreMascota } = req.body;
+      const uid = (uidRaw || '').toUpperCase();
       if (!uid || !autor || !mensaje) return res.status(200).json({ ok: false, error: 'Faltan campos' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/mensajes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ uid_mascota: uid, autor, mensaje, nombre_mascota: nombreMascota || '' })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── publicarMensaje ────────────────────────────────────────
+    // NUEVO: faltaba este handler. galeria.html (botón "🎉 Felicitar" /
+    // "🌈 mensaje de apoyo") llama a esta acción con un payload distinto
+    // (uid_destinatario, email_emisor) al de addMensajePublico — antes
+    // caía sin manejador y el frontend igual mostraba "✅ Mensaje enviado"
+    // aunque nunca se guardaba nada. Guarda en la MISMA tabla "mensajes"
+    // que usa perfil.html/p.html, resolviendo el nombre del emisor a
+    // partir de su email (la galería no le pide que escriba su nombre).
+    if (action === 'publicarMensaje' && req.method === 'POST') {
+      const { uid_destinatario, email_emisor, mensaje, tipo } = req.body;
+      const uid = (uid_destinatario || '').toUpperCase();
+      if (!uid || !mensaje) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+
+      let autor = email_emisor || 'Alguien';
+      try {
+        const rEmisor = await fetch(
+          SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent((email_emisor || '').toLowerCase()) + '&select=dueno&limit=1',
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+        );
+        const rowsEmisor = await rEmisor.json();
+        if (rowsEmisor && rowsEmisor[0] && rowsEmisor[0].dueno) autor = rowsEmisor[0].dueno;
+      } catch (e) { /* si falla, usamos el email tal cual */ }
+
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mensajes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ uid_mascota: uid, autor, mensaje, tipo: tipo || '' })
       });
       return res.status(200).json({ ok: r.ok });
     }
@@ -865,65 +909,279 @@ export default async function handler(req, res) {
       const emailL  = email.trim().toLowerCase();
       const nombreL = nombreMascota.trim().toLowerCase();
 
-      // Anti-brute force: max 5 intentos fallidos por email en 15 min
-      const hace15 = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-      const attR = await fetch(
-        SUPABASE_URL + '/rest/v1/login_attempts?email=eq.' + encodeURIComponent(emailL) +
-        '&exitoso=eq.false&created_at=gte.' + hace15 + '&select=id',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const atts = await attR.json();
-      if (Array.isArray(atts) && atts.length >= 5) {
-        return res.status(200).json({ ok: false, msg: 'Demasiados intentos. Espera 15 minutos.' });
-      }
-
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(emailL) +
-        '&select=uid,nombre,email,dueno,foto,especie,premium,premium_vence,angelito&limit=20',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
+      // Buscar todas las mascotas con ese email (case-insensitive)
+      const queryUrl = SUPABASE_URL + '/rest/v1/mascotas?select=uid,nombre,email,dueno,foto,especie,premium,angelito&limit=20&email=eq.' + encodeURIComponent(emailL);
+      const r = await fetch(queryUrl, {
+        headers: {
+          'apikey': SUPABASE_SERVICE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY
+        }
+      });
       const mascotas = await r.json();
 
-      if (!mascotas || !mascotas.length) {
-        // No revelar si el email existe o no
-        return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
+      // Si no es array o está vacío — email no existe
+      if (!Array.isArray(mascotas) || mascotas.length === 0) {
+        return res.status(200).json({ ok: false, msg: 'Datos incorrectos', code: 'NO_ACCOUNT' });
       }
 
-      // Verificar nombre (acepta cualquier mascota del email)
-      const match = mascotas.find(m =>
-        m.nombre && m.nombre.trim().toLowerCase() === nombreL && !m.angelito
-      );
+      // Limpiar caracteres invisibles del nombre buscado
+      const limpiar = s => s
+        .normalize('NFD')           // separar acentos
+        .replace(/[\u0300-\u036f]/g, '') // quitar acentos
+        .replace(/[^a-z0-9\s]/g, '') // solo alfanuméricos
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const nombreNorm = limpiar(nombreL);
+
+      // Buscar mascota que coincida — angelito puede ser bool o string
+      const match = mascotas.find(m => {
+        if (!m.nombre) return false;
+        const esAngelito = m.angelito === true || m.angelito === 'true' || m.angelito === 1;
+        if (esAngelito) return false;
+        const nombreDB = limpiar(m.nombre.toLowerCase());
+        return nombreDB === nombreNorm;
+      });
 
       if (!match) {
-        // Registrar intento fallido
-        fetch(SUPABASE_URL + '/rest/v1/login_attempts', {
-          method: 'POST',
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ email: emailL, exitoso: false })
-        }).catch(() => {});
         return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
       }
 
-      // Registrar intento exitoso
-      fetch(SUPABASE_URL + '/rest/v1/login_attempts', {
-        method: 'POST',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ email: emailL, exitoso: true })
-      }).catch(() => {});
-
-      // Login exitoso — devolver datos de sesión
+      // ✅ Login exitoso
       return res.status(200).json({
         ok: true,
         email: emailL,
         dueno: mascotas[0].dueno || '',
-        mascotas: mascotas.map(m => ({
+        mascotas: mascotas.filter(m => !m.angelito).map(m => ({
           uid: m.uid, nombre: m.nombre, especie: m.especie,
           foto: m.foto, premium: m.premium
         }))
       });
     }
 
-    return res.status(200).json({ status: 'PetMi Supabase API activa' });
+
+    // ── enviarOTP — fallback login sin nombre ──────────────────
+    if (action === 'enviarOTP' && req.method === 'POST') {
+      const { email } = req.body;
+      if (!email) return res.status(200).json({ ok: false });
+      const emailL = email.trim().toLowerCase();
+
+      // Verificar que el email existe
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?email=ilike.' + encodeURIComponent(emailL) +
+        '&select=uid,dueno&limit=1',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const rows = await r.json();
+      if (!rows || !rows.length) {
+        return res.status(200).json({ ok: false, msg: 'No encontramos ese correo' });
+      }
+
+      // Generar código 6 dígitos
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
+
+      // Guardar en Supabase
+      await fetch(SUPABASE_URL + '/rest/v1/otp_codes', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ email: emailL, code, expires_at: expires, used: false })
+      });
+
+      // Enviar via Apps Script
+      const scriptUrl = process.env.APPS_SCRIPT_URL || '';
+      if (scriptUrl) {
+        await fetch(scriptUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'enviarOTP', email: emailL, code, dueno: rows[0].dueno || '' })
+        }).catch(() => {});
+      }
+
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── verificarOTP ───────────────────────────────────────────
+    if (action === 'verificarOTP' && req.method === 'POST') {
+      const { email, code } = req.body;
+      if (!email || !code) return res.status(200).json({ ok: false });
+      const emailL = email.trim().toLowerCase();
+      const now = new Date().toISOString();
+
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/otp_codes?email=ilike.' + encodeURIComponent(emailL) +
+        '&code=eq.' + encodeURIComponent(code.trim()) +
+        '&used=eq.false&expires_at=gte.' + encodeURIComponent(now) +
+        '&select=id&order=created_at.desc&limit=1',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const rows = await r.json();
+      if (!rows || !rows.length) {
+        return res.status(200).json({ ok: false, msg: 'Código incorrecto o expirado' });
+      }
+
+      // Marcar como usado
+      await fetch(SUPABASE_URL + '/rest/v1/otp_codes?id=eq.' + rows[0].id, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ used: true })
+      });
+
+      // Devolver datos del usuario
+      const mr = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?email=ilike.' + encodeURIComponent(emailL) +
+        '&select=uid,nombre,email,dueno,foto,especie,premium&limit=20',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const mascotas = await mr.json();
+      return res.status(200).json({
+        ok: true, email: emailL,
+        dueno: mascotas[0]?.dueno || '',
+        mascotas: mascotas.map(m => ({ uid: m.uid, nombre: m.nombre, especie: m.especie, foto: m.foto, premium: m.premium }))
+      });
+    }
+
+
+    // ── wc_predecir ───────────────────────────────────────────
+    if (action === 'wc_predecir' && req.method === 'POST') {
+      const { email, partido_id, prediccion } = req.body;
+      if (!email || !partido_id || !prediccion) return res.status(200).json({ ok: false });
+      const emailL = email.trim().toLowerCase();
+      const pr = await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id + '&select=fecha', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const parts = await pr.json();
+      if (!parts || !parts[0]) return res.status(200).json({ ok: false, msg: 'Partido no encontrado' });
+      const cierre = new Date(new Date(parts[0].fecha).getTime() - 30*60*1000);
+      if (cierre <= new Date()) return res.status(200).json({ ok: false, msg: 'Predicciones cerradas (30 min antes del partido)' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?on_conflict=email,partido_id', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ email: emailL, partido_id, prediccion })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+
+    // ── wc_porcentajes ────────────────────────────────────────
+    if (action === 'wc_porcentajes') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?select=partido_id,prediccion', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const preds = await r.json();
+      if (!Array.isArray(preds)) return res.status(200).json({ porcentajes: {} });
+
+      const byPartido = {};
+      preds.forEach(p => {
+        if (!byPartido[p.partido_id]) byPartido[p.partido_id] = { equipo1: 0, empate: 0, equipo2: 0, total: 0 };
+        if (byPartido[p.partido_id][p.prediccion] !== undefined) {
+          byPartido[p.partido_id][p.prediccion]++;
+          byPartido[p.partido_id].total++;
+        }
+      });
+
+      const porcentajes = {};
+      Object.keys(byPartido).forEach(id => {
+        const d = byPartido[id];
+        if (d.total === 0) { porcentajes[id] = null; return; }
+        porcentajes[id] = {
+          total: d.total,
+          equipo1: Math.round((d.equipo1 / d.total) * 100),
+          empate:  Math.round((d.empate  / d.total) * 100),
+          equipo2: Math.round((d.equipo2 / d.total) * 100)
+        };
+      });
+
+      return res.status(200).json({ porcentajes });
+    }
+
+    // ── wc_ranking ────────────────────────────────────────────
+    if (action === 'wc_ranking') {
+      // Paginar para evitar el límite de 1000 filas por defecto de Supabase
+      const PAGE = 1000;
+      let allPreds = [];
+      let offset   = 0;
+      let keepGoing = true;
+      while (keepGoing) {
+        const r = await fetch(
+          SUPABASE_URL + '/rest/v1/wc_predicciones?select=email,puntos,acerto&acerto=not.is.null&limit=' + PAGE + '&offset=' + offset,
+          { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'count=none' } }
+        );
+        const page = await r.json();
+        if (!Array.isArray(page) || page.length === 0) { keepGoing = false; break; }
+        allPreds = allPreds.concat(page);
+        if (page.length < PAGE) keepGoing = false;
+        offset += PAGE;
+      }
+      if (!allPreds.length) return res.status(200).json({ ranking: [] });
+      const byEmail = {};
+      allPreds.forEach(p => {
+        if (!byEmail[p.email]) byEmail[p.email] = { email: p.email, puntos: 0, aciertos: 0, predicciones: 0 };
+        byEmail[p.email].puntos      += (p.puntos || 0);
+        byEmail[p.email].aciertos    += (p.acerto ? 1 : 0);
+        byEmail[p.email].predicciones += 1;
+      });
+      const ranking = Object.values(byEmail).sort((a,b) => b.puntos-a.puntos || b.aciertos-a.aciertos).slice(0,50);
+      return res.status(200).json({ ranking });
+    }
+
+    // ── wc_marcarResultado (admin) ────────────────────────────
+    if (action === 'wc_marcarResultado' && req.method === 'POST') {
+      const { partido_id, resultado, adminKey } = req.body;
+      if (adminKey !== 'petmiadmin2026') return res.status(200).json({ ok: false, msg: 'No autorizado' });
+      if (!partido_id || !resultado) return res.status(200).json({ ok: false });
+      // Verificar que no tenga resultado ya
+      const chk = await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id + '&select=resultado,fecha,fase', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const chkData = await chk.json();
+      if (chkData && chkData[0] && chkData[0].resultado) {
+        return res.status(200).json({ ok: false, msg: 'Este partido ya tiene resultado: ' + chkData[0].resultado });
+      }
+      const fase = (chkData && chkData[0] && chkData[0].fase) || 'grupos';
+      const fasesBonus = ['ronda16', 'cuartos', 'semis', 'final', 'bronze'];
+      const esBonus = fasesBonus.includes(fase);
+      await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id, { method: 'PATCH', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ resultado }) });
+      const pr = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?partido_id=eq.' + partido_id + '&select=id,email,prediccion', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const preds = await pr.json();
+      if (!Array.isArray(preds)) return res.status(200).json({ ok: true, procesados: 0 });
+      let aciertos = 0;
+      for (const pred of preds) {
+        const acerto = pred.prediccion === resultado;
+        // Ronda 16+: 5pts por acierto. Grupos/R32: 2pts ganador, 1pt empate
+        const puntos = !acerto ? 0 : (esBonus ? 5 : (resultado === 'empate' ? 1 : 2));
+        await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?id=eq.' + pred.id, { method: 'PATCH', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ acerto, puntos }) });
+        if (acerto) aciertos++;
+      }
+      return res.status(200).json({ ok: true, procesados: preds.length, aciertos, fase, esBonus });
+    }
+
+    // ── markAngel ─────────────────────────────────────────────
+    if (action === 'markAngel' && req.method === 'POST') {
+      const { uid, esAngel, fechaAngelito } = req.body;
+      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
+
+      const patch = { angelito: true };
+      if (fechaAngelito) patch.fecha_angelito = fechaAngelito;
+
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid.toUpperCase()),
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_SERVICE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(patch)
+        }
+      );
+      if (!r.ok) {
+        let errMsg = '';
+        try { errMsg = JSON.stringify(await r.json()); } catch(e) { errMsg = await r.text().catch(()=>''); }
+        console.error('[markAngel] Supabase error', r.status, errMsg);
+        return res.status(200).json({ ok: false, error: errMsg });
+      }
+      console.log('[markAngel] OK — uid:', uid, 'fecha:', fechaAngelito);
+      return res.status(200).json({ ok: true });
+    }
+
+        return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
     return res.status(500).json({ ok: false, error: err.message });
