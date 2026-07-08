@@ -40,7 +40,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .card-btns{display:flex;gap:6px}
 .btn-ver{flex:1;padding:7px;background:#e0f7f7;color:#007a7a;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
 .btn-editar{flex:1;padding:7px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
-.btn-ver{flex:1;padding:7px;background:#F5C842;color:#1a1a2e;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
 
 /* AGREGAR */
 .btn-agregar-wrap{text-align:center;padding:8px 0 20px}
@@ -258,7 +257,7 @@ function renderCard(m){
   // Fila 1: Ver + Editar
   html += '<div class="card-btns" style="margin-bottom:6px">';
   var highlightParam = new URLSearchParams(window.location.search).get('highlight') === 'perfil' ? '&highlight=perfil' : '';
-  html += '<a href="/p/'+m.uid+'" class="btn-ver" target="_blank">👁️ Ver</a>';
+  html += '<a href="/p/'+(m.slug||m.uid)+'" class="btn-ver" target="_blank">👁️ Ver</a>';
   html += '<a href="/editar.html?uid='+m.uid+highlightParam+'" class="btn-editar" style="flex:1">✏️ Editar</a>';
   html += '</div>';
   // Fila 2: acciones
