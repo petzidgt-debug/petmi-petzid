@@ -129,7 +129,7 @@ export default async function handler(req, res) {
 
     // ── getMensajes ───────────────────────────────────────────
     if (action === 'getMensajes') {
-      const uid = req.query.uid || '';
+      const uid = (req.query.uid || '').toUpperCase();
       if (!uid) return res.status(200).json({ mensajes: [] });
 
       const response = await fetch(
@@ -788,13 +788,58 @@ export default async function handler(req, res) {
     // ── addMensajePublico ─────────────────────────────────────
     // Guarda mensaje publico directamente en Supabase (para angelitos/cumpleanos)
     if (action === 'addMensajePublico' && req.method === 'POST') {
-      const { uid, autor, mensaje, nombreMascota } = req.body;
+      const { uid: uidRaw, autor, mensaje, nombreMascota } = req.body;
+      const uid = (uidRaw || '').toUpperCase();
       if (!uid || !autor || !mensaje) return res.status(200).json({ ok: false, error: 'Faltan campos' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/mensajes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ uid_mascota: uid, autor, mensaje, nombre_mascota: nombreMascota || '' })
       });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── publicarMensaje ────────────────────────────────────────
+    // NUEVO: faltaba este handler. galeria.html (botón "🎉 Felicitar" /
+    // "🌈 mensaje de apoyo") llama a esta acción con un payload distinto
+    // (uid_destinatario, email_emisor) al de addMensajePublico — antes
+    // caía sin manejador y el frontend igual mostraba "✅ Mensaje enviado"
+    // aunque nunca se guardaba nada. Guarda en la MISMA tabla "mensajes"
+    // que usa perfil.html/p.html, resolviendo el nombre del emisor a
+    // partir de su email (la galería no le pide que escriba su nombre).
+    if (action === 'publicarMensaje' && req.method === 'POST') {
+      const { uid_destinatario, email_emisor, mensaje, tipo } = req.body;
+      const uid = (uid_destinatario || '').toUpperCase();
+      if (!uid || !mensaje) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+
+      let autor = email_emisor || 'Alguien';
+      let nombreMascota = '';
+      try {
+        const rEmisor = await fetch(
+          SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent((email_emisor || '').toLowerCase()) + '&select=dueno&limit=1',
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+        );
+        const rowsEmisor = await rEmisor.json();
+        if (rowsEmisor && rowsEmisor[0] && rowsEmisor[0].dueno) autor = rowsEmisor[0].dueno;
+      } catch (e) { /* si falla, usamos el email tal cual */ }
+      try {
+        const rDest = await fetch(
+          SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=nombre&limit=1',
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+        );
+        const rowsDest = await rDest.json();
+        if (rowsDest && rowsDest[0] && rowsDest[0].nombre) nombreMascota = rowsDest[0].nombre;
+      } catch (e) { /* no bloquea el envío si falla */ }
+
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mensajes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ uid_mascota: uid, autor, mensaje, nombre_mascota: nombreMascota })
+      });
+      if (!r.ok) {
+        const errText = await r.text().catch(() => '');
+        console.error('publicarMensaje insert failed:', r.status, errText);
+      }
       return res.status(200).json({ ok: r.ok });
     }
 
