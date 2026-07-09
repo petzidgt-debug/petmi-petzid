@@ -893,6 +893,7 @@ async function submitPetzID(){
 
   var payload={
     uid:uid,isSibling:isSibling,siblings:isSibling?siblings.map(function(s){return {nombre:s.nombre,especie:s.especie,sexo:s.sexo||''};}) : [],
+    referido_por:refBy,
     nombre:      document.getElementById('inNombre').value.trim(),
     apodo:       document.getElementById('inApodo').value.trim(),
     especie:     getChip('chipsEspecie'),

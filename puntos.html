@@ -212,7 +212,10 @@ function init() {
     return;
   }
   // Link de referido
-  fetch('/api/galeria?action=getMascotasByEmail&email=' + encodeURIComponent(sessionEmail))
+  fetch('/api/galeria?action=checkEmail', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'checkEmail', email: sessionEmail })
+  })
     .then(function(r) { return r.json(); })
     .then(function(d) {
       var uid = d.mascotas && d.mascotas[0] ? d.mascotas[0].uid : sessionEmail;

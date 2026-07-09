@@ -623,6 +623,19 @@ document.addEventListener('DOMContentLoaded', function() {
   var negEl = document.querySelector('.negocios-sec');
   if (negEl) negEl.id = 'negocios';
 });
+
+// ── Reenviar ?ref= a todos los links de registro (sistema de referidos) ──
+document.addEventListener('DOMContentLoaded', function() {
+  var ref = new URLSearchParams(window.location.search).get('ref');
+  if (!ref) return;
+  document.querySelectorAll('a[href^="/registro.html"]').forEach(function(a) {
+    a.href = '/registro.html?ref=' + encodeURIComponent(ref);
+  });
+  // El botón que usa onclick en vez de href (plan "Comenzar gratis")
+  document.querySelectorAll('button[onclick*="registro.html"]').forEach(function(btn) {
+    btn.setAttribute('onclick', "location.href='/registro.html?ref=" + encodeURIComponent(ref) + "'");
+  });
+});
 </script>
 </body>
 </html>
