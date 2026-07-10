@@ -70,3 +70,37 @@ self.addEventListener('fetch', function(e) {
       })
   );
 });
+
+// ── Push notifications ──────────────────────────────────────
+self.addEventListener('push', function(e) {
+  var data = {};
+  try { data = e.data ? e.data.json() : {}; } catch(err) { data = { title: 'PetMi', body: e.data ? e.data.text() : '' }; }
+
+  var title = data.title || 'PetMi';
+  var options = {
+    body: data.body || '',
+    icon: data.icon || '/icon-192.png',
+    badge: '/icon-192.png',
+    data: { url: data.url || '/mensajes.html' },
+    tag: data.tag || 'petmi-generico',
+    renotify: !!data.tag
+  };
+
+  e.waitUntil(self.registration.showNotification(title, options));
+});
+
+// ── Click en la notificación — abrir o enfocar la página ────
+self.addEventListener('notificationclick', function(e) {
+  e.notification.close();
+  var url = (e.notification.data && e.notification.data.url) || '/mensajes.html';
+
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+      for (var i = 0; i < clientList.length; i++) {
+        var client = clientList[i];
+        if (client.url.indexOf(url) >= 0 && 'focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
+  );
+});

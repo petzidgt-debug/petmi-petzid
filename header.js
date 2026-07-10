@@ -130,7 +130,6 @@
     var navHTML =
       '<a href="/galeria.html" class="h-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">🐾 Galería</a>' +
       '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-link' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
-      '<a href="/mensajes.html" class="h-link' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '">💬 Mensajes <span id="petmiMsgBadge" class="h-avisos-badge"></span></a>' +
 
       '<a href="/quiniela.html" class="h-link' + (currentPath.indexOf('quiniela') >= 0 ? ' active' : '') + '" style="color:#F5C842!important;font-weight:700">⚽ Mundial</a>' +
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
@@ -164,7 +163,6 @@
             '<a href="/mis-ids.html" class="h-drop-item">🆔 Mis IDs</a>' +
             '<a href="/premium.html" class="h-drop-item">⭐ Premium</a>' +
             '<a href="/amigos.html" class="h-drop-item">👥 Amigos</a>' +
-            '<a href="/mensajes.html" class="h-drop-item">💬 Mensajes</a>' +
             '<a href="/mis-avisos.html" class="h-drop-item">📝 Mis avisos</a>' +
             '<a href="/puntos.html" class="h-drop-item">🏆 Mis puntos</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
@@ -233,7 +231,7 @@
     var header = document.createElement('header');
     header.className = 'site-header';
     header.innerHTML =
-      '<a href="https://app.revistapetmi.com/" target="_blank" class="h-logo">' +
+      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-logo">' +
         '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="34" onerror="this.style.display=\'none\'">' +
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
@@ -266,6 +264,27 @@
         '<button class="h-pwa-later" onclick="petmiPwaLater()">Ahora no</button>' +
       '</div>';
     document.body.appendChild(pwaBanner);
+
+    // Notificaciones push banner
+    var notifBanner = document.createElement('div');
+    notifBanner.className = 'h-pwa-banner';
+    notifBanner.id = 'notifBanner';
+    notifBanner.innerHTML =
+      '<div class="h-pwa-handle"></div>' +
+      '<div class="h-pwa-row">' +
+        '<div class="h-pwa-icon"><img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi"></div>' +
+        '<div><div class="h-pwa-name">Activa las notificaciones</div><div class="h-pwa-url">No te pierdas un mensaje</div></div>' +
+      '</div>' +
+      '<div class="h-pwa-pills">' +
+        '<span class="h-pwa-pill green">💬 Mensajes nuevos</span>' +
+        '<span class="h-pwa-pill">👥 Solicitudes de amistad</span>' +
+        '<span class="h-pwa-pill gold">📢 Avisos de PetMi</span>' +
+      '</div>' +
+      '<div class="h-pwa-btns">' +
+        '<button class="h-pwa-install" id="notifBtnActivar">🔔 Activar notificaciones</button>' +
+        '<button class="h-pwa-later" onclick="petmiNotifLater()">Ahora no</button>' +
+      '</div>';
+    document.body.appendChild(notifBanner);
 
     // Bottom nav mobile
     var bottomNav = document.createElement('nav');
@@ -300,6 +319,7 @@
     }).then(function(r){return r.json();})
     .then(function(d){
       if(!d.found||!d.mascotas.length) return;
+      window._petmiMiUid = d.mascotas[0].uid;
       // Guardar especie de la primera mascota para link de tienda
       if(d.mascotas && d.mascotas[0] && d.mascotas[0].especie) {
         localStorage.setItem('petmi_especie', d.mascotas[0].especie);
@@ -663,6 +683,73 @@ window.petmiNotificarPunto = petmiNotificarPunto;
 function petmiPwaLater(){
   localStorage.setItem('pwa_dismissed_at', Date.now().toString());
   var banner = document.getElementById('pwaBanner');
+  if(banner) banner.classList.remove('show');
+}
+
+// ══════════════════════════════════════════════════════════════
+// PUSH NOTIFICATIONS
+// ══════════════════════════════════════════════════════════════
+var PETMI_VAPID_PUBLIC_KEY = 'BETkQ-teJGtPmnLMFc0OC6HqFvhFoMZySxoywrKincHOJIoixLxuDUSD5RelsWYQiq32p2wuRgn9StrCOcYhD8U';
+
+function _petmiUrlBase64ToUint8Array(base64String) {
+  var padding = '='.repeat((4 - base64String.length % 4) % 4);
+  var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  var rawData = atob(base64);
+  var outputArray = new Uint8Array(rawData.length);
+  for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+(function(){
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!('Notification' in window)) return;
+
+  var lastDismissedNotif = localStorage.getItem('notif_dismissed_at');
+  var dismissedNotif = lastDismissedNotif && (Date.now() - parseInt(lastDismissedNotif)) < 7*24*60*60*1000;
+
+  document.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){
+      if (Notification.permission !== 'default') return; // ya decidió antes
+      if (dismissedNotif) return;
+      if (!localStorage.getItem('petzid_email')) return; // solo si tiene sesión
+      var banner = document.getElementById('notifBanner');
+      if (banner) banner.classList.add('show');
+    }, 4000);
+  });
+
+  document.addEventListener('click', function(e){
+    if (e.target && e.target.id === 'notifBtnActivar') {
+      Notification.requestPermission().then(function(permiso){
+        var banner = document.getElementById('notifBanner');
+        if (banner) banner.classList.remove('show');
+        if (permiso !== 'granted') return;
+        navigator.serviceWorker.ready.then(function(reg){
+          return reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: _petmiUrlBase64ToUint8Array(PETMI_VAPID_PUBLIC_KEY)
+          });
+        }).then(function(sub){
+          var uid = window._petmiMiUid;
+          if (!uid || !sub) return;
+          var subJson = sub.toJSON();
+          fetch('/api/galeria?action=guardarSuscripcionPush', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              uid_mascota: uid,
+              endpoint: subJson.endpoint,
+              p256dh: subJson.keys.p256dh,
+              auth: subJson.keys.auth
+            })
+          }).catch(function(){});
+        }).catch(function(err){ console.log('Push subscribe error:', err); });
+      });
+    }
+  });
+})();
+
+function petmiNotifLater(){
+  localStorage.setItem('notif_dismissed_at', Date.now().toString());
+  var banner = document.getElementById('notifBanner');
   if(banner) banner.classList.remove('show');
 }
 
