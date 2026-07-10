@@ -2,6 +2,47 @@ const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
 
+// ── Web Push (notificaciones) ───────────────────────────────
+const webpush = require('web-push');
+webpush.setVapidDetails(
+  'mailto:info@revistapetmi.com',
+  'BETkQ-teJGtPmnLMFc0OC6HqFvhFoMZySxoywrKincHOJIoixLxuDUSD5RelsWYQiq32p2wuRgn9StrCOcYhD8U',
+  'QR9-huYL22s0wrUpc6Ou_kCAW86LfCOYqXZJY5bzx40'
+);
+
+// Manda un push a todas las suscripciones guardadas de un uid.
+// Si una suscripción ya no es válida (410/404 — el usuario desinstaló
+// o revocó permiso), se borra sola de la tabla.
+async function _enviarPush(uidMascota, payload) {
+  try {
+    const r = await fetch(
+      SUPABASE_URL + '/rest/v1/push_subscriptions?uid_mascota=eq.' + encodeURIComponent(uidMascota) + '&select=id,endpoint,p256dh,auth',
+      { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+    );
+    const subs = await r.json();
+    if (!Array.isArray(subs) || !subs.length) return;
+
+    await Promise.all(subs.map(async (s) => {
+      const subscription = { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } };
+      try {
+        await webpush.sendNotification(subscription, JSON.stringify(payload));
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          // Suscripción muerta — borrarla
+          await fetch(SUPABASE_URL + '/rest/v1/push_subscriptions?id=eq.' + s.id, {
+            method: 'DELETE',
+            headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+          }).catch(() => {});
+        } else {
+          console.error('Push error uid ' + uidMascota + ':', err.message);
+        }
+      }
+    }));
+  } catch (e) {
+    console.error('_enviarPush error:', e.message);
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -325,6 +366,46 @@ export default async function handler(req, res) {
       return res.status(200).json({ mensajes: data || [] });
     }
 
+    // ── guardarSuscripcionPush ────────────────────────────────
+    if (action === 'guardarSuscripcionPush' && req.method === 'POST') {
+      const { uid_mascota, endpoint, p256dh, auth } = req.body;
+      if (!uid_mascota || !endpoint || !p256dh || !auth) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/push_subscriptions?on_conflict=endpoint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify({ uid_mascota, endpoint, p256dh, auth })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── enviarPushExterno (llamado desde Apps Script) ─────────
+    // Permite mandar push desde Code.gs/EmailsMarketing.gs sin que
+    // Apps Script tenga que hablar el protocolo VAPID directamente.
+    // uid_mascota = 'TODOS' manda a todas las suscripciones (broadcast).
+    if (action === 'enviarPushExterno' && req.method === 'POST') {
+      const { uid_mascota, title, body, url, tag } = req.body;
+      if (!title || !body) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const payload = { title, body, url: url || '/mensajes.html', tag: tag || '' };
+
+      if (uid_mascota === 'TODOS') {
+        const r = await fetch(SUPABASE_URL + '/rest/v1/push_subscriptions?select=uid_mascota', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        const rows = await r.json();
+        const uidsUnicos = [...new Set((rows || []).map(x => x.uid_mascota))];
+        await Promise.all(uidsUnicos.map(u => _enviarPush(u, payload)));
+        return res.status(200).json({ ok: true, destinatarios: uidsUnicos.length });
+      }
+
+      if (!uid_mascota) return res.status(200).json({ ok: false, error: 'uid_mascota requerido' });
+      await _enviarPush(uid_mascota, payload);
+      return res.status(200).json({ ok: true });
+    }
+
     // ── enviarMensajePrivado ──────────────────────────────────
     if (action === 'enviarMensajePrivado' && req.method === 'POST') {
       const { uid_emisor, uid_receptor, mensaje } = req.body;
@@ -341,6 +422,15 @@ export default async function handler(req, res) {
           body: JSON.stringify({ uid_emisor, uid_receptor, mensaje })
         }
       );
+      if (response.ok) {
+        // Push al receptor (no bloqueante — si falla, el mensaje ya se guardó igual)
+        _enviarPush(uid_receptor, {
+          title: 'Nuevo mensaje en PetMi',
+          body: String(mensaje || '').substring(0, 100),
+          url: '/mensajes.html?abrir=' + encodeURIComponent(uid_emisor),
+          tag: 'mensaje-' + uid_emisor
+        }).catch(() => {});
+      }
       return res.status(200).json({ ok: response.ok });
     }
 
