@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     // ── getBasic — galería principal ─────────────────────────
     if (action === 'getBasic') {
       const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?select=uid,nombre,apodo,especie,sexo,raza,tipo_fecha,fecha,email,foto,angelito,fecha_angelito,created_at,slug&order=created_at.desc',
+        SUPABASE_URL + '/rest/v1/mascotas?uid=neq.PETMI-OFICIAL&select=uid,nombre,apodo,especie,sexo,raza,tipo_fecha,fecha,email,foto,angelito,fecha_angelito,created_at,slug&order=created_at.desc',
         {
           headers: {
             'apikey':        SUPABASE_KEY,
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     // ── getData — datos completos ─────────────────────────────
     if (action === 'getData') {
       const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?select=*&order=created_at.desc',
+        SUPABASE_URL + '/rest/v1/mascotas?uid=neq.PETMI-OFICIAL&select=*&order=created_at.desc',
         {
           headers: {
             'apikey':        SUPABASE_KEY,
