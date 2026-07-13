@@ -141,9 +141,9 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
 <!-- PARTIDOS -->
 <div class="section active" id="sec-partidos">
 <div style="background:linear-gradient(135deg,#1a1a2e,#0D2B2B);border:2px solid #F5C842;border-radius:14px;padding:14px 16px;margin-bottom:12px;text-align:center">
-  <div style="color:#F5C842;font-size:22px;font-weight:900">⭐ RONDA DE 16 — BONUS</div>
+  <div style="color:#F5C842;font-size:22px;font-weight:900">⭐ CUARTOS DE FINAL — BONUS</div>
   <div style="color:#fff;font-size:16px;font-weight:700;margin:4px 0">¡Cada acierto vale 5 puntos!</div>
-  <div style="color:#aaa;font-size:11px;line-height:1.5">Grupos y Ronda de 32: +2 pts · <strong style="color:#F5C842">Ronda de 16 en adelante: +5 pts</strong></div>
+  <div style="color:#aaa;font-size:11px;line-height:1.5">Grupos y R32: +2 pts · <strong style="color:#F5C842">Ronda de 16, Cuartos, Semis y Final: +5 pts</strong></div>
 </div>
   <div id="listPartidos"><div class="empty-state"><div>⚽</div>Cargando partidos...</div></div>
 </div>
@@ -155,13 +155,212 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
 
 <!-- RANKING -->
 <div class="section" id="sec-ranking">
-  <div style="font-size:12px;color:#aaa;text-align:center;padding:6px 0 10px">Top 10 — Ronda de 16 en curso</div>
+  <div style="font-size:12px;color:#aaa;text-align:center;padding:6px 0 10px">Top 10 — Cuartos de Final en curso</div>
   <div id="listRanking"><div class="empty-state"><div>🏆</div>Cargando ranking...</div></div>
 
   <!-- DATOS SORPRESA -->
   <div style="margin-top:18px;background:#1a1a2e;border-radius:14px;padding:14px 16px">
     <div onclick="toggleDatos()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-      <div style="color:#F5C842;font-size:13px;font-weight:700">⚡ Datos sorpresa del Mundial</div>
+      <div style="color:#F5C842;font-size:13px;font-weight:700">⚡ Datos clave — Cuartos de Final</div>
+      <span id="datosCaret" style="color:#aaa;font-size:16px">▾</span>
+    </div>
+    <div id="datosWrap" style="display:none;margin-top:12px">
+
+      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1EB;&#x1F1F7; Francia vs Marruecos</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">El partido de Africa. Marruecos ya eliminó a Países Bajos en penales. &iquest;Puede con Francia?</div>
+      </div>
+
+      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1EA;&#x1F1F8; Clásico Ibérico en Cuartos</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">España vs Bélgica. España goleó 3-0 a Austria y 3-0 a Portugal en R16. Bélgica remontó dos veces vs Senegal.</div>
+      </div>
+
+      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1F3;&#x1F1F4; Noruega sorpresa del torneo</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">Noruega eliminó a Brasil en R16. Ahora enfrenta a Inglaterra en Los Ángeles. Håland busca su primer gol en Cuartos.</div>
+      </div>
+
+      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1E6;&#x1F1F7; Messi busca Cuartos</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">Argentina eliminó a Egipto. Messi lleva 20 goles en Mundiales. Su rival es Suiza, que eliminó a Colombia en R16.</div>
+      </div>
+
+      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x2B50; Bonus activo: +5 pts por acierto</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">Cada partido de Cuartos vale 5 puntos. Con 4 aciertos perfectos subes 20 pts en el ranking de un solo día.</div>
+      </div>
+
+      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F4CA; El ranking se mueve hoy</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">45 participantes aún no han predicho los Cuartos. Si tú sí predices y ellos no, tienes ventaja directa en el ranking.</div>
+      </div>
+
+      <div style="font-size:11px;color:#555">&#x26BD; Cuartos de Final en curso — 4 partidos eliminatorios</div>
+    </div> html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiniela Mundial 2026 — PetMi</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00B4B4">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-top:56px;padding-bottom:72px}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,#1a1a2e 0%,#0d2847 50%,#1a3a1a 100%);padding:20px 16px 24px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='20' fill='none' stroke='rgba(255,255,255,.04)' stroke-width='8'/%3E%3C/svg%3E") repeat;pointer-events:none}
+.hero-badge{display:inline-block;background:rgba(245,200,66,.15);border:1px solid rgba(245,200,66,.4);color:#F5C842;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.hero-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-0.5px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px}
+.hero-stats{display:flex;justify-content:center;gap:24px}
+.hero-stat{text-align:center}
+.hero-stat-num{font-size:20px;font-weight:900;color:#F5C842}
+.hero-stat-lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.3px}
+
+/* Tabs */
+.tabs{display:flex;background:#fff;border-bottom:0.5px solid #e0e0e0;position:sticky;top:56px;z-index:40;overflow-x:auto}
+.tab{flex:1;min-width:70px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#888;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab.active{color:#00B4B4;border-bottom-color:#00B4B4}
+.tab-ico{font-size:16px;display:block;margin-bottom:2px}
+
+/* Sections */
+.section{display:none;padding:14px 12px}
+.section.active{display:block}
+
+/* Day divider */
+.day-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;padding:14px 4px 8px;display:flex;align-items:center;gap:8px}
+.day-label::after{content:'';flex:1;height:0.5px;background:#ddd}
+
+/* Match card */
+.match-card{background:#fff;border-radius:14px;margin-bottom:10px;overflow:hidden;border:0.5px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.match-card.locked{opacity:.85}
+.match-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8f8f8;border-bottom:0.5px solid #efefef}
+.match-grupo{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px}
+.match-time{font-size:11px;color:#aaa}
+.match-teams{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px}
+.team{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.team-flag{font-size:26px;line-height:1}
+.team-name{font-size:11px;font-weight:700;color:#333;text-align:center;max-width:70px}
+.vs-box{font-size:13px;font-weight:900;color:#ccc;padding:0 8px}
+.match-picks{display:flex;gap:6px;padding:0 10px 12px}
+.pick-btn{flex:1;padding:8px 4px;border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;font-size:11px;font-weight:700;color:#555;cursor:pointer;text-align:center;transition:all .2s;line-height:1.3}
+.pick-btn:hover{border-color:#00B4B4;color:#00B4B4;background:#e0f7f7}
+.pick-btn.selected{background:#00B4B4;border-color:#00B4B4;color:#fff}
+.pick-btn.selected.correct{background:#00C853;border-color:#00C853}
+.pick-btn.selected.wrong{background:#ff5252;border-color:#ff5252}
+.pick-btn.correct-ans{background:#e8f5e9;border-color:#00C853;color:#00C853}
+.pick-btn:disabled{cursor:default}
+.match-result-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;margin:0 10px 10px}
+.match-result-badge.win{background:#e8f5e9;color:#00C853}
+.match-result-badge.lose{background:#fce4ec;color:#e53935}
+.match-result-badge.pending{background:#fff8e1;color:#f9a825}
+
+/* Ranking */
+.ranking-card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:0.5px solid #e8e8e8}
+.rank-pos{font-size:15px;font-weight:900;color:#ccc;min-width:24px}
+.rank-pos.gold{color:#F5C842}
+.rank-pos.silver{color:#aaa}
+.rank-pos.bronze{color:#cd7f32}
+.rank-avatar{width:36px;height:36px;border-radius:50%;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1.5px solid #00B4B4}
+.rank-info{flex:1}
+.rank-name{font-size:13px;font-weight:700;color:#222}
+.rank-detail{font-size:11px;color:#888}
+.rank-pts{font-size:17px;font-weight:900;color:#00B4B4}
+
+/* Premio */
+.premio-box{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;border:0.5px solid #e8e8e8;text-align:center}
+.premio-ico{font-size:48px;margin-bottom:8px}
+.premio-title{font-size:18px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
+.premio-desc{font-size:13px;color:#666;line-height:1.6}
+.ruleta-wrap{background:linear-gradient(135deg,#1a1a2e,#0d2847);border-radius:16px;padding:24px;text-align:center;margin-bottom:12px}
+.ruleta-title{font-size:15px;font-weight:700;color:#F5C842;margin-bottom:4px}
+.ruleta-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:16px}
+canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
+.btn-spin{background:#F5C842;color:#1a1a2e;border:none;padding:12px 28px;border-radius:99px;font-size:15px;font-weight:900;cursor:pointer;margin-top:14px;display:block;width:100%}
+.btn-spin:disabled{background:#555;color:#888}
+
+/* CTA */
+.btn-primary{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
+.login-prompt{background:#fff;border-radius:14px;padding:20px;text-align:center;border:0.5px solid #e8e8e8}
+.login-prompt p{font-size:14px;color:#666;margin-bottom:12px}
+
+/* Misc */
+.empty-state{text-align:center;padding:40px 20px;color:#aaa}
+.empty-state div{font-size:36px;margin-bottom:8px}
+.toast-q{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;white-space:nowrap}
+.toast-q.show{opacity:1}
+.pts-badge{display:inline-block;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:900;padding:2px 6px;border-radius:99px}
+.section-divider{display:flex;align-items:center;gap:8px;padding:18px 4px 8px;font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
+.section-divider::after{content:'';flex:1;height:0.5px;background:#ddd}
+.compact-card{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;border:0.5px solid #ececec;display:flex;align-items:center;gap:10px;opacity:.85}
+.compact-teams{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#555}
+.compact-team{display:flex;align-items:center;gap:5px;flex:1;justify-content:flex-end}
+.compact-team.right{justify-content:flex-start}
+.compact-team .flag{font-size:16px}
+.compact-team.winner .name{font-weight:900;color:#1a1a2e}
+.compact-vs{font-size:10px;color:#bbb;font-weight:700;padding:0 4px;min-width:24px;text-align:center}
+.compact-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:46px}
+.compact-grupo{font-size:9px;color:#aaa;text-transform:uppercase}
+.compact-badge{font-size:14px}
+.pct-row{display:flex;gap:6px;padding:0 10px 10px;margin-top:-4px}
+.pct-item{flex:1;text-align:center}
+.pct-bar-bg{height:5px;background:#eee;border-radius:99px;overflow:hidden;margin-bottom:3px}
+.pct-bar-fill{height:100%;background:#00B4B4;border-radius:99px;transition:width .6s ease}
+.pct-bar-fill.empate{background:#F5C842}
+.pct-label{font-size:10px;color:#999;font-weight:700}
+.pct-label.mine{color:#00B4B4}
+</style>
+</head>
+<body>
+<script src="/header.js"></script>
+
+<div class="hero">
+  <div class="hero-badge">⚽ Mundial 2026</div>
+  <div class="hero-title">Quiniela PetMi</div>
+  <div class="hero-sub">Predice los ganadores · Acumula puntos · Gana premios</div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-num" id="statPartidos">—</div><div class="hero-stat-lbl">Partidos</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statMisPts">—</div><div class="hero-stat-lbl">Mis puntos</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statAciertos">—</div><div class="hero-stat-lbl">Aciertos</div></div>
+  </div>
+</div>
+
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('partidos')"><span class="tab-ico">⚽</span>Partidos</div>
+  <div class="tab" onclick="showTab('miquiniela')"><span class="tab-ico">📋</span>Mi Quiniela</div>
+  <div class="tab" onclick="showTab('ranking')"><span class="tab-ico">🏆</span>Ranking</div>
+  <div class="tab" onclick="showTab('premio')"><span class="tab-ico">🎁</span>Premio</div>
+  <div class="tab" onclick="showTab('reglas')"><span class="tab-ico">📋</span>Reglas</div>
+</div>
+
+<!-- PARTIDOS -->
+<div class="section active" id="sec-partidos">
+<div style="background:linear-gradient(135deg,#1a1a2e,#0D2B2B);border:2px solid #F5C842;border-radius:14px;padding:14px 16px;margin-bottom:12px;text-align:center">
+  <div style="color:#F5C842;font-size:22px;font-weight:900">⭐ CUARTOS DE FINAL — BONUS</div>
+  <div style="color:#fff;font-size:16px;font-weight:700;margin:4px 0">¡Cada acierto vale 5 puntos!</div>
+  <div style="color:#aaa;font-size:11px;line-height:1.5">Grupos y R32: +2 pts · <strong style="color:#F5C842">Ronda de 16, Cuartos, Semis y Final: +5 pts</strong></div>
+</div>
+  <div id="listPartidos"><div class="empty-state"><div>⚽</div>Cargando partidos...</div></div>
+</div>
+
+<!-- MI QUINIELA -->
+<div class="section" id="sec-miquiniela">
+  <div id="listMiQuiniela"><div class="empty-state"><div>📋</div>Cargando...</div></div>
+</div>
+
+<!-- RANKING -->
+<div class="section" id="sec-ranking">
+  <div style="font-size:12px;color:#aaa;text-align:center;padding:6px 0 10px">Top 10 — Cuartos de Final en curso</div>
+  <div id="listRanking"><div class="empty-state"><div>🏆</div>Cargando ranking...</div></div>
+
+  <!-- DATOS SORPRESA -->
+  <div style="margin-top:18px;background:#1a1a2e;border-radius:14px;padding:14px 16px">
+    <div onclick="toggleDatos()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+      <div style="color:#F5C842;font-size:13px;font-weight:700">⚡ Datos clave — Cuartos de Final</div>
       <span id="datosCaret" style="color:#aaa;font-size:16px">▾</span>
     </div>
     <div id="datosWrap" style="display:none;margin-top:12px">
@@ -213,16 +412,16 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
 
       <div style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
         <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">🇳🇱 Holanda fuera — Marruecos sigue</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Países Bajos 1-1 Marruecos, penales 2-3. África tiene dos equipos en Ronda de 16.</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">Marruecos avanzó a Cuartos de Final — enfrenta a Francia. África sigue en el torneo.</div>
       </div>
 
       <div style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
         <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">🇲🇽 México 2-0 Ecuador en el Azteca</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Los 3 países sede (México, EE.UU., Canadá) pasaron a Ronda de 16. Ahora México enfrenta a Inglaterra.</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">México fue eliminado por Inglaterra en Ronda de 16. Solo EE.UU. sigue en Cuartos vs Bélgica.</div>
       </div>
 
       <div style="text-align:center;padding-top:8px">
-        <div style="font-size:11px;color:#555">⚽ Ronda de 16 en curso — 8 partidos eliminatorios</div>
+        <div style="font-size:11px;color:#555">⚽ Cuartos de Final en curso — 4 partidos eliminatorios</div>
         <div style="font-size:11px;color:#00B4B4;margin-top:3px">¡Sigue prediciendo para subir en el ranking!</div>
       </div>
     </div>
@@ -235,7 +434,7 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
     <div class="premio-ico">🏆</div>
     <div class="premio-title">¡El que más acierte gana!</div>
     <div class="premio-desc">
-      Por cada partido que aciertes en grupos/R32 ganas <strong>+2 puntos</strong>. Desde la <strong style="color:#F5C842">Ronda de 16 en adelante cada acierto vale ⭐ +5 puntos</strong>.<br><br>
+      Por cada partido que aciertes en grupos/R32 ganas <strong>+2 puntos</strong>. Desde la <strong style="color:#F5C842">Ronda de 16 en adelante (Cuartos, Semis, Final) cada acierto vale ⭐ +5 puntos</strong>.<br><br>
       Al finalizar el Mundial (19 julio) el jugador con más puntos gana el premio.<br>
       Si hay empate, se rifará con la <strong>Ruleta PetMi</strong> entre todos los ganadores empatados.
     </div>
