@@ -183,6 +183,7 @@ var PREMIOS = [
 ];
 
 var sessionEmail = '';
+var miNombreDueno = '';
 var totalPuntos = 0;
 var accionesCompletadas = {};
 
@@ -219,6 +220,7 @@ function init() {
     .then(function(r) { return r.json(); })
     .then(function(d) {
       var uid = d.mascotas && d.mascotas[0] ? d.mascotas[0].uid : sessionEmail;
+      if (d.mascotas && d.mascotas[0]) miNombreDueno = d.mascotas[0].dueno || '';
       var link = 'https://app.revistapetmi.com/index.html?ref=' + encodeURIComponent(uid);
       document.getElementById('refLink').value = link;
     }).catch(function() {
@@ -474,13 +476,20 @@ function copiarLink() {
 function canjear(nombre, pts) {
   if (totalPuntos < pts) return;
   if (!confirm('¿Canjear "' + nombre + '" por ' + pts + ' puntos?\n\nEl equipo de PetMi te contactará para entregarte el premio.')) return;
-  // Notificar al admin via Apps Script
-  var url = 'https://script.google.com/macros/s/YOUR_APPS_SCRIPT_URL/exec';
-  fetch(url, {
+  fetch('/api/galeria?action=registrarCanje', {
     method: 'POST',
-    body: JSON.stringify({ action: 'canjearPremio', email: sessionEmail, premio: nombre, puntos: pts })
-  }).catch(function() {});
-  alert('¡Solicitud enviada! El equipo de PetMi te contactará pronto. 🎉');
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: sessionEmail, dueno: miNombreDueno || '', premio: nombre, puntos: pts })
+  }).then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d && d.ok) {
+      alert('¡Solicitud enviada! El equipo de PetMi te contactará pronto. 🎉');
+    } else {
+      alert('No se pudo enviar la solicitud. Intenta de nuevo o escríbenos directo.');
+    }
+  }).catch(function(){
+    alert('No se pudo enviar la solicitud. Intenta de nuevo o escríbenos directo.');
+  });
 }
 </script>
 </body>
