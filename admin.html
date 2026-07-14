@@ -359,10 +359,10 @@ tbody tr:last-child td{border-bottom:none}
     <div id="screenJuegos" class="screen">
       <h2 class="screen-title">🎮 Estadísticas de Juegos</h2>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
-        <div class="stat-card"><div class="stat-num" id="jTotalPartidas">—</div><div class="stat-lbl">Total partidas</div></div>
-        <div class="stat-card"><div class="stat-num" id="jJugadoresUnicos">—</div><div class="stat-lbl">Jugadores únicos</div></div>
-        <div class="stat-card"><div class="stat-num" id="jHoy">—</div><div class="stat-lbl">Jugaron hoy</div></div>
-        <div class="stat-card"><div class="stat-num" id="jRacha">—</div><div class="stat-lbl">Racha más larga</div></div>
+        <div class="stat-card stat-card-click" onclick="verDetalleJuegos('totalPartidas')"><div class="stat-num" id="jTotalPartidas">—</div><div class="stat-lbl">Total partidas</div></div>
+        <div class="stat-card stat-card-click" onclick="verDetalleJuegos('jugadoresUnicos')"><div class="stat-num" id="jJugadoresUnicos">—</div><div class="stat-lbl">Jugadores únicos</div></div>
+        <div class="stat-card stat-card-click" onclick="verDetalleJuegos('jugaronHoy')"><div class="stat-num" id="jHoy">—</div><div class="stat-lbl">Jugaron hoy</div></div>
+        <div class="stat-card stat-card-click" onclick="verDetalleJuegos('rachaLarga')"><div class="stat-num" id="jRacha">—</div><div class="stat-lbl">Racha más larga</div></div>
       </div>
       <div class="table-card" style="margin-bottom:16px">
         <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Partidas por día (últimos 14 días)</div>
@@ -1029,24 +1029,30 @@ function verDetalle(tipo){
 
 // ── Juegos ────────────────────────────────────────────────────
 function loadJuegos(){
+  var EXCLUIR_EMAILS = ['elsamoralesg@gmail.com', 'petzid.gt@gmail.com'];
   var hoy = new Date().toISOString().split('T')[0];
-  var hace14 = new Date(Date.now() - 14*86400000).toISOString();
   fetch(SUPA_ADM + '/rest/v1/puntos?accion=eq.juego_diario&select=email,puntos,created_at&order=created_at.desc&limit=1000', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
-  .then(function(rows){
-    if(!rows||!rows.length){
+  .then(function(todas){
+    var rows = (todas||[]).filter(function(r){ return EXCLUIR_EMAILS.indexOf((r.email||'').toLowerCase()) === -1; });
+    if(!rows.length){
       ['jDiasBody','jRankingBody'].forEach(function(id){document.getElementById(id).innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Sin datos</td></tr>';});
       return;
     }
+    window._juegosDatos = { rows: rows };
+
     // Stats generales
     var emails = [...new Set(rows.map(function(r){return r.email;}))];
     var hoyRows = rows.filter(function(r){return r.created_at && r.created_at.startsWith(hoy);});
     document.getElementById('jTotalPartidas').textContent = rows.length;
     document.getElementById('jJugadoresUnicos').textContent = emails.length;
     document.getElementById('jHoy').textContent = hoyRows.length;
+    window._juegosDatos.hoyRows = hoyRows;
+    window._juegosDatos.emails = emails;
 
     // Racha más larga (por email)
     var maxRacha = 0;
+    var rachasPorEmail = [];
     emails.forEach(function(email){
       var fechas = [...new Set(rows.filter(function(r){return r.email===email;}).map(function(r){return r.created_at.split('T')[0];}).sort())];
       var racha = 1, maxR = 1;
@@ -1054,9 +1060,11 @@ function loadJuegos(){
         var diff = (new Date(fechas[i]) - new Date(fechas[i-1])) / 86400000;
         if(diff===1){racha++; if(racha>maxR)maxR=racha;}else racha=1;
       }
+      rachasPorEmail.push({ email: email, racha: maxR });
       if(maxR>maxRacha) maxRacha=maxR;
     });
     document.getElementById('jRacha').textContent = maxRacha + ' días';
+    window._juegosDatos.rachasPorEmail = rachasPorEmail.sort(function(a,b){ return b.racha - a.racha; });
 
     // Por día
     var porDia = {};
@@ -1089,6 +1097,27 @@ function loadJuegos(){
   }).catch(function(){
     document.getElementById('jDiasBody').innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa">Error</td></tr>';
   });
+}
+
+// ── Detalle clickeable de las tarjetas de Juegos ────────────────
+function verDetalleJuegos(tipo){
+  var D = window._juegosDatos || {};
+  if(tipo === 'totalPartidas'){
+    abrirDetalleModal('Todas las partidas', ['Correo','Puntos','Fecha'],
+      (D.rows||[]).map(function(r){ return [r.email, r.puntos||1, _estFecha(r.created_at)]; }));
+  }
+  else if(tipo === 'jugadoresUnicos'){
+    abrirDetalleModal('Jugadores únicos', ['Correo'],
+      (D.emails||[]).map(function(e){ return [e]; }));
+  }
+  else if(tipo === 'jugaronHoy'){
+    abrirDetalleModal('Jugaron hoy', ['Correo','Puntos','Fecha'],
+      (D.hoyRows||[]).map(function(r){ return [r.email, r.puntos||1, _estFecha(r.created_at)]; }));
+  }
+  else if(tipo === 'rachaLarga'){
+    abrirDetalleModal('Racha más larga por jugador', ['Correo','Racha (días)'],
+      (D.rachasPorEmail||[]).map(function(r){ return [r.email, r.racha]; }));
+  }
 }
 
 // ── Amigos ────────────────────────────────────────────────────
