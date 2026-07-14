@@ -28,8 +28,8 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 .sopa-grid{display:inline-grid;gap:3px;user-select:none;margin:0 auto;display:flex;flex-direction:column;align-items:center}
 .sopa-row{display:flex;gap:3px}
 .sopa-cell{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;border-radius:8px;cursor:pointer;color:#333;background:#f8f7f4;border:0.5px solid #e8e8e8;transition:all .15s;flex-shrink:0}
-.sopa-cell.sel{background:#00B4B4;color:#fff;border-color:#00B4B4;transform:scale(1.05)}
 .sopa-cell.found{background:#e0f7f7;color:#007a7a;border-color:#b2dede}
+.sopa-cell.sel{background:#00B4B4;color:#fff;border-color:#00B4B4;transform:scale(1.05)}
 .sopa-cell.found-flash{background:#F5C842;color:#1a1a2e;border-color:#F5C842}
 
 /* Resultado */
@@ -350,7 +350,7 @@ function updateSel(r, c) {
 
 function addSel(r, c) {
   var el = getCell(r, c);
-  if (el && !el.classList.contains('found')) {
+  if (el) {
     el.classList.add('sel');
     selCells.push({ r: r, c: c });
   }
