@@ -438,32 +438,44 @@ function ganaste() {
     }).then(function(r) { return r.json(); })
     .then(function(d) {
       if (d && d.ok && window.petmiNotificarPunto) petmiNotificarPunto('juego_diario', pts);
-    }).catch(function() {});
+      renderRacha(); // ya se guardó el punto — ahora sí refleja el día de hoy
+    }).catch(function() { renderRacha(); });
+  } else {
+    renderRacha();
   }
-
-  // Actualizar racha
-  renderRacha();
 }
 
 // ── Racha ─────────────────────────────────────────────────────
-function calcularRacha() {
-  var streak = 0;
-  var key = 'juego_ultimo_' + (sessionEmail||'anon');
-  for (var i = 0; i < 30; i++) {
-    var d = new Date();
-    d.setDate(d.getDate() - i);
-    var dayKey = d.toISOString().split('T')[0];
-    if (localStorage.getItem(key) === dayKey || (i === 0 && gameOver)) {
-      streak++;
-    } else if (i > 0) {
-      break;
-    }
+// Antes se calculaba con localStorage (solo guardaba el último día
+// jugado, así que nunca podía pasar de 1 día). Ahora se calcula desde
+// el historial real en Supabase, igual que hace el panel de admin.
+function calcularRachaDesdeFechas(fechas) {
+  if (!fechas.length) return 0;
+  var hoy  = new Date().toISOString().split('T')[0];
+  var ayer = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  var ultima = fechas[fechas.length - 1];
+  if (ultima !== hoy && ultima !== ayer) return 0; // la racha ya se rompió
+  var streak = 1;
+  for (var i = fechas.length - 1; i > 0; i--) {
+    var diff = (new Date(fechas[i]) - new Date(fechas[i-1])) / 86400000;
+    if (diff === 1) streak++; else break;
   }
   return streak;
 }
 
 function renderRacha() {
-  var streak = calcularRacha();
+  if (!sessionEmail) { _pintarRacha(0); return; }
+  fetch(SUPA_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(sessionEmail) + '&accion=eq.juego_diario&select=created_at&order=created_at.asc', {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    var fechas = [...new Set((rows||[]).map(function(r){ return r.created_at.split('T')[0]; }))].sort();
+    _pintarRacha(calcularRachaDesdeFechas(fechas));
+  }).catch(function(){ _pintarRacha(0); });
+}
+
+function _pintarRacha(streak) {
   var DIAS = ['L','M','M','J','V','S','D'];
   var hoyDia = new Date().getDay();
   var html = '';
