@@ -134,6 +134,12 @@ function mostrarMascota(m){
   }
   var esAngelito=m.angelito===true||m.angelito==='true'||m.angelito==='Si'||m.angelito==='si';
   if(!m.premium && !esAngelito){ renderNoPremium(m); } else { renderPerfil(m); }
+
+  // Registrar la visita (no bloqueante, no afecta al usuario si falla)
+  fetch('/api/galeria?action=registrarVisitaPerfil',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid_mascota:m.uid})
+  }).catch(function(){});
 }
 
 function calcEdad(fecha, esAngelito){
