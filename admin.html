@@ -133,7 +133,7 @@ tbody tr:last-child td{border-bottom:none}
       <a class="nav-item" href="/admin-afiliados.html" style="text-decoration:none"><span class="nav-icon">🤝</span>Afiliados</a>
       <a class="nav-item" href="/admin-premium.html" style="text-decoration:none"><span class="nav-icon">⭐</span>Premium</a>
       <div class="nav-item" onclick="showScreen('puntos',this)"><span class="nav-icon">🏆</span>Puntos</div>
-      <div class="nav-item" onclick="showScreen('instalaciones',this)"><span class="nav-icon">📲</span>Instalaciones</div>
+      <div class="nav-item" onclick="showScreen('estadisticas',this)"><span class="nav-icon">📈</span>Estadísticas</div>
       <div class="nav-item" onclick="showScreen('emailfix',this)"><span class="nav-icon">✉️</span>Corregir Emails</div>
       <div class="nav-item" onclick="showScreen('juegos',this)"><span class="nav-icon">🎮</span>Juegos</div>
       <div class="nav-item" onclick="showScreen('amigos',this)"><span class="nav-icon">👥</span>Amigos</div>
@@ -300,20 +300,56 @@ tbody tr:last-child td{border-bottom:none}
         </div>
       </div>
     </div>
-    <div id="screenInstalaciones" class="screen">
-      <h2 class="screen-title">📲 Instalaciones de la App</h2>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
-        <div class="stat-card"><div class="stat-num" id="instTotal">—</div><div class="stat-lbl">Total instalaciones</div></div>
-        <div class="stat-card"><div class="stat-num" id="instAndroid">—</div><div class="stat-lbl">Android</div></div>
-        <div class="stat-card"><div class="stat-num" id="instIOS">—</div><div class="stat-lbl">iOS</div></div>
-        <div class="stat-card"><div class="stat-num" id="instHoy">—</div><div class="stat-lbl">Hoy</div></div>
+    <div id="screenEstadisticas" class="screen">
+      <h2 class="screen-title">📈 Estadísticas</h2>
+
+      <div style="font-weight:700;font-size:13px;color:#888;margin:4px 0 8px">Crecimiento</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-num" id="estTotalMascotas">—</div><div class="stat-lbl">Mascotas activas</div></div>
+        <div class="stat-card"><div class="stat-num" id="estNuevasSemana">—</div><div class="stat-lbl">Nuevas (7 días)</div></div>
+        <div class="stat-card"><div class="stat-num" id="estAngelitos">—</div><div class="stat-lbl">Angelitos</div></div>
+        <div class="stat-card"><div class="stat-num" id="estPerfilCompleto">—</div><div class="stat-lbl">% Perfil completo</div></div>
       </div>
-      <div class="table-card">
-        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Detalle de instalaciones</div>
+
+      <div style="font-weight:700;font-size:13px;color:#888;margin:4px 0 8px">Actividad</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-num" id="estMsgPublicos">—</div><div class="stat-lbl">Mensajes en muros</div></div>
+        <div class="stat-card"><div class="stat-num" id="estMsgPrivados">—</div><div class="stat-lbl">Mensajes privados</div></div>
+        <div class="stat-card"><div class="stat-num" id="estAvisosActivos">—</div><div class="stat-lbl">Avisos activos</div></div>
+        <div class="stat-card"><div class="stat-num" id="estVisitasPerfil">—</div><div class="stat-lbl">Visitas a perfiles (30d)</div></div>
+      </div>
+
+      <div style="font-weight:700;font-size:13px;color:#888;margin:4px 0 8px">Retención</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-num" id="estActivos7d">—</div><div class="stat-lbl">Activos últimos 7 días</div></div>
+        <div class="stat-card"><div class="stat-num" id="estActivos30d">—</div><div class="stat-lbl">Activos últimos 30 días</div></div>
+        <div class="stat-card"><div class="stat-num" id="estInactivos">—</div><div class="stat-lbl">Nunca han vuelto</div></div>
+      </div>
+
+      <div style="font-weight:700;font-size:13px;color:#888;margin:4px 0 8px">Premium y Notificaciones</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-num" id="estPremiumPct">—</div><div class="stat-lbl">% Premium</div></div>
+        <div class="stat-card"><div class="stat-num" id="estPushActivos">—</div><div class="stat-lbl">Push activados</div></div>
+        <div class="stat-card"><div class="stat-num" id="estAppsInstaladas">—</div><div class="stat-lbl">Apps instaladas</div></div>
+        <div class="stat-card"><div class="stat-num" id="estCanjesPendientes">—</div><div class="stat-lbl">Canjes pendientes</div></div>
+      </div>
+
+      <div class="table-card" style="margin-bottom:16px">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Canjes pendientes de entregar</div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Email</th><th>Plataforma</th><th>Dispositivo</th><th>Fecha</th></tr></thead>
-            <tbody id="instBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            <thead><tr><th>Fecha</th><th>Dueño</th><th>Correo</th><th>Premio</th><th>Puntos</th></tr></thead>
+            <tbody id="estCanjesBody"><tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Mascotas más visitadas (perfil público, 30 días)</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Nombre</th><th>Visitas</th></tr></thead>
+            <tbody id="estVisitasBody"><tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -708,33 +744,118 @@ function exportPuntos(){
   });
 }
 
-function loadInstalaciones(){
-  fetch(SUPA_ADM + '/rest/v1/pwa_installs?select=email,dispositivo,plataforma,created_at&order=created_at.desc&limit=200', {headers: SUPA_ADM_H})
+function loadEstadisticas(){
+  var hace7 = new Date(Date.now() - 7*86400000).toISOString();
+  var hace30 = new Date(Date.now() - 30*86400000).toISOString();
+
+  // ── Mascotas: crecimiento, retención, perfil completo, premium ──
+  fetch(SUPA_ADM + '/rest/v1/mascotas?uid=neq.PETMI-OFICIAL&select=uid,nombre,foto,raza,zona,veterinario,angelito,premium,created_at,ultima_actividad', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
   .then(function(rows){
-    // Detectar error de Supabase (devuelve objeto con message en vez de array)
-    if(!Array.isArray(rows)){
-      var errMsg = (rows && rows.message) ? rows.message : JSON.stringify(rows);
-      document.getElementById('instBody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#e53935">Error Supabase: '+errMsg+'</td></tr>';
-      document.getElementById('instTotal').textContent = 'ERR';
-      console.error('[pwa_installs]', rows);
+    if(!Array.isArray(rows)){ console.error('[mascotas]', rows); return; }
+    var activas = rows.filter(function(m){return !m.angelito;});
+    var angelitos = rows.filter(function(m){return m.angelito;});
+    var nuevas7 = rows.filter(function(m){return m.created_at && m.created_at >= hace7;});
+    var completos = activas.filter(function(m){
+      return m.foto && m.foto.indexOf('http')>=0 && m.raza && m.raza!=='-' && m.zona && m.veterinario;
+    });
+    var premium = activas.filter(function(m){return m.premium;});
+    var activos7 = rows.filter(function(m){return m.ultima_actividad && m.ultima_actividad >= hace7;});
+    var activos30 = rows.filter(function(m){return m.ultima_actividad && m.ultima_actividad >= hace30;});
+    var inactivos = rows.filter(function(m){return !m.ultima_actividad;});
+
+    document.getElementById('estTotalMascotas').textContent = activas.length;
+    document.getElementById('estNuevasSemana').textContent = nuevas7.length;
+    document.getElementById('estAngelitos').textContent = angelitos.length;
+    document.getElementById('estPerfilCompleto').textContent = activas.length ? Math.round(completos.length/activas.length*100)+'%' : '—';
+    document.getElementById('estPremiumPct').textContent = activas.length ? Math.round(premium.length/activas.length*100)+'%' : '—';
+    document.getElementById('estActivos7d').textContent = activos7.length;
+    document.getElementById('estActivos30d').textContent = activos30.length;
+    document.getElementById('estInactivos').textContent = inactivos.length;
+
+    // Mapa uid -> nombre, para la tabla de visitas más abajo
+    window._estMapaNombres = {};
+    rows.forEach(function(m){ window._estMapaNombres[m.uid] = m.nombre || 'Mascota'; });
+    cargarVisitasTop();
+  }).catch(function(e){ console.error(e); });
+
+  // ── Mensajes públicos (muro) ──────────────────────────────────
+  fetch(SUPA_ADM + '/rest/v1/mensajes?select=id', {headers: Object.assign({'Prefer':'count=exact'}, SUPA_ADM_H)})
+  .then(function(r){return r.json();}).then(function(rows){
+    if(Array.isArray(rows)) document.getElementById('estMsgPublicos').textContent = rows.length;
+  }).catch(function(){});
+
+  // ── Mensajes privados ──────────────────────────────────────────
+  fetch(SUPA_ADM + '/rest/v1/conversaciones?select=id', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();}).then(function(rows){
+    if(Array.isArray(rows)) document.getElementById('estMsgPrivados').textContent = rows.length;
+  }).catch(function(){});
+
+  // ── Avisos activos ───────────────────────────────────────────
+  fetch(SUPA_ADM + '/rest/v1/actividades?select=id', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();}).then(function(rows){
+    if(Array.isArray(rows)) document.getElementById('estAvisosActivos').textContent = rows.length;
+  }).catch(function(){});
+
+  // ── Push activados (mascotas únicas con suscripción) ──────────
+  fetch(SUPA_ADM + '/rest/v1/push_subscriptions?select=uid_mascota', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();}).then(function(rows){
+    if(Array.isArray(rows)){
+      var unicos = [...new Set(rows.map(function(r){return r.uid_mascota;}))];
+      document.getElementById('estPushActivos').textContent = unicos.length;
+    }
+  }).catch(function(){});
+
+  // ── Apps instaladas (métrica que antes vivía en su propia pantalla) ──
+  fetch(SUPA_ADM + '/rest/v1/pwa_installs?select=id', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();}).then(function(rows){
+    if(Array.isArray(rows)) document.getElementById('estAppsInstaladas').textContent = rows.length;
+  }).catch(function(){});
+
+  // ── Visitas a perfiles (30 días) ───────────────────────────────
+  fetch(SUPA_ADM + '/rest/v1/visitas_perfil?created_at=gte.' + hace30 + '&select=uid_mascota', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();}).then(function(rows){
+    if(!Array.isArray(rows)){ document.getElementById('estVisitasPerfil').textContent = '—'; return; }
+    document.getElementById('estVisitasPerfil').textContent = rows.length;
+    window._estVisitasRows = rows;
+    cargarVisitasTop();
+  }).catch(function(){ document.getElementById('estVisitasPerfil').textContent = '—'; });
+
+  function cargarVisitasTop(){
+    if(!window._estVisitasRows || !window._estMapaNombres) return;
+    var conteo = {};
+    window._estVisitasRows.forEach(function(v){ conteo[v.uid_mascota] = (conteo[v.uid_mascota]||0)+1; });
+    var top = Object.keys(conteo).map(function(uid){
+      return { uid: uid, nombre: window._estMapaNombres[uid] || uid, visitas: conteo[uid] };
+    }).sort(function(a,b){ return b.visitas - a.visitas; }).slice(0, 15);
+    if(!top.length){
+      document.getElementById('estVisitasBody').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Sin visitas registradas aún</td></tr>';
       return;
     }
-    if(!rows.length){
-      document.getElementById('instBody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Sin instalaciones registradas</td></tr>';
-      return;
-    }
-    var hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('instTotal').textContent = rows.length;
-    document.getElementById('instAndroid').textContent = rows.filter(function(r){return r.plataforma==='Android';}).length;
-    document.getElementById('instIOS').textContent = rows.filter(function(r){return r.plataforma==='iOS';}).length;
-    document.getElementById('instHoy').textContent = rows.filter(function(r){return r.created_at && r.created_at.startsWith(hoy);}).length;
-    var html = rows.map(function(r){
-      return '<tr><td>'+(r.email||'Anónimo')+'</td><td>'+(r.plataforma||'—')+'</td><td>'+(r.dispositivo||'—')+'</td><td>'+new Date(r.created_at).toLocaleDateString('es-GT')+'</td></tr>';
+    document.getElementById('estVisitasBody').innerHTML = top.map(function(t,i){
+      return '<tr><td>'+(i+1)+'</td><td>'+t.nombre+'</td><td>'+t.visitas+'</td></tr>';
     }).join('');
-    document.getElementById('instBody').innerHTML = html;
+  }
+
+  // ── Canjes pendientes ───────────────────────────────────────────
+  fetch(SUPA_ADM + '/rest/v1/canjes?estado=eq.pendiente&select=dueno,email,premio,puntos_usados,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    if(!Array.isArray(rows)){
+      document.getElementById('estCanjesBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#e53935">Error: crea la tabla "canjes" en Supabase primero</td></tr>';
+      document.getElementById('estCanjesPendientes').textContent = 'N/A';
+      return;
+    }
+    document.getElementById('estCanjesPendientes').textContent = rows.length;
+    if(!rows.length){
+      document.getElementById('estCanjesBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Sin canjes pendientes 🎉</td></tr>';
+      return;
+    }
+    document.getElementById('estCanjesBody').innerHTML = rows.map(function(c){
+      return '<tr><td>'+new Date(c.created_at).toLocaleDateString('es-GT')+'</td><td>'+(c.dueno||'—')+'</td><td>'+(c.email||'')+'</td><td>'+(c.premio||'')+'</td><td>'+(c.puntos_usados||'')+'</td></tr>';
+    }).join('');
   }).catch(function(){
-    document.getElementById('instBody').innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa">Error al cargar</td></tr>';
+    document.getElementById('estCanjesBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Error al cargar</td></tr>';
   });
 }
 
@@ -983,7 +1104,7 @@ function showScreen(name,el){
   if(name==='reglas') setTimeout(cargarReglas,100);
   if(name==='grupos') setTimeout(cargarAdminGrupos,100);
   if(name==='puntos') loadPuntos();
-  if(name==='instalaciones') loadInstalaciones();
+  if(name==='estadisticas') loadEstadisticas();
   if(name==='juegos') loadJuegos();
   if(name==='amigos') loadAmigos();
   if(name==='emailfix') emailfixDetectar();
