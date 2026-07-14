@@ -434,30 +434,6 @@ var modoEdicion=false;
 var editUID=null;
 var editEmail=null;
 
-// Pre-llenar datos de familia si hay sesión activa
-(function(){
-  var emailSesion=localStorage.getItem('petzid_email')||'';
-  var params=new URLSearchParams(window.location.search);
-  var agregar=params.get('agregar');
-  if(emailSesion&&agregar==='1'){
-    fetch('/api/galeria?action=checkEmail',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'checkEmail',email:emailSesion})
-    }).then(function(r){return r.json();})
-    .then(function(d){
-      if(!d.found||!d.mascotas.length)return;
-      var m=d.mascotas[0];
-      isSibling=true;
-      familyData={dueno:m.dueno||'',email:m.email||'',whatsapp:m.whatsapp||'',zona:m.zona||'',vet:m.veterinario||''};
-      var fb=document.getElementById('familyBlock');
-      var si=document.getElementById('siblingFamilyInfo');
-      if(fb)fb.style.display='none';
-      if(si)si.style.display='block';
-    }).catch(function(){});
-  }
-})();
-
 (function(){
   var params=new URLSearchParams(window.location.search);
   var uidParam=params.get('editar');
