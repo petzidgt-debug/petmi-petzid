@@ -772,7 +772,7 @@ function loadEstadisticas(){
     // Excluir la cuenta de pruebas de TODO — guardamos sus uids para
     // poder filtrarla también de las tablas que se relacionan por uid,
     // no solo las que tienen el correo directo.
-    var misUids = todas.filter(function(m){ return EXCLUIR_EMAILS.indexOf((m.email||'').toLowerCase()) !== -1; }).map(function(m){ return m.uid; });
+    var misUids = todas.filter(function(m){ return EXCLUIR_EMAILS.indexOf((m.email||'').toLowerCase()) !== -1; }).map(function(m){ return String(m.uid).toUpperCase(); });
     var rows = todas.filter(function(m){ return EXCLUIR_EMAILS.indexOf((m.email||'').toLowerCase()) === -1; });
 
     var activas = rows.filter(function(m){return !m.angelito;});
@@ -824,7 +824,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
   fetch(SUPA_ADM + '/rest/v1/mensajes?select=id,uid_mascota,autor,mensaje,nombre_mascota,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(Array.isArray(rows)){
-      var f = rows.filter(function(r){ return misUids.indexOf(r.uid_mascota) === -1; });
+      var f = rows.filter(function(r){ return misUids.indexOf(String(r.uid_mascota).toUpperCase()) === -1; });
       document.getElementById('estMsgPublicos').textContent = f.length;
       window._estDatos.msgPublicos = f;
     }
@@ -835,7 +835,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
   .then(function(r){return r.json();}).then(function(rows){
     if(Array.isArray(rows)){
       var f = rows.filter(function(r){
-        return misUids.indexOf(r.uid_emisor) === -1 && misUids.indexOf(r.uid_receptor) === -1;
+        return misUids.indexOf(String(r.uid_emisor).toUpperCase()) === -1 && misUids.indexOf(String(r.uid_receptor).toUpperCase()) === -1;
       });
       document.getElementById('estMsgPrivados').textContent = f.length;
       window._estDatos.msgPrivados = f;
@@ -846,7 +846,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
   fetch(SUPA_ADM + '/rest/v1/actividades?select=*&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(Array.isArray(rows)){
-      var f = rows.filter(function(r){ return misUids.indexOf(r.uid_creador) === -1; });
+      var f = rows.filter(function(r){ return misUids.indexOf(String(r.uid_creador).toUpperCase()) === -1; });
       document.getElementById('estAvisosActivos').textContent = f.length;
       window._estDatos.avisos = f;
     }
@@ -856,7 +856,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
   fetch(SUPA_ADM + '/rest/v1/push_subscriptions?select=uid_mascota,created_at', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(Array.isArray(rows)){
-      var f = rows.filter(function(r){ return misUids.indexOf(r.uid_mascota) === -1; });
+      var f = rows.filter(function(r){ return misUids.indexOf(String(r.uid_mascota).toUpperCase()) === -1; });
       var unicos = [...new Set(f.map(function(r){return r.uid_mascota;}))];
       document.getElementById('estPushActivos').textContent = unicos.length;
       window._estDatos.pushUids = unicos;
@@ -877,7 +877,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
   fetch(SUPA_ADM + '/rest/v1/visitas_perfil?created_at=gte.' + hace30 + '&select=uid_mascota,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(!Array.isArray(rows)){ document.getElementById('estVisitasPerfil').textContent = '—'; return; }
-    var f = rows.filter(function(r){ return misUids.indexOf(r.uid_mascota) === -1; });
+    var f = rows.filter(function(r){ return misUids.indexOf(String(r.uid_mascota).toUpperCase()) === -1; });
     document.getElementById('estVisitasPerfil').textContent = f.length;
     window._estVisitasRows = f;
     window._estDatos.visitas = f;
