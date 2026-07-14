@@ -1363,7 +1363,10 @@ export default async function handler(req, res) {
       if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
 
       const patch = { angelito: true };
-      if (fechaAngelito) patch.fecha_angelito = fechaAngelito;
+      // Si el frontend no manda la fecha, usar HOY por defecto — sin esto,
+      // fecha_angelito se queda vacía y el correo automático diario
+      // (que busca fecha_angelito = hoy) nunca se dispara para esta mascota.
+      patch.fecha_angelito = fechaAngelito || new Date().toISOString().split('T')[0];
 
       const r = await fetch(
         SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid.toUpperCase()),
