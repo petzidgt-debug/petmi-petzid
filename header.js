@@ -192,7 +192,7 @@
         '<span class="h-btab-lbl">Mundial</span>' +
         '<span style="font-size:8px;color:#F5C842;font-weight:700;line-height:1;display:block">¡Ya!</span>' +
       '</a>' +
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-btab">' +
+      '<a href="https://app.revistapetmi.com/" target="_blank" class="h-btab">' +
         '<span class="h-btab-ico">📖</span>' +
         '<span class="h-btab-lbl">Revista</span>' +
       '</a>';
@@ -233,7 +233,7 @@
     var header = document.createElement('header');
     header.className = 'site-header';
     header.innerHTML =
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-logo">' +
+      '<a href="https://app.revistapetmi.com/" target="_blank" class="h-logo">' +
         '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="34" onerror="this.style.display=\'none\'">' +
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
