@@ -167,6 +167,16 @@ export default async function handler(req, res) {
         premium_hasta:m.premium_hasta  || null,
         slug:         m.slug           || ''
       }));
+
+      // Marcar última actividad (no bloqueante — no afecta la respuesta si falla)
+      if (mascotas.length) {
+        fetch(SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email.toLowerCase()), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ ultima_actividad: new Date().toISOString() })
+        }).catch(() => {});
+      }
+
       return res.status(200).json({ found: mascotas.length > 0, mascotas });
     }
 
@@ -364,6 +374,42 @@ export default async function handler(req, res) {
       );
       const data = await response.json();
       return res.status(200).json({ mensajes: data || [] });
+    }
+
+    // ── registrarCanje ─────────────────────────────────────────
+    // Guarda la solicitud real de canje (antes se perdía — el botón
+    // apuntaba a un placeholder sin llenar) y avisa al admin por correo.
+    if (action === 'registrarCanje' && req.method === 'POST') {
+      const { email, dueno, premio, puntos } = req.body;
+      if (!email || !premio || !puntos) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+
+      const r = await fetch(SUPABASE_URL + '/rest/v1/canjes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ email, dueno: dueno || '', premio, puntos_usados: puntos, estado: 'pendiente' })
+      });
+
+      if (r.ok) {
+        // Avisar al admin por correo (no bloqueante)
+        fetch('https://app.revistapetmi.com/api/submit', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'notificarCanje', email, dueno: dueno || '', premio, puntos })
+        }).catch(() => {});
+      }
+
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── registrarVisitaPerfil ──────────────────────────────────
+    if (action === 'registrarVisitaPerfil' && req.method === 'POST') {
+      const { uid_mascota } = req.body;
+      if (!uid_mascota) return res.status(200).json({ ok: false });
+      fetch(SUPABASE_URL + '/rest/v1/visitas_perfil', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ uid_mascota: uid_mascota.toUpperCase() })
+      }).catch(() => {});
+      return res.status(200).json({ ok: true });
     }
 
     // ── guardarSuscripcionPush ────────────────────────────────
