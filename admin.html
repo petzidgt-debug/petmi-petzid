@@ -759,7 +759,7 @@ function exportPuntos(){
 }
 
 function loadEstadisticas(){
-  var EXCLUIR_EMAIL = 'elsamoralesg@gmail.com';
+  var EXCLUIR_EMAILS = ['elsamoralesg@gmail.com', 'petzid.gt@gmail.com'];
   var hace7 = new Date(Date.now() - 7*86400000).toISOString();
   var hace30 = new Date(Date.now() - 30*86400000).toISOString();
 
@@ -772,8 +772,8 @@ function loadEstadisticas(){
     // Excluir la cuenta de pruebas de TODO — guardamos sus uids para
     // poder filtrarla también de las tablas que se relacionan por uid,
     // no solo las que tienen el correo directo.
-    var misUids = todas.filter(function(m){ return (m.email||'').toLowerCase() === EXCLUIR_EMAIL; }).map(function(m){ return m.uid; });
-    var rows = todas.filter(function(m){ return (m.email||'').toLowerCase() !== EXCLUIR_EMAIL; });
+    var misUids = todas.filter(function(m){ return EXCLUIR_EMAILS.indexOf((m.email||'').toLowerCase()) !== -1; }).map(function(m){ return m.uid; });
+    var rows = todas.filter(function(m){ return EXCLUIR_EMAILS.indexOf((m.email||'').toLowerCase()) === -1; });
 
     var activas = rows.filter(function(m){return !m.angelito;});
     var angelitos = rows.filter(function(m){return m.angelito;});
@@ -796,7 +796,11 @@ function loadEstadisticas(){
     document.getElementById('estInactivos').textContent = inactivos.length;
 
     window._estMapaNombres = {};
-    rows.forEach(function(m){ window._estMapaNombres[m.uid] = m.nombre || 'Mascota'; });
+    window._estMapaDuenos = {};
+    rows.forEach(function(m){
+      window._estMapaNombres[String(m.uid).toUpperCase()] = m.nombre || 'Mascota';
+      window._estMapaDuenos[String(m.uid).toUpperCase()] = m.dueno || '—';
+    });
 
     window._estDatos = window._estDatos || {};
     window._estDatos.activas = activas;
@@ -809,11 +813,11 @@ function loadEstadisticas(){
     window._estDatos.activos30 = activos30;
     window._estDatos.inactivos = inactivos;
 
-    cargarRestoEstadisticas(misUids, EXCLUIR_EMAIL, hace30);
+    cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30);
   }).catch(function(e){ console.error(e); });
 }
 
-function cargarRestoEstadisticas(misUids, EXCLUIR_EMAIL, hace30){
+function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
   window._estDatos = window._estDatos || {};
 
   // ── Mensajes públicos (muro) ──────────────────────────────────
@@ -827,7 +831,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAIL, hace30){
   }).catch(function(){});
 
   // ── Mensajes privados ──────────────────────────────────────────
-  fetch(SUPA_ADM + '/rest/v1/conversaciones?select=id,uid_emisor,uid_receptor,mensaje,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
+  fetch(SUPA_ADM + '/rest/v1/conversaciones?select=id,uid_emisor,uid_receptor,mensaje,leido,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(Array.isArray(rows)){
       var f = rows.filter(function(r){
@@ -863,7 +867,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAIL, hace30){
   fetch(SUPA_ADM + '/rest/v1/pwa_installs?select=email,plataforma,dispositivo,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(Array.isArray(rows)){
-      var f = rows.filter(function(r){ return (r.email||'').toLowerCase() !== EXCLUIR_EMAIL; });
+      var f = rows.filter(function(r){ return EXCLUIR_EMAILS.indexOf((r.email||'').toLowerCase()) === -1; });
       document.getElementById('estAppsInstaladas').textContent = f.length;
       window._estDatos.instalaciones = f;
     }
@@ -889,7 +893,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAIL, hace30){
       document.getElementById('estCanjesPendientes').textContent = 'N/A';
       return;
     }
-    var f = rows.filter(function(r){ return (r.email||'').toLowerCase() !== EXCLUIR_EMAIL; });
+    var f = rows.filter(function(r){ return EXCLUIR_EMAILS.indexOf((r.email||'').toLowerCase()) === -1; });
     document.getElementById('estCanjesPendientes').textContent = f.length;
     window._estDatos.canjes = f;
     if(!f.length){
@@ -909,7 +913,7 @@ function cargarVisitasTop(){
   var conteo = {};
   window._estVisitasRows.forEach(function(v){ conteo[v.uid_mascota] = (conteo[v.uid_mascota]||0)+1; });
   var top = Object.keys(conteo).map(function(uid){
-    return { uid: uid, nombre: window._estMapaNombres[uid] || uid, visitas: conteo[uid] };
+    return { uid: uid, nombre: window._estMapaNombres[String(uid).toUpperCase()] || uid, visitas: conteo[uid] };
   }).sort(function(a,b){ return b.visitas - a.visitas; }).slice(0, 15);
   if(!top.length){
     document.getElementById('estVisitasBody').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Sin visitas registradas aún</td></tr>';
@@ -941,7 +945,17 @@ function _estFecha(v){
 }
 
 function _estNombreMascota(uid){
-  return (window._estMapaNombres && window._estMapaNombres[uid]) || uid || '—';
+  if(!uid) return '—';
+  return (window._estMapaNombres && window._estMapaNombres[String(uid).toUpperCase()]) || uid;
+}
+
+function _estDueno(uid){
+  if(!uid) return '—';
+  return (window._estMapaDuenos && window._estMapaDuenos[String(uid).toUpperCase()]) || '—';
+}
+
+function _estNombreConDueno(uid){
+  return _estNombreMascota(uid) + ' (' + _estDueno(uid) + ')';
 }
 
 function verDetalle(tipo){
@@ -971,16 +985,16 @@ function verDetalle(tipo){
       (D.msgPublicos||[]).map(function(m){ return [m.nombre_mascota || _estNombreMascota(m.uid_mascota), m.autor||'—', (m.mensaje||'').substring(0,80), _estFecha(m.created_at)]; }));
   }
   else if(tipo === 'msgPrivados'){
-    abrirDetalleModal('Mensajes privados', ['De','Para','Mensaje','Fecha'],
-      (D.msgPrivados||[]).map(function(m){ return [_estNombreMascota(m.uid_emisor), _estNombreMascota(m.uid_receptor), (m.mensaje||'').substring(0,80), _estFecha(m.created_at)]; }));
+    abrirDetalleModal('Mensajes privados', ['De','Para','Mensaje','Recibido','Fecha'],
+      (D.msgPrivados||[]).map(function(m){ return [_estNombreConDueno(m.uid_emisor), _estNombreConDueno(m.uid_receptor), (m.mensaje||'').substring(0,80), m.leido ? '✅ Sí' : '⏳ No leído', _estFecha(m.created_at)]; }));
   }
   else if(tipo === 'avisosActivos'){
-    abrirDetalleModal('Avisos activos', ['Tipo','Mascota/Detalle','Zona','Fecha'],
-      (D.avisos||[]).map(function(a){ return [a.tipo||'—', _estNombreMascota(a.uid_mascota)||a.descripcion||'—', a.zona||'—', _estFecha(a.created_at)]; }));
+    abrirDetalleModal('Avisos activos', ['Tipo','Mascota (Dueño)','Zona','Fecha'],
+      (D.avisos||[]).map(function(a){ return [a.tipo||'—', a.uid_creador ? _estNombreConDueno(a.uid_creador) : (a.descripcion||'—'), a.zona||'—', _estFecha(a.created_at)]; }));
   }
   else if(tipo === 'visitasPerfil'){
-    abrirDetalleModal('Visitas a perfiles (30 días)', ['Mascota','Fecha'],
-      (D.visitas||[]).map(function(v){ return [_estNombreMascota(v.uid_mascota), _estFecha(v.created_at)]; }));
+    abrirDetalleModal('Visitas a perfiles (30 días)', ['Mascota (Dueño)','Fecha'],
+      (D.visitas||[]).map(function(v){ return [_estNombreConDueno(v.uid_mascota), _estFecha(v.created_at)]; }));
   }
   else if(tipo === 'activos7d'){
     abrirDetalleModal('Activos en los últimos 7 días', ['Nombre','Dueño','Última actividad'],
@@ -999,8 +1013,8 @@ function verDetalle(tipo){
       (D.premium||[]).map(function(m){ return [m.nombre, m.dueno||'—']; }));
   }
   else if(tipo === 'pushActivos'){
-    abrirDetalleModal('Mascotas con notificaciones push activadas', ['Nombre'],
-      (D.pushUids||[]).map(function(uid){ return [_estNombreMascota(uid)]; }));
+    abrirDetalleModal('Mascotas con notificaciones push activadas', ['Mascota (Dueño)'],
+      (D.pushUids||[]).map(function(uid){ return [_estNombreConDueno(uid)]; }));
   }
   else if(tipo === 'appsInstaladas'){
     abrirDetalleModal('Apps instaladas', ['Correo','Plataforma','Dispositivo','Fecha'],
