@@ -19,7 +19,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 /* TARJETA ACTUAL — grande */
 .actual-card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.12);margin-bottom:36px}
 .actual-foto-wrap{width:100%;height:280px;position:relative;overflow:hidden}
-.actual-foto-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.actual-foto-wrap img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
 .actual-foto-wrap .ph{width:100%;height:100%;background:#e8ddd0;display:flex;align-items:center;justify-content:center;font-size:80px}
 .actual-badge{position:absolute;top:16px;left:16px;background:#F5C842;color:#1a1a2e;font-size:12px;font-weight:900;padding:7px 16px;border-radius:99px}
 .actual-body{padding:22px 24px 28px}
@@ -56,7 +56,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <div class="wrap">
   <div class="titulo-pagina">
-    <h1>🎲 Amigo de la Semana</h1>
+    <h1 id="tituloPagina">🎲 Amigo de la Semana</h1>
     <p>Cada semana celebramos a un miembro de la comunidad PetMi</p>
   </div>
 
@@ -161,6 +161,8 @@ fetch('/api/galeria?action=getAmigoSemanaHistorial')
     ? '<div class="actual-tags-titulo">LE GUSTA</div><div>'+actividadesArr.map(function(a){return '<span class="actual-tag">'+a+'</span>';}).join('')+'</div>'
     : '';
 
+  document.getElementById('tituloPagina').textContent = '👋 Conoce a "'+actual.nombre+'" — nuestro amigo de la semana 🎉';
+
   document.getElementById('contenedorActual').innerHTML =
     '<div class="actual-card">'
     +'<div class="actual-foto-wrap">'+fotoHtml+'<div class="actual-badge">🎲 AMIGO DE ESTA SEMANA</div></div>'
@@ -175,8 +177,7 @@ fetch('/api/galeria?action=getAmigoSemanaHistorial')
     +actividadesHtml
     +(actual.especial ? '<div class="actual-especial"><div class="actual-especial-lbl">ALGO ESPECIAL</div><div class="actual-especial-txt">'+actual.especial+'</div></div>' : '')
     +'<div class="actual-btns">'
-    +'<a href="/p/'+encodeURIComponent(actual.slug)+'" class="actual-cta">Ver perfil completo →</a>'
-    +'<button id="btnAgregarAmigo" class="actual-agregar" onclick="agregarAmigoDestacado(\''+actual.uid+'\',\''+(actual.email||'')+'\',\''+actual.nombre.replace(/'/g,"\\'")+'\')">➕ Agregar amigo</button>'
+    +'<button id="btnAgregarAmigo" class="actual-agregar" style="flex:none;width:100%" onclick="agregarAmigoDestacado(\''+actual.uid+'\',\''+(actual.email||'')+'\',\''+actual.nombre.replace(/'/g,"\\'")+'\')">➕ Agregar amigo</button>'
     +'</div>'
     +'</div>'
     +'</div>';
