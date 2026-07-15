@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Amigo de la Semana — PetMi</title>
+<meta property="og:title" content="Amigo de la Semana — PetMi">
+<meta property="og:description" content="Cada semana celebramos a un miembro de la comunidad PetMi.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.wrap{max-width:600px;margin:0 auto;padding:0 16px 60px}
+
+.titulo-pagina{text-align:center;padding:32px 0 8px}
+.titulo-pagina h1{font-size:26px;font-weight:900;color:#1a1a2e}
+.titulo-pagina p{font-size:13px;color:#888;margin-top:6px}
+
+/* TARJETA ACTUAL — grande */
+.actual-card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.12);position:relative;margin-bottom:36px}
+.actual-banner{height:180px;background:#00B4B4;clip-path:polygon(0 0,100% 0,100% 68%,0 100%);position:relative}
+.actual-pill{position:absolute;top:20px;right:20px;background:#F5C842;color:#1a1a2e;font-size:12px;font-weight:900;padding:7px 16px;border-radius:99px}
+.actual-paw{position:absolute;top:18px;left:22px;font-size:26px}
+.actual-foto-wrap{position:absolute;top:100px;left:50%;transform:translateX(-50%);width:180px;height:180px;border-radius:50%;background:#fff;padding:6px;box-shadow:0 10px 24px rgba(0,0,0,.2)}
+.actual-foto-wrap img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.actual-foto-wrap .ph{width:100%;height:100%;border-radius:50%;background:#e8ddd0;display:flex;align-items:center;justify-content:center;font-size:70px}
+.actual-body{padding:110px 24px 32px;text-align:center}
+.actual-nombre{font-size:32px;font-weight:900;color:#1a1a2e}
+.actual-tipo{font-size:14px;color:#888;margin-top:4px}
+.actual-especial{background:#FEF7ED;border-radius:14px;padding:16px 18px;margin-top:20px;font-size:14.5px;color:#333;line-height:1.6}
+.actual-cta{display:inline-block;margin-top:22px;background:#00B4B4;color:#fff;text-decoration:none;padding:13px 30px;border-radius:99px;font-weight:700;font-size:14px}
+
+/* HISTORIAL */
+.historial-titulo{font-size:16px;font-weight:900;color:#1a1a2e;margin-bottom:14px}
+.historial-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
+.hist-card{background:#fff;border-radius:14px;padding:14px 10px;text-align:center;text-decoration:none;box-shadow:0 1px 6px rgba(0,0,0,.08);transition:transform .12s}
+.hist-card:hover{transform:translateY(-2px)}
+.hist-foto{width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;background:#e8ddd0}
+.hist-foto-ph{width:64px;height:64px;border-radius:50%;background:#e8ddd0;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:28px}
+.hist-nombre{font-size:13px;font-weight:700;color:#1a1a2e}
+.hist-fecha{font-size:10px;color:#aaa;margin-top:2px}
+
+.vacio{text-align:center;padding:50px 20px;color:#aaa}
+.vacio-ico{font-size:48px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="titulo-pagina">
+    <h1>🎲 Amigo de la Semana</h1>
+    <p>Cada semana celebramos a un miembro de la comunidad PetMi</p>
+  </div>
+
+  <div id="contenedorActual"></div>
+
+  <div id="contenedorHistorial"></div>
+</div>
+
+<script>
+function especieEmoji(especie){
+  var e=(especie||'').toLowerCase();
+  if(e.indexOf('gato')>=0) return '🐱';
+  if(e.indexOf('perro')>=0) return '🐕';
+  return '🐾';
+}
+
+function fechaCorta(iso){
+  try{ return new Date(iso).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}); }
+  catch(e){ return ''; }
+}
+
+fetch('/api/galeria?action=getAmigoSemanaHistorial')
+.then(function(r){return r.json();})
+.then(function(d){
+  var historial = (d && d.historial) || [];
+  if(!historial.length){
+    document.getElementById('contenedorActual').innerHTML =
+      '<div class="vacio"><div class="vacio-ico">🎲</div><div>Todavía no se ha elegido ningún Amigo de la Semana.</div></div>';
+    return;
+  }
+
+  var actual = historial[0];
+  var anteriores = historial.slice(1);
+
+  var fotoHtml = actual.foto && actual.foto.indexOf('http')>=0
+    ? '<img src="'+actual.foto+'" alt="'+actual.nombre+'">'
+    : '<div class="ph">'+especieEmoji(actual.especie)+'</div>';
+
+  document.getElementById('contenedorActual').innerHTML =
+    '<div class="actual-card">'
+    +'<div class="actual-banner">'
+    +'<div class="actual-paw">🐾</div>'
+    +'<div class="actual-pill">AMIGO DE ESTA SEMANA</div>'
+    +'</div>'
+    +'<div class="actual-foto-wrap">'+fotoHtml+'</div>'
+    +'<div class="actual-body">'
+    +'<div class="actual-nombre">'+actual.nombre+'</div>'
+    +'<div class="actual-tipo">'+(actual.especie||'')+(actual.raza?' · '+actual.raza:'')+'</div>'
+    +(actual.especial ? '<div class="actual-especial">'+actual.especial+'</div>' : '')
+    +'<a href="/p/'+encodeURIComponent(actual.slug)+'" class="actual-cta">Conocer su perfil completo →</a>'
+    +'</div>'
+    +'</div>';
+
+  if(anteriores.length){
+    var html = '<div class="historial-titulo">Amigos anteriores</div><div class="historial-grid">';
+    anteriores.forEach(function(a){
+      var foto = a.foto && a.foto.indexOf('http')>=0
+        ? '<img class="hist-foto" src="'+a.foto+'" alt="'+a.nombre+'">'
+        : '<div class="hist-foto-ph">'+especieEmoji(a.especie)+'</div>';
+      html += '<a href="/p/'+encodeURIComponent(a.slug)+'" class="hist-card">'
+        + foto
+        + '<div class="hist-nombre">'+a.nombre+'</div>'
+        + '<div class="hist-fecha">'+fechaCorta(a.fecha)+'</div>'
+        + '</a>';
+    });
+    html += '</div>';
+    document.getElementById('contenedorHistorial').innerHTML = html;
+  }
+}).catch(function(){
+  document.getElementById('contenedorActual').innerHTML =
+    '<div class="vacio"><div class="vacio-ico">😕</div><div>No se pudo cargar. Intenta de nuevo.</div></div>';
+});
+</script>
+<script src="/header.js"></script>
+</body>
+</html>
