@@ -412,6 +412,77 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // ── getAmigoSemanaHistorial ────────────────────────────────
+    // Trae todo el historial (más reciente = el actual), con los
+    // datos de cada mascota, para la página pública amigo-semana.html
+    if (action === 'getAmigoSemanaHistorial') {
+      const rHist = await fetch(
+        SUPABASE_URL + '/rest/v1/amigo_semana_historial?select=uid_mascota,created_at&order=created_at.desc&limit=60',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+      );
+      const historial = await rHist.json();
+      if (!Array.isArray(historial) || !historial.length) return res.status(200).json({ historial: [] });
+
+      const uids = [...new Set(historial.map(h => h.uid_mascota))];
+      const rMasc = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uids.map(u => '"' + u + '"').join(',') + ')&select=uid,nombre,especie,raza,foto,especial,slug',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+      );
+      const mascotasRows = await rMasc.json();
+      const porUid = {};
+      (mascotasRows || []).forEach(m => { porUid[m.uid] = m; });
+
+      const resultado = historial
+        .map(h => {
+          const m = porUid[h.uid_mascota];
+          if (!m) return null;
+          return { fecha: h.created_at, nombre: m.nombre, especie: m.especie, raza: m.raza, foto: m.foto, especial: m.especial, slug: m.slug || m.uid };
+        })
+        .filter(Boolean);
+
+      return res.status(200).json({ historial: resultado });
+    }
+
+    // ── elegirAmigoSemana ──────────────────────────────────────
+    // Elige al azar entre mascotas activas, con foto, con "algo
+    // especial" lleno, y que no hayan salido antes. Si ya salieron
+    // todas, reinicia el ciclo automáticamente.
+    if (action === 'elegirAmigoSemana') {
+      const rCandidatos = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?angelito=eq.false&uid=neq.PETMI-OFICIAL&foto=not.is.null&especial=not.is.null&select=uid,nombre,especie,raza,foto,especial',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      let candidatos = await rCandidatos.json();
+      candidatos = (candidatos || []).filter(m => m.foto && m.foto.indexOf('http') >= 0 && m.especial && m.especial.trim());
+
+      if (!candidatos.length) return res.status(200).json({ ok: false, error: 'No hay candidatos calificados (foto + algo especial llenos)' });
+
+      const rHist = await fetch(
+        SUPABASE_URL + '/rest/v1/amigo_semana_historial?select=uid_mascota',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const historial = await rHist.json();
+      const yaSalieron = new Set((historial || []).map(h => h.uid_mascota));
+
+      let disponibles = candidatos.filter(m => !yaSalieron.has(m.uid));
+      let reiniciado = false;
+      if (!disponibles.length) {
+        // Ya salieron todos — reiniciar el ciclo
+        disponibles = candidatos;
+        reiniciado = true;
+      }
+
+      const elegido = disponibles[Math.floor(Math.random() * disponibles.length)];
+
+      await fetch(SUPABASE_URL + '/rest/v1/amigo_semana_historial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ uid_mascota: elegido.uid })
+      });
+
+      return res.status(200).json({ ok: true, mascota: elegido, reiniciado, totalCandidatos: candidatos.length });
+    }
+
     // ── guardarSuscripcionPush ────────────────────────────────
     if (action === 'guardarSuscripcionPush' && req.method === 'POST') {
       const { uid_mascota, endpoint, p256dh, auth } = req.body;
