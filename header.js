@@ -131,6 +131,7 @@
       '<a href="/galeria.html" class="h-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">🐾 Galería</a>' +
       '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-link' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
       '<a href="/mensajes.html" class="h-link' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '">💬 Mensajes <span id="petmiMsgBadge" class="h-avisos-badge"></span></a>' +
+      '<a href="/amigo-semana.html" class="h-link' + (currentPath.indexOf('amigo-semana') >= 0 ? ' active' : '') + '">🎲 Amigo de la Semana</a>' +
 
       '<a href="/quiniela.html" class="h-link' + (currentPath.indexOf('quiniela') >= 0 ? ' active' : '') + '" style="color:#F5C842!important;font-weight:700">⚽ Mundial</a>' +
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
@@ -165,6 +166,7 @@
             '<a href="/premium.html" class="h-drop-item">⭐ Premium</a>' +
             '<a href="/amigos.html" class="h-drop-item">👥 Amigos</a>' +
             '<a href="/mensajes.html" class="h-drop-item">💬 Mensajes</a>' +
+            '<a href="/amigo-semana.html" class="h-drop-item">🎲 Amigo de la Semana</a>' +
             '<a href="/mis-avisos.html" class="h-drop-item">📝 Mis avisos</a>' +
             '<a href="/puntos.html" class="h-drop-item">🏆 Mis puntos</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
@@ -192,7 +194,7 @@
         '<span class="h-btab-lbl">Mundial</span>' +
         '<span style="font-size:8px;color:#F5C842;font-weight:700;line-height:1;display:block">¡Ya!</span>' +
       '</a>' +
-      '<a href="https://app.revistapetmi.com/" target="_blank" class="h-btab">' +
+      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-btab">' +
         '<span class="h-btab-ico">📖</span>' +
         '<span class="h-btab-lbl">Revista</span>' +
       '</a>';
@@ -233,12 +235,12 @@
     var header = document.createElement('header');
     header.className = 'site-header';
     header.innerHTML =
-      '<a href="https://app.revistapetmi.com/" target="_blank" class="h-logo">' +
+      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-logo">' +
         '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="34" onerror="this.style.display=\'none\'">' +
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
       '<div class="h-right">' +
-        '<a href="https://app.revistapetmi.com/" target="_blank" class="h-search" aria-label="Qué es PetzID" style="text-decoration:none;padding:4px"><img src="https://app.revistapetmi.com/ID.png" alt="PetzID" style="width:22px;height:22px;object-fit:contain;display:block"></a>' +
+        '<a href="https://www.revistapetmi.com/home" target="_blank" class="h-search" aria-label="Qué es PetzID" style="text-decoration:none;padding:4px"><img src="https://app.revistapetmi.com/ID.png" alt="PetzID" style="width:22px;height:22px;object-fit:contain;display:block"></a>' +
         rightHTML +
       '</div>';
     document.body.insertBefore(header, document.body.firstChild);

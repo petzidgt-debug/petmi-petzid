@@ -17,18 +17,26 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .titulo-pagina p{font-size:13px;color:#888;margin-top:6px}
 
 /* TARJETA ACTUAL — grande */
-.actual-card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.12);position:relative;margin-bottom:36px}
-.actual-banner{height:180px;background:#00B4B4;clip-path:polygon(0 0,100% 0,100% 68%,0 100%);position:relative}
-.actual-pill{position:absolute;top:20px;right:20px;background:#F5C842;color:#1a1a2e;font-size:12px;font-weight:900;padding:7px 16px;border-radius:99px}
-.actual-paw{position:absolute;top:18px;left:22px;font-size:26px}
-.actual-foto-wrap{position:absolute;top:100px;left:50%;transform:translateX(-50%);width:180px;height:180px;border-radius:50%;background:#fff;padding:6px;box-shadow:0 10px 24px rgba(0,0,0,.2)}
-.actual-foto-wrap img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
-.actual-foto-wrap .ph{width:100%;height:100%;border-radius:50%;background:#e8ddd0;display:flex;align-items:center;justify-content:center;font-size:70px}
-.actual-body{padding:110px 24px 32px;text-align:center}
-.actual-nombre{font-size:32px;font-weight:900;color:#1a1a2e}
-.actual-tipo{font-size:14px;color:#888;margin-top:4px}
-.actual-especial{background:#FEF7ED;border-radius:14px;padding:16px 18px;margin-top:20px;font-size:14.5px;color:#333;line-height:1.6}
-.actual-cta{display:inline-block;margin-top:22px;background:#00B4B4;color:#fff;text-decoration:none;padding:13px 30px;border-radius:99px;font-weight:700;font-size:14px}
+.actual-card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.12);margin-bottom:36px}
+.actual-foto-wrap{width:100%;height:280px;position:relative;overflow:hidden}
+.actual-foto-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.actual-foto-wrap .ph{width:100%;height:100%;background:#e8ddd0;display:flex;align-items:center;justify-content:center;font-size:80px}
+.actual-badge{position:absolute;top:16px;left:16px;background:#F5C842;color:#1a1a2e;font-size:12px;font-weight:900;padding:7px 16px;border-radius:99px}
+.actual-body{padding:22px 24px 28px}
+.actual-nombre{font-size:28px;font-weight:900;color:#1a1a2e}
+.actual-apodo{display:inline-block;margin-top:8px;background:#F4A0B0;color:#7a1a2e;font-size:12px;font-weight:700;padding:4px 14px;border-radius:99px}
+.actual-info{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:20px}
+.actual-info-lbl{font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.3px}
+.actual-info-val{font-size:15px;font-weight:700;color:#1a1a2e;margin-top:3px}
+.actual-tags-titulo{font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.3px;margin:20px 0 10px}
+.actual-tag{display:inline-block;background:#E0F7F7;color:#007a7a;font-size:12px;font-weight:700;padding:5px 14px;border-radius:99px;margin:0 6px 6px 0}
+.actual-especial{background:#f8f8f8;border-left:4px solid #F5C842;border-radius:0 12px 12px 0;padding:14px 18px;margin-top:20px}
+.actual-especial-lbl{font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px}
+.actual-especial-txt{font-size:14px;color:#333;line-height:1.6;word-break:break-word}
+.actual-btns{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.actual-cta{flex:1;min-width:150px;text-align:center;background:#00B4B4;color:#fff;text-decoration:none;padding:13px 20px;border-radius:99px;font-weight:700;font-size:14px}
+.actual-agregar{flex:1;min-width:150px;text-align:center;background:#F5C842;color:#1a1a2e;border:none;padding:13px 20px;border-radius:99px;font-weight:700;font-size:14px;cursor:pointer}
+.actual-agregar:disabled{opacity:.6;cursor:default}
 
 /* HISTORIAL */
 .historial-titulo{font-size:16px;font-weight:900;color:#1a1a2e;margin-bottom:14px}
@@ -58,6 +66,22 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </div>
 
 <script>
+var sessionEmailVisitante=localStorage.getItem('petzid_email')||'';
+var miUidVisitante=null;
+var miNombreVisitante='';
+if(sessionEmailVisitante){
+  fetch('/api/galeria?action=checkEmail',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'checkEmail',email:sessionEmailVisitante})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.found && d.mascotas && d.mascotas.length){
+      miUidVisitante=d.mascotas[0].uid;
+      miNombreVisitante=d.mascotas[0].nombre||'';
+    }
+  }).catch(function(){});
+}
+
 function especieEmoji(especie){
   var e=(especie||'').toLowerCase();
   if(e.indexOf('gato')>=0) return '🐱';
@@ -68,6 +92,51 @@ function especieEmoji(especie){
 function fechaCorta(iso){
   try{ return new Date(iso).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}); }
   catch(e){ return ''; }
+}
+
+function calcularEdadTexto(fechaStr){
+  if(!fechaStr) return '—';
+  try{
+    var fecha=new Date(fechaStr), hoy=new Date();
+    var meses=(hoy.getFullYear()-fecha.getFullYear())*12+(hoy.getMonth()-fecha.getMonth());
+    if(meses<1) return 'Recién nacido';
+    if(meses<12) return meses+' mes'+(meses!==1?'es':'');
+    var anios=Math.floor(meses/12);
+    return anios+' año'+(anios!==1?'s':'');
+  }catch(e){ return '—'; }
+}
+
+function agregarAmigoDestacado(uidReceptor, emailReceptor, nombreReceptor){
+  if(!sessionEmailVisitante){
+    alert('Inicia sesión en PetMi para agregar amigos.');
+    window.location.href='/index.html';
+    return;
+  }
+  if(!miUidVisitante){
+    alert('Un momento — todavía estamos cargando tu sesión. Intenta de nuevo en unos segundos.');
+    return;
+  }
+  var btn=document.getElementById('btnAgregarAmigo');
+  if(btn){ btn.disabled=true; btn.textContent='Enviando...'; }
+  fetch('/api/galeria?action=enviarSolicitud',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid_solicitante:miUidVisitante, uid_receptor:uidReceptor, email_solicitante:sessionEmailVisitante, email_receptor:emailReceptor})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d && d.ok){
+      if(btn){ btn.textContent='✓ Solicitud enviada'; }
+      fetch('/api/submit',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'notificarSolicitud',emailReceptor:emailReceptor,nombreSolicit:miNombreVisitante,nombreReceptor:nombreReceptor})
+      }).catch(function(){});
+    } else {
+      if(btn){ btn.disabled=false; btn.textContent='➕ Agregar amigo'; }
+      alert('No se pudo enviar la solicitud. Intenta de nuevo.');
+    }
+  }).catch(function(){
+    if(btn){ btn.disabled=false; btn.textContent='➕ Agregar amigo'; }
+    alert('No se pudo enviar la solicitud. Intenta de nuevo.');
+  });
 }
 
 fetch('/api/galeria?action=getAmigoSemanaHistorial')
@@ -87,18 +156,28 @@ fetch('/api/galeria?action=getAmigoSemanaHistorial')
     ? '<img src="'+actual.foto+'" alt="'+actual.nombre+'">'
     : '<div class="ph">'+especieEmoji(actual.especie)+'</div>';
 
+  var actividadesArr=(actual.actividades||'').split(',').map(function(a){return a.trim();}).filter(Boolean);
+  var actividadesHtml = actividadesArr.length
+    ? '<div class="actual-tags-titulo">LE GUSTA</div><div>'+actividadesArr.map(function(a){return '<span class="actual-tag">'+a+'</span>';}).join('')+'</div>'
+    : '';
+
   document.getElementById('contenedorActual').innerHTML =
     '<div class="actual-card">'
-    +'<div class="actual-banner">'
-    +'<div class="actual-paw">🐾</div>'
-    +'<div class="actual-pill">AMIGO DE ESTA SEMANA</div>'
-    +'</div>'
-    +'<div class="actual-foto-wrap">'+fotoHtml+'</div>'
+    +'<div class="actual-foto-wrap">'+fotoHtml+'<div class="actual-badge">🎲 AMIGO DE ESTA SEMANA</div></div>'
     +'<div class="actual-body">'
-    +'<div class="actual-nombre">'+actual.nombre+'</div>'
-    +'<div class="actual-tipo">'+(actual.especie||'')+(actual.raza?' · '+actual.raza:'')+'</div>'
-    +(actual.especial ? '<div class="actual-especial">'+actual.especial+'</div>' : '')
-    +'<a href="/p/'+encodeURIComponent(actual.slug)+'" class="actual-cta">Conocer su perfil completo →</a>'
+    +'<div class="actual-nombre">"'+actual.nombre.toUpperCase()+'"</div>'
+    +(actual.apodo?'<div><span class="actual-apodo">'+actual.apodo+'</span></div>':'')
+    +'<div class="actual-info">'
+      +'<div><div class="actual-info-lbl">ESPECIE</div><div class="actual-info-val">'+(actual.especie||'—')+'</div></div>'
+      +'<div><div class="actual-info-lbl">SEXO</div><div class="actual-info-val">'+(actual.sexo||'—')+'</div></div>'
+      +'<div><div class="actual-info-lbl">EDAD</div><div class="actual-info-val">'+calcularEdadTexto(actual.fechaNac)+'</div></div>'
+    +'</div>'
+    +actividadesHtml
+    +(actual.especial ? '<div class="actual-especial"><div class="actual-especial-lbl">ALGO ESPECIAL</div><div class="actual-especial-txt">'+actual.especial+'</div></div>' : '')
+    +'<div class="actual-btns">'
+    +'<a href="/p/'+encodeURIComponent(actual.slug)+'" class="actual-cta">Ver perfil completo →</a>'
+    +'<button id="btnAgregarAmigo" class="actual-agregar" onclick="agregarAmigoDestacado(\''+actual.uid+'\',\''+(actual.email||'')+'\',\''+actual.nombre.replace(/'/g,"\\'")+'\')">➕ Agregar amigo</button>'
+    +'</div>'
     +'</div>'
     +'</div>';
 

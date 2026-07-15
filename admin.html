@@ -418,7 +418,7 @@ tbody tr:last-child td{border-bottom:none}
       <button class="btn-primary" onclick="elegirAmigoSemana()" style="margin-bottom:20px">🎲 Elegir amigo de la semana</button>
       <div id="asContenedor" style="display:none">
         <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
-          <div id="asTarjeta" style="width:300px;height:380px;background:#fff;border-radius:16px;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.15);border:1px solid #eee;flex-shrink:0"></div>
+          <div id="asTarjeta" style="width:320px;background:#fff;border-radius:16px;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.15);border:1px solid #eee;flex-shrink:0"></div>
           <div>
             <button class="btn-primary" onclick="descargarTarjetaAmigo()">⬇️ Descargar imagen (PNG)</button>
             <div id="asInfo" style="margin-top:16px;font-size:13px;color:#666;max-width:300px"></div>
@@ -1516,6 +1516,47 @@ function downloadID(){
   });
 }
 
+function calcularEdadTexto(fechaStr){
+  if(!fechaStr) return '—';
+  try{
+    var fecha=new Date(fechaStr), hoy=new Date();
+    var meses=(hoy.getFullYear()-fecha.getFullYear())*12+(hoy.getMonth()-fecha.getMonth());
+    if(meses<1) return 'Recién nacido';
+    if(meses<12) return meses+' mes'+(meses!==1?'es':'');
+    var anios=Math.floor(meses/12);
+    return anios+' año'+(anios!==1?'s':'');
+  }catch(e){ return '—'; }
+}
+
+function tarjetaAmigoHTML(m){
+  var especieRaza=(m.especie||'')+(m.raza?' · '+m.raza:'');
+  var actividadesArr=(m.actividades||'').split(',').map(function(a){return a.trim();}).filter(Boolean);
+  var actividadesHtml=actividadesArr.length
+    ? '<div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px">LE GUSTA</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px">'+actividadesArr.map(function(a){
+        return '<span style="background:#E0F7F7;color:#007a7a;font-size:11px;font-weight:700;padding:5px 12px;border-radius:99px">'+a+'</span>';
+      }).join('')+'</div>'
+    : '';
+  return '<div style="width:100%;height:220px;overflow:hidden;position:relative">'
+    +'<img src="'+m.foto+'" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;display:block">'
+    +'<div style="position:absolute;top:14px;left:14px;background:#F5C842;color:#1a1a2e;font-size:11px;font-weight:900;padding:6px 14px;border-radius:99px">🎲 AMIGO DE LA SEMANA</div>'
+    +'</div>'
+    +'<div style="padding:20px 22px 24px;background:#fff">'
+    +'<div style="font-size:26px;font-weight:900;color:#1a1a2e">"'+(m.nombre||'').toUpperCase()+'"</div>'
+    +(m.apodo?'<span style="display:inline-block;margin-top:8px;background:#F4A0B0;color:#7a1a2e;font-size:12px;font-weight:700;padding:4px 14px;border-radius:99px">'+m.apodo+'</span>':'')
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:18px">'
+      +'<div><div style="font-size:9px;font-weight:700;color:#999;text-transform:uppercase">ESPECIE</div><div style="font-size:14px;font-weight:700;color:#1a1a2e;margin-top:2px">'+(m.especie||'—')+'</div></div>'
+      +'<div><div style="font-size:9px;font-weight:700;color:#999;text-transform:uppercase">SEXO</div><div style="font-size:14px;font-weight:700;color:#1a1a2e;margin-top:2px">'+(m.sexo||'—')+'</div></div>'
+      +'<div><div style="font-size:9px;font-weight:700;color:#999;text-transform:uppercase">EDAD</div><div style="font-size:14px;font-weight:700;color:#1a1a2e;margin-top:2px">'+calcularEdadTexto(m.fechaNac||m.fecha)+'</div></div>'
+    +'</div>'
+    +actividadesHtml
+    +(m.especial ? '<div style="background:#f8f8f8;border-left:4px solid #F5C842;border-radius:0 10px 10px 0;padding:12px 16px;margin-top:18px">'
+      +'<div style="font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">ALGO ESPECIAL</div>'
+      +'<div style="font-size:13px;color:#333;line-height:1.5;word-break:break-word">'+m.especial+'</div></div>' : '')
+    +'<div style="text-align:center;margin-top:10px"><img src="https://app.revistapetmi.com/logopetmi.png" crossorigin="anonymous" alt="PetMi" style="height:18px;display:inline-block"></div>'
+    +'</div>';
+}
+
 // ── Amigo de la Semana ──────────────────────────────────────────
 function elegirAmigoSemana(){
   document.getElementById('asVacio').textContent='Eligiendo...';
@@ -1528,24 +1569,7 @@ function elegirAmigoSemana(){
       return;
     }
     var m=d.mascota;
-    var especieRaza=(m.especie||'')+(m.raza?' '+m.raza:'');
-    document.getElementById('asTarjeta').innerHTML =
-      '<div style="position:absolute;top:0;left:0;right:0;height:140px;background:#00B4B4;clip-path:polygon(0 0,100% 0,100% 70%,0 100%)"></div>'
-      +'<div style="position:absolute;top:16px;left:18px;font-size:20px">🐾</div>'
-      +'<div style="position:absolute;top:18px;right:16px;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:900;padding:5px 12px;border-radius:99px">AMIGO DE LA SEMANA</div>'
-      +'<div style="position:absolute;top:76px;left:50%;transform:translateX(-50%);width:140px;height:140px;border-radius:50%;background:#fff;padding:5px;box-shadow:0 6px 16px rgba(0,0,0,.18)">'
-      +'<img src="'+m.foto+'" crossorigin="anonymous" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block">'
-      +'</div>'
-      +'<div style="position:absolute;top:228px;left:0;right:0;text-align:center">'
-      +'<div style="font-size:23px;font-weight:900;color:#1a1a2e">'+m.nombre+'</div>'
-      +'<div style="font-size:12px;color:#888;margin-top:2px">'+especieRaza+'</div>'
-      +'</div>'
-      +'<div style="position:absolute;top:274px;left:24px;right:24px;background:#FEF7ED;border-radius:12px;padding:10px 12px;text-align:center">'
-      +'<div style="font-size:12.5px;color:#333;line-height:1.4">'+m.especial+'</div>'
-      +'</div>'
-      +'<div style="position:absolute;bottom:14px;left:0;right:0;text-align:center">'
-      +'<img src="https://app.revistapetmi.com/logopetmi.png" crossorigin="anonymous" alt="PetMi" style="height:20px;display:inline-block">'
-      +'</div>';
+    document.getElementById('asTarjeta').innerHTML = tarjetaAmigoHTML(m);
     document.getElementById('asContenedor').style.display='block';
     document.getElementById('asVacio').textContent='';
     var perfilUrl='https://app.revistapetmi.com/p/'+(m.slug||m.uid);
