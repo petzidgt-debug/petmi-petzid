@@ -105,6 +105,19 @@ else uid=new URLSearchParams(window.location.search).get('uid');
 // ¿Es el dueño quien visita? (el link del correo de Angelito agrega ?owner=1)
 var esVisitanteDueno=new URLSearchParams(window.location.search).get('owner')==='1';
 
+// Sesión del visitante — para poder mandar mensaje interno (reemplaza WhatsApp)
+var sessionEmailVisitante=localStorage.getItem('petzid_email')||'';
+var miUidVisitante=null;
+if(sessionEmailVisitante){
+  fetch('/api/galeria?action=checkEmail',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'checkEmail',email:sessionEmailVisitante})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.found && d.mascotas && d.mascotas.length) miUidVisitante=d.mascotas[0].uid;
+  }).catch(function(){});
+}
+
 if(!uid){
   document.getElementById('root').innerHTML='<div class="no-premium"><div class="no-premium-ico">🐾</div><div class="no-premium-titulo">Perfil no encontrado</div><div class="no-premium-sub">No se especificó una mascota.</div><a href="/galeria.html" style="color:#00B4B4;font-weight:700">Ver galería →</a></div>';
 } else {
@@ -232,10 +245,15 @@ function renderPerfil(m){
 
   // Botones
   html+='<div class="btns">';
-  if(m.whatsapp && !esAngelito){
-    var waNum2=m.whatsapp.replace(/[^0-9]/g,'');
-    if(waNum2.length===8) waNum2='502'+waNum2;
-    html+='<button class="btn-contactar" onclick="window.open(\'https://wa.me/'+waNum2+'?text='+encodeURIComponent('Hola! Vi el perfil de '+m.nombre+' en PetMi.')+'\',\'_blank\')">💬 Contactar responsable</button>';
+  if(!esAngelito && !esVisitanteDueno){
+    if(sessionEmailVisitante){
+      html+='<div class="condolencia-form">';
+      html+='<textarea id="mDuenoMsj" placeholder="Escribe un mensaje para el responsable de '+m.nombre+'..."></textarea>';
+      html+='<button class="btn-enviar-msj" onclick="enviarMensajeAlDueno(\''+m.uid+'\')">💬 Enviar mensaje</button>';
+      html+='</div>';
+    } else {
+      html+='<a href="/index.html" class="btn-contactar" style="display:block;text-align:center;text-decoration:none">🔒 Inicia sesión en PetMi para contactar</a>';
+    }
   }
   html+='</div>';
 
@@ -288,6 +306,30 @@ function cargarCondolencias(uidMascota){
   }).catch(function(){
     var el=document.getElementById('listaCondolencias');
     if(el) el.innerHTML='<div class="condolencias-vacio">No se pudieron cargar los mensajes.</div>';
+  });
+}
+
+function enviarMensajeAlDueno(uidReceptor){
+  if(!miUidVisitante){
+    alert('Un momento — todavía estamos cargando tu sesión. Intenta de nuevo en unos segundos.');
+    return;
+  }
+  var textarea=document.getElementById('mDuenoMsj');
+  var mensaje=textarea.value.trim();
+  if(!mensaje){ alert('Escribe un mensaje primero.'); return; }
+  fetch('/api/galeria?action=enviarMensajePrivado',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid_emisor:miUidVisitante, uid_receptor:uidReceptor, mensaje:mensaje})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d && d.ok){
+      textarea.value='';
+      alert('¡Mensaje enviado! Le llegará una notificación al responsable. 🐾');
+    } else {
+      alert('No se pudo enviar el mensaje. Intenta de nuevo.');
+    }
+  }).catch(function(){
+    alert('No se pudo enviar el mensaje. Intenta de nuevo.');
   });
 }
 
