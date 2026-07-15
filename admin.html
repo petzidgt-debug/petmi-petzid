@@ -139,6 +139,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('emailfix',this)"><span class="nav-icon">✉️</span>Corregir Emails</div>
       <div class="nav-item" onclick="showScreen('juegos',this)"><span class="nav-icon">🎮</span>Juegos</div>
       <div class="nav-item" onclick="showScreen('amigos',this)"><span class="nav-icon">👥</span>Amigos</div>
+      <div class="nav-item" onclick="showScreen('amigosemana',this)"><span class="nav-icon">🎲</span>Amigo de la Semana</div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
@@ -411,7 +412,23 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
 
-    <div class="screen" id="screenEventos">
+    <div id="screenAmigosemana" class="screen">
+      <h2 class="screen-title">🎲 Amigo de la Semana</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Elige al azar entre mascotas activas, con foto y con "algo especial" lleno. No repite hasta agotar a todas.</p>
+      <button class="btn-primary" onclick="elegirAmigoSemana()" style="margin-bottom:20px">🎲 Elegir amigo de la semana</button>
+      <div id="asContenedor" style="display:none">
+        <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+          <div id="asTarjeta" style="width:300px;height:380px;background:#fff;border-radius:16px;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.15);border:1px solid #eee;flex-shrink:0"></div>
+          <div>
+            <button class="btn-primary" onclick="descargarTarjetaAmigo()">⬇️ Descargar imagen (PNG)</button>
+            <div id="asInfo" style="margin-top:16px;font-size:13px;color:#666;max-width:300px"></div>
+          </div>
+        </div>
+      </div>
+      <div id="asVacio" style="color:#aaa;font-size:13px"></div>
+    </div>
+
+    <div id="screenEventos" class="screen">
       <div class="page-header">
         <div><div class="page-title">Eventos y Avisos</div><div class="page-sub" id="subEventos">-</div></div>
         <div style="display:flex;gap:8px">
@@ -1496,6 +1513,57 @@ function downloadID(){
   if(!el){alert('No hay ID para descargar');return;}
   html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#fff'}).then(function(canvas){
     var a=document.createElement('a');a.download='PetzID.png';a.href=canvas.toDataURL('image/png');a.click();
+  });
+}
+
+// ── Amigo de la Semana ──────────────────────────────────────────
+function elegirAmigoSemana(){
+  document.getElementById('asVacio').textContent='Eligiendo...';
+  document.getElementById('asContenedor').style.display='none';
+  fetch('/api/galeria?action=elegirAmigoSemana')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.ok){
+      document.getElementById('asVacio').textContent=d.error||'No se pudo elegir un amigo de la semana.';
+      return;
+    }
+    var m=d.mascota;
+    var especieRaza=(m.especie||'')+(m.raza?' '+m.raza:'');
+    document.getElementById('asTarjeta').innerHTML =
+      '<div style="position:absolute;top:0;left:0;right:0;height:140px;background:#00B4B4;clip-path:polygon(0 0,100% 0,100% 70%,0 100%)"></div>'
+      +'<div style="position:absolute;top:16px;left:18px;font-size:20px">🐾</div>'
+      +'<div style="position:absolute;top:18px;right:16px;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:900;padding:5px 12px;border-radius:99px">AMIGO DE LA SEMANA</div>'
+      +'<div style="position:absolute;top:76px;left:50%;transform:translateX(-50%);width:140px;height:140px;border-radius:50%;background:#fff;padding:5px;box-shadow:0 6px 16px rgba(0,0,0,.18)">'
+      +'<img src="'+m.foto+'" crossorigin="anonymous" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block">'
+      +'</div>'
+      +'<div style="position:absolute;top:228px;left:0;right:0;text-align:center">'
+      +'<div style="font-size:23px;font-weight:900;color:#1a1a2e">'+m.nombre+'</div>'
+      +'<div style="font-size:12px;color:#888;margin-top:2px">'+especieRaza+'</div>'
+      +'</div>'
+      +'<div style="position:absolute;top:274px;left:24px;right:24px;background:#FEF7ED;border-radius:12px;padding:10px 12px;text-align:center">'
+      +'<div style="font-size:12.5px;color:#333;line-height:1.4">'+m.especial+'</div>'
+      +'</div>'
+      +'<div style="position:absolute;bottom:14px;left:0;right:0;text-align:center">'
+      +'<img src="https://app.revistapetmi.com/logopetmi.png" crossorigin="anonymous" alt="PetMi" style="height:20px;display:inline-block">'
+      +'</div>';
+    document.getElementById('asContenedor').style.display='block';
+    document.getElementById('asVacio').textContent='';
+    var perfilUrl='https://app.revistapetmi.com/p/'+(m.slug||m.uid);
+    var infoHtml = d.reiniciado
+      ? '🔄 Ya habían salido todas las mascotas calificadas — se reinició el ciclo.<br><br>'
+      : ('Candidatos calificados en total: '+d.totalCandidatos+'<br><br>');
+    infoHtml += '<strong>Link de su perfil:</strong><br><input readonly value="'+perfilUrl+'" style="width:100%;padding:6px 8px;font-size:11px;margin:4px 0 10px;border:1px solid #ddd;border-radius:6px" onclick="this.select()">'
+      + '<strong>Link de la página Amigo de la Semana:</strong><br><input readonly value="https://app.revistapetmi.com/amigo-semana.html" style="width:100%;padding:6px 8px;font-size:11px;margin:4px 0;border:1px solid #ddd;border-radius:6px" onclick="this.select()">';
+    document.getElementById('asInfo').innerHTML = infoHtml;
+  }).catch(function(){
+    document.getElementById('asVacio').textContent='Error al elegir. Intenta de nuevo.';
+  });
+}
+
+function descargarTarjetaAmigo(){
+  var el=document.getElementById('asTarjeta');
+  html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#fff'}).then(function(canvas){
+    var a=document.createElement('a');a.download='amigo-de-la-semana.png';a.href=canvas.toDataURL('image/png');a.click();
   });
 }
 
