@@ -8,8 +8,6 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-top:56px;padding-bottom:72px}
-
-/* Hero */
 .hero{background:linear-gradient(135deg,#1a1a2e 0%,#0d2847 50%,#1a3a1a 100%);padding:20px 16px 24px;text-align:center;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='20' fill='none' stroke='rgba(255,255,255,.04)' stroke-width='8'/%3E%3C/svg%3E") repeat;pointer-events:none}
 .hero-badge{display:inline-block;background:rgba(245,200,66,.15);border:1px solid rgba(245,200,66,.4);color:#F5C842;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
@@ -19,22 +17,14 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-to
 .hero-stat{text-align:center}
 .hero-stat-num{font-size:20px;font-weight:900;color:#F5C842}
 .hero-stat-lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.3px}
-
-/* Tabs */
 .tabs{display:flex;background:#fff;border-bottom:0.5px solid #e0e0e0;position:sticky;top:56px;z-index:40;overflow-x:auto}
 .tab{flex:1;min-width:70px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#888;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s}
 .tab.active{color:#00B4B4;border-bottom-color:#00B4B4}
 .tab-ico{font-size:16px;display:block;margin-bottom:2px}
-
-/* Sections */
 .section{display:none;padding:14px 12px}
 .section.active{display:block}
-
-/* Day divider */
 .day-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;padding:14px 4px 8px;display:flex;align-items:center;gap:8px}
 .day-label::after{content:'';flex:1;height:0.5px;background:#ddd}
-
-/* Match card */
 .match-card{background:#fff;border-radius:14px;margin-bottom:10px;overflow:hidden;border:0.5px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,.04)}
 .match-card.locked{opacity:.85}
 .match-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8f8f8;border-bottom:0.5px solid #efefef}
@@ -57,8 +47,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-to
 .match-result-badge.win{background:#e8f5e9;color:#00C853}
 .match-result-badge.lose{background:#fce4ec;color:#e53935}
 .match-result-badge.pending{background:#fff8e1;color:#f9a825}
-
-/* Ranking */
 .ranking-card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:0.5px solid #e8e8e8}
 .rank-pos{font-size:15px;font-weight:900;color:#ccc;min-width:24px}
 .rank-pos.gold{color:#F5C842}
@@ -69,25 +57,13 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-to
 .rank-name{font-size:13px;font-weight:700;color:#222}
 .rank-detail{font-size:11px;color:#888}
 .rank-pts{font-size:17px;font-weight:900;color:#00B4B4}
-
-/* Premio */
 .premio-box{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;border:0.5px solid #e8e8e8;text-align:center}
 .premio-ico{font-size:48px;margin-bottom:8px}
 .premio-title{font-size:18px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
 .premio-desc{font-size:13px;color:#666;line-height:1.6}
-.ruleta-wrap{background:linear-gradient(135deg,#1a1a2e,#0d2847);border-radius:16px;padding:24px;text-align:center;margin-bottom:12px}
-.ruleta-title{font-size:15px;font-weight:700;color:#F5C842;margin-bottom:4px}
-.ruleta-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:16px}
-canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
-.btn-spin{background:#F5C842;color:#1a1a2e;border:none;padding:12px 28px;border-radius:99px;font-size:15px;font-weight:900;cursor:pointer;margin-top:14px;display:block;width:100%}
-.btn-spin:disabled{background:#555;color:#888}
-
-/* CTA */
 .btn-primary{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
 .login-prompt{background:#fff;border-radius:14px;padding:20px;text-align:center;border:0.5px solid #e8e8e8}
 .login-prompt p{font-size:14px;color:#666;margin-bottom:12px}
-
-/* Misc */
 .empty-state{text-align:center;padding:40px 20px;color:#aaa}
 .empty-state div{font-size:36px;margin-bottom:8px}
 .toast-q{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;white-space:nowrap}
@@ -118,375 +94,356 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
 <script src="/header.js"></script>
 
 <div class="hero">
-  <div class="hero-badge">⚽ FINAL — Mundial 2026</div>
+  <div class="hero-badge">&#x26BD; Semifinal &mdash; Mundial 2026</div>
   <div class="hero-title">Quiniela PetMi</div>
-  <div class="hero-sub">Predice los ganadores · Acumula puntos · Gana premios</div>
+  <div class="hero-sub">Predice los ganadores &middot; Acumula puntos &middot; Gana premios</div>
   <div class="hero-stats">
-    <div class="hero-stat"><div class="hero-stat-num" id="statPartidos">—</div><div class="hero-stat-lbl">Partidos</div></div>
-    <div class="hero-stat"><div class="hero-stat-num" id="statMisPts">—</div><div class="hero-stat-lbl">Mis puntos</div></div>
-    <div class="hero-stat"><div class="hero-stat-num" id="statAciertos">—</div><div class="hero-stat-lbl">Aciertos</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statPartidos">&mdash;</div><div class="hero-stat-lbl">Partidos</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statMisPts">&mdash;</div><div class="hero-stat-lbl">Mis puntos</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statAciertos">&mdash;</div><div class="hero-stat-lbl">Aciertos</div></div>
   </div>
 </div>
 
-
 <div class="tabs">
-  <div class="tab active" onclick="showTab('partidos')"><span class="tab-ico">⚽</span>Partidos</div>
-  <div class="tab" onclick="showTab('miquiniela')"><span class="tab-ico">📋</span>Mi Quiniela</div>
-  <div class="tab" onclick="showTab('ranking')"><span class="tab-ico">🏆</span>Ranking</div>
-  <div class="tab" onclick="showTab('premio')"><span class="tab-ico">🎁</span>Premio</div>
-  <div class="tab" onclick="showTab('reglas')"><span class="tab-ico">📋</span>Reglas</div>
+  <div class="tab active" onclick="showTab('partidos')"><span class="tab-ico">&#x26BD;</span>Partidos</div>
+  <div class="tab" onclick="showTab('miquiniela')"><span class="tab-ico">&#x1F4CB;</span>Mi Quiniela</div>
+  <div class="tab" onclick="showTab('ranking')"><span class="tab-ico">&#x1F3C6;</span>Ranking</div>
+  <div class="tab" onclick="showTab('premio')"><span class="tab-ico">&#x1F381;</span>Premio</div>
+  <div class="tab" onclick="showTab('reglas')"><span class="tab-ico">&#x1F4CB;</span>Reglas</div>
 </div>
 
 <!-- PARTIDOS -->
 <div class="section active" id="sec-partidos">
-<div style="background:linear-gradient(135deg,#1a1a2e,#0D2B2B);border:2px solid #F5C842;border-radius:14px;padding:14px 16px;margin-bottom:12px;text-align:center">
-  <div style="color:#F5C842;font-size:22px;font-weight:900">⭐ SEMIFINAL — BONUS ⭐</div>
-  <div style="color:#fff;font-size:16px;font-weight:700;margin:4px 0">¡Cada acierto vale 5 puntos!</div>
-  <div style="color:#aaa;font-size:11px;line-height:1.5">Grupos y R32: +2 pts · <strong style="color:#F5C842">Ronda de 16, Cuartos, Semis y Final: +5 pts</strong></div>
-</div>
-  <div id="listPartidos"><div class="empty-state"><div>⚽</div>Cargando partidos...</div></div>
-</div>
-
-<!-- MI QUINIELA -->
-<div class="section" id="sec-miquiniela">
-  <div id="listMiQuiniela"><div class="empty-state"><div>📋</div>Cargando...</div></div>
-</div>
-
-<!-- RANKING -->
-<div class="section" id="sec-ranking">
-  <div style="font-size:12px;color:#aaa;text-align:center;padding:6px 0 10px">Top 10 — Semifinal en curso</div>
-  <div id="listRanking"><div class="empty-state"><div>🏆</div>Cargando ranking...</div></div>
-
-  <!-- DATOS SORPRESA -->
-  <div style="margin-top:18px;background:#1a1a2e;border-radius:14px;padding:14px 16px">
-    <div onclick="toggleDatos()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-      <div style="color:#F5C842;font-size:13px;font-weight:700">⚡ Datos clave — Semifinal</div>
-      <span id="datosCaret" style="color:#aaa;font-size:16px">▾</span>
-    </div>
-    <div id="datosWrap" style="display:none;margin-top:12px">
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1EB;&#x1F1F7; Francia vs España — Mar 14 Jul</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">El duelo europeo. Francia goleó 2-0 a Marruecos. España eliminó a Bélgica con gol de Merino. AT&amp;T Stadium, Dallas.</div>
-      </div>
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1E6;&#x1F1F7; Argentina vs Inglaterra — Mié 15 Jul</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">La revancha de las Malvinas en semifinales. Argentina eliminó a Suiza 3-1 ET. Inglaterra remontió a Noruega 2-1 con doblete de Bellingham.</div>
-      </div>
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x2B50; Cuartos: 73% aciertos — Semis en juego</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">67 de 92 predicciones acertaron en Cuartos. Se repartieron 335 puntos de bonus. Ahora cada acierto en Semis vale &#x2B50; +5 pts.</div>
-      </div>
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F3C6; El camino a la final</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Final el 19 de julio en el Estadio de Nueva York. Los dos ganadores de esta ronda se verán las caras por el título mundial.</div>
-      </div>
-
-      <div style="font-size:11px;color:#555">&#x26BD; Semifinal en curso — 2 partidos decisivos</div>
-    </div>g="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quiniela Mundial 2026 — PetMi</title>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#00B4B4">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-top:56px;padding-bottom:72px}
-
-/* Hero */
-.hero{background:linear-gradient(135deg,#1a1a2e 0%,#0d2847 50%,#1a3a1a 100%);padding:20px 16px 24px;text-align:center;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='20' fill='none' stroke='rgba(255,255,255,.04)' stroke-width='8'/%3E%3C/svg%3E") repeat;pointer-events:none}
-.hero-badge{display:inline-block;background:rgba(245,200,66,.15);border:1px solid rgba(245,200,66,.4);color:#F5C842;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-.hero-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-0.5px}
-.hero-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px}
-.hero-stats{display:flex;justify-content:center;gap:24px}
-.hero-stat{text-align:center}
-.hero-stat-num{font-size:20px;font-weight:900;color:#F5C842}
-.hero-stat-lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.3px}
-
-/* Tabs */
-.tabs{display:flex;background:#fff;border-bottom:0.5px solid #e0e0e0;position:sticky;top:56px;z-index:40;overflow-x:auto}
-.tab{flex:1;min-width:70px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#888;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s}
-.tab.active{color:#00B4B4;border-bottom-color:#00B4B4}
-.tab-ico{font-size:16px;display:block;margin-bottom:2px}
-
-/* Sections */
-.section{display:none;padding:14px 12px}
-.section.active{display:block}
-
-/* Day divider */
-.day-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;padding:14px 4px 8px;display:flex;align-items:center;gap:8px}
-.day-label::after{content:'';flex:1;height:0.5px;background:#ddd}
-
-/* Match card */
-.match-card{background:#fff;border-radius:14px;margin-bottom:10px;overflow:hidden;border:0.5px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-.match-card.locked{opacity:.85}
-.match-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8f8f8;border-bottom:0.5px solid #efefef}
-.match-grupo{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px}
-.match-time{font-size:11px;color:#aaa}
-.match-teams{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px}
-.team{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
-.team-flag{font-size:26px;line-height:1}
-.team-name{font-size:11px;font-weight:700;color:#333;text-align:center;max-width:70px}
-.vs-box{font-size:13px;font-weight:900;color:#ccc;padding:0 8px}
-.match-picks{display:flex;gap:6px;padding:0 10px 12px}
-.pick-btn{flex:1;padding:8px 4px;border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;font-size:11px;font-weight:700;color:#555;cursor:pointer;text-align:center;transition:all .2s;line-height:1.3}
-.pick-btn:hover{border-color:#00B4B4;color:#00B4B4;background:#e0f7f7}
-.pick-btn.selected{background:#00B4B4;border-color:#00B4B4;color:#fff}
-.pick-btn.selected.correct{background:#00C853;border-color:#00C853}
-.pick-btn.selected.wrong{background:#ff5252;border-color:#ff5252}
-.pick-btn.correct-ans{background:#e8f5e9;border-color:#00C853;color:#00C853}
-.pick-btn:disabled{cursor:default}
-.match-result-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;margin:0 10px 10px}
-.match-result-badge.win{background:#e8f5e9;color:#00C853}
-.match-result-badge.lose{background:#fce4ec;color:#e53935}
-.match-result-badge.pending{background:#fff8e1;color:#f9a825}
-
-/* Ranking */
-.ranking-card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:0.5px solid #e8e8e8}
-.rank-pos{font-size:15px;font-weight:900;color:#ccc;min-width:24px}
-.rank-pos.gold{color:#F5C842}
-.rank-pos.silver{color:#aaa}
-.rank-pos.bronze{color:#cd7f32}
-.rank-avatar{width:36px;height:36px;border-radius:50%;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1.5px solid #00B4B4}
-.rank-info{flex:1}
-.rank-name{font-size:13px;font-weight:700;color:#222}
-.rank-detail{font-size:11px;color:#888}
-.rank-pts{font-size:17px;font-weight:900;color:#00B4B4}
-
-/* Premio */
-.premio-box{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;border:0.5px solid #e8e8e8;text-align:center}
-.premio-ico{font-size:48px;margin-bottom:8px}
-.premio-title{font-size:18px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
-.premio-desc{font-size:13px;color:#666;line-height:1.6}
-.ruleta-wrap{background:linear-gradient(135deg,#1a1a2e,#0d2847);border-radius:16px;padding:24px;text-align:center;margin-bottom:12px}
-.ruleta-title{font-size:15px;font-weight:700;color:#F5C842;margin-bottom:4px}
-.ruleta-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:16px}
-canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
-.btn-spin{background:#F5C842;color:#1a1a2e;border:none;padding:12px 28px;border-radius:99px;font-size:15px;font-weight:900;cursor:pointer;margin-top:14px;display:block;width:100%}
-.btn-spin:disabled{background:#555;color:#888}
-
-/* CTA */
-.btn-primary{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
-.login-prompt{background:#fff;border-radius:14px;padding:20px;text-align:center;border:0.5px solid #e8e8e8}
-.login-prompt p{font-size:14px;color:#666;margin-bottom:12px}
-
-/* Misc */
-.empty-state{text-align:center;padding:40px 20px;color:#aaa}
-.empty-state div{font-size:36px;margin-bottom:8px}
-.toast-q{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;white-space:nowrap}
-.toast-q.show{opacity:1}
-.pts-badge{display:inline-block;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:900;padding:2px 6px;border-radius:99px}
-.section-divider{display:flex;align-items:center;gap:8px;padding:18px 4px 8px;font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
-.section-divider::after{content:'';flex:1;height:0.5px;background:#ddd}
-.compact-card{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;border:0.5px solid #ececec;display:flex;align-items:center;gap:10px;opacity:.85}
-.compact-teams{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#555}
-.compact-team{display:flex;align-items:center;gap:5px;flex:1;justify-content:flex-end}
-.compact-team.right{justify-content:flex-start}
-.compact-team .flag{font-size:16px}
-.compact-team.winner .name{font-weight:900;color:#1a1a2e}
-.compact-vs{font-size:10px;color:#bbb;font-weight:700;padding:0 4px;min-width:24px;text-align:center}
-.compact-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:46px}
-.compact-grupo{font-size:9px;color:#aaa;text-transform:uppercase}
-.compact-badge{font-size:14px}
-.pct-row{display:flex;gap:6px;padding:0 10px 10px;margin-top:-4px}
-.pct-item{flex:1;text-align:center}
-.pct-bar-bg{height:5px;background:#eee;border-radius:99px;overflow:hidden;margin-bottom:3px}
-.pct-bar-fill{height:100%;background:#00B4B4;border-radius:99px;transition:width .6s ease}
-.pct-bar-fill.empate{background:#F5C842}
-.pct-label{font-size:10px;color:#999;font-weight:700}
-.pct-label.mine{color:#00B4B4}
-</style>
-</head>
-<body>
-<script src="/header.js"></script>
-
-<div class="hero">
-  <div class="hero-badge">⚽ Semifinal — Mundial 2026</div>
-  <div class="hero-title">Quiniela PetMi</div>
-  <div class="hero-sub">Predice los ganadores · Acumula puntos · Gana premios</div>
-  <div class="hero-stats">
-    <div class="hero-stat"><div class="hero-stat-num" id="statPartidos">—</div><div class="hero-stat-lbl">Partidos</div></div>
-    <div class="hero-stat"><div class="hero-stat-num" id="statMisPts">—</div><div class="hero-stat-lbl">Mis puntos</div></div>
-    <div class="hero-stat"><div class="hero-stat-num" id="statAciertos">—</div><div class="hero-stat-lbl">Aciertos</div></div>
+  <div style="background:linear-gradient(135deg,#1a1a2e,#0D2B2B);border:2px solid #F5C842;border-radius:14px;padding:14px 16px;margin-bottom:12px;text-align:center">
+    <div style="color:#F5C842;font-size:22px;font-weight:900">&#x2B50; FINAL &mdash; BONUS &#x2B50;</div>
+    <div style="color:#fff;font-size:16px;font-weight:700;margin:4px 0">&#xA1;Cada acierto vale 5 puntos!</div>
+    <div style="color:#aaa;font-size:11px;line-height:1.5">Grupos y R32: +2 pts &middot; <strong style="color:#F5C842">Ronda de 16, Cuartos, Semis y Final: +5 pts</strong></div>
   </div>
-</div>
-
-
-<div class="tabs">
-  <div class="tab active" onclick="showTab('partidos')"><span class="tab-ico">⚽</span>Partidos</div>
-  <div class="tab" onclick="showTab('miquiniela')"><span class="tab-ico">📋</span>Mi Quiniela</div>
-  <div class="tab" onclick="showTab('ranking')"><span class="tab-ico">🏆</span>Ranking</div>
-  <div class="tab" onclick="showTab('premio')"><span class="tab-ico">🎁</span>Premio</div>
-  <div class="tab" onclick="showTab('reglas')"><span class="tab-ico">📋</span>Reglas</div>
-</div>
-
-<!-- PARTIDOS -->
-<div class="section active" id="sec-partidos">
-<div style="background:linear-gradient(135deg,#1a1a2e,#0D2B2B);border:2px solid #F5C842;border-radius:14px;padding:14px 16px;margin-bottom:12px;text-align:center">
-  <div style="color:#F5C842;font-size:22px;font-weight:900">⭐ SEMIFINAL — BONUS ⭐</div>
-  <div style="color:#fff;font-size:16px;font-weight:700;margin:4px 0">¡Cada acierto vale 5 puntos!</div>
-  <div style="color:#aaa;font-size:11px;line-height:1.5">Grupos y R32: +2 pts · <strong style="color:#F5C842">Ronda de 16, Cuartos, Semis y Final: +5 pts</strong></div>
-</div>
-  <div id="listPartidos"><div class="empty-state"><div>⚽</div>Cargando partidos...</div></div>
+  <div id="listPartidos"><div class="empty-state"><div>&#x26BD;</div>Cargando partidos...</div></div>
 </div>
 
 <!-- MI QUINIELA -->
 <div class="section" id="sec-miquiniela">
-  <div id="listMiQuiniela"><div class="empty-state"><div>📋</div>Cargando...</div></div>
+  <div id="listMiQuiniela"><div class="empty-state"><div>&#x1F4CB;</div>Cargando...</div></div>
 </div>
 
 <!-- RANKING -->
 <div class="section" id="sec-ranking">
-  <div style="font-size:12px;color:#aaa;text-align:center;padding:6px 0 10px">Top 10 — Semifinal en curso</div>
-  <div id="listRanking"><div class="empty-state"><div>🏆</div>Cargando ranking...</div></div>
-
-  <!-- DATOS SORPRESA -->
+  <div style="font-size:12px;color:#aaa;text-align:center;padding:6px 0 10px">Top 10 &mdash; Final en curso</div>
+  <div id="listRanking"><div class="empty-state"><div>&#x1F3C6;</div>Cargando ranking...</div></div>
   <div style="margin-top:18px;background:#1a1a2e;border-radius:14px;padding:14px 16px">
     <div onclick="toggleDatos()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-      <div style="color:#F5C842;font-size:13px;font-weight:700">⚡ Datos clave — Semifinal</div>
-      <span id="datosCaret" style="color:#aaa;font-size:16px">▾</span>
+      <div style="color:#F5C842;font-size:13px;font-weight:700">&#x26A1; Datos clave &mdash; Semifinal</div>
+      <span id="datosCaret" style="color:#aaa;font-size:16px">&#x25BE;</span>
     </div>
     <div id="datosWrap" style="display:none;margin-top:12px">
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1EB;&#x1F1F7; Francia vs Espa&#xF1;a — Mar 14 Jul</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">El partido m&#xE1;s esperado. Francia elimin&#xF3; a Marruecos 2-0 (Mbapp&#xE9;). Espa&#xF1;a elimin&#xF3; a B&#xE9;lgica con gol de Merino. AT&amp;T Stadium, Dallas.</div>
+      <div style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1EB;&#x1F1F7; Francia vs Espa&#xF1;a &mdash; Mar 14 Jul</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">El duelo europeo. Francia elimin&#xF3; a Marruecos 2-0 (Mbapp&#xE9;). Espa&#xF1;a elimin&#xF3; a B&#xE9;lgica con gol de Merino. AT&amp;T Stadium, Dallas.</div>
       </div>
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1E6;&#x1F1F7; Argentina vs Inglaterra — Mi&#xE9; 15 Jul</div>
+      <div style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1E6;&#x1F1F7; Argentina vs Inglaterra &mdash; Mi&#xE9; 15 Jul</div>
         <div style="color:#ccc;font-size:12px;line-height:1.5">Messi (20 goles en Mundiales) vs Kane. Argentina derrot&#xF3; a Suiza 3-1 en tiempo extra. Mercedes-Benz Stadium, Atlanta.</div>
       </div>
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x2B50; +5 pts por acierto — sigue activo</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Semifinal y Final mantienen el bonus de +5 pts. 2 aciertos perfectos = +10 pts en el ranking.</div>
+      <div style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x2B50; Cuartos: 73% aciertos &mdash; 335 pts repartidos</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">67 de 92 predicciones acertaron. Ahora cada acierto en Semis vale &#x2B50; +5 pts.</div>
       </div>
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F3C6; Final — S&#xE1;b 19 Jul · MetLife Stadium</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">La final es el 19 de julio. El ganador de la quiniela se anuncia ese d&#xED;a. &#xA1;Todo se define esta semana!</div>
+      <div style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F3C6; Final &mdash; S&#xE1;b 19 Jul &middot; MetLife Stadium</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">La final es el 19 de julio. El ganador de la quiniela se anuncia ese d&#xED;a.</div>
       </div>
+      <div style="font-size:11px;color:#555">&#x26BD; Final en curso &mdash; 2 partidos decisivos</div>
+    </div>
+  </div>
+</div>
 
-      <div style="font-size:11px;color:#555">&#x26BD; Semifinal en curso &#x2014; 2 partidos</div>
-    </div>g="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quiniela Mundial 2026 — PetMi</title>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#00B4B4">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-top:56px;padding-bottom:72px}
+<!-- PREMIO -->
+<div class="section" id="sec-premio">
+  <div class="premio-box">
+    <div class="premio-ico">&#x1F3C6;</div>
+    <div class="premio-title">Premio Final</div>
+    <div class="premio-desc">El participante con m&#xE1;s puntos al terminar el Mundial gana un premio especial de PetMi.<br><br>&#x2B50; Ronda de 16, Cuartos, Semis y Final valen +5 pts cada acierto.<br><br>&#xA1;La quiniela cierra el 19 de julio con la gran final!</div>
+  </div>
+</div>
 
-/* Hero */
-.hero{background:linear-gradient(135deg,#1a1a2e 0%,#0d2847 50%,#1a3a1a 100%);padding:20px 16px 24px;text-align:center;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='20' fill='none' stroke='rgba(255,255,255,.04)' stroke-width='8'/%3E%3C/svg%3E") repeat;pointer-events:none}
-.hero-badge{display:inline-block;background:rgba(245,200,66,.15);border:1px solid rgba(245,200,66,.4);color:#F5C842;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-.hero-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-0.5px}
-.hero-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px}
-.hero-stats{display:flex;justify-content:center;gap:24px}
-.hero-stat{text-align:center}
-.hero-stat-num{font-size:20px;font-weight:900;color:#F5C842}
-.hero-stat-lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.3px}
+<!-- REGLAS -->
+<div class="section" id="sec-reglas">
+  <div class="premio-box" style="text-align:left">
+    <div class="premio-title" style="margin-bottom:12px">&#x1F4CB; Reglas de la Quiniela</div>
+    <div class="premio-desc">
+      <strong>C&#xF3;mo jugar:</strong><br>
+      Predice el ganador de cada partido antes de que empiece.<br><br>
+      <strong>Puntos:</strong><br>
+      &bull; Grupos y Ronda de 32: +2 pts por acierto<br>
+      &bull; Ronda de 16, Cuartos, Semis y Final: <strong style="color:#F5C842">+5 pts</strong> por acierto<br><br>
+      <strong>Cierre:</strong><br>
+      Las predicciones cierran 30 minutos antes de cada partido.<br><br>
+      <strong>Ganador:</strong><br>
+      El jugador con m&#xE1;s puntos al finalizar el Mundial gana el premio.
+    </div>
+  </div>
+</div>
 
-/* Tabs */
-.tabs{display:flex;background:#fff;border-bottom:0.5px solid #e0e0e0;position:sticky;top:56px;z-index:40;overflow-x:auto}
-.tab{flex:1;min-width:70px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#888;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s}
-.tab.active{color:#00B4B4;border-bottom-color:#00B4B4}
-.tab-ico{font-size:16px;display:block;margin-bottom:2px}
+<div class="toast-q" id="toastQ"></div>
 
-/* Sections */
-.section{display:none;padding:14px 12px}
-.section.active{display:block}
+<script>
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var SUPA_H  = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY };
 
-/* Day divider */
-.day-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;padding:14px 4px 8px;display:flex;align-items:center;gap:8px}
-.day-label::after{content:'';flex:1;height:0.5px;background:#ddd}
+var sessionEmail = localStorage.getItem('petzid_email') || '';
+var allPartidos  = [];
+var misPreds     = {};
+var porcentajes  = {};
 
-/* Match card */
-.match-card{background:#fff;border-radius:14px;margin-bottom:10px;overflow:hidden;border:0.5px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-.match-card.locked{opacity:.85}
-.match-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8f8f8;border-bottom:0.5px solid #efefef}
-.match-grupo{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px}
-.match-time{font-size:11px;color:#aaa}
-.match-teams{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px}
-.team{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
-.team-flag{font-size:26px;line-height:1}
-.team-name{font-size:11px;font-weight:700;color:#333;text-align:center;max-width:70px}
-.vs-box{font-size:13px;font-weight:900;color:#ccc;padding:0 8px}
-.match-picks{display:flex;gap:6px;padding:0 10px 12px}
-.pick-btn{flex:1;padding:8px 4px;border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;font-size:11px;font-weight:700;color:#555;cursor:pointer;text-align:center;transition:all .2s;line-height:1.3}
-.pick-btn:hover{border-color:#00B4B4;color:#00B4B4;background:#e0f7f7}
-.pick-btn.selected{background:#00B4B4;border-color:#00B4B4;color:#fff}
-.pick-btn.selected.correct{background:#00C853;border-color:#00C853}
-.pick-btn.selected.wrong{background:#ff5252;border-color:#ff5252}
-.pick-btn.correct-ans{background:#e8f5e9;border-color:#00C853;color:#00C853}
-.pick-btn:disabled{cursor:default}
-.match-result-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;margin:0 10px 10px}
-.match-result-badge.win{background:#e8f5e9;color:#00C853}
-.match-result-badge.lose{background:#fce4ec;color:#e53935}
-.match-result-badge.pending{background:#fff8e1;color:#f9a825}
+// ── Tab nav ────────────────────────────────────────────────────
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.section').forEach(function(el) { el.classList.remove('active'); });
+  var btn = document.querySelector('[onclick="showTab(\'' + t + '\')"]');
+  if (btn) btn.classList.add('active');
+  var sec = document.getElementById('sec-' + t);
+  if (sec) sec.classList.add('active');
+  if (t === 'ranking')    cargarRanking();
+  if (t === 'miquiniela') cargarMiQuiniela();
+}
 
-/* Ranking */
-.ranking-card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:0.5px solid #e8e8e8}
-.rank-pos{font-size:15px;font-weight:900;color:#ccc;min-width:24px}
-.rank-pos.gold{color:#F5C842}
-.rank-pos.silver{color:#aaa}
-.rank-pos.bronze{color:#cd7f32}
-.rank-avatar{width:36px;height:36px;border-radius:50%;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1.5px solid #00B4B4}
-.rank-info{flex:1}
-.rank-name{font-size:13px;font-weight:700;color:#222}
-.rank-detail{font-size:11px;color:#888}
-.rank-pts{font-size:17px;font-weight:900;color:#00B4B4}
+// ── Toast ──────────────────────────────────────────────────────
+function showToastQ(msg) {
+  var t = document.getElementById('toastQ');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
 
-/* Premio */
-.premio-box{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;border:0.5px solid #e8e8e8;text-align:center}
-.premio-ico{font-size:48px;margin-bottom:8px}
-.premio-title{font-size:18px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
-.premio-desc{font-size:13px;color:#666;line-height:1.6}
-.ruleta-wrap{background:linear-gradient(135deg,#1a1a2e,#0d2847);border-radius:16px;padding:24px;text-align:center;margin-bottom:12px}
-.ruleta-title{font-size:15px;font-weight:700;color:#F5C842;margin-bottom:4px}
-.ruleta-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:16px}
-canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
-.btn-spin{background:#F5C842;color:#1a1a2e;border:none;padding:12px 28px;border-radius:99px;font-size:15px;font-weight:900;cursor:pointer;margin-top:14px;display:block;width:100%}
-.btn-spin:disabled{background:#555;color:#888}
+// ── Datos sorpresa toggle ──────────────────────────────────────
+function toggleDatos() {
+  var w = document.getElementById('datosWrap');
+  var c = document.getElementById('datosCaret');
+  var open = w.style.display !== 'none';
+  w.style.display = open ? 'none' : 'block';
+  c.textContent = open ? '▾' : '▴';
+}
 
-/* CTA */
-.btn-primary{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
-.login-prompt{background:#fff;border-radius:14px;padding:20px;text-align:center;border:0.5px solid #e8e8e8}
-.login-prompt p{font-size:14px;color:#666;margin-bottom:12px}
+// ── Cargar partidos ────────────────────────────────────────────
+function cargarPartidos() {
+  fetch(SUPA_URL + '/rest/v1/wc_partidos?activo=eq.true&order=fecha.asc', { headers: SUPA_H })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      allPartidos = data || [];
+      document.getElementById('statPartidos').textContent = allPartidos.length;
 
-/* Misc */
-.empty-state{text-align:center;padding:40px 20px;color:#aaa}
-.empty-state div{font-size:36px;margin-bottom:8px}
-.toast-q{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;white-space:nowrap}
-.toast-q.show{opacity:1}
-.pts-badge{display:inline-block;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:900;padding:2px 6px;border-radius:99px}
-.section-divider{display:flex;align-items:center;gap:8px;padding:18px 4px 8px;font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
-.section-divider::after{content:'';flex:1;height:0.5px;background:#ddd}
-.compact-card{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;border:0.5px solid #ececec;display:flex;align-items:center;gap:10px;opacity:.85}
-.compact-teams{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#555}
-.compact-team{display:flex;align-items:center;gap:5px;flex:1;justify-content:flex-end}
-.compact-team.right{justify-content:flex-start}
-.compact-team .flag{font-size:16px}
-.compact-team.winner .name{font-weight:900;color:#1a1a2e}
-.compact-vs{font-size:10px;color:#bbb;font-weight:700;padding:0 4px;min-width:24px;text-align:center}
-.compact-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:46px}
-.compact-grupo{font-size:9px;color:#aaa;text-transform:uppercase}
-.compact-badge{font-size:14px}
-.pct-row{display:flex;gap:6px;padding:0 10px 10px;margin-top:-4px}
-.pct-item{flex:1;text-align:center}
-.pct-bar-bg{height:5px;background:#eee;border-radius:99px;overflow:hidden;margin-bottom:3px}
-.pct-bar-fill{height:100%;background:#00B4B4;border-radius:99px;transition:width .6s ease}
-.pct-bar-fill.empate{background:#F5C842}
-.pct-label{font-size:10px;color:#999;font-weight:700}
-.pct-label.mine{color:#00B4B4}
+      fetch('/api/galeria?action=wc_porcentajes', { headers: { 'Content-Type': 'application/json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          porcentajes = d.porcentajes || {};
+          cargarMisPreds(function() { renderPartidos(); });
+        })
+        .catch(function() { cargarMisPreds(function() { renderPartidos(); }); });
+    })
+    .catch(function() {
+      document.getElementById('listPartidos').innerHTML = '<div class="empty-state"><div>&#x26A0;&#xFE0F;</div>Error cargando partidos</div>';
+    });
+}
+
+function cargarMisPreds(cb) {
+  if (!sessionEmail) { cb(); return; }
+  fetch(SUPA_URL + '/rest/v1/wc_predicciones?email=eq.' + encodeURIComponent(sessionEmail) + '&select=partido_id,prediccion,acerto,puntos', { headers: SUPA_H })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      misPreds = {};
+      (data || []).forEach(function(p) { misPreds[p.partido_id] = p; });
+      var aciertos = Object.values(misPreds).filter(function(p) { return p.acerto; }).length;
+      var puntos   = Object.values(misPreds).reduce(function(s, p) { return s + (p.puntos || 0); }, 0);
+      document.getElementById('statAciertos').textContent = aciertos;
+      document.getElementById('statMisPts').textContent   = puntos;
+      cb();
+    })
+    .catch(function() { cb(); });
+}
+
+function renderPartidos() {
+  var list = document.getElementById('listPartidos');
+  if (!allPartidos.length) {
+    list.innerHTML = '<div class="empty-state"><div>&#x26BD;</div>No hay partidos activos</div>';
+    return;
+  }
+  var ahora = Date.now();
+  var html = '';
+  var faseActual = '';
+
+  allPartidos.forEach(function(p) {
+    var fechaMs  = new Date(p.fecha).getTime();
+    var cerrado  = fechaMs - ahora < 30 * 60 * 1000; // cierra 30 min antes
+    var miPred   = misPreds[p.id];
+    var tienePred = miPred && miPred.prediccion;
+    var faseLbl  = { grupos:'Grupo', ronda32:'R32', ronda16:'Ronda 16', cuartos:'Cuartos', semis:'Semifinal', final:'Final', bronze:'3er lugar' }[p.fase] || p.fase;
+    var esBonus  = ['ronda16','cuartos','semis','final','bronze'].indexOf(p.fase) >= 0;
+
+    // Day divider
+    var dia = new Date(p.fecha).toLocaleDateString('es-GT', { weekday:'short', month:'short', day:'numeric' });
+    if (dia !== faseActual) {
+      faseActual = dia;
+      html += '<div class="day-label">' + dia + (esBonus ? ' &nbsp;<span class="pts-badge">&#x2B50; +5 pts</span>' : '') + '</div>';
+    }
+
+    // Result state
+    var resultado = p.resultado;
+    var pctData   = porcentajes[p.id];
+
+    html += '<div class="match-card' + (cerrado ? ' locked' : '') + '">';
+    html += '<div class="match-header"><span class="match-grupo">' + faseLbl + (p.grupo ? ' &middot; ' + p.grupo : '') + '</span><span class="match-time">' + new Date(p.fecha).toLocaleTimeString('es-GT', {hour:'2-digit',minute:'2-digit'}) + '</span></div>';
+    html += '<div class="match-teams"><div class="team"><div class="team-flag">' + (p.bandera1||'') + '</div><div class="team-name">' + p.equipo1 + '</div></div>';
+    html += '<div class="vs-box">VS</div>';
+    html += '<div class="team"><div class="team-flag">' + (p.bandera2||'') + '</div><div class="team-name">' + p.equipo2 + '</div></div></div>';
+
+    // Result badge
+    if (resultado) {
+      var resLabel = resultado === 'equipo1' ? p.equipo1 + ' gan&oacute;' : resultado === 'equipo2' ? p.equipo2 + ' gan&oacute;' : 'Empate';
+      var badgeCls = miPred ? (miPred.acerto ? 'win' : 'lose') : 'pending';
+      html += '<div class="match-result-badge ' + badgeCls + '">' + (miPred && miPred.acerto ? '&#x2705; ' : miPred ? '&#x274C; ' : '') + resLabel + '</div>';
+    }
+
+    // Pick buttons
+    html += '<div class="match-picks">';
+    ['equipo1','empate','equipo2'].forEach(function(opt) {
+      var label = opt === 'equipo1' ? p.equipo1 : opt === 'equipo2' ? p.equipo2 : 'Empate';
+      var cls   = 'pick-btn';
+      if (tienePred && miPred.prediccion === opt) {
+        cls += ' selected';
+        if (resultado) cls += miPred.acerto ? ' correct' : ' wrong';
+      } else if (resultado && resultado === opt) {
+        cls += ' correct-ans';
+      }
+      var disabled = (cerrado || !!resultado) ? ' disabled' : '';
+      html += '<button class="' + cls + '"' + disabled + ' onclick="predecir(\'' + p.id + '\',\'' + opt + '\')">' + label + '</button>';
+    });
+    html += '</div>';
+
+    // Porcentajes
+    if (pctData && pctData.total > 0) {
+      html += '<div class="pct-row">';
+      ['equipo1','empate','equipo2'].forEach(function(opt) {
+        var pct = pctData[opt] || 0;
+        var isMine = tienePred && miPred.prediccion === opt;
+        html += '<div class="pct-item">'
+          + '<div class="pct-bar-bg"><div class="pct-bar-fill' + (opt==='empate'?' empate':'') + '" style="width:' + pct + '%"></div></div>'
+          + '<div class="pct-label' + (isMine?' mine':'') + '">' + pct + '%</div>'
+          + '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+  });
+
+  list.innerHTML = html;
+}
+
+// ── Predecir ───────────────────────────────────────────────────
+function predecir(partidoId, prediccion) {
+  if (!sessionEmail) {
+    showToastQ('&#x1F512; Inicia sesi&oacute;n para predecir');
+    setTimeout(function() { window.location.href = '/familia.html'; }, 1200);
+    return;
+  }
+  fetch('/api/galeria?action=wc_predecir', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: sessionEmail, partido_id: partidoId, prediccion: prediccion })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        misPreds[partidoId] = { prediccion: prediccion, acerto: null, puntos: 0 };
+        renderPartidos();
+        showToastQ('&#x2705; Predicci&oacute;n guardada');
+      } else {
+        showToastQ(d.msg || 'Error al guardar');
+      }
+    })
+    .catch(function() { showToastQ('Error de conexi&oacute;n'); });
+}
+
+// ── Mi Quiniela ────────────────────────────────────────────────
+function cargarMiQuiniela() {
+  var list = document.getElementById('listMiQuiniela');
+  if (!sessionEmail) {
+    list.innerHTML = '<div class="login-prompt"><p>Inicia sesi&oacute;n para ver tus predicciones</p><button class="btn-primary" onclick="window.location.href=\'/familia.html\'">Iniciar sesi&oacute;n</button></div>';
+    return;
+  }
+  if (!allPartidos.length) {
+    setTimeout(cargarMiQuiniela, 800);
+    return;
+  }
+  var html = '';
+  var pendientes = 0;
+
+  allPartidos.forEach(function(p) {
+    var pred = misPreds[p.id];
+    var faseLbl = { grupos:'Grupo', ronda32:'R32', ronda16:'R16', cuartos:'QF', semis:'SF', final:'Final', bronze:'3er' }[p.fase] || p.fase;
+    var esBonus = ['ronda16','cuartos','semis','final','bronze'].indexOf(p.fase) >= 0;
+    var ahora = Date.now();
+    var cerrado = new Date(p.fecha).getTime() - ahora < 30 * 60 * 1000;
+
+    if (!pred && !cerrado && !p.resultado) pendientes++;
+
+    var predLabel = pred ? (pred.prediccion === 'equipo1' ? p.equipo1 : pred.prediccion === 'equipo2' ? p.equipo2 : 'Empate') : (cerrado || p.resultado ? '&mdash;' : '&#x1F4AC; Pendiente');
+    var statusIcon = pred ? (p.resultado ? (pred.acerto ? '&#x2705;' : '&#x274C;') : '&#x23F3;') : (cerrado ? '&#x1F512;' : '&#x26AA;');
+    var pts = pred && pred.acerto ? (esBonus ? '+5' : pred.prediccion === 'empate' ? '+1' : '+2') : '';
+
+    html += '<div class="compact-card">';
+    html += '<div style="font-size:18px">' + statusIcon + '</div>';
+    html += '<div class="compact-teams">';
+    html += '<div class="compact-team' + (p.resultado === 'equipo1' ? ' winner' : '') + '"><span class="flag">' + (p.bandera1||'') + '</span><span class="name">' + p.equipo1 + '</span></div>';
+    html += '<span class="compact-vs">vs</span>';
+    html += '<div class="compact-team right' + (p.resultado === 'equipo2' ? ' winner' : '') + '"><span class="name">' + p.equipo2 + '</span><span class="flag">' + (p.bandera2||'') + '</span></div>';
+    html += '</div>';
+    html += '<div class="compact-meta">';
+    html += '<span class="compact-grupo">' + faseLbl + '</span>';
+    html += '<span style="font-size:11px;color:#' + (pred && pred.acerto ? '00C853' : pred && p.resultado ? 'ff5252' : '888') + ';font-weight:700">' + predLabel + '</span>';
+    if (pts) html += '<span class="pts-badge">' + pts + '</span>';
+    html += '</div></div>';
+  });
+
+  if (pendientes > 0) {
+    html = '<div style="background:#E0F7F7;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#006060;font-weight:700">&#x26A1; Te faltan ' + pendientes + ' predicciones &mdash; &iexcl;no pierdas puntos!</div>' + html;
+  }
+
+  list.innerHTML = html || '<div class="empty-state"><div>&#x1F4CB;</div>Sin predicciones a&uacute;n</div>';
+}
+
+// ── Ranking ────────────────────────────────────────────────────
+function cargarRanking() {
+  fetch('/api/galeria?action=wc_ranking')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var ranking = d.ranking || [];
+      var html = '';
+      var MEDALS = ['&#x1F947;','&#x1F948;','&#x1F949;'];
+
+      ranking.slice(0,10).forEach(function(u, i) {
+        var esMio = sessionEmail && u.email === sessionEmail;
+        var posCls = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+        var inicial = (u.email || '?')[0].toUpperCase();
+        html += '<div class="ranking-card" style="' + (esMio ? 'border-color:#00B4B4;background:#f0fdfd' : '') + '">';
+        html += '<div class="rank-pos ' + posCls + '">' + (i < 3 ? MEDALS[i] : i + 1) + '</div>';
+        html += '<div class="rank-avatar">' + inicial + '</div>';
+        html += '<div class="rank-info"><div class="rank-name">' + u.email.split('@')[0] + (esMio ? ' <span style="color:#00B4B4;font-size:10px">(t&uacute;)</span>' : '') + '</div>';
+        html += '<div class="rank-detail">&#x2705; ' + u.aciertos + ' aciertos &middot; ' + u.predicciones + ' pred.</div></div>';
+        html += '<div class="rank-pts">' + u.puntos + ' pts</div></div>';
+      });
+
+      if (!html) html = '<div class="empty-state"><div>&#x1F3C6;</div>Ranking no disponible</div>';
+      document.getElementById('listRanking').innerHTML = html;
+    })
+    .catch(function() {
+      document.getElementById('listRanking').innerHTML = '<div class="empty-state"><div>&#x26A0;&#xFE0F;</div>Error cargando ranking</div>';
+    });
+}
+
+// ── Init ───────────────────────────────────────────────────────
+cargarPartidos();
+</script>
 </body>
-</html>
+</html
