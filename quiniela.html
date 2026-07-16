@@ -1,202 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quiniela Mundial 2026 — PetMi</title>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#00B4B4">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-top:56px;padding-bottom:72px}
-
-/* Hero */
-.hero{background:linear-gradient(135deg,#1a1a2e 0%,#0d2847 50%,#1a3a1a 100%);padding:20px 16px 24px;text-align:center;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='20' fill='none' stroke='rgba(255,255,255,.04)' stroke-width='8'/%3E%3C/svg%3E") repeat;pointer-events:none}
-.hero-badge{display:inline-block;background:rgba(245,200,66,.15);border:1px solid rgba(245,200,66,.4);color:#F5C842;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-.hero-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-0.5px}
-.hero-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px}
-.hero-stats{display:flex;justify-content:center;gap:24px}
-.hero-stat{text-align:center}
-.hero-stat-num{font-size:20px;font-weight:900;color:#F5C842}
-.hero-stat-lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.3px}
-
-/* Tabs */
-.tabs{display:flex;background:#fff;border-bottom:0.5px solid #e0e0e0;position:sticky;top:56px;z-index:40;overflow-x:auto}
-.tab{flex:1;min-width:70px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#888;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s}
-.tab.active{color:#00B4B4;border-bottom-color:#00B4B4}
-.tab-ico{font-size:16px;display:block;margin-bottom:2px}
-
-/* Sections */
-.section{display:none;padding:14px 12px}
-.section.active{display:block}
-
-/* Day divider */
-.day-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;padding:14px 4px 8px;display:flex;align-items:center;gap:8px}
-.day-label::after{content:'';flex:1;height:0.5px;background:#ddd}
-
-/* Match card */
-.match-card{background:#fff;border-radius:14px;margin-bottom:10px;overflow:hidden;border:0.5px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-.match-card.locked{opacity:.85}
-.match-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8f8f8;border-bottom:0.5px solid #efefef}
-.match-grupo{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px}
-.match-time{font-size:11px;color:#aaa}
-.match-teams{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px}
-.team{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
-.team-flag{font-size:26px;line-height:1}
-.team-name{font-size:11px;font-weight:700;color:#333;text-align:center;max-width:70px}
-.vs-box{font-size:13px;font-weight:900;color:#ccc;padding:0 8px}
-.match-picks{display:flex;gap:6px;padding:0 10px 12px}
-.pick-btn{flex:1;padding:8px 4px;border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;font-size:11px;font-weight:700;color:#555;cursor:pointer;text-align:center;transition:all .2s;line-height:1.3}
-.pick-btn:hover{border-color:#00B4B4;color:#00B4B4;background:#e0f7f7}
-.pick-btn.selected{background:#00B4B4;border-color:#00B4B4;color:#fff}
-.pick-btn.selected.correct{background:#00C853;border-color:#00C853}
-.pick-btn.selected.wrong{background:#ff5252;border-color:#ff5252}
-.pick-btn.correct-ans{background:#e8f5e9;border-color:#00C853;color:#00C853}
-.pick-btn:disabled{cursor:default}
-.match-result-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;margin:0 10px 10px}
-.match-result-badge.win{background:#e8f5e9;color:#00C853}
-.match-result-badge.lose{background:#fce4ec;color:#e53935}
-.match-result-badge.pending{background:#fff8e1;color:#f9a825}
-
-/* Ranking */
-.ranking-card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:0.5px solid #e8e8e8}
-.rank-pos{font-size:15px;font-weight:900;color:#ccc;min-width:24px}
-.rank-pos.gold{color:#F5C842}
-.rank-pos.silver{color:#aaa}
-.rank-pos.bronze{color:#cd7f32}
-.rank-avatar{width:36px;height:36px;border-radius:50%;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1.5px solid #00B4B4}
-.rank-info{flex:1}
-.rank-name{font-size:13px;font-weight:700;color:#222}
-.rank-detail{font-size:11px;color:#888}
-.rank-pts{font-size:17px;font-weight:900;color:#00B4B4}
-
-/* Premio */
-.premio-box{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;border:0.5px solid #e8e8e8;text-align:center}
-.premio-ico{font-size:48px;margin-bottom:8px}
-.premio-title{font-size:18px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
-.premio-desc{font-size:13px;color:#666;line-height:1.6}
-.ruleta-wrap{background:linear-gradient(135deg,#1a1a2e,#0d2847);border-radius:16px;padding:24px;text-align:center;margin-bottom:12px}
-.ruleta-title{font-size:15px;font-weight:700;color:#F5C842;margin-bottom:4px}
-.ruleta-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:16px}
-canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
-.btn-spin{background:#F5C842;color:#1a1a2e;border:none;padding:12px 28px;border-radius:99px;font-size:15px;font-weight:900;cursor:pointer;margin-top:14px;display:block;width:100%}
-.btn-spin:disabled{background:#555;color:#888}
-
-/* CTA */
-.btn-primary{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
-.login-prompt{background:#fff;border-radius:14px;padding:20px;text-align:center;border:0.5px solid #e8e8e8}
-.login-prompt p{font-size:14px;color:#666;margin-bottom:12px}
-
-/* Misc */
-.empty-state{text-align:center;padding:40px 20px;color:#aaa}
-.empty-state div{font-size:36px;margin-bottom:8px}
-.toast-q{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;white-space:nowrap}
-.toast-q.show{opacity:1}
-.pts-badge{display:inline-block;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:900;padding:2px 6px;border-radius:99px}
-.section-divider{display:flex;align-items:center;gap:8px;padding:18px 4px 8px;font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
-.section-divider::after{content:'';flex:1;height:0.5px;background:#ddd}
-.compact-card{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;border:0.5px solid #ececec;display:flex;align-items:center;gap:10px;opacity:.85}
-.compact-teams{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#555}
-.compact-team{display:flex;align-items:center;gap:5px;flex:1;justify-content:flex-end}
-.compact-team.right{justify-content:flex-start}
-.compact-team .flag{font-size:16px}
-.compact-team.winner .name{font-weight:900;color:#1a1a2e}
-.compact-vs{font-size:10px;color:#bbb;font-weight:700;padding:0 4px;min-width:24px;text-align:center}
-.compact-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:46px}
-.compact-grupo{font-size:9px;color:#aaa;text-transform:uppercase}
-.compact-badge{font-size:14px}
-.pct-row{display:flex;gap:6px;padding:0 10px 10px;margin-top:-4px}
-.pct-item{flex:1;text-align:center}
-.pct-bar-bg{height:5px;background:#eee;border-radius:99px;overflow:hidden;margin-bottom:3px}
-.pct-bar-fill{height:100%;background:#00B4B4;border-radius:99px;transition:width .6s ease}
-.pct-bar-fill.empate{background:#F5C842}
-.pct-label{font-size:10px;color:#999;font-weight:700}
-.pct-label.mine{color:#00B4B4}
-</style>
-</head>
-<body>
-
-<div class="hero">
-  <div class="hero-badge">⚽ Mundial 2026</div>
-  <div class="hero-title">Quiniela PetMi</div>
-  <div class="hero-sub">Predice los ganadores · Acumula puntos · Gana premios</div>
-  <div class="hero-stats">
-    <div class="hero-stat"><div class="hero-stat-num" id="statPartidos">—</div><div class="hero-stat-lbl">Partidos</div></div>
-    <div class="hero-stat"><div class="hero-stat-num" id="statMisPts">—</div><div class="hero-stat-lbl">Mis puntos</div></div>
-    <div class="hero-stat"><div class="hero-stat-num" id="statAciertos">—</div><div class="hero-stat-lbl">Aciertos</div></div>
-  </div>
-</div>
-
-
-<div class="tabs">
-  <div class="tab active" onclick="showTab('partidos')"><span class="tab-ico">⚽</span>Partidos</div>
-  <div class="tab" onclick="showTab('miquiniela')"><span class="tab-ico">📋</span>Mi Quiniela</div>
-  <div class="tab" onclick="showTab('ranking')"><span class="tab-ico">🏆</span>Ranking</div>
-  <div class="tab" onclick="showTab('premio')"><span class="tab-ico">🎁</span>Premio</div>
-  <div class="tab" onclick="showTab('reglas')"><span class="tab-ico">📋</span>Reglas</div>
-</div>
-
-<!-- PARTIDOS -->
-<div class="section active" id="sec-partidos">
-<div style="background:linear-gradient(135deg,#1a1a2e,#0D2B2B);border:2px solid #F5C842;border-radius:14px;padding:14px 16px;margin-bottom:12px;text-align:center">
-  <div style="color:#F5C842;font-size:22px;font-weight:900">⭐ SEMIFINAL — BONUS</div>
-  <div style="color:#fff;font-size:16px;font-weight:700;margin:4px 0">¡Cada acierto vale 5 puntos!</div>
-  <div style="color:#aaa;font-size:11px;line-height:1.5">Grupos y R32: +2 pts · <strong style="color:#F5C842">Ronda de 16, Cuartos, Semis y Final: +5 pts</strong></div>
-</div>
-  <div id="listPartidos"><div class="empty-state"><div>⚽</div>Cargando partidos...</div></div>
-</div>
-
-<!-- MI QUINIELA -->
-<div class="section" id="sec-miquiniela">
-  <div id="listMiQuiniela"><div class="empty-state"><div>📋</div>Cargando...</div></div>
-</div>
-
-<!-- RANKING -->
-<div class="section" id="sec-ranking">
-  <div style="font-size:12px;color:#aaa;text-align:center;padding:6px 0 10px">Top 10 — Cuartos de Final en curso</div>
-  <div id="listRanking"><div class="empty-state"><div>🏆</div>Cargando ranking...</div></div>
-
-  <!-- DATOS SORPRESA -->
-  <div style="margin-top:18px;background:#1a1a2e;border-radius:14px;padding:14px 16px">
-    <div onclick="toggleDatos()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-      <div style="color:#F5C842;font-size:13px;font-weight:700">⚡ Datos clave — Cuartos de Final</div>
-      <span id="datosCaret" style="color:#aaa;font-size:16px">▾</span>
-    </div>
-    <div id="datosWrap" style="display:none;margin-top:12px">
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1EB;&#x1F1F7; Francia vs Marruecos</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">El partido de Africa. Marruecos ya eliminó a Países Bajos en penales. &iquest;Puede con Francia?</div>
-      </div>
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1EA;&#x1F1F8; Clásico Ibérico en Cuartos</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">España vs Bélgica. España goleó 3-0 a Austria y 3-0 a Portugal en R16. Bélgica remontó dos veces vs Senegal.</div>
-      </div>
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1F3;&#x1F1F4; Noruega sorpresa del torneo</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Noruega eliminó a Brasil en R16. Ahora enfrenta a Inglaterra en Los Ángeles. Håland busca su primer gol en Cuartos.</div>
-      </div>
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1E6;&#x1F1F7; Messi busca Cuartos</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Argentina eliminó a Egipto. Messi lleva 20 goles en Mundiales. Su rival es Suiza, que eliminó a Colombia en R16.</div>
-      </div>
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x2B50; Bonus activo: +5 pts por acierto</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Cada partido de Cuartos vale 5 puntos. Con 4 aciertos perfectos subes 20 pts en el ranking de un solo día.</div>
-      </div>
-
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F4CA; El ranking se mueve hoy</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">45 participantes aún no han predicho los Cuartos. Si tú sí predices y ellos no, tienes ventaja directa en el ranking.</div>
-      </div>
-
-      <div style="font-size:11px;color:#555">&#x26BD; Cuartos de Final en curso — 4 partidos eliminatorios</div>
-    </div> html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -317,7 +118,7 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
 <script src="/header.js"></script>
 
 <div class="hero">
-  <div class="hero-badge">⚽ Mundial 2026</div>
+  <div class="hero-badge">⚽ Semifinal — Mundial 2026</div>
   <div class="hero-title">Quiniela PetMi</div>
   <div class="hero-sub">Predice los ganadores · Acumula puntos · Gana premios</div>
   <div class="hero-stats">
@@ -339,7 +140,7 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
 <!-- PARTIDOS -->
 <div class="section active" id="sec-partidos">
 <div style="background:linear-gradient(135deg,#1a1a2e,#0D2B2B);border:2px solid #F5C842;border-radius:14px;padding:14px 16px;margin-bottom:12px;text-align:center">
-  <div style="color:#F5C842;font-size:22px;font-weight:900">⭐ CUARTOS DE FINAL — BONUS</div>
+  <div style="color:#F5C842;font-size:22px;font-weight:900">⭐ SEMIFINAL — BONUS ⭐</div>
   <div style="color:#fff;font-size:16px;font-weight:700;margin:4px 0">¡Cada acierto vale 5 puntos!</div>
   <div style="color:#aaa;font-size:11px;line-height:1.5">Grupos y R32: +2 pts · <strong style="color:#F5C842">Ronda de 16, Cuartos, Semis y Final: +5 pts</strong></div>
 </div>
@@ -353,552 +154,339 @@ canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
 
 <!-- RANKING -->
 <div class="section" id="sec-ranking">
-  <div style="font-size:12px;color:#aaa;text-align:center;padding:6px 0 10px">Top 10 — Cuartos de Final en curso</div>
+  <div style="font-size:12px;color:#aaa;text-align:center;padding:6px 0 10px">Top 10 — Semifinal en curso</div>
   <div id="listRanking"><div class="empty-state"><div>🏆</div>Cargando ranking...</div></div>
 
   <!-- DATOS SORPRESA -->
   <div style="margin-top:18px;background:#1a1a2e;border-radius:14px;padding:14px 16px">
     <div onclick="toggleDatos()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-      <div style="color:#F5C842;font-size:13px;font-weight:700">⚡ Datos clave — Cuartos de Final</div>
+      <div style="color:#F5C842;font-size:13px;font-weight:700">⚡ Datos clave — Semifinal</div>
       <span id="datosCaret" style="color:#aaa;font-size:16px">▾</span>
     </div>
     <div id="datosWrap" style="display:none;margin-top:12px">
 
       <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">🇪🇨 Sorpresa más grande</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Ecuador venció 2-1 a Alemania y los eliminó. Era el favorito del Grupo E.</div>
+        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1EB;&#x1F1F7; Francia vs España — Mar 14 Jul</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">El duelo europeo. Francia goleó 2-0 a Marruecos. España eliminó a Bélgica con gol de Merino. AT&amp;T Stadium, Dallas.</div>
       </div>
 
       <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">🇩🇿 Dramático 3-3</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Argelia empató 3-3 con Austria — con 2 goles en el tiempo de descuento. Ambos pasan a la Ronda de 32.</div>
+        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1E6;&#x1F1F7; Argentina vs Inglaterra — Mié 15 Jul</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">La revancha de las Malvinas en semifinales. Argentina eliminó a Suiza 3-1 ET. Inglaterra remontió a Noruega 2-1 con doblete de Bellingham.</div>
       </div>
 
       <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">🇹🇷 Turquía rompe a EE.UU.</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Turquía venció 3-2 a Estados Unidos — la única derrota del anfitrión en la fase de grupos.</div>
+        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x2B50; Cuartos: 73% aciertos — Semis en juego</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">67 de 92 predicciones acertaron en Cuartos. Se repartieron 335 puntos de bonus. Ahora cada acierto en Semis vale &#x2B50; +5 pts.</div>
       </div>
 
       <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">🇿🇦 Sudáfrica hace historia</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Sudáfrica clasifica por primera vez a la fase eliminatoria. Venció a Corea del Sur 1-0 en el último partido.</div>
+        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F3C6; El camino a la final</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">Final el 19 de julio en el Estadio de Nueva York. Los dos ganadores de esta ronda se verán las caras por el título mundial.</div>
       </div>
 
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">🇨🇻 Cabo Verde — debut histórico</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">En su primer Mundial, Cabo Verde empató los 3 partidos (incluyendo vs. España) y clasificó 2do del Grupo H.</div>
-      </div>
+      <div style="font-size:11px;color:#555">&#x26BD; Semifinal en curso — 2 partidos decisivos</div>
+    </div>g="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiniela Mundial 2026 — PetMi</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00B4B4">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-top:56px;padding-bottom:72px}
 
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">🇫🇷 Francia perfecta</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Francia ganó los 3 partidos, anotó 10 goles y no recibió ninguno en casa. La selección más dominante de la fase de grupos.</div>
-      </div>
+/* Hero */
+.hero{background:linear-gradient(135deg,#1a1a2e 0%,#0d2847 50%,#1a3a1a 100%);padding:20px 16px 24px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='20' fill='none' stroke='rgba(255,255,255,.04)' stroke-width='8'/%3E%3C/svg%3E") repeat;pointer-events:none}
+.hero-badge{display:inline-block;background:rgba(245,200,66,.15);border:1px solid rgba(245,200,66,.4);color:#F5C842;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.hero-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-0.5px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px}
+.hero-stats{display:flex;justify-content:center;gap:24px}
+.hero-stat{text-align:center}
+.hero-stat-num{font-size:20px;font-weight:900;color:#F5C842}
+.hero-stat-lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.3px}
 
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">🐐 Messi — goleador histórico</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Messi marcó 2 goles vs. Austria y se convirtió en el máximo goleador histórico de Mundiales con 18 goles.</div>
-      </div>
+/* Tabs */
+.tabs{display:flex;background:#fff;border-bottom:0.5px solid #e0e0e0;position:sticky;top:56px;z-index:40;overflow-x:auto}
+.tab{flex:1;min-width:70px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#888;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab.active{color:#00B4B4;border-bottom-color:#00B4B4}
+.tab-ico{font-size:16px;display:block;margin-bottom:2px}
 
-      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">🇧🇪 Bélgica — rey del empate</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Bélgica empató vs. Egipto (1-1) e Irán (0-0) antes de ganar 5-1 a N. Zelanda. Pasan 3ros del Grupo G.</div>
-      </div>
+/* Sections */
+.section{display:none;padding:14px 12px}
+.section.active{display:block}
 
-      <div style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">🇩🇪 Alemania eliminada por Paraguay</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Alemania 1-1 Paraguay, penales 3-4. Primera vez que Alemania pierde un Mundial en penales.</div>
-      </div>
+/* Day divider */
+.day-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;padding:14px 4px 8px;display:flex;align-items:center;gap:8px}
+.day-label::after{content:'';flex:1;height:0.5px;background:#ddd}
 
-      <div style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">🇳🇱 Holanda fuera — Marruecos sigue</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">Marruecos avanzó a Cuartos de Final — enfrenta a Francia. África sigue en el torneo.</div>
-      </div>
+/* Match card */
+.match-card{background:#fff;border-radius:14px;margin-bottom:10px;overflow:hidden;border:0.5px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.match-card.locked{opacity:.85}
+.match-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8f8f8;border-bottom:0.5px solid #efefef}
+.match-grupo{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px}
+.match-time{font-size:11px;color:#aaa}
+.match-teams{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px}
+.team{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.team-flag{font-size:26px;line-height:1}
+.team-name{font-size:11px;font-weight:700;color:#333;text-align:center;max-width:70px}
+.vs-box{font-size:13px;font-weight:900;color:#ccc;padding:0 8px}
+.match-picks{display:flex;gap:6px;padding:0 10px 12px}
+.pick-btn{flex:1;padding:8px 4px;border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;font-size:11px;font-weight:700;color:#555;cursor:pointer;text-align:center;transition:all .2s;line-height:1.3}
+.pick-btn:hover{border-color:#00B4B4;color:#00B4B4;background:#e0f7f7}
+.pick-btn.selected{background:#00B4B4;border-color:#00B4B4;color:#fff}
+.pick-btn.selected.correct{background:#00C853;border-color:#00C853}
+.pick-btn.selected.wrong{background:#ff5252;border-color:#ff5252}
+.pick-btn.correct-ans{background:#e8f5e9;border-color:#00C853;color:#00C853}
+.pick-btn:disabled{cursor:default}
+.match-result-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;margin:0 10px 10px}
+.match-result-badge.win{background:#e8f5e9;color:#00C853}
+.match-result-badge.lose{background:#fce4ec;color:#e53935}
+.match-result-badge.pending{background:#fff8e1;color:#f9a825}
 
-      <div style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
-        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">🇲🇽 México 2-0 Ecuador en el Azteca</div>
-        <div style="color:#ccc;font-size:12px;line-height:1.5">México fue eliminado por Inglaterra en Ronda de 16. Solo EE.UU. sigue en Cuartos vs Bélgica.</div>
-      </div>
+/* Ranking */
+.ranking-card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:0.5px solid #e8e8e8}
+.rank-pos{font-size:15px;font-weight:900;color:#ccc;min-width:24px}
+.rank-pos.gold{color:#F5C842}
+.rank-pos.silver{color:#aaa}
+.rank-pos.bronze{color:#cd7f32}
+.rank-avatar{width:36px;height:36px;border-radius:50%;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1.5px solid #00B4B4}
+.rank-info{flex:1}
+.rank-name{font-size:13px;font-weight:700;color:#222}
+.rank-detail{font-size:11px;color:#888}
+.rank-pts{font-size:17px;font-weight:900;color:#00B4B4}
 
-      <div style="text-align:center;padding-top:8px">
-        <div style="font-size:11px;color:#555">⚽ Cuartos de Final en curso — 4 partidos eliminatorios</div>
-        <div style="font-size:11px;color:#00B4B4;margin-top:3px">¡Sigue prediciendo para subir en el ranking!</div>
-      </div>
-    </div>
+/* Premio */
+.premio-box{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;border:0.5px solid #e8e8e8;text-align:center}
+.premio-ico{font-size:48px;margin-bottom:8px}
+.premio-title{font-size:18px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
+.premio-desc{font-size:13px;color:#666;line-height:1.6}
+.ruleta-wrap{background:linear-gradient(135deg,#1a1a2e,#0d2847);border-radius:16px;padding:24px;text-align:center;margin-bottom:12px}
+.ruleta-title{font-size:15px;font-weight:700;color:#F5C842;margin-bottom:4px}
+.ruleta-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:16px}
+canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
+.btn-spin{background:#F5C842;color:#1a1a2e;border:none;padding:12px 28px;border-radius:99px;font-size:15px;font-weight:900;cursor:pointer;margin-top:14px;display:block;width:100%}
+.btn-spin:disabled{background:#555;color:#888}
+
+/* CTA */
+.btn-primary{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
+.login-prompt{background:#fff;border-radius:14px;padding:20px;text-align:center;border:0.5px solid #e8e8e8}
+.login-prompt p{font-size:14px;color:#666;margin-bottom:12px}
+
+/* Misc */
+.empty-state{text-align:center;padding:40px 20px;color:#aaa}
+.empty-state div{font-size:36px;margin-bottom:8px}
+.toast-q{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;white-space:nowrap}
+.toast-q.show{opacity:1}
+.pts-badge{display:inline-block;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:900;padding:2px 6px;border-radius:99px}
+.section-divider{display:flex;align-items:center;gap:8px;padding:18px 4px 8px;font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
+.section-divider::after{content:'';flex:1;height:0.5px;background:#ddd}
+.compact-card{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;border:0.5px solid #ececec;display:flex;align-items:center;gap:10px;opacity:.85}
+.compact-teams{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#555}
+.compact-team{display:flex;align-items:center;gap:5px;flex:1;justify-content:flex-end}
+.compact-team.right{justify-content:flex-start}
+.compact-team .flag{font-size:16px}
+.compact-team.winner .name{font-weight:900;color:#1a1a2e}
+.compact-vs{font-size:10px;color:#bbb;font-weight:700;padding:0 4px;min-width:24px;text-align:center}
+.compact-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:46px}
+.compact-grupo{font-size:9px;color:#aaa;text-transform:uppercase}
+.compact-badge{font-size:14px}
+.pct-row{display:flex;gap:6px;padding:0 10px 10px;margin-top:-4px}
+.pct-item{flex:1;text-align:center}
+.pct-bar-bg{height:5px;background:#eee;border-radius:99px;overflow:hidden;margin-bottom:3px}
+.pct-bar-fill{height:100%;background:#00B4B4;border-radius:99px;transition:width .6s ease}
+.pct-bar-fill.empate{background:#F5C842}
+.pct-label{font-size:10px;color:#999;font-weight:700}
+.pct-label.mine{color:#00B4B4}
+</style>
+</head>
+<body>
+<script src="/header.js"></script>
+
+<div class="hero">
+  <div class="hero-badge">⚽ Semifinal — Mundial 2026</div>
+  <div class="hero-title">Quiniela PetMi</div>
+  <div class="hero-sub">Predice los ganadores · Acumula puntos · Gana premios</div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-num" id="statPartidos">—</div><div class="hero-stat-lbl">Partidos</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statMisPts">—</div><div class="hero-stat-lbl">Mis puntos</div></div>
+    <div class="hero-stat"><div class="hero-stat-num" id="statAciertos">—</div><div class="hero-stat-lbl">Aciertos</div></div>
   </div>
 </div>
 
-<!-- PREMIO -->
-<div class="section" id="sec-premio">
-  <div class="premio-box">
-    <div class="premio-ico">🏆</div>
-    <div class="premio-title">¡El que más acierte gana!</div>
-    <div class="premio-desc">
-      Por cada partido que aciertes en grupos/R32 ganas <strong>+2 puntos</strong>. Desde la <strong style="color:#F5C842">Ronda de 16 en adelante (Cuartos, Semis, Final) cada acierto vale ⭐ +5 puntos</strong>.<br><br>
-      Al finalizar el Mundial (19 julio) el jugador con más puntos gana el premio.<br>
-      Si hay empate, se rifará con la <strong>Ruleta PetMi</strong> entre todos los ganadores empatados.
-    </div>
-  </div>
-  <div class="premio-box" id="premioActual" style="padding:0;overflow:hidden;border-radius:16px;border:1.5px solid #F5C842">
-    <div style="position:relative">
-      <img src="https://app.revistapetmi.com/img/premio1.png" alt="Premio Quiniela PetMi"
-           style="width:100%;display:block;border-radius:14px 14px 0 0;max-height:280px;object-fit:cover">
-      <div style="position:absolute;top:10px;right:10px;background:#F5C842;color:#1a1a2e;
-                  font-size:10px;font-weight:900;padding:4px 10px;border-radius:99px;
-                  letter-spacing:0.3px">🎁 PREMIO</div>
-    </div>
-    <div style="padding:16px">
-      <div style="color:#F5C842;font-size:11px;font-weight:700;letter-spacing:0.5px;margin-bottom:6px">
-        ✨ REVELANDO LAS SORPRESAS
-      </div>
-      <div class="premio-title" style="font-size:16px;margin-bottom:8px">¿Quieres saber qué ganarás?</div>
-      <div class="premio-desc" style="color:#888;font-size:12px;line-height:1.6">
-        El premio final del torneo se irá revelando partidos a partidos.<br>
-        Sigue prediciendo — cada acierto te acerca más a llevártelo.
-      </div>
-    </div>
-  </div>
-  <div class="ruleta-wrap" id="ruletaSection" style="display:none">
-    <div class="ruleta-title">🎡 Ruleta de Ganadores</div>
-    <div class="ruleta-sub" id="ruletaInfo">Solo disponible al finalizar el mundial</div>
-    <canvas id="ruleta" width="260" height="260"></canvas>
-    <button class="btn-spin" id="btnSpin" onclick="girarRuleta()">🎡 Girar la Ruleta</button>
-  </div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('partidos')"><span class="tab-ico">⚽</span>Partidos</div>
+  <div class="tab" onclick="showTab('miquiniela')"><span class="tab-ico">📋</span>Mi Quiniela</div>
+  <div class="tab" onclick="showTab('ranking')"><span class="tab-ico">🏆</span>Ranking</div>
+  <div class="tab" onclick="showTab('premio')"><span class="tab-ico">🎁</span>Premio</div>
+  <div class="tab" onclick="showTab('reglas')"><span class="tab-ico">📋</span>Reglas</div>
 </div>
 
-<!-- REGLAS -->
-<div class="section" id="sec-reglas">
-  <div style="background:#fff;border-radius:14px;padding:20px;border:0.5px solid #e8e8e8;margin-bottom:10px">
-    <div style="font-size:16px;font-weight:900;color:#1a1a2e;margin-bottom:14px">📋 Reglas de la Quiniela</div>
-
-    <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:16px">
-      Predice el resultado de cada partido del Mundial FIFA 2026 y acumula puntos.
-      <strong>La/El participante que más acierte al final del torneo gana el premio.</strong>
-    </div>
-
-    <div style="font-size:12px;font-weight:700;color:#00B4B4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">¿Cómo predecir?</div>
-    <div style="background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#444;line-height:1.8">
-      • Elige el equipo que crees que ganará (o empate en fase de grupos)<br>
-      • Tienes hasta <strong>30 minutos antes</strong> de que comience cada partido<br>
-      • Puedes cambiar tu predicción cuantas veces quieras antes del cierre<br>
-      • Una vez cerrado el partido, ya no puedes modificarla
-    </div>
-
-    <div style="font-size:12px;font-weight:700;color:#00B4B4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Puntuación</div>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:10px;background:#e8f5e9;border-radius:8px;padding:10px 12px">
-        <span style="font-size:18px">✅</span>
-        <div><div style="font-size:13px;font-weight:700;color:#2e7d32">Aciertas el ganador (grupos)</div><div style="font-size:11px;color:#555">+2 puntos</div></div><div style="margin-top:6px"><div style="font-size:13px;font-weight:700;color:#856404">⭐ Aciertas R16 en adelante</div><div style="font-size:11px;color:#555">+5 puntos</div></div>
-        <span style="margin-left:auto;font-size:20px;font-weight:900;color:#2e7d32">+2</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;background:#fff8e1;border-radius:8px;padding:10px 12px">
-        <span style="font-size:18px">🤝</span>
-        <div><div style="font-size:13px;font-weight:700;color:#f9a825">Aciertas el empate</div><div style="font-size:11px;color:#555">+1 punto</div></div>
-        <span style="margin-left:auto;font-size:20px;font-weight:900;color:#f9a825">+1</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;background:#f5f5f5;border-radius:8px;padding:10px 12px">
-        <span style="font-size:18px">❌</span>
-        <div><div style="font-size:13px;font-weight:700;color:#888">No aciertas</div><div style="font-size:11px;color:#555">0 puntos</div></div>
-        <span style="margin-left:auto;font-size:20px;font-weight:900;color:#ccc">0</span>
-      </div>
-    </div>
-
-    <div style="background:#e0f7f7;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#007a7a">
-      <strong>Nota:</strong> Esta quiniela es un juego independiente — los puntos <strong>no se suman</strong> a tus puntos generales de PetMi.
-    </div>
-
-    <div style="font-size:12px;font-weight:700;color:#00B4B4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Fases del torneo</div>
-    <div style="background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#444;line-height:1.8">
-      <strong>Fase de grupos:</strong> 3 opciones — Gana equipo 1, Empate, Gana equipo 2<br>
-      <strong>Eliminatorias:</strong> 2 opciones — Gana equipo 1, Gana equipo 2<br>
-      <span style="font-size:11px;color:#888">(No hay empate en eliminatorias — se juega hasta definir un ganador)</span>
-    </div>
-
-    <div style="font-size:12px;font-weight:700;color:#00B4B4;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Premio</div>
-    <div style="background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#444;line-height:1.8">
-      La/El participante con más puntos al finalizar el Mundial (19 de julio) gana el premio.<br>
-      Si hay empate en puntos, se decide con la <strong>Ruleta PetMi</strong> en vivo. 🎡
-    </div>
-
-    <div style="background:#fff8e1;border-radius:10px;padding:12px;font-size:12px;color:#856404;line-height:1.7">
-      <strong>Importante:</strong> Los resultados son marcados por el equipo PetMi al terminar cada partido. En caso de cualquier discrepancia, la decisión del equipo PetMi es final.
-    </div>
-  </div>
+<!-- PARTIDOS -->
+<div class="section active" id="sec-partidos">
+<div style="background:linear-gradient(135deg,#1a1a2e,#0D2B2B);border:2px solid #F5C842;border-radius:14px;padding:14px 16px;margin-bottom:12px;text-align:center">
+  <div style="color:#F5C842;font-size:22px;font-weight:900">⭐ SEMIFINAL — BONUS ⭐</div>
+  <div style="color:#fff;font-size:16px;font-weight:700;margin:4px 0">¡Cada acierto vale 5 puntos!</div>
+  <div style="color:#aaa;font-size:11px;line-height:1.5">Grupos y R32: +2 pts · <strong style="color:#F5C842">Ronda de 16, Cuartos, Semis y Final: +5 pts</strong></div>
+</div>
+  <div id="listPartidos"><div class="empty-state"><div>⚽</div>Cargando partidos...</div></div>
 </div>
 
-<div class="toast-q" id="toastQ"></div>
+<!-- MI QUINIELA -->
+<div class="section" id="sec-miquiniela">
+  <div id="listMiQuiniela"><div class="empty-state"><div>📋</div>Cargando...</div></div>
+</div>
 
-<script>
-var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
-var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-var H = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' };
+<!-- RANKING -->
+<div class="section" id="sec-ranking">
+  <div style="font-size:12px;color:#aaa;text-align:center;padding:6px 0 10px">Top 10 — Semifinal en curso</div>
+  <div id="listRanking"><div class="empty-state"><div>🏆</div>Cargando ranking...</div></div>
 
-var sessionEmail = localStorage.getItem('petzid_email') || '';
-var partidos = [];
-var misPreds = {};
-var porcentajes = {};
+  <!-- DATOS SORPRESA -->
+  <div style="margin-top:18px;background:#1a1a2e;border-radius:14px;padding:14px 16px">
+    <div onclick="toggleDatos()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+      <div style="color:#F5C842;font-size:13px;font-weight:700">⚡ Datos clave — Semifinal</div>
+      <span id="datosCaret" style="color:#aaa;font-size:16px">▾</span>
+    </div>
+    <div id="datosWrap" style="display:none;margin-top:12px">
 
-function showTab(id) {
-  document.querySelectorAll('.tab').forEach(function(t,i){ t.classList.toggle('active', ['partidos','miquiniela','ranking','premio','reglas'][i]===id); });
-  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
-  document.getElementById('sec-'+id).classList.add('active');
-  if(id==='ranking') loadRanking();
-}
+      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1EB;&#x1F1F7; Francia vs Espa&#xF1;a — Mar 14 Jul</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">El partido m&#xE1;s esperado. Francia elimin&#xF3; a Marruecos 2-0 (Mbapp&#xE9;). Espa&#xF1;a elimin&#xF3; a B&#xE9;lgica con gol de Merino. AT&amp;T Stadium, Dallas.</div>
+      </div>
 
-function toggleDatos() {
-  var w = document.getElementById('datosWrap');
-  var c = document.getElementById('datosCaret');
-  if(!w) return;
-  var open = w.style.display === 'block';
-  w.style.display = open ? 'none' : 'block';
-  if(c) c.textContent = open ? '▾' : '▴';
-}
-function toast(msg) {
-  var t = document.getElementById('toastQ');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(function(){ t.classList.remove('show'); }, 2500);
-}
+      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F1E6;&#x1F1F7; Argentina vs Inglaterra — Mi&#xE9; 15 Jul</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">Messi (20 goles en Mundiales) vs Kane. Argentina derrot&#xF3; a Suiza 3-1 en tiempo extra. Mercedes-Benz Stadium, Atlanta.</div>
+      </div>
 
-// ── Cargar partidos ───────────────────────────────────────────
-function loadPartidos() {
-  fetch(SUPA_URL + '/rest/v1/wc_partidos?select=*&order=fecha.asc', { headers: H })
-  .then(function(r){ return r.json(); })
-  .then(function(rows){
-    partidos = rows;
-    document.getElementById('statPartidos').textContent = rows.length;
-    loadPorcentajes();
-    if(sessionEmail) loadMisPreds(rows);
-    else renderPartidos(rows, {});
-  }).catch(function(){ document.getElementById('listPartidos').innerHTML = '<div class="empty-state"><div>⚠️</div>Error cargando partidos</div>'; });
-}
+      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#F5C842;font-size:12px;font-weight:700;margin-bottom:3px">&#x2B50; +5 pts por acierto — sigue activo</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">Semifinal y Final mantienen el bonus de +5 pts. 2 aciertos perfectos = +10 pts en el ranking.</div>
+      </div>
 
-function loadPorcentajes() {
-  fetch('/api/galeria?action=wc_porcentajes')
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if(d.porcentajes) {
-      porcentajes = d.porcentajes;
-      // Re-render to show percentages if already rendered
-      if(partidos.length) renderPartidos(partidos, misPreds);
-    }
-  }).catch(function(){});
-}
+      <div class="dato-item" style="background:#0D2B2B;border-radius:10px;padding:10px 12px;margin-bottom:8px">
+        <div style="color:#00B4B4;font-size:12px;font-weight:700;margin-bottom:3px">&#x1F3C6; Final — S&#xE1;b 19 Jul · MetLife Stadium</div>
+        <div style="color:#ccc;font-size:12px;line-height:1.5">La final es el 19 de julio. El ganador de la quiniela se anuncia ese d&#xED;a. &#xA1;Todo se define esta semana!</div>
+      </div>
 
-function loadMisPreds(rows) {
-  var ids = rows.map(function(p){ return p.id; }).join(',');
-  fetch(SUPA_URL + '/rest/v1/wc_predicciones?email=eq.' + encodeURIComponent(sessionEmail) + '&select=*', { headers: H })
-  .then(function(r){ return r.json(); })
-  .then(function(preds){
-    preds.forEach(function(p){ misPreds[p.partido_id] = p; });
-    updateStats(preds);
-    renderPartidos(rows, misPreds);
-    renderMiQuiniela(rows, misPreds);
-  });
-}
+      <div style="font-size:11px;color:#555">&#x26BD; Semifinal en curso &#x2014; 2 partidos</div>
+    </div>g="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiniela Mundial 2026 — PetMi</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00B4B4">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-top:56px;padding-bottom:72px}
 
-function updateStats(preds) {
-  var pts = preds.reduce(function(s,p){ return s + (p.puntos||0); }, 0);
-  var ok  = preds.filter(function(p){ return p.acerto === true; }).length;
-  document.getElementById('statMisPts').textContent = pts;
-  document.getElementById('statAciertos').textContent = ok;
-}
+/* Hero */
+.hero{background:linear-gradient(135deg,#1a1a2e 0%,#0d2847 50%,#1a3a1a 100%);padding:20px 16px 24px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='20' fill='none' stroke='rgba(255,255,255,.04)' stroke-width='8'/%3E%3C/svg%3E") repeat;pointer-events:none}
+.hero-badge{display:inline-block;background:rgba(245,200,66,.15);border:1px solid rgba(245,200,66,.4);color:#F5C842;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.hero-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-0.5px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px}
+.hero-stats{display:flex;justify-content:center;gap:24px}
+.hero-stat{text-align:center}
+.hero-stat-num{font-size:20px;font-weight:900;color:#F5C842}
+.hero-stat-lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.3px}
 
-// ── Renderizar partidos ───────────────────────────────────────
-function renderPartidos(rows, preds) {
-  var now = new Date();
+/* Tabs */
+.tabs{display:flex;background:#fff;border-bottom:0.5px solid #e0e0e0;position:sticky;top:56px;z-index:40;overflow-x:auto}
+.tab{flex:1;min-width:70px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:#888;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab.active{color:#00B4B4;border-bottom-color:#00B4B4}
+.tab-ico{font-size:16px;display:block;margin-bottom:2px}
 
-  var proximos = [];
-  var pasados = [];
-  rows.forEach(function(p) {
-    if (p.resultado) pasados.push(p);
-    else proximos.push(p);
-  });
+/* Sections */
+.section{display:none;padding:14px 12px}
+.section.active{display:block}
 
-  var html = '';
-  var lastDay = '';
+/* Day divider */
+.day-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;padding:14px 4px 8px;display:flex;align-items:center;gap:8px}
+.day-label::after{content:'';flex:1;height:0.5px;background:#ddd}
 
-  // Próximos partidos primero, con separador por día
-  proximos.forEach(function(p) {
-    var fecha = new Date(p.fecha);
-    var dayKey = fecha.toLocaleDateString('es-GT', {weekday:'long', month:'long', day:'numeric', timeZone:'America/Guatemala'});
-    if(dayKey !== lastDay) {
-      html += '<div class="day-label">' + dayKey + '</div>';
-      lastDay = dayKey;
-    }
-    html += renderMatchCard(p, preds[p.id], now, false);
-  });
+/* Match card */
+.match-card{background:#fff;border-radius:14px;margin-bottom:10px;overflow:hidden;border:0.5px solid #e8e8e8;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.match-card.locked{opacity:.85}
+.match-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8f8f8;border-bottom:0.5px solid #efefef}
+.match-grupo{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px}
+.match-time{font-size:11px;color:#aaa}
+.match-teams{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px}
+.team{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.team-flag{font-size:26px;line-height:1}
+.team-name{font-size:11px;font-weight:700;color:#333;text-align:center;max-width:70px}
+.vs-box{font-size:13px;font-weight:900;color:#ccc;padding:0 8px}
+.match-picks{display:flex;gap:6px;padding:0 10px 12px}
+.pick-btn{flex:1;padding:8px 4px;border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;font-size:11px;font-weight:700;color:#555;cursor:pointer;text-align:center;transition:all .2s;line-height:1.3}
+.pick-btn:hover{border-color:#00B4B4;color:#00B4B4;background:#e0f7f7}
+.pick-btn.selected{background:#00B4B4;border-color:#00B4B4;color:#fff}
+.pick-btn.selected.correct{background:#00C853;border-color:#00C853}
+.pick-btn.selected.wrong{background:#ff5252;border-color:#ff5252}
+.pick-btn.correct-ans{background:#e8f5e9;border-color:#00C853;color:#00C853}
+.pick-btn:disabled{cursor:default}
+.match-result-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;margin:0 10px 10px}
+.match-result-badge.win{background:#e8f5e9;color:#00C853}
+.match-result-badge.lose{background:#fce4ec;color:#e53935}
+.match-result-badge.pending{background:#fff8e1;color:#f9a825}
 
-  // Partidos ya jugados, como tarjetas resumidas al final
-  if (pasados.length) {
-    html += '<div class="section-divider">⏱️ Partidos jugados</div>';
-    // Más reciente primero
-    pasados.slice().reverse().forEach(function(p) {
-      html += renderMatchCardCompact(p, preds[p.id]);
-    });
-  }
+/* Ranking */
+.ranking-card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:0.5px solid #e8e8e8}
+.rank-pos{font-size:15px;font-weight:900;color:#ccc;min-width:24px}
+.rank-pos.gold{color:#F5C842}
+.rank-pos.silver{color:#aaa}
+.rank-pos.bronze{color:#cd7f32}
+.rank-avatar{width:36px;height:36px;border-radius:50%;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1.5px solid #00B4B4}
+.rank-info{flex:1}
+.rank-name{font-size:13px;font-weight:700;color:#222}
+.rank-detail{font-size:11px;color:#888}
+.rank-pts{font-size:17px;font-weight:900;color:#00B4B4}
 
-  document.getElementById('listPartidos').innerHTML = html || '<div class="empty-state"><div>⚽</div>Sin partidos disponibles</div>';
-}
+/* Premio */
+.premio-box{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;border:0.5px solid #e8e8e8;text-align:center}
+.premio-ico{font-size:48px;margin-bottom:8px}
+.premio-title{font-size:18px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
+.premio-desc{font-size:13px;color:#666;line-height:1.6}
+.ruleta-wrap{background:linear-gradient(135deg,#1a1a2e,#0d2847);border-radius:16px;padding:24px;text-align:center;margin-bottom:12px}
+.ruleta-title{font-size:15px;font-weight:700;color:#F5C842;margin-bottom:4px}
+.ruleta-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:16px}
+canvas#ruleta{border-radius:50%;border:4px solid #F5C842}
+.btn-spin{background:#F5C842;color:#1a1a2e;border:none;padding:12px 28px;border-radius:99px;font-size:15px;font-weight:900;cursor:pointer;margin-top:14px;display:block;width:100%}
+.btn-spin:disabled{background:#555;color:#888}
 
-// ── Tarjeta resumida (partidos ya jugados) ─────────────────────
-function renderMatchCardCompact(p, pred) {
-  var fecha = new Date(p.fecha);
-  var fechaCorta = fecha.toLocaleDateString('es-GT', {day:'numeric', month:'short', timeZone:'America/Guatemala'});
-  var fase = p.grupo ? 'Gr.' + p.grupo : (p.fase.charAt(0).toUpperCase() + p.fase.slice(1));
+/* CTA */
+.btn-primary{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
+.login-prompt{background:#fff;border-radius:14px;padding:20px;text-align:center;border:0.5px solid #e8e8e8}
+.login-prompt p{font-size:14px;color:#666;margin-bottom:12px}
 
-  var win1 = p.resultado === 'equipo1';
-  var win2 = p.resultado === 'equipo2';
-
-  var badge = '';
-  if (pred && p.resultado) {
-    badge = pred.acerto ? '<span class="compact-badge" title="Acertaste">✅</span>' : '<span class="compact-badge" title="No acertaste">❌</span>';
-  } else if (pred) {
-    badge = '<span class="compact-badge" title="Esperando resultado">⏳</span>';
-  } else if (!p.resultado) {
-    badge = '<span class="compact-badge" title="Sin resultado aún">⏳</span>';
-  }
-
-  return '<div class="compact-card">'
-    + '<div class="compact-meta"><div class="compact-grupo">'+fase+'</div><div style="font-size:10px;color:#bbb">'+fechaCorta+'</div></div>'
-    + '<div class="compact-teams">'
-    + '<div class="compact-team'+(win1?' winner':'')+'"><span class="name">'+p.equipo1+'</span><span class="flag">'+p.bandera1+'</span></div>'
-    + '<div class="compact-vs">'+(p.resultado ? (p.resultado==='empate' ? 'EMP' : 'VS') : 'VS')+'</div>'
-    + '<div class="compact-team right'+(win2?' winner':'')+'"><span class="flag">'+p.bandera2+'</span><span class="name">'+p.equipo2+'</span></div>'
-    + '</div>'
-    + badge
-    + '</div>';
-}
-
-function renderMiQuiniela(rows, preds) {
-  if(!sessionEmail) {
-    document.getElementById('listMiQuiniela').innerHTML = '<div class="login-prompt"><p>Inicia sesión para ver tus predicciones</p><button class="btn-primary" onclick="petmiAbrirLogin()">Ingresar</button></div>';
-    return;
-  }
-  var now = new Date();
-  var played = rows.filter(function(p){ return preds[p.id]; });
-  if(!played.length) {
-    document.getElementById('listMiQuiniela').innerHTML = '<div class="empty-state"><div>📋</div>Aún no tienes predicciones.<br>Ve a la pestaña Partidos.</div>';
-    return;
-  }
-
-  var proximos = [];
-  var pasados = [];
-  played.forEach(function(p) {
-    if (p.resultado) pasados.push(p);
-    else proximos.push(p);
-  });
-
-  var html = '';
-  proximos.forEach(function(p){ html += renderMatchCard(p, preds[p.id], now, true); });
-
-  if (pasados.length) {
-    html += '<div class="section-divider">⏱️ Partidos jugados</div>';
-    pasados.slice().reverse().forEach(function(p){ html += renderMatchCardCompact(p, preds[p.id]); });
-  }
-
-  document.getElementById('listMiQuiniela').innerHTML = html;
-}
-
-function renderMatchCard(p, pred, now, showAll) {
-  var fecha  = new Date(p.fecha);
-  var treintaMin = new Date(fecha.getTime() - 30*60*1000);
-  var locked = treintaMin <= now;
-  var hora   = fecha.toLocaleTimeString('es-GT', {hour:'2-digit', minute:'2-digit', timeZone:'America/Guatemala'});
-  var fase    = p.grupo ? 'Grupo ' + p.grupo : p.fase.charAt(0).toUpperCase() + p.fase.slice(1);
-  var esBonus = ['ronda16','cuartos','semis','final','bronze'].indexOf(p.fase) >= 0;
-  var ptsGanar = esBonus ? 5 : 2;
-  var ptsEmpate = esBonus ? 0 : 1;
-
-  // Pick buttons
-  var opts = [
-    { key: 'equipo1', label: p.bandera1 + '<br>' + p.equipo1 },
-    { key: 'empate',  label: 'Empate' },
-    { key: 'equipo2', label: p.bandera2 + '<br>' + p.equipo2 }
-  ];
-  if(p.fase !== 'grupos') opts.splice(1, 1); // No empate en eliminatorias
-
-  // Badge de bonus puntos para eliminatorias
-  var bonusBadge = esBonus ? '<div style="background:linear-gradient(135deg,#F5C842,#f0a500);color:#1a1a2e;font-size:11px;font-weight:900;text-align:center;padding:5px 0;border-radius:8px 8px 0 0;letter-spacing:0.3px">⭐ +5 PUNTOS si aciertas este partido</div>' : '';
-  var picksHtml = bonusBadge + '<div class="match-picks">';
-  opts.forEach(function(o) {
-    var cls = 'pick-btn';
-    var disabled = locked ? 'disabled' : '';
-    if(pred && pred.prediccion === o.key) {
-      cls += ' selected';
-      if(p.resultado) cls += (p.resultado === o.key ? ' correct' : ' wrong');
-    }
-    if(p.resultado && p.resultado === o.key && (!pred || pred.prediccion !== o.key)) cls += ' correct-ans';
-    picksHtml += '<button class="'+cls+'" '+disabled+' onclick="predecir('+p.id+',\''+o.key+'\')">'+o.label+'</button>';
-  });
-  picksHtml += '</div>';
-
-  // Result badge
-  var badgeHtml = '';
-  if(pred && p.resultado) {
-    if(pred.acerto) badgeHtml = '<div class="match-result-badge win">' + (esBonus ? '⭐ +5 puntos BONUS!' : '✅ +2 puntos') + '</div>';
-    else badgeHtml = '<div class="match-result-badge lose">❌ No acertaste</div>';
-  } else if(pred && !p.resultado) {
-    badgeHtml = '<div class="match-result-badge pending">⏳ Esperando resultado</div>';
-  }
-
-  // Porcentajes — solo mostrar si el usuario ya predijo este partido
-  var pctHtml = '';
-  if(pred && porcentajes[p.id]) {
-    var pc = porcentajes[p.id];
-    pctHtml = '<div class="pct-row">'
-      + '<div class="pct-item"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:'+pc.equipo1+'%"></div></div>'
-      + '<div class="pct-label'+(pred.prediccion==='equipo1'?' mine':'')+'">'+pc.equipo1+'%</div></div>';
-    if(p.fase === 'grupos') {
-      pctHtml += '<div class="pct-item"><div class="pct-bar-bg"><div class="pct-bar-fill empate" style="width:'+pc.empate+'%"></div></div>'
-        + '<div class="pct-label'+(pred.prediccion==='empate'?' mine':'')+'">'+pc.empate+'%</div></div>';
-    }
-    pctHtml += '<div class="pct-item"><div class="pct-bar-bg"><div class="pct-bar-fill" style="width:'+pc.equipo2+'%"></div></div>'
-      + '<div class="pct-label'+(pred.prediccion==='equipo2'?' mine':'')+'">'+pc.equipo2+'%</div></div>'
-      + '</div>'
-      + '<div style="text-align:center;font-size:10px;color:#bbb;padding:0 10px 10px;margin-top:-6px">'+pc.total+' '+(pc.total===1?'predicción':'predicciones')+'</div>';
-  }
-
-  return '<div class="match-card'+(locked?' locked':'')+'" id="mc-'+p.id+'">'
-    + '<div class="match-header"><span class="match-grupo">'+fase+'</span>'+(esBonus?'<span style="background:#F5C842;color:#1a1a2e;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;margin-left:4px">⭐ BONUS</span>':'')+' <span class="match-time">'+hora+' (GT)</span></div>'
-    + '<div class="match-teams">'
-    + '<div class="team"><div class="team-flag">'+p.bandera1+'</div><div class="team-name">'+p.equipo1+'</div></div>'
-    + '<div class="vs-box">VS</div>'
-    + '<div class="team"><div class="team-flag">'+p.bandera2+'</div><div class="team-name">'+p.equipo2+'</div></div>'
-    + '</div>'
-    + picksHtml
-    + pctHtml
-    + badgeHtml
-    + '</div>';
-}
-
-// ── Predecir ──────────────────────────────────────────────────
-function predecir(partidoId, opcion) {
-  if(!sessionEmail) { petmiAbrirLogin(); return; }
-
-  var partido = partidos.find(function(p){ return p.id === partidoId; });
-  if(!partido) return;
-  var cierre = new Date(new Date(partido.fecha).getTime() - 30*60*1000);
-  if(cierre <= new Date()) { toast('⏰ Predicciones cerradas (30 min antes del partido)'); return; }
-
-  fetch('/api/galeria?action=wc_predecir', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: sessionEmail, partido_id: partidoId, prediccion: opcion })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if(d.ok) {
-      misPreds[partidoId] = { partido_id: partidoId, prediccion: opcion, acerto: null, puntos: 0 };
-      var now = new Date();
-      var card = document.getElementById('mc-'+partidoId);
-      if(card) card.outerHTML = renderMatchCard(partido, misPreds[partidoId], now, false);
-      toast('✅ Predicción guardada!');
-      loadPorcentajes();
-    } else {
-      toast(d.msg || 'Error al guardar');
-    }
-  }).catch(function(){ toast('Error de conexión'); });
-}
-
-// ── Ranking ───────────────────────────────────────────────────
-function loadRanking() {
-  fetch('/api/galeria?action=wc_ranking', { headers: { 'Content-Type': 'application/json' } })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if(!d.ranking || !d.ranking.length) {
-      document.getElementById('listRanking').innerHTML = '<div class="empty-state"><div>🏆</div>Sin datos aún</div>';
-      return;
-    }
-    var html = '';
-    var medallas = ['🥇','🥈','🥉'];
-    var top10 = d.ranking.slice(0,10);
-    top10.forEach(function(u, i) {
-      var posClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
-      var isTop3 = i < 3;
-      html += '<div class="ranking-card" style="'+(isTop3?'border:1.5px solid '+(i===0?'#F5C842':i===1?'#C0C0C0':'#CD7F32'):'')+'">'
-        + '<div class="rank-pos '+posClass+'">'+(medallas[i]||('#'+(i+1)))+'</div>'
-        + '<div class="rank-avatar">🐾</div>'
-        + '<div class="rank-info"><div class="rank-name">'+(u.dueno||u.email.split('@')[0])+'</div>'
-        + '<div class="rank-detail">'+u.aciertos+' aciertos · '+(u.predicciones||'?')+' predicciones</div></div>'
-        + '<div class="rank-pts">'+u.puntos+'<span style="font-size:10px;font-weight:400;color:#aaa"> pts</span></div>'
-        + '</div>';
-    });
-    if(d.ranking.length > 10) {
-      html += '<div style="text-align:center;font-size:11px;color:#aaa;padding:8px">+ '+(d.ranking.length-10)+' jugadores más</div>';
-    }
-    document.getElementById('listRanking').innerHTML = html;
-  }).catch(function(){ document.getElementById('listRanking').innerHTML = '<div class="empty-state"><div>⚠️</div>Error</div>'; });
-}
-
-// ── Ruleta ────────────────────────────────────────────────────
-var ruletaGanadores = [];
-var spining = false;
-var currentAngle = 0;
-
-function dibujarRuleta(ganadores, angle) {
-  var canvas = document.getElementById('ruleta');
-  if(!canvas) return;
-  var ctx = canvas.getContext('2d');
-  var cx = 130, cy = 130, r = 118;
-  var n = ganadores.length;
-  var arc = (2 * Math.PI) / n;
-  var colores = ['#00B4B4','#F5C842','#1a1a2e','#00C853','#e53935','#7B1FA2','#1565C0','#E65100'];
-
-  ctx.clearRect(0,0,260,260);
-  ganadores.forEach(function(g, i) {
-    var start = angle + i * arc;
-    ctx.beginPath(); ctx.moveTo(cx,cy);
-    ctx.arc(cx,cy,r,start,start+arc);
-    ctx.fillStyle = colores[i % colores.length]; ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.save(); ctx.translate(cx,cy);
-    ctx.rotate(start + arc/2);
-    ctx.textAlign = 'right'; ctx.fillStyle = '#fff';
-    ctx.font = 'bold 11px Arial';
-    var nombre = (g.dueno || g.email.split('@')[0]).substring(0,12);
-    ctx.fillText(nombre, r-8, 4); ctx.restore();
-  });
-  // Centro
-  ctx.beginPath(); ctx.arc(cx,cy,18,0,Math.PI*2);
-  ctx.fillStyle = '#fff'; ctx.fill();
-  ctx.fillStyle = '#00B4B4'; ctx.font = 'bold 16px Arial';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('🐾',cx,cy);
-  // Flecha
-  ctx.beginPath(); ctx.moveTo(cx+122,cy); ctx.lineTo(cx+108,cy-8); ctx.lineTo(cx+108,cy+8);
-  ctx.fillStyle = '#F5C842'; ctx.fill();
-}
-
-function girarRuleta() {
-  if(spining || ruletaGanadores.length < 2) return;
-  spining = true;
-  document.getElementById('btnSpin').disabled = true;
-  var vueltas = 5 + Math.random()*5;
-  var extra   = Math.random() * 2 * Math.PI;
-  var target  = currentAngle + vueltas * 2 * Math.PI + extra;
-  var start   = null;
-  var dur     = 4000;
-
-  function frame(ts) {
-    if(!start) start = ts;
-    var progress = Math.min((ts - start) / dur, 1);
-    var ease     = 1 - Math.pow(1 - progress, 4);
-    currentAngle = currentAngle + (target - currentAngle) * ease;
-    dibujarRuleta(ruletaGanadores, currentAngle);
-    if(progress < 1) { requestAnimationFrame(frame); return; }
-    // Ganador
-    var arc = (2 * Math.PI) / ruletaGanadores.length;
-    var norm = ((2*Math.PI) - (currentAngle % (2*Math.PI))) % (2*Math.PI);
-    var idx  = Math.floor(norm / arc) % ruletaGanadores.length;
-    var ganador = ruletaGanadores[idx];
-    spining = false;
-    document.getElementById('btnSpin').disabled = false;
-    toast('🎉 ¡Ganador: ' + (ganador.dueno || ganador.email.split('@')[0]) + '!');
-  }
-  requestAnimationFrame(frame);
-}
-
-// ── Init ──────────────────────────────────────────────────────
-loadPartidos();
-</script>
+/* Misc */
+.empty-state{text-align:center;padding:40px 20px;color:#aaa}
+.empty-state div{font-size:36px;margin-bottom:8px}
+.toast-q{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;white-space:nowrap}
+.toast-q.show{opacity:1}
+.pts-badge{display:inline-block;background:#F5C842;color:#1a1a2e;font-size:10px;font-weight:900;padding:2px 6px;border-radius:99px}
+.section-divider{display:flex;align-items:center;gap:8px;padding:18px 4px 8px;font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px}
+.section-divider::after{content:'';flex:1;height:0.5px;background:#ddd}
+.compact-card{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;border:0.5px solid #ececec;display:flex;align-items:center;gap:10px;opacity:.85}
+.compact-teams{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#555}
+.compact-team{display:flex;align-items:center;gap:5px;flex:1;justify-content:flex-end}
+.compact-team.right{justify-content:flex-start}
+.compact-team .flag{font-size:16px}
+.compact-team.winner .name{font-weight:900;color:#1a1a2e}
+.compact-vs{font-size:10px;color:#bbb;font-weight:700;padding:0 4px;min-width:24px;text-align:center}
+.compact-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:46px}
+.compact-grupo{font-size:9px;color:#aaa;text-transform:uppercase}
+.compact-badge{font-size:14px}
+.pct-row{display:flex;gap:6px;padding:0 10px 10px;margin-top:-4px}
+.pct-item{flex:1;text-align:center}
+.pct-bar-bg{height:5px;background:#eee;border-radius:99px;overflow:hidden;margin-bottom:3px}
+.pct-bar-fill{height:100%;background:#00B4B4;border-radius:99px;transition:width .6s ease}
+.pct-bar-fill.empate{background:#F5C842}
+.pct-label{font-size:10px;color:#999;font-weight:700}
+.pct-label.mine{color:#00B4B4}
 </body>
 </html>
