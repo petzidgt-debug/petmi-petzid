@@ -269,78 +269,95 @@ function renderPartidos() {
     return;
   }
   var ahora = Date.now();
+  var pendientes = allPartidos.filter(function(p) { return !p.resultado; });
+  var terminados = allPartidos.filter(function(p) { return !!p.resultado; });
   var html = '';
   var faseActual = '';
 
-  allPartidos.forEach(function(p) {
-    var fechaMs  = new Date(p.fecha).getTime();
-    var cerrado  = fechaMs - ahora < 30 * 60 * 1000; // cierra 30 min antes
-    var miPred   = misPreds[p.id];
+  // ── Pendientes (cards completos con botones) ───────────────
+  if (!pendientes.length) {
+    html += '<div class="empty-state"><div>&#x1F3C6;</div>&#xA1;Todos los partidos han terminado!</div>';
+  }
+  pendientes.forEach(function(p) {
+    var fechaMs   = new Date(p.fecha).getTime();
+    var cerrado   = fechaMs - ahora < 30 * 60 * 1000;
+    var miPred    = misPreds[p.id];
     var tienePred = miPred && miPred.prediccion;
-    var faseLbl  = { grupos:'Grupo', ronda32:'R32', ronda16:'Ronda 16', cuartos:'Cuartos', semis:'Semifinal', final:'Final', bronze:'3er lugar' }[p.fase] || p.fase;
-    var esBonus  = ['ronda16','cuartos','semis','final','bronze'].indexOf(p.fase) >= 0;
-
-    // Day divider
-    var dia = new Date(p.fecha).toLocaleDateString('es-GT', { weekday:'short', month:'short', day:'numeric' });
+    var faseLbl   = {grupos:'Grupo',ronda32:'R32',ronda16:'Ronda 16',cuartos:'Cuartos',semis:'Semifinal',final:'Final',bronze:'3er lugar'}[p.fase] || p.fase;
+    var esBonus   = ['ronda16','cuartos','semis','final','bronze'].indexOf(p.fase) >= 0;
+    var pctData   = porcentajes[p.id];
+    var dia = new Date(p.fecha).toLocaleDateString('es-GT',{weekday:'short',month:'short',day:'numeric'});
     if (dia !== faseActual) {
       faseActual = dia;
       html += '<div class="day-label">' + dia + (esBonus ? ' &nbsp;<span class="pts-badge">&#x2B50; +5 pts</span>' : '') + '</div>';
     }
-
-    // Result state
-    var resultado = p.resultado;
-    var pctData   = porcentajes[p.id];
-
-    html += '<div class="match-card' + (cerrado ? ' locked' : '') + '">';
-    html += '<div class="match-header"><span class="match-grupo">' + faseLbl + (p.grupo ? ' &middot; ' + p.grupo : '') + '</span><span class="match-time">' + new Date(p.fecha).toLocaleTimeString('es-GT', {hour:'2-digit',minute:'2-digit'}) + '</span></div>';
-    html += '<div class="match-teams"><div class="team"><div class="team-flag">' + (p.bandera1||'') + '</div><div class="team-name">' + p.equipo1 + '</div></div>';
-    html += '<div class="vs-box">VS</div>';
-    html += '<div class="team"><div class="team-flag">' + (p.bandera2||'') + '</div><div class="team-name">' + p.equipo2 + '</div></div></div>';
-
-    // Result badge
-    if (resultado) {
-      var resLabel = resultado === 'equipo1' ? p.equipo1 + ' gan&oacute;' : resultado === 'equipo2' ? p.equipo2 + ' gan&oacute;' : 'Empate';
-      var badgeCls = miPred ? (miPred.acerto ? 'win' : 'lose') : 'pending';
-      html += '<div class="match-result-badge ' + badgeCls + '">' + (miPred && miPred.acerto ? '&#x2705; ' : miPred ? '&#x274C; ' : '') + resLabel + '</div>';
-    }
-
-    // Pick buttons
+    html += '<div class="match-card' + (cerrado?' locked':'') + '">';
+    html += '<div class="match-header"><span class="match-grupo">' + faseLbl + '</span><span class="match-time">' + new Date(p.fecha).toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'}) + '</span></div>';
+    html += '<div class="match-teams"><div class="team"><div class="team-flag">' + (p.bandera1||'') + '</div><div class="team-name">' + p.equipo1 + '</div></div><div class="vs-box">VS</div><div class="team"><div class="team-flag">' + (p.bandera2||'') + '</div><div class="team-name">' + p.equipo2 + '</div></div></div>';
     html += '<div class="match-picks">';
     ['equipo1','empate','equipo2'].forEach(function(opt) {
-      var label = opt === 'equipo1' ? p.equipo1 : opt === 'equipo2' ? p.equipo2 : 'Empate';
-      var cls   = 'pick-btn';
-      if (tienePred && miPred.prediccion === opt) {
-        cls += ' selected';
-        if (resultado) cls += miPred.acerto ? ' correct' : ' wrong';
-      } else if (resultado && resultado === opt) {
-        cls += ' correct-ans';
-      }
-      var disabled = (cerrado || !!resultado) ? ' disabled' : '';
-      html += '<button class="' + cls + '"' + disabled + ' onclick="predecir(\'' + p.id + '\',\'' + opt + '\')">' + label + '</button>';
+      var label = opt==='equipo1'?p.equipo1:opt==='equipo2'?p.equipo2:'Empate';
+      var cls = 'pick-btn' + (tienePred&&miPred.prediccion===opt?' selected':'');
+      var dis = cerrado ? ' disabled' : '';
+      html += '<button class="' + cls + '" data-pid="' + p.id + '" data-opt="' + opt + '"' + dis + ' onclick="predecirBtn(this)">' + label + '</button>';
     });
     html += '</div>';
-
-    // Porcentajes
     if (pctData && pctData.total > 0) {
       html += '<div class="pct-row">';
       ['equipo1','empate','equipo2'].forEach(function(opt) {
-        var pct = pctData[opt] || 0;
-        var isMine = tienePred && miPred.prediccion === opt;
-        html += '<div class="pct-item">'
-          + '<div class="pct-bar-bg"><div class="pct-bar-fill' + (opt==='empate'?' empate':'') + '" style="width:' + pct + '%"></div></div>'
-          + '<div class="pct-label' + (isMine?' mine':'') + '">' + pct + '%</div>'
-          + '</div>';
+        var pct = pctData[opt]||0;
+        var isMine = tienePred && miPred.prediccion===opt;
+        html += '<div class="pct-item"><div class="pct-bar-bg"><div class="pct-bar-fill' + (opt==='empate'?' empate':'') + '" style="width:' + pct + '%"></div></div><div class="pct-label' + (isMine?' mine':'') + '">' + pct + '%</div></div>';
       });
       html += '</div>';
     }
-
     html += '</div>';
   });
+
+  // ── Terminados (colapsados) ────────────────────────────────
+  if (terminados.length > 0) {
+    var aciertos = terminados.filter(function(p){return misPreds[p.id]&&misPreds[p.id].acerto;}).length;
+    var predCount = terminados.filter(function(p){return misPreds[p.id]&&misPreds[p.id].prediccion;}).length;
+    html += '<div style="margin-top:16px;border-top:1px solid #e8e8e8">';
+    html += '<div onclick="toggleHistorial()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 4px 8px">';
+    html += '<span style="font-size:12px;font-weight:700;color:#888">&#x1F4DC; Partidos terminados (' + terminados.length + ')</span>';
+    html += '<span id="histCaret" style="color:#aaa;font-size:12px;font-weight:700">Ver &#x25BA;</span></div>';
+    html += '<div id="historialWrap" style="display:none">';
+    if (predCount > 0) {
+      html += '<div style="background:#E0F7F7;border-radius:10px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:#006060;font-weight:700">Tu score: &#x2705; ' + aciertos + ' / ' + predCount + ' predicciones</div>';
+    }
+    var faseHist = '';
+    terminados.slice().reverse().forEach(function(p) {
+      var miPred = misPreds[p.id];
+      var faseLbl = {grupos:'Grupos',ronda32:'Ronda 32',ronda16:'Ronda 16',cuartos:'Cuartos',semis:'Semifinal',final:'Final',bronze:'3er lugar'}[p.fase]||p.fase;
+      if (faseLbl !== faseHist) { faseHist = faseLbl; html += '<div class="section-divider">' + faseLbl + '</div>'; }
+      var ganador = p.resultado==='equipo1'?p.equipo1:p.resultado==='equipo2'?p.equipo2:'Empate';
+      var miLabel = miPred?(miPred.prediccion==='equipo1'?p.equipo1:miPred.prediccion==='equipo2'?p.equipo2:'Empate'):'&mdash;';
+      var ico = !miPred?'&#x26AA;':(miPred.acerto?'&#x2705;':'&#x274C;');
+      html += '<div class="compact-card"><div style="font-size:16px">' + ico + '</div>';
+      html += '<div class="compact-teams"><div class="compact-team' + (p.resultado==='equipo1'?' winner':'') + '"><span class="flag">' + (p.bandera1||'') + '</span><span class="name">' + p.equipo1 + '</span></div>';
+      html += '<span class="compact-vs">' + ganador.substring(0,3).toUpperCase() + '</span>';
+      html += '<div class="compact-team right' + (p.resultado==='equipo2'?' winner':'') + '"><span class="name">' + p.equipo2 + '</span><span class="flag">' + (p.bandera2||'') + '</span></div></div>';
+      html += '<div class="compact-meta"><span style="font-size:10px;color:#' + (miPred&&miPred.acerto?'00C853':miPred?'ff5252':'aaa') + ';font-weight:700">' + miLabel + '</span></div></div>';
+    });
+    html += '</div></div>';
+  }
 
   list.innerHTML = html;
 }
 
-// ── Predecir ───────────────────────────────────────────────────
+function toggleHistorial() {
+  var w = document.getElementById('historialWrap');
+  var c = document.getElementById('histCaret');
+  var open = w.style.display !== 'none';
+  w.style.display = open ? 'none' : 'block';
+  c.innerHTML = open ? 'Ver &#x25BA;' : 'Ocultar &#x25BC;';
+}
+// ── Predecir ─────────────────────────────────────────────────
+function predecirBtn(btn) {
+  predecir(btn.getAttribute('data-pid'), btn.getAttribute('data-opt'));
+}
+
 function predecir(partidoId, prediccion) {
   if (!sessionEmail) {
     showToastQ('&#x1F512; Inicia sesi&oacute;n para predecir');
