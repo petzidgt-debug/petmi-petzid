@@ -1226,6 +1226,51 @@ export default async function handler(req, res) {
       return res.status(200).json({ afiliados: await r.json() });
     }
 
+    // ── verSorteoGanadores (admin) ────────────────────────────
+    // Revela quiénes son los 2 ganadores del sorteo, con su nombre
+    // de dueño para que sea fácil identificarlos.
+    if (action === 'verSorteoGanadores') {
+      const rConf = await fetch(
+        SUPABASE_URL + '/rest/v1/config?clave=eq.sorteo_ganadores&select=valor',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const confRows = await rConf.json();
+      if (!Array.isArray(confRows) || !confRows.length || !confRows[0].valor) {
+        return res.status(200).json({ ok: true, sorteado: false, ganadores: [] });
+      }
+      const emails = confRows[0].valor.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+
+      const rDuenos = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?email=in.(' + emails.map(e => '"' + e + '"').join(',') + ')&select=email,dueno,nombre',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const duenosRows = await rDuenos.json();
+      const porEmail = {};
+      (Array.isArray(duenosRows) ? duenosRows : []).forEach(m => {
+        if (!porEmail[m.email]) porEmail[m.email] = { dueno: m.dueno, mascotas: [] };
+        porEmail[m.email].mascotas.push(m.nombre);
+      });
+
+      // Ver si ya giraron y reclamaron
+      const rGiros = await fetch(
+        SUPABASE_URL + '/rest/v1/wc_sorteo?email=in.(' + emails.map(e => '"' + e + '"').join(',') + ')&select=email,resultado,created_at',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const girosRows = await rGiros.json();
+      const giroPorEmail = {};
+      (Array.isArray(girosRows) ? girosRows : []).forEach(g => { giroPorEmail[g.email] = g; });
+
+      const ganadores = emails.map(em => ({
+        email: em,
+        dueno: (porEmail[em] && porEmail[em].dueno) || '(sin encontrar)',
+        mascotas: (porEmail[em] && porEmail[em].mascotas) || [],
+        yaGiro: !!giroPorEmail[em],
+        fechaGiro: giroPorEmail[em] ? giroPorEmail[em].created_at : null
+      }));
+
+      return res.status(200).json({ ok: true, sorteado: true, ganadores });
+    }
+
     // ── getPuntos ──────────────────────────────────────────────
     if (action === 'getPuntos') {
       const email = req.query.email || '';
