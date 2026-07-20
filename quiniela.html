@@ -105,21 +105,123 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;padding-to
 </div>
 
 <div class="tabs">
-  <div class="tab active" onclick="showTab('partidos')"><span class="tab-ico">&#x26BD;</span>Partidos</div>
+  <div class="tab active" onclick="showTab('sorteo')"><span class="tab-ico">&#x1F3B0;</span>Sorteo</div>
   <div class="tab" onclick="showTab('miquiniela')"><span class="tab-ico">&#x1F4CB;</span>Mi Quiniela</div>
   <div class="tab" onclick="showTab('ranking')"><span class="tab-ico">&#x1F3C6;</span>Ranking</div>
   <div class="tab" onclick="showTab('premio')"><span class="tab-ico">&#x1F381;</span>Premio</div>
   <div class="tab" onclick="showTab('reglas')"><span class="tab-ico">&#x1F4CB;</span>Reglas</div>
 </div>
 
-<!-- PARTIDOS -->
-<div class="section active" id="sec-partidos">
-  <div style="background:linear-gradient(135deg,#1a1a2e,#0D2B2B);border:2px solid #F5C842;border-radius:14px;padding:14px 16px;margin-bottom:12px;text-align:center">
-    <div style="color:#F5C842;font-size:22px;font-weight:900">&#x1F3C6; GRAN FINAL &mdash; BONUS &#x1F3C6;</div>
-    <div style="color:#fff;font-size:16px;font-weight:700;margin:4px 0">&#xA1;Cada acierto vale 5 puntos!</div>
-    <div style="color:#aaa;font-size:11px;line-height:1.5">Grupos y R32: +2 pts &middot; <strong style="color:#F5C842">Ronda de 16, Cuartos, Semis y Final: +5 pts</strong></div>
+<!-- SORTEO -->
+<div class="section active" id="sec-sorteo">
+
+  <!-- TOP 3 GANADORES -->
+  <div style="margin-bottom:14px">
+    <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-bottom:10px">&#x1F3C6; Ganadores de la Quiniela</div>
+    <div id="sortTop3"><div class="empty-state" style="padding:20px"><div>&#x1F3C6;</div>Cargando...</div></div>
   </div>
-  <div id="listPartidos"><div class="empty-state"><div>&#x26BD;</div>Cargando partidos...</div></div>
+
+  <!-- DIVIDER -->
+  <div style="height:1px;background:linear-gradient(90deg,transparent,#e0e0e0,transparent);margin:4px 0 16px"></div>
+
+  <!-- TEXTO SORTEO -->
+  <div style="background:linear-gradient(135deg,#1a1a2e,#0D2B2B);border:2px solid #F5C842;border-radius:14px;padding:16px;margin-bottom:14px;text-align:center">
+    <div style="font-size:28px;margin-bottom:6px">&#x1F3B0;</div>
+    <div style="color:#F5C842;font-size:17px;font-weight:900;margin-bottom:6px">&#xA1;Aca todos juegan!</div>
+    <div style="color:rgba(255,255,255,.8);font-size:13px;line-height:1.7;margin-bottom:8px">
+      Gira la ruleta y descubre si eres uno de los<br>
+      <strong style="color:#F5C842">2 ganadores sorpresa</strong> de este Mundial &#x26BD;<br><br>
+      <span style="color:rgba(255,255,255,.5);font-size:11px">Solo para participantes de la Quiniela PetMi 2026</span>
+    </div>
+    <div style="display:flex;justify-content:center;gap:16px;margin-top:4px">
+      <div style="text-align:center"><div style="font-size:20px">&#x26BD;</div><div style="font-size:10px;color:rgba(255,255,255,.5)">Gol = Ganaste</div></div>
+      <div style="text-align:center"><div style="font-size:20px">&#x1F7E5;</div><div style="font-size:10px;color:rgba(255,255,255,.5)">Roja = Suerte</div></div>
+      <div style="text-align:center"><div style="font-size:20px">&#x1F7E8;</div><div style="font-size:10px;color:rgba(255,255,255,.5)">Amarilla = Gracias</div></div>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="sort-login">
+    <div style="background:#fff;border-radius:14px;padding:16px;border:0.5px solid #e8e8e8">
+      <div style="font-size:13px;color:#666;margin-bottom:10px;text-align:center">&#x1F4E7; Ingresa tu email para girar:</div>
+      <input type="email" id="sortEmail" placeholder="tucorreo@gmail.com"
+        style="width:100%;padding:11px 12px;border-radius:10px;border:1.5px solid #ddd;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none"
+        onkeydown="if(event.key==='Enter')sortVerificar()"/>
+      <button onclick="sortVerificar()" id="sortBtnVerificar"
+        style="width:100%;padding:13px;background:#1a1a2e;color:#F5C842;border:none;border-radius:10px;font-size:15px;font-weight:900;cursor:pointer;letter-spacing:.5px">
+        &#x1F3B0; &nbsp;GIRAR MI RULETA
+      </button>
+      <div id="sortErr" style="font-size:12px;color:#e53935;margin-top:8px;display:none;text-align:center"></div>
+      <div id="sortLoad" style="font-size:12px;color:#aaa;margin-top:8px;display:none;text-align:center">Verificando...</div>
+    </div>
+  </div>
+
+  <!-- RULETA -->
+  <div id="sort-ruleta" style="display:none;text-align:center">
+    <div style="font-size:14px;color:#888;margin-bottom:2px">Hola, <span id="sortUser" style="color:#1a1a2e;font-weight:900"></span> &#x1F44B;</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:14px">&#xA1;Tu momento ha llegado! Gira y descubre&#x2026;</div>
+    <div style="position:relative;display:inline-block;margin-bottom:16px">
+      <div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:24px;line-height:1;color:#1a1a2e">&#x25BC;</div>
+      <canvas id="sortCanvas" width="300" height="300" style="border-radius:50%;border:4px solid #1a1a2e;display:block;box-shadow:0 4px 24px rgba(0,0,0,.15)"></canvas>
+      <div style="position:absolute;top:50%;right:-22px;transform:translateY(-50%);width:0;height:0;border-top:15px solid transparent;border-bottom:15px solid transparent;border-left:24px solid #F5C842"></div>
+    </div>
+    <br>
+    <button onclick="sortGirar()" id="sortBtnGirar"
+      style="background:#1a1a2e;color:#F5C842;border:none;padding:14px 44px;border-radius:99px;font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);letter-spacing:.5px">
+      &#x26BD; &nbsp;G I R A R
+    </button>
+  </div>
+
+  <!-- YA GIRÓ -->
+  <div id="sort-yagiro" style="display:none">
+    <div style="background:#fff3e0;border:1.5px solid #FF9800;border-radius:14px;padding:20px;text-align:center">
+      <div style="font-size:36px;margin-bottom:8px">&#x23F3;</div>
+      <div style="font-size:16px;font-weight:900;color:#E65100;margin-bottom:6px">Ya giraste la ruleta</div>
+      <div style="font-size:13px;color:#BF360C;line-height:1.6" id="sortYaGiroMsg">Tu resultado ya fue registrado.</div>
+    </div>
+  </div>
+
+  <!-- RESULTADO: GOL -->
+  <div id="sort-gol" style="display:none;text-align:center">
+    <div style="background:linear-gradient(135deg,#0d4f3c,#1D9E75);border:2px solid #1D9E75;border-radius:16px;padding:24px 20px;margin-bottom:14px">
+      <div style="font-size:60px;margin-bottom:10px">&#x26BD;</div>
+      <div style="font-size:26px;font-weight:900;color:#fff;margin-bottom:8px">&#xA1;GOOOL! &#xA1;Ganaste!</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.9);line-height:1.8">
+        &#xA1;Eres uno de los <strong>2 ganadores</strong> del sorteo de la Quiniela PetMi 2026!<br><br>
+        Esc&#xED;benos a <strong>info@revistapetmi.com</strong><br>con el asunto <strong>"Ganador Sorteo Quiniela"</strong><br>para reclamar tu premio.
+      </div>
+    </div>
+    <canvas id="sortConf" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999"></canvas>
+  </div>
+
+  <!-- RESULTADO: ROJA -->
+  <div id="sort-roja" style="display:none;text-align:center">
+    <div style="background:linear-gradient(135deg,#4a0f0f,#c0392b);border:2px solid #c0392b;border-radius:16px;padding:24px 20px;margin-bottom:14px">
+      <div style="font-size:60px;margin-bottom:10px">&#x1F7E5;</div>
+      <div style="font-size:26px;font-weight:900;color:#fff;margin-bottom:8px">&#xA1;Tarjeta Roja!</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.9);line-height:1.8">
+        El &#xE1;rbitro no te favoreci&#xF3; esta vez&#x2026;<br>
+        &#xA1;Pero tu participaci&#xF3;n en la quiniela fue increble!<br><br>
+        Sigue en PetMi &#x2014; &#xA1;habr&#xE1; revancha pronto!
+      </div>
+    </div>
+    <button onclick="showTab('ranking')" style="background:transparent;color:#888;border:1px solid #ddd;padding:9px 22px;border-radius:99px;font-size:13px;cursor:pointer">Ver ranking final &#x2192;</button>
+  </div>
+
+  <!-- RESULTADO: AMARILLA -->
+  <div id="sort-amar" style="display:none;text-align:center">
+    <div style="background:linear-gradient(135deg,#4a3000,#d68910);border:2px solid #d68910;border-radius:16px;padding:24px 20px;margin-bottom:14px">
+      <div style="font-size:60px;margin-bottom:10px">&#x1F7E8;</div>
+      <div style="font-size:26px;font-weight:900;color:#fff;margin-bottom:8px">&#xA1;Amarilla!</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.9);line-height:1.8">
+        Muy cerca&#x2026; &#xA1;pero no fue esta vez!<br>
+        Gracias por ser parte de la Quiniela PetMi 2026.<br><br>
+        &#xA1;Nos vemos en la pr&#xF3;xima edici&#xF3;n!
+      </div>
+    </div>
+    <button onclick="showTab('ranking')" style="background:transparent;color:#888;border:1px solid #ddd;padding:9px 22px;border-radius:99px;font-size:13px;cursor:pointer">Ver ranking final &#x2192;</button>
+  </div>
+
 </div>
 
 <!-- MI QUINIELA -->
@@ -207,6 +309,7 @@ function showTab(t) {
   if (sec) sec.classList.add('active');
   if (t === 'ranking')    cargarRanking();
   if (t === 'miquiniela') cargarMiQuiniela();
+  if (t === 'sorteo')     sortIniciar();
 }
 
 // ── Toast ──────────────────────────────────────────────────────
@@ -461,6 +564,205 @@ function cargarRanking() {
 
 // ── Init ───────────────────────────────────────────────────────
 cargarPartidos();
+cargarTop3();
+setTimeout(sortIniciar, 300); // Auto-login si ya está logueado
+
+// ── Top 3 para sorteo ──────────────────────────────────────────
+function cargarTop3() {
+  fetch('/api/galeria?action=wc_ranking')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var ranking = d.ranking || [];
+      var top = ranking.slice(0,3);
+      var MEDALS = ['&#x1F947;','&#x1F948;','&#x1F949;'];
+      var LABELS = ['1er Lugar','2do Lugar','3er Lugar'];
+      var html = '';
+      top.forEach(function(u,i){
+        var inicial = (u.email||'?')[0].toUpperCase();
+        html += '<div style="background:#fff;border-radius:12px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:0.5px solid #e8e8e8">';
+        html += '<div style="font-size:24px;min-width:28px">' + MEDALS[i] + '</div>';
+        html += '<div style="width:38px;height:38px;border-radius:50%;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#00B4B4;flex-shrink:0;border:1.5px solid #00B4B4">' + inicial + '</div>';
+        html += '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#222">' + u.email.split('@')[0] + '</div>';
+        html += '<div style="font-size:11px;color:#888">&#x2705; ' + u.aciertos + ' aciertos &middot; ' + LABELS[i] + '</div></div>';
+        html += '<div style="font-size:18px;font-weight:900;color:#00B4B4">' + u.puntos + ' pts</div>';
+        html += '</div>';
+      });
+      if(!html) html='<div class="empty-state" style="padding:16px"><div>&#x1F3C6;</div>Cargando ranking...</div>';
+      var el=document.getElementById('sortTop3');
+      if(el) el.innerHTML=html;
+    })
+    .catch(function(){
+      var el=document.getElementById('sortTop3');
+      if(el) el.innerHTML='<div style="text-align:center;color:#aaa;font-size:12px;padding:10px">No se pudo cargar el ranking</div>';
+    });
+}
+
+// ═══════════════════════════════════════════════
+// SORTEO — Ruleta
+// ═══════════════════════════════════════════════
+var SORT_SEGS = [
+  {t:'\u26BD GOOOL!',   c:'#1D9E75'},
+  {t:'\uD83D\uDFE5 Roja',    c:'#C0392B'},
+  {t:'\uD83D\uDFE8 Amarilla',c:'#D4AC0D'},
+  {t:'\u26BD GOOOL!',   c:'#0F6E56'},
+  {t:'\uD83D\uDFE5 Roja',    c:'#E74C3C'},
+  {t:'\uD83D\uDFE8 Amarilla',c:'#D68910'},
+  {t:'\u26BD GOOOL!',   c:'#148A68'},
+  {t:'\uD83D\uDFE5 Roja',    c:'#A93226'},
+  {t:'\uD83D\uDFE8 Amarilla',c:'#B7950B'},
+  {t:'\u26BD GOOOL!',   c:'#1ABC9C'},
+  {t:'\uD83D\uDFE5 Roja',    c:'#CB4335'},
+  {t:'\uD83D\uDFE8 Amarilla',c:'#CA8A04'},
+];
+var SORT_GOL  = [0,3,6,9];
+var SORT_ROJA = [1,4,7,10];
+var SORT_AMAR = [2,5,8,11];
+var sortAng=0, sortGirando=false, sortEsGanador=false;
+
+function sortShowPanel(id) {
+  ['sort-login','sort-ruleta','sort-yagiro','sort-gol','sort-roja','sort-amar'].forEach(function(p){
+    var el=document.getElementById(p);
+    if(el) el.style.display = p===id ? 'block' : 'none';
+  });
+}
+
+function sortIniciar() {
+  // Si ya está logueado, saltar el formulario directamente
+  var emailGuardado = localStorage.getItem('petzid_email') || '';
+  if (emailGuardado) {
+    sortLlamarAPI(emailGuardado);
+  }
+  // Si no, mostrar el formulario (ya visible por defecto)
+}
+
+function sortVerificar() {
+  var email = document.getElementById('sortEmail').value.trim().toLowerCase();
+  var err   = document.getElementById('sortErr');
+  if (!email || email.indexOf('@') < 0) {
+    err.textContent = 'Ingresa un email v\u00E1lido.'; err.style.display='block'; return;
+  }
+  err.style.display='none';
+  sortLlamarAPI(email);
+}
+
+function sortLlamarAPI(email) {
+  var err  = document.getElementById('sortErr');
+  var load = document.getElementById('sortLoad');
+  var btn  = document.getElementById('sortBtnVerificar');
+  if(load) load.style.display='block';
+  if(btn)  btn.disabled=true;
+  fetch('/api/galeria?action=verificarSorteo', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email: email})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(load) load.style.display='none';
+    if (!d.ok) {
+      // No participó en la quiniela — mostrar login con error
+      sortShowPanel('sort-login');
+      if(err){ err.textContent = d.msg || 'Este email no particip\u00F3 en la quiniela.'; err.style.display='block'; }
+      if(btn) btn.disabled=false;
+      return;
+    }
+    if (d.ya_giro) {
+      var msg = document.getElementById('sortYaGiroMsg');
+      if (d.resultado === 'ganador') {
+        msg.innerHTML = '\u00A1Ya giraste y <strong>GANASTE</strong>! Esc\u00EDbenos a info@revistapetmi.com.';
+      } else {
+        msg.textContent = 'Ya giraste la ruleta. Tu resultado ya fue registrado.';
+      }
+      sortShowPanel('sort-yagiro'); return;
+    }
+    sortEsGanador = d.ganador === true;
+    document.getElementById('sortUser').textContent = email.split('@')[0];
+    sortDraw(0);
+    sortShowPanel('sort-ruleta');
+  })
+  .catch(function(){
+    if(load) load.style.display='none';
+    if(err){ err.textContent='Error de conexi\u00F3n. Intenta de nuevo.'; err.style.display='block'; }
+    if(btn) btn.disabled=false;
+    sortShowPanel('sort-login');
+  });
+}
+
+function sortDraw(rot) {
+  var c=document.getElementById('sortCanvas');
+  if(!c)return;
+  var ctx=c.getContext('2d');
+  var cx=c.width/2,cy=c.height/2,r=cx-4;
+  var n=SORT_SEGS.length,sl=(Math.PI*2)/n;
+  ctx.clearRect(0,0,c.width,c.height);
+  for(var i=0;i<n;i++){
+    var s=rot+i*sl-Math.PI/2,e=s+sl;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,s,e);ctx.closePath();
+    ctx.fillStyle=SORT_SEGS[i].c;ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=2;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(s+sl/2);
+    ctx.textAlign='right';ctx.fillStyle='rgba(255,255,255,.93)';
+    ctx.font='700 11px Arial';
+    ctx.fillText(SORT_SEGS[i].t,r-8,4);
+    ctx.restore();
+  }
+  ctx.beginPath();ctx.arc(cx,cy,22,0,Math.PI*2);
+  ctx.fillStyle='#1a1a2e';ctx.fill();
+  ctx.strokeStyle='#F5C842';ctx.lineWidth=2.5;ctx.stroke();
+  ctx.fillStyle='#F5C842';ctx.font='700 10px Arial';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('PetMi',cx,cy);
+}
+
+function sortGirar() {
+  if(sortGirando)return;
+  sortGirando=true;
+  document.getElementById('sortBtnGirar').disabled=true;
+  var isGol = sortEsGanador;
+  var useRoja = !isGol && Math.random()>0.5;
+  var opts = isGol?SORT_GOL:useRoja?SORT_ROJA:SORT_AMAR;
+  var tIdx=opts[Math.floor(Math.random()*opts.length)];
+  var n=SORT_SEGS.length,sl=(Math.PI*2)/n;
+  var vueltas=7+Math.random()*4;
+  var offset=(Math.random()-0.5)*sl*0.45;
+  var tAngle=vueltas*(Math.PI*2)+(sl*0.5-tIdx*sl+offset);
+  var dur=5500+Math.random()*1500,start=null,ini=sortAng;
+  function ease(t){return 1-Math.pow(1-t,4.5);}
+  function tick(ts){
+    if(!start)start=ts;
+    var t=Math.min((ts-start)/dur,1);
+    sortAng=ini+tAngle*ease(t);
+    sortDraw(sortAng);
+    if(t<1){requestAnimationFrame(tick);}
+    else{
+      sortGirando=false;
+      setTimeout(function(){
+        if(isGol){sortShowPanel('sort-gol');sortConfetti();}
+        else if(useRoja){sortShowPanel('sort-roja');}
+        else{sortShowPanel('sort-amar');}
+      },500);
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+function sortConfetti(){
+  var c=document.getElementById('sortConf');
+  c.width=window.innerWidth;c.height=window.innerHeight;
+  var ctx=c.getContext('2d');
+  var p=[],cols=['#1D9E75','#F5C842','#E24B4A','#534AB7','#fff','#1a1a2e'];
+  for(var i=0;i<180;i++)p.push({x:Math.random()*c.width,y:-20,vx:(Math.random()-.5)*7,vy:2+Math.random()*6,col:cols[i%cols.length],w:6+Math.random()*8,h:9+Math.random()*9,rot:Math.random()*360,vr:(Math.random()-.5)*10});
+  var fr=0;
+  function drw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    p.forEach(function(q){q.x+=q.vx;q.y+=q.vy;q.vy+=0.07;q.rot+=q.vr;ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.rot*Math.PI/180);ctx.fillStyle=q.col;ctx.fillRect(-q.w/2,-q.h/2,q.w,q.h);ctx.restore();});
+    if(++fr<240)requestAnimationFrame(drw);else ctx.clearRect(0,0,c.width,c.height);
+  }
+  drw();
+}
+
+// Auto-dibujar ruleta al cargar
+setTimeout(function(){sortDraw(0);},100);
+
 </script>
 </body>
 </html>
