@@ -133,7 +133,7 @@
       '<a href="/mensajes.html" class="h-link' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '">💬 Mensajes <span id="petmiMsgBadge" class="h-avisos-badge"></span></a>' +
       '<a href="/amigo-semana.html" class="h-link' + (currentPath.indexOf('amigo-semana') >= 0 ? ' active' : '') + '">🎲 Amigo de la Semana</a>' +
 
-      '<a href="/quiniela.html" class="h-link' + (currentPath.indexOf('quiniela') >= 0 ? ' active' : '') + '" style="color:#F5C842!important;font-weight:700">⚽ Mundial</a>' +
+      '<a href="/juego.html" class="h-link' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '" style="color:#F5C842!important;font-weight:700">🎮 Juego del Día</a>' +
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
       '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">📖 Revista</a>' +
       (function(){
@@ -189,10 +189,9 @@
         '<div class="h-fab-circle">➕</div>' +
         '<span class="h-fab-lbl">Crear PetzID</span>' +
       '</a>' +
-      '<a href="/quiniela.html" class="h-btab' + (currentPath.indexOf('quiniela') >= 0 ? ' active' : '') + '">' +
-        '<span class="h-btab-ico">⚽</span>' +
-        '<span class="h-btab-lbl">Mundial</span>' +
-        '<span style="font-size:8px;color:#F5C842;font-weight:700;line-height:1;display:block">¡Ya!</span>' +
+      '<a href="/juego.html" class="h-btab' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '">' +
+        '<span class="h-btab-ico">🎮</span>' +
+        '<span class="h-btab-lbl">Juego</span>' +
       '</a>' +
       '<a href="https://www.revistapetmi.com/" target="_blank" class="h-btab">' +
         '<span class="h-btab-ico">📖</span>' +
