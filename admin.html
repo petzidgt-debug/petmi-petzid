@@ -213,6 +213,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="search-bar">
         <input type="text" id="searchNombre" placeholder="Nombre mascota...">
         <input type="text" id="searchDueno" placeholder="Nombre dueno...">
+        <input type="text" id="searchEmail" placeholder="Correo...">
         <select id="filterEspecie"><option value="">Todas</option><option>Perro</option><option>Gato</option></select>
         <input type="text" id="filterZona" placeholder="Zona...">
         <select id="filterFoto">
@@ -508,6 +509,15 @@ tbody tr:last-child td{border-bottom:none}
         <div class="stat-card"><div class="stat-num" id="wcPreds">—</div><div class="stat-lbl">Predicciones</div></div>
         <div class="stat-card"><div class="stat-num" id="wcParticipantes">—</div><div class="stat-lbl">Participantes</div></div>
         <div class="stat-card"><div class="stat-num" id="wcPendientes">—</div><div class="stat-lbl">Pendientes</div></div>
+      </div>
+
+      <!-- Ganadores del Sorteo -->
+      <div class="table-card" style="margin-bottom:16px">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee;display:flex;justify-content:space-between;align-items:center">
+          <span>🎰 Ganadores del Sorteo</span>
+          <button class="btn-primary" style="padding:6px 14px;font-size:12px" onclick="verGanadoresSorteo()">🔄 Ver</button>
+        </div>
+        <div id="sorteoGanadoresBody" style="padding:16px;font-size:13px;color:#aaa">Dale clic en "Ver" para revisar.</div>
       </div>
 
       <!-- Marcar resultado -->
@@ -1409,6 +1419,7 @@ function renderBars(id,obj,top,color){
 function applyFilters(){
   var n=document.getElementById('searchNombre').value.toLowerCase();
   var du=document.getElementById('searchDueno').value.toLowerCase();
+  var em=document.getElementById('searchEmail').value.toLowerCase();
   var es=document.getElementById('filterEspecie').value.toLowerCase();
   var zo=document.getElementById('filterZona').value.toLowerCase();
   var en=document.getElementById('filterEnviado').value.toLowerCase();
@@ -1416,6 +1427,7 @@ function applyFilters(){
   filtered=allData.filter(function(r){
     if(n&&String(r[2]).toLowerCase().indexOf(n)<0)return false;
     if(du&&String(r[10]).toLowerCase().indexOf(du)<0)return false;
+    if(em&&String(r[11]).toLowerCase().indexOf(em)<0)return false;
     if(es&&String(r[4]).toLowerCase().indexOf(es)<0)return false;
     if(zo&&String(r[9]).toLowerCase().indexOf(zo)<0)return false;
     if(en&&String(r[24]).toLowerCase().indexOf(en)<0)return false;
@@ -1427,7 +1439,7 @@ function applyFilters(){
   page=1; renderTable();
 }
 function clearFilters(){
-  ['searchNombre','searchDueno','filterZona'].forEach(function(id){document.getElementById(id).value='';});
+  ['searchNombre','searchDueno','searchEmail','filterZona'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('filterEspecie').value='';
   document.getElementById('filterEnviado').value='';
   document.getElementById('filterFoto').value='';
@@ -2227,6 +2239,32 @@ function mostrarToastAdmin(msg){
 }
 
 // ── Mundial Admin ─────────────────────────────────────────────
+function verGanadoresSorteo(){
+  var el = document.getElementById('sorteoGanadoresBody');
+  el.innerHTML = 'Cargando...';
+  fetch('/api/galeria?action=verSorteoGanadores')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.ok){ el.innerHTML = '<span style="color:#c0392b">Error al cargar.</span>'; return; }
+    if(!d.sorteado){
+      el.innerHTML = 'Todavía nadie ha girado la ruleta — los ganadores se eligen cuando la primera persona lo intente.';
+      return;
+    }
+    el.innerHTML = d.ganadores.map(function(g){
+      return '<div style="background:#f8f8f8;border-radius:10px;padding:12px 14px;margin-bottom:8px">'
+        + '<div style="font-weight:700;color:#1a1a2e">'+g.dueno+'</div>'
+        + '<div style="font-size:12px;color:#666;margin-top:2px">'+g.email+'</div>'
+        + (g.mascotas.length ? '<div style="font-size:12px;color:#888;margin-top:2px">Mascotas: '+g.mascotas.join(', ')+'</div>' : '')
+        + '<div style="font-size:11px;margin-top:6px;font-weight:700;color:'+(g.yaGiro?'#00B4B4':'#F5A623')+'">'
+        + (g.yaGiro ? '✅ Ya vio que ganó' : '⏳ Todavía no ha girado la ruleta')
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }).catch(function(){
+    el.innerHTML = '<span style="color:#c0392b">Error al cargar.</span>';
+  });
+}
+
 function loadWCAdmin() {
   var H = SUPA_ADM_H;
   var SUPA = SUPA_ADM;
