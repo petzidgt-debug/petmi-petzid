@@ -1462,7 +1462,47 @@ export default async function handler(req, res) {
       console.log('[markAngel] OK — uid:', uid, 'fecha:', fechaAngelito);
       return res.status(200).json({ ok: true });
     }
-
+// ── verificarSorteo ──────────────────────────────────────────
+    // ⚠️ LUNES: cambiar GANADOR1 y GANADOR2 por los emails reales
+    if (action === 'verificarSorteo' && req.method === 'POST') {
+      const { email } = req.body;
+      if (!email) return res.status(200).json({ ok: false, msg: 'Email requerido' });
+      const emailL = email.trim().toLowerCase();
+      const GANADORES = ['GANADOR1@gmail.com', 'GANADOR2@gmail.com'];
+      try {
+        const rPart = await fetch(
+          SUPABASE_URL + '/rest/v1/wc_predicciones?email=ilike.' + encodeURIComponent(emailL) + '&select=email&limit=1',
+          { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+        );
+        const rows = await rPart.json();
+        if (!Array.isArray(rows) || rows.length === 0)
+          return res.status(200).json({ ok: false, msg: 'Este email no participó en la quiniela.' });
+        let yaGiro = false, resultadoPrevio = null;
+        try {
+          const rSpin = await fetch(
+            SUPABASE_URL + '/rest/v1/wc_sorteo?email=eq.' + encodeURIComponent(emailL) + '&select=resultado,es_ganador&limit=1',
+            { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+          );
+          if (rSpin.ok) {
+            const s = await rSpin.json();
+            if (Array.isArray(s) && s.length > 0) { yaGiro = true; resultadoPrevio = s[0].resultado; }
+          }
+        } catch(e) {}
+        if (yaGiro) return res.status(200).json({ ok: true, ya_giro: true, resultado: resultadoPrevio, ganador: resultadoPrevio === 'ganador' });
+        const esGanador = GANADORES.includes(emailL);
+        try {
+          await fetch(SUPABASE_URL + '/rest/v1/wc_sorteo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ email: emailL, resultado: esGanador ? 'ganador' : 'no_ganador', es_ganador: esGanador })
+          });
+        } catch(e) {}
+        return res.status(200).json({ ok: true, ganador: esGanador, ya_giro: false });
+      } catch(err) {
+        console.error('[verificarSorteo]', err.message);
+        return res.status(200).json({ ok: false, msg: 'Error verificando participación.' });
+      }
+    }
         return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
