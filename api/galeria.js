@@ -43,6 +43,57 @@ async function _enviarPush(uidMascota, payload) {
   }
 }
 
+// Elige 2 ganadores al azar entre quienes participaron en la quiniela,
+// la primera vez que se llama — y guarda la elección en la tabla
+// "config" para que sea consistente para todos los que pregunten después.
+// Usa on_conflict=clave con ignore-duplicates: si 2 peticiones llegan
+// casi al mismo tiempo, solo una "gana" el insert, y ambas terminan
+// leyendo el mismo resultado final guardado (sin condición de carrera).
+async function _obtenerOElegirGanadoresSorteo() {
+  const rConf = await fetch(
+    SUPABASE_URL + '/rest/v1/config?clave=eq.sorteo_ganadores&select=valor',
+    { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+  );
+  const confRows = await rConf.json();
+  if (Array.isArray(confRows) && confRows.length && confRows[0].valor) {
+    return confRows[0].valor.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+  }
+
+  const rEmails = await fetch(
+    SUPABASE_URL + '/rest/v1/wc_predicciones?select=email',
+    { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+  );
+  const emailRows = await rEmails.json();
+  const unicos = [...new Set((Array.isArray(emailRows) ? emailRows : []).map(r => (r.email || '').toLowerCase()).filter(Boolean))];
+  if (unicos.length < 2) return [];
+
+  for (let i = unicos.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [unicos[i], unicos[j]] = [unicos[j], unicos[i]];
+  }
+  const elegidos = unicos.slice(0, 2);
+
+  await fetch(SUPABASE_URL + '/rest/v1/config?on_conflict=clave', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
+      'Prefer': 'resolution=ignore-duplicates,return=minimal'
+    },
+    body: JSON.stringify({ clave: 'sorteo_ganadores', valor: elegidos.join(',') })
+  }).catch(() => {});
+
+  const rFinal = await fetch(
+    SUPABASE_URL + '/rest/v1/config?clave=eq.sorteo_ganadores&select=valor',
+    { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+  );
+  const finalRows = await rFinal.json();
+  if (Array.isArray(finalRows) && finalRows.length && finalRows[0].valor) {
+    return finalRows[0].valor.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+  }
+  return elegidos;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -678,9 +729,10 @@ export default async function handler(req, res) {
       if (!nombre) return res.status(200).json({ ok: false, error: 'Falta el nombre' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/lugares', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ nombre, tipo: tipo||'restaurante', zona, direccion, descripcion, imagen, google_maps, instagram, telefono, activo: false })
       });
+      if (!r.ok) console.error('enviarLugar insert failed:', r.status, await r.text().catch(() => ''));
       return res.status(200).json({ ok: r.ok });
     }
 
@@ -763,9 +815,10 @@ export default async function handler(req, res) {
       const activo = req.body.activo_override !== undefined ? req.body.activo_override : (tipo === 'perdido');
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividades', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
         body: JSON.stringify({ uid_creador, nombre_creador, foto_creador, email_creador: req.body.email_creador||'', tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, activo, expires_at, especie: especie||null, sexo: sexo||null, raza: raza||null, whatsapp: whatsapp||null, recompensa: recompensa||null })
       });
+      if (!r.ok) console.error('publicarActividad insert failed:', r.status, await r.text().catch(() => ''));
       const data = await r.json();
       return res.status(200).json({ ok: r.ok, id: data[0]?.id });
     }
@@ -775,7 +828,7 @@ export default async function handler(req, res) {
       const { actividad_id, uid_mascota, nombre_mascota, foto_mascota } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividad_apuntes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ actividad_id, uid_mascota, nombre_mascota, foto_mascota })
       });
       return res.status(200).json({ ok: r.ok || r.status === 409 });
@@ -786,7 +839,7 @@ export default async function handler(req, res) {
       const { actividad_id, uid_mascota } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/actividad_apuntes?actividad_id=eq.' + encodeURIComponent(actividad_id) + '&uid_mascota=eq.' + encodeURIComponent(uid_mascota), {
         method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
       });
       return res.status(200).json({ ok: r.ok });
     }
@@ -1462,13 +1515,17 @@ export default async function handler(req, res) {
       console.log('[markAngel] OK — uid:', uid, 'fecha:', fechaAngelito);
       return res.status(200).json({ ok: true });
     }
-// ── verificarSorteo ──────────────────────────────────────────
-    // ⚠️ LUNES: cambiar GANADOR1 y GANADOR2 por los emails reales
+
+    // ── verificarSorteo ──────────────────────────────────────────
+    // Los 2 ganadores se eligen AL AZAR entre quienes participaron en
+    // la quiniela, la primera vez que alguien verifica — y esa elección
+    // se guarda en la tabla "config" para que sea la misma para todos
+    // (usa on_conflict=clave con ignore-duplicates para evitar que 2
+    // peticiones simultáneas elijan ganadores distintos).
     if (action === 'verificarSorteo' && req.method === 'POST') {
       const { email } = req.body;
       if (!email) return res.status(200).json({ ok: false, msg: 'Email requerido' });
       const emailL = email.trim().toLowerCase();
-      const GANADORES = ['GANADOR1@gmail.com', 'GANADOR2@gmail.com'];
       try {
         const rPart = await fetch(
           SUPABASE_URL + '/rest/v1/wc_predicciones?email=ilike.' + encodeURIComponent(emailL) + '&select=email&limit=1',
@@ -1477,6 +1534,9 @@ export default async function handler(req, res) {
         const rows = await rPart.json();
         if (!Array.isArray(rows) || rows.length === 0)
           return res.status(200).json({ ok: false, msg: 'Este email no participó en la quiniela.' });
+
+        const GANADORES = await _obtenerOElegirGanadoresSorteo();
+
         let yaGiro = false, resultadoPrevio = null;
         try {
           const rSpin = await fetch(
@@ -1503,6 +1563,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: false, msg: 'Error verificando participación.' });
       }
     }
+
         return res.status(200).json({ status: 'PetMi Supabase API activa' });
 
   } catch(err) {
