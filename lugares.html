@@ -358,11 +358,23 @@ function cerrarFormLugar(){
   var btn=document.getElementById('sgLBtn');
   if(btn){btn.disabled=false;btn.textContent='Enviar sugerencia';}
 }
-function enviarSugerenciaLugar(){
+async function enviarSugerenciaLugar(){
   var nombre=document.getElementById('sgLNombre').value.trim();
   if(!nombre){mostrarMsgLugar('El nombre es obligatorio');return;}
   var btn=document.getElementById('sgLBtn');btn.disabled=true;btn.textContent='Enviando...';
-  fetch('/api/galeria?action=enviarLugar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:nombre,tipo:document.getElementById('sgLTipo').value,zona:document.getElementById('sgLZona').value.trim(),telefono:document.getElementById('sgLTelefono').value.trim(),direccion:document.getElementById('sgLDireccion').value.trim(),descripcion:document.getElementById('sgLDesc').value.trim(),google_maps:document.getElementById('sgLMaps').value.trim(),email:sessionEmail||'',fotoBase64:sgFotoBase64||null,fotoMime:sgFotoMime||null})})
+  var imagenUrl='';
+  if(sgFotoBase64){
+    btn.textContent='Subiendo foto...';
+    try{
+      var fd=new FormData();
+      fd.append('file','data:'+(sgFotoMime||'image/jpeg')+';base64,'+sgFotoBase64);
+      fd.append('upload_preset','petzid');fd.append('folder','petzid/lugares');
+      var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
+      var data=await res.json();imagenUrl=data.secure_url||'';
+    }catch(e){console.log('Cloudinary lugar:',e);}
+  }
+  btn.textContent='Enviando...';
+  fetch('/api/galeria?action=enviarLugar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:nombre,tipo:document.getElementById('sgLTipo').value,zona:document.getElementById('sgLZona').value.trim(),telefono:document.getElementById('sgLTelefono').value.trim(),direccion:document.getElementById('sgLDireccion').value.trim(),descripcion:document.getElementById('sgLDesc').value.trim(),google_maps:document.getElementById('sgLMaps').value.trim(),email:sessionEmail||'',imagen:imagenUrl||null})})
     .then(function(r){return r.json();}).then(function(d){if(d.ok){mostrarMsgLugar('ok',true);}else{mostrarMsgLugar('Error al enviar');btn.disabled=false;btn.textContent='Enviar sugerencia';}});
 }
 function mostrarMsgLugar(txt, exito){
