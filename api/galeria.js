@@ -59,12 +59,45 @@ async function _obtenerOElegirGanadoresSorteo() {
     return confRows[0].valor.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
   }
 
+  // Calcular el Top 3 (mismo criterio que wc_ranking: puntos, luego aciertos)
+  // para excluirlo del sorteo — quien ya va ganando por su desempeño no
+  // debe llevarse también el premio sorpresa.
+  let top3Emails = [];
+  try {
+    const PAGE = 1000;
+    let allPreds = [], offset = 0, keepGoing = true;
+    while (keepGoing) {
+      const rP = await fetch(
+        SUPABASE_URL + '/rest/v1/wc_predicciones?select=email,puntos,acerto&acerto=not.is.null&limit=' + PAGE + '&offset=' + offset,
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const page = await rP.json();
+      if (!Array.isArray(page) || page.length === 0) { keepGoing = false; break; }
+      allPreds = allPreds.concat(page);
+      if (page.length < PAGE) keepGoing = false;
+      offset += PAGE;
+    }
+    const byEmail = {};
+    allPreds.forEach(p => {
+      const em = (p.email || '').toLowerCase();
+      if (!em) return;
+      if (!byEmail[em]) byEmail[em] = { email: em, puntos: 0, aciertos: 0 };
+      byEmail[em].puntos += (p.puntos || 0);
+      byEmail[em].aciertos += (p.acerto ? 1 : 0);
+    });
+    top3Emails = Object.values(byEmail)
+      .sort((a, b) => b.puntos - a.puntos || b.aciertos - a.aciertos)
+      .slice(0, 3)
+      .map(x => x.email);
+  } catch (e) { /* si falla, simplemente no se excluye a nadie */ }
+
   const rEmails = await fetch(
     SUPABASE_URL + '/rest/v1/wc_predicciones?select=email',
     { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
   );
   const emailRows = await rEmails.json();
-  const unicos = [...new Set((Array.isArray(emailRows) ? emailRows : []).map(r => (r.email || '').toLowerCase()).filter(Boolean))];
+  const unicos = [...new Set((Array.isArray(emailRows) ? emailRows : []).map(r => (r.email || '').toLowerCase()).filter(Boolean))]
+    .filter(e => !top3Emails.includes(e));
   if (unicos.length < 2) return [];
 
   for (let i = unicos.length - 1; i > 0; i--) {
