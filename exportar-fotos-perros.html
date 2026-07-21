@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Exportar fotos de perros — Día del Perro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#f0f0ee;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:20px;padding:32px;max-width:420px;width:100%;box-shadow:0 8px 28px rgba(0,0,0,.12);text-align:center}
+h1{font-size:22px;color:#1a1a2e;margin-bottom:8px}
+p{font-size:13px;color:#888;margin-bottom:24px;line-height:1.6}
+button{background:#00B4B4;color:#fff;border:none;padding:14px 32px;border-radius:99px;font-weight:700;font-size:15px;cursor:pointer;width:100%}
+button:disabled{opacity:.6;cursor:default}
+#status{margin-top:18px;font-size:13px;color:#555;min-height:20px}
+.bar-wrap{background:#eee;border-radius:99px;height:8px;margin-top:10px;overflow:hidden;display:none}
+.bar{background:#00B4B4;height:100%;width:0%;transition:width .2s}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>🐾 Día del Perro</h1>
+  <p>Exporta 50 fotos al azar de perros activos, listas para armar el video collage.</p>
+  <button id="btn" onclick="exportarFotos()">📦 Exportar 50 fotos (.zip)</button>
+  <div class="bar-wrap" id="barWrap"><div class="bar" id="bar"></div></div>
+  <div id="status"></div>
+</div>
+
+<script>
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+
+function barajar(arr){
+  for(var i=arr.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var t=arr[i];arr[i]=arr[j];arr[j]=t;
+  }
+  return arr;
+}
+
+function limpiarNombre(s){
+  return (s||'perro').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]/g,'_').substring(0,20);
+}
+
+async function exportarFotos(){
+  var btn=document.getElementById('btn');
+  var status=document.getElementById('status');
+  var barWrap=document.getElementById('barWrap');
+  var bar=document.getElementById('bar');
+  btn.disabled=true;
+  status.textContent='Buscando perros activos...';
+
+  try{
+    var url=SUPA_URL+'/rest/v1/mascotas?especie=eq.Perro&angelito=eq.false&foto=not.is.null&select=uid,nombre,foto';
+    var resp=await fetch(url,{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
+    var data=await resp.json();
+    if(!Array.isArray(data)) throw new Error('Respuesta inesperada de la base de datos');
+
+    var conFoto=data.filter(function(m){return m.foto && m.foto.indexOf('http')>=0;});
+    if(!conFoto.length) throw new Error('No se encontraron perros con foto');
+
+    barajar(conFoto);
+    var elegidos=conFoto.slice(0,50);
+
+    status.textContent='Descargando '+elegidos.length+' fotos...';
+    barWrap.style.display='block';
+
+    var zip=new JSZip();
+    var ok=0, fallidas=0;
+
+    for(var i=0;i<elegidos.length;i++){
+      var m=elegidos[i];
+      try{
+        var imgResp=await fetch(m.foto);
+        if(!imgResp.ok) throw new Error('fetch falló');
+        var blob=await imgResp.blob();
+        var ext=(m.foto.split('.').pop()||'jpg').split('?')[0].substring(0,4);
+        var nombreArchivo=String(i+1).padStart(2,'0')+'_'+limpiarNombre(m.nombre)+'.'+ext;
+        zip.file(nombreArchivo, blob);
+        ok++;
+      }catch(e){
+        fallidas++;
+        console.warn('No se pudo descargar foto de '+m.nombre, e);
+      }
+      var pct=Math.round(((i+1)/elegidos.length)*100);
+      bar.style.width=pct+'%';
+      status.textContent='Descargando fotos... '+(i+1)+'/'+elegidos.length;
+    }
+
+    status.textContent='Comprimiendo zip...';
+    var contenido=await zip.generateAsync({type:'blob'}, function(meta){
+      bar.style.width=Math.round(meta.percent)+'%';
+    });
+
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(contenido);
+    a.download='fotos-perros-dia-del-perro.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    status.textContent='✅ Listo — '+ok+' fotos descargadas'+(fallidas?(' ('+fallidas+' fallaron)'):'')+'. Revisa tu carpeta de Descargas.';
+    btn.disabled=false;
+
+  }catch(err){
+    console.error(err);
+    status.textContent='❌ Error: '+err.message;
+    btn.disabled=false;
+  }
+}
+</script>
+</body>
+</html>
