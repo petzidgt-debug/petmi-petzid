@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:80px}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:110px}
 
 .hero{background:linear-gradient(135deg,#1a1a2e,#00B4B4);padding:24px 20px 20px;text-align:center}
 .hero-label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
@@ -55,8 +55,8 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 .racha-dot.today{background:#00B4B4;color:#fff;font-weight:700;font-size:12px}
 .racha-lbl{font-size:9px;color:#aaa;font-weight:600}
 
-.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#F5C842;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1}
+.game-toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#F5C842;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.game-toast.show{opacity:1}
 .raza-foto-card{position:fixed;right:16px;bottom:80px;width:160px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.2);overflow:hidden;z-index:500;transform:translateX(200px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);border:2px solid #00B4B4}
 .raza-foto-card.show{transform:translateX(0)}
 .raza-foto-card img{width:160px;height:120px;object-fit:cover;display:block}
@@ -115,7 +115,7 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="game-toast" id="gameToast"></div>
 <!-- Tarjeta foto de raza -->
 <div class="raza-foto-card" id="razaFotoCard">
   <img id="razaFotoImg" src="" alt="" width="160" height="120">
@@ -495,7 +495,7 @@ function _pintarRacha(streak) {
 }
 
 function mostrarToast(msg) {
-  var t = document.getElementById('toast');
+  var t = document.getElementById('gameToast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(function() { t.classList.remove('show'); }, 2000);
