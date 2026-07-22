@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Trivia Relámpago — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:110px}
+
+.hero{background:linear-gradient(135deg,#1a1a2e,#00B4B4);padding:24px 20px 20px;text-align:center}
+.hero-label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.hero-title{font-size:26px;font-weight:900;color:#fff;margin-bottom:4px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.7)}
+
+.patrocinio-wrap{display:none;max-width:480px;margin:0 auto;padding:10px 16px 0}
+.patrocinio-wrap img{width:100%;display:block;border-radius:10px}
+.patrocinio-lbl{font-size:9px;color:#bbb;text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-bottom:4px;font-weight:700}
+
+.wrap{max-width:480px;margin:0 auto;padding:16px}
+
+/* Progreso */
+.progreso-wrap{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:0.5px solid #eee}
+.progreso-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px;color:#888;font-weight:700}
+.progreso-bar-bg{background:#eee;border-radius:99px;height:8px;overflow:hidden}
+.progreso-bar{background:#00B4B4;height:100%;width:0%;transition:width .3s}
+
+/* Timer */
+.timer-wrap{background:#eee;border-radius:99px;height:6px;overflow:hidden;margin-bottom:18px}
+.timer-bar{background:#F5C842;height:100%;width:100%;transition:width 1s linear}
+.timer-bar.urgente{background:#E05090}
+
+/* Tarjeta de pregunta */
+.pregunta-card{background:#fff;border-radius:14px;padding:22px 18px;border:0.5px solid #eee;text-align:center}
+.pregunta-txt{font-size:18px;font-weight:700;color:#1a1a2e;line-height:1.4;margin-bottom:22px;min-height:70px;display:flex;align-items:center;justify-content:center}
+
+.opcion{display:block;width:100%;background:#f8f7f4;border:1.5px solid #e8e8e8;border-radius:12px;padding:14px 16px;margin-bottom:10px;font-size:14.5px;font-weight:600;color:#333;text-align:left;cursor:pointer;transition:all .15s}
+.opcion:active{transform:scale(.98)}
+.opcion.correcta{background:#E0F7F7;border-color:#00B4B4;color:#007a7a}
+.opcion.incorrecta{background:#FCEBEB;border-color:#E05090;color:#a01050}
+.opcion.disabled{pointer-events:none;opacity:.6}
+.opcion.disabled.correcta,.opcion.disabled.incorrecta{opacity:1}
+
+/* Resultados */
+.resultado-card{background:#fff;border-radius:16px;padding:30px 22px;border:0.5px solid #eee;text-align:center}
+.resultado-emoji{font-size:52px;margin-bottom:10px}
+.resultado-titulo{font-size:20px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
+.resultado-sub{font-size:13.5px;color:#888;margin-bottom:20px;line-height:1.6}
+.resultado-puntos{background:#FFF8E1;border-radius:14px;padding:16px;margin-bottom:20px}
+.resultado-puntos-n{font-size:30px;font-weight:900;color:#F5A623}
+.resultado-puntos-l{font-size:11px;color:#a08030;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.btn-volver{display:inline-block;background:#00B4B4;color:#fff;text-decoration:none;padding:13px 32px;border-radius:99px;font-weight:700;font-size:14px}
+
+.ya-jugaste{text-align:center;padding:40px 20px}
+.ya-jugaste-emoji{font-size:48px;margin-bottom:14px}
+.ya-jugaste-txt{font-size:14px;color:#666;line-height:1.7;margin-bottom:20px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-label">Trivia PetMi</div>
+  <div class="hero-title">⚡ Trivia Relámpago</div>
+  <div class="hero-sub">5 preguntas diarias — responde rápido, gana más puntos</div>
+</div>
+
+<div class="patrocinio-wrap" id="patrocinioWrap">
+  <div class="patrocinio-lbl">Presentado por</div>
+  <a href="#" id="patrocinioLink" target="_blank" rel="noopener">
+    <picture>
+      <source id="patrocinioDesktop" media="(min-width:600px)" srcset="">
+      <img id="patrocinioImg" src="" alt="Patrocinador">
+    </picture>
+  </a>
+</div>
+
+<div class="wrap" id="contenedor">
+  <div style="text-align:center;padding:40px;color:#aaa">Cargando...</div>
+</div>
+
+<script>
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var sessionEmail = localStorage.getItem('petzid_email') || sessionStorage.getItem('petmiEmail') || '';
+
+// ── Patrocinio (banner de imagen) ────────────────────────────────
+// Para activar: poner activo:true y las URLs de las 2 imágenes.
+// Medidas recomendadas — móvil: 700x200px (proporción ~3.5:1)
+//                        escritorio: 1200x160px (proporción ~7.5:1)
+// link es opcional (a dónde va si le dan clic al banner).
+var PATROCINADOR = {
+  activo: false,
+  imagenMovil: '',
+  imagenDesktop: '',
+  link: ''
+};
+function iniciarPatrocinio() {
+  if (!PATROCINADOR.activo || !PATROCINADOR.imagenMovil) return;
+  document.getElementById('patrocinioWrap').style.display = 'block';
+  document.getElementById('patrocinioImg').src = PATROCINADOR.imagenMovil;
+  document.getElementById('patrocinioDesktop').srcset = PATROCINADOR.imagenDesktop || PATROCINADOR.imagenMovil;
+  document.getElementById('patrocinioLink').href = PATROCINADOR.link || 'javascript:void(0)';
+}
+iniciarPatrocinio();
+
+// ── Banco de preguntas (facil de ampliar despues) ────────────────
+var BANCO = [
+  {p:'¿Cada cuánto se recomienda bañar a un perro de pelo corto?', o:['Cada 3-4 semanas','Todos los días','Una vez al año','Cada 6 meses'], r:0},
+  {p:'¿Cuál de estos alimentos es tóxico para perros y gatos?', o:['Zanahoria','Chocolate','Manzana sin semillas','Arroz cocido'], r:1},
+  {p:'¿Cuántos dientes tiene un perro adulto aproximadamente?', o:['20','32','42','60'], r:2},
+  {p:'¿Qué raza es conocida como "el perro sin ladrido"?', o:['Basenji','Beagle','Husky','Boxer'], r:0},
+  {p:'¿Cada cuánto debe desparasitarse a una mascota adulta?', o:['Cada 3-6 meses','Solo una vez en su vida','Cada 5 años','Nunca si vive en casa'], r:0},
+  {p:'¿Cuál es la esperanza de vida promedio de un gato doméstico?', o:['3-5 años','12-16 años','25-30 años','40 años'], r:1},
+  {p:'¿Qué significa que un perro "jadee" mucho en un día caluroso?', o:['Está enojado','Regula su temperatura','Tiene hambre','Está aburrido'], r:1},
+  {p:'¿Cuál de estas razas de gato NO tiene pelo?', o:['Persa','Sphynx','Maine Coon','Ragdoll'], r:1},
+  {p:'¿Cada cuánto tiempo debe vacunarse anualmente a un perro (refuerzo)?', o:['Cada mes','Una vez al año','Cada 5 años','Nunca después del primer año'], r:1},
+  {p:'¿Qué fruta es segura y hasta beneficiosa para los perros?', o:['Uvas','Aguacate','Manzana (sin semillas)','Cebolla'], r:2},
+  {p:'¿Cuál es la raza de perro más grande del mundo (por altura)?', o:['San Bernardo','Gran Danés','Rottweiler','Mastín'], r:1},
+  {p:'¿Los gatos pueden ver en la oscuridad total?', o:['Sí, perfectamente','No, necesitan algo de luz','Solo los gatos negros','Solo de día'], r:1},
+  {p:'¿Qué indica que un perro mueva la cola rápido y bajo?', o:['Siempre felicidad','Puede indicar nerviosismo','Que tiene hambre','Que quiere jugar siempre'], r:1},
+  {p:'¿Cuál de estas razas es originaria de Guatemala/Centroamérica?', o:['Xoloitzcuintle','Chow Chow','Akita','Samoyedo'], r:0},
+  {p:'¿Cada cuánto debe cortarse las uñas a un perro que no las desgasta solo?', o:['Cada 3-4 semanas','Cada 2 años','Nunca','Solo si sangran'], r:0},
+  {p:'¿Qué significa que un gato "amase" con las patas?', o:['Está incómodo','Recuerda cuando mamaba, señal de confort','Quiere pelear','Tiene frío'], r:1},
+  {p:'¿Cuál de estos NO es un signo de estrés en una mascota?', o:['Jadeo excesivo','Cola relajada moviéndose suave','Orejas hacia atrás','Esconderse'], r:1},
+  {p:'¿Qué raza de perro fue criada originalmente para pastorear?', o:['Border Collie','Bulldog','Pug','Chihuahua'], r:0},
+  {p:'¿Cuánto tiempo dura aproximadamente el embarazo de una perra?', o:['30 días','63 días','100 días','9 meses'], r:1},
+  {p:'¿Cuál de estos huesos NO se le debe dar a un perro?', o:['Hueso de goma para masticar','Hueso de pollo cocido','Snack dental','Juguete de cuerda'], r:1},
+  {p:'¿Qué significa "ronroneo" en los gatos?', o:['Solo felicidad','Puede ser felicidad, dolor o autoconsuelo','Siempre hambre','Que va a maullar'], r:1},
+  {p:'¿Cuál de estas razas de perro es hipoalergénica (bota menos pelo)?', o:['Poodle','Golden Retriever','Husky','Pastor Alemán'], r:0},
+  {p:'¿Qué distancia puede oler un perro comparado con un humano?', o:['Un poco mejor','Miles de veces mejor','Igual','Peor'], r:1},
+  {p:'¿A qué edad se considera que un gato es "senior"?', o:['1 año','3 años','11 años en adelante','20 años'], r:2},
+  {p:'¿Cuál es la mejor forma de saludar a un perro desconocido?', o:['Correr hacia él emocionado','Dejar que te huela la mano despacio','Acariciar la cabeza de inmediato','Gritar su atención'], r:1},
+  {p:'¿Qué vitamina produce el cuerpo del perro/gato al tomar sol?', o:['Vitamina C','Vitamina D','Vitamina B12','Vitamina K'], r:1},
+  {p:'¿Cuál de estas mascotas tiene mejor visión nocturna?', o:['Perro','Gato','Ambos igual','Ninguno ve de noche'], r:1},
+  {p:'¿Qué comportamiento indica que un gato confía en ti?', o:['Te muestra la panza','Te bufa','Se esconde','Te araña jugando'], r:0},
+  {p:'¿Cada cuántos meses se recomienda una revisión veterinaria general (mascota sana)?', o:['Cada 3 meses','Cada 6-12 meses','Cada 5 años','Solo si se enferma'], r:1},
+  {p:'¿Cuál de estas razas de gato es conocida por ser muy sociable y "perruna"?', o:['Ragdoll','Persa','Siamés arisco','Angora salvaje'], r:0}
+];
+
+function seedDia() {
+  var hoy = new Date();
+  return hoy.getFullYear()*10000 + (hoy.getMonth()+1)*100 + hoy.getDate();
+}
+function pseudoRandom(seed) {
+  var x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+function preguntasDeHoy() {
+  var seed = seedDia();
+  var indices = BANCO.map(function(_, i){ return i; });
+  // Barajar deterministico segun el dia (mismo orden para todos hoy)
+  for (var i = indices.length - 1; i > 0; i--) {
+    var j = Math.floor(pseudoRandom(seed + i) * (i + 1));
+    var t = indices[i]; indices[i] = indices[j]; indices[j] = t;
+  }
+  return indices.slice(0, 5).map(function(i){ return BANCO[i]; });
+}
+
+var preguntas = preguntasDeHoy();
+var idx = 0;
+var aciertos = 0;
+var puntosGanados = 0;
+var timerInterval = null;
+var TIEMPO_TOTAL = 15;
+
+function checkYaJugado() {
+  var hoy = new Date().toDateString();
+  return localStorage.getItem('trivia_ultimo_dia') === hoy;
+}
+
+function iniciar() {
+  if (checkYaJugado()) {
+    document.getElementById('contenedor').innerHTML =
+      '<div class="progreso-wrap"><div class="ya-jugaste">'
+      + '<div class="ya-jugaste-emoji">⚡</div>'
+      + '<div class="ya-jugaste-txt">Ya jugaste la trivia de hoy.<br>Vuelve mañana por más preguntas y puntos.</div>'
+      + '<a href="/puntos.html" class="btn-volver">Ver mis puntos</a>'
+      + '</div></div>';
+    return;
+  }
+  renderPregunta();
+}
+
+function renderPregunta() {
+  clearInterval(timerInterval);
+  var q = preguntas[idx];
+  var pct = Math.round((idx / preguntas.length) * 100);
+
+  document.getElementById('contenedor').innerHTML =
+    '<div class="progreso-wrap">'
+    + '<div class="progreso-top"><span>Pregunta ' + (idx+1) + ' de ' + preguntas.length + '</span><span id="puntosVista">' + puntosGanados + ' pts</span></div>'
+    + '<div class="progreso-bar-bg"><div class="progreso-bar" style="width:' + pct + '%"></div></div>'
+    + '</div>'
+    + '<div class="timer-wrap"><div class="timer-bar" id="timerBar"></div></div>'
+    + '<div class="pregunta-card">'
+    + '<div class="pregunta-txt">' + q.p + '</div>'
+    + '<div id="opcionesWrap">' + q.o.map(function(op, i){
+        return '<button class="opcion" onclick="responder(' + i + ')">' + op + '</button>';
+      }).join('') + '</div>'
+    + '</div>';
+
+  var restante = TIEMPO_TOTAL;
+  var inicio = Date.now();
+  timerInterval = setInterval(function() {
+    restante = TIEMPO_TOTAL - Math.floor((Date.now() - inicio) / 1000);
+    var bar = document.getElementById('timerBar');
+    if (!bar) { clearInterval(timerInterval); return; }
+    bar.style.width = Math.max(0, (restante / TIEMPO_TOTAL) * 100) + '%';
+    if (restante <= 5) bar.classList.add('urgente');
+    if (restante <= 0) {
+      clearInterval(timerInterval);
+      responder(-1); // se acabo el tiempo, cuenta como fallo
+    }
+  }, 100);
+
+  window._inicioPregunta = inicio;
+}
+
+function responder(elegida) {
+  clearInterval(timerInterval);
+  var q = preguntas[idx];
+  var tiempoUsado = (Date.now() - window._inicioPregunta) / 1000;
+  var botones = document.querySelectorAll('#opcionesWrap .opcion');
+  botones.forEach(function(b, i) {
+    b.classList.add('disabled');
+    if (i === q.r) b.classList.add('correcta');
+    else if (i === elegida) b.classList.add('incorrecta');
+  });
+
+  if (elegida === q.r) {
+    aciertos++;
+    var pts = 2 + (tiempoUsado <= 5 ? 1 : 0);
+    puntosGanados += pts;
+  }
+
+  setTimeout(function() {
+    idx++;
+    if (idx < preguntas.length) renderPregunta();
+    else mostrarResultados();
+  }, 1400);
+}
+
+function mostrarResultados() {
+  localStorage.setItem('trivia_ultimo_dia', new Date().toDateString());
+
+  var emoji = aciertos === preguntas.length ? '🏆' : aciertos >= 3 ? '🎉' : '💪';
+  var titulo = aciertos === preguntas.length ? '¡Perfecto!' : aciertos >= 3 ? '¡Muy bien!' : '¡Sigue intentando!';
+
+  document.getElementById('contenedor').innerHTML =
+    '<div class="resultado-card">'
+    + '<div class="resultado-emoji">' + emoji + '</div>'
+    + '<div class="resultado-titulo">' + titulo + '</div>'
+    + '<div class="resultado-sub">Acertaste ' + aciertos + ' de ' + preguntas.length + ' preguntas</div>'
+    + '<div class="resultado-puntos"><div class="resultado-puntos-n">+' + puntosGanados + '</div><div class="resultado-puntos-l">Puntos ganados</div></div>'
+    + '<a href="/puntos.html" class="btn-volver">Ver mis puntos</a>'
+    + '</div>';
+
+  if (sessionEmail && puntosGanados > 0) {
+    fetch('/api/galeria?action=registrarPunto', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: sessionEmail, accion: 'trivia_diaria', puntos: puntosGanados })
+    }).catch(function(){});
+  }
+}
+
+iniciar();
+</script>
+<script src="/header.js"></script>
+</body>
+</html>

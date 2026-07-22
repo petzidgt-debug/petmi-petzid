@@ -14,6 +14,10 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 .hero-title{font-size:26px;font-weight:900;color:#fff;margin-bottom:4px}
 .hero-sub{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:14px}
 
+.patrocinio-wrap{display:none;max-width:480px;margin:0 auto;padding:10px 16px 0}
+.patrocinio-wrap img{width:100%;display:block;border-radius:10px}
+.patrocinio-lbl{font-size:9px;color:#bbb;text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-bottom:4px;font-weight:700}
+
 .wrap{max-width:480px;margin:0 auto;padding:16px}
 
 /* Palabras objetivo */
@@ -26,8 +30,8 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 /* Grid sopa de letras */
 .sopa-wrap{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;border:0.5px solid #eee;overflow-x:auto}
 .sopa-grid{display:inline-grid;gap:3px;user-select:none;margin:0 auto;display:flex;flex-direction:column;align-items:center}
-.sopa-row{display:flex;gap:3px}
-.sopa-cell{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;border-radius:8px;cursor:pointer;color:#333;background:#f8f7f4;border:0.5px solid #e8e8e8;transition:all .15s;flex-shrink:0}
+.sopa-row{display:flex;gap:3px;width:100%}
+.sopa-cell{aspect-ratio:1;flex:1;min-width:0;display:flex;align-items:center;justify-content:center;font-size:clamp(11px,3.2vw,14px);font-weight:700;border-radius:8px;cursor:pointer;color:#333;background:#f8f7f4;border:0.5px solid #e8e8e8;transition:all .15s}
 .sopa-cell.found{background:#e0f7f7;color:#007a7a;border-color:#b2dede}
 .sopa-cell.sel{background:#00B4B4;color:#fff;border-color:#00B4B4;transform:scale(1.05)}
 .sopa-cell.found-flash{background:#F5C842;color:#1a1a2e;border-color:#F5C842}
@@ -70,6 +74,17 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
   <div class="hero-title">Encuentra al Peludo</div>
   <div class="hero-sub">Busca las 5 razas escondidas</div>
 </div>
+
+<div class="patrocinio-wrap" id="patrocinioWrap">
+  <div class="patrocinio-lbl">Presentado por</div>
+  <a href="#" id="patrocinioLink" target="_blank" rel="noopener">
+    <picture>
+      <source id="patrocinioDesktop" media="(min-width:600px)" srcset="">
+      <img id="patrocinioImg" src="" alt="Patrocinador">
+    </picture>
+  </a>
+</div>
+
 <!-- Timer flotante -->
 <div id="timerDisplay" style="position:fixed;top:68px;right:14px;z-index:150;background:#1a1a2e;color:#F5C842;padding:6px 14px;border-radius:99px;font-size:15px;font-weight:700;box-shadow:0 2px 12px rgba(0,0,0,.3)">⏱ 00:00</div>
 
@@ -127,6 +142,25 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 var sessionEmail = localStorage.getItem('petzid_email') || sessionStorage.getItem('petmiEmail') || '';
+
+// ── Patrocinio (banner de imagen) ────────────────────────────────
+// Para activar: poner activo:true y las URLs de las 2 imágenes.
+// Medidas recomendadas — móvil: 700x200px (proporción ~3.5:1)
+//                        escritorio: 1200x160px (proporción ~7.5:1)
+var PATROCINADOR = {
+  activo: false,
+  imagenMovil: '',
+  imagenDesktop: '',
+  link: ''
+};
+function iniciarPatrocinio() {
+  if (!PATROCINADOR.activo || !PATROCINADOR.imagenMovil) return;
+  document.getElementById('patrocinioWrap').style.display = 'block';
+  document.getElementById('patrocinioImg').src = PATROCINADOR.imagenMovil;
+  document.getElementById('patrocinioDesktop').srcset = PATROCINADOR.imagenDesktop || PATROCINADOR.imagenMovil;
+  document.getElementById('patrocinioLink').href = PATROCINADOR.link || 'javascript:void(0)';
+}
+iniciarPatrocinio();
 var GRID_SIZE = 10;
 
 // ── Banco de palabras (razas) ─────────────────────────────────
