@@ -140,6 +140,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('juegos',this)"><span class="nav-icon">🎮</span>Juegos</div>
       <div class="nav-item" onclick="showScreen('amigos',this)"><span class="nav-icon">👥</span>Amigos</div>
       <div class="nav-item" onclick="showScreen('amigosemana',this)"><span class="nav-icon">🎲</span>Amigo de la Semana</div>
+      <div class="nav-item" onclick="showScreen('saludreglas',this)"><span class="nav-icon">🩺</span>Reglas de Salud</div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
@@ -429,6 +430,32 @@ tbody tr:last-child td{border-bottom:none}
       <div id="asVacio" style="color:#aaa;font-size:13px"></div>
     </div>
 
+    <div id="screenSaludreglas" class="screen">
+      <h2 class="screen-title">🩺 Reglas de Salud</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Estas reglas controlan lo que ven los usuarios en salud.html — agrega, edita o desactiva sin tocar código.</p>
+      <button class="btn-primary" onclick="abrirModalReglaSalud()" style="margin-bottom:16px">+ Nueva regla</button>
+      <div class="table-card" style="margin-bottom:24px">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Especie</th><th>Pelo</th><th>Nombre</th><th>Tipo</th><th>Frecuencia</th><th>Edad</th><th>Compra</th><th>Activa</th><th></th></tr></thead>
+            <tbody id="reglasSaludBody"><tr><td colspan="9" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2 class="screen-title" style="font-size:18px">🏥 Condiciones Especiales</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">La lista de condiciones (diabetes, alergias, etc.) que los usuarios pueden agregar a su mascota.</p>
+      <button class="btn-primary" onclick="abrirModalCondicionAdmin()" style="margin-bottom:16px">+ Nueva condición</button>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Recomendación</th><th>Compra</th><th>Activa</th><th></th></tr></thead>
+            <tbody id="condicionesAdminBody"><tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="screenEventos" class="screen">
       <div class="page-header">
         <div><div class="page-title">Eventos y Avisos</div><div class="page-sub" id="subEventos">-</div></div>
@@ -618,6 +645,74 @@ tbody tr:last-child td{border-bottom:none}
         <thead id="modalDetalleHead"></thead>
         <tbody id="modalDetalleBody"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalReglaSalud">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title"><span id="modalReglaSaludTitle">Nueva regla</span><button class="modal-close" onclick="closeModal('modalReglaSalud')">✕</button></div>
+    <input type="hidden" id="rsId">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Especie</label>
+    <select id="rsEspecie" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+      <option value="Perro">Perro</option><option value="Gato">Gato</option><option value="Todos">Todos</option>
+    </select>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Tipo de pelo (opcional)</label>
+    <select id="rsTipoPelo" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+      <option value="">Aplica sin importar el pelo</option><option value="corto">Solo pelo corto</option><option value="largo">Solo pelo largo</option>
+    </select>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Nombre</label>
+    <input type="text" id="rsNombre" placeholder="ej. Desparasitante externo (pulgas)" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Tipo</label>
+    <select id="rsTipo" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+      <option value="vacuna">Vacuna</option>
+      <option value="desparasitacion_interna">Desparasitación interna</option>
+      <option value="desparasitacion_externa">Desparasitación externa</option>
+      <option value="consulta_vet">Consulta veterinaria</option>
+      <option value="grooming">Grooming / Baño</option>
+    </select>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Frecuencia (en meses — usa decimales para semanas, ej. 0.25 = cada semana)</label>
+    <input type="number" step="0.25" id="rsFrecuencia" placeholder="ej. 12" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1">
+        <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Edad mínima (meses, opcional)</label>
+        <input type="number" id="rsEdadMin" placeholder="ej. 84" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+      </div>
+      <div style="flex:1">
+        <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Edad máxima (meses, opcional)</label>
+        <input type="number" id="rsEdadMax" placeholder="ej. 12" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+      </div>
+    </div>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Tip educativo ("¿Por qué importa?")</label>
+    <textarea id="rsTip" rows="3" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-family:Arial"></textarea>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Link de compra (opcional)</label>
+    <input type="text" id="rsLinkCompra" placeholder="https://..." style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Texto del botón de compra (opcional)</label>
+    <input type="text" id="rsTextoBoton" placeholder="ej. Comprar en PetMi Shop" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalReglaSalud')">Cancelar</button>
+      <button class="btn-save" onclick="guardarReglaSalud()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalCondicionAdmin">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title"><span id="modalCondicionAdminTitle">Nueva condición</span><button class="modal-close" onclick="closeModal('modalCondicionAdmin')">✕</button></div>
+    <input type="hidden" id="caId">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Nombre</label>
+    <input type="text" id="caNombre" placeholder="ej. Diabetes" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Recomendación</label>
+    <textarea id="caRecomendacion" rows="2" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-family:Arial"></textarea>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Tip adicional (opcional)</label>
+    <textarea id="caTip" rows="2" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-family:Arial"></textarea>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Link de compra (opcional)</label>
+    <input type="text" id="caLinkCompra" placeholder="https://..." style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Texto del botón de compra (opcional)</label>
+    <input type="text" id="caTextoBoton" placeholder="ej. Comprar alimento especial" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalCondicionAdmin')">Cancelar</button>
+      <button class="btn-save" onclick="guardarCondicionAdmin()">Guardar</button>
     </div>
   </div>
 </div>
@@ -1332,6 +1427,7 @@ function showScreen(name,el){
   if(name==='amigos') loadAmigos();
   if(name==='emailfix') emailfixDetectar();
   if(name==='mundial') { try { loadWCAdmin(); } catch(e) { console.error('WC Error:', e); } }
+  if(name==='saludreglas') { loadReglasSalud(); loadCondicionesAdmin(); }
   if(name==='_unused'){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
@@ -2239,6 +2335,186 @@ function mostrarToastAdmin(msg){
 }
 
 // ── Mundial Admin ─────────────────────────────────────────────
+// ── Reglas de Salud (CRUD) ───────────────────────────────────────
+function loadReglasSalud(){
+  fetch('/api/galeria?action=getReglasSaludAdmin')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var reglas = d.reglas || [];
+    if(!reglas.length){
+      document.getElementById('reglasSaludBody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#aaa">Sin reglas — crea la primera</td></tr>';
+      return;
+    }
+    document.getElementById('reglasSaludBody').innerHTML = reglas.map(function(r){
+      return '<tr>'
+        + '<td>'+r.especie+'</td>'
+        + '<td>'+(r.tipo_pelo||'—')+'</td>'
+        + '<td>'+r.nombre+'</td>'
+        + '<td>'+r.tipo+'</td>'
+        + '<td>'+r.frecuencia_meses+' meses</td>'
+        + '<td style="font-size:11px">'+(r.edad_min_meses?('desde '+r.edad_min_meses+'m'):'')+(r.edad_min_meses&&r.edad_max_meses?' / ':'')+(r.edad_max_meses?('hasta '+r.edad_max_meses+'m'):'')+((!r.edad_min_meses&&!r.edad_max_meses)?'—':'')+'</td>'
+        + '<td>'+(r.link_compra?'🛒':'—')+'</td>'
+        + '<td><input type="checkbox" '+(r.activo?'checked':'')+' onchange="toggleReglaSalud('+r.id+',this.checked)"></td>'
+        + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'editarReglaSalud('+JSON.stringify(r)+')\'>Editar</button> '
+        + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px;color:#c0392b" onclick="eliminarReglaSalud('+r.id+')">Borrar</button></td>'
+        + '</tr>';
+    }).join('');
+  }).catch(function(){
+    document.getElementById('reglasSaludBody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de reglas_salud?</td></tr>';
+  });
+}
+
+function abrirModalReglaSalud(){
+  document.getElementById('modalReglaSaludTitle').textContent = 'Nueva regla';
+  document.getElementById('rsId').value = '';
+  document.getElementById('rsEspecie').value = 'Perro';
+  document.getElementById('rsTipoPelo').value = '';
+  document.getElementById('rsNombre').value = '';
+  document.getElementById('rsTipo').value = 'vacuna';
+  document.getElementById('rsFrecuencia').value = '';
+  document.getElementById('rsEdadMin').value = '';
+  document.getElementById('rsEdadMax').value = '';
+  document.getElementById('rsTip').value = '';
+  document.getElementById('rsLinkCompra').value = '';
+  document.getElementById('rsTextoBoton').value = '';
+  document.getElementById('modalReglaSalud').classList.add('open');
+}
+
+function editarReglaSalud(r){
+  document.getElementById('modalReglaSaludTitle').textContent = 'Editar regla';
+  document.getElementById('rsId').value = r.id;
+  document.getElementById('rsEspecie').value = r.especie;
+  document.getElementById('rsTipoPelo').value = r.tipo_pelo || '';
+  document.getElementById('rsNombre').value = r.nombre;
+  document.getElementById('rsTipo').value = r.tipo;
+  document.getElementById('rsFrecuencia').value = r.frecuencia_meses;
+  document.getElementById('rsEdadMin').value = r.edad_min_meses || '';
+  document.getElementById('rsEdadMax').value = r.edad_max_meses || '';
+  document.getElementById('rsTip').value = r.tip || '';
+  document.getElementById('rsLinkCompra').value = r.link_compra || '';
+  document.getElementById('rsTextoBoton').value = r.texto_boton_compra || '';
+  document.getElementById('modalReglaSalud').classList.add('open');
+}
+
+function guardarReglaSalud(){
+  var id = document.getElementById('rsId').value;
+  var payload = {
+    especie: document.getElementById('rsEspecie').value,
+    tipo_pelo: document.getElementById('rsTipoPelo').value || null,
+    nombre: document.getElementById('rsNombre').value.trim(),
+    tipo: document.getElementById('rsTipo').value,
+    frecuencia_meses: parseFloat(document.getElementById('rsFrecuencia').value),
+    edad_min_meses: document.getElementById('rsEdadMin').value ? parseFloat(document.getElementById('rsEdadMin').value) : null,
+    edad_max_meses: document.getElementById('rsEdadMax').value ? parseFloat(document.getElementById('rsEdadMax').value) : null,
+    tip: document.getElementById('rsTip').value.trim(),
+    link_compra: document.getElementById('rsLinkCompra').value.trim() || null,
+    texto_boton_compra: document.getElementById('rsTextoBoton').value.trim() || null
+  };
+  if(!payload.nombre || !payload.frecuencia_meses){ alert('Nombre y frecuencia son obligatorios.'); return; }
+  var action = id ? 'actualizarReglaSalud' : 'crearReglaSalud';
+  if(id) payload.id = parseInt(id);
+  fetch('/api/galeria?action='+action, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){ closeModal('modalReglaSalud'); loadReglasSalud(); }
+    else alert('No se pudo guardar.');
+  }).catch(function(){ alert('No se pudo guardar.'); });
+}
+
+function toggleReglaSalud(id, activo){
+  fetch('/api/galeria?action=actualizarReglaSalud', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, activo: activo })
+  }).catch(function(){});
+}
+
+function eliminarReglaSalud(id){
+  if(!confirm('¿Borrar esta regla? Ya no se mostrará a los usuarios.')) return;
+  fetch('/api/galeria?action=eliminarReglaSalud', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
+  }).then(function(){ loadReglasSalud(); }).catch(function(){});
+}
+
+function loadCondicionesAdmin(){
+  fetch('/api/galeria?action=getCondicionesAdmin')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var condiciones = d.condiciones || [];
+    if(!condiciones.length){
+      document.getElementById('condicionesAdminBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Sin condiciones — crea la primera</td></tr>';
+      return;
+    }
+    document.getElementById('condicionesAdminBody').innerHTML = condiciones.map(function(c){
+      return '<tr>'
+        + '<td>'+c.nombre+'</td>'
+        + '<td style="font-size:12px;max-width:280px">'+c.recomendacion+'</td>'
+        + '<td>'+(c.link_compra?'🛒':'—')+'</td>'
+        + '<td><input type="checkbox" '+(c.activo?'checked':'')+' onchange="toggleCondicionAdmin('+c.id+',this.checked)"></td>'
+        + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'editarCondicionAdmin('+JSON.stringify(c)+')\'>Editar</button> '
+        + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px;color:#c0392b" onclick="eliminarCondicionAdmin('+c.id+')">Borrar</button></td>'
+        + '</tr>';
+    }).join('');
+  }).catch(function(){
+    document.getElementById('condicionesAdminBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#c0392b">Error al cargar</td></tr>';
+  });
+}
+
+function abrirModalCondicionAdmin(){
+  document.getElementById('modalCondicionAdminTitle').textContent = 'Nueva condición';
+  document.getElementById('caId').value = '';
+  document.getElementById('caNombre').value = '';
+  document.getElementById('caRecomendacion').value = '';
+  document.getElementById('caTip').value = '';
+  document.getElementById('caLinkCompra').value = '';
+  document.getElementById('caTextoBoton').value = '';
+  document.getElementById('modalCondicionAdmin').classList.add('open');
+}
+
+function editarCondicionAdmin(c){
+  document.getElementById('modalCondicionAdminTitle').textContent = 'Editar condición';
+  document.getElementById('caId').value = c.id;
+  document.getElementById('caNombre').value = c.nombre;
+  document.getElementById('caRecomendacion').value = c.recomendacion;
+  document.getElementById('caTip').value = c.tip || '';
+  document.getElementById('caLinkCompra').value = c.link_compra || '';
+  document.getElementById('caTextoBoton').value = c.texto_boton_compra || '';
+  document.getElementById('modalCondicionAdmin').classList.add('open');
+}
+
+function guardarCondicionAdmin(){
+  var id = document.getElementById('caId').value;
+  var payload = {
+    nombre: document.getElementById('caNombre').value.trim(),
+    recomendacion: document.getElementById('caRecomendacion').value.trim(),
+    tip: document.getElementById('caTip').value.trim(),
+    link_compra: document.getElementById('caLinkCompra').value.trim() || null,
+    texto_boton_compra: document.getElementById('caTextoBoton').value.trim() || null
+  };
+  if(!payload.nombre || !payload.recomendacion){ alert('Nombre y recomendación son obligatorios.'); return; }
+  var action = id ? 'actualizarCondicion' : 'crearCondicion';
+  if(id) payload.id = parseInt(id);
+  fetch('/api/galeria?action='+action, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){ closeModal('modalCondicionAdmin'); loadCondicionesAdmin(); }
+    else alert('No se pudo guardar.');
+  }).catch(function(){ alert('No se pudo guardar.'); });
+}
+
+function toggleCondicionAdmin(id, activo){
+  fetch('/api/galeria?action=actualizarCondicion', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, activo: activo })
+  }).catch(function(){});
+}
+
+function eliminarCondicionAdmin(id){
+  if(!confirm('¿Borrar esta condición? Se quitará de las mascotas que ya la tengan.')) return;
+  fetch('/api/galeria?action=eliminarCondicion', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
+  }).then(function(){ loadCondicionesAdmin(); }).catch(function(){});
+}
+
 function verGanadoresSorteo(){
   var el = document.getElementById('sorteoGanadoresBody');
   el.innerHTML = 'Cargando...';

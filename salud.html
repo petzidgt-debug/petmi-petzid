@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Salud Preventiva — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:110px}
+
+.hero{background:linear-gradient(135deg,#1a1a2e,#00B4B4);padding:24px 20px 20px;text-align:center}
+.hero-label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.hero-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:4px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.7)}
+
+.wrap{max-width:480px;margin:0 auto;padding:16px}
+
+.selector-mascota{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;-ms-overflow-style:none;scrollbar-width:none}
+.selector-mascota::-webkit-scrollbar{display:none}
+.chip-mascota{flex-shrink:0;display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #eee;border-radius:99px;padding:8px 16px 8px 8px;cursor:pointer;font-size:13px;font-weight:700;color:#666}
+.chip-mascota.activo{border-color:#00B4B4;background:#E0F7F7;color:#007a7a}
+.chip-mascota img,.chip-mascota .ph{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#e8ddd0;display:flex;align-items:center;justify-content:center;font-size:14px}
+
+.req-card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:0.5px solid #eee}
+.req-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.req-nombre{font-size:14.5px;font-weight:700;color:#1a1a2e}
+.req-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap;margin-left:8px}
+.req-badge.al-dia{background:#E0F7F7;color:#007a7a}
+.req-badge.por-vencer{background:#FFF3D6;color:#8a6200}
+.req-badge.pendiente{background:#FCEBEB;color:#a01050}
+.req-fecha{font-size:12px;color:#999;margin-bottom:8px}
+.req-tip{background:#f8f7f4;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#555;line-height:1.5;margin-bottom:10px}
+.req-tip b{color:#1a1a2e}
+.btn-agregar-req{background:#00B4B4;color:#fff;border:none;padding:9px 18px;border-radius:99px;font-size:12.5px;font-weight:700;cursor:pointer}
+
+.historial-titulo{font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:20px 0 10px}
+
+.condicion-card{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;border:0.5px solid #eee;border-left:4px solid #E05090}
+.condicion-nombre{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.condicion-quitar{font-size:11px;color:#999;cursor:pointer;font-weight:600}
+.condicion-recom{font-size:12.5px;color:#555;line-height:1.5;margin-bottom:6px}
+.condicion-tip{font-size:11.5px;color:#888;line-height:1.5}
+.btn-agregar-condicion{background:#fff;border:1.5px dashed #ccc;color:#888;border-radius:12px;padding:12px;width:100%;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px}
+.hist-item{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;border:0.5px solid #eee;display:flex;justify-content:space-between;align-items:center}
+.hist-nombre{font-size:13px;font-weight:700;color:#1a1a2e}
+.hist-fecha{font-size:11px;color:#999}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:900;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
+.modal-titulo{font-size:17px;font-weight:900;color:#1a1a2e;margin-bottom:16px}
+.modal label{font-size:12px;font-weight:700;color:#888;display:block;margin:12px 0 5px}
+.modal input[type=date],.modal select{width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px}
+.foto-upload{border:2px dashed #ddd;border-radius:12px;padding:16px;text-align:center;cursor:pointer;margin-top:5px}
+.foto-upload img{max-width:100%;max-height:140px;border-radius:8px;display:none}
+.modal-btns{display:flex;gap:10px;margin-top:20px}
+.modal-btns button{flex:1;padding:13px;border-radius:99px;font-weight:700;font-size:14px;border:none;cursor:pointer}
+.btn-cancelar{background:#f0f0ee;color:#666}
+.btn-guardar{background:#00B4B4;color:#fff}
+
+.vacio{text-align:center;padding:50px 20px;color:#aaa}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-label">🩺 Salud Preventiva</div>
+  <div class="hero-title">¿Está al día tu mascota?</div>
+  <div class="hero-sub">Vacunas y desparasitación recomendadas según su especie y edad</div>
+</div>
+
+<div class="wrap">
+  <div id="selectorMascota" class="selector-mascota"></div>
+  <div id="checklistWrap"></div>
+  <div id="condicionesWrap"></div>
+  <div id="historialWrap"></div>
+</div>
+
+<!-- Modal agregar registro -->
+<div class="modal-overlay" id="modalAgregar">
+  <div class="modal">
+    <div class="modal-titulo" id="modalTitulo">Agregar registro</div>
+    <label>Fecha de aplicación</label>
+    <input type="date" id="fechaAplicacion">
+    <label>Foto del comprobante (opcional — gana puntos extra)</label>
+    <div class="foto-upload" onclick="document.getElementById('fotoInput').click()">
+      <input type="file" id="fotoInput" accept="image/*" style="display:none" onchange="previsualizarFoto(this)">
+      <img id="fotoPreview">
+      <div id="fotoLabel" style="font-size:12.5px;color:#999">Toca para agregar una foto</div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-guardar" id="btnGuardar" onclick="guardarRegistro()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal agregar condicion especial -->
+<div class="modal-overlay" id="modalCondicion">
+  <div class="modal">
+    <div class="modal-titulo">Agregar condición especial</div>
+    <label>Condición</label>
+    <select id="condicionSelect" style="width:100%;padding:11px 12px;border:1.5px solid #eee;border-radius:10px;font-size:14px"></select>
+    <label>Fecha de diagnóstico (opcional)</label>
+    <input type="date" id="fechaDiagnostico">
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="document.getElementById('modalCondicion').classList.remove('open')">Cancelar</button>
+      <button class="btn-guardar" onclick="guardarCondicion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+var sessionEmail = localStorage.getItem('petzid_email') || sessionStorage.getItem('petmiEmail') || '';
+
+// ── Reglas de salud — ahora vienen de la base de datos (administrables
+//    desde el admin), ya no están fijas en el código ──────────────
+var TODAS_LAS_REGLAS = [];
+
+var misMascotas = [];
+var mascotaActivaUid = null;
+var registrosActuales = [];
+var reglaParaAgregar = null;
+
+if (!sessionEmail) {
+  document.getElementById('selectorMascota').innerHTML = '<div class="vacio">Inicia sesión en PetMi para ver la salud de tus mascotas.</div>';
+} else {
+  cargarReglasYMascotas();
+}
+
+function cargarReglasYMascotas() {
+  fetch('/api/galeria?action=getReglasSalud')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    TODAS_LAS_REGLAS = d.reglas || [];
+    cargarMascotas();
+  }).catch(function(){ TODAS_LAS_REGLAS = []; cargarMascotas(); });
+}
+
+function edadMesesDe(mascota) {
+  if (!mascota.fecha) return null;
+  var fecha = new Date(mascota.fecha);
+  if (isNaN(fecha)) return null;
+  var hoy = new Date();
+  return (hoy.getFullYear()-fecha.getFullYear())*12 + (hoy.getMonth()-fecha.getMonth());
+}
+
+function reglasParaMascota(mascota) {
+  var edadMeses = edadMesesDe(mascota);
+  return TODAS_LAS_REGLAS.filter(function(r){
+    var especieOk = r.especie === 'Todos' || r.especie === mascota.especie;
+    var peloOk = !r.tipo_pelo || r.tipo_pelo === mascota.tipoPelo;
+    var edadMinOk = r.edad_min_meses == null || edadMeses == null || edadMeses >= r.edad_min_meses;
+    var edadMaxOk = r.edad_max_meses == null || edadMeses == null || edadMeses <= r.edad_max_meses;
+    return especieOk && peloOk && edadMinOk && edadMaxOk;
+  });
+}
+
+function cargarMascotas() {
+  fetch('/api/galeria?action=checkEmail', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'checkEmail', email: sessionEmail })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if (!d.found || !d.mascotas.length) {
+      document.getElementById('selectorMascota').innerHTML = '<div class="vacio">No encontramos mascotas en tu cuenta.</div>';
+      return;
+    }
+    var especiesConReglas = [...new Set(TODAS_LAS_REGLAS.map(function(r){return r.especie;}))];
+    misMascotas = d.mascotas.filter(function(m){ return especiesConReglas.indexOf(m.especie) >= 0 || especiesConReglas.indexOf('Todos') >= 0; });
+    if (!misMascotas.length) {
+      document.getElementById('checklistWrap').innerHTML = '<div class="vacio">Por ahora esta sección solo aplica para perros y gatos.</div>';
+      return;
+    }
+    renderSelector();
+    seleccionarMascota(misMascotas[0].uid);
+  }).catch(function(){});
+}
+
+function renderSelector() {
+  document.getElementById('selectorMascota').innerHTML = misMascotas.map(function(m){
+    var foto = m.foto && m.foto.indexOf('http')>=0 ? '<img src="'+m.foto+'">' : '<div class="ph">'+(m.especie==='Gato'?'🐱':'🐕')+'</div>';
+    return '<div class="chip-mascota' + (m.uid===mascotaActivaUid?' activo':'') + '" onclick="seleccionarMascota(\''+m.uid+'\')">' + foto + '<span>'+m.nombre+'</span></div>';
+  }).join('');
+}
+
+function seleccionarMascota(uid) {
+  mascotaActivaUid = uid;
+  renderSelector();
+  cargarRegistros();
+  cargarCondicionesMascota();
+}
+
+function cargarRegistros() {
+  document.getElementById('checklistWrap').innerHTML = '<div class="vacio">Cargando...</div>';
+  fetch('/api/galeria?action=getRegistrosSalud&uid=' + encodeURIComponent(mascotaActivaUid))
+  .then(function(r){return r.json();})
+  .then(function(d){
+    registrosActuales = d.registros || [];
+    renderChecklist();
+    renderHistorial();
+  }).catch(function(){
+    document.getElementById('checklistWrap').innerHTML = '<div class="vacio">Error al cargar. Intenta de nuevo.</div>';
+  });
+}
+
+function ultimoRegistro(reglaId) {
+  var filtrados = registrosActuales.filter(function(r){ return r.nombre_especifico === String(reglaId); });
+  if (!filtrados.length) return null;
+  return filtrados.sort(function(a,b){ return new Date(b.fecha_aplicacion) - new Date(a.fecha_aplicacion); })[0];
+}
+
+function calcularEstado(regla) {
+  var ultimo = ultimoRegistro(regla.id);
+  if (!ultimo) return { estado:'pendiente', fechaTxt:'Sin registro' };
+  var fecha = new Date(ultimo.fecha_aplicacion);
+  var vence = new Date(fecha);
+  vence.setDate(vence.getDate() + Math.round(regla.frecuencia_meses * 30));
+  var hoy = new Date();
+  var diasParaVencer = Math.round((vence - hoy) / 86400000);
+  var fechaTxt = 'Último: ' + fecha.toLocaleDateString('es-GT', {day:'2-digit',month:'short',year:'numeric'});
+  if (diasParaVencer < 0) return { estado:'pendiente', fechaTxt: fechaTxt + ' — venció' };
+  if (diasParaVencer <= 30) return { estado:'por-vencer', fechaTxt: fechaTxt + ' — vence pronto' };
+  return { estado:'al-dia', fechaTxt: fechaTxt };
+}
+
+function renderChecklist() {
+  var mascota = misMascotas.find(function(m){ return m.uid === mascotaActivaUid; });
+  var reglas = reglasParaMascota(mascota);
+  var etiquetas = { 'al-dia':'✅ Al día', 'por-vencer':'⚠️ Por vencer', 'pendiente':'❌ Pendiente' };
+
+  var peloPromptHtml = '';
+  if (!mascota.tipoPelo) {
+    peloPromptHtml = '<div class="req-card" style="background:#FFF8E1;border-color:#F5C842">'
+      + '<div style="font-size:13.5px;font-weight:700;color:#1a1a2e;margin-bottom:8px">🐕‍🦺 ¿De pelo corto o largo?</div>'
+      + '<div style="font-size:12.5px;color:#666;margin-bottom:10px">Nos ayuda a darte una recomendación de baño/grooming más precisa.</div>'
+      + '<div style="display:flex;gap:8px">'
+      + '<button class="btn-agregar-req" style="flex:1" onclick="guardarTipoPelo(\'corto\')">Pelo corto</button>'
+      + '<button class="btn-agregar-req" style="flex:1;background:#1a1a2e" onclick="guardarTipoPelo(\'largo\')">Pelo largo</button>'
+      + '</div></div>';
+  }
+
+  document.getElementById('checklistWrap').innerHTML = peloPromptHtml + reglas.map(function(regla){
+    var st = calcularEstado(regla);
+    var botonCompra = regla.link_compra
+      ? '<a href="'+regla.link_compra+'" target="_blank" rel="noopener" style="display:inline-block;margin-left:8px;background:#F5C842;color:#1a1a2e;padding:9px 16px;border-radius:99px;font-size:12.5px;font-weight:700;text-decoration:none">'+(regla.texto_boton_compra||'🛒 Comprar')+'</a>'
+      : '';
+    return '<div class="req-card">'
+      + '<div class="req-top"><div class="req-nombre">'+regla.nombre+'</div><div class="req-badge '+st.estado+'">'+etiquetas[st.estado]+'</div></div>'
+      + '<div class="req-fecha">'+st.fechaTxt+'</div>'
+      + '<div class="req-tip"><b>¿Por qué importa?</b> '+regla.tip+'</div>'
+      + '<button class="btn-agregar-req" onclick="abrirModal('+regla.id+',\''+regla.tipo+'\',\''+regla.nombre.replace(/'/g,"\\'")+'\')">+ Agregar registro</button>'
+      + botonCompra
+      + '</div>';
+  }).join('');
+}
+
+function guardarTipoPelo(valor) {
+  fetch('/api/galeria?action=actualizarTipoPelo', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ uid: mascotaActivaUid, tipo_pelo: valor })
+  }).then(function(){
+    var mascota = misMascotas.find(function(m){ return m.uid === mascotaActivaUid; });
+    mascota.tipoPelo = valor;
+    renderChecklist();
+  }).catch(function(){});
+}
+
+function renderHistorial() {
+  if (!registrosActuales.length) {
+    document.getElementById('historialWrap').innerHTML = '';
+    return;
+  }
+  var ordenados = registrosActuales.slice().sort(function(a,b){ return new Date(b.fecha_aplicacion) - new Date(a.fecha_aplicacion); });
+  document.getElementById('historialWrap').innerHTML = '<div class="historial-titulo">Historial</div>' + ordenados.map(function(r){
+    var fecha = new Date(r.fecha_aplicacion).toLocaleDateString('es-GT', {day:'2-digit',month:'short',year:'numeric'});
+    return '<div class="hist-item"><div><div class="hist-nombre">'+r.nombre_especifico.replace(/_/g,' ')+'</div><div class="hist-fecha">'+fecha+'</div></div>'+(r.foto_comprobante?'📷':'')+'</div>';
+  }).join('');
+}
+
+// ── Modal de agregar registro ─────────────────────────────────
+var fotoBase64 = null, fotoMime = null;
+
+function abrirModal(id, tipo, nombre) {
+  reglaParaAgregar = { id: id, tipo: tipo, nombre: nombre };
+  document.getElementById('modalTitulo').textContent = nombre;
+  document.getElementById('fechaAplicacion').value = new Date().toISOString().split('T')[0];
+  fotoBase64 = null; fotoMime = null;
+  document.getElementById('fotoPreview').style.display = 'none';
+  document.getElementById('fotoLabel').textContent = 'Toca para agregar una foto';
+  document.getElementById('modalAgregar').classList.add('open');
+}
+function cerrarModal() {
+  document.getElementById('modalAgregar').classList.remove('open');
+}
+function previsualizarFoto(input) {
+  var file = input.files[0]; if (!file) return;
+  fotoMime = file.type;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    fotoBase64 = e.target.result.split(',')[1];
+    var prev = document.getElementById('fotoPreview');
+    prev.src = e.target.result; prev.style.display = 'block';
+    document.getElementById('fotoLabel').textContent = '✓ Foto seleccionada';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function guardarRegistro() {
+  var fecha = document.getElementById('fechaAplicacion').value;
+  if (!fecha) { alert('Selecciona la fecha.'); return; }
+  var btn = document.getElementById('btnGuardar');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  var fotoUrl = '';
+  if (fotoBase64) {
+    btn.textContent = 'Subiendo foto...';
+    try {
+      var fd = new FormData();
+      fd.append('file', 'data:' + (fotoMime||'image/jpeg') + ';base64,' + fotoBase64);
+      fd.append('upload_preset', 'petzid'); fd.append('folder', 'petzid/salud');
+      var res = await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload', { method:'POST', body: fd });
+      var data = await res.json();
+      fotoUrl = data.secure_url || '';
+    } catch(e) { console.log('Cloudinary salud:', e); }
+  }
+
+  btn.textContent = 'Guardando...';
+  fetch('/api/galeria?action=agregarRegistroSalud', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      uid_mascota: mascotaActivaUid, tipo: reglaParaAgregar.tipo, nombre_especifico: reglaParaAgregar.id,
+      fecha_aplicacion: fecha, foto_comprobante: fotoUrl || null, email: sessionEmail
+    })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    btn.disabled = false; btn.textContent = 'Guardar';
+    if (d.ok) {
+      cerrarModal();
+      cargarRegistros();
+    } else {
+      alert('No se pudo guardar. Intenta de nuevo.');
+    }
+  }).catch(function(){
+    btn.disabled = false; btn.textContent = 'Guardar';
+    alert('No se pudo guardar. Intenta de nuevo.');
+  });
+}
+
+// ── Condiciones especiales ────────────────────────────────────
+var condicionesDisponibles = [];
+var misCondiciones = [];
+
+function cargarCondicionesMascota() {
+  document.getElementById('condicionesWrap').innerHTML = '';
+  fetch('/api/galeria?action=getMascotaCondiciones&uid=' + encodeURIComponent(mascotaActivaUid))
+  .then(function(r){return r.json();})
+  .then(function(d){
+    misCondiciones = d.condiciones || [];
+    renderCondiciones();
+  }).catch(function(){});
+}
+
+function renderCondiciones() {
+  var html = '<div class="historial-titulo">Condiciones especiales</div>';
+  html += misCondiciones.map(function(c){
+    var info = c.condiciones_disponibles || {};
+    return '<div class="condicion-card">'
+      + '<div class="condicion-nombre">'+(info.nombre||'')+'<span class="condicion-quitar" onclick="quitarCondicion('+c.id+')">Quitar \u2715</span></div>'
+      + '<div class="condicion-recom">'+(info.recomendacion||'')+'</div>'
+      + (info.tip ? '<div class="condicion-tip">\ud83d\udca1 '+info.tip+'</div>' : '')
+      + (info.link_compra ? '<a href="'+info.link_compra+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;background:#F5C842;color:#1a1a2e;padding:8px 14px;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none">'+(info.texto_boton_compra||'\ud83d\uded2 Comprar')+'</a>' : '')
+      + '</div>';
+  }).join('');
+  html += '<button class="btn-agregar-condicion" onclick="abrirModalCondicion()">+ Agregar condici\u00f3n especial</button>';
+  document.getElementById('condicionesWrap').innerHTML = html;
+}
+
+function abrirModalCondicion() {
+  var yaAgregadas = misCondiciones.map(function(c){ return c.condicion_id; });
+  fetch('/api/galeria?action=getCondicionesDisponibles')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    condicionesDisponibles = (d.condiciones || []).filter(function(c){ return yaAgregadas.indexOf(c.id) < 0; });
+    if (!condicionesDisponibles.length) { alert('Ya agregaste todas las condiciones disponibles.'); return; }
+    document.getElementById('condicionSelect').innerHTML = condicionesDisponibles.map(function(c){
+      return '<option value="'+c.id+'">'+c.nombre+'</option>';
+    }).join('');
+    document.getElementById('fechaDiagnostico').value = '';
+    document.getElementById('modalCondicion').classList.add('open');
+  }).catch(function(){});
+}
+
+function guardarCondicion() {
+  var condicionId = document.getElementById('condicionSelect').value;
+  var fecha = document.getElementById('fechaDiagnostico').value;
+  fetch('/api/galeria?action=agregarCondicionMascota', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ uid_mascota: mascotaActivaUid, condicion_id: parseInt(condicionId), fecha_diagnostico: fecha || null })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if (d.ok) {
+      document.getElementById('modalCondicion').classList.remove('open');
+      cargarCondicionesMascota();
+    } else alert('No se pudo guardar.');
+  }).catch(function(){ alert('No se pudo guardar.'); });
+}
+
+function quitarCondicion(id) {
+  if (!confirm('\u00bfQuitar esta condici\u00f3n especial?')) return;
+  fetch('/api/galeria?action=quitarCondicionMascota', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ id: id })
+  }).then(function(){ cargarCondicionesMascota(); }).catch(function(){});
+}
+</script>
+<script src="/header.js"></script>
+</body>
+</html>
