@@ -233,6 +233,7 @@ export default async function handler(req, res) {
         sexo:         m.sexo           || '',
         raza:         m.raza           || '',
         tipoFecha:    m.tipo_fecha     || '',
+        tipoPelo:     m.tipo_pelo      || '',
         fecha:        m.fecha          || '',
         zona:         m.zona           || '',
         dueno:        m.dueno          || '',
@@ -922,7 +923,7 @@ export default async function handler(req, res) {
       if (!mascotas || !mascotas.length) return res.status(200).json({ ok: true, count: 0 });
       const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?on_conflict=uid', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify(mascotas)
       });
       return res.status(200).json({ ok: r.ok, count: mascotas.length });
@@ -949,7 +950,7 @@ export default async function handler(req, res) {
       const { id, activo } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?id=eq.' + encodeURIComponent(id), {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ activo })
       });
       return res.status(200).json({ ok: r.ok });
@@ -960,7 +961,7 @@ export default async function handler(req, res) {
       const { id } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?id=eq.' + encodeURIComponent(id), {
         method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
       });
       return res.status(200).json({ ok: r.ok });
     }
@@ -978,7 +979,7 @@ export default async function handler(req, res) {
       const { id, activo } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + encodeURIComponent(id), {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ activo })
       });
       return res.status(200).json({ ok: r.ok });
@@ -989,7 +990,7 @@ export default async function handler(req, res) {
       const { id } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + encodeURIComponent(id), {
         method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
       });
       return res.status(200).json({ ok: r.ok });
     }
@@ -1060,7 +1061,7 @@ export default async function handler(req, res) {
       if (!titulo || !aliado) return res.status(200).json({ ok: false, error: 'Faltan campos' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/promos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
         body: JSON.stringify({ titulo, descripcion, aliado, nivel: nivel||'basico', codigo, descuento, imagen, fecha_fin: fecha_fin||null, especie: especie||'todos', zona: zona||'todos', activo: true })
       });
       const data = await r.json();
@@ -1073,7 +1074,7 @@ export default async function handler(req, res) {
       if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/promos?id=eq.' + encodeURIComponent(id), {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify(fields)
       });
       return res.status(200).json({ ok: r.ok });
@@ -1084,7 +1085,7 @@ export default async function handler(req, res) {
       const { id } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/promos?id=eq.' + encodeURIComponent(id), {
         method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
       });
       return res.status(200).json({ ok: r.ok });
     }
@@ -1098,7 +1099,7 @@ export default async function handler(req, res) {
       const hasta = hoy.toISOString().split('T')[0];
       const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ premium: true, premium_hasta: hasta })
       });
       return res.status(200).json({ ok: r.ok, premium_hasta: hasta });
@@ -1110,7 +1111,7 @@ export default async function handler(req, res) {
       if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ premium: false, premium_hasta: null })
       });
       return res.status(200).json({ ok: r.ok });
@@ -1122,7 +1123,7 @@ export default async function handler(req, res) {
       if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
       // Verificar que no tenga ya premium activo
       const check = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=premium,premium_hasta', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
       });
       const data = await check.json();
       if (data[0]?.premium) return res.status(200).json({ ok: false, error: 'ya tiene premium' });
@@ -1131,7 +1132,7 @@ export default async function handler(req, res) {
       const hastaStr = hasta.toISOString().split('T')[0];
       const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ premium: true, premium_hasta: hastaStr })
       });
       return res.status(200).json({ ok: r.ok, premium_hasta: hastaStr, meses: 3 });
@@ -1271,6 +1272,196 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, sorteado: true, ganadores });
     }
 
+    // ── getReglasSalud (público — usado por salud.html) ────────
+    if (action === 'getReglasSalud') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud?activo=eq.true&select=*&order=orden.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ reglas: Array.isArray(data) ? data : [] });
+    }
+
+    // ── actualizarTipoPelo ──────────────────────────────────────
+    if (action === 'actualizarTipoPelo' && req.method === 'POST') {
+      const { uid, tipo_pelo } = req.body;
+      if (!uid || !tipo_pelo) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid.toUpperCase()), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ tipo_pelo })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getReglasSaludAdmin (todas, incluye inactivas) ─────────
+    if (action === 'getReglasSaludAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud?select=*&order=especie.asc,orden.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ reglas: Array.isArray(data) ? data : [] });
+    }
+
+    // ── crearReglaSalud (admin) ─────────────────────────────────
+    if (action === 'crearReglaSalud' && req.method === 'POST') {
+      const { especie, tipo_pelo, nombre, tipo, frecuencia_meses, tip, link_compra, texto_boton_compra, orden } = req.body;
+      if (!especie || !nombre || !tipo || !frecuencia_meses) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ especie, tipo_pelo: tipo_pelo || null, nombre, tipo, frecuencia_meses, tip: tip || '', link_compra: link_compra || null, texto_boton_compra: texto_boton_compra || null, orden: orden || 0, activo: true })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── actualizarReglaSalud (admin) ─────────────────────────────
+    if (action === 'actualizarReglaSalud' && req.method === 'POST') {
+      const { id, ...campos } = req.body;
+      if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(campos)
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── eliminarReglaSalud (admin) ────────────────────────────────
+    if (action === 'eliminarReglaSalud' && req.method === 'POST') {
+      const { id } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getCondicionesDisponibles (público — lista para elegir) ──
+    if (action === 'getCondicionesDisponibles') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/condiciones_disponibles?activo=eq.true&select=*&order=nombre.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ condiciones: Array.isArray(data) ? data : [] });
+    }
+
+    // ── getMascotaCondiciones (condiciones de una mascota específica) ──
+    if (action === 'getMascotaCondiciones') {
+      const uid = (req.query.uid || '').toUpperCase();
+      if (!uid) return res.status(200).json({ condiciones: [] });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mascota_condiciones?uid_mascota=eq.' + encodeURIComponent(uid) + '&select=*,condiciones_disponibles(*)', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ condiciones: Array.isArray(data) ? data : [] });
+    }
+
+    // ── agregarCondicionMascota ───────────────────────────────
+    if (action === 'agregarCondicionMascota' && req.method === 'POST') {
+      const { uid_mascota, condicion_id, fecha_diagnostico } = req.body;
+      const uid = (uid_mascota || '').toUpperCase();
+      if (!uid || !condicion_id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mascota_condiciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ uid_mascota: uid, condicion_id, fecha_diagnostico: fecha_diagnostico || null })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── quitarCondicionMascota ─────────────────────────────────
+    if (action === 'quitarCondicionMascota' && req.method === 'POST') {
+      const { id } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mascota_condiciones?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getCondicionesAdmin (todas, incluye inactivas) ─────────
+    if (action === 'getCondicionesAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/condiciones_disponibles?select=*&order=nombre.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ condiciones: Array.isArray(data) ? data : [] });
+    }
+
+    // ── crearCondicion (admin) ─────────────────────────────────
+    if (action === 'crearCondicion' && req.method === 'POST') {
+      const { nombre, recomendacion, tip, link_compra, texto_boton_compra } = req.body;
+      if (!nombre || !recomendacion) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/condiciones_disponibles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ nombre, recomendacion, tip: tip || '', link_compra: link_compra || null, texto_boton_compra: texto_boton_compra || null, activo: true })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── actualizarCondicion (admin) ─────────────────────────────
+    if (action === 'actualizarCondicion' && req.method === 'POST') {
+      const { id, ...campos } = req.body;
+      if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/condiciones_disponibles?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(campos)
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── eliminarCondicion (admin) ────────────────────────────────
+    if (action === 'eliminarCondicion' && req.method === 'POST') {
+      const { id } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/condiciones_disponibles?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getRegistrosSalud ──────────────────────────────────────
+    if (action === 'getRegistrosSalud') {
+      const uid = (req.query.uid || '').toUpperCase();
+      if (!uid) return res.status(200).json({ registros: [] });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/registros_salud?uid_mascota=eq.' + encodeURIComponent(uid) + '&select=*&order=fecha_aplicacion.desc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ registros: Array.isArray(data) ? data : [] });
+    }
+
+    // ── agregarRegistroSalud ───────────────────────────────────
+    if (action === 'agregarRegistroSalud' && req.method === 'POST') {
+      const { uid_mascota, tipo, nombre_especifico, fecha_aplicacion, foto_comprobante, email } = req.body;
+      const uid = (uid_mascota || '').toUpperCase();
+      if (!uid || !tipo || !nombre_especifico || !fecha_aplicacion) {
+        return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      }
+      const r = await fetch(SUPABASE_URL + '/rest/v1/registros_salud', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ uid_mascota: uid, tipo, nombre_especifico, fecha_aplicacion, foto_comprobante: foto_comprobante || null })
+      });
+      if (!r.ok) { console.error('agregarRegistroSalud failed:', r.status, await r.text().catch(()=>'')); return res.status(200).json({ ok:false }); }
+
+      // Puntos: +2 por agregar el registro, +1 extra si subió foto (no bloqueante)
+      if (email) {
+        const pts = foto_comprobante ? 3 : 2;
+        fetch(SUPABASE_URL + '/rest/v1/puntos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ email: email.toLowerCase(), accion: 'registro_salud', puntos: pts, referencia: uid })
+        }).catch(() => {});
+      }
+      return res.status(200).json({ ok: true });
+    }
+
     // ── getPuntos ──────────────────────────────────────────────
     if (action === 'getPuntos') {
       const email = req.query.email || '';
@@ -1289,10 +1480,11 @@ export default async function handler(req, res) {
       if (!email || !accion || !puntos) return res.status(200).json({ ok: false });
       // Evitar duplicados en acciones únicas
       const UNICAS = ['perfil_completo', 'instalar_app'];
-      // juego_diario: max 1 por dia
+      // juego_diario y trivia_diaria: max 1 por dia
       const hoy = new Date().toISOString().split('T')[0];
-      if(accion === 'juego_diario'){
-        const checkDia = await fetch(SUPABASE_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(email) + '&accion=eq.juego_diario&created_at=gte.' + hoy + '&select=id&limit=1', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const ACCIONES_DIARIAS = ['juego_diario', 'trivia_diaria'];
+      if(ACCIONES_DIARIAS.includes(accion)){
+        const checkDia = await fetch(SUPABASE_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(email) + '&accion=eq.' + accion + '&created_at=gte.' + hoy + '&select=id&limit=1', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
         const diaRows = await checkDia.json();
         if(Array.isArray(diaRows) && diaRows.length > 0) return res.status(200).json({ ok: false, msg: 'Ya jugaste hoy' });
       }
