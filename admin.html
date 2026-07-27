@@ -795,6 +795,7 @@ var editingEventoId = null, editingLugarId = null;
 // ── Auth ──────────────────────────────────────────────────────
 function doLogin(){
   if(document.getElementById('loginPass').value === PASSWORD){
+    localStorage.setItem('petmi_admin','1');
     document.getElementById('loginWrap').style.display='none';
     document.getElementById('appWrap').style.display='flex';
     loadData();
@@ -802,7 +803,13 @@ function doLogin(){
     document.getElementById('loginErr').style.display='block';
   }
 }
+if(localStorage.getItem('petmi_admin')==='1'){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('appWrap').style.display='flex';
+  loadData();
+}
 function doLogout(){
+  localStorage.removeItem('petmi_admin');
   document.getElementById('loginWrap').style.display='flex';
   document.getElementById('appWrap').style.display='none';
   document.getElementById('loginPass').value='';
