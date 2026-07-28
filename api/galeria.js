@@ -1304,12 +1304,12 @@ export default async function handler(req, res) {
 
     // ── crearReglaSalud (admin) ─────────────────────────────────
     if (action === 'crearReglaSalud' && req.method === 'POST') {
-      const { especie, tipo_pelo, nombre, tipo, frecuencia_meses, tip, link_compra, texto_boton_compra, orden } = req.body;
+      const { especie, tipo_pelo, nombre, tipo, frecuencia_meses, tip, descripcion, link_compra, texto_boton_compra, orden } = req.body;
       if (!especie || !nombre || !tipo || !frecuencia_meses) return res.status(200).json({ ok: false, error: 'Faltan campos' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ especie, tipo_pelo: tipo_pelo || null, nombre, tipo, frecuencia_meses, tip: tip || '', link_compra: link_compra || null, texto_boton_compra: texto_boton_compra || null, orden: orden || 0, activo: true })
+        body: JSON.stringify({ especie, tipo_pelo: tipo_pelo || null, nombre, tipo, frecuencia_meses, tip: tip || '', descripcion: descripcion || '', link_compra: link_compra || null, texto_boton_compra: texto_boton_compra || null, orden: orden || 0, activo: true })
       });
       return res.status(200).json({ ok: r.ok });
     }
