@@ -170,7 +170,11 @@ function cargarMascotas() {
       return;
     }
     var especiesConReglas = [...new Set(TODAS_LAS_REGLAS.map(function(r){return r.especie;}))];
-    misMascotas = d.mascotas.filter(function(m){ return especiesConReglas.indexOf(m.especie) >= 0 || especiesConReglas.indexOf('Todos') >= 0; });
+    misMascotas = d.mascotas.filter(function(m){
+      var esAngelito = m.angelito === 'Si' || m.angelito === true;
+      if (esAngelito) return false;
+      return especiesConReglas.indexOf(m.especie) >= 0 || especiesConReglas.indexOf('Todos') >= 0;
+    });
     if (!misMascotas.length) {
       document.getElementById('checklistWrap').innerHTML = '<div class="vacio">Por ahora esta sección solo aplica para perros y gatos.</div>';
       return;
