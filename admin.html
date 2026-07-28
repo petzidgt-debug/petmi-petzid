@@ -36,6 +36,9 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .btn-primary{padding:9px 18px;background:#00B4B4;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
 .stat-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.filtros{display:flex;gap:8px;flex-wrap:wrap}
+.filtro-btn{padding:7px 18px;border:1.5px solid #eee;border-radius:999px;font-size:12.5px;font-weight:700;color:#888;background:#fff;cursor:pointer}
+.filtro-btn.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
 .stat-card-click{cursor:pointer;transition:transform .1s,box-shadow .1s}
 .stat-card-click:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.12)}
 .stat-num{font-size:32px;font-weight:900;color:#222;margin-bottom:4px}
@@ -349,12 +352,22 @@ tbody tr:last-child td{border-bottom:none}
         </div>
       </div>
 
-      <div class="table-card">
+      <div class="table-card" style="margin-bottom:16px">
         <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Mascotas más visitadas (perfil público, 30 días)</div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>#</th><th>Nombre</th><th>Visitas</th></tr></thead>
             <tbody id="estVisitasBody"><tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Razas de perros más comunes — clic para ver dueños (útil para el "Día de la raza X")</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Raza</th><th>Cantidad</th></tr></thead>
+            <tbody id="estRazasPerrosBody"><tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -434,6 +447,11 @@ tbody tr:last-child td{border-bottom:none}
       <h2 class="screen-title">🩺 Reglas de Salud</h2>
       <p style="color:#888;font-size:13px;margin-bottom:16px">Estas reglas controlan lo que ven los usuarios en salud.html — agrega, edita o desactiva sin tocar código.</p>
       <button class="btn-primary" onclick="abrirModalReglaSalud()" style="margin-bottom:16px">+ Nueva regla</button>
+      <div class="filtros" style="margin-bottom:12px">
+        <button class="filtro-btn active" id="tabRS-Todos" onclick="filtrarReglasSaludTab('Todos')">Todos</button>
+        <button class="filtro-btn" id="tabRS-Perro" onclick="filtrarReglasSaludTab('Perro')">🐕 Perro</button>
+        <button class="filtro-btn" id="tabRS-Gato" onclick="filtrarReglasSaludTab('Gato')">🐱 Gato</button>
+      </div>
       <div class="table-card" style="margin-bottom:24px">
         <div class="table-wrap">
           <table>
@@ -683,6 +701,8 @@ tbody tr:last-child td{border-bottom:none}
         <input type="number" id="rsEdadMax" placeholder="ej. 12" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
       </div>
     </div>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Descripción ("¿Qué es / qué cubre?")</label>
+    <textarea id="rsDescripcion" rows="2" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-family:Arial" placeholder="ej. Vacuna combinada que protege contra..."></textarea>
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Tip educativo ("¿Por qué importa?")</label>
     <textarea id="rsTip" rows="3" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-family:Arial"></textarea>
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Link de compra (opcional)</label>
@@ -893,7 +913,7 @@ function loadEstadisticas(){
   var hace30 = new Date(Date.now() - 30*86400000).toISOString();
 
   // ── Mascotas: crecimiento, retención, perfil completo, premium ──
-  fetch(SUPA_ADM + '/rest/v1/mascotas?uid=neq.PETMI-OFICIAL&select=uid,nombre,email,foto,raza,zona,veterinario,angelito,premium,created_at,ultima_actividad', {headers: SUPA_ADM_H})
+  fetch(SUPA_ADM + '/rest/v1/mascotas?uid=neq.PETMI-OFICIAL&select=uid,nombre,email,foto,raza,especie,dueno,zona,veterinario,angelito,premium,created_at,ultima_actividad', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
   .then(function(todas){
     if(!Array.isArray(todas)){ console.error('[mascotas]', todas); return; }
@@ -933,6 +953,24 @@ function loadEstadisticas(){
 
     window._estDatos = window._estDatos || {};
     window._estDatos.activas = activas;
+
+    // Razas de perros más comunes (para campañas por "Día de la raza X")
+    var perros = activas.filter(function(m){ return m.especie === 'Perro' && m.raza && m.raza.trim() && m.raza.trim() !== '-'; });
+    var conteoRazas = {};
+    perros.forEach(function(m){
+      var raza = m.raza.trim();
+      if(!conteoRazas[raza]) conteoRazas[raza] = [];
+      conteoRazas[raza].push(m);
+    });
+    var razasOrdenadas = Object.keys(conteoRazas).map(function(raza){
+      return { raza: raza, mascotas: conteoRazas[raza], cantidad: conteoRazas[raza].length };
+    }).sort(function(a,b){ return b.cantidad - a.cantidad; });
+    window._estDatos.razasPerros = razasOrdenadas;
+
+    document.getElementById('estRazasPerrosBody').innerHTML = razasOrdenadas.length ? razasOrdenadas.map(function(r, i){
+      return '<tr class="stat-card-click" style="cursor:pointer" onclick="verDetalleRaza(\''+r.raza.replace(/'/g,"\\'")+'\')"><td>'+(i+1)+'</td><td>'+r.raza+'</td><td>'+r.cantidad+'</td></tr>';
+    }).join('') : '<tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Sin datos de raza aún</td></tr>';
+
     window._estDatos.angelitos = angelitos;
     window._estDatos.nuevas7 = nuevas7;
     window._estDatos.completos = completos;
@@ -2343,32 +2381,58 @@ function mostrarToastAdmin(msg){
 
 // ── Mundial Admin ─────────────────────────────────────────────
 // ── Reglas de Salud (CRUD) ───────────────────────────────────────
+function verDetalleRaza(raza){
+  var D = window._estDatos || {};
+  var entrada = (D.razasPerros || []).find(function(r){ return r.raza === raza; });
+  if(!entrada) return;
+  abrirDetalleModal('Perros raza "'+raza+'"', ['Nombre','Dueño','Correo'],
+    entrada.mascotas.map(function(m){ return [m.nombre, m.dueno||'—', m.email||'—']; }));
+}
+
+var _todasReglasSalud = [];
+var _tabReglasSaludActivo = 'Todos';
+
 function loadReglasSalud(){
   fetch('/api/galeria?action=getReglasSaludAdmin')
   .then(function(r){return r.json();})
   .then(function(d){
-    var reglas = d.reglas || [];
-    if(!reglas.length){
-      document.getElementById('reglasSaludBody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#aaa">Sin reglas — crea la primera</td></tr>';
-      return;
-    }
-    document.getElementById('reglasSaludBody').innerHTML = reglas.map(function(r){
-      return '<tr>'
-        + '<td>'+r.especie+'</td>'
-        + '<td>'+(r.tipo_pelo||'—')+'</td>'
-        + '<td>'+r.nombre+'</td>'
-        + '<td>'+r.tipo+'</td>'
-        + '<td>'+r.frecuencia_meses+' meses</td>'
-        + '<td style="font-size:11px">'+(r.edad_min_meses?('desde '+r.edad_min_meses+'m'):'')+(r.edad_min_meses&&r.edad_max_meses?' / ':'')+(r.edad_max_meses?('hasta '+r.edad_max_meses+'m'):'')+((!r.edad_min_meses&&!r.edad_max_meses)?'—':'')+'</td>'
-        + '<td>'+(r.link_compra?'🛒':'—')+'</td>'
-        + '<td><input type="checkbox" '+(r.activo?'checked':'')+' onchange="toggleReglaSalud('+r.id+',this.checked)"></td>'
-        + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'editarReglaSalud('+JSON.stringify(r)+')\'>Editar</button> '
-        + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px;color:#c0392b" onclick="eliminarReglaSalud('+r.id+')">Borrar</button></td>'
-        + '</tr>';
-    }).join('');
+    _todasReglasSalud = d.reglas || [];
+    renderReglasSaludTabla();
   }).catch(function(){
     document.getElementById('reglasSaludBody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de reglas_salud?</td></tr>';
   });
+}
+
+function filtrarReglasSaludTab(tab){
+  _tabReglasSaludActivo = tab;
+  ['Todos','Perro','Gato'].forEach(function(t){
+    document.getElementById('tabRS-'+t).classList.toggle('active', t===tab);
+  });
+  renderReglasSaludTabla();
+}
+
+function renderReglasSaludTabla(){
+  var reglas = _todasReglasSalud.filter(function(r){
+    return _tabReglasSaludActivo === 'Todos' || r.especie === _tabReglasSaludActivo || r.especie === 'Todos';
+  });
+  if(!reglas.length){
+    document.getElementById('reglasSaludBody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#aaa">Sin reglas en esta categoría</td></tr>';
+    return;
+  }
+  document.getElementById('reglasSaludBody').innerHTML = reglas.map(function(r){
+    return '<tr>'
+      + '<td>'+r.especie+'</td>'
+      + '<td>'+(r.tipo_pelo||'—')+'</td>'
+      + '<td>'+r.nombre+'</td>'
+      + '<td>'+r.tipo+'</td>'
+      + '<td>'+r.frecuencia_meses+' meses</td>'
+      + '<td style="font-size:11px">'+(r.edad_min_meses?('desde '+r.edad_min_meses+'m'):'')+(r.edad_min_meses&&r.edad_max_meses?' / ':'')+(r.edad_max_meses?('hasta '+r.edad_max_meses+'m'):'')+((!r.edad_min_meses&&!r.edad_max_meses)?'—':'')+'</td>'
+      + '<td>'+(r.link_compra?'🛒':'—')+'</td>'
+      + '<td><input type="checkbox" '+(r.activo?'checked':'')+' onchange="toggleReglaSalud('+r.id+',this.checked)"></td>'
+      + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'editarReglaSalud('+JSON.stringify(r)+')\'>Editar</button> '
+      + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px;color:#c0392b" onclick="eliminarReglaSalud('+r.id+')">Borrar</button></td>'
+      + '</tr>';
+  }).join('');
 }
 
 function abrirModalReglaSalud(){
@@ -2382,6 +2446,7 @@ function abrirModalReglaSalud(){
   document.getElementById('rsEdadMin').value = '';
   document.getElementById('rsEdadMax').value = '';
   document.getElementById('rsTip').value = '';
+  document.getElementById('rsDescripcion').value = '';
   document.getElementById('rsLinkCompra').value = '';
   document.getElementById('rsTextoBoton').value = '';
   document.getElementById('modalReglaSalud').classList.add('open');
@@ -2398,6 +2463,7 @@ function editarReglaSalud(r){
   document.getElementById('rsEdadMin').value = r.edad_min_meses || '';
   document.getElementById('rsEdadMax').value = r.edad_max_meses || '';
   document.getElementById('rsTip').value = r.tip || '';
+  document.getElementById('rsDescripcion').value = r.descripcion || '';
   document.getElementById('rsLinkCompra').value = r.link_compra || '';
   document.getElementById('rsTextoBoton').value = r.texto_boton_compra || '';
   document.getElementById('modalReglaSalud').classList.add('open');
@@ -2414,6 +2480,7 @@ function guardarReglaSalud(){
     edad_min_meses: document.getElementById('rsEdadMin').value ? parseFloat(document.getElementById('rsEdadMin').value) : null,
     edad_max_meses: document.getElementById('rsEdadMax').value ? parseFloat(document.getElementById('rsEdadMax').value) : null,
     tip: document.getElementById('rsTip').value.trim(),
+    descripcion: document.getElementById('rsDescripcion').value.trim(),
     link_compra: document.getElementById('rsLinkCompra').value.trim() || null,
     texto_boton_compra: document.getElementById('rsTextoBoton').value.trim() || null
   };

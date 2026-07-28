@@ -227,6 +227,22 @@ function calcularEstado(regla) {
   return { estado:'al-dia', fechaTxt: fechaTxt };
 }
 
+function etapaDeVidaTexto(mascota) {
+  var edadMeses = edadMesesDe(mascota);
+  if (edadMeses == null) return '';
+  var esGato = mascota.especie === 'Gato';
+  var edadTxt = edadMeses < 12 ? (edadMeses + ' mes' + (edadMeses !== 1 ? 'es' : '')) : (Math.floor(edadMeses/12) + ' año' + (Math.floor(edadMeses/12) !== 1 ? 's' : ''));
+  if (edadMeses < 12) return 'cachorro de ' + edadTxt;
+  if ((esGato && edadMeses >= 120) || (!esGato && edadMeses >= 84)) return 'senior de ' + edadTxt;
+  return 'adulto de ' + edadTxt;
+}
+
+var CATEGORIAS_TIPO = {
+  vacuna: { titulo: '💉 Vacunas', tipos: ['vacuna'] },
+  higiene: { titulo: '🧼 Higiene', tipos: ['grooming'] },
+  otras: { titulo: '📋 Otras recomendaciones', tipos: ['desparasitacion_interna', 'desparasitacion_externa', 'consulta_vet'] }
+};
+
 function renderChecklist() {
   var mascota = misMascotas.find(function(m){ return m.uid === mascotaActivaUid; });
   var reglas = reglasParaMascota(mascota);
@@ -243,7 +259,12 @@ function renderChecklist() {
       + '</div></div>';
   }
 
-  document.getElementById('checklistWrap').innerHTML = peloPromptHtml + reglas.map(function(regla){
+  var etapa = etapaDeVidaTexto(mascota);
+  var introHtml = '<div style="background:#E0F7F7;border-radius:14px;padding:14px 16px;margin-bottom:14px;font-size:13px;color:#005f5f;line-height:1.6">'
+    + '<b>Según la edad de ' + mascota.nombre + (etapa ? ' (' + etapa + ')' : '') + '</b>, estas son las recomendaciones que debería tener al día:'
+    + '</div>';
+
+  function tarjetaRegla(regla) {
     var st = calcularEstado(regla);
     var botonCompra = regla.link_compra
       ? '<a href="'+regla.link_compra+'" target="_blank" rel="noopener" style="display:inline-block;margin-left:8px;background:#F5C842;color:#1a1a2e;padding:9px 16px;border-radius:99px;font-size:12.5px;font-weight:700;text-decoration:none">'+(regla.texto_boton_compra||'🛒 Comprar')+'</a>'
@@ -251,11 +272,21 @@ function renderChecklist() {
     return '<div class="req-card">'
       + '<div class="req-top"><div class="req-nombre">'+regla.nombre+'</div><div class="req-badge '+st.estado+'">'+etiquetas[st.estado]+'</div></div>'
       + '<div class="req-fecha">'+st.fechaTxt+'</div>'
+      + (regla.descripcion ? '<div style="font-size:12.5px;color:#555;line-height:1.5;margin-bottom:8px">'+regla.descripcion+'</div>' : '')
       + '<div class="req-tip"><b>¿Por qué importa?</b> '+regla.tip+'</div>'
       + '<button class="btn-agregar-req" onclick="abrirModal('+regla.id+',\''+regla.tipo+'\',\''+regla.nombre.replace(/'/g,"\\'")+'\')">+ Agregar registro</button>'
       + botonCompra
       + '</div>';
+  }
+
+  var categoriasHtml = Object.keys(CATEGORIAS_TIPO).map(function(clave){
+    var cat = CATEGORIAS_TIPO[clave];
+    var reglasCategoria = reglas.filter(function(r){ return cat.tipos.indexOf(r.tipo) >= 0; });
+    if (!reglasCategoria.length) return '';
+    return '<div class="historial-titulo" style="margin-top:18px">'+cat.titulo+'</div>' + reglasCategoria.map(tarjetaRegla).join('');
   }).join('');
+
+  document.getElementById('checklistWrap').innerHTML = peloPromptHtml + introHtml + categoriasHtml;
 }
 
 function guardarTipoPelo(valor) {

@@ -75,6 +75,8 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
   <div class="hero-sub">Busca las 5 razas escondidas</div>
 </div>
 
+<div id="avisoSinSesion"></div>
+
 <div class="patrocinio-wrap" id="patrocinioWrap">
   <div class="patrocinio-lbl">Presentado por</div>
   <a href="#" id="patrocinioLink" target="_blank" rel="noopener">
@@ -142,6 +144,12 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 var sessionEmail = localStorage.getItem('petzid_email') || sessionStorage.getItem('petmiEmail') || '';
+if (!sessionEmail) {
+  document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('avisoSinSesion');
+    if (el) el.innerHTML = '<div style="max-width:480px;margin:0 auto 14px;background:#FFF8E1;border:1px solid #F5C842;border-radius:12px;padding:12px 16px;font-size:12.5px;color:#8a6200;text-align:center">🔒 Estás jugando sin iniciar sesión — no vas a ganar puntos. <a href="/index.html" style="color:#8a6200;font-weight:700;text-decoration:underline">Inicia sesión</a> para que cuenten.</div>';
+  });
+}
 
 // ── Patrocinio (banner de imagen) ────────────────────────────────
 // Para activar: poner activo:true y las URLs de las 2 imágenes.
@@ -460,7 +468,11 @@ function ganaste() {
   var titulo = '¡Lo encontraste todo! 🎉';
   document.getElementById('resultTitle').textContent = titulo;
   document.getElementById('resultSub').textContent = 'Tiempo: ' + tiempo + ' — ¡Vuelve mañana!';
-  document.getElementById('resultPts').textContent = '⭐ +1 punto ganado';
+  if (sessionEmail) {
+    document.getElementById('resultPts').innerHTML = '⭐ +1 punto ganado';
+  } else {
+    document.getElementById('resultPts').innerHTML = '🔒 No se guardó ningún punto — <a href="/index.html" style="color:#00B4B4;font-weight:700">inicia sesión</a> para que la próxima sí cuente';
+  }
   card.classList.add('show');
 
   // Registrar punto
