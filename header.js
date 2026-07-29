@@ -131,12 +131,12 @@
       '<a href="/galeria.html" class="h-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">🐾 Galería</a>' +
       '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-link' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
       '<a href="/mensajes.html" class="h-link' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '">💬 Mensajes <span id="petmiMsgBadge" class="h-avisos-badge"></span></a>' +
-      '<a href="/salud.html" class="h-link' + (currentPath.indexOf('salud') >= 0 ? ' active' : '') + '">🩺 Mi Registro de Salud</a>' +
 
       '<a href="/juego.html" class="h-link' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '" style="color:#F5C842!important;font-weight:700">🎮 Juego del Día</a>' +
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
       '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">📖 Revista</a>' +
-      (function(){
+      // Tienda oculta por ahora — para reactivar, descomentar este bloque
+      /* (function(){
         var _esp = localStorage.getItem('petmi_especie') || '';
         var _url = 'https://www.revistapetmi.com/tienda';
         if (_esp.toLowerCase().indexOf('gato') >= 0)
@@ -144,7 +144,8 @@
         else if (_esp.toLowerCase().indexOf('perro') >= 0)
           _url = 'https://www.revistapetmi.com/tienda/coleccion/perros';
         return '<a href="' + _url + '" target="_blank" class="h-link">🛍️ Tienda</a>';
-      })();
+      })(); */
+      '';
     // ── Right: avatar o botones ──────────────────────────────
     var userInitials = sessionDueno
       ? sessionDueno.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()
@@ -167,6 +168,7 @@
             '<a href="/amigos.html" class="h-drop-item">👥 Amigos</a>' +
             '<a href="/mensajes.html" class="h-drop-item">💬 Mensajes</a>' +
             '<a href="/salud.html" class="h-drop-item">🩺 Mi Registro de Salud</a>' +
+            '<a href="/ruleta.html" class="h-drop-item">🎡 Ruleta de Premios</a>' +
             '<a href="/mis-avisos.html" class="h-drop-item">📝 Mis avisos</a>' +
             '<a href="/puntos.html" class="h-drop-item">🏆 Mis puntos</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
