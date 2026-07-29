@@ -255,11 +255,26 @@ export default async function handler(req, res) {
 
       // Marcar última actividad (no bloqueante — no afecta la respuesta si falla)
       if (mascotas.length) {
+        // Detectar reactivación: nunca había tenido actividad Y se registró
+        // hace más de 14 días (para no confundir con el primer uso normal
+        // de alguien recién registrado)
+        const primeraVezConActividad = !data[0].ultima_actividad;
+        const antiguedadMs = data[0].created_at ? (Date.now() - new Date(data[0].created_at).getTime()) : 0;
+        const esReactivacion = primeraVezConActividad && antiguedadMs > 14 * 86400000;
+
         fetch(SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email.toLowerCase()), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
           body: JSON.stringify({ ultima_actividad: new Date().toISOString() })
         }).catch(() => {});
+
+        if (esReactivacion) {
+          fetch(SUPABASE_URL + '/rest/v1/puntos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ email: email.toLowerCase(), accion: 'reactivacion', puntos: 15 })
+          }).catch(() => {});
+        }
       }
 
       return res.status(200).json({ found: mascotas.length > 0, mascotas });
@@ -1304,12 +1319,12 @@ export default async function handler(req, res) {
 
     // ── crearReglaSalud (admin) ─────────────────────────────────
     if (action === 'crearReglaSalud' && req.method === 'POST') {
-      const { especie, tipo_pelo, nombre, tipo, frecuencia_meses, tip, descripcion, link_compra, texto_boton_compra, orden } = req.body;
+      const { especie, tipo_pelo, nombre, tipo, frecuencia_meses, tip, descripcion, etiqueta, link_compra, texto_boton_compra, orden } = req.body;
       if (!especie || !nombre || !tipo || !frecuencia_meses) return res.status(200).json({ ok: false, error: 'Faltan campos' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ especie, tipo_pelo: tipo_pelo || null, nombre, tipo, frecuencia_meses, tip: tip || '', descripcion: descripcion || '', link_compra: link_compra || null, texto_boton_compra: texto_boton_compra || null, orden: orden || 0, activo: true })
+        body: JSON.stringify({ especie, tipo_pelo: tipo_pelo || null, nombre, tipo, frecuencia_meses, tip: tip || '', descripcion: descripcion || '', etiqueta: etiqueta || null, link_compra: link_compra || null, texto_boton_compra: texto_boton_compra || null, orden: orden || 0, activo: true })
       });
       return res.status(200).json({ ok: r.ok });
     }
@@ -1460,6 +1475,123 @@ export default async function handler(req, res) {
         }).catch(() => {});
       }
       return res.status(200).json({ ok: true });
+    }
+
+    // ── getRuletaPremios (público — para dibujar la rueda) ─────
+    if (action === 'getRuletaPremios') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios?activo=eq.true&select=*&order=orden.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ premios: Array.isArray(data) ? data : [] });
+    }
+
+    // ── girarRuleta ─────────────────────────────────────────────
+    // Una sola vez por email, para siempre. Si ya giró, devuelve el
+    // mismo resultado guardado (no vuelve a sortear).
+    if (action === 'girarRuleta' && req.method === 'POST') {
+      const { email, uid_mascota, dueno } = req.body;
+      if (!email || !uid_mascota) return res.status(200).json({ ok: false, error: 'Faltan datos' });
+      const emailL = email.trim().toLowerCase();
+
+      const rYaGiro = await fetch(SUPABASE_URL + '/rest/v1/ruleta_giros?email=eq.' + encodeURIComponent(emailL) + '&select=*,ruleta_premios(*)', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const yaGiroData = await rYaGiro.json();
+      if (Array.isArray(yaGiroData) && yaGiroData.length) {
+        return res.status(200).json({ ok: true, ya_giro: true, premio: yaGiroData[0].ruleta_premios });
+      }
+
+      const rPremios = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios?activo=eq.true&select=*', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const premios = await rPremios.json();
+      if (!Array.isArray(premios) || !premios.length) return res.status(200).json({ ok: false, error: 'Sin premios configurados' });
+
+      const totalPeso = premios.reduce((s, p) => s + Number(p.probabilidad || 0), 0);
+      let dado = Math.random() * totalPeso;
+      let elegido = premios[premios.length - 1];
+      for (const p of premios) {
+        if (dado < Number(p.probabilidad || 0)) { elegido = p; break; }
+        dado -= Number(p.probabilidad || 0);
+      }
+
+      // Guardar el giro (esto es lo que evita que vuelva a girar)
+      await fetch(SUPABASE_URL + '/rest/v1/ruleta_giros', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ uid_mascota, email: emailL, premio_id: elegido.id })
+      });
+
+      // Aplicar el premio segun su tipo
+      if (elegido.tipo === 'puntos') {
+        fetch(SUPABASE_URL + '/rest/v1/puntos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ email: emailL, accion: 'ruleta_premio', puntos: Number(elegido.valor || 0) })
+        }).catch(() => {});
+      } else if (elegido.tipo === 'premium') {
+        const hasta = new Date();
+        hasta.setMonth(hasta.getMonth() + Number(elegido.valor || 1));
+        fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid_mascota.toUpperCase()), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ premium: true, premium_hasta: hasta.toISOString().split('T')[0] })
+        }).catch(() => {});
+      } else if (elegido.tipo === 'entrega') {
+        // Crea una solicitud visible en el admin (misma tabla que los canjes de puntos.html)
+        fetch(SUPABASE_URL + '/rest/v1/canjes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ email: emailL, dueno: dueno || '', premio: elegido.nombre + (elegido.patrocinador ? ' (' + elegido.patrocinador + ')' : ''), puntos_usados: 0, estado: 'pendiente' })
+        }).catch(() => {});
+      }
+
+      return res.status(200).json({ ok: true, ya_giro: false, premio: elegido });
+    }
+
+    // ── getRuletaPremiosAdmin (todos, incluye inactivos) ───────
+    if (action === 'getRuletaPremiosAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios?select=*&order=orden.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ premios: Array.isArray(data) ? data : [] });
+    }
+
+    // ── crearRuletaPremio (admin) ────────────────────────────────
+    if (action === 'crearRuletaPremio' && req.method === 'POST') {
+      const { nombre, tipo, valor, probabilidad, patrocinador, color, orden } = req.body;
+      if (!nombre || !tipo || probabilidad == null) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ nombre, tipo, valor: valor || null, probabilidad, patrocinador: patrocinador || null, color: color || '#00B4B4', orden: orden || 0, activo: true })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── actualizarRuletaPremio (admin) ───────────────────────────
+    if (action === 'actualizarRuletaPremio' && req.method === 'POST') {
+      const { id, ...campos } = req.body;
+      if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(campos)
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── eliminarRuletaPremio (admin) ──────────────────────────────
+    if (action === 'eliminarRuletaPremio' && req.method === 'POST') {
+      const { id } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
     }
 
     // ── getPuntos ──────────────────────────────────────────────
