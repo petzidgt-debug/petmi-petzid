@@ -28,6 +28,7 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 .req-badge.al-dia{background:#E0F7F7;color:#007a7a}
 .req-badge.por-vencer{background:#FFF3D6;color:#8a6200}
 .req-badge.pendiente{background:#FCEBEB;color:#a01050}
+.req-badge.vencido{background:#c0392b;color:#fff}
 .req-fecha{font-size:12px;color:#999;margin-bottom:8px}
 .req-tip{background:#f8f7f4;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#555;line-height:1.5;margin-bottom:10px}
 .req-tip b{color:#1a1a2e}
@@ -226,7 +227,7 @@ function calcularEstado(regla) {
   var hoy = new Date();
   var diasParaVencer = Math.round((vence - hoy) / 86400000);
   var fechaTxt = 'Último: ' + fecha.toLocaleDateString('es-GT', {day:'2-digit',month:'short',year:'numeric'});
-  if (diasParaVencer < 0) return { estado:'pendiente', fechaTxt: fechaTxt + ' — venció' };
+  if (diasParaVencer < 0) return { estado:'vencido', fechaTxt: fechaTxt + ' — venció' };
   if (diasParaVencer <= 30) return { estado:'por-vencer', fechaTxt: fechaTxt + ' — vence pronto' };
   return { estado:'al-dia', fechaTxt: fechaTxt };
 }
@@ -250,7 +251,7 @@ var CATEGORIAS_TIPO = {
 function renderChecklist() {
   var mascota = misMascotas.find(function(m){ return m.uid === mascotaActivaUid; });
   var reglas = reglasParaMascota(mascota);
-  var etiquetas = { 'al-dia':'✅ Al día', 'por-vencer':'⚠️ Por vencer', 'pendiente':'❌ Pendiente' };
+  var etiquetas = { 'al-dia':'✅ Al día', 'por-vencer':'⚠️ Por vencer', 'pendiente':'❌ Pendiente', 'vencido':'⛔ Vencida' };
 
   var peloPromptHtml = '';
   if (!mascota.tipoPelo) {
@@ -312,7 +313,12 @@ function renderHistorial() {
   var ordenados = registrosActuales.slice().sort(function(a,b){ return new Date(b.fecha_aplicacion) - new Date(a.fecha_aplicacion); });
   document.getElementById('historialWrap').innerHTML = '<div class="historial-titulo">Historial</div>' + ordenados.map(function(r){
     var fecha = new Date(r.fecha_aplicacion).toLocaleDateString('es-GT', {day:'2-digit',month:'short',year:'numeric'});
-    return '<div class="hist-item"><div><div class="hist-nombre">'+r.nombre_especifico.replace(/_/g,' ')+'</div><div class="hist-fecha">'+fecha+'</div></div>'+(r.foto_comprobante?'📷':'')+'</div>';
+    var reglaMatch = TODAS_LAS_REGLAS.find(function(regla){ return String(regla.id) === String(r.nombre_especifico); });
+    var nombreMostrado = reglaMatch ? reglaMatch.nombre : r.nombre_especifico.replace(/_/g,' ');
+    var fotoHtml = r.foto_comprobante
+      ? '<a href="'+r.foto_comprobante+'" target="_blank" rel="noopener" style="font-size:20px;text-decoration:none" title="Ver comprobante">📷</a>'
+      : '';
+    return '<div class="hist-item"><div><div class="hist-nombre">'+nombreMostrado+'</div><div class="hist-fecha">'+fecha+'</div></div>'+fotoHtml+'</div>';
   }).join('');
 }
 
