@@ -144,6 +144,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('amigos',this)"><span class="nav-icon">👥</span>Amigos</div>
       <div class="nav-item" onclick="showScreen('amigosemana',this)"><span class="nav-icon">🎲</span>Amigo de la Semana</div>
       <div class="nav-item" onclick="showScreen('saludreglas',this)"><span class="nav-icon">🩺</span>Reglas de Salud</div>
+      <div class="nav-item" onclick="showScreen('ruletapremios',this)"><span class="nav-icon">🎡</span>Ruleta de Premios</div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
@@ -455,8 +456,8 @@ tbody tr:last-child td{border-bottom:none}
       <div class="table-card" style="margin-bottom:24px">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Especie</th><th>Pelo</th><th>Nombre</th><th>Tipo</th><th>Frecuencia</th><th>Edad</th><th>Compra</th><th>Activa</th><th></th></tr></thead>
-            <tbody id="reglasSaludBody"><tr><td colspan="9" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            <thead><tr><th>Especie</th><th>Pelo</th><th>Nombre</th><th>Etiqueta</th><th>Tipo</th><th>Frecuencia</th><th>Edad</th><th>Compra</th><th>Activa</th><th></th></tr></thead>
+            <tbody id="reglasSaludBody"><tr><td colspan="10" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -469,6 +470,20 @@ tbody tr:last-child td{border-bottom:none}
           <table>
             <thead><tr><th>Nombre</th><th>Recomendación</th><th>Compra</th><th>Activa</th><th></th></tr></thead>
             <tbody id="condicionesAdminBody"><tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="screenRuletapremios" class="screen">
+      <h2 class="screen-title">🎡 Ruleta de Premios</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Los premios y sus probabilidades — cada usuario solo puede girar una vez en la vida.</p>
+      <button class="btn-primary" onclick="abrirModalRuletaPremio()" style="margin-bottom:16px">+ Nuevo premio</button>
+      <div class="table-card" style="margin-bottom:24px">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Tipo</th><th>Valor</th><th>Probabilidad</th><th>Patrocinador</th><th>Activo</th><th></th></tr></thead>
+            <tbody id="ruletaPremiosBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -703,6 +718,14 @@ tbody tr:last-child td{border-bottom:none}
     </div>
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Descripción ("¿Qué es / qué cubre?")</label>
     <textarea id="rsDescripcion" rows="2" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-family:Arial" placeholder="ej. Vacuna combinada que protege contra..."></textarea>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Etiqueta</label>
+    <select id="rsEtiqueta" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+      <option value="">Sin etiqueta</option>
+      <option value="Obligatoria por ley">Obligatoria por ley</option>
+      <option value="Obligatoria">Obligatoria</option>
+      <option value="Muy recomendada">Muy recomendada</option>
+      <option value="Recomendada">Recomendada</option>
+    </select>
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Tip educativo ("¿Por qué importa?")</label>
     <textarea id="rsTip" rows="3" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-family:Arial"></textarea>
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Link de compra (opcional)</label>
@@ -733,6 +756,35 @@ tbody tr:last-child td{border-bottom:none}
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('modalCondicionAdmin')">Cancelar</button>
       <button class="btn-save" onclick="guardarCondicionAdmin()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalRuletaPremio">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title"><span id="modalRuletaPremioTitle">Nuevo premio</span><button class="modal-close" onclick="closeModal('modalRuletaPremio')">✕</button></div>
+    <input type="hidden" id="rpId">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Nombre</label>
+    <input type="text" id="rpNombre" placeholder="ej. Bolsa de treats" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Tipo</label>
+    <select id="rpTipo" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px" onchange="document.getElementById('rpValorWrap').style.display=this.value==='entrega'?'none':'block'">
+      <option value="puntos">Puntos (automático)</option>
+      <option value="premium">Meses de Premium (automático)</option>
+      <option value="entrega">Entrega física/servicio (aparece en Canjes)</option>
+    </select>
+    <div id="rpValorWrap">
+      <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Valor (puntos, o meses si es Premium)</label>
+      <input type="number" id="rpValor" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    </div>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Probabilidad (peso relativo — no necesita sumar 100)</label>
+    <input type="number" id="rpProbabilidad" placeholder="ej. 10" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Patrocinador (opcional)</label>
+    <input type="text" id="rpPatrocinador" placeholder="ej. Wazu" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Color en la rueda</label>
+    <input type="color" id="rpColor" value="#00B4B4" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:8px;height:40px">
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalRuletaPremio')">Cancelar</button>
+      <button class="btn-save" onclick="guardarRuletaPremio()">Guardar</button>
     </div>
   </div>
 </div>
@@ -1473,6 +1525,7 @@ function showScreen(name,el){
   if(name==='emailfix') emailfixDetectar();
   if(name==='mundial') { try { loadWCAdmin(); } catch(e) { console.error('WC Error:', e); } }
   if(name==='saludreglas') { loadReglasSalud(); loadCondicionesAdmin(); }
+  if(name==='ruletapremios') loadRuletaPremios();
   if(name==='_unused'){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
@@ -2389,6 +2442,97 @@ function verDetalleRaza(raza){
     entrada.mascotas.map(function(m){ return [m.nombre, m.dueno||'—', m.email||'—']; }));
 }
 
+// ── Ruleta de Premios (CRUD) ─────────────────────────────────────
+function loadRuletaPremios(){
+  fetch('/api/galeria?action=getRuletaPremiosAdmin')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var premios = d.premios || [];
+    if(!premios.length){
+      document.getElementById('ruletaPremiosBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Sin premios — crea el primero</td></tr>';
+      return;
+    }
+    var totalPeso = premios.reduce(function(s,p){return s+Number(p.probabilidad||0);}, 0);
+    document.getElementById('ruletaPremiosBody').innerHTML = premios.map(function(p){
+      var pct = totalPeso ? Math.round((p.probabilidad/totalPeso)*100) : 0;
+      return '<tr>'
+        + '<td><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:'+(p.color||'#00B4B4')+';margin-right:6px;vertical-align:middle"></span>'+p.nombre+'</td>'
+        + '<td>'+p.tipo+'</td>'
+        + '<td>'+(p.valor!=null?p.valor:'—')+'</td>'
+        + '<td>'+p.probabilidad+' ('+pct+'%)</td>'
+        + '<td>'+(p.patrocinador||'—')+'</td>'
+        + '<td><input type="checkbox" '+(p.activo?'checked':'')+' onchange="toggleRuletaPremio('+p.id+',this.checked)"></td>'
+        + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'editarRuletaPremio('+JSON.stringify(p)+')\'>Editar</button> '
+        + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px;color:#c0392b" onclick="eliminarRuletaPremio('+p.id+')">Borrar</button></td>'
+        + '</tr>';
+    }).join('');
+  }).catch(function(){
+    document.getElementById('ruletaPremiosBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de ruleta_premios?</td></tr>';
+  });
+}
+
+function abrirModalRuletaPremio(){
+  document.getElementById('modalRuletaPremioTitle').textContent = 'Nuevo premio';
+  document.getElementById('rpId').value = '';
+  document.getElementById('rpNombre').value = '';
+  document.getElementById('rpTipo').value = 'puntos';
+  document.getElementById('rpValorWrap').style.display = 'block';
+  document.getElementById('rpValor').value = '';
+  document.getElementById('rpProbabilidad').value = '';
+  document.getElementById('rpPatrocinador').value = '';
+  document.getElementById('rpColor').value = '#00B4B4';
+  document.getElementById('modalRuletaPremio').classList.add('open');
+}
+
+function editarRuletaPremio(p){
+  document.getElementById('modalRuletaPremioTitle').textContent = 'Editar premio';
+  document.getElementById('rpId').value = p.id;
+  document.getElementById('rpNombre').value = p.nombre;
+  document.getElementById('rpTipo').value = p.tipo;
+  document.getElementById('rpValorWrap').style.display = p.tipo === 'entrega' ? 'none' : 'block';
+  document.getElementById('rpValor').value = p.valor != null ? p.valor : '';
+  document.getElementById('rpProbabilidad').value = p.probabilidad;
+  document.getElementById('rpPatrocinador').value = p.patrocinador || '';
+  document.getElementById('rpColor').value = p.color || '#00B4B4';
+  document.getElementById('modalRuletaPremio').classList.add('open');
+}
+
+function guardarRuletaPremio(){
+  var id = document.getElementById('rpId').value;
+  var tipo = document.getElementById('rpTipo').value;
+  var payload = {
+    nombre: document.getElementById('rpNombre').value.trim(),
+    tipo: tipo,
+    valor: tipo === 'entrega' ? null : parseFloat(document.getElementById('rpValor').value) || 0,
+    probabilidad: parseFloat(document.getElementById('rpProbabilidad').value),
+    patrocinador: document.getElementById('rpPatrocinador').value.trim() || null,
+    color: document.getElementById('rpColor').value
+  };
+  if(!payload.nombre || !payload.probabilidad){ alert('Nombre y probabilidad son obligatorios.'); return; }
+  var action = id ? 'actualizarRuletaPremio' : 'crearRuletaPremio';
+  if(id) payload.id = parseInt(id);
+  fetch('/api/galeria?action='+action, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){ closeModal('modalRuletaPremio'); loadRuletaPremios(); }
+    else alert('No se pudo guardar.');
+  }).catch(function(){ alert('No se pudo guardar.'); });
+}
+
+function toggleRuletaPremio(id, activo){
+  fetch('/api/galeria?action=actualizarRuletaPremio', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, activo: activo })
+  }).catch(function(){});
+}
+
+function eliminarRuletaPremio(id){
+  if(!confirm('¿Borrar este premio?')) return;
+  fetch('/api/galeria?action=eliminarRuletaPremio', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
+  }).then(function(){ loadRuletaPremios(); }).catch(function(){});
+}
+
 var _todasReglasSalud = [];
 var _tabReglasSaludActivo = 'Todos';
 
@@ -2399,7 +2543,7 @@ function loadReglasSalud(){
     _todasReglasSalud = d.reglas || [];
     renderReglasSaludTabla();
   }).catch(function(){
-    document.getElementById('reglasSaludBody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de reglas_salud?</td></tr>';
+    document.getElementById('reglasSaludBody').innerHTML = '<tr><td colspan="10" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de reglas_salud?</td></tr>';
   });
 }
 
@@ -2416,7 +2560,7 @@ function renderReglasSaludTabla(){
     return _tabReglasSaludActivo === 'Todos' || r.especie === _tabReglasSaludActivo || r.especie === 'Todos';
   });
   if(!reglas.length){
-    document.getElementById('reglasSaludBody').innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:#aaa">Sin reglas en esta categoría</td></tr>';
+    document.getElementById('reglasSaludBody').innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:#aaa">Sin reglas en esta categoría</td></tr>';
     return;
   }
   document.getElementById('reglasSaludBody').innerHTML = reglas.map(function(r){
@@ -2424,6 +2568,7 @@ function renderReglasSaludTabla(){
       + '<td>'+r.especie+'</td>'
       + '<td>'+(r.tipo_pelo||'—')+'</td>'
       + '<td>'+r.nombre+'</td>'
+      + '<td style="font-size:11px">'+(r.etiqueta||'—')+'</td>'
       + '<td>'+r.tipo+'</td>'
       + '<td>'+r.frecuencia_meses+' meses</td>'
       + '<td style="font-size:11px">'+(r.edad_min_meses?('desde '+r.edad_min_meses+'m'):'')+(r.edad_min_meses&&r.edad_max_meses?' / ':'')+(r.edad_max_meses?('hasta '+r.edad_max_meses+'m'):'')+((!r.edad_min_meses&&!r.edad_max_meses)?'—':'')+'</td>'
@@ -2447,6 +2592,7 @@ function abrirModalReglaSalud(){
   document.getElementById('rsEdadMax').value = '';
   document.getElementById('rsTip').value = '';
   document.getElementById('rsDescripcion').value = '';
+  document.getElementById('rsEtiqueta').value = '';
   document.getElementById('rsLinkCompra').value = '';
   document.getElementById('rsTextoBoton').value = '';
   document.getElementById('modalReglaSalud').classList.add('open');
@@ -2464,6 +2610,7 @@ function editarReglaSalud(r){
   document.getElementById('rsEdadMax').value = r.edad_max_meses || '';
   document.getElementById('rsTip').value = r.tip || '';
   document.getElementById('rsDescripcion').value = r.descripcion || '';
+  document.getElementById('rsEtiqueta').value = r.etiqueta || '';
   document.getElementById('rsLinkCompra').value = r.link_compra || '';
   document.getElementById('rsTextoBoton').value = r.texto_boton_compra || '';
   document.getElementById('modalReglaSalud').classList.add('open');
@@ -2481,6 +2628,7 @@ function guardarReglaSalud(){
     edad_max_meses: document.getElementById('rsEdadMax').value ? parseFloat(document.getElementById('rsEdadMax').value) : null,
     tip: document.getElementById('rsTip').value.trim(),
     descripcion: document.getElementById('rsDescripcion').value.trim(),
+    etiqueta: document.getElementById('rsEtiqueta').value || null,
     link_compra: document.getElementById('rsLinkCompra').value.trim() || null,
     texto_boton_compra: document.getElementById('rsTextoBoton').value.trim() || null
   };

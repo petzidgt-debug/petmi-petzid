@@ -269,13 +269,23 @@ function renderChecklist() {
     + '<b>Según la edad de ' + mascota.nombre + (etapa ? ' (' + etapa + ')' : '') + '</b>, estas son las recomendaciones que debería tener al día:'
     + '</div>';
 
+  function etiquetaColor(et) {
+    if (et === 'Obligatoria por ley') return '#c0392b';
+    if (et === 'Obligatoria') return '#a01050';
+    if (et === 'Muy recomendada') return '#8a6200';
+    return '#007a7a';
+  }
+
   function tarjetaRegla(regla) {
     var st = calcularEstado(regla);
     var botonCompra = regla.link_compra
       ? '<a href="'+regla.link_compra+'" target="_blank" rel="noopener" style="display:inline-block;margin-left:8px;background:#F5C842;color:#1a1a2e;padding:9px 16px;border-radius:99px;font-size:12.5px;font-weight:700;text-decoration:none">'+(regla.texto_boton_compra||'🛒 Comprar')+'</a>'
       : '';
+    var etiquetaHtml = regla.etiqueta
+      ? '<div style="display:inline-block;font-size:10px;font-weight:700;color:'+etiquetaColor(regla.etiqueta)+';text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">'+regla.etiqueta+'</div><br>'
+      : '';
     return '<div class="req-card">'
-      + '<div class="req-top"><div class="req-nombre">'+regla.nombre+'</div><div class="req-badge '+st.estado+'">'+etiquetas[st.estado]+'</div></div>'
+      + '<div class="req-top"><div><div class="req-nombre">'+regla.nombre+'</div>'+etiquetaHtml+'</div><div class="req-badge '+st.estado+'">'+etiquetas[st.estado]+'</div></div>'
       + '<div class="req-fecha">'+st.fechaTxt+'</div>'
       + (regla.descripcion ? '<div style="font-size:12.5px;color:#555;line-height:1.5;margin-bottom:8px">'+regla.descripcion+'</div>' : '')
       + '<div class="req-tip"><b>¿Por qué importa?</b> '+regla.tip+'</div>'

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Ruleta de Premios — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:110px}
+
+.hero{background:linear-gradient(135deg,#1a1a2e,#00B4B4);padding:24px 20px 20px;text-align:center}
+.hero-label{font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.hero-title{font-size:24px;font-weight:900;color:#fff;margin-bottom:4px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.7)}
+
+.wrap{max-width:420px;margin:0 auto;padding:24px 16px;text-align:center}
+
+.rueda-wrap{position:relative;width:280px;height:280px;margin:20px auto}
+.rueda{width:280px;height:280px;border-radius:50%;position:relative;transition:transform 4.5s cubic-bezier(.15,.6,.15,1);box-shadow:0 8px 30px rgba(0,0,0,.25);border:6px solid #fff}
+.rueda-label{position:absolute;top:50%;left:50%;font-size:10.5px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);width:90px;text-align:center;transform-origin:0 0;pointer-events:none}
+.puntero{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid #F5C842;z-index:10;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+.centro-rueda{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;font-size:26px;z-index:5}
+
+.btn-girar{background:#F5C842;color:#1a1a2e;border:none;padding:16px 44px;border-radius:99px;font-weight:900;font-size:16px;cursor:pointer;margin-top:10px;box-shadow:0 4px 16px rgba(245,200,66,.4)}
+.btn-girar:disabled{opacity:.5;cursor:default}
+
+.resultado-card{background:#fff;border-radius:16px;padding:28px 20px;border:0.5px solid #eee;margin-top:20px}
+.resultado-emoji{font-size:48px;margin-bottom:10px}
+.resultado-nombre{font-size:20px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
+.resultado-sub{font-size:13px;color:#888;line-height:1.6}
+
+.aviso{background:#FFF8E1;border:1px solid #F5C842;border-radius:12px;padding:12px 16px;margin:10px 16px 0;font-size:12.5px;color:#8a6200;text-align:center}
+.vacio{color:#aaa;padding:30px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-label">🎡 Un solo giro</div>
+  <div class="hero-title">Ruleta de Premios</div>
+  <div class="hero-sub">Todos ganan algo — desde puntos hasta premios reales</div>
+</div>
+
+<div id="avisoSinSesion"></div>
+
+<div class="wrap" id="contenedor">
+  <div class="vacio">Cargando...</div>
+</div>
+
+<script>
+var sessionEmail = localStorage.getItem('petzid_email') || sessionStorage.getItem('petmiEmail') || '';
+if (!sessionEmail) {
+  document.getElementById('avisoSinSesion').innerHTML = '<div class="aviso">🔒 Necesitas iniciar sesión para girar la ruleta. <a href="/index.html" style="color:#8a6200;font-weight:700;text-decoration:underline">Inicia sesión</a>.</div>';
+}
+
+var miUid = null, miDueno = '';
+var premios = [];
+var yaGiro = false;
+
+function iniciar() {
+  if (!sessionEmail) {
+    document.getElementById('contenedor').innerHTML = '<div class="vacio">Inicia sesión para jugar.</div>';
+    return;
+  }
+  Promise.all([
+    fetch('/api/galeria?action=checkEmail', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'checkEmail', email: sessionEmail}) }).then(r=>r.json()),
+    fetch('/api/galeria?action=getRuletaPremios').then(r=>r.json())
+  ]).then(function(resultados) {
+    var d = resultados[0], premiosData = resultados[1];
+    premios = premiosData.premios || [];
+    if (!d.found || !d.mascotas.length) {
+      document.getElementById('contenedor').innerHTML = '<div class="vacio">No encontramos mascotas en tu cuenta.</div>';
+      return;
+    }
+    miUid = d.mascotas[0].uid;
+    miDueno = d.mascotas[0].dueno || '';
+    renderRueda();
+  }).catch(function(){
+    document.getElementById('contenedor').innerHTML = '<div class="vacio">Error al cargar. Intenta de nuevo.</div>';
+  });
+}
+
+function anguloAcumulado() {
+  var total = premios.reduce(function(s,p){ return s + Number(p.probabilidad||0); }, 0);
+  var acumulado = 0;
+  return premios.map(function(p) {
+    var grados = (Number(p.probabilidad||0) / total) * 360;
+    var rango = { premio: p, desde: acumulado, hasta: acumulado + grados, medio: acumulado + grados/2 };
+    acumulado += grados;
+    return rango;
+  });
+}
+
+function renderRueda() {
+  var rangos = anguloAcumulado();
+  var gradiente = rangos.map(function(r){ return r.premio.color + ' ' + r.desde + 'deg ' + r.hasta + 'deg'; }).join(', ');
+
+  var etiquetas = rangos.map(function(r) {
+    var rad = (r.medio - 90) * Math.PI / 180; // -90 para que 0deg sea arriba
+    var radio = 78;
+    var x = 140 + radio * Math.cos(rad);
+    var y = 140 + radio * Math.sin(rad);
+    return '<div class="rueda-label" style="left:'+x+'px;top:'+y+'px;transform:translate(-50%,-50%) rotate('+(r.medio)+'deg)">'+r.premio.nombre+'</div>';
+  }).join('');
+
+  document.getElementById('contenedor').innerHTML =
+    '<div class="rueda-wrap">'
+    + '<div class="puntero"></div>'
+    + '<div class="rueda" id="rueda" style="background:conic-gradient(' + gradiente + ')">' + etiquetas + '</div>'
+    + '<div class="centro-rueda">🐾</div>'
+    + '</div>'
+    + '<button class="btn-girar" id="btnGirar" onclick="girar()">🎡 Girar la ruleta</button>'
+    + '<div id="resultadoWrap"></div>';
+}
+
+function girar() {
+  var btn = document.getElementById('btnGirar');
+  btn.disabled = true; btn.textContent = 'Girando...';
+
+  fetch('/api/galeria?action=girarRuleta', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ email: sessionEmail, uid_mascota: miUid, dueno: miDueno })
+  }).then(function(r){ return r.json(); })
+  .then(function(d) {
+    if (!d.ok) { alert('No se pudo girar. Intenta de nuevo.'); btn.disabled = false; btn.textContent = '🎡 Girar la ruleta'; return; }
+
+    var rangos = anguloAcumulado();
+    var ganado = rangos.find(function(r){ return r.premio.id === d.premio.id; });
+    var medio = ganado ? ganado.medio : 0;
+    var vueltasExtra = 360 * 5;
+    var rotacionFinal = vueltasExtra + (360 - medio);
+
+    var rueda = document.getElementById('rueda');
+    if (d.ya_giro) {
+      // Ya había girado antes — mostrar directo sin animar
+      mostrarResultado(d.premio, true);
+    } else {
+      rueda.style.transform = 'rotate(' + rotacionFinal + 'deg)';
+      setTimeout(function(){ mostrarResultado(d.premio, false); }, 4600);
+    }
+  }).catch(function(){
+    alert('No se pudo girar. Intenta de nuevo.');
+    btn.disabled = false; btn.textContent = '🎡 Girar la ruleta';
+  });
+}
+
+function mostrarResultado(premio, yaHabiaGirado) {
+  var btn = document.getElementById('btnGirar');
+  btn.style.display = 'none';
+
+  var emoji = premio.tipo === 'entrega' ? '🎁' : premio.tipo === 'premium' ? '⭐' : '🎉';
+  var sub = premio.tipo === 'entrega'
+    ? 'El equipo de PetMi te va a contactar para coordinar la entrega.' + (premio.patrocinador ? ' Cortesía de ' + premio.patrocinador + '.' : '')
+    : premio.tipo === 'premium'
+      ? 'Ya activamos tu Premium — disfrútalo.'
+      : 'Ya se sumaron a tu cuenta de puntos.';
+
+  document.getElementById('resultadoWrap').innerHTML =
+    '<div class="resultado-card">'
+    + '<div class="resultado-emoji">' + emoji + '</div>'
+    + '<div class="resultado-nombre">' + (yaHabiaGirado ? 'Ya habías ganado:' : '¡Ganaste!') + '<br>' + premio.nombre + '</div>'
+    + '<div class="resultado-sub">' + sub + '</div>'
+    + '</div>';
+}
+
+iniciar();
+</script>
+<script src="/header.js"></script>
+</body>
+</html>
