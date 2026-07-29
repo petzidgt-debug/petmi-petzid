@@ -1287,6 +1287,53 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, sorteado: true, ganadores });
     }
 
+    // ── getLikesResumen (conteos + cuáles ya dio like el usuario) ──
+    if (action === 'getLikesResumen' && req.method === 'POST') {
+      const { uids, email } = req.body;
+      if (!Array.isArray(uids) || !uids.length) return res.status(200).json({ conteos: {}, misLikes: [] });
+      const uidsUpper = uids.map(u => String(u).toUpperCase());
+      const r = await fetch(SUPABASE_URL + '/rest/v1/likes_mascotas?uid_mascota=in.(' + uidsUpper.map(u => encodeURIComponent(u)).join(',') + ')&select=uid_mascota,email_liker', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      const conteos = {};
+      const misLikes = [];
+      const emailL = (email || '').trim().toLowerCase();
+      (Array.isArray(data) ? data : []).forEach(row => {
+        conteos[row.uid_mascota] = (conteos[row.uid_mascota] || 0) + 1;
+        if (emailL && row.email_liker === emailL) misLikes.push(row.uid_mascota);
+      });
+      return res.status(200).json({ conteos, misLikes });
+    }
+
+    // ── toggleLike ───────────────────────────────────────────────
+    if (action === 'toggleLike' && req.method === 'POST') {
+      const { uid_mascota, email } = req.body;
+      if (!uid_mascota || !email) return res.status(200).json({ ok: false });
+      const uid = uid_mascota.toUpperCase();
+      const emailL = email.trim().toLowerCase();
+
+      const rCheck = await fetch(SUPABASE_URL + '/rest/v1/likes_mascotas?uid_mascota=eq.' + encodeURIComponent(uid) + '&email_liker=eq.' + encodeURIComponent(emailL) + '&select=id', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const existente = await rCheck.json();
+
+      if (Array.isArray(existente) && existente.length) {
+        await fetch(SUPABASE_URL + '/rest/v1/likes_mascotas?id=eq.' + existente[0].id, {
+          method: 'DELETE',
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        return res.status(200).json({ ok: true, liked: false });
+      } else {
+        await fetch(SUPABASE_URL + '/rest/v1/likes_mascotas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ uid_mascota: uid, email_liker: emailL })
+        });
+        return res.status(200).json({ ok: true, liked: true });
+      }
+    }
+
     // ── getReglasSalud (público — usado por salud.html) ────────
     if (action === 'getReglasSalud') {
       const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud?activo=eq.true&select=*&order=orden.asc', {
