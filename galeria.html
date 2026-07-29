@@ -102,6 +102,9 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .gallery-wrap{padding:20px;max-width:1200px;margin:0 auto}
 .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
 .pet-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative}
+.like-btn{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#999;background:none;border:none;padding:4px 6px;cursor:pointer;border-radius:99px}
+.like-btn.liked{color:#E05090}
+.like-btn:active{transform:scale(1.15)}
 .pet-card:hover{transform:translateY(-4px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
 .pet-photo{width:100%;aspect-ratio:1;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
 .pet-photo img{width:100%;aspect-ratio:1;object-fit:cover}
@@ -669,7 +672,9 @@ function renderGallery(append){
     return '<div class="pet-card" onclick="openModal('+idx+')">'
       +'<div class="pet-photo" style="position:relative">'+fotoHTML+badgeNuevo+badgePremium+'</div>'
       +'<div class="pet-info"><div class="pet-name">'+p.nombre+'</div>'
-      +'<div><span class="pet-especie '+(esGato?'gato':'perro')+'">'+(esGato?'Gato':'Perro')+'</span>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+      +'<span class="pet-especie '+(esGato?'gato':'perro')+'">'+(esGato?'Gato':'Perro')+'</span>'
+      +'<button class="like-btn" id="likeBtn_'+p.uid+'" onclick="event.stopPropagation();toggleLikeMascota(\''+p.uid+'\')">🐾 <span id="likeCount_'+p.uid+'">0</span></button>'
       +'</div></div></div>';
   }).join('');
   if(!append){
@@ -681,6 +686,49 @@ function renderGallery(append){
   }
   document.getElementById('resultsCount').textContent=filtered.length+' mascotas';
   document.getElementById('loadMoreWrap').style.display=shown<filtered.length?'block':'none';
+  cargarLikesVisibles();
+}
+
+function cargarLikesVisibles(){
+  var uids = filtered.slice(0, shown).map(function(p){ return p.uid; }).filter(Boolean);
+  if(!uids.length) return;
+  fetch('/api/galeria?action=getLikesResumen', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ uids: uids, email: sessionEmail })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    var conteos = d.conteos || {}, misLikes = d.misLikes || [];
+    uids.forEach(function(uid){
+      var uidUpper = uid.toUpperCase();
+      var elCount = document.getElementById('likeCount_'+uid);
+      var elBtn = document.getElementById('likeBtn_'+uid);
+      if(elCount) elCount.textContent = conteos[uidUpper] || 0;
+      if(elBtn && misLikes.indexOf(uidUpper) >= 0) elBtn.classList.add('liked');
+    });
+  }).catch(function(){});
+}
+
+function toggleLikeMascota(uid){
+  if(!sessionEmail){
+    mostrarToastG('Inicia sesión para dar like 🐾');
+    return;
+  }
+  var elBtn = document.getElementById('likeBtn_'+uid);
+  var elCount = document.getElementById('likeCount_'+uid);
+  var yaLiked = elBtn.classList.contains('liked');
+  // Optimista: actualiza la UI de inmediato, sin esperar la respuesta
+  var actual = parseInt(elCount.textContent) || 0;
+  elCount.textContent = yaLiked ? Math.max(0, actual-1) : actual+1;
+  elBtn.classList.toggle('liked');
+
+  fetch('/api/galeria?action=toggleLike', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ uid_mascota: uid, email: sessionEmail })
+  }).catch(function(){
+    // Revertir si falló
+    elCount.textContent = actual;
+    elBtn.classList.toggle('liked');
+  });
 }
 
 // ── Modal mascota ─────────────────────────────────────────────
