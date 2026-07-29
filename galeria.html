@@ -829,7 +829,10 @@ function renderModalFooter(p){
 
   // Mi propia mascota — banner + sin botones
   if(esMia){
-    footer.innerHTML='<div style="background:#e0f7f7;border-radius:10px;padding:10px 14px;font-size:12px;color:#007a7a;font-weight:500;width:100%;text-align:center">✏️ Para editar o gestionar a <strong>'+p.nombre+'</strong>, ve a <a href="/familia.html" style="color:#007a7a;font-weight:700">Mi Familia</a></div>';
+    var editarFechaBtn = p.angelito
+      ? '<button onclick="toggleAngel(true)" style="margin-top:8px;background:none;border:none;color:#007a7a;font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline">✏️ Editar fecha de partida</button>'
+      : '';
+    footer.innerHTML='<div style="background:#e0f7f7;border-radius:10px;padding:10px 14px;font-size:12px;color:#007a7a;font-weight:500;width:100%;text-align:center">✏️ Para editar o gestionar a <strong>'+p.nombre+'</strong>, ve a <a href="/familia.html" style="color:#007a7a;font-weight:700">Mi Familia</a>' + editarFechaBtn + '</div>';
     return;
   }
 
@@ -912,7 +915,7 @@ function toggleAngel(esAngel){
       +'</div>';
     document.body.appendChild(overlay);
   } else { overlay.style.display='flex'; }
-  document.getElementById('angelFechaInput').value=new Date().toISOString().split('T')[0];
+  document.getElementById('angelFechaInput').value=(currentModalPet&&currentModalPet.fechaAngelito)?currentModalPet.fechaAngelito:new Date().toISOString().split('T')[0];
 }
 
 function confirmarAngel(){
