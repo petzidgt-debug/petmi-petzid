@@ -17,7 +17,17 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 
 .rueda-wrap{position:relative;width:280px;height:280px;margin:20px auto}
 .rueda{width:280px;height:280px;border-radius:50%;position:relative;transition:transform 4.5s cubic-bezier(.15,.6,.15,1);box-shadow:0 8px 30px rgba(0,0,0,.25);border:6px solid #fff}
-.rueda-label{position:absolute;top:50%;left:50%;font-size:10.5px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);width:90px;text-align:center;transform-origin:0 0;pointer-events:none}
+.leyenda-wrap{display:flex;flex-direction:column;gap:8px;align-items:flex-start;margin:6px auto 0;max-width:260px;text-align:left}
+.leyenda-item{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#333}
+.leyenda-punto{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.leyenda-num{width:18px;height:18px;border-radius:50%;background:#1a1a2e;color:#fff;font-size:10.5px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rueda-num{position:absolute;transform:translate(-50%,-50%);width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.9);color:#1a1a2e;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+
+.confeti-pieza{position:fixed;top:-10px;width:9px;height:14px;z-index:999;pointer-events:none;animation:caerConfeti linear forwards}
+@keyframes caerConfeti{
+  0%{transform:translateY(0) rotate(0deg);opacity:1}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:.9}
+}
 .puntero{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid #F5C842;z-index:10;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
 .centro-rueda{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;font-size:26px;z-index:5}
 
@@ -95,20 +105,29 @@ function renderRueda() {
   var rangos = anguloAcumulado();
   var gradiente = rangos.map(function(r){ return r.premio.color + ' ' + r.desde + 'deg ' + r.hasta + 'deg'; }).join(', ');
 
-  var etiquetas = rangos.map(function(r) {
-    var rad = (r.medio - 90) * Math.PI / 180; // -90 para que 0deg sea arriba
-    var radio = 78;
+  var numeros = rangos.map(function(r, i) {
+    var rad = (r.medio - 90) * Math.PI / 180;
+    var radio = 90;
     var x = 140 + radio * Math.cos(rad);
     var y = 140 + radio * Math.sin(rad);
-    return '<div class="rueda-label" style="left:'+x+'px;top:'+y+'px;transform:translate(-50%,-50%) rotate('+(r.medio)+'deg)">'+r.premio.nombre+'</div>';
+    return '<div class="rueda-num" style="left:'+x+'px;top:'+y+'px">'+(i+1)+'</div>';
+  }).join('');
+
+  var leyenda = rangos.map(function(r, i) {
+    return '<div class="leyenda-item">'
+      + '<span class="leyenda-num">'+(i+1)+'</span>'
+      + '<span class="leyenda-punto" style="background:'+r.premio.color+'"></span>'
+      + '<span>'+r.premio.nombre+'</span>'
+      + '</div>';
   }).join('');
 
   document.getElementById('contenedor').innerHTML =
     '<div class="rueda-wrap">'
     + '<div class="puntero"></div>'
-    + '<div class="rueda" id="rueda" style="background:conic-gradient(' + gradiente + ')">' + etiquetas + '</div>'
+    + '<div class="rueda" id="rueda" style="background:conic-gradient(' + gradiente + ')">' + numeros + '</div>'
     + '<div class="centro-rueda">🐾</div>'
     + '</div>'
+    + '<div class="leyenda-wrap">' + leyenda + '</div>'
     + '<button class="btn-girar" id="btnGirar" onclick="girar()">🎡 Girar la ruleta</button>'
     + '<div id="resultadoWrap"></div>';
 }
@@ -161,6 +180,25 @@ function mostrarResultado(premio, yaHabiaGirado) {
     + '<div class="resultado-nombre">' + (yaHabiaGirado ? 'Ya habías ganado:' : '¡Ganaste!') + '<br>' + premio.nombre + '</div>'
     + '<div class="resultado-sub">' + sub + '</div>'
     + '</div>';
+
+  if (!yaHabiaGirado) lanzarConfeti();
+}
+
+function lanzarConfeti() {
+  var colores = ['#00B4B4', '#7B61FF', '#FF8A5C', '#F5C842', '#E05090', '#1a1a2e'];
+  for (var i = 0; i < 70; i++) {
+    (function(i){
+      var pieza = document.createElement('div');
+      pieza.className = 'confeti-pieza';
+      pieza.style.left = Math.random() * 100 + 'vw';
+      pieza.style.background = colores[Math.floor(Math.random() * colores.length)];
+      pieza.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+      pieza.style.animationDelay = (Math.random() * 0.4) + 's';
+      pieza.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      document.body.appendChild(pieza);
+      setTimeout(function(){ pieza.remove(); }, 4500);
+    })(i);
+  }
 }
 
 iniciar();
