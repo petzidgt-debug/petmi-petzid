@@ -1287,6 +1287,38 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, sorteado: true, ganadores });
     }
 
+    // ── getSinonimosRaza (admin) ────────────────────────────────
+    if (action === 'getSinonimosRaza') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/raza_sinonimos?select=*&order=raza_canonica.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ sinonimos: Array.isArray(data) ? data : [] });
+    }
+
+    // ── guardarSinonimoRaza (crear o actualizar — variante es única) ──
+    if (action === 'guardarSinonimoRaza' && req.method === 'POST') {
+      const { raza_variante, raza_canonica } = req.body;
+      if (!raza_variante || !raza_canonica) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/raza_sinonimos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ raza_variante, raza_canonica })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── eliminarSinonimoRaza (admin) ─────────────────────────────
+    if (action === 'eliminarSinonimoRaza' && req.method === 'POST') {
+      const { raza_variante } = req.body;
+      if (!raza_variante) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/raza_sinonimos?raza_variante=eq.' + encodeURIComponent(raza_variante), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
     // ── getLikesResumen (conteos + cuáles ya dio like el usuario) ──
     if (action === 'getLikesResumen' && req.method === 'POST') {
       const { uids, email } = req.body;
