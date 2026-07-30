@@ -367,8 +367,8 @@ tbody tr:last-child td{border-bottom:none}
         <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Razas de perros más comunes — clic para ver dueños (útil para el "Día de la raza X")</div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>#</th><th>Raza</th><th>Cantidad</th></tr></thead>
-            <tbody id="estRazasPerrosBody"><tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            <thead><tr><th>#</th><th>Raza</th><th>Cantidad</th><th></th></tr></thead>
+            <tbody id="estRazasPerrosBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -494,6 +494,17 @@ tbody tr:last-child td{border-bottom:none}
           <table>
             <thead><tr><th>Nombre</th><th>Tipo</th><th>Valor</th><th>Probabilidad</th><th>Patrocinador</th><th>Activo</th><th></th></tr></thead>
             <tbody id="ruletaPremiosBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2 class="screen-title" style="font-size:18px">📋 Quién ha girado — <span id="ruletaGirosTotal">0</span> giros en total</h2>
+      <div id="ruletaResumenPremios" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px"></div>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Correo</th><th>Premio</th><th>Tipo</th></tr></thead>
+            <tbody id="ruletaGirosBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -799,6 +810,21 @@ tbody tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<div class="modal-overlay" id="modalUnificarRaza">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title"><span>Unificar raza</span><button class="modal-close" onclick="closeModal('modalUnificarRaza')">✕</button></div>
+    <input type="hidden" id="urVariante">
+    <p style="font-size:13px;color:#666;margin:6px 0 14px">Fusionando: <strong id="urNombreActual"></strong></p>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Nombre bajo el cual agrupar</label>
+    <input type="text" id="urCanonico" placeholder="ej. Labrador Retriever" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <p style="font-size:11.5px;color:#999;margin-top:8px">Escribe el nombre exacto que ya usa otra raza de la lista para fusionarlas, o un nombre nuevo. Aplica solo a las estadísticas, no cambia los datos originales de cada mascota.</p>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalUnificarRaza')">Cancelar</button>
+      <button class="btn-save" onclick="guardarUnificacionRaza()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL FAMILIA -->
 <div class="modal-overlay" id="modalFamilia">
   <div class="modal">
@@ -1017,21 +1043,47 @@ function loadEstadisticas(){
     window._estDatos.activas = activas;
 
     // Razas de perros más comunes (para campañas por "Día de la raza X")
-    var perros = activas.filter(function(m){ return m.especie === 'Perro' && m.raza && m.raza.trim() && m.raza.trim() !== '-'; });
-    var conteoRazas = {};
-    perros.forEach(function(m){
-      var raza = m.raza.trim();
-      if(!conteoRazas[raza]) conteoRazas[raza] = [];
-      conteoRazas[raza].push(m);
-    });
-    var razasOrdenadas = Object.keys(conteoRazas).map(function(raza){
-      return { raza: raza, mascotas: conteoRazas[raza], cantidad: conteoRazas[raza].length };
-    }).sort(function(a,b){ return b.cantidad - a.cantidad; });
-    window._estDatos.razasPerros = razasOrdenadas;
+    function normalizarRaza(raza) {
+      return raza.trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // quitar acentos
+        .replace(/\s+/g,' '); // colapsar espacios de más
+    }
+    function capitalizar(txt) {
+      return txt.replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+    }
 
-    document.getElementById('estRazasPerrosBody').innerHTML = razasOrdenadas.length ? razasOrdenadas.map(function(r, i){
-      return '<tr class="stat-card-click" style="cursor:pointer" onclick="verDetalleRaza(\''+r.raza.replace(/'/g,"\\'")+'\')"><td>'+(i+1)+'</td><td>'+r.raza+'</td><td>'+r.cantidad+'</td></tr>';
-    }).join('') : '<tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Sin datos de raza aún</td></tr>';
+    var perros = activas.filter(function(m){ return m.especie === 'Perro' && m.raza && m.raza.trim() && m.raza.trim() !== '-'; });
+
+    fetch('/api/galeria?action=getSinonimosRaza').then(function(r){return r.json();}).then(function(sd){
+      var sinonimos = sd.sinonimos || [];
+      window._razaSinonimosMapa = {}; // clave normalizada -> nombre canónico (para el botón Unificar)
+      var sinonimosMapa = {};
+      sinonimos.forEach(function(s){ sinonimosMapa[s.raza_variante] = s.raza_canonica; window._razaSinonimosMapa[s.raza_variante] = s.raza_canonica; });
+
+      var conteoRazas = {};
+      perros.forEach(function(m){
+        var claveOriginal = normalizarRaza(m.raza);
+        var nombreFinal = sinonimosMapa[claveOriginal] || capitalizar(claveOriginal);
+        var claveFinal = normalizarRaza(nombreFinal);
+        if(!conteoRazas[claveFinal]) conteoRazas[claveFinal] = { nombreMostrado: nombreFinal, mascotas: [], variantesOriginales: {} };
+        conteoRazas[claveFinal].mascotas.push(m);
+        conteoRazas[claveFinal].variantesOriginales[claveOriginal] = true;
+      });
+      var razasOrdenadas = Object.keys(conteoRazas).map(function(clave){
+        return { raza: conteoRazas[clave].nombreMostrado, mascotas: conteoRazas[clave].mascotas, cantidad: conteoRazas[clave].mascotas.length, variantes: Object.keys(conteoRazas[clave].variantesOriginales) };
+      }).sort(function(a,b){ return b.cantidad - a.cantidad; });
+      window._estDatos.razasPerros = razasOrdenadas;
+
+      document.getElementById('estRazasPerrosBody').innerHTML = razasOrdenadas.length ? razasOrdenadas.map(function(r, i){
+        var variantePrincipal = r.variantes[0];
+        return '<tr>'
+          + '<td onclick="verDetalleRaza(\''+r.raza.replace(/'/g,"\\'")+'\')" style="cursor:pointer">'+(i+1)+'</td>'
+          + '<td onclick="verDetalleRaza(\''+r.raza.replace(/'/g,"\\'")+'\')" style="cursor:pointer">'+r.raza+(r.variantes.length>1?' <span style="font-size:10px;color:#aaa">('+r.variantes.length+' variantes fusionadas)</span>':'')+'</td>'
+          + '<td onclick="verDetalleRaza(\''+r.raza.replace(/'/g,"\\'")+'\')" style="cursor:pointer">'+r.cantidad+'</td>'
+          + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick="abrirModalUnificarRaza(\''+variantePrincipal+'\',\''+r.raza.replace(/'/g,"\\'")+'\')">🔗 Unificar</button></td>'
+          + '</tr>';
+      }).join('') : '<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Sin datos de raza aún</td></tr>';
+    }).catch(function(){});
 
     window._estDatos.angelitos = angelitos;
     window._estDatos.nuevas7 = nuevas7;
@@ -1549,7 +1601,7 @@ function showScreen(name,el){
   if(name==='emailfix') emailfixDetectar();
   if(name==='mundial') { try { loadWCAdmin(); } catch(e) { console.error('WC Error:', e); } }
   if(name==='saludreglas') { loadReglasSalud(); loadCondicionesAdmin(); }
-  if(name==='ruletapremios') loadRuletaPremios();
+  if(name==='ruletapremios') { loadRuletaPremios(); loadRuletaGiros(); }
   if(name==='_unused'){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
@@ -2458,6 +2510,27 @@ function mostrarToastAdmin(msg){
 
 // ── Mundial Admin ─────────────────────────────────────────────
 // ── Reglas de Salud (CRUD) ───────────────────────────────────────
+function abrirModalUnificarRaza(variante, nombreActual){
+  document.getElementById('urVariante').value = variante;
+  document.getElementById('urNombreActual').textContent = nombreActual;
+  document.getElementById('urCanonico').value = '';
+  document.getElementById('modalUnificarRaza').classList.add('open');
+}
+
+function guardarUnificacionRaza(){
+  var variante = document.getElementById('urVariante').value;
+  var canonico = document.getElementById('urCanonico').value.trim();
+  if(!canonico){ alert('Escribe el nombre bajo el cual quieres agruparla.'); return; }
+  fetch('/api/galeria?action=guardarSinonimoRaza', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ raza_variante: variante, raza_canonica: canonico })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){ closeModal('modalUnificarRaza'); loadEstadisticas(); }
+    else alert('No se pudo guardar.');
+  }).catch(function(){ alert('No se pudo guardar.'); });
+}
+
 function verDetalleRaza(raza){
   var D = window._estDatos || {};
   var entrada = (D.razasPerros || []).find(function(r){ return r.raza === raza; });
@@ -2467,6 +2540,37 @@ function verDetalleRaza(raza){
 }
 
 // ── Ruleta de Premios (CRUD) ─────────────────────────────────────
+function loadRuletaGiros(){
+  fetch('/api/galeria?action=getRuletaGiros')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var giros = d.giros || [];
+    document.getElementById('ruletaGirosTotal').textContent = giros.length;
+
+    // Resumen: cuántos ganaron cada premio
+    var resumen = {};
+    giros.forEach(function(g){
+      var nombre = (g.ruleta_premios && g.ruleta_premios.nombre) || 'Premio borrado';
+      resumen[nombre] = (resumen[nombre]||0) + 1;
+    });
+    document.getElementById('ruletaResumenPremios').innerHTML = Object.keys(resumen).map(function(nombre){
+      return '<div class="stat-card" style="padding:12px"><div style="font-size:22px;font-weight:900;color:#1a1a2e">'+resumen[nombre]+'</div><div style="font-size:11px;color:#888">'+nombre+'</div></div>';
+    }).join('') || '<div style="color:#aaa;font-size:13px">Aún no hay giros.</div>';
+
+    if(!giros.length){
+      document.getElementById('ruletaGirosBody').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Nadie ha girado todavía</td></tr>';
+      return;
+    }
+    document.getElementById('ruletaGirosBody').innerHTML = giros.map(function(g){
+      var fecha = new Date(g.created_at).toLocaleDateString('es-GT', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      var premio = g.ruleta_premios || {};
+      return '<tr><td>'+fecha+'</td><td>'+g.email+'</td><td>'+(premio.nombre||'—')+(premio.patrocinador?' ('+premio.patrocinador+')':'')+'</td><td>'+(premio.tipo||'—')+'</td></tr>';
+    }).join('');
+  }).catch(function(){
+    document.getElementById('ruletaGirosBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#c0392b">Error al cargar</td></tr>';
+  });
+}
+
 function loadRuletaPremios(){
   fetch('/api/galeria?action=getRuletaPremiosAdmin')
   .then(function(r){return r.json();})
