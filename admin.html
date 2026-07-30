@@ -372,6 +372,16 @@ tbody tr:last-child td{border-bottom:none}
           </table>
         </div>
       </div>
+
+      <div class="table-card">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Cuentas eliminadas (últimos 90 días) — <span id="estBajasTotal">0</span> en total</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Correo</th><th># Mascotas</th><th>Nombres</th></tr></thead>
+            <tbody id="estBajasBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
     <div id="screenJuegos" class="screen">
       <h2 class="screen-title">🎮 Estadísticas de Juegos</h2>
@@ -1038,6 +1048,20 @@ function loadEstadisticas(){
 
 function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
   window._estDatos = window._estDatos || {};
+
+  // ── Cuentas eliminadas (últimos 90 días) ──────────────────────
+  var hace90 = new Date(Date.now() - 90*86400000).toISOString();
+  fetch(SUPA_ADM + '/rest/v1/cuentas_eliminadas?created_at=gte.' + hace90 + '&select=*&order=created_at.desc', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();}).then(function(rows){
+    var f = Array.isArray(rows) ? rows.filter(function(r){ return EXCLUIR_EMAILS.indexOf((r.email||'').toLowerCase()) === -1; }) : [];
+    document.getElementById('estBajasTotal').textContent = f.length;
+    document.getElementById('estBajasBody').innerHTML = f.length ? f.map(function(r){
+      var fecha = new Date(r.created_at).toLocaleDateString('es-GT', {day:'2-digit',month:'short',year:'numeric'});
+      return '<tr><td>'+fecha+'</td><td>'+r.email+'</td><td>'+r.cantidad_mascotas+'</td><td style="font-size:12px">'+(r.nombres_mascotas||'—')+'</td></tr>';
+    }).join('') : '<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Sin bajas en este período</td></tr>';
+  }).catch(function(){
+    document.getElementById('estBajasBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de cuentas_eliminadas?</td></tr>';
+  });
 
   // ── Mensajes públicos (muro) ──────────────────────────────────
   fetch(SUPA_ADM + '/rest/v1/mensajes?select=id,uid_mascota,autor,mensaje,nombre_mascota,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
