@@ -1594,6 +1594,13 @@ export default async function handler(req, res) {
         }).catch(() => {});
       }
 
+      // Notificar por correo — al ganador y a info@revistapetmi.com (no bloqueante)
+      fetch('https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'notificarPremioRuleta', email: emailL, dueno: dueno || '', premio: elegido.nombre, tipo: elegido.tipo, patrocinador: elegido.patrocinador || '' })
+      }).catch(() => {});
+
       return res.status(200).json({ ok: true, ya_giro: false, premio: elegido });
     }
 
