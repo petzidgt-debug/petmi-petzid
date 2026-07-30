@@ -1645,6 +1645,15 @@ export default async function handler(req, res) {
       return res.status(200).json({ premios: Array.isArray(data) ? data : [] });
     }
 
+    // ── getRuletaGiros (admin — historial de quién giró y qué ganó) ──
+    if (action === 'getRuletaGiros') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_giros?select=*,ruleta_premios(nombre,tipo,patrocinador)&order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ giros: Array.isArray(data) ? data : [] });
+    }
+
     // ── crearRuletaPremio (admin) ────────────────────────────────
     if (action === 'crearRuletaPremio' && req.method === 'POST') {
       const { nombre, tipo, valor, probabilidad, patrocinador, color, orden } = req.body;
