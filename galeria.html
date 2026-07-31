@@ -22,6 +22,26 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 /* HERO */
 .hero{background:#00B4B4;padding:40px 20px;text-align:center}
+
+.dash-card{background:linear-gradient(135deg,#1a1a2e,#00B4B4);border-radius:16px 16px 0 0;padding:20px 18px}
+.dash-saludo{font-size:19px;font-weight:900;color:#fff;margin-bottom:4px}
+.dash-sub{font-size:13.5px;color:rgba(255,255,255,.85)}
+.dash-body{background:#fff;padding:16px;border-radius:0 0 16px 16px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.dash-acciones{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.dash-accion{text-align:center;text-decoration:none;display:block;position:relative}
+.dash-accion-ico{border-radius:12px;padding:10px 4px;font-size:20px}
+.dash-accion-lbl{font-size:9.5px;color:#666;margin-top:4px;font-weight:600}
+.dash-accion-badge{position:absolute;top:-4px;right:6px;background:#E05090;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px}
+.dash-premio{border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;text-decoration:none}
+.dash-premio-lbl{font-size:10.5px;font-weight:700}
+.dash-premio-titulo{font-size:13.5px;font-weight:900;color:#1a1a2e}
+.dash-premio-btn{color:#fff;font-size:11.5px;font-weight:700;padding:7px 14px;border-radius:99px;white-space:nowrap}
+.dash-seccion-titulo{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.dash-cuidado-item{background:#f8f7f4;border-radius:12px;padding:11px 14px;margin-bottom:6px;font-size:12.5px;color:#333}
+.dash-comunidad-scroll{display:flex;gap:8px;overflow-x:auto}
+.dash-comunidad-foto{width:70px;height:70px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.dash-nuevo-lista{font-size:12.5px;color:#555;line-height:2;text-align:left;margin-bottom:14px}
+.dash-nuevo-cta{display:block;background:#00B4B4;color:#fff;text-align:center;padding:12px;border-radius:99px;font-weight:700;font-size:13.5px;text-decoration:none}
 .hero h1{font-size:28px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:8px}
 .hero h1 span{color:#F5C842}
 .hero p{font-size:15px;color:rgba(255,255,255,.85);margin-bottom:20px}
@@ -213,6 +233,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   </div>
 </div>
 
+<div id="dashboardPersonal" style="max-width:480px;margin:0 auto 20px;padding:0 16px"></div>
+
 <!-- SOLICITUDES PENDIENTES -->
 <div class="seccion-solicitudes" id="seccionSolicitudes" style="display:none">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -397,6 +419,164 @@ function supaMarkAngelito(uid,esAngel,fecha){
 // ── Header ────────────────────────────────────────────────────
 function cerrarSesion(){ if(typeof petmiCerrarSesion==='function') petmiCerrarSesion(); }
 
+// ── Dashboard personalizado ─────────────────────────────────────
+function edadMesesDeDash(mascota) {
+  if (!mascota.fecha) return null;
+  var f = new Date(mascota.fecha);
+  if (isNaN(f)) return null;
+  var h = new Date();
+  return (h.getFullYear()-f.getFullYear())*12 + (h.getMonth()-f.getMonth());
+}
+
+function cargarDashboardPersonalizado() {
+  var wrap = document.getElementById('dashboardPersonal');
+
+  // Estado 1: sin sesión — no sabemos si ya tiene cuenta o no
+  if (!sessionEmail) {
+    wrap.innerHTML =
+      '<div class="dash-card" style="border-radius:16px;text-align:center;padding:22px 20px">'
+      + '<div class="dash-saludo">&#161;Hola! &#x1F44B;</div>'
+      + '<div class="dash-sub">Inicia sesi&oacute;n o &uacute;nete a la comunidad</div>'
+      + '</div>'
+      + '<div class="dash-body" style="display:flex;gap:10px">'
+      + '<button onclick="openLoginModal()" style="flex:1;background:#00B4B4;color:#fff;border:none;padding:13px;border-radius:99px;font-weight:700;font-size:13.5px;cursor:pointer">Iniciar sesi&oacute;n</button>'
+      + '<a href="/index.html" style="flex:1;background:#f0f0ee;color:#1a1a2e;padding:13px;border-radius:99px;font-weight:700;font-size:13.5px;text-decoration:none;text-align:center">Registrar mascota</a>'
+      + '</div>';
+    return;
+  }
+
+  var misMascotas = allPets.filter(function(p){ return p.email === sessionEmail && !p.angelito; });
+
+  // Estado 2: con sesión, pero sin ninguna mascota registrada
+  if (!misMascotas.length) {
+    wrap.innerHTML =
+      '<div class="dash-card" style="border-radius:16px 16px 0 0;text-align:center;padding:24px 20px 18px">'
+      + '<div class="dash-saludo">&#161;Hola! &#x1F44B; &#191;A&uacute;n no eres parte de la comunidad?</div>'
+      + '<div class="dash-sub">Mira todo lo que tu mascota se est&aacute; perdiendo&hellip;</div>'
+      + '</div>'
+      + '<div class="dash-body" style="border-radius:0 0 16px 16px;text-align:center">'
+      + '<img src="https://app.revistapetmi.com/img/petzID01.gif" alt="Carnet PetzID" style="max-width:260px;width:100%;margin-bottom:16px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12)">'
+      + '<div style="background:#f8f7f4;border-radius:14px;padding:16px;text-align:left;margin-bottom:14px">'
+      + '<div class="dash-nuevo-lista" style="margin-bottom:0">'
+      + '<div>&#x2713; Su propio carnet digital, listo para compartir</div>'
+      + '<div>&#x2713; Recordatorios de salud autom&aacute;ticos</div>'
+      + '<div>&#x2713; Puntos, premios reales y la ruleta</div>'
+      + '<div>&#x2713; Una comunidad entera de pet lovers en Guatemala</div>'
+      + '</div></div>'
+      + '<a href="/index.html" class="dash-nuevo-cta">+ Crear su PetzID gratis</a>'
+      + '</div>';
+    return;
+  }
+
+  var mascota = misMascotas[0];
+  var dueno = sessionDueno || 'Amigo PetMi';
+
+  Promise.all([
+    fetch('/api/galeria?action=getReglasSalud').then(function(r){return r.json();}).catch(function(){return {reglas:[]};}),
+    fetch('/api/galeria?action=getRegistrosSalud&uid='+encodeURIComponent(mascota.uid)).then(function(r){return r.json();}).catch(function(){return {registros:[]};}),
+    fetch('/api/galeria?action=getPuntos&email='+encodeURIComponent(sessionEmail)).then(function(r){return r.json();}).catch(function(){return {total:0};}),
+    fetch('/api/galeria?action=checkRuletaGiro&email='+encodeURIComponent(sessionEmail)).then(function(r){return r.json();}).catch(function(){return {ya_giro:false};}),
+    fetch('/api/galeria?action=getEventos').then(function(r){return r.json();}).catch(function(){return {eventos:[]};})
+  ]).then(function(res){
+    renderDashboardPersonalizado(mascota, dueno, res[0].reglas||[], res[1].registros||[], res[2].total||0, res[3], res[4].eventos||[]);
+  });
+}
+
+function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosTotal, ruletaEstado, eventos) {
+  var wrap = document.getElementById('dashboardPersonal');
+  var edadMeses = edadMesesDeDash(mascota);
+
+  // ── Filtrar reglas aplicables a esta mascota ──
+  var aplicables = reglas.filter(function(r){
+    var especieOk = r.especie === 'Todos' || r.especie === mascota.especie;
+    var edadMinOk = r.edad_min_meses == null || edadMeses == null || edadMeses >= r.edad_min_meses;
+    var edadMaxOk = r.edad_max_meses == null || edadMeses == null || edadMeses <= r.edad_max_meses;
+    return especieOk && edadMinOk && edadMaxOk;
+  });
+
+  // ── Calcular estado de cada una (mismo criterio que salud.html) ──
+  function ultimoRegistroDe(reglaId) {
+    var filtr = registros.filter(function(r){ return r.nombre_especifico === String(reglaId); });
+    if (!filtr.length) return null;
+    return filtr.sort(function(a,b){ return new Date(b.fecha_aplicacion) - new Date(a.fecha_aplicacion); })[0];
+  }
+  var cuidados = aplicables.map(function(regla){
+    var ultimo = ultimoRegistroDe(regla.id);
+    if (!ultimo) return { texto: '&#10060; ' + regla.nombre + ' &mdash; sin registro', prioridad: 3 };
+    var vence = new Date(ultimo.fecha_aplicacion);
+    vence.setDate(vence.getDate() + Math.round(regla.frecuencia_meses*30));
+    var dias = Math.round((vence-new Date())/86400000);
+    if (dias < 0) return { texto: '&#9940; ' + regla.nombre + ' &mdash; venci&oacute;', prioridad: 4 };
+    if (dias <= 30) return { texto: '&#9888;&#65039; ' + regla.nombre + ' &mdash; vence en ' + dias + ' d&iacute;as', prioridad: 2 };
+    return { texto: '&#9989; ' + regla.nombre + ' &mdash; al d&iacute;a', prioridad: 0 };
+  }).sort(function(a,b){ return b.prioridad - a.prioridad; }).slice(0, 3);
+
+  // Cumpleaños
+  if (mascota.fecha) {
+    var f = new Date(mascota.fecha);
+    var hoy = new Date();
+    var prox = new Date(hoy.getFullYear(), f.getMonth(), f.getDate());
+    if (prox < hoy) prox.setFullYear(hoy.getFullYear()+1);
+    var faltan = Math.round((prox-hoy)/86400000);
+    if (faltan <= 60) {
+      cuidados.unshift({ texto: '&#127874; Cumplea&ntilde;os de ' + mascota.nombre + ' &mdash; en ' + faltan + ' d&iacute;as', prioridad: 5 });
+      cuidados = cuidados.slice(0,3);
+    }
+  }
+
+  // Evento más próximo
+  var eventoTxt = '';
+  if (eventos.length) {
+    var ev = eventos[0];
+    eventoTxt = '<div class="dash-cuidado-item">&#128197; ' + ev.titulo + ' &mdash; ' + new Date(ev.fecha).toLocaleDateString('es-GT',{day:'2-digit',month:'short'}) + '</div>';
+  }
+
+  // ── Premio de hoy: ruleta si no ha girado, si no juego del dia ──
+  var premioHtml;
+  if (!ruletaEstado.ya_giro) {
+    premioHtml = '<a href="/ruleta.html" class="dash-premio" style="background:#F5C842">'
+      + '<div><div class="dash-premio-lbl" style="color:#856404">TU PREMIO DE HOY</div><div class="dash-premio-titulo">&#127920; Gira la ruleta</div></div>'
+      + '<div class="dash-premio-btn" style="background:#1a1a2e">Girar &rarr;</div></a>';
+  } else {
+    premioHtml = '<a href="/juego.html" class="dash-premio" style="background:#e8f4ff">'
+      + '<div><div class="dash-premio-lbl" style="color:#0070cc">JUEGO DEL D&Iacute;A</div><div class="dash-premio-titulo">&#127918; Encuentra al Peludo</div></div>'
+      + '<div class="dash-premio-btn" style="background:#00B4B4">Jugar &rarr;</div></a>';
+  }
+
+  // ── Actividad de comunidad (fotos recientes de otros) ──
+  var fotosComunidad = allPets.filter(function(p){ return p.foto && p.foto.indexOf('http')>=0 && !p.angelito; })
+    .sort(function(a,b){ return new Date(b.createdAt)-new Date(a.createdAt); })
+    .slice(0, 8);
+  var comunidadHtml = fotosComunidad.map(function(p){
+    return '<img src="'+p.foto+'" class="dash-comunidad-foto" title="'+p.nombre+'">';
+  }).join('');
+
+  wrap.innerHTML =
+    '<div class="dash-card">'
+    + '<div class="dash-saludo">Hola ' + dueno + ' &#128075;</div>'
+    + '<div class="dash-sub">&#191;C&oacute;mo est&aacute; ' + mascota.nombre + ' hoy?</div>'
+    + '</div>'
+    + '<div class="dash-body">'
+
+    + '<div class="dash-acciones">'
+    + '<a href="/lugares.html?tipo=veterinaria" class="dash-accion"><div class="dash-accion-ico" style="background:#f0f7f7">&#127973;</div><div class="dash-accion-lbl">Veterinario</div></a>'
+    + '<a href="/puntos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#fff8e8">&#127873;</div><div class="dash-accion-lbl">Beneficios</div>'
+    + (puntosTotal>0?'<div class="dash-accion-badge">'+puntosTotal+'</div>':'') + '</a>'
+    + '<a href="/eventos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#fce8f0">&#128197;</div><div class="dash-accion-lbl">Eventos</div></a>'
+    + '<a href="/lugares.html" class="dash-accion"><div class="dash-accion-ico" style="background:#eeeaff">&#128205;</div><div class="dash-accion-lbl">Lugares</div></a>'
+    + '</div>'
+
+    + premioHtml
+
+    + '<div class="dash-seccion-titulo">&#10084;&#65039; Pr&oacute;ximos cuidados</div>'
+    + cuidados.map(function(c){ return '<div class="dash-cuidado-item">'+c.texto+'</div>'; }).join('')
+    + eventoTxt
+
+    + (comunidadHtml ? '<div class="dash-seccion-titulo" style="margin-top:14px">&#128062; Actividad de la comunidad</div><div class="dash-comunidad-scroll">'+comunidadHtml+'</div>' : '')
+
+    + '</div>';
+}
+
 // ── Cargar datos ──────────────────────────────────────────────
 fetch('/api/galeria?action=getBasic')
   .then(function(r){return r.json();})
@@ -435,6 +615,7 @@ fetch('/api/galeria?action=getBasic')
     renderAngeles();
     applyFilter();
     cargarGrupos();
+    cargarDashboardPersonalizado();
 
     fetch('/api/galeria?action=getData')
       .then(function(r2){return r2.json();})
