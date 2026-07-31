@@ -1568,6 +1568,20 @@ export default async function handler(req, res) {
     // ── girarRuleta ─────────────────────────────────────────────
     // Una sola vez por email, para siempre. Si ya giró, devuelve el
     // mismo resultado guardado (no vuelve a sortear).
+    // ── checkRuletaGiro (solo consulta, no dispara giro) ────────
+    if (action === 'checkRuletaGiro') {
+      const email = (req.query.email || '').trim().toLowerCase();
+      if (!email) return res.status(200).json({ ya_giro: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_giros?email=eq.' + encodeURIComponent(email) + '&select=*,ruleta_premios(*)', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      if (Array.isArray(data) && data.length) {
+        return res.status(200).json({ ya_giro: true, premio: data[0].ruleta_premios });
+      }
+      return res.status(200).json({ ya_giro: false });
+    }
+
     if (action === 'girarRuleta' && req.method === 'POST') {
       const { email, uid_mascota, dueno } = req.body;
       if (!email || !uid_mascota) return res.status(200).json({ ok: false, error: 'Faltan datos' });
