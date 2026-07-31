@@ -230,6 +230,10 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <div id="dashboardPersonal"></div>
 
+<div style="max-width:900px;margin:26px auto 4px;padding:0 20px">
+  <div style="font-size:22px;font-weight:900;color:#1a1a2e">🐾 Actividad de la comunidad</div>
+</div>
+
 <!-- SOLICITUDES PENDIENTES -->
 <div class="seccion-solicitudes" id="seccionSolicitudes" style="display:none">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -264,11 +268,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <div class="cumple-scroll" id="actividadesScroll"></div>
 </div>
 
-<!-- ANGELES DE 4 PATAS -->
-<div class="seccion-angeles" id="seccionAngeles" style="display:none">
-  <div class="seccion-titulo">🐾 Ángeles de 4 Patas</div>
-  <div class="seccion-sub" style="color:rgba(255,255,255,.7)">Siempre en nuestros corazones 🌈</div>
-  <div class="cumple-scroll" id="angelesScroll"></div>
+<div style="max-width:900px;margin:8px auto 4px;padding:0 20px">
+  <div style="font-size:20px;font-weight:900;color:#1a1a2e">🐾 Amigos PetMi</div>
 </div>
 
 <!-- FILTERS -->
@@ -298,10 +299,22 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   </div>
 </div>
 
+<div class="seccion-angeles" id="seccionAngeles" style="display:none">
+  <div class="seccion-titulo">🐾 Ángeles de 4 Patas</div>
+  <div class="seccion-sub" style="color:rgba(255,255,255,.7)">Siempre en nuestros corazones 🌈</div>
+  <div class="cumple-scroll" id="angelesScroll"></div>
+</div>
+
 <!-- FOOTER -->
-<div class="footer">
-  <div class="footer-brand">petz<span>ID</span></div>
-  <div class="footer-sub">PetMi Guatemala — Comunidad de mascotas</div>
+<div class="footer" style="background:#1a1a2e;padding:28px 20px;text-align:center">
+  <div class="footer-brand" style="font-size:20px;font-weight:900;color:#fff;margin-bottom:4px">petz<span style="color:#00B4B4">ID</span></div>
+  <div class="footer-sub" style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:16px">PetMi Guatemala — Comunidad de mascotas</div>
+  <div style="display:flex;justify-content:center;gap:32px;flex-wrap:wrap">
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statTotal">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Mascotas</div></div>
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statPerros">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Perros</div></div>
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statGatos">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Gatos</div></div>
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statAngeles">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Angelitos 🐾</div></div>
+  </div>
 </div>
 
 <!-- MODAL MASCOTA -->
@@ -464,7 +477,13 @@ function cargarDashboardPersonalizado() {
   }
 
   var mascota = misMascotas[0];
-  var dueno = sessionDueno || 'Amigo PetMi';
+  var duenoRaw = (sessionDueno || 'Amigo PetMi').trim().split(' ')[0];
+  var dueno = duenoRaw ? duenoRaw.charAt(0).toUpperCase() + duenoRaw.slice(1).toLowerCase() : 'Amigo PetMi';
+  var nombresMascotas = misMascotas.map(function(p){ return p.nombre; });
+  var nombresTexto = nombresMascotas.length > 1
+    ? nombresMascotas.slice(0,-1).join(', ') + ' y ' + nombresMascotas[nombresMascotas.length-1]
+    : nombresMascotas[0];
+  var verboEstar = nombresMascotas.length > 1 ? 'est&aacute;n' : 'est&aacute;';
 
   Promise.all([
     fetch('/api/galeria?action=getReglasSalud').then(function(r){return r.json();}).catch(function(){return {reglas:[]};}),
@@ -473,11 +492,11 @@ function cargarDashboardPersonalizado() {
     fetch('/api/galeria?action=checkRuletaGiro&email='+encodeURIComponent(sessionEmail)).then(function(r){return r.json();}).catch(function(){return {ya_giro:false};}),
     fetch('/api/galeria?action=getEventos').then(function(r){return r.json();}).catch(function(){return {eventos:[]};})
   ]).then(function(res){
-    renderDashboardPersonalizado(mascota, dueno, res[0].reglas||[], res[1].registros||[], res[2].total||0, res[3], res[4].eventos||[]);
+    renderDashboardPersonalizado(mascota, dueno, res[0].reglas||[], res[1].registros||[], res[2].total||0, res[3], res[4].eventos||[], nombresTexto, verboEstar);
   });
 }
 
-function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosTotal, ruletaEstado, eventos) {
+function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosTotal, ruletaEstado, eventos, nombresTexto, verboEstar) {
   var wrap = document.getElementById('dashboardPersonal');
   var edadMeses = edadMesesDeDash(mascota);
 
@@ -549,7 +568,7 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
   wrap.innerHTML =
     '<div class="dash-card"><div class="dash-card-inner">'
     + '<div class="dash-saludo">Hola ' + dueno + ' &#128075;</div>'
-    + '<div class="dash-sub">&#191;C&oacute;mo est&aacute; ' + mascota.nombre + ' hoy?</div>'
+    + '<div class="dash-sub">&#191;C&oacute;mo ' + verboEstar + ' ' + nombresTexto + ' hoy?</div>'
     + '</div></div>'
     + '<div class="dash-body"><div class="dash-body-inner">'
 
@@ -564,11 +583,11 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
     + premioHtml
     + '</div>'
 
-    + '<div class="dash-seccion-titulo">&#10084;&#65039; Pr&oacute;ximos cuidados</div>'
+    + '<div class="dash-seccion-titulo" style="display:flex;justify-content:space-between;align-items:center">&#10084;&#65039; Pr&oacute;ximos cuidados <a href="/salud.html" style="color:#00B4B4;font-weight:700;text-transform:none;letter-spacing:0;font-size:11.5px">Ver todo &rarr;</a></div>'
     + cuidados.map(function(c){ return '<div class="dash-cuidado-item">'+c.texto+'</div>'; }).join('')
     + eventoTxt
 
-    + (comunidadHtml ? '<div class="dash-seccion-titulo">&#128062; Actividad de la comunidad</div><div class="dash-comunidad-scroll">'+comunidadHtml+'</div>' : '')
+    + ''
 
     + '</div></div>';
 }
@@ -1981,15 +2000,6 @@ function irACrear(){
 }
 </script>
 <script src="/header.js"></script>
-<div style="background:#1a1a2e;padding:28px 20px;text-align:center;margin-top:20px">
-  <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px">La comunidad PetzID — mascotas registradas en PetMi</div>
-  <div style="display:flex;justify-content:center;gap:32px;flex-wrap:wrap">
-    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statTotal">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Mascotas</div></div>
-    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statPerros">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Perros</div></div>
-    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statGatos">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Gatos</div></div>
-    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statAngeles">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Angelitos 🐾</div></div>
-  </div>
-</div>
 
 </body>
 </html>
