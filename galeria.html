@@ -23,23 +23,30 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 /* HERO */
 .hero{background:#00B4B4;padding:40px 20px;text-align:center}
 
-.dash-card{background:linear-gradient(135deg,#1a1a2e,#00B4B4);border-radius:16px 16px 0 0;padding:20px 18px}
+.dash-card{background:linear-gradient(135deg,#1a1a2e,#00B4B4);padding:22px 20px}
+.dash-card-inner{max-width:900px;margin:0 auto}
 .dash-saludo{font-size:19px;font-weight:900;color:#fff;margin-bottom:4px}
 .dash-sub{font-size:13.5px;color:rgba(255,255,255,.85)}
-.dash-body{background:#fff;padding:16px;border-radius:0 0 16px 16px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-.dash-acciones{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.dash-body{background:#fff;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.dash-body-inner{max-width:900px;margin:0 auto}
+.dash-main-row{display:flex;flex-direction:column;gap:16px}
+.dash-acciones{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:1}
 .dash-accion{text-align:center;text-decoration:none;display:block;position:relative}
 .dash-accion-ico{border-radius:12px;padding:10px 4px;font-size:20px}
 .dash-accion-lbl{font-size:9.5px;color:#666;margin-top:4px;font-weight:600}
 .dash-accion-badge{position:absolute;top:-4px;right:6px;background:#E05090;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px}
-.dash-premio{border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;text-decoration:none}
+.dash-premio{border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;text-decoration:none;flex:1}
 .dash-premio-lbl{font-size:10.5px;font-weight:700}
 .dash-premio-titulo{font-size:13.5px;font-weight:900;color:#1a1a2e}
 .dash-premio-btn{color:#fff;font-size:11.5px;font-weight:700;padding:7px 14px;border-radius:99px;white-space:nowrap}
-.dash-seccion-titulo{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.dash-seccion-titulo{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
 .dash-cuidado-item{background:#f8f7f4;border-radius:12px;padding:11px 14px;margin-bottom:6px;font-size:12.5px;color:#333}
 .dash-comunidad-scroll{display:flex;gap:8px;overflow-x:auto}
 .dash-comunidad-foto{width:70px;height:70px;border-radius:10px;object-fit:cover;flex-shrink:0}
+@media(min-width:768px){
+  .dash-main-row{flex-direction:row;align-items:stretch}
+  .dash-acciones{grid-template-columns:repeat(4,110px)}
+}
 .dash-nuevo-lista{font-size:12.5px;color:#555;line-height:2;text-align:left;margin-bottom:14px}
 .dash-nuevo-cta{display:block;background:#00B4B4;color:#fff;text-align:center;padding:12px;border-radius:99px;font-weight:700;font-size:13.5px;text-decoration:none}
 .hero h1{font-size:28px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:8px}
@@ -221,19 +228,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 </head>
 <body>
 
-<!-- HERO -->
-<div class="hero">
-  <h1>La comunidad <span>PetzID</span></h1>
-  <p>Conoce a todas las mascotas de la familia PetMi</p>
-  <div class="hero-stats">
-    <div class="hero-stat"><div class="hero-stat-num" id="statTotal">-</div><div class="hero-stat-lbl">Mascotas</div></div>
-    <div class="hero-stat"><div class="hero-stat-num" id="statPerros">-</div><div class="hero-stat-lbl">Perros</div></div>
-    <div class="hero-stat"><div class="hero-stat-num" id="statGatos">-</div><div class="hero-stat-lbl">Gatos</div></div>
-    <div class="hero-stat"><div class="hero-stat-num" id="statAngeles">-</div><div class="hero-stat-lbl">Angelitos 🐾</div></div>
-  </div>
-</div>
-
-<div id="dashboardPersonal" style="max-width:480px;margin:0 auto 20px;padding:0 16px"></div>
+<div id="dashboardPersonal"></div>
 
 <!-- SOLICITUDES PENDIENTES -->
 <div class="seccion-solicitudes" id="seccionSolicitudes" style="display:none">
@@ -434,14 +429,14 @@ function cargarDashboardPersonalizado() {
   // Estado 1: sin sesión — no sabemos si ya tiene cuenta o no
   if (!sessionEmail) {
     wrap.innerHTML =
-      '<div class="dash-card" style="border-radius:16px;text-align:center;padding:22px 20px">'
+      '<div class="dash-card" style="text-align:center"><div class="dash-card-inner">'
       + '<div class="dash-saludo">&#161;Hola! &#x1F44B;</div>'
       + '<div class="dash-sub">Inicia sesi&oacute;n o &uacute;nete a la comunidad</div>'
-      + '</div>'
-      + '<div class="dash-body" style="display:flex;gap:10px">'
+      + '</div></div>'
+      + '<div class="dash-body"><div class="dash-body-inner" style="display:flex;gap:10px">'
       + '<button onclick="openLoginModal()" style="flex:1;background:#00B4B4;color:#fff;border:none;padding:13px;border-radius:99px;font-weight:700;font-size:13.5px;cursor:pointer">Iniciar sesi&oacute;n</button>'
       + '<a href="/index.html" style="flex:1;background:#f0f0ee;color:#1a1a2e;padding:13px;border-radius:99px;font-weight:700;font-size:13.5px;text-decoration:none;text-align:center">Registrar mascota</a>'
-      + '</div>';
+      + '</div></div>';
     return;
   }
 
@@ -450,12 +445,12 @@ function cargarDashboardPersonalizado() {
   // Estado 2: con sesión, pero sin ninguna mascota registrada
   if (!misMascotas.length) {
     wrap.innerHTML =
-      '<div class="dash-card" style="border-radius:16px 16px 0 0;text-align:center;padding:24px 20px 18px">'
+      '<div class="dash-card" style="text-align:center"><div class="dash-card-inner">'
       + '<div class="dash-saludo">&#161;Hola! &#x1F44B; &#191;A&uacute;n no eres parte de la comunidad?</div>'
       + '<div class="dash-sub">Mira todo lo que tu mascota se est&aacute; perdiendo&hellip;</div>'
-      + '</div>'
-      + '<div class="dash-body" style="border-radius:0 0 16px 16px;text-align:center">'
-      + '<img src="https://app.revistapetmi.com/img/petzID01.gif" alt="Carnet PetzID" style="max-width:260px;width:100%;margin-bottom:16px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12)">'
+      + '</div></div>'
+      + '<div class="dash-body"><div class="dash-body-inner" style="text-align:center;max-width:420px">'
+      + '<img src="https://app.revistapetmi.com/img/petzID01.gif" alt="Carnet PetzID" style="max-width:260px;width:100%;margin:6px 0 16px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12)">'
       + '<div style="background:#f8f7f4;border-radius:14px;padding:16px;text-align:left;margin-bottom:14px">'
       + '<div class="dash-nuevo-lista" style="margin-bottom:0">'
       + '<div>&#x2713; Su propio carnet digital, listo para compartir</div>'
@@ -464,7 +459,7 @@ function cargarDashboardPersonalizado() {
       + '<div>&#x2713; Una comunidad entera de pet lovers en Guatemala</div>'
       + '</div></div>'
       + '<a href="/index.html" class="dash-nuevo-cta">+ Crear su PetzID gratis</a>'
-      + '</div>';
+      + '</div></div>';
     return;
   }
 
@@ -552,12 +547,13 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
   }).join('');
 
   wrap.innerHTML =
-    '<div class="dash-card">'
+    '<div class="dash-card"><div class="dash-card-inner">'
     + '<div class="dash-saludo">Hola ' + dueno + ' &#128075;</div>'
     + '<div class="dash-sub">&#191;C&oacute;mo est&aacute; ' + mascota.nombre + ' hoy?</div>'
-    + '</div>'
-    + '<div class="dash-body">'
+    + '</div></div>'
+    + '<div class="dash-body"><div class="dash-body-inner">'
 
+    + '<div class="dash-main-row">'
     + '<div class="dash-acciones">'
     + '<a href="/lugares.html?tipo=veterinaria" class="dash-accion"><div class="dash-accion-ico" style="background:#f0f7f7">&#127973;</div><div class="dash-accion-lbl">Veterinario</div></a>'
     + '<a href="/puntos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#fff8e8">&#127873;</div><div class="dash-accion-lbl">Beneficios</div>'
@@ -565,16 +561,16 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
     + '<a href="/eventos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#fce8f0">&#128197;</div><div class="dash-accion-lbl">Eventos</div></a>'
     + '<a href="/lugares.html" class="dash-accion"><div class="dash-accion-ico" style="background:#eeeaff">&#128205;</div><div class="dash-accion-lbl">Lugares</div></a>'
     + '</div>'
-
     + premioHtml
+    + '</div>'
 
     + '<div class="dash-seccion-titulo">&#10084;&#65039; Pr&oacute;ximos cuidados</div>'
     + cuidados.map(function(c){ return '<div class="dash-cuidado-item">'+c.texto+'</div>'; }).join('')
     + eventoTxt
 
-    + (comunidadHtml ? '<div class="dash-seccion-titulo" style="margin-top:14px">&#128062; Actividad de la comunidad</div><div class="dash-comunidad-scroll">'+comunidadHtml+'</div>' : '')
+    + (comunidadHtml ? '<div class="dash-seccion-titulo">&#128062; Actividad de la comunidad</div><div class="dash-comunidad-scroll">'+comunidadHtml+'</div>' : '')
 
-    + '</div>';
+    + '</div></div>';
 }
 
 // ── Cargar datos ──────────────────────────────────────────────
@@ -611,11 +607,12 @@ fetch('/api/galeria?action=getBasic')
     document.getElementById('statGatos').textContent=gatos;
     document.getElementById('statAngeles').textContent=angeles;
 
+    try { cargarDashboardPersonalizado(); } catch(e) { console.error('Error en dashboard personalizado:', e); }
+
     renderCumpleaneros();
     renderAngeles();
     applyFilter();
     cargarGrupos();
-    cargarDashboardPersonalizado();
 
     fetch('/api/galeria?action=getData')
       .then(function(r2){return r2.json();})
@@ -1984,5 +1981,15 @@ function irACrear(){
 }
 </script>
 <script src="/header.js"></script>
+<div style="background:#1a1a2e;padding:28px 20px;text-align:center;margin-top:20px">
+  <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:14px">La comunidad PetzID — mascotas registradas en PetMi</div>
+  <div style="display:flex;justify-content:center;gap:32px;flex-wrap:wrap">
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statTotal">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Mascotas</div></div>
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statPerros">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Perros</div></div>
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statGatos">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Gatos</div></div>
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statAngeles">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Angelitos 🐾</div></div>
+  </div>
+</div>
+
 </body>
 </html>
