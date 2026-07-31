@@ -174,8 +174,9 @@
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
         '</div>'
-      : '<a href="/registro.html" class="h-btn-reg">Registrar mascota</a>' +
-        '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>';
+      : (currentPath.indexOf('galeria') >= 0 ? '' :
+        '<a href="/registro.html" class="h-btn-reg">Registrar mascota</a>' +
+        '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>');
     // ── Bottom nav mobile ─────────────────────────────────────
     var bottomNavHTML =
       '<a href="/galeria.html" class="h-btab' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">' +
