@@ -313,8 +313,8 @@ export default async function handler(req, res) {
           method: 'POST',
           headers: {
             'Content-Type':  'application/json',
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'apikey':        SUPABASE_SERVICE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
             'Prefer':        'resolution=merge-duplicates,return=minimal'
           },
           body: JSON.stringify({ uid_solicitante, uid_receptor, email_solicitante, email_receptor, estado: 'pendiente' })
@@ -347,8 +347,8 @@ export default async function handler(req, res) {
         {
           method: 'DELETE',
           headers: {
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'apikey':        SUPABASE_SERVICE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
             'Prefer':        'return=minimal'
           }
         }
@@ -364,8 +364,8 @@ export default async function handler(req, res) {
           method: 'PATCH',
           headers: {
             'Content-Type':  'application/json',
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'apikey':        SUPABASE_SERVICE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
             'Prefer':        'return=minimal'
           },
           body: JSON.stringify({ estado, updated_at: new Date().toISOString() })
