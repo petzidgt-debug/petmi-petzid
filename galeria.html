@@ -443,6 +443,21 @@ function edadMesesDeDash(mascota) {
   return (h.getFullYear()-f.getFullYear())*12 + (h.getMonth()-f.getMonth());
 }
 
+function toggleSaludDash(){
+  var det = document.getElementById('saludDetalleDash');
+  var arrow = document.getElementById('saludToggleArrow');
+  var abierto = det.style.display === 'block';
+  det.style.display = abierto ? 'none' : 'block';
+  arrow.style.transform = abierto ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+function abrirPerdidoDesdeDashboard(uid){
+  var p = allPets.find(function(x){ return x.uid === uid; });
+  if(!p){ return; }
+  currentModalPet = p;
+  abrirModalPerdido();
+}
+
 function cargarDashboardPersonalizado() {
   var wrap = document.getElementById('dashboardPersonal');
 
@@ -531,16 +546,24 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
     if (!filtr.length) return null;
     return filtr.sort(function(a,b){ return new Date(b.fecha_aplicacion) - new Date(a.fecha_aplicacion); })[0];
   }
-  var cuidados = aplicables.map(function(regla){
+
+  var saludDetalle = { hoy: [], proximamente: [], completados: [] };
+  aplicables.forEach(function(regla){
     var ultimo = ultimoRegistroDe(regla.id);
-    if (!ultimo) return { texto: '&#10060; ' + regla.nombre + ' &mdash; sin registro', prioridad: 3 };
+    if (!ultimo) { saludDetalle.hoy.push({ nombre: regla.nombre, sub: 'Sin registro' }); return; }
     var vence = new Date(ultimo.fecha_aplicacion);
     vence.setDate(vence.getDate() + Math.round(regla.frecuencia_meses*30));
     var dias = Math.round((vence-new Date())/86400000);
-    if (dias < 0) return { texto: '&#9940; ' + regla.nombre + ' &mdash; venci&oacute;', prioridad: 4 };
-    if (dias <= 30) return { texto: '&#9888;&#65039; ' + regla.nombre + ' &mdash; vence en ' + dias + ' d&iacute;as', prioridad: 2 };
-    return { texto: '&#9989; ' + regla.nombre + ' &mdash; al d&iacute;a', prioridad: 0 };
-  }).sort(function(a,b){ return b.prioridad - a.prioridad; }).slice(0, 3);
+    if (dias < 0) { saludDetalle.hoy.push({ nombre: regla.nombre, sub: 'Venci\u00f3' }); return; }
+    if (dias <= 30) { saludDetalle.proximamente.push({ nombre: regla.nombre, sub: vence.toLocaleDateString('es-GT',{day:'2-digit',month:'long'}) }); return; }
+    saludDetalle.completados.push({ nombre: regla.nombre, sub: '' });
+  });
+  var totalCuidados = aplicables.length;
+  var alDiaCount = saludDetalle.completados.length;
+  var porcentajeSalud = totalCuidados > 0 ? Math.round((alDiaCount/totalCuidados)*100) : 0;
+  var colorBarra = porcentajeSalud >= 80 ? '#2ecc71' : porcentajeSalud >= 50 ? '#F5C842' : '#E05090';
+
+  var cuidados = [];
 
   // Cumpleaños
   if (mascota.fecha) {
@@ -595,13 +618,30 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
     + (puntosTotal>0?'<div class="dash-accion-badge">'+puntosTotal+'</div>':'') + '</a>'
     + '<a href="/eventos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#fce8f0">&#128197;</div><div class="dash-accion-lbl">Eventos</div></a>'
     + '<a href="/lugares.html" class="dash-accion"><div class="dash-accion-ico" style="background:#eeeaff">&#128205;</div><div class="dash-accion-lbl">Lugares</div></a>'
-    + '<a href="/avisos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#fdeaea">&#128680;</div><div class="dash-accion-lbl">&#161;Se perdi&oacute;!</div></a>'
+    + '<a href="javascript:void(0)" onclick="abrirPerdidoDesdeDashboard(\''+mascota.uid+'\')" class="dash-accion"><div class="dash-accion-ico" style="background:#fdeaea">&#128680;</div><div class="dash-accion-lbl">&#161;Se perdi&oacute;!</div></a>'
     + '</div>'
     + premioHtml
     + '</div>'
 
-    + '<div class="dash-seccion-titulo" style="display:flex;justify-content:space-between;align-items:center">&#10084;&#65039; Pr&oacute;ximos cuidados <a href="/salud.html" style="color:#00B4B4;font-weight:700;text-transform:none;letter-spacing:0;font-size:11.5px">Ver todo &rarr;</a></div>'
-    + cuidados.map(function(c){ return '<div class="dash-cuidado-item">'+c.texto+'</div>'; }).join('')
+    + (cuidados.length ? cuidados.map(function(c){ return '<div class="dash-cuidado-item">'+c.texto+'</div>'; }).join('') : '')
+
+    + '<div class="dash-salud-card" onclick="toggleSaludDash()" style="background:#f8f7f4;border-radius:14px;padding:14px 16px;margin-top:10px;cursor:pointer">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<div style="font-weight:700;color:#1a1a2e;font-size:14px">&#129658; Salud de ' + mascota.nombre + '</div>'
+    + '<div id="saludToggleArrow" style="color:#999;transition:transform .2s;font-size:12px">&#9660;</div>'
+    + '</div>'
+    + (totalCuidados > 0
+        ? '<div style="background:#eee;border-radius:99px;height:8px;overflow:hidden;margin:10px 0 6px"><div style="background:'+colorBarra+';height:100%;width:'+porcentajeSalud+'%"></div></div>'
+        + '<div style="font-size:12px;color:#666">' + alDiaCount + ' de ' + totalCuidados + ' cuidados al d\u00eda &middot; ' + porcentajeSalud + '%</div>'
+        : '<div style="font-size:12px;color:#999;margin-top:6px">Sin recomendaciones de salud aplicables a\u00fan</div>')
+    + '</div>'
+
+    + '<div id="saludDetalleDash" style="display:none;background:#fff;border:1px solid #eee;border-radius:14px;padding:14px 16px;margin-top:8px">'
+    + (saludDetalle.hoy.length ? '<div style="font-size:10.5px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Hoy</div>' + saludDetalle.hoy.map(function(x){ return '<div style="font-size:13px;color:#333;padding:4px 0">&#10060; ' + x.nombre + ' <span style="color:#999;font-size:11.5px">&mdash; '+x.sub+'</span></div>'; }).join('') : '')
+    + (saludDetalle.proximamente.length ? '<div style="font-size:10.5px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px">Pr&oacute;ximamente</div>' + saludDetalle.proximamente.map(function(x){ return '<div style="font-size:13px;color:#333;padding:4px 0">&#128993; ' + x.nombre + ' <span style="color:#999;font-size:11.5px">&mdash; '+x.sub+'</span></div>'; }).join('') : '')
+    + (saludDetalle.completados.length ? '<div style="font-size:10.5px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px">Completados</div>' + saludDetalle.completados.map(function(x){ return '<div style="font-size:13px;color:#333;padding:4px 0">&#128994; ' + x.nombre + '</div>'; }).join('') : '')
+    + '<a href="/salud.html" style="display:block;text-align:center;margin-top:12px;color:#00B4B4;font-weight:700;font-size:12.5px;text-decoration:none">Ver todo en Salud &rarr;</a>'
+    + '</div>'
     + eventoTxt
 
     + ''
