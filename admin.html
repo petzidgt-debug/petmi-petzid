@@ -312,6 +312,16 @@ tbody tr:last-child td{border-bottom:none}
     <div id="screenEstadisticas" class="screen">
       <h2 class="screen-title">📈 Estadísticas</h2>
 
+      <div style="background:linear-gradient(135deg,#1a1a2e,#00B4B4);border-radius:16px;padding:24px;margin-bottom:20px;color:#fff;position:relative;overflow:hidden">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.7);margin-bottom:6px">⭐ North Star Metric</div>
+        <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+          <div style="font-size:42px;font-weight:900;line-height:1" id="estNorthStar">—</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85)">mascotas activas este mes</div>
+        </div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,.65);margin-top:8px" id="estNorthStarComparacion"></div>
+        <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:10px;line-height:1.5">Mascotas con al menos una acción útil este mes: visita a su perfil, registro de salud, puntos ganados, o asistencia a un evento.</div>
+      </div>
+
       <div style="font-weight:700;font-size:13px;color:#888;margin:4px 0 8px">Crecimiento</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">
         <div class="stat-card stat-card-click" onclick="verDetalle('totalMascotas')"><div class="stat-num" id="estTotalMascotas">—</div><div class="stat-lbl">Mascotas activas</div></div>
@@ -1041,6 +1051,29 @@ function loadEstadisticas(){
 
     window._estDatos = window._estDatos || {};
     window._estDatos.activas = activas;
+
+    // North Star Metric: mascotas activas este mes (ultima_actividad este mes)
+    var hoy = new Date();
+    var inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    var inicioMesPasado = new Date(hoy.getFullYear(), hoy.getMonth()-1, 1);
+    var finMesPasado = inicioMes;
+
+    var activasEsteMes = activas.filter(function(m){
+      return m.ultima_actividad && new Date(m.ultima_actividad) >= inicioMes;
+    }).length;
+    var activasMesPasado = activas.filter(function(m){
+      return m.ultima_actividad && new Date(m.ultima_actividad) >= inicioMesPasado && new Date(m.ultima_actividad) < finMesPasado;
+    }).length;
+
+    document.getElementById('estNorthStar').textContent = activasEsteMes;
+    var compTexto = '';
+    if (activasMesPasado > 0) {
+      var cambio = Math.round(((activasEsteMes - activasMesPasado) / activasMesPasado) * 100);
+      compTexto = (cambio >= 0 ? '↑ +' : '↓ ') + cambio + '% vs. mes pasado (' + activasMesPasado + ')';
+    } else {
+      compTexto = 'Mes pasado: ' + activasMesPasado;
+    }
+    document.getElementById('estNorthStarComparacion').textContent = compTexto;
 
     // Razas de perros más comunes (para campañas por "Día de la raza X")
     function normalizarRaza(raza) {
