@@ -237,12 +237,12 @@
     var header = document.createElement('header');
     header.className = 'site-header';
     header.innerHTML =
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-logo">' +
+      '<a href="https://app.revistapetmi.com/index.html" target="_blank" class="h-logo">' +
         '<img src="https://raw.githubusercontent.com/petzidgt-debug/petmi-petzid/main/logopetmi.png" alt="PetMi" height="34" onerror="this.style.display=\'none\'">' +
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
       '<div class="h-right">' +
-        '<a href="https://www.revistapetmi.com/home" target="_blank" class="h-search" aria-label="Qué es PetzID" style="text-decoration:none;padding:4px"><img src="https://app.revistapetmi.com/ID.png" alt="PetzID" style="width:22px;height:22px;object-fit:contain;display:block"></a>' +
+        '<a href="https://app.revistapetmi.com/galeria.html" target="_blank" class="h-search" aria-label="Qué es PetzID" style="text-decoration:none;padding:4px"><img src="https://app.revistapetmi.com/ID.png" alt="PetzID" style="width:22px;height:22px;object-fit:contain;display:block"></a>' +
         rightHTML +
       '</div>';
     document.body.insertBefore(header, document.body.firstChild);
