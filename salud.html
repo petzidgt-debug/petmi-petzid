@@ -220,7 +220,7 @@ function ultimoRegistro(reglaId) {
 
 function calcularEstado(regla) {
   var ultimo = ultimoRegistro(regla.id);
-  if (!ultimo) return { estado:'pendiente', fechaTxt:'Sin registro' };
+  if (!ultimo) return { estado:'pendiente', fechaTxt:'Sin fecha registrada' };
   var fecha = new Date(ultimo.fecha_aplicacion);
   var vence = new Date(fecha);
   vence.setDate(vence.getDate() + Math.round(regla.frecuencia_meses * 30));
@@ -282,16 +282,28 @@ function renderChecklist() {
     var botonCompra = regla.link_compra
       ? '<a href="'+regla.link_compra+'" target="_blank" rel="noopener" style="display:inline-block;margin-left:8px;background:#F5C842;color:#1a1a2e;padding:9px 16px;border-radius:99px;font-size:12.5px;font-weight:700;text-decoration:none">'+(regla.texto_boton_compra||'🛒 Comprar')+'</a>'
       : '';
-    var etiquetaHtml = regla.etiqueta
-      ? '<div style="display:inline-block;font-size:10px;font-weight:700;color:'+etiquetaColor(regla.etiqueta)+';text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">'+regla.etiqueta+'</div><br>'
+    var necesitaVet = (regla.tipo === 'vacuna' || regla.tipo === 'consulta_vet') && (st.estado === 'pendiente' || st.estado === 'vencido');
+    var botonVet = necesitaVet
+      ? '<a href="/lugares.html?tipo=veterinaria" style="display:inline-block;margin-left:8px;background:#e0f7f7;color:#007a7a;padding:9px 16px;border-radius:99px;font-size:12.5px;font-weight:700;text-decoration:none">🏥 Buscar veterinario cercano</a>'
       : '';
-    return '<div class="req-card">'
-      + '<div class="req-top"><div><div class="req-nombre">'+regla.nombre+'</div>'+etiquetaHtml+'</div><div class="req-badge '+st.estado+'">'+etiquetas[st.estado]+'</div></div>'
-      + '<div class="req-fecha">'+st.fechaTxt+'</div>'
+    var etiquetaHtml = regla.etiqueta
+      ? '<div style="font-size:9.5px;font-weight:700;color:'+etiquetaColor(regla.etiqueta)+';text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px">'+regla.etiqueta+'</div>'
+      : '';
+    return '<div class="req-card" style="cursor:pointer;padding:14px 16px" onclick="toggleReqCard('+regla.id+')">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+      + '<div>' + etiquetaHtml + '<div class="req-nombre" style="margin-bottom:0">'+regla.nombre+'</div></div>'
+      + '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+      + '<div class="req-badge '+st.estado+'">'+etiquetas[st.estado]+'</div>'
+      + '<div id="reqArrow_'+regla.id+'" style="color:#999;font-size:11px;transition:transform .2s">&#9660;</div>'
+      + '</div></div>'
+      + '<div class="req-fecha" style="margin-top:4px">'+st.fechaTxt+'</div>'
+      + '<div id="reqDetalle_'+regla.id+'" style="display:none;margin-top:10px" onclick="event.stopPropagation()">'
       + (regla.descripcion ? '<div style="font-size:12.5px;color:#555;line-height:1.5;margin-bottom:8px">'+regla.descripcion+'</div>' : '')
       + '<div class="req-tip"><b>¿Por qué importa?</b> '+regla.tip+'</div>'
       + '<button class="btn-agregar-req" onclick="abrirModal('+regla.id+',\''+regla.tipo+'\',\''+regla.nombre.replace(/'/g,"\\'")+'\')">+ Agregar registro</button>'
       + botonCompra
+      + botonVet
+      + '</div>'
       + '</div>';
   }
 
@@ -335,6 +347,15 @@ function renderHistorial() {
 
 // ── Modal de agregar registro ─────────────────────────────────
 var fotoBase64 = null, fotoMime = null;
+
+function toggleReqCard(id){
+  var det = document.getElementById('reqDetalle_'+id);
+  var arrow = document.getElementById('reqArrow_'+id);
+  if(!det||!arrow) return;
+  var abierto = det.style.display === 'block';
+  det.style.display = abierto ? 'none' : 'block';
+  arrow.style.transform = abierto ? 'rotate(0deg)' : 'rotate(180deg)';
+}
 
 function abrirModal(id, tipo, nombre) {
   reglaParaAgregar = { id: id, tipo: tipo, nombre: nombre };
