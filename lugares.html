@@ -239,6 +239,13 @@ function cargarLugares(){
         var o=document.createElement('option');o.value=z;o.textContent='Zona '+z;zonaSel.appendChild(o);
       });
       document.getElementById('aliarteWrap').style.display='block';
+
+      // Si viene un filtro por URL (ej. desde el aviso de salud), aplicarlo
+      var tipoUrl = new URLSearchParams(window.location.search).get('tipo');
+      if (tipoUrl) {
+        var btnCoincide = document.querySelector('.filtro-btn[onclick*="\'' + tipoUrl + '\'"]');
+        if (btnCoincide) { setFiltro(tipoUrl, btnCoincide); return; }
+      }
       filtrarLugares();
     }).catch(function(){
       document.getElementById('lugaresWrap').innerHTML='<div class="empty"><div class="empty-icon">😕</div><p>Error al cargar</p></div>';
