@@ -145,6 +145,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('amigosemana',this)"><span class="nav-icon">🎲</span>Amigo de la Semana</div>
       <div class="nav-item" onclick="showScreen('saludreglas',this)"><span class="nav-icon">🩺</span>Reglas de Salud</div>
       <div class="nav-item" onclick="showScreen('ruletapremios',this)"><span class="nav-icon">🎡</span>Ruleta de Premios</div>
+      <div class="nav-item" onclick="showScreen('reactivacion',this)"><span class="nav-icon">📧</span>Reactivación</div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
@@ -518,6 +519,12 @@ tbody tr:last-child td{border-bottom:none}
           </table>
         </div>
       </div>
+    </div>
+
+    <div id="screenReactivacion" class="screen">
+      <h2 class="screen-title">📧 Efectividad de Reactivación</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Por cada semana de la serie: cuántos correos se enviaron, y cuántos de esos usuarios volvieron a entrar después.</p>
+      <div id="reactivacionResumen" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px"></div>
     </div>
 
     <div id="screenEventos" class="screen">
@@ -1635,6 +1642,7 @@ function showScreen(name,el){
   if(name==='mundial') { try { loadWCAdmin(); } catch(e) { console.error('WC Error:', e); } }
   if(name==='saludreglas') { loadReglasSalud(); loadCondicionesAdmin(); }
   if(name==='ruletapremios') { loadRuletaPremios(); loadRuletaGiros(); }
+  if(name==='reactivacion') loadReactivacionEfectividad();
   if(name==='_unused'){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
@@ -2573,6 +2581,57 @@ function verDetalleRaza(raza){
 }
 
 // ── Ruleta de Premios (CRUD) ─────────────────────────────────────
+function loadReactivacionEfectividad(){
+  document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#aaa">Cargando...</div>';
+  fetch(SUPA_ADM + '/rest/v1/reactivacion_envios?select=email,semana,enviado_at&order=semana.asc', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();})
+  .then(function(envios){
+    if(!Array.isArray(envios) || !envios.length){
+      document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#aaa">Aún no se ha enviado ninguna semana de la serie.</div>';
+      return;
+    }
+    var emailsUnicos = [...new Set(envios.map(function(e){return e.email;}))];
+    fetch(SUPA_ADM + '/rest/v1/mascotas?email=in.(' + emailsUnicos.map(function(e){return encodeURIComponent(e);}).join(',') + ')&select=email,ultima_actividad', {headers: SUPA_ADM_H})
+    .then(function(r){return r.json();})
+    .then(function(mascotasRows){
+      var ultimaPorEmail = {};
+      (mascotasRows||[]).forEach(function(m){
+        var email = (m.email||'').toLowerCase();
+        if(!m.ultima_actividad) return;
+        if(!ultimaPorEmail[email] || new Date(m.ultima_actividad) > new Date(ultimaPorEmail[email])){
+          ultimaPorEmail[email] = m.ultima_actividad;
+        }
+      });
+
+      var porSemana = {};
+      envios.forEach(function(e){
+        if(!porSemana[e.semana]) porSemana[e.semana] = [];
+        porSemana[e.semana].push(e);
+      });
+
+      var nombresSemana = {1:'Ruleta',2:'Beneficios',3:'Lugares',4:'Carnet/Puntos',5:'Trivia',6:'Juego'};
+      var html = '';
+      Object.keys(porSemana).sort().forEach(function(semana){
+        var lista = porSemana[semana];
+        var volvieron = lista.filter(function(e){
+          var ua = ultimaPorEmail[(e.email||'').toLowerCase()];
+          return ua && new Date(ua) > new Date(e.enviado_at);
+        }).length;
+        var pct = lista.length ? Math.round((volvieron/lista.length)*100) : 0;
+        html += '<div class="stat-card">'
+          + '<div style="font-size:11px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:6px">Semana '+semana+' — '+(nombresSemana[semana]||'')+'</div>'
+          + '<div style="font-size:26px;font-weight:900;color:#1a1a2e">'+lista.length+'</div>'
+          + '<div style="font-size:11px;color:#999;margin-bottom:8px">enviados</div>'
+          + '<div style="font-size:13px;color:#00B4B4;font-weight:700">'+volvieron+' volvieron ('+pct+'%)</div>'
+          + '</div>';
+      });
+      document.getElementById('reactivacionResumen').innerHTML = html;
+    });
+  }).catch(function(){
+    document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#c0392b">Error al cargar — ¿corriste el SQL de reactivacion_envios?</div>';
+  });
+}
+
 function loadRuletaGiros(){
   fetch('/api/galeria?action=getRuletaGiros')
   .then(function(r){return r.json();})
