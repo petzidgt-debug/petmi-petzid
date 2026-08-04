@@ -172,7 +172,7 @@
             '<a href="/tienda.html" class="h-drop-item">🛍️ Tienda</a>' +
             '<a href="/mis-avisos.html" class="h-drop-item">📝 Mis avisos</a>' +
             '<a href="/puntos.html" class="h-drop-item">🏆 Mis puntos</a>' +
-            '<a href="https://wa.me/50237673927?text=' + encodeURIComponent('Hola! Tengo una duda sobre PetMi') + '" target="_blank" class="h-drop-item">💬 &#191;Tienes dudas? Cont&aacute;ctanos</a>' +
+            '<a href="/mensajes.html?abrir=PETMI-OFICIAL&nombre=' + encodeURIComponent('PetMi Oficial') + '" class="h-drop-item">💬 &#191;Tienes dudas? Cont&aacute;ctanos</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
         '</div>'
