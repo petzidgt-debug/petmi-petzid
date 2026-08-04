@@ -2858,8 +2858,8 @@ function guardarProducto(){
   }).then(function(r){return r.json();})
   .then(function(d){
     if(d.ok){ closeModal('modalProducto'); loadTiendaProductos(); }
-    else alert('No se pudo guardar.');
-  }).catch(function(){ alert('No se pudo guardar.'); });
+    else alert('No se pudo guardar. Detalle: ' + (d.error || 'desconocido'));
+  }).catch(function(){ alert('No se pudo guardar. Error de conexión.'); });
 }
 
 function toggleProducto(id, activo){
