@@ -462,25 +462,48 @@ async function generarPosterFam(){
   window.location.href='/avisos.html';
 }
 
+var _angelitoUidPendiente = null, _angelitoNombrePendiente = null;
+
 function confirmarAngelito(uid, nombre){
-  if(confirm('¿Marcar a '+nombre+' como angelito? Esta acción no se puede deshacer.')){
-    var hoy=new Date().toISOString().split('T')[0];
-    fetch('/api/galeria?action=markAngel',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({uid:uid,esAngel:true,fechaAngelito:hoy})
-    }).then(function(r){return r.json();})
-    .then(function(d){
-      if(d.ok){
-        alert('🌈 '+nombre+' fue marcado como angelito. Descansa en paz 🐾');
-        location.reload();
-      } else {
-        alert('Error al guardar. Por favor intenta de nuevo. (' + (d.error||'sin detalle') + ')');
-      }
-    }).catch(function(e){
-      alert('Error de conexión al marcar angelito.');
-      console.error('[markAngel]',e);
-    });
-  }
+  _angelitoUidPendiente = uid;
+  _angelitoNombrePendiente = nombre;
+  var overlay = document.createElement('div');
+  overlay.id = 'modalFechaAngelito';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:16px;padding:24px;max-width:340px;width:100%;text-align:center">'
+    + '<div style="font-size:32px;margin-bottom:8px">🌈</div>'
+    + '<div style="font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:4px">Marcar a '+nombre+' como angelito</div>'
+    + '<div style="font-size:12.5px;color:#888;margin-bottom:16px">¿En qué fecha nos dejó?</div>'
+    + '<input type="date" id="fechaAngelitoInput" style="width:100%;padding:12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:15px;margin-bottom:16px">'
+    + '<div style="display:flex;gap:10px">'
+    + '<button onclick="document.getElementById(\'modalFechaAngelito\').remove()" style="flex:1;padding:12px;background:#f0f0ee;color:#1a1a2e;border:none;border-radius:99px;font-weight:700;cursor:pointer">Cancelar</button>'
+    + '<button onclick="confirmarAngelitoConFecha()" style="flex:1;padding:12px;background:#764ba2;color:#fff;border:none;border-radius:99px;font-weight:700;cursor:pointer">Confirmar</button>'
+    + '</div></div>';
+  document.body.appendChild(overlay);
+  document.getElementById('fechaAngelitoInput').value = new Date().toISOString().split('T')[0];
+}
+
+function confirmarAngelitoConFecha(){
+  var fecha = document.getElementById('fechaAngelitoInput').value;
+  if(!fecha){ alert('Selecciona la fecha.'); return; }
+  var uid = _angelitoUidPendiente, nombre = _angelitoNombrePendiente;
+  document.getElementById('modalFechaAngelito').remove();
+  fetch('/api/galeria?action=markAngel',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid:uid,esAngel:true,fechaAngelito:fecha})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      alert('🌈 '+nombre+' fue marcado como angelito. Descansa en paz 🐾');
+      location.reload();
+    } else {
+      alert('Error al guardar. Por favor intenta de nuevo. (' + (d.error||'sin detalle') + ')');
+    }
+  }).catch(function(e){
+    alert('Error de conexión al marcar angelito.');
+    console.error('[markAngel]',e);
+  });
 }
 
 function confirmarEliminar(uid, nombre){

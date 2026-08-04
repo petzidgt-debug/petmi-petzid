@@ -740,6 +740,7 @@ fetch('/api/galeria?action=getBasic')
             pet.especial     =String(r[23]||'').trim();
             pet.alimento     =String(r[16]||'').trim();
             pet.zona         =String(r[9] ||'').trim();
+            pet.veterinario  =String(r[13]||'').trim();
             pet.notifMensajes=String(r[30]||'').trim();
           }
         });
@@ -771,6 +772,7 @@ fetch('/api/galeria?action=getBasic')
             comentario:   '',
             alimento:     String(r[16]||'').trim(),
             zona:         String(r[9] ||'').trim(),
+            veterinario:  String(r[13]||'').trim(),
             notifMensajes:String(r[30]||'').trim()
           };
         }).filter(function(p){return p.nombre;});
