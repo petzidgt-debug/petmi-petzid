@@ -443,9 +443,10 @@ function edadMesesDeDash(mascota) {
   return (h.getFullYear()-f.getFullYear())*12 + (h.getMonth()-f.getMonth());
 }
 
-function toggleSaludDash(){
-  var det = document.getElementById('saludDetalleDash');
-  var arrow = document.getElementById('saludToggleArrow');
+function toggleSaludDash(uid){
+  var det = document.getElementById('saludDetalle_'+uid);
+  var arrow = document.getElementById('saludArrow_'+uid);
+  if (!det || !arrow) return;
   var abierto = det.style.display === 'block';
   det.style.display = abierto ? 'none' : 'block';
   arrow.style.transform = abierto ? 'rotate(0deg)' : 'rotate(180deg)';
@@ -519,12 +520,15 @@ function cargarDashboardPersonalizado() {
 
   Promise.all([
     fetch('/api/galeria?action=getReglasSalud').then(function(r){return r.json();}).catch(function(){return {reglas:[]};}),
-    fetch('/api/galeria?action=getRegistrosSalud&uid='+encodeURIComponent(mascota.uid)).then(function(r){return r.json();}).catch(function(){return {registros:[]};}),
+    Promise.all(misMascotas.map(function(m){
+      return fetch('/api/galeria?action=getRegistrosSalud&uid='+encodeURIComponent(m.uid)).then(function(r){return r.json();}).catch(function(){return {registros:[]};});
+    })),
     fetch('/api/galeria?action=getPuntos&email='+encodeURIComponent(sessionEmail)).then(function(r){return r.json();}).catch(function(){return {total:0};}),
     fetch('/api/galeria?action=checkRuletaGiro&email='+encodeURIComponent(sessionEmail)).then(function(r){return r.json();}).catch(function(){return {ya_giro:false};}),
     fetch('/api/galeria?action=getEventos').then(function(r){return r.json();}).catch(function(){return {eventos:[]};})
   ]).then(function(res){
-    renderDashboardPersonalizado(mascota, dueno, res[0].reglas||[], res[1].registros||[], res[2].total||0, res[3], res[4].eventos||[], nombresTexto, verboEstar);
+    var registrosPorMascota = misMascotas.map(function(m, i){ return { mascota: m, registros: (res[1][i]&&res[1][i].registros)||[] }; });
+    renderDashboardPersonalizado(mascota, dueno, res[0].reglas||[], registrosPorMascota, res[2].total||0, res[3], res[4].eventos||[], nombresTexto, verboEstar);
   });
 }
 
@@ -532,36 +536,49 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
   var wrap = document.getElementById('dashboardPersonal');
   var edadMeses = edadMesesDeDash(mascota);
 
-  // ── Filtrar reglas aplicables a esta mascota ──
-  var aplicables = reglas.filter(function(r){
-    var especieOk = r.especie === 'Todos' || r.especie === mascota.especie;
-    var edadMinOk = r.edad_min_meses == null || edadMeses == null || edadMeses >= r.edad_min_meses;
-    var edadMaxOk = r.edad_max_meses == null || edadMeses == null || edadMeses <= r.edad_max_meses;
-    return especieOk && edadMinOk && edadMaxOk;
-  });
-
-  // ── Calcular estado de cada una (mismo criterio que salud.html) ──
-  function ultimoRegistroDe(reglaId) {
-    var filtr = registros.filter(function(r){ return r.nombre_especifico === String(reglaId); });
-    if (!filtr.length) return null;
-    return filtr.sort(function(a,b){ return new Date(b.fecha_aplicacion) - new Date(a.fecha_aplicacion); })[0];
+  // ── Calcular salud de CADA mascota de la familia ──
+  function edadMesesDeOtra(m){
+    if (!m.fecha) return null;
+    var f = new Date(m.fecha);
+    if (isNaN(f)) return null;
+    var h = new Date();
+    return (h.getFullYear()-f.getFullYear())*12 + (h.getMonth()-f.getMonth());
   }
 
-  var saludDetalle = { hoy: [], proximamente: [], completados: [] };
-  aplicables.forEach(function(regla){
-    var ultimo = ultimoRegistroDe(regla.id);
-    if (!ultimo) { saludDetalle.hoy.push({ nombre: regla.nombre, sub: 'Sin registro' }); return; }
-    var vence = new Date(ultimo.fecha_aplicacion);
-    vence.setDate(vence.getDate() + Math.round(regla.frecuencia_meses*30));
-    var dias = Math.round((vence-new Date())/86400000);
-    if (dias < 0) { saludDetalle.hoy.push({ nombre: regla.nombre, sub: 'Venci\u00f3' }); return; }
-    if (dias <= 30) { saludDetalle.proximamente.push({ nombre: regla.nombre, sub: vence.toLocaleDateString('es-GT',{day:'2-digit',month:'long'}) }); return; }
-    saludDetalle.completados.push({ nombre: regla.nombre, sub: '' });
+  var saludPorMascota = registros.map(function(entrada){
+    var m = entrada.mascota;
+    var edadM = edadMesesDeOtra(m);
+    var aplicablesM = reglas.filter(function(r){
+      var especieOk = r.especie === 'Todos' || r.especie === m.especie;
+      var edadMinOk = r.edad_min_meses == null || edadM == null || edadM >= r.edad_min_meses;
+      var edadMaxOk = r.edad_max_meses == null || edadM == null || edadM <= r.edad_max_meses;
+      return especieOk && edadMinOk && edadMaxOk;
+    });
+
+    function ultimoRegistroDeM(reglaId) {
+      var filtr = entrada.registros.filter(function(r){ return r.nombre_especifico === String(reglaId); });
+      if (!filtr.length) return null;
+      return filtr.sort(function(a,b){ return new Date(b.fecha_aplicacion) - new Date(a.fecha_aplicacion); })[0];
+    }
+
+    var detalle = { hoy: [], proximamente: [], completados: [] };
+    aplicablesM.forEach(function(regla){
+      var ultimo = ultimoRegistroDeM(regla.id);
+      if (!ultimo) { detalle.hoy.push({ nombre: regla.nombre, sub: 'Sin registro' }); return; }
+      var vence = new Date(ultimo.fecha_aplicacion);
+      vence.setDate(vence.getDate() + Math.round(regla.frecuencia_meses*30));
+      var dias = Math.round((vence-new Date())/86400000);
+      if (dias < 0) { detalle.hoy.push({ nombre: regla.nombre, sub: 'Venci\u00f3' }); return; }
+      if (dias <= 30) { detalle.proximamente.push({ nombre: regla.nombre, sub: vence.toLocaleDateString('es-GT',{day:'2-digit',month:'long'}) }); return; }
+      detalle.completados.push({ nombre: regla.nombre, sub: '' });
+    });
+
+    var total = aplicablesM.length;
+    var alDia = detalle.completados.length;
+    var pct = total > 0 ? Math.round((alDia/total)*100) : 0;
+    var color = pct >= 80 ? '#2ecc71' : pct >= 50 ? '#F5C842' : '#E05090';
+    return { mascota: m, totalCuidados: total, alDiaCount: alDia, porcentajeSalud: pct, colorBarra: color, saludDetalle: detalle };
   });
-  var totalCuidados = aplicables.length;
-  var alDiaCount = saludDetalle.completados.length;
-  var porcentajeSalud = totalCuidados > 0 ? Math.round((alDiaCount/totalCuidados)*100) : 0;
-  var colorBarra = porcentajeSalud >= 80 ? '#2ecc71' : porcentajeSalud >= 50 ? '#F5C842' : '#E05090';
 
   var cuidados = [];
 
@@ -625,23 +642,29 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
 
     + (cuidados.length ? cuidados.map(function(c){ return '<div class="dash-cuidado-item">'+c.texto+'</div>'; }).join('') : '')
 
-    + '<div class="dash-salud-card" onclick="toggleSaludDash()" style="background:#f8f7f4;border-radius:14px;padding:14px 16px;margin-top:10px;cursor:pointer">'
-    + '<div style="display:flex;justify-content:space-between;align-items:center">'
-    + '<div style="font-weight:700;color:#1a1a2e;font-size:14px">&#129658; Salud de ' + mascota.nombre + '</div>'
-    + '<div id="saludToggleArrow" style="color:#999;transition:transform .2s;font-size:12px">&#9660;</div>'
-    + '</div>'
-    + (totalCuidados > 0
-        ? '<div style="background:#eee;border-radius:99px;height:8px;overflow:hidden;margin:10px 0 6px"><div style="background:'+colorBarra+';height:100%;width:'+porcentajeSalud+'%"></div></div>'
-        + '<div style="font-size:12px;color:#666">' + alDiaCount + ' de ' + totalCuidados + ' cuidados al d\u00eda &middot; ' + porcentajeSalud + '%</div>'
-        : '<div style="font-size:12px;color:#999;margin-top:6px">Sin recomendaciones de salud aplicables a\u00fan</div>')
-    + '</div>'
+    + (saludPorMascota.length > 1 ? '<div class="dash-seccion-titulo" style="margin-top:14px">&#129658; Salud de la familia</div>' : '')
 
-    + '<div id="saludDetalleDash" style="display:none;background:#fff;border:1px solid #eee;border-radius:14px;padding:14px 16px;margin-top:8px">'
-    + (saludDetalle.hoy.length ? '<div style="font-size:10.5px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Hoy</div>' + saludDetalle.hoy.map(function(x){ return '<div style="font-size:13px;color:#333;padding:4px 0">&#10060; ' + x.nombre + ' <span style="color:#999;font-size:11.5px">&mdash; '+x.sub+'</span></div>'; }).join('') : '')
-    + (saludDetalle.proximamente.length ? '<div style="font-size:10.5px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px">Pr&oacute;ximamente</div>' + saludDetalle.proximamente.map(function(x){ return '<div style="font-size:13px;color:#333;padding:4px 0">&#128993; ' + x.nombre + ' <span style="color:#999;font-size:11.5px">&mdash; '+x.sub+'</span></div>'; }).join('') : '')
-    + (saludDetalle.completados.length ? '<div style="font-size:10.5px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px">Completados</div>' + saludDetalle.completados.map(function(x){ return '<div style="font-size:13px;color:#333;padding:4px 0">&#128994; ' + x.nombre + '</div>'; }).join('') : '')
-    + '<a href="/salud.html" style="display:block;text-align:center;margin-top:12px;color:#00B4B4;font-weight:700;font-size:12.5px;text-decoration:none">Ver todo en Salud &rarr;</a>'
-    + '</div>'
+    + saludPorMascota.map(function(sm){
+        var idSuf = sm.mascota.uid;
+        var tituloTarjeta = saludPorMascota.length > 1 ? sm.mascota.nombre : ('&#129658; Salud de ' + sm.mascota.nombre);
+        return '<div class="dash-salud-card" onclick="toggleSaludDash(\''+idSuf+'\')" style="background:#f8f7f4;border-radius:14px;padding:14px 16px;margin-top:10px;cursor:pointer">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center">'
+        + '<div style="font-weight:700;color:#1a1a2e;font-size:14px">' + tituloTarjeta + '</div>'
+        + '<div id="saludArrow_'+idSuf+'" style="color:#999;transition:transform .2s;font-size:12px">&#9660;</div>'
+        + '</div>'
+        + (sm.totalCuidados > 0
+            ? '<div style="background:#eee;border-radius:99px;height:8px;overflow:hidden;margin:10px 0 6px"><div style="background:'+sm.colorBarra+';height:100%;width:'+sm.porcentajeSalud+'%"></div></div>'
+            + '<div style="font-size:12px;color:#666">' + sm.alDiaCount + ' de ' + sm.totalCuidados + ' cuidados al d\u00eda &middot; ' + sm.porcentajeSalud + '%</div>'
+            : '<div style="font-size:12px;color:#999;margin-top:6px">Sin recomendaciones de salud aplicables a\u00fan</div>')
+        + '</div>'
+
+        + '<div id="saludDetalle_'+idSuf+'" style="display:none;background:#fff;border:1px solid #eee;border-radius:14px;padding:14px 16px;margin-top:8px">'
+        + (sm.saludDetalle.hoy.length ? '<div style="font-size:10.5px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Hoy</div>' + sm.saludDetalle.hoy.map(function(x){ return '<div style="font-size:13px;color:#333;padding:4px 0">&#10060; ' + x.nombre + ' <span style="color:#999;font-size:11.5px">&mdash; '+x.sub+'</span></div>'; }).join('') : '')
+        + (sm.saludDetalle.proximamente.length ? '<div style="font-size:10.5px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px">Pr&oacute;ximamente</div>' + sm.saludDetalle.proximamente.map(function(x){ return '<div style="font-size:13px;color:#333;padding:4px 0">&#128993; ' + x.nombre + ' <span style="color:#999;font-size:11.5px">&mdash; '+x.sub+'</span></div>'; }).join('') : '')
+        + (sm.saludDetalle.completados.length ? '<div style="font-size:10.5px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px">Completados</div>' + sm.saludDetalle.completados.map(function(x){ return '<div style="font-size:13px;color:#333;padding:4px 0">&#128994; ' + x.nombre + '</div>'; }).join('') : '')
+        + '<a href="/salud.html" style="display:block;text-align:center;margin-top:12px;color:#00B4B4;font-weight:700;font-size:12.5px;text-decoration:none">Ver todo en Salud &rarr;</a>'
+        + '</div>';
+      }).join('')
     + eventoTxt
 
     + ''
