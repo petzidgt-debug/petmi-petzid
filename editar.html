@@ -132,6 +132,11 @@ function validarCamposPuntos() {
       if (el) {
         el.className = el.className.replace(/\bcampo-ok\b|\bcampo-falta\b/g, '').trim();
         el.classList.add(ok ? 'campo-ok' : 'campo-falta');
+        var lbl = el.previousElementSibling;
+        if (lbl && lbl.tagName === 'LABEL') {
+          lbl.style.color = ok ? '' : '#E24B4A';
+          lbl.style.fontWeight = ok ? '' : '700';
+        }
       }
     }
     itemsHTML += '<div class="check-item ' + (ok ? 'ok' : 'falta') + '">' + (ok ? '✅' : '❌') + ' ' + c.label + '</div>';
