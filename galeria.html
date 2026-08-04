@@ -623,7 +623,7 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
   }).join('');
 
   // ── Perfil incompleto: mismo criterio que puntos.html (nombre, foto, raza, zona, veterinario) ──
-  var incompletas = misMascotas.filter(function(m){
+  var incompletas = registros.map(function(e){ return e.mascota; }).filter(function(m){
     return !m.nombre || !m.foto || !m.raza || !m.zona || !m.veterinario;
   }).map(function(m){ return m.nombre; });
   var bannerPerfilHtml = '';
