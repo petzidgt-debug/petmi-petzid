@@ -252,6 +252,16 @@ function renderCard(m){
   html += '<div class="card-body">';
   html += '<div class="card-nombre">'+m.nombre+'</div>';
   html += '<div class="card-meta">'+(m.apodo?'"'+m.apodo+'" · ':'')+(m.especie||'')+'</div>';
+  if(!esAngel){
+    var faltantes = [];
+    if(!m.foto) faltantes.push('foto');
+    if(!m.raza) faltantes.push('raza');
+    if(!m.zona) faltantes.push('zona');
+    if(!m.veterinario) faltantes.push('veterinario');
+    if(faltantes.length){
+      html += '<div style="color:#c0392b;font-size:11px;font-weight:700;margin-bottom:6px">⚠️ Falta: '+faltantes.join(', ')+'</div>';
+    }
+  }
   // Fila 1: Ver + Editar
   html += '<div class="card-btns" style="margin-bottom:6px">';
   var highlightParam = new URLSearchParams(window.location.search).get('highlight') === 'perfil' ? '&highlight=perfil' : '';
