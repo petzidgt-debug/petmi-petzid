@@ -1319,6 +1319,64 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
 
+    // ── getProductosTienda (público) ────────────────────────────
+    if (action === 'getProductosTienda') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?activo=eq.true&select=*&order=categoria.asc,orden.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ productos: Array.isArray(data) ? data : [] });
+    }
+
+    // ── getProductosTiendaAdmin (todos, incluye inactivos) ──────
+    if (action === 'getProductosTiendaAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?select=*&order=categoria.asc,orden.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ productos: Array.isArray(data) ? data : [] });
+    }
+
+    // ── crearProductoTienda (admin) ─────────────────────────────
+    if (action === 'crearProductoTienda' && req.method === 'POST') {
+      const { nombre, descripcion, precio, imagen, categoria, orden } = req.body;
+      if (!nombre || !categoria) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, orden: orden || 0, activo: true })
+      });
+      if (!r.ok) {
+        const errTxt = await r.text().catch(() => '');
+        console.error('crearProductoTienda failed:', r.status, errTxt);
+        return res.status(200).json({ ok: false, error: errTxt || ('HTTP ' + r.status) });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── actualizarProductoTienda (admin) ─────────────────────────
+    if (action === 'actualizarProductoTienda' && req.method === 'POST') {
+      const { id, ...campos } = req.body;
+      if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(campos)
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── eliminarProductoTienda (admin) ─────────────────────────────
+    if (action === 'eliminarProductoTienda' && req.method === 'POST') {
+      const { id } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
     // ── getLikesResumen (conteos + cuáles ya dio like el usuario) ──
     if (action === 'getLikesResumen' && req.method === 'POST') {
       const { uids, email } = req.body;
