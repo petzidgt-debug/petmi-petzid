@@ -185,10 +185,10 @@
         '<span class="h-btab-ico">🐾</span>' +
         '<span class="h-btab-lbl">Galería</span>' +
       '</a>' +
-      '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-btab' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '" style="position:relative">' +
-        '<span class="h-btab-ico">📢</span>' +
-        '<span class="h-btab-bdg" id="hAvisosCountMob"></span>' +
-        '<span class="h-btab-lbl">Avisos</span>' +
+      '<a href="/mensajes.html" class="h-btab' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '" style="position:relative">' +
+        '<span class="h-btab-ico">💬</span>' +
+        '<span class="h-btab-bdg" id="petmiMsgBadgeMob"></span>' +
+        '<span class="h-btab-lbl">Mensajes</span>' +
       '</a>' +
       '<a href="/registro.html" class="h-fab-tab">' +
         '<div class="h-fab-circle">➕</div>' +
@@ -355,6 +355,11 @@
       if(badge && d.count > 0){
         badge.textContent = d.count + (d.count===1?' mensaje':' mensajes');
         badge.style.display = 'inline-block';
+      }
+      var badgeMob = document.getElementById('petmiMsgBadgeMob');
+      if(badgeMob && d.count > 0){
+        badgeMob.textContent = d.count > 99 ? '99+' : d.count;
+        badgeMob.style.display = 'inline-block';
       }
     }).catch(function(){});
   }
