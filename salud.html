@@ -311,7 +311,20 @@ function renderChecklist() {
     var cat = CATEGORIAS_TIPO[clave];
     var reglasCategoria = reglas.filter(function(r){ return cat.tipos.indexOf(r.tipo) >= 0; });
     if (!reglasCategoria.length) return '';
-    return '<div class="historial-titulo" style="margin-top:18px">'+cat.titulo+'</div>' + reglasCategoria.map(tarjetaRegla).join('');
+    var bannerAlimento = '';
+    if (clave === 'alimentacion') {
+      if (mascota.alimento) {
+        var msjPedido = encodeURIComponent('Hola! Quiero pedir más: ' + mascota.alimento + ' para ' + mascota.nombre);
+        bannerAlimento = '<div style="background:#fff8e8;border-radius:12px;padding:12px 14px;margin-bottom:10px">'
+          + '<div style="font-size:11px;color:#a08030;font-weight:700;text-transform:uppercase;margin-bottom:3px">Actualmente come</div>'
+          + '<div style="font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:8px">'+mascota.alimento+'</div>'
+          + '<a href="https://wa.me/50237673927?text='+msjPedido+'" target="_blank" style="display:inline-block;background:#25D366;color:#fff;padding:8px 16px;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none">💬 Pedir más por WhatsApp</a>'
+          + '</div>';
+      } else {
+        bannerAlimento = '<div style="background:#f8f7f4;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:12.5px;color:#888">Aún no registraste qué alimento come <a href="/familia.html" style="color:#00B4B4;font-weight:700">— agrégalo aquí</a></div>';
+      }
+    }
+    return '<div class="historial-titulo" style="margin-top:18px">'+cat.titulo+'</div>' + bannerAlimento + reglasCategoria.map(tarjetaRegla).join('');
   }).join('');
 
   document.getElementById('checklistWrap').innerHTML = peloPromptHtml + introHtml + categoriasHtml;
