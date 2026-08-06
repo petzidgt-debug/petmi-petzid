@@ -322,6 +322,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <div><div style="font-size:24px;font-weight:900;color:#fff" id="statGatos">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Gatos</div></div>
     <div><div style="font-size:24px;font-weight:900;color:#fff" id="statAngeles">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Angelitos 🐾</div></div>
   </div>
+  <a href="/mensajes.html?abrir=PETMI-OFICIAL&nombre=PetMi%20Oficial" style="display:inline-block;margin-top:20px;color:rgba(255,255,255,.7);font-size:12px;text-decoration:underline">💬 ¿Tienes dudas? Contáctanos</a>
 </div>
 
 <!-- MODAL MASCOTA -->
@@ -744,6 +745,8 @@ fetch('/api/galeria?action=getBasic')
             pet.notifMensajes=String(r[30]||'').trim();
           }
         });
+        // Recalcular el dashboard con los datos completos (zona/veterinario ya disponibles)
+        try { cargarDashboardPersonalizado(); } catch(e) { console.error('Error en dashboard (recalculo):', e); }
       }).catch(function(){});
   })
   .catch(function(){
