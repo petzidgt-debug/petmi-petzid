@@ -9,10 +9,16 @@ export default async function handler(req, res) {
   try {
     let response;
     if (req.method === 'POST') {
+      // Si el action viene en la URL (?action=algo) y no en el body, lo agregamos —
+      // de lo contrario Code.gs recibe action vacío y cae al flujo equivocado.
+      var bodyConAction = Object.assign({}, req.body || {});
+      if (!bodyConAction.action && req.query && req.query.action) {
+        bodyConAction.action = req.query.action;
+      }
       response = await fetch(SCRIPT_URL, {
         method:   'POST',
         headers:  { 'Content-Type': 'application/json' },
-        body:     JSON.stringify(req.body),
+        body:     JSON.stringify(bodyConAction),
         redirect: 'follow'
       });
     } else {
