@@ -1985,7 +1985,7 @@ function saveEdit(){
   r[9]=document.getElementById('eZona').value; r[10]=document.getElementById('eDueno').value;
   r[11]=document.getElementById('eEmail').value; r[12]=document.getElementById('eWA').value;
   r[13]=document.getElementById('eVet').value; r[16]=document.getElementById('eAlimento').value;
-  fetch('/api/admin?action=updateRow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:r[1],data:r})})
+  fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'updateRow',uid:r[1],data:r})})
   .then(function(){buildFamilias();renderTable();renderFamilias();closeModal('modalEdit');alert('Guardado!');})
   .catch(function(){buildFamilias();renderTable();renderFamilias();closeModal('modalEdit');});
 }
@@ -1993,8 +1993,12 @@ function saveEdit(){
 function reenviarID(idx){
   var r=filtered[idx];
   if(!confirm('Reenviar PetzID a '+String(r[11])+'?')) return;
-  fetch('/api/admin?action=reenviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:r[1],email:r[11],nombre:r[2]})})
-  .then(function(){alert('Reenviado a '+String(r[11]));}).catch(function(){alert('Error al reenviar');});
+  fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reenviar',uid:r[1],email:r[11],nombre:r[2]})})
+  .then(function(resp){return resp.json();})
+  .then(function(d){
+    if(d && d.ok === false){ alert('No se pudo reenviar: ' + (d.error||'error desconocido')); return; }
+    alert('Reenviado a '+String(r[11]));
+  }).catch(function(){alert('Error al reenviar');});
 }
 
 // ── Eliminar mascota ──────────────────────────────────────────
