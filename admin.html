@@ -526,6 +526,16 @@ tbody tr:last-child td{border-bottom:none}
       <h2 class="screen-title">📧 Efectividad de Reactivación</h2>
       <p style="color:#888;font-size:13px;margin-bottom:16px">Por cada semana de la serie: cuántos correos se enviaron, y cuántos de esos usuarios volvieron a entrar después.</p>
       <div id="reactivacionResumen" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px"></div>
+
+      <h2 class="screen-title" style="font-size:18px;margin-top:24px">🙌 Quiénes volvieron</h2>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Correo</th><th>Semana que lo trajo</th><th>Volvió</th><th>Premio ruleta</th><th>Acciones desde que volvió</th></tr></thead>
+            <tbody id="reactivacionVolvieronBody"><tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div id="screenTienda" class="screen">
@@ -2664,6 +2674,57 @@ function loadReactivacionEfectividad(){
           + '</div>';
       });
       document.getElementById('reactivacionResumen').innerHTML = html;
+
+      // ── Detalle de quiénes volvieron: premio de ruleta + acciones ──
+      var volvieronDetalle = [];
+      envios.forEach(function(e){
+        var email = (e.email||'').toLowerCase();
+        var ua = ultimaPorEmail[email];
+        if (ua && new Date(ua) > new Date(e.enviado_at)) {
+          volvieronDetalle.push({ email: e.email, semana: e.semana, volvioEn: ua, enviadoAt: e.enviado_at });
+        }
+      });
+      // Si alguien volvió más de una vez (varias semanas), dejar solo la primera
+      var vistos = {};
+      volvieronDetalle = volvieronDetalle.filter(function(v){
+        var k = v.email.toLowerCase();
+        if (vistos[k]) return false;
+        vistos[k] = true;
+        return true;
+      }).sort(function(a,b){ return new Date(b.volvioEn) - new Date(a.volvioEn); });
+
+      if (!volvieronDetalle.length) {
+        document.getElementById('reactivacionVolvieronBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Nadie ha vuelto todavía</td></tr>';
+        return;
+      }
+
+      var emailsVolvieron = volvieronDetalle.map(function(v){ return v.email; });
+      var accionLbl = { perfil_completo:'🐾 Perfil', instalar_app:'📲 Instaló app', juego_diario:'🎮 Jugó', trivia_diaria:'⚡ Trivia', racha_7dias:'🔥 Racha', registro_salud:'🩺 Salud', ruleta_premio:'🎡 Ruleta', reactivacion:'👋 Reactivación' };
+
+      Promise.all([
+        fetch(SUPA_ADM + '/rest/v1/puntos?email=in.(' + emailsVolvieron.map(encodeURIComponent).join(',') + ')&select=email,accion,created_at', {headers: SUPA_ADM_H}).then(function(r){return r.json();}).catch(function(){return [];}),
+        fetch(SUPA_ADM + '/rest/v1/ruleta_giros?email=in.(' + emailsVolvieron.map(encodeURIComponent).join(',') + ')&select=email,ruleta_premios(nombre)', {headers: SUPA_ADM_H}).then(function(r){return r.json();}).catch(function(){return [];})
+      ]).then(function(res){
+        var puntosPorEmail = {};
+        (res[0]||[]).forEach(function(p){
+          var k=(p.email||'').toLowerCase();
+          if(!puntosPorEmail[k]) puntosPorEmail[k]=[];
+          puntosPorEmail[k].push(p.accion);
+        });
+        var premioPorEmail = {};
+        (res[1]||[]).forEach(function(g){
+          premioPorEmail[(g.email||'').toLowerCase()] = (g.ruleta_premios && g.ruleta_premios.nombre) || '—';
+        });
+
+        document.getElementById('reactivacionVolvieronBody').innerHTML = volvieronDetalle.map(function(v){
+          var k = v.email.toLowerCase();
+          var fecha = new Date(v.volvioEn).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'});
+          var acciones = [...new Set(puntosPorEmail[k]||[])].map(function(a){ return accionLbl[a]||a; });
+          var accionesHtml = acciones.length ? acciones.map(function(a){ return '<span style="background:#f0f0ee;border-radius:99px;padding:3px 9px;font-size:11px;margin:2px;display:inline-block">'+a+'</span>'; }).join('') : '<span style="color:#bbb;font-size:12px">Sin acciones registradas aún</span>';
+          var premio = premioPorEmail[k] || '<span style="color:#bbb">No ha girado</span>';
+          return '<tr><td>'+v.email+'</td><td>Semana '+v.semana+'</td><td>'+fecha+'</td><td>'+premio+'</td><td>'+accionesHtml+'</td></tr>';
+        }).join('');
+      });
     });
   }).catch(function(){
     document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#c0392b">Error al cargar — ¿corriste el SQL de reactivacion_envios?</div>';
