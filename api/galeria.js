@@ -1323,10 +1323,24 @@ export default async function handler(req, res) {
     // ── getBlogPosts (últimos artículos del blog de Wix, vía RSS) ──
     // ── buscarContenido (buscador interno, sin IA — salud + lugares + blog) ──
     if (action === 'buscarContenido') {
-      const q = (req.query.q || '').toLowerCase().trim();
-      if (!q || q.length < 2) return res.status(200).json({ salud: [], lugares: [], blog: [] });
+      const qOriginal = (req.query.q || '').toLowerCase().trim();
+      if (!qOriginal || qOriginal.length < 2) return res.status(200).json({ salud: [], lugares: [], blog: [] });
 
-      const contiene = (txt) => (txt || '').toLowerCase().indexOf(q) >= 0;
+      // Palabras vacías que no aportan al match (para no diluir la búsqueda)
+      const stopwords = ['el','la','los','las','de','del','para','con','mi','tu','su','y','o','un','una','que','es','en','al','por','como','mejor','buen','buena'];
+      const palabras = qOriginal.split(/\s+/).filter(w => w.length >= 3 && stopwords.indexOf(w) === -1);
+      // Si tras quitar stopwords no queda nada útil, usamos la frase completa tal cual
+      const terminos = palabras.length ? palabras : [qOriginal];
+
+      function puntaje(txt) {
+        const t = (txt || '').toLowerCase();
+        let score = 0;
+        terminos.forEach(function(p) { if (t.indexOf(p) >= 0) score++; });
+        return score;
+      }
+      function coincide(campos) {
+        return puntaje(campos.join(' ')) > 0;
+      }
 
       const [reglasResp, lugaresResp] = await Promise.all([
         fetch(SUPABASE_URL + '/rest/v1/reglas_salud?activo=eq.true&select=*', {
@@ -1340,14 +1354,18 @@ export default async function handler(req, res) {
       const lugares = await lugaresResp.json();
 
       const saludMatches = (Array.isArray(reglas) ? reglas : [])
-        .filter(r => contiene(r.nombre) || contiene(r.descripcion) || contiene(r.tip) || contiene(r.tipo))
+        .map(r => ({ r, score: puntaje([r.nombre, r.descripcion, r.tip, r.tipo, r.especie].join(' ')) }))
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
         .slice(0, 8)
-        .map(r => ({ tipo: 'salud', nombre: r.nombre, descripcion: r.descripcion || r.tip || '', especie: r.especie, link: '/calendario-vacunas.html' }));
+        .map(x => ({ tipo: 'salud', nombre: x.r.nombre, descripcion: x.r.descripcion || x.r.tip || '', especie: x.r.especie, link: '/calendario-vacunas.html' }));
 
       const lugaresMatches = (Array.isArray(lugares) ? lugares : [])
-        .filter(l => contiene(l.nombre) || contiene(l.tipo) || contiene(l.zona) || contiene(l.direccion))
+        .map(l => ({ l, score: puntaje([l.nombre, l.tipo, l.zona, l.direccion].join(' ')) }))
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
         .slice(0, 8)
-        .map(l => ({ tipo: 'lugar', nombre: l.nombre, descripcion: (l.tipo || '') + (l.zona ? ' · Zona ' + l.zona : ''), link: '/lugares.html' }));
+        .map(x => ({ tipo: 'lugar', nombre: x.l.nombre, descripcion: (x.l.tipo || '') + (x.l.zona ? ' · Zona ' + x.l.zona : ''), link: '/lugares.html' }));
 
       let blogMatches = [];
       try {
@@ -1360,9 +1378,11 @@ export default async function handler(req, res) {
         const bloques = xml.split('<item>').slice(1);
         blogMatches = bloques
           .map(b => ({ title: extraer(b, 'title'), link: extraer(b, 'link'), desc: extraer(b, 'description').replace(/<[^>]+>/g, '') }))
-          .filter(p => contiene(p.title) || contiene(p.desc))
+          .map(p => ({ p, score: puntaje(p.title + ' ' + p.desc) }))
+          .filter(x => x.score > 0)
+          .sort((a, b) => b.score - a.score)
           .slice(0, 6)
-          .map(p => ({ tipo: 'blog', nombre: p.title, descripcion: p.desc.substring(0, 140), link: p.link }));
+          .map(x => ({ tipo: 'blog', nombre: x.p.title, descripcion: x.p.desc.substring(0, 140), link: x.p.link }));
       } catch (e) { /* si falla el blog, seguimos con lo demás */ }
 
       return res.status(200).json({ salud: saludMatches, lugares: lugaresMatches, blog: blogMatches });
