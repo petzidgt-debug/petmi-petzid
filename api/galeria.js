@@ -1320,6 +1320,36 @@ export default async function handler(req, res) {
     }
 
     // ── getProductosTienda (público) ────────────────────────────
+    // ── getBlogPosts (últimos artículos del blog de Wix, vía RSS) ──
+    if (action === 'getBlogPosts') {
+      try {
+        const rssUrl = 'https://www.revistapetmi.com/blog-feed.xml';
+        const rResp = await fetch(rssUrl);
+        const xml = await rResp.text();
+
+        function extraer(bloque, tag) {
+          const m = bloque.match(new RegExp('<' + tag + '[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/' + tag + '>'));
+          return m ? m[1].trim() : '';
+        }
+
+        const bloques = xml.split('<item>').slice(1).slice(0, 6);
+        const posts = bloques.map(function(b) {
+          const title = extraer(b, 'title');
+          const link = extraer(b, 'link');
+          const descRaw = extraer(b, 'description');
+          const excerpt = descRaw.replace(/<[^>]+>/g, '').trim().substring(0, 160);
+          const imgMatch = b.match(/<enclosure[^>]*url="([^"]+)"/) || b.match(/<media:content[^>]*url="([^"]+)"/) || b.match(/<img[^>]*src="([^"]+)"/);
+          const image = imgMatch ? imgMatch[1] : '';
+          const pubDate = extraer(b, 'pubDate');
+          return { title, link, excerpt, image, pubDate };
+        }).filter(function(p) { return p.title && p.link; });
+
+        return res.status(200).json({ posts });
+      } catch (e) {
+        return res.status(200).json({ posts: [], error: e.message });
+      }
+    }
+
     if (action === 'getProductosTienda') {
       const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?activo=eq.true&select=*&order=categoria.asc,orden.asc', {
         headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
