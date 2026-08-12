@@ -6,6 +6,62 @@
 <link rel="icon" href="/favico.jpg" type="image/jpeg">
 <title>PetzID — La identidad digital de tu mascota | PetMi Guatemala</title>
 <meta name="description" content="Crea el perfil digital de tu mascota gratis. PetzID es la plataforma de identidad para mascotas en Guatemala. Únete a la comunidad pet lover más grande del país.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "PetMi",
+  "alternateName": "PetzID",
+  "url": "https://app.revistapetmi.com",
+  "logo": "https://app.revistapetmi.com/logopetmi.png",
+  "description": "PetMi es la plataforma de identidad digital y comunidad para mascotas en Guatemala. Los dueños de mascotas pueden crear un carnet digital gratuito (PetzID), llevar el registro de salud preventiva de su mascota, encontrar lugares y veterinarias pet-friendly, y conectar con otros dueños de mascotas guatemaltecos.",
+  "areaServed": {
+    "@type": "Country",
+    "name": "Guatemala"
+  },
+  "sameAs": [
+    "https://www.instagram.com/revistapetmi"
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Qué es PetMi / PetzID?",
+      "acceptedAnswer": { "@type": "Answer", "text": "PetMi es una plataforma guatemalteca para dueños de mascotas. PetzID es el carnet digital gratuito que le creas a tu mascota — su identidad, foto, raza y datos básicos, listo para compartir o mostrar si alguien la encuentra perdida." }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Es gratis?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Sí, crear el PetzID de tu mascota, llevar su registro de salud preventiva, y participar en la comunidad es gratis para siempre. Existe un plan Premium opcional con beneficios adicionales, como perfil público compartible." }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cómo funciona el registro de salud preventiva?",
+      "acceptedAnswer": { "@type": "Answer", "text": "PetMi arma un checklist automático según la edad y especie de tu mascota — vacunas, desparasitación, baño, y hasta condiciones especiales como diabetes o alergias — y te avisa cuando algo está por vencer o pendiente." }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cómo ayuda PetMi si mi mascota se pierde?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Puedes generar un aviso de mascota perdida en segundos, con foto, última ubicación conocida, y tu contacto — visible para toda la comunidad PetMi en Guatemala." }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué diferencia tiene PetMi con una red social normal?",
+      "acceptedAnswer": { "@type": "Answer", "text": "PetMi no es solo fotos — es una herramienta de utilidad diaria para el cuidado real de tu mascota: salud preventiva, identidad digital, y un directorio de lugares y negocios pet-friendly en Guatemala, todo en un mismo lugar." }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cómo agrego mi veterinaria o negocio a PetMi?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Escríbenos por WhatsApp o llena el formulario de \"Para negocios\" en la página de inicio — reclamar tu perfil como negocio es gratis por ahora." }
+    }
+  ]
+}
+</script>
 <script src="/header.js" defer></script>
 <style>
 /* ── RESET & BASE ── */
@@ -111,6 +167,25 @@ body{font-family:Arial,sans-serif;background:#FEF7ED;overflow-x:hidden;color:#1a
 .join-count{font-size:clamp(12px,1.5vw,14px);color:rgba(255,255,255,.7);margin-top:-8px;margin-bottom:clamp(20px,3vw,28px)}
 
 /* ── PLANES ── */
+.faq-sec{background:#fff;padding:clamp(40px,6vw,72px) clamp(16px,4vw,32px)}
+.blog-sec{background:#F7F8FA;padding:clamp(40px,6vw,72px) clamp(16px,4vw,32px)}
+.blog-inner{max-width:1000px;margin:0 auto}
+.blog-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:32px}
+.blog-card{background:#fff;border-radius:16px;overflow:hidden;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.06);transition:transform .15s}
+.blog-card:hover{transform:translateY(-3px)}
+.blog-card-img{width:100%;aspect-ratio:16/10;object-fit:cover;background:#eee}
+.blog-card-body{padding:16px}
+.blog-card-title{font-weight:800;font-size:14.5px;color:#1a1a2e;line-height:1.3;margin-bottom:6px}
+.blog-card-excerpt{font-size:12.5px;color:#888;line-height:1.5}
+.btn-outline{background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e!important}
+.faq-inner{max-width:720px;margin:0 auto}
+.faq-item{border-bottom:1px solid #eee;padding:18px 0}
+.faq-q{display:flex;justify-content:space-between;align-items:center;gap:16px;cursor:pointer;font-weight:800;font-size:clamp(15px,2vw,17px);color:#1a1a2e}
+.faq-arrow{flex-shrink:0;color:#00B4B4;font-size:14px;transition:transform .2s}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .25s ease;color:#555;font-size:14.5px;line-height:1.7}
+.faq-a-inner{padding-top:12px}
+.faq-item.open .faq-arrow{transform:rotate(180deg)}
+
 .planes-sec{background:#FEF7ED;padding:clamp(40px,6vw,72px) clamp(16px,4vw,32px)}
 .planes-inner{max-width:900px;margin:0 auto}
 .planes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:clamp(12px,2vw,20px);margin-top:clamp(24px,3.5vw,40px)}
@@ -325,7 +400,7 @@ body{font-family:Arial,sans-serif;background:#FEF7ED;overflow-x:hidden;color:#1a
         <p style="color:#666;font-size:14px;line-height:1.7">Vacunas, desparasitación, baño y hasta condiciones especiales como diabetes o alergias — todo en un checklist que se adapta según la edad de tu mascota, con recomendaciones claras de por qué cada una importa.</p>
       </div>
       <div style="flex:1;min-width:260px;text-align:center">
-        <img src="/img/salud-mockup.png" alt="Checklist de salud preventiva en PetMi" style="max-width:320px;width:100%;border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.12)">
+        <img src="/img/salud_mockup.png" alt="Checklist de salud preventiva en PetMi" style="max-width:320px;width:100%;border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.12)">
       </div>
     </div>
   </div>
@@ -486,6 +561,62 @@ body{font-family:Arial,sans-serif;background:#FEF7ED;overflow-x:hidden;color:#1a
 </div>
 
 <!-- ═══════════════════════════════════════════
+     BLOQUE 7.4 — BLOG
+════════════════════════════════════════════ -->
+<div class="blog-sec">
+  <div class="blog-inner">
+    <div class="reveal" style="text-align:center">
+      <div class="badge badge-blue">Del blog</div>
+      <h2 class="titulo">Últimos artículos<br><span>de Revista PetMi</span></h2>
+    </div>
+    <div class="blog-grid" id="blogGrid">
+      <div style="text-align:center;color:#999;padding:20px;grid-column:1/-1">Cargando artículos...</div>
+    </div>
+    <div style="text-align:center;margin-top:24px">
+      <a href="https://www.revistapetmi.com/blog" target="_blank" class="btn btn-outline">Ver todos los artículos →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BLOQUE 7.5 — PREGUNTAS FRECUENTES
+════════════════════════════════════════════ -->
+<div class="faq-sec">
+  <div class="faq-inner">
+    <div class="reveal" style="text-align:center">
+      <div class="badge badge-blue">Preguntas frecuentes</div>
+      <h2 class="titulo">Todo lo que quieres saber<br><span>sobre PetMi</span></h2>
+    </div>
+    <div class="faq-lista" id="faqLista">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Qué es PetMi / PetzID?<span class="faq-arrow">▼</span></div>
+        <div class="faq-a"><div class="faq-a-inner">PetMi es una plataforma guatemalteca para dueños de mascotas. PetzID es el carnet digital gratuito que le creas a tu mascota — su identidad, foto, raza y datos básicos, listo para compartir o mostrar si alguien la encuentra perdida.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Es gratis?<span class="faq-arrow">▼</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Sí, crear el PetzID de tu mascota, llevar su registro de salud preventiva, y participar en la comunidad es gratis para siempre. Existe un plan Premium opcional con beneficios adicionales, como perfil público compartible.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Cómo funciona el registro de salud preventiva?<span class="faq-arrow">▼</span></div>
+        <div class="faq-a"><div class="faq-a-inner">PetMi arma un checklist automático según la edad y especie de tu mascota — vacunas, desparasitación, baño, y hasta condiciones especiales como diabetes o alergias — y te avisa cuando algo está por vencer o pendiente.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Cómo ayuda PetMi si mi mascota se pierde?<span class="faq-arrow">▼</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Puedes generar un aviso de mascota perdida en segundos, con foto, última ubicación conocida, y tu contacto — visible para toda la comunidad PetMi en Guatemala.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Qué diferencia tiene PetMi con una red social normal?<span class="faq-arrow">▼</span></div>
+        <div class="faq-a"><div class="faq-a-inner">PetMi no es solo fotos — es una herramienta de utilidad diaria para el cuidado real de tu mascota: salud preventiva, identidad digital, y un directorio de lugares y negocios pet-friendly en Guatemala, todo en un mismo lugar.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">¿Cómo agrego mi veterinaria o negocio a PetMi?<span class="faq-arrow">▼</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Escríbenos por WhatsApp o llena el formulario de "Para negocios" en esta misma página — reclamar tu perfil como negocio es gratis por ahora.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
      BLOQUE 8 — FOOTER
 ════════════════════════════════════════════ -->
 <footer class="footer">
@@ -532,6 +663,41 @@ body{font-family:Arial,sans-serif;background:#FEF7ED;overflow-x:hidden;color:#1a
      SCRIPTS
 ════════════════════════════════════════════ -->
 <script>
+// ── Últimos artículos del blog ──────────────────────────────────
+fetch('/api/galeria?action=getBlogPosts')
+.then(function(r){return r.json();})
+.then(function(d){
+  var posts = d.posts || [];
+  var grid = document.getElementById('blogGrid');
+  if(!posts.length){
+    grid.innerHTML = '<div style="text-align:center;color:#999;padding:20px;grid-column:1/-1">No se pudieron cargar los artículos por ahora — <a href="https://www.revistapetmi.com/blog" target="_blank">visita el blog directo</a>.</div>';
+    return;
+  }
+  grid.innerHTML = posts.map(function(p){
+    var img = p.image ? '<img class="blog-card-img" src="'+p.image+'" alt="'+p.title.replace(/"/g,'')+'">' : '<div class="blog-card-img"></div>';
+    return '<a class="blog-card" href="'+p.link+'" target="_blank">'
+      + img
+      + '<div class="blog-card-body">'
+      + '<div class="blog-card-title">'+p.title+'</div>'
+      + (p.excerpt ? '<div class="blog-card-excerpt">'+p.excerpt+'…</div>' : '')
+      + '</div></a>';
+  }).join('');
+}).catch(function(){
+  document.getElementById('blogGrid').innerHTML = '<div style="text-align:center;color:#999;padding:20px;grid-column:1/-1"><a href="https://www.revistapetmi.com/blog" target="_blank">Visita el blog directo</a></div>';
+});
+
+// ── FAQ acordeón ─────────────────────────────────────────────
+function toggleFaq(el){
+  var item = el.parentElement;
+  var abrir = !item.classList.contains('open');
+  item.parentElement.querySelectorAll('.faq-item').forEach(function(i){ i.classList.remove('open'); i.querySelector('.faq-a').style.maxHeight = null; });
+  if(abrir){
+    item.classList.add('open');
+    var a = item.querySelector('.faq-a');
+    a.style.maxHeight = a.scrollHeight + 'px';
+  }
+}
+
 // ── Supabase ─────────────────────────────────────────────────
 var SB_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
