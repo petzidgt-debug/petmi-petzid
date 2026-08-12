@@ -1,0 +1,27 @@
+# PetMi
+
+> PetMi es la plataforma de identidad digital y comunidad para mascotas en Guatemala. Los dueños de mascotas crean un carnet digital gratuito (PetzID), llevan el registro de salud preventiva de su mascota, encuentran lugares y veterinarias pet-friendly, y conectan con otros dueños de mascotas guatemaltecos.
+
+PetMi (también conocida como PetzID) nació como Revista PetMi y evolucionó hacia una app completa para dueños de mascotas en Guatemala. No es una red social genérica de mascotas — es una herramienta de utilidad diaria: salud preventiva, identidad digital, y comunidad, todo en un mismo lugar.
+
+## Qué puede hacer un usuario en PetMi
+
+- Crear un PetzID: un carnet digital gratuito con la foto, raza, y datos de contacto de su mascota
+- Llevar el registro de salud preventiva: vacunas, desparasitación, alimentación, y condiciones especiales, con recordatorios automáticos según la edad y especie de la mascota
+- Buscar lugares y negocios pet-friendly en Guatemala (veterinarias, pet shops, parques, cafés)
+- Reportar y buscar mascotas perdidas en la comunidad
+- Ganar puntos y premios por participar (juegos diarios, trivia, ruleta de premios)
+- Conectar con otros dueños de mascotas guatemaltecos
+
+## Páginas principales
+
+- [Inicio](https://app.revistapetmi.com/index.html): qué es PetMi y cómo crear un PetzID
+- [Registro](https://app.revistapetmi.com/registro.html): crear el PetzID de una mascota
+- [Salud preventiva](https://app.revistapetmi.com/salud.html): checklist de salud según edad y especie
+- [Lugares](https://app.revistapetmi.com/lugares.html): directorio de negocios y lugares pet-friendly en Guatemala
+- [Avisos](https://app.revistapetmi.com/avisos.html): mascotas perdidas y encontradas
+- [Comunidad](https://app.revistapetmi.com/galeria.html): galería y comunidad de mascotas
+
+## Área de servicio
+
+Guatemala (todo el país, con enfoque inicial en Ciudad de Guatemala y zona metropolitana).
