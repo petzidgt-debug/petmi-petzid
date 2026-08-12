@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Buscar — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh}
+.hero{background:linear-gradient(135deg,#00B4B4,#00838f);padding:32px 20px;text-align:center}
+.hero h1{font-size:24px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.hero p{font-size:13.5px;color:rgba(255,255,255,.8)}
+.wrap{max-width:640px;margin:0 auto;padding:20px}
+.search-box{display:flex;gap:8px;margin-bottom:24px}
+.search-input{flex:1;padding:13px 16px;border:1.5px solid #e0e0e0;border-radius:24px;font-size:15px;outline:none}
+.search-input:focus{border-color:#00B4B4}
+.search-btn{background:#00B4B4;color:#fff;border:none;padding:0 22px;border-radius:24px;font-weight:700;font-size:14px;cursor:pointer}
+.seccion-titulo{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:20px 0 10px}
+.resultado{display:block;background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:8px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.resultado-nombre{font-weight:800;font-size:14.5px;color:#1a1a2e;margin-bottom:3px}
+.resultado-desc{font-size:12.5px;color:#888;line-height:1.4}
+.resultado-tag{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:99px;margin-bottom:5px;text-transform:uppercase}
+.tag-salud{background:#e0f7f7;color:#007a7a}
+.tag-lugar{background:#eeeaff;color:#5a3ec8}
+.tag-blog{background:#fff8e8;color:#a08030}
+.estado{text-align:center;color:#999;padding:40px 20px;font-size:13.5px}
+.sugerencias{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;justify-content:center}
+.sugerencia-btn{background:#fff;border:1.5px solid #eee;padding:8px 14px;border-radius:99px;font-size:12.5px;color:#555;cursor:pointer}
+.login-wall{text-align:center;padding:60px 20px}
+.login-wall a{display:inline-block;margin-top:16px;background:#00B4B4;color:#fff;padding:12px 28px;border-radius:24px;text-decoration:none;font-weight:700;font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🔍 Buscar en PetMi</h1>
+  <p>Salud, lugares pet-friendly, y artículos — todo en un mismo lugar</p>
+</div>
+
+<div class="wrap" id="wrap">
+  <div class="estado">Cargando...</div>
+</div>
+
+<script>
+var sessionEmail = localStorage.getItem('petzid_email') || '';
+
+if (!sessionEmail) {
+  document.getElementById('wrap').innerHTML =
+    '<div class="login-wall">'
+    + '<div style="font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:6px">Inicia sesión para usar el buscador</div>'
+    + '<div style="font-size:13px;color:#888">Es una de las ventajas de tener tu cuenta PetMi activa.</div>'
+    + '<a href="/galeria.html">Ir a iniciar sesión</a>'
+    + '</div>';
+} else {
+  initBuscador();
+}
+
+function initBuscador(){
+  document.getElementById('wrap').innerHTML =
+    '<div class="search-box">'
+    + '<input type="text" class="search-input" id="searchInput" placeholder="Ej: vacunas cachorro, veterinaria zona 10..." onkeydown="if(event.key===\'Enter\')buscar()">'
+    + '<button class="search-btn" onclick="buscar()">Buscar</button>'
+    + '</div>'
+    + '<div id="resultados"><div class="estado">¿Qué quieres saber? Escribe arriba para empezar.'
+    + '<div class="sugerencias">'
+    + '<button class="sugerencia-btn" onclick="buscarSugerencia(\'vacunas\')">vacunas</button>'
+    + '<button class="sugerencia-btn" onclick="buscarSugerencia(\'veterinaria\')">veterinaria</button>'
+    + '<button class="sugerencia-btn" onclick="buscarSugerencia(\'desparasitación\')">desparasitación</button>'
+    + '<button class="sugerencia-btn" onclick="buscarSugerencia(\'alimento\')">alimento</button>'
+    + '</div></div></div>';
+}
+
+function buscarSugerencia(texto){
+  document.getElementById('searchInput').value = texto;
+  buscar();
+}
+
+function buscar(){
+  var q = document.getElementById('searchInput').value.trim();
+  if(q.length < 2){ return; }
+  document.getElementById('resultados').innerHTML = '<div class="estado">Buscando...</div>';
+
+  fetch('/api/galeria?action=buscarContenido&q=' + encodeURIComponent(q))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var salud = d.salud || [], lugares = d.lugares || [], blog = d.blog || [];
+    var total = salud.length + lugares.length + blog.length;
+
+    if(!total){
+      document.getElementById('resultados').innerHTML = '<div class="estado">No encontramos nada para "'+q+'". Intenta con otra palabra.</div>';
+      return;
+    }
+
+    var html = '';
+    if(salud.length){
+      html += '<div class="seccion-titulo">🩺 Salud preventiva</div>';
+      html += salud.map(function(r){
+        return '<a class="resultado" href="'+r.link+'">'
+          + '<div class="resultado-tag tag-salud">Salud</div>'
+          + '<div class="resultado-nombre">'+r.nombre+'</div>'
+          + (r.descripcion ? '<div class="resultado-desc">'+r.descripcion+'</div>' : '')
+          + '</a>';
+      }).join('');
+    }
+    if(lugares.length){
+      html += '<div class="seccion-titulo">📍 Lugares</div>';
+      html += lugares.map(function(l){
+        return '<a class="resultado" href="'+l.link+'">'
+          + '<div class="resultado-tag tag-lugar">Lugar</div>'
+          + '<div class="resultado-nombre">'+l.nombre+'</div>'
+          + '<div class="resultado-desc">'+l.descripcion+'</div>'
+          + '</a>';
+      }).join('');
+    }
+    if(blog.length){
+      html += '<div class="seccion-titulo">📖 Del blog</div>';
+      html += blog.map(function(p){
+        return '<a class="resultado" href="'+p.link+'" target="_blank">'
+          + '<div class="resultado-tag tag-blog">Artículo</div>'
+          + '<div class="resultado-nombre">'+p.nombre+'</div>'
+          + '<div class="resultado-desc">'+p.descripcion+'…</div>'
+          + '</a>';
+      }).join('');
+    }
+    document.getElementById('resultados').innerHTML = html;
+  }).catch(function(){
+    document.getElementById('resultados').innerHTML = '<div class="estado">Ocurrió un error al buscar. Intenta de nuevo.</div>';
+  });
+}
+</script>
+<script src="/header.js"></script>
+</body>
+</html>

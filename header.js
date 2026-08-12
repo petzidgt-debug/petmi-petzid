@@ -170,6 +170,7 @@
             '<a href="/salud.html" class="h-drop-item">🩺 Mi Registro de Salud</a>' +
             '<a href="/ruleta.html" class="h-drop-item">🎡 Ruleta de Premios</a>' +
             '<a href="/tienda.html" class="h-drop-item">🛍️ Tienda</a>' +
+            '<a href="/buscar.html" class="h-drop-item">🔍 Buscar</a>' +
             '<a href="/mis-avisos.html" class="h-drop-item">📝 Mis avisos</a>' +
             '<a href="/puntos.html" class="h-drop-item">🏆 Mis puntos</a>' +
             '<a href="/mensajes.html?abrir=PETMI-OFICIAL&nombre=' + encodeURIComponent('PetMi Oficial') + '" class="h-drop-item">💬 &#191;Tienes dudas? Cont&aacute;ctanos</a>' +
