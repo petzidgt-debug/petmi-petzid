@@ -1321,6 +1321,53 @@ export default async function handler(req, res) {
 
     // ── getProductosTienda (público) ────────────────────────────
     // ── getBlogPosts (últimos artículos del blog de Wix, vía RSS) ──
+    // ── buscarContenido (buscador interno, sin IA — salud + lugares + blog) ──
+    if (action === 'buscarContenido') {
+      const q = (req.query.q || '').toLowerCase().trim();
+      if (!q || q.length < 2) return res.status(200).json({ salud: [], lugares: [], blog: [] });
+
+      const contiene = (txt) => (txt || '').toLowerCase().indexOf(q) >= 0;
+
+      const [reglasResp, lugaresResp] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/reglas_salud?activo=eq.true&select=*', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        }),
+        fetch(SUPABASE_URL + '/rest/v1/lugares?activo=eq.true&select=*', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        })
+      ]);
+      const reglas = await reglasResp.json();
+      const lugares = await lugaresResp.json();
+
+      const saludMatches = (Array.isArray(reglas) ? reglas : [])
+        .filter(r => contiene(r.nombre) || contiene(r.descripcion) || contiene(r.tip) || contiene(r.tipo))
+        .slice(0, 8)
+        .map(r => ({ tipo: 'salud', nombre: r.nombre, descripcion: r.descripcion || r.tip || '', especie: r.especie, link: '/calendario-vacunas.html' }));
+
+      const lugaresMatches = (Array.isArray(lugares) ? lugares : [])
+        .filter(l => contiene(l.nombre) || contiene(l.tipo) || contiene(l.zona) || contiene(l.direccion))
+        .slice(0, 8)
+        .map(l => ({ tipo: 'lugar', nombre: l.nombre, descripcion: (l.tipo || '') + (l.zona ? ' · Zona ' + l.zona : ''), link: '/lugares.html' }));
+
+      let blogMatches = [];
+      try {
+        const rssResp = await fetch('https://www.revistapetmi.com/blog-feed.xml');
+        const xml = await rssResp.text();
+        function extraer(bloque, tag) {
+          const m = bloque.match(new RegExp('<' + tag + '[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/' + tag + '>'));
+          return m ? m[1].trim() : '';
+        }
+        const bloques = xml.split('<item>').slice(1);
+        blogMatches = bloques
+          .map(b => ({ title: extraer(b, 'title'), link: extraer(b, 'link'), desc: extraer(b, 'description').replace(/<[^>]+>/g, '') }))
+          .filter(p => contiene(p.title) || contiene(p.desc))
+          .slice(0, 6)
+          .map(p => ({ tipo: 'blog', nombre: p.title, descripcion: p.desc.substring(0, 140), link: p.link }));
+      } catch (e) { /* si falla el blog, seguimos con lo demás */ }
+
+      return res.status(200).json({ salud: saludMatches, lugares: lugaresMatches, blog: blogMatches });
+    }
+
     if (action === 'getBlogPosts') {
       try {
         const rssUrl = 'https://www.revistapetmi.com/blog-feed.xml';
