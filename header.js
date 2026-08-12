@@ -134,7 +134,7 @@
 
       '<a href="/juego.html" class="h-link' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '" style="color:#F5C842!important;font-weight:700">🎮 Juego del Día</a>' +
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-link">📖 Revista</a>' +
+      '<a href="/buscar.html" class="h-link' + (currentPath.indexOf('buscar') >= 0 ? ' active' : '') + '">🔍 Buscar</a>' +
       // Tienda oculta por ahora — para reactivar, descomentar este bloque
       /* (function(){
         var _esp = localStorage.getItem('petmi_especie') || '';
@@ -199,9 +199,9 @@
         '<span class="h-btab-ico">🎮</span>' +
         '<span class="h-btab-lbl">Juego</span>' +
       '</a>' +
-      '<a href="https://www.revistapetmi.com/" target="_blank" class="h-btab">' +
-        '<span class="h-btab-ico">📖</span>' +
-        '<span class="h-btab-lbl">Revista</span>' +
+      '<a href="/buscar.html" class="h-btab' + (currentPath.indexOf('buscar') >= 0 ? ' active' : '') + '">' +
+        '<span class="h-btab-ico">🔍</span>' +
+        '<span class="h-btab-lbl">Buscar</span>' +
       '</a>';
     var loginHTML =
       '<div class="h-login-overlay" id="petmiLoginOverlay">' +

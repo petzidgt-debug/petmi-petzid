@@ -655,6 +655,11 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
     + premioHtml
     + '</div>'
 
+    + '<a href="/buscar.html" style="display:flex;justify-content:space-between;align-items:center;background:#f0f7f7;border-radius:12px;padding:12px 14px;margin-top:10px;text-decoration:none">'
+    + '<div><div style="font-size:12.5px;font-weight:700;color:#007a7a">&#128269; &#191;Buscas info relacionada para ' + nombresTexto + '?</div><div style="font-size:11px;color:#5a9a9a">Salud, lugares, y art&iacute;culos en un solo lugar</div></div>'
+    + '<div style="color:#007a7a;font-weight:700;font-size:12px">&rarr;</div>'
+    + '</a>'
+
     + (cuidados.length ? cuidados.map(function(c){ return '<div class="dash-cuidado-item">'+c.texto+'</div>'; }).join('') : '')
 
     + (saludPorMascota.length > 1 ? '<div class="dash-seccion-titulo" style="margin-top:14px">&#129658; Salud de la familia</div>' : '')
