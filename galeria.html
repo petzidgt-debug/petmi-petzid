@@ -842,7 +842,12 @@ function renderAngeles(){
     var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
       ?'<img src="'+p.foto+'" onerror="this.style.display=\'none\'">'
       :'<div style="width:130px;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px">'+(esGato?'🐱':'🐶')+'</div>';
-    var fechaPartida=p.fechaAngelito?new Date(p.fechaAngelito).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'}):'';
+    var fechaPartida='';
+    if(p.fechaAngelito){
+      var fap=p.fechaAngelito.split('-');
+      var faDate=new Date(parseInt(fap[0]),parseInt(fap[1])-1,parseInt(fap[2]));
+      fechaPartida=faDate.toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'});
+    }
     return '<div class="angel-card">'
       +'<div class="angel-foto" style="position:relative">'+fotoHTML+'<div class="angel-overlay"></div><div class="angel-emoji">🌈</div></div>'
       +'<div class="angel-info"><div class="angel-nombre">'+p.nombre+'</div>'

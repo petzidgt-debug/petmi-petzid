@@ -392,11 +392,6 @@ async function guardar(){
       .then(function(d){ if(d&&d.ok && window.petmiNotificarPunto) petmiNotificarPunto('perfil_completo',5); })
       .catch(function(){});
     }
-    fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(mascota.uid.toUpperCase()),{
-      method:'PATCH',
-      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({angelito:esAngelito,fecha_angelito:esAngelito?(fechaAngel||new Date().toISOString().split('T')[0]):null})
-    }).catch(function(){});
     fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'markAngel',uid:mascota.uid,esAngel:esAngelito,fechaAngelito:fechaAngel})}).catch(function(){});
     mascota.nombre=nombre;
