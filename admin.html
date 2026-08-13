@@ -146,6 +146,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('ruletapremios',this)"><span class="nav-icon">🎡</span>Ruleta de Premios</div>
       <div class="nav-item" onclick="showScreen('reactivacion',this)"><span class="nav-icon">📧</span>Reactivación</div>
       <div class="nav-item" onclick="showScreen('tienda',this)"><span class="nav-icon">🛍️</span>Tienda</div>
+      <div class="nav-item" onclick="showScreen('busquedas',this)"><span class="nav-icon">🔍</span>Búsquedas</div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
@@ -546,6 +547,31 @@ tbody tr:last-child td{border-bottom:none}
           <table>
             <thead><tr><th>Foto</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Activo</th><th></th></tr></thead>
             <tbody id="tiendaProductosBody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="screenBusquedas" class="screen">
+      <h2 class="screen-title">🔍 Búsquedas de usuarios</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Qué escribe la gente en el buscador — útil para saber qué contenido crear después.</p>
+
+      <div style="font-weight:700;font-size:13px;color:#888;margin:4px 0 8px">Más frecuentes</div>
+      <div class="table-card" style="margin-bottom:24px">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Búsqueda</th><th>Veces buscada</th><th>Última vez</th></tr></thead>
+            <tbody id="busquedasFrecuentesBody"><tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="font-weight:700;font-size:13px;color:#c0392b;margin:4px 0 8px">⚠️ Sin resultados — oportunidades de contenido</div>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Búsqueda</th><th>Veces buscada</th><th>Última vez</th></tr></thead>
+            <tbody id="busquedasSinResultadosBody"><tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1690,6 +1716,7 @@ function showScreen(name,el){
   if(name==='ruletapremios') { loadRuletaPremios(); loadRuletaGiros(); }
   if(name==='reactivacion') loadReactivacionEfectividad();
   if(name==='tienda') loadTiendaProductos();
+  if(name==='busquedas') loadBusquedas();
   if(name==='_unused'){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
@@ -2937,6 +2964,44 @@ function eliminarProducto(id){
   fetch('/api/galeria?action=eliminarProductoTienda', {
     method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
   }).then(function(){ loadTiendaProductos(); }).catch(function(){});
+}
+
+// ── Búsquedas de usuarios ────────────────────────────────────────
+function loadBusquedas(){
+  fetch(SUPA_ADM + '/rest/v1/busquedas_log?select=query,resultados,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    if(!Array.isArray(rows)){ rows = []; }
+
+    var agrupado = {};
+    rows.forEach(function(r){
+      var k = (r.query||'').toLowerCase().trim();
+      if(!k) return;
+      if(!agrupado[k]) agrupado[k] = { query: r.query, veces: 0, ultima: r.created_at, sinResultados: true };
+      agrupado[k].veces++;
+      if(new Date(r.created_at) > new Date(agrupado[k].ultima)) agrupado[k].ultima = r.created_at;
+      if(r.resultados > 0) agrupado[k].sinResultados = false;
+    });
+
+    var lista = Object.values(agrupado).sort(function(a,b){ return b.veces - a.veces; });
+    var frecuentes = lista.filter(function(x){ return !x.sinResultados; }).slice(0, 20);
+    var sinResultados = lista.filter(function(x){ return x.sinResultados; }).slice(0, 20);
+
+    function fila(x){
+      var fecha = new Date(x.ultima).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'});
+      return '<tr><td>"'+x.query+'"</td><td>'+x.veces+'</td><td>'+fecha+'</td></tr>';
+    }
+
+    document.getElementById('busquedasFrecuentesBody').innerHTML = frecuentes.length
+      ? frecuentes.map(fila).join('')
+      : '<tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Aún no hay búsquedas registradas</td></tr>';
+
+    document.getElementById('busquedasSinResultadosBody').innerHTML = sinResultados.length
+      ? sinResultados.map(fila).join('')
+      : '<tr><td colspan="3" style="text-align:center;padding:20px;color:#aaa">Ninguna búsqueda se quedó sin resultados 🎉</td></tr>';
+  }).catch(function(){
+    document.getElementById('busquedasFrecuentesBody').innerHTML = '<tr><td colspan="3" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de busquedas_log?</td></tr>';
+  });
 }
 
 var _todasReglasSalud = [];

@@ -81,7 +81,7 @@ function buscar(){
   if(q.length < 2){ return; }
   document.getElementById('resultados').innerHTML = '<div class="estado">Buscando...</div>';
 
-  fetch('/api/galeria?action=buscarContenido&q=' + encodeURIComponent(q))
+  fetch('/api/galeria?action=buscarContenido&q=' + encodeURIComponent(q) + '&email=' + encodeURIComponent(sessionEmail))
   .then(function(r){ return r.json(); })
   .then(function(d){
     var salud = d.salud || [], lugares = d.lugares || [], blog = d.blog || [];
