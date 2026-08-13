@@ -1328,7 +1328,7 @@ export default async function handler(req, res) {
 
       // Palabras vacías que no aportan al match (para no diluir la búsqueda)
       const stopwords = ['el','la','los','las','de','del','para','con','mi','tu','su','y','o','un','una','que','es','en','al','por','como','mejor','buen','buena'];
-      const palabras = qOriginal.split(/\s+/).filter(w => w.length >= 3 && stopwords.indexOf(w) === -1);
+      const palabras = qOriginal.split(/\s+/).filter(w => (w.length >= 3 || /^\d+$/.test(w)) && stopwords.indexOf(w) === -1);
       // Si tras quitar stopwords no queda nada útil, usamos la frase completa tal cual
       const terminos = palabras.length ? palabras : [qOriginal];
 
