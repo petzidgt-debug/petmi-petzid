@@ -1385,6 +1385,14 @@ export default async function handler(req, res) {
           .map(x => ({ tipo: 'blog', nombre: x.p.title, descripcion: x.p.desc.substring(0, 140), link: x.p.link }));
       } catch (e) { /* si falla el blog, seguimos con lo demás */ }
 
+      // Registrar la búsqueda (no bloqueante, no afecta la respuesta si falla)
+      const totalResultados = saludMatches.length + lugaresMatches.length + blogMatches.length;
+      fetch(SUPABASE_URL + '/rest/v1/busquedas_log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ query: qOriginal, email: (req.query.email || '').toLowerCase() || null, resultados: totalResultados })
+      }).catch(() => {});
+
       return res.status(200).json({ salud: saludMatches, lugares: lugaresMatches, blog: blogMatches });
     }
 
