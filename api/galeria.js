@@ -1444,12 +1444,12 @@ export default async function handler(req, res) {
 
     // ── crearProductoTienda (admin) ─────────────────────────────
     if (action === 'crearProductoTienda' && req.method === 'POST') {
-      const { nombre, descripcion, precio, imagen, categoria, orden } = req.body;
+      const { nombre, descripcion, precio, imagen, categoria, especie, orden } = req.body;
       if (!nombre || !categoria) return res.status(200).json({ ok: false, error: 'Faltan campos' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, orden: orden || 0, activo: true })
+        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, especie: especie || 'Todos', orden: orden || 0, activo: true })
       });
       if (!r.ok) {
         const errTxt = await r.text().catch(() => '');
