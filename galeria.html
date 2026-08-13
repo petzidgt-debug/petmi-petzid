@@ -982,7 +982,9 @@ function renderGallery(append){
       +'<div style="display:flex;justify-content:space-between;align-items:center">'
       +'<span class="pet-especie '+(esGato?'gato':'perro')+'">'+(esGato?'Gato':'Perro')+'</span>'
       +'<button class="like-btn" id="likeBtn_'+p.uid+'" onclick="event.stopPropagation();toggleLikeMascota(\''+p.uid+'\')">🐾 <span id="likeCount_'+p.uid+'">0</span></button>'
-      +'</div></div></div>';
+      +'</div>'
+      +'<a href="/tienda.html?uid='+p.uid+'" onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;color:#00838f;text-decoration:none">🛍️ Tienda de '+p.nombre+'</a>'
+      +'</div></div>';
   }).join('');
   if(!append){
     grid.innerHTML=filtered.length===0

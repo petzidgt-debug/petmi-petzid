@@ -244,7 +244,6 @@ function etapaDeVidaTexto(mascota) {
 
 var CATEGORIAS_TIPO = {
   vacuna: { titulo: '💉 Vacunas', tipos: ['vacuna'] },
-  alimentacion: { titulo: '🍖 Alimentación', tipos: ['alimentacion'] },
   higiene: { titulo: '🧼 Higiene', tipos: ['grooming'] },
   otras: { titulo: '📋 Otras recomendaciones', tipos: ['desparasitacion_interna', 'desparasitacion_externa', 'consulta_vet'] }
 };
@@ -277,6 +276,14 @@ function renderChecklist() {
     return '#007a7a';
   }
 
+  function frecuenciaTexto(meses) {
+    if (!meses) return '';
+    if (meses === 12) return '1 vez por año';
+    if (meses === 1) return 'cada mes';
+    if (meses % 12 === 0) return (meses/12) + ' años';
+    return 'cada ' + meses + ' meses';
+  }
+
   function tarjetaRegla(regla) {
     var st = calcularEstado(regla);
     var botonCompra = regla.link_compra
@@ -291,7 +298,7 @@ function renderChecklist() {
       : '';
     return '<div class="req-card" style="cursor:pointer;padding:14px 16px" onclick="toggleReqCard('+regla.id+')">'
       + '<div style="display:flex;justify-content:space-between;align-items:center">'
-      + '<div>' + etiquetaHtml + '<div class="req-nombre" style="margin-bottom:0">'+regla.nombre+'</div></div>'
+      + '<div>' + etiquetaHtml + '<div class="req-nombre" style="margin-bottom:0">'+regla.nombre+(frecuenciaTexto(regla.frecuencia_meses)?' <span style="font-weight:400;color:#999;font-size:12.5px">('+frecuenciaTexto(regla.frecuencia_meses)+')</span>':'')+'</div></div>'
       + '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
       + '<div class="req-badge '+st.estado+'">'+etiquetas[st.estado]+'</div>'
       + '<div id="reqArrow_'+regla.id+'" style="color:#999;font-size:11px;transition:transform .2s">&#9660;</div>'
@@ -311,23 +318,22 @@ function renderChecklist() {
     var cat = CATEGORIAS_TIPO[clave];
     var reglasCategoria = reglas.filter(function(r){ return cat.tipos.indexOf(r.tipo) >= 0; });
     if (!reglasCategoria.length) return '';
-    var bannerAlimento = '';
-    if (clave === 'alimentacion') {
-      if (mascota.alimento) {
-        var msjPedido = encodeURIComponent('Hola! Quiero pedir más: ' + mascota.alimento + ' para ' + mascota.nombre);
-        bannerAlimento = '<div style="background:#fff8e8;border-radius:12px;padding:12px 14px;margin-bottom:10px">'
-          + '<div style="font-size:11px;color:#a08030;font-weight:700;text-transform:uppercase;margin-bottom:3px">Actualmente come</div>'
-          + '<div style="font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:8px">'+mascota.alimento+'</div>'
-          + '<a href="https://wa.me/50237673927?text='+msjPedido+'" target="_blank" style="display:inline-block;background:#25D366;color:#fff;padding:8px 16px;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none">💬 Pedir más por WhatsApp</a>'
-          + '</div>';
-      } else {
-        bannerAlimento = '<div style="background:#f8f7f4;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:12.5px;color:#888">Aún no registraste qué alimento come <a href="/familia.html" style="color:#00B4B4;font-weight:700">— agrégalo aquí</a></div>';
-      }
-    }
-    return '<div class="historial-titulo" style="margin-top:18px">'+cat.titulo+'</div>' + bannerAlimento + reglasCategoria.map(tarjetaRegla).join('');
+    return '<div class="historial-titulo" style="margin-top:18px">'+cat.titulo+'</div>' + reglasCategoria.map(tarjetaRegla).join('');
   }).join('');
 
-  document.getElementById('checklistWrap').innerHTML = peloPromptHtml + introHtml + categoriasHtml;
+  var alimentoHtml = '<div class="historial-titulo" style="margin-top:18px">🍖 Alimentación</div>';
+  if (mascota.alimento) {
+    var msjPedido = encodeURIComponent('Hola! Quiero pedir más: ' + mascota.alimento + ' para ' + mascota.nombre);
+    alimentoHtml += '<div style="background:#fff8e8;border-radius:12px;padding:12px 14px">'
+      + '<div style="font-size:11px;color:#a08030;font-weight:700;text-transform:uppercase;margin-bottom:3px">Actualmente come</div>'
+      + '<div style="font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:8px">'+mascota.alimento+'</div>'
+      + '<a href="https://wa.me/50237673927?text='+msjPedido+'" target="_blank" style="display:inline-block;background:#25D366;color:#fff;padding:8px 16px;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none">💬 Pedir más por WhatsApp</a>'
+      + '</div>';
+  } else {
+    alimentoHtml += '<div style="background:#f8f7f4;border-radius:12px;padding:12px 14px;font-size:12.5px;color:#888">Aún no registraste qué alimento come <a href="/familia.html" style="color:#00B4B4;font-weight:700">— agrégalo aquí</a></div>';
+  }
+
+  document.getElementById('checklistWrap').innerHTML = peloPromptHtml + introHtml + categoriasHtml + alimentoHtml;
 }
 
 function guardarTipoPelo(valor) {

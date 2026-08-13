@@ -32,11 +32,12 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 </head>
 <body>
 
-<div class="hero">
+<div class="hero" id="heroWrap">
   <h1>🛍️ Tienda PetMi</h1>
   <p>Pide por WhatsApp, así de fácil</p>
 </div>
 
+<div id="yaComeWrap"></div>
 <div class="filtros" id="filtrosWrap"></div>
 <div class="grid" id="grid"><div class="vacio">Cargando...</div></div>
 
@@ -44,16 +45,59 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 var WHATSAPP_NUMERO = '50237673927';
 var productos = [];
 var categoriaActiva = 'Todos';
+var uidMascota = new URLSearchParams(window.location.search).get('uid');
+var mascotaPersonal = null;
 
-fetch('/api/galeria?action=getProductosTienda')
-.then(function(r){return r.json();})
-.then(function(d){
-  productos = d.productos || [];
-  renderFiltros();
-  renderGrid();
-}).catch(function(){
-  document.getElementById('grid').innerHTML = '<div class="vacio">No se pudo cargar la tienda. Intenta de nuevo.</div>';
-});
+function iniciar(){
+  if(uidMascota){
+    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:localStorage.getItem('petzid_email')||''})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var mascotas = (d && d.mascotas) || [];
+      mascotaPersonal = mascotas.find(function(m){ return m.uid === uidMascota; }) || null;
+      aplicarPersonalizacion();
+      cargarProductos();
+    }).catch(function(){ cargarProductos(); });
+  } else {
+    cargarProductos();
+  }
+}
+
+function aplicarPersonalizacion(){
+  if(!mascotaPersonal) return;
+  document.getElementById('heroWrap').innerHTML =
+    '<h1>🛍️ Tienda de '+mascotaPersonal.nombre+'</h1>'
+    + '<p>'+(mascotaPersonal.especie||'')+(mascotaPersonal.raza?' · '+mascotaPersonal.raza:'')+'</p>';
+
+  if(mascotaPersonal.alimento){
+    var msj = encodeURIComponent('Hola! Quiero pedir más: ' + mascotaPersonal.alimento + ' para ' + mascotaPersonal.nombre);
+    document.getElementById('yaComeWrap').innerHTML =
+      '<div style="max-width:900px;margin:16px auto 0;padding:0 20px">'
+      + '<div style="background:#fff8e8;border-radius:14px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">'
+      + '<div><div style="font-size:11px;color:#a08030;font-weight:700;text-transform:uppercase">Ya come</div>'
+      + '<div style="font-size:14px;font-weight:700;color:#1a1a2e">'+mascotaPersonal.alimento+'</div></div>'
+      + '<a href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+msj+'" target="_blank" style="background:#25D366;color:#fff;padding:9px 16px;border-radius:99px;font-size:12.5px;font-weight:700;text-decoration:none">💬 Pedir más</a>'
+      + '</div></div>';
+  }
+}
+
+function cargarProductos(){
+  fetch('/api/galeria?action=getProductosTienda')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    productos = d.productos || [];
+    if(mascotaPersonal && mascotaPersonal.especie){
+      var especieProductos = productos.filter(function(p){ return !p.especie || p.especie === mascotaPersonal.especie || p.especie === 'Todos'; });
+      if(especieProductos.length) productos = especieProductos;
+    }
+    renderFiltros();
+    renderGrid();
+  }).catch(function(){
+    document.getElementById('grid').innerHTML = '<div class="vacio">No se pudo cargar la tienda. Intenta de nuevo.</div>';
+  });
+}
+
+iniciar();
 
 function renderFiltros(){
   var categorias = ['Todos'].concat([...new Set(productos.map(function(p){return p.categoria;}))]);
