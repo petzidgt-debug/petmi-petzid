@@ -1425,6 +1425,169 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── registrarPedido (log cada vez que alguien pide por WhatsApp) ──
+    if (action === 'registrarPedido' && req.method === 'POST') {
+      const { email, mascotaNombre, item, tipo } = req.body;
+      if (!item) return res.status(200).json({ ok: false });
+      fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda_log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ email: (email||'').toLowerCase() || null, mascota_nombre: mascotaNombre || null, item, tipo: tipo || 'alimento' })
+      }).catch(() => {});
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── getPedidosTiendaAdmin (admin) ────────────────────────────
+    if (action === 'getPedidosTiendaAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda_log?select=*&order=created_at.desc&limit=200', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ pedidos: Array.isArray(data) ? data : [] });
+    }
+
+    // ── getAlimentosCatalogo (público — para buscar la foto de un alimento) ──
+    if (action === 'getAlimentosCatalogo') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?select=*', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ alimentos: Array.isArray(data) ? data : [] });
+    }
+
+    // ── getAlimentosUsadosAdmin (lista de alimentos distintos que la gente usa, para poder catalogarlos) ──
+    if (action === 'getAlimentosUsadosAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?alimento=not.is.null&select=alimento,especie&uid=neq.PETMI-OFICIAL', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      const rows = Array.isArray(data) ? data : [];
+      const conteo = {};
+      rows.forEach(m => {
+        const nombre = (m.alimento || '').trim();
+        if (!nombre) return;
+        if (!conteo[nombre]) conteo[nombre] = { nombre, veces: 0, especies: new Set() };
+        conteo[nombre].veces++;
+        if (m.especie) conteo[nombre].especies.add(m.especie);
+      });
+      const catalogoResp = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?select=nombre,foto', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const catalogo = await catalogoResp.json();
+      const fotosPorNombre = {};
+      (Array.isArray(catalogo) ? catalogo : []).forEach(c => { fotosPorNombre[c.nombre] = c.foto; });
+
+      const lista = Object.values(conteo).map(x => ({
+        nombre: x.nombre, veces: x.veces, especies: Array.from(x.especies).join(', '),
+        tieneFoto: !!fotosPorNombre[x.nombre], foto: fotosPorNombre[x.nombre] || null
+      })).sort((a, b) => b.veces - a.veces);
+
+      return res.status(200).json({ alimentos: lista });
+    }
+
+    // ── guardarAlimentoCatalogo (admin) ──────────────────────────
+    if (action === 'guardarAlimentoCatalogo' && req.method === 'POST') {
+      const { nombre, foto, especie } = req.body;
+      if (!nombre) return res.status(200).json({ ok: false, error: 'Falta nombre' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ nombre, foto: foto || null, especie: especie || 'Todos' })
+      });
+      if (!r.ok) {
+        const errTxt = await r.text().catch(() => '');
+        return res.status(200).json({ ok: false, error: errTxt });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── registrarPedido (guarda el pedido cuando alguien toca "Pedir por WhatsApp") ──
+    if (action === 'registrarPedido' && req.method === 'POST') {
+      const { uid_mascota, nombre_mascota, email, producto, origen } = req.body;
+      if (!producto) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_pedidos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ uid_mascota: uid_mascota || null, nombre_mascota: nombre_mascota || '', email: email || '', producto, origen: origen || 'tienda' })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getPedidosTienda (admin) ────────────────────────────────
+    if (action === 'getPedidosTienda') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_pedidos?select=*&order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ pedidos: Array.isArray(data) ? data : [] });
+    }
+
+    // ── actualizarPedido (admin — marcar atendido) ──────────────
+    if (action === 'actualizarPedido' && req.method === 'POST') {
+      const { id, estado } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_pedidos?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ estado })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getAlimentosCatalogo (público — para reconocer fotos) ───
+    if (action === 'getAlimentosCatalogo') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?activo=eq.true&select=*', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ alimentos: Array.isArray(data) ? data : [] });
+    }
+
+    // ── getAlimentosCatalogoAdmin (todos, incluye inactivos) ────
+    if (action === 'getAlimentosCatalogoAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?select=*&order=nombre.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ alimentos: Array.isArray(data) ? data : [] });
+    }
+
+    // ── crearAlimentoCatalogo (admin) ───────────────────────────
+    if (action === 'crearAlimentoCatalogo' && req.method === 'POST') {
+      const { nombre, foto, especie } = req.body;
+      if (!nombre) return res.status(200).json({ ok: false, error: 'Falta el nombre' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ nombre, foto: foto || null, especie: especie || 'Todos', activo: true })
+      });
+      if (!r.ok) { const t = await r.text().catch(()=> ''); return res.status(200).json({ ok: false, error: t }); }
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── actualizarAlimentoCatalogo (admin) ──────────────────────
+    if (action === 'actualizarAlimentoCatalogo' && req.method === 'POST') {
+      const { id, ...campos } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(campos)
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── eliminarAlimentoCatalogo (admin) ────────────────────────
+    if (action === 'eliminarAlimentoCatalogo' && req.method === 'POST') {
+      const { id } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
     if (action === 'getProductosTienda') {
       const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?activo=eq.true&select=*&order=categoria.asc,orden.asc', {
         headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
