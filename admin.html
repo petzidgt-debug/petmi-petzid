@@ -593,13 +593,12 @@ tbody tr:last-child td{border-bottom:none}
     </div>
 
     <div id="screenAlimentos" class="screen">
-      <h2 class="screen-title">🍖 Catálogo de Alimentos</h2>
-      <p style="color:#888;font-size:13px;margin-bottom:16px">Cuando el alimento que come una mascota coincide (letra por letra) con uno de este catálogo, se muestra su foto en la tienda.</p>
-      <button class="btn-primary" onclick="abrirModalAlimento()" style="margin-bottom:16px">+ Nuevo alimento</button>
+      <h2 class="screen-title">🍖 Alimentos de las mascotas</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Esto es lo que la gente escribió de verdad. Agrégale foto a cada uno, o une variantes similares con "Unificar" para que compartan la misma foto.</p>
       <div class="table-card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Foto</th><th>Nombre</th><th>Especie</th><th>Activo</th><th></th></tr></thead>
+            <thead><tr><th>Foto</th><th>Alimento</th><th>Veces usado</th><th>Especies</th><th></th></tr></thead>
             <tbody id="alimentosBody"><tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
@@ -951,10 +950,10 @@ tbody tr:last-child td{border-bottom:none}
 
 <div class="modal-overlay" id="modalAlimento">
   <div class="modal" style="max-width:420px">
-    <div class="modal-title"><span id="modalAlimentoTitle">Nuevo alimento</span><button class="modal-close" onclick="closeModal('modalAlimento')">✕</button></div>
+    <div class="modal-title"><span id="modalAlimentoTitle">Editar alimento</span><button class="modal-close" onclick="closeModal('modalAlimento')">✕</button></div>
     <input type="hidden" id="alimId">
-    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Nombre exacto (debe coincidir con lo que la gente escribe)</label>
-    <input type="text" id="alimNombre" placeholder="ej. Nutrisourse" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <p style="font-size:13px;color:#666;margin:6px 0 14px">Editando: <strong id="alimNombreDisplay"></strong></p>
+    <input type="hidden" id="alimNombre">
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Especie</label>
     <select id="alimEspecie" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
       <option value="Todos">Todos</option>
@@ -966,6 +965,21 @@ tbody tr:last-child td{border-bottom:none}
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('modalAlimento')">Cancelar</button>
       <button class="btn-save" onclick="guardarAlimento()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalUnificarAlimento">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title"><span>Unificar alimento</span><button class="modal-close" onclick="closeModal('modalUnificarAlimento')">✕</button></div>
+    <input type="hidden" id="uaVariante">
+    <p style="font-size:13px;color:#666;margin:6px 0 14px">Fusionando: <strong id="uaNombreActual"></strong></p>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Nombre exacto con el que ya está catalogado (comparte su foto)</label>
+    <input type="text" id="uaCanonico" placeholder="ej. NutriSource" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <p style="font-size:11.5px;color:#999;margin-top:8px">Solo afecta la foto que se muestra en la tienda — no cambia lo que cada mascota tiene guardado.</p>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalUnificarAlimento')">Cancelar</button>
+      <button class="btn-save" onclick="guardarUnificacionAlimento()">Guardar</button>
     </div>
   </div>
 </div>
@@ -3096,59 +3110,48 @@ function marcarPedidoAtendido(id){
 
 // ── Catálogo de alimentos ────────────────────────────────────────
 function loadAlimentos(){
-  fetch('/api/galeria?action=getAlimentosCatalogoAdmin')
+  fetch('/api/galeria?action=getAlimentosUsadosAdmin')
   .then(function(r){return r.json();})
   .then(function(d){
     var alimentos = d.alimentos || [];
     if(!alimentos.length){
-      document.getElementById('alimentosBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Sin alimentos — crea el primero</td></tr>';
+      document.getElementById('alimentosBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Nadie ha registrado un alimento todavía</td></tr>';
       return;
     }
     document.getElementById('alimentosBody').innerHTML = alimentos.map(function(a){
-      var foto = a.foto ? '<img src="'+a.foto+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover">' : '—';
+      var foto = a.foto ? '<img src="'+a.foto+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover">' : '<span style="color:#ccc;font-size:11px">Sin foto</span>';
       return '<tr>'
         + '<td>'+foto+'</td>'
         + '<td>'+a.nombre+'</td>'
-        + '<td>'+(a.especie||'Todos')+'</td>'
-        + '<td><input type="checkbox" '+(a.activo?'checked':'')+' onchange="toggleAlimento('+a.id+',this.checked)"></td>'
-        + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'editarAlimento('+JSON.stringify(a)+')\'>Editar</button> '
-        + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px;color:#c0392b" onclick="eliminarAlimento('+a.id+')">Borrar</button></td>'
+        + '<td>'+a.veces+'</td>'
+        + '<td>'+(a.especies||'—')+'</td>'
+        + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'editarAlimento('+JSON.stringify(a)+')\'>'+(a.tieneFoto?'Editar':'+ Agregar foto')+'</button> '
+        + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick="abrirModalUnificarAlimento(\''+a.nombre.replace(/'/g,"\\'")+'\')">🔗 Unificar</button></td>'
         + '</tr>';
     }).join('');
   }).catch(function(){
-    document.getElementById('alimentosBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de alimentos_catalogo?</td></tr>';
+    document.getElementById('alimentosBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#c0392b">Error al cargar</td></tr>';
   });
-}
-
-function abrirModalAlimento(){
-  document.getElementById('modalAlimentoTitle').textContent = 'Nuevo alimento';
-  document.getElementById('alimId').value = '';
-  document.getElementById('alimNombre').value = '';
-  document.getElementById('alimEspecie').value = 'Todos';
-  document.getElementById('alimFoto').value = '';
-  document.getElementById('modalAlimento').classList.add('open');
 }
 
 function editarAlimento(a){
   document.getElementById('modalAlimentoTitle').textContent = 'Editar alimento';
-  document.getElementById('alimId').value = a.id;
+  document.getElementById('alimId').value = '';
+  document.getElementById('alimNombreDisplay').textContent = a.nombre;
   document.getElementById('alimNombre').value = a.nombre;
-  document.getElementById('alimEspecie').value = a.especie || 'Todos';
+  document.getElementById('alimEspecie').value = (a.especies && a.especies.indexOf(',')<0) ? a.especies : 'Todos';
   document.getElementById('alimFoto').value = a.foto || '';
   document.getElementById('modalAlimento').classList.add('open');
 }
 
 function guardarAlimento(){
-  var id = document.getElementById('alimId').value;
   var payload = {
     nombre: document.getElementById('alimNombre').value.trim(),
     especie: document.getElementById('alimEspecie').value,
     foto: document.getElementById('alimFoto').value.trim() || null
   };
-  if(!payload.nombre){ alert('El nombre es obligatorio.'); return; }
-  var action = id ? 'actualizarAlimentoCatalogo' : 'crearAlimentoCatalogo';
-  if(id) payload.id = parseInt(id);
-  fetch('/api/galeria?action='+action, {
+  if(!payload.nombre){ alert('Falta el nombre.'); return; }
+  fetch('/api/galeria?action=guardarAlimentoCatalogo', {
     method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
   }).then(function(r){return r.json();})
   .then(function(d){
@@ -3157,17 +3160,25 @@ function guardarAlimento(){
   }).catch(function(){ alert('No se pudo guardar. Error de conexión.'); });
 }
 
-function toggleAlimento(id, activo){
-  fetch('/api/galeria?action=actualizarAlimentoCatalogo', {
-    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, activo: activo })
-  }).catch(function(){});
+function abrirModalUnificarAlimento(nombre){
+  document.getElementById('uaVariante').value = nombre;
+  document.getElementById('uaNombreActual').textContent = nombre;
+  document.getElementById('uaCanonico').value = '';
+  document.getElementById('modalUnificarAlimento').classList.add('open');
 }
 
-function eliminarAlimento(id){
-  if(!confirm('¿Borrar este alimento del catálogo?')) return;
-  fetch('/api/galeria?action=eliminarAlimentoCatalogo', {
-    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
-  }).then(function(){ loadAlimentos(); }).catch(function(){});
+function guardarUnificacionAlimento(){
+  var variante = document.getElementById('uaVariante').value;
+  var canonico = document.getElementById('uaCanonico').value.trim();
+  if(!canonico){ alert('Escribe el nombre exacto con el que quieres unificarlo.'); return; }
+  fetch('/api/galeria?action=guardarSinonimoAlimento', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ variante: variante, alimento_canonico: canonico })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){ closeModal('modalUnificarAlimento'); loadAlimentos(); }
+    else alert('No se pudo guardar.');
+  }).catch(function(){ alert('No se pudo guardar.'); });
 }
 
 var _todasReglasSalud = [];
