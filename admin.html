@@ -147,6 +147,8 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('reactivacion',this)"><span class="nav-icon">📧</span>Reactivación</div>
       <div class="nav-item" onclick="showScreen('tienda',this)"><span class="nav-icon">🛍️</span>Tienda</div>
       <div class="nav-item" onclick="showScreen('busquedas',this)"><span class="nav-icon">🔍</span>Búsquedas</div>
+      <div class="nav-item" onclick="showScreen('pedidos',this)"><span class="nav-icon">📦</span>Pedidos</div>
+      <div class="nav-item" onclick="showScreen('alimentos',this)"><span class="nav-icon">🍖</span>Alimentos</div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="doLogout()">Cerrar sesion</button>
@@ -577,6 +579,33 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
 
+    <div id="screenPedidos" class="screen">
+      <h2 class="screen-title">📦 Pedidos de la Tienda</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Cada vez que alguien toca "Pedir por WhatsApp" (en la tienda o desde "come"), queda registrado aquí.</p>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Mascota</th><th>Correo</th><th>Producto</th><th>Origen</th><th>Estado</th></tr></thead>
+            <tbody id="pedidosBody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="screenAlimentos" class="screen">
+      <h2 class="screen-title">🍖 Catálogo de Alimentos</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Cuando el alimento que come una mascota coincide (letra por letra) con uno de este catálogo, se muestra su foto en la tienda.</p>
+      <button class="btn-primary" onclick="abrirModalAlimento()" style="margin-bottom:16px">+ Nuevo alimento</button>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Foto</th><th>Nombre</th><th>Especie</th><th>Activo</th><th></th></tr></thead>
+            <tbody id="alimentosBody"><tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="screenEventos" class="screen">
       <div class="page-header">
         <div><div class="page-title">Eventos y Avisos</div><div class="page-sub" id="subEventos">-</div></div>
@@ -916,6 +945,27 @@ tbody tr:last-child td{border-bottom:none}
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('modalProducto')">Cancelar</button>
       <button class="btn-save" onclick="guardarProducto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAlimento">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title"><span id="modalAlimentoTitle">Nuevo alimento</span><button class="modal-close" onclick="closeModal('modalAlimento')">✕</button></div>
+    <input type="hidden" id="alimId">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Nombre exacto (debe coincidir con lo que la gente escribe)</label>
+    <input type="text" id="alimNombre" placeholder="ej. Nutrisourse" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Especie</label>
+    <select id="alimEspecie" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+      <option value="Todos">Todos</option>
+      <option value="Perro">Perro</option>
+      <option value="Gato">Gato</option>
+    </select>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">URL de la foto</label>
+    <input type="text" id="alimFoto" placeholder="https://..." style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('modalAlimento')">Cancelar</button>
+      <button class="btn-save" onclick="guardarAlimento()">Guardar</button>
     </div>
   </div>
 </div>
@@ -1723,6 +1773,8 @@ function showScreen(name,el){
   if(name==='reactivacion') loadReactivacionEfectividad();
   if(name==='tienda') loadTiendaProductos();
   if(name==='busquedas') loadBusquedas();
+  if(name==='pedidos') loadPedidos();
+  if(name==='alimentos') loadAlimentos();
   if(name==='_unused'){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
@@ -3011,6 +3063,111 @@ function loadBusquedas(){
   }).catch(function(){
     document.getElementById('busquedasFrecuentesBody').innerHTML = '<tr><td colspan="3" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de busquedas_log?</td></tr>';
   });
+}
+
+// ── Pedidos de la tienda ─────────────────────────────────────────
+function loadPedidos(){
+  fetch('/api/galeria?action=getPedidosTienda')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var pedidos = d.pedidos || [];
+    if(!pedidos.length){
+      document.getElementById('pedidosBody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Aún no hay pedidos</td></tr>';
+      return;
+    }
+    document.getElementById('pedidosBody').innerHTML = pedidos.map(function(p){
+      var fecha = new Date(p.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      var origenLbl = p.origen === 'alimento_actual' || p.origen === 'alimento' ? '🍖 Alimento actual' : '🛍️ Tienda';
+      var estadoHtml = p.estado === 'atendido'
+        ? '<span style="color:#2ecc71;font-weight:700;font-size:12px">✓ Atendido</span>'
+        : '<button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick="marcarPedidoAtendido('+p.id+')">Marcar atendido</button>';
+      return '<tr><td>'+fecha+'</td><td>'+(p.nombre_mascota||'—')+'</td><td>'+(p.email||'—')+'</td><td>'+p.producto+'</td><td>'+origenLbl+'</td><td>'+estadoHtml+'</td></tr>';
+    }).join('');
+  }).catch(function(){
+    document.getElementById('pedidosBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de tienda_pedidos?</td></tr>';
+  });
+}
+
+function marcarPedidoAtendido(id){
+  fetch('/api/galeria?action=actualizarPedido', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, estado: 'atendido' })
+  }).then(function(){ loadPedidos(); }).catch(function(){});
+}
+
+// ── Catálogo de alimentos ────────────────────────────────────────
+function loadAlimentos(){
+  fetch('/api/galeria?action=getAlimentosCatalogoAdmin')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var alimentos = d.alimentos || [];
+    if(!alimentos.length){
+      document.getElementById('alimentosBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Sin alimentos — crea el primero</td></tr>';
+      return;
+    }
+    document.getElementById('alimentosBody').innerHTML = alimentos.map(function(a){
+      var foto = a.foto ? '<img src="'+a.foto+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover">' : '—';
+      return '<tr>'
+        + '<td>'+foto+'</td>'
+        + '<td>'+a.nombre+'</td>'
+        + '<td>'+(a.especie||'Todos')+'</td>'
+        + '<td><input type="checkbox" '+(a.activo?'checked':'')+' onchange="toggleAlimento('+a.id+',this.checked)"></td>'
+        + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'editarAlimento('+JSON.stringify(a)+')\'>Editar</button> '
+        + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px;color:#c0392b" onclick="eliminarAlimento('+a.id+')">Borrar</button></td>'
+        + '</tr>';
+    }).join('');
+  }).catch(function(){
+    document.getElementById('alimentosBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de alimentos_catalogo?</td></tr>';
+  });
+}
+
+function abrirModalAlimento(){
+  document.getElementById('modalAlimentoTitle').textContent = 'Nuevo alimento';
+  document.getElementById('alimId').value = '';
+  document.getElementById('alimNombre').value = '';
+  document.getElementById('alimEspecie').value = 'Todos';
+  document.getElementById('alimFoto').value = '';
+  document.getElementById('modalAlimento').classList.add('open');
+}
+
+function editarAlimento(a){
+  document.getElementById('modalAlimentoTitle').textContent = 'Editar alimento';
+  document.getElementById('alimId').value = a.id;
+  document.getElementById('alimNombre').value = a.nombre;
+  document.getElementById('alimEspecie').value = a.especie || 'Todos';
+  document.getElementById('alimFoto').value = a.foto || '';
+  document.getElementById('modalAlimento').classList.add('open');
+}
+
+function guardarAlimento(){
+  var id = document.getElementById('alimId').value;
+  var payload = {
+    nombre: document.getElementById('alimNombre').value.trim(),
+    especie: document.getElementById('alimEspecie').value,
+    foto: document.getElementById('alimFoto').value.trim() || null
+  };
+  if(!payload.nombre){ alert('El nombre es obligatorio.'); return; }
+  var action = id ? 'actualizarAlimentoCatalogo' : 'crearAlimentoCatalogo';
+  if(id) payload.id = parseInt(id);
+  fetch('/api/galeria?action='+action, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){ closeModal('modalAlimento'); loadAlimentos(); }
+    else alert('No se pudo guardar. Detalle: ' + (d.error || 'desconocido'));
+  }).catch(function(){ alert('No se pudo guardar. Error de conexión.'); });
+}
+
+function toggleAlimento(id, activo){
+  fetch('/api/galeria?action=actualizarAlimentoCatalogo', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, activo: activo })
+  }).catch(function(){});
+}
+
+function eliminarAlimento(id){
+  if(!confirm('¿Borrar este alimento del catálogo?')) return;
+  fetch('/api/galeria?action=eliminarAlimentoCatalogo', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
+  }).then(function(){ loadAlimentos(); }).catch(function(){});
 }
 
 var _todasReglasSalud = [];

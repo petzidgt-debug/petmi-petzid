@@ -47,38 +47,50 @@ var productos = [];
 var categoriaActiva = 'Todos';
 var uidMascota = new URLSearchParams(window.location.search).get('uid');
 var mascotaPersonal = null;
+var especiesFamilia = [];
+var alimentosCatalogo = {};
+var sessionEmail = localStorage.getItem('petzid_email') || '';
 
 function iniciar(){
-  if(uidMascota){
-    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:localStorage.getItem('petzid_email')||''})})
-    .then(function(r){return r.json();})
-    .then(function(d){
-      var mascotas = (d && d.mascotas) || [];
-      mascotaPersonal = mascotas.find(function(m){ return m.uid === uidMascota; }) || null;
-      aplicarPersonalizacion();
-      cargarProductos();
-    }).catch(function(){ cargarProductos(); });
-  } else {
+  Promise.all([
+    sessionEmail ? fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:sessionEmail})}).then(function(r){return r.json();}).catch(function(){return {mascotas:[]};}) : Promise.resolve({mascotas:[]}),
+    fetch('/api/galeria?action=getAlimentosCatalogo').then(function(r){return r.json();}).catch(function(){return {alimentos:[]};})
+  ]).then(function(res){
+    var mascotas = (res[0] && res[0].mascotas) || [];
+    especiesFamilia = [...new Set(mascotas.map(function(m){return m.especie;}).filter(Boolean))];
+    if(uidMascota) mascotaPersonal = mascotas.find(function(m){ return m.uid === uidMascota; }) || null;
+
+    (res[1].alimentos || []).forEach(function(a){ alimentosCatalogo[a.nombre] = a.foto; });
+
+    if(mascotaPersonal) aplicarPersonalizacion();
     cargarProductos();
-  }
+  });
 }
 
 function aplicarPersonalizacion(){
-  if(!mascotaPersonal) return;
   document.getElementById('heroWrap').innerHTML =
     '<h1>🛍️ Tienda de '+mascotaPersonal.nombre+'</h1>'
     + '<p>'+(mascotaPersonal.especie||'')+(mascotaPersonal.raza?' · '+mascotaPersonal.raza:'')+'</p>';
 
   if(mascotaPersonal.alimento){
+    var fotoAlimento = alimentosCatalogo[mascotaPersonal.alimento];
     var msj = encodeURIComponent('Hola! Quiero pedir más: ' + mascotaPersonal.alimento + ' para ' + mascotaPersonal.nombre);
     document.getElementById('yaComeWrap').innerHTML =
       '<div style="max-width:900px;margin:16px auto 0;padding:0 20px">'
-      + '<div style="background:#fff8e8;border-radius:14px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">'
-      + '<div><div style="font-size:11px;color:#a08030;font-weight:700;text-transform:uppercase">Ya come</div>'
+      + '<div style="background:#fff8e8;border-radius:14px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">'
+      + '<div style="display:flex;align-items:center;gap:12px">'
+      + (fotoAlimento ? '<img src="'+fotoAlimento+'" style="width:52px;height:52px;border-radius:10px;object-fit:cover">' : '')
+      + '<div><div style="font-size:11px;color:#a08030;font-weight:700;text-transform:uppercase">'+mascotaPersonal.nombre+' come</div>'
       + '<div style="font-size:14px;font-weight:700;color:#1a1a2e">'+mascotaPersonal.alimento+'</div></div>'
-      + '<a href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+msj+'" target="_blank" style="background:#25D366;color:#fff;padding:9px 16px;border-radius:99px;font-size:12.5px;font-weight:700;text-decoration:none">💬 Pedir más</a>'
+      + '</div>'
+      + '<a href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+msj+'" target="_blank" onclick="registrarPedido(\''+mascotaPersonal.alimento.replace(/'/g,"\\'")+'\',\''+mascotaPersonal.nombre.replace(/'/g,"\\'")+'\',\'alimento\')" style="background:#25D366;color:#fff;padding:9px 16px;border-radius:99px;font-size:12.5px;font-weight:700;text-decoration:none">💬 Pedir más</a>'
       + '</div></div>';
   }
+}
+
+function registrarPedido(item, mascotaNombre, tipo){
+  fetch('/api/galeria?action=registrarPedido',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid_mascota: mascotaPersonal?mascotaPersonal.uid:'', nombre_mascota:mascotaNombre||'', email:sessionEmail, producto:item, origen:tipo||'tienda'})}).catch(function(){});
 }
 
 function cargarProductos(){
@@ -86,9 +98,10 @@ function cargarProductos(){
   .then(function(r){return r.json();})
   .then(function(d){
     productos = d.productos || [];
-    if(mascotaPersonal && mascotaPersonal.especie){
-      var especieProductos = productos.filter(function(p){ return !p.especie || p.especie === mascotaPersonal.especie || p.especie === 'Todos'; });
-      if(especieProductos.length) productos = especieProductos;
+    var especiesRelevantes = mascotaPersonal ? [mascotaPersonal.especie] : especiesFamilia;
+    if(especiesRelevantes.length){
+      var filtrados = productos.filter(function(p){ return !p.especie || p.especie === 'Todos' || especiesRelevantes.indexOf(p.especie) >= 0; });
+      if(filtrados.length) productos = filtrados;
     }
     renderFiltros();
     renderGrid();
@@ -130,7 +143,7 @@ function renderGrid(){
       + '<div class="prod-nombre">'+p.nombre+'</div>'
       + (p.descripcion ? '<div class="prod-desc">'+p.descripcion+'</div>' : '')
       + '<div class="prod-precio">'+precioTxt+'</div>'
-      + '<a class="prod-btn" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank">💬 Pedir por WhatsApp</a>'
+      + '<a class="prod-btn" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank" onclick="registrarPedido(\''+p.nombre.replace(/'/g,"\\'")+'\',\''+(mascotaPersonal?mascotaPersonal.nombre:'').replace(/'/g,"\\'")+'\',\'producto\')">💬 Pedir por WhatsApp</a>'
       + '</div></div>';
   }).join('');
 }
