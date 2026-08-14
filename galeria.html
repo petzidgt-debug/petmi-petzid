@@ -624,9 +624,14 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
   }).join('');
 
   // ── Perfil incompleto: mismo criterio que puntos.html (nombre, foto, raza, zona, veterinario) ──
-  var incompletas = registros.map(function(e){ return e.mascota; }).filter(function(m){
-    return !m.nombre || !m.foto || !m.raza || !m.zona || !m.veterinario;
-  }).map(function(m){ return m.nombre; });
+  // Solo se calcula con datos completos — el primer render (rápido) no trae zona/veterinario,
+  // así que calcularlo ahí daría falsos positivos.
+  var incompletas = [];
+  if (window._datosCompletosDashboard) {
+    incompletas = registros.map(function(e){ return e.mascota; }).filter(function(m){
+      return !m.nombre || !m.foto || !m.raza || !m.zona || !m.veterinario;
+    }).map(function(m){ return m.nombre; });
+  }
   var bannerPerfilHtml = '';
   if (incompletas.length) {
     var textoIncompletas = incompletas.length > 1 ? incompletas.join(', ') : incompletas[0];
@@ -644,30 +649,14 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
     + '<div class="dash-body"><div class="dash-body-inner">'
     + bannerPerfilHtml
 
-    + '<div class="dash-main-row">'
-    + '<div class="dash-acciones" style="grid-template-columns:repeat(4,1fr)">'
-    + '<a href="/puntos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#fff8e8">&#127873;</div><div class="dash-accion-lbl">Beneficios</div>'
-    + (puntosTotal>0?'<div class="dash-accion-badge">'+puntosTotal+'</div>':'') + '</a>'
-    + '<a href="/eventos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#fce8f0">&#128197;</div><div class="dash-accion-lbl">Eventos</div></a>'
-    + '<a href="/lugares.html" class="dash-accion"><div class="dash-accion-ico" style="background:#eeeaff">&#128205;</div><div class="dash-accion-lbl">Lugares</div></a>'
-    + '<a href="javascript:void(0)" onclick="abrirPerdidoDesdeDashboard(\''+mascota.uid+'\')" class="dash-accion"><div class="dash-accion-ico" style="background:#fdeaea">&#128680;</div><div class="dash-accion-lbl">&#161;Se perdi&oacute;!</div></a>'
-    + '</div>'
-    + premioHtml
-    + '</div>'
-
-    + '<a href="/buscar.html" style="display:flex;justify-content:space-between;align-items:center;background:#f0f7f7;border-radius:12px;padding:12px 14px;margin-top:10px;text-decoration:none">'
-    + '<div><div style="font-size:12.5px;font-weight:700;color:#007a7a">&#128269; &#191;Buscas info relacionada para ' + nombresTexto + '?</div><div style="font-size:11px;color:#5a9a9a">Salud, lugares, y art&iacute;culos en un solo lugar</div></div>'
-    + '<div style="color:#007a7a;font-weight:700;font-size:12px">&rarr;</div>'
-    + '</a>'
-
+    // ── Módulo de Salud / Rutina (Cuidados del día) ──
+    + '<div class="dash-seccion-titulo" style="margin-top:0">&#129658; Cuidados del d&iacute;a</div>'
     + (cuidados.length ? cuidados.map(function(c){ return '<div class="dash-cuidado-item">'+c.texto+'</div>'; }).join('') : '')
-
-    + (saludPorMascota.length > 1 ? '<div class="dash-seccion-titulo" style="margin-top:14px">&#129658; Salud de la familia</div>' : '')
-
+    + eventoTxt
     + saludPorMascota.map(function(sm){
         var idSuf = sm.mascota.uid;
-        var tituloTarjeta = saludPorMascota.length > 1 ? sm.mascota.nombre : ('&#129658; Salud de ' + sm.mascota.nombre);
-        return '<div class="dash-salud-card" onclick="toggleSaludDash(\''+idSuf+'\')" style="background:#f8f7f4;border-radius:14px;padding:14px 16px;margin-top:10px;cursor:pointer">'
+        var tituloTarjeta = saludPorMascota.length > 1 ? sm.mascota.nombre : sm.mascota.nombre;
+        return '<div class="dash-salud-card" onclick="toggleSaludDash(\''+idSuf+'\')" style="background:#f8f7f4;border-radius:14px;padding:14px 16px;margin-top:8px;cursor:pointer">'
         + '<div style="display:flex;justify-content:space-between;align-items:center">'
         + '<div style="font-weight:700;color:#1a1a2e;font-size:14px">' + tituloTarjeta + '</div>'
         + '<div id="saludArrow_'+idSuf+'" style="color:#999;transition:transform .2s;font-size:12px">&#9660;</div>'
@@ -686,9 +675,26 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
         + '<a href="/salud.html" style="display:block;text-align:center;margin-top:12px;color:#00B4B4;font-weight:700;font-size:12.5px;text-decoration:none">Ver todo en Salud &rarr;</a>'
         + '</div>';
       }).join('')
-    + eventoTxt
 
-    + ''
+    // ── Acciones Rápidas ──
+    + '<div class="dash-seccion-titulo">&#9889; Acciones r&aacute;pidas</div>'
+    + '<div class="dash-acciones" style="grid-template-columns:repeat(4,1fr)">'
+    + '<a href="/puntos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#fff8e8">&#127873;</div><div class="dash-accion-lbl">Beneficios</div>'
+    + (puntosTotal>0?'<div class="dash-accion-badge">'+puntosTotal+'</div>':'') + '</a>'
+    + '<a href="/lugares.html" class="dash-accion"><div class="dash-accion-ico" style="background:#eeeaff">&#128205;</div><div class="dash-accion-lbl">Lugares</div></a>'
+    + '<a href="/eventos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#fce8f0">&#128197;</div><div class="dash-accion-lbl">Eventos</div></a>'
+    + '<a href="javascript:void(0)" onclick="abrirPerdidoDesdeDashboard(\''+mascota.uid+'\')" class="dash-accion"><div class="dash-accion-ico" style="background:#fdeaea">&#128680;</div><div class="dash-accion-lbl">Emergencia</div></a>'
+    + '</div>'
+
+    // ── Módulo de búsqueda ──
+    + '<a href="/buscar.html" style="display:flex;justify-content:space-between;align-items:center;background:#f0f7f7;border-radius:12px;padding:12px 14px;margin-top:14px;text-decoration:none">'
+    + '<div><div style="font-size:12.5px;font-weight:700;color:#007a7a">&#128269; &#191;Buscas info relacionada para ' + nombresTexto + '?</div><div style="font-size:11px;color:#5a9a9a">Salud, lugares, y art&iacute;culos en un solo lugar</div></div>'
+    + '<div style="color:#007a7a;font-weight:700;font-size:12px">&rarr;</div>'
+    + '</a>'
+
+    // ── Módulo de gamificación ──
+    + '<div class="dash-seccion-titulo">&#127918; Tu recompensa de hoy</div>'
+    + premioHtml
 
     + '</div></div>';
 }
@@ -727,6 +733,7 @@ fetch('/api/galeria?action=getBasic')
     document.getElementById('statGatos').textContent=gatos;
     document.getElementById('statAngeles').textContent=angeles;
 
+    window._datosCompletosDashboard = false;
     try { cargarDashboardPersonalizado(); } catch(e) { console.error('Error en dashboard personalizado:', e); }
 
     renderCumpleaneros();
@@ -751,6 +758,7 @@ fetch('/api/galeria?action=getBasic')
           }
         });
         // Recalcular el dashboard con los datos completos (zona/veterinario ya disponibles)
+        window._datosCompletosDashboard = true;
         try { cargarDashboardPersonalizado(); } catch(e) { console.error('Error en dashboard (recalculo):', e); }
       }).catch(function(){});
   })
@@ -1329,6 +1337,7 @@ function verificarLogin(){
       setTimeout(function(){
         closeLoginModal();
         shown=0;applyFilter();
+        window._datosCompletosDashboard = true;
         cargarDashboardPersonalizado();
         if(currentModalPet) renderModalFooter(currentModalPet);
         else closeModal();
