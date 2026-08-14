@@ -1448,11 +1448,17 @@ export default async function handler(req, res) {
 
     // ── getAlimentosCatalogo (público — para buscar la foto de un alimento) ──
     if (action === 'getAlimentosCatalogo') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?select=*', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ alimentos: Array.isArray(data) ? data : [] });
+      const [catResp, sinResp] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?select=*', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        }),
+        fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos?select=*', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        })
+      ]);
+      const data = await catResp.json();
+      const sinonimos = await sinResp.json();
+      return res.status(200).json({ alimentos: Array.isArray(data) ? data : [], sinonimos: Array.isArray(sinonimos) ? sinonimos : [] });
     }
 
     // ── getAlimentosUsadosAdmin (lista de alimentos distintos que la gente usa, para poder catalogarlos) ──
@@ -1534,54 +1540,32 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
 
-    // ── getAlimentosCatalogo (público — para reconocer fotos) ───
-    if (action === 'getAlimentosCatalogo') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?activo=eq.true&select=*', {
+    // ── getSinonimosAlimento (admin) ────────────────────────────
+    if (action === 'getSinonimosAlimento') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos?select=*&order=alimento_canonico.asc', {
         headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
       });
       const data = await r.json();
-      return res.status(200).json({ alimentos: Array.isArray(data) ? data : [] });
+      return res.status(200).json({ sinonimos: Array.isArray(data) ? data : [] });
     }
 
-    // ── getAlimentosCatalogoAdmin (todos, incluye inactivos) ────
-    if (action === 'getAlimentosCatalogoAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?select=*&order=nombre.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ alimentos: Array.isArray(data) ? data : [] });
-    }
-
-    // ── crearAlimentoCatalogo (admin) ───────────────────────────
-    if (action === 'crearAlimentoCatalogo' && req.method === 'POST') {
-      const { nombre, foto, especie } = req.body;
-      if (!nombre) return res.status(200).json({ ok: false, error: 'Falta el nombre' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo', {
+    // ── guardarSinonimoAlimento (unificar una variante con el canónico) ──
+    if (action === 'guardarSinonimoAlimento' && req.method === 'POST') {
+      const { variante, alimento_canonico } = req.body;
+      if (!variante || !alimento_canonico) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ nombre, foto: foto || null, especie: especie || 'Todos', activo: true })
-      });
-      if (!r.ok) { const t = await r.text().catch(()=> ''); return res.status(200).json({ ok: false, error: t }); }
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── actualizarAlimentoCatalogo (admin) ──────────────────────
-    if (action === 'actualizarAlimentoCatalogo' && req.method === 'POST') {
-      const { id, ...campos } = req.body;
-      if (!id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(campos)
+        body: JSON.stringify({ variante, alimento_canonico })
       });
       return res.status(200).json({ ok: r.ok });
     }
 
-    // ── eliminarAlimentoCatalogo (admin) ────────────────────────
-    if (action === 'eliminarAlimentoCatalogo' && req.method === 'POST') {
-      const { id } = req.body;
-      if (!id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?id=eq.' + encodeURIComponent(id), {
+    // ── eliminarSinonimoAlimento (admin) ────────────────────────
+    if (action === 'eliminarSinonimoAlimento' && req.method === 'POST') {
+      const { variante } = req.body;
+      if (!variante) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos?variante=eq.' + encodeURIComponent(variante), {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
       });
