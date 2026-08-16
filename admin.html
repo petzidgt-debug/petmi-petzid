@@ -976,7 +976,7 @@ tbody tr:last-child td{border-bottom:none}
     <p style="font-size:13px;color:#666;margin:6px 0 14px">Fusionando: <strong id="uaNombreActual"></strong></p>
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Nombre exacto con el que ya está catalogado (comparte su foto)</label>
     <input type="text" id="uaCanonico" placeholder="ej. NutriSource" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
-    <p style="font-size:11.5px;color:#999;margin-top:8px">Solo afecta la foto que se muestra en la tienda — no cambia lo que cada mascota tiene guardado.</p>
+    <p style="font-size:11.5px;color:#999;margin-top:8px">Escribe el nombre exacto de un alimento <strong>de la misma especie</strong> con el que ya está catalogado, para que comparta su foto.</p>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('modalUnificarAlimento')">Cancelar</button>
       <button class="btn-save" onclick="guardarUnificacionAlimento()">Guardar</button>
@@ -3118,15 +3118,16 @@ function loadAlimentos(){
       document.getElementById('alimentosBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Nadie ha registrado un alimento todavía</td></tr>';
       return;
     }
+    var iconoEspecie = { 'Perro':'🐶', 'Gato':'🐱' };
     document.getElementById('alimentosBody').innerHTML = alimentos.map(function(a){
       var foto = a.foto ? '<img src="'+a.foto+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover">' : '<span style="color:#ccc;font-size:11px">Sin foto</span>';
       return '<tr>'
         + '<td>'+foto+'</td>'
         + '<td>'+a.nombre+'</td>'
         + '<td>'+a.veces+'</td>'
-        + '<td>'+(a.especies||'—')+'</td>'
+        + '<td>'+(iconoEspecie[a.especie]||'')+' '+a.especie+'</td>'
         + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'editarAlimento('+JSON.stringify(a)+')\'>'+(a.tieneFoto?'Editar':'+ Agregar foto')+'</button> '
-        + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick="abrirModalUnificarAlimento(\''+a.nombre.replace(/'/g,"\\'")+'\')">🔗 Unificar</button></td>'
+        + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'abrirModalUnificarAlimento('+JSON.stringify(a)+')\'>🔗 Unificar</button></td>'
         + '</tr>';
     }).join('');
   }).catch(function(){
@@ -3137,9 +3138,9 @@ function loadAlimentos(){
 function editarAlimento(a){
   document.getElementById('modalAlimentoTitle').textContent = 'Editar alimento';
   document.getElementById('alimId').value = '';
-  document.getElementById('alimNombreDisplay').textContent = a.nombre;
+  document.getElementById('alimNombreDisplay').textContent = a.nombre + ' (' + a.especie + ')';
   document.getElementById('alimNombre').value = a.nombre;
-  document.getElementById('alimEspecie').value = (a.especies && a.especies.indexOf(',')<0) ? a.especies : 'Todos';
+  document.getElementById('alimEspecie').value = a.especie || 'Todos';
   document.getElementById('alimFoto').value = a.foto || '';
   document.getElementById('modalAlimento').classList.add('open');
 }
@@ -3160,9 +3161,9 @@ function guardarAlimento(){
   }).catch(function(){ alert('No se pudo guardar. Error de conexión.'); });
 }
 
-function abrirModalUnificarAlimento(nombre){
-  document.getElementById('uaVariante').value = nombre;
-  document.getElementById('uaNombreActual').textContent = nombre;
+function abrirModalUnificarAlimento(a){
+  document.getElementById('uaVariante').value = a.nombre;
+  document.getElementById('uaNombreActual').textContent = a.nombre + ' (' + a.especie + ')';
   document.getElementById('uaCanonico').value = '';
   document.getElementById('modalUnificarAlimento').classList.add('open');
 }

@@ -60,10 +60,13 @@ function iniciar(){
     especiesFamilia = [...new Set(mascotas.map(function(m){return m.especie;}).filter(Boolean))];
     if(uidMascota) mascotaPersonal = mascotas.find(function(m){ return m.uid === uidMascota; }) || null;
 
-    (res[1].alimentos || []).forEach(function(a){ alimentosCatalogo[a.nombre.toLowerCase().trim()] = a.foto; });
+    (res[1].alimentos || []).forEach(function(a){ alimentosCatalogo[a.nombre.toLowerCase().trim()+'||'+(a.especie||'Todos')] = a.foto; });
     (res[1].sinonimos || []).forEach(function(s){
-      var fotoCanon = alimentosCatalogo[s.alimento_canonico.toLowerCase().trim()];
-      if(fotoCanon) alimentosCatalogo[s.variante.toLowerCase().trim()] = fotoCanon;
+      // Los sinónimos aplican a cualquier especie del alimento canónico que exista en el catálogo
+      ['Perro','Gato','Todos'].forEach(function(esp){
+        var fotoCanon = alimentosCatalogo[s.alimento_canonico.toLowerCase().trim()+'||'+esp];
+        if(fotoCanon) alimentosCatalogo[s.variante.toLowerCase().trim()+'||'+esp] = fotoCanon;
+      });
     });
 
     if(mascotaPersonal) aplicarPersonalizacion();
@@ -77,7 +80,7 @@ function aplicarPersonalizacion(){
     + '<p>'+(mascotaPersonal.especie||'')+(mascotaPersonal.raza?' · '+mascotaPersonal.raza:'')+'</p>';
 
   if(mascotaPersonal.alimento){
-    var fotoAlimento = alimentosCatalogo[(mascotaPersonal.alimento||'').toLowerCase().trim()];
+    var fotoAlimento = alimentosCatalogo[(mascotaPersonal.alimento||'').toLowerCase().trim()+'||'+(mascotaPersonal.especie||'Todos')];
     var msj = encodeURIComponent('Hola! Quiero pedir más: ' + mascotaPersonal.alimento + ' para ' + mascotaPersonal.nombre);
     document.getElementById('yaComeWrap').innerHTML =
       '<div style="max-width:900px;margin:16px auto 0;padding:0 20px">'
