@@ -1471,21 +1471,22 @@ export default async function handler(req, res) {
       const conteo = {};
       rows.forEach(m => {
         const nombre = (m.alimento || '').trim();
+        const especie = m.especie || 'Sin especie';
         if (!nombre) return;
-        if (!conteo[nombre]) conteo[nombre] = { nombre, veces: 0, especies: new Set() };
-        conteo[nombre].veces++;
-        if (m.especie) conteo[nombre].especies.add(m.especie);
+        const clave = nombre + '||' + especie;
+        if (!conteo[clave]) conteo[clave] = { nombre, especie, veces: 0 };
+        conteo[clave].veces++;
       });
-      const catalogoResp = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?select=nombre,foto', {
+      const catalogoResp = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?select=nombre,especie,foto', {
         headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
       });
       const catalogo = await catalogoResp.json();
-      const fotosPorNombre = {};
-      (Array.isArray(catalogo) ? catalogo : []).forEach(c => { fotosPorNombre[c.nombre] = c.foto; });
+      const fotosPorClave = {};
+      (Array.isArray(catalogo) ? catalogo : []).forEach(c => { fotosPorClave[c.nombre + '||' + (c.especie||'Todos')] = c.foto; });
 
       const lista = Object.values(conteo).map(x => ({
-        nombre: x.nombre, veces: x.veces, especies: Array.from(x.especies).join(', '),
-        tieneFoto: !!fotosPorNombre[x.nombre], foto: fotosPorNombre[x.nombre] || null
+        nombre: x.nombre, especie: x.especie, veces: x.veces,
+        tieneFoto: !!fotosPorClave[x.nombre + '||' + x.especie], foto: fotosPorClave[x.nombre + '||' + x.especie] || null
       })).sort((a, b) => b.veces - a.veces);
 
       return res.status(200).json({ alimentos: lista });
