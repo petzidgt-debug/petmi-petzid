@@ -1300,7 +1300,7 @@ export default async function handler(req, res) {
     if (action === 'guardarSinonimoRaza' && req.method === 'POST') {
       const { raza_variante, raza_canonica } = req.body;
       if (!raza_variante || !raza_canonica) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/raza_sinonimos', {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/raza_sinonimos?on_conflict=raza_variante', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify({ raza_variante, raza_canonica })
@@ -1496,7 +1496,7 @@ export default async function handler(req, res) {
     if (action === 'guardarAlimentoCatalogo' && req.method === 'POST') {
       const { nombre, foto, especie } = req.body;
       if (!nombre) return res.status(200).json({ ok: false, error: 'Falta nombre' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo', {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?on_conflict=nombre,especie', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify({ nombre, foto: foto || null, especie: especie || 'Todos' })
@@ -1554,7 +1554,7 @@ export default async function handler(req, res) {
     if (action === 'guardarSinonimoAlimento' && req.method === 'POST') {
       const { variante, alimento_canonico } = req.body;
       if (!variante || !alimento_canonico) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos', {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos?on_conflict=variante', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify({ variante, alimento_canonico })
