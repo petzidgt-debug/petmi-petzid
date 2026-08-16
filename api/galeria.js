@@ -1559,7 +1559,12 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify({ variante, alimento_canonico })
       });
-      return res.status(200).json({ ok: r.ok });
+      if (!r.ok) {
+        const errTxt = await r.text().catch(() => '');
+        console.error('guardarSinonimoAlimento failed:', r.status, errTxt);
+        return res.status(200).json({ ok: false, error: errTxt || ('HTTP ' + r.status) });
+      }
+      return res.status(200).json({ ok: true });
     }
 
     // ── eliminarSinonimoAlimento (admin) ────────────────────────
