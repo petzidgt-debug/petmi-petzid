@@ -1484,10 +1484,30 @@ export default async function handler(req, res) {
       const fotosPorClave = {};
       (Array.isArray(catalogo) ? catalogo : []).forEach(c => { fotosPorClave[c.nombre + '||' + (c.especie||'Todos')] = c.foto; });
 
-      const lista = Object.values(conteo).map(x => ({
-        nombre: x.nombre, especie: x.especie, veces: x.veces,
-        tieneFoto: !!fotosPorClave[x.nombre + '||' + x.especie], foto: fotosPorClave[x.nombre + '||' + x.especie] || null
-      })).sort((a, b) => b.veces - a.veces);
+      const sinResp = await fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos?select=*', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const sinonimosData = await sinResp.json();
+      const sinonimos = Array.isArray(sinonimosData) ? sinonimosData : [];
+
+      function buscarFoto(nombre, especie) {
+        // 1. Coincidencia directa en el catálogo (misma especie)
+        if (fotosPorClave[nombre + '||' + especie]) return fotosPorClave[nombre + '||' + especie];
+        // 2. Vía sinónimo — resuelto hacia el nombre canónico, en cualquier especie que tenga foto
+        const sin = sinonimos.find(s => s.variante === nombre);
+        if (sin) {
+          const directo = fotosPorClave[sin.alimento_canonico + '||' + especie];
+          if (directo) return directo;
+          const cualquierEspecie = Object.keys(fotosPorClave).find(k => k.startsWith(sin.alimento_canonico + '||') && fotosPorClave[k]);
+          if (cualquierEspecie) return fotosPorClave[cualquierEspecie];
+        }
+        return null;
+      }
+
+      const lista = Object.values(conteo).map(x => {
+        const foto = buscarFoto(x.nombre, x.especie);
+        return { nombre: x.nombre, especie: x.especie, veces: x.veces, tieneFoto: !!foto, foto: foto || null };
+      }).sort((a, b) => b.veces - a.veces);
 
       return res.status(200).json({ alimentos: lista });
     }
