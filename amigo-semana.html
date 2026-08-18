@@ -19,7 +19,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 /* TARJETA ACTUAL — grande */
 .actual-card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.12);margin-bottom:36px}
 .actual-foto-wrap{width:100%;height:280px;position:relative;overflow:hidden}
-.actual-foto-wrap img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.actual-foto-bg{width:100%;height:100%;background-size:cover;background-position:center;background-repeat:no-repeat}
 .actual-foto-wrap .ph{width:100%;height:100%;background:#e8ddd0;display:flex;align-items:center;justify-content:center;font-size:80px}
 .actual-badge{position:absolute;top:16px;left:16px;background:#F5C842;color:#1a1a2e;font-size:12px;font-weight:900;padding:7px 16px;border-radius:99px}
 .actual-body{padding:22px 24px 28px}
@@ -43,7 +43,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .historial-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
 .hist-card{background:#fff;border-radius:14px;padding:14px 10px;text-align:center;text-decoration:none;box-shadow:0 1px 6px rgba(0,0,0,.08);transition:transform .12s}
 .hist-card:hover{transform:translateY(-2px)}
-.hist-foto{width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;background:#e8ddd0}
+.hist-foto{width:64px;height:64px;border-radius:50%;background-size:cover;background-position:center;background-repeat:no-repeat;margin:0 auto 8px;display:block;background-color:#e8ddd0}
 .hist-foto-ph{width:64px;height:64px;border-radius:50%;background:#e8ddd0;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:28px}
 .hist-nombre{font-size:13px;font-weight:700;color:#1a1a2e}
 .hist-fecha{font-size:10px;color:#aaa;margin-top:2px}
@@ -153,7 +153,7 @@ fetch('/api/galeria?action=getAmigoSemanaHistorial')
   var anteriores = historial.slice(1);
 
   var fotoHtml = actual.foto && actual.foto.indexOf('http')>=0
-    ? '<img src="'+actual.foto+'" alt="'+actual.nombre+'">'
+    ? '<div class="actual-foto-bg" style="background-image:url(\''+actual.foto.replace(/'/g,"\\'")+'\')" role="img" aria-label="'+actual.nombre+'"></div>'
     : '<div class="ph">'+especieEmoji(actual.especie)+'</div>';
 
   var actividadesArr=(actual.actividades||'').split(',').map(function(a){return a.trim();}).filter(Boolean);
@@ -186,7 +186,7 @@ fetch('/api/galeria?action=getAmigoSemanaHistorial')
     var html = '<div class="historial-titulo">Amigos anteriores</div><div class="historial-grid">';
     anteriores.forEach(function(a){
       var foto = a.foto && a.foto.indexOf('http')>=0
-        ? '<img class="hist-foto" src="'+a.foto+'" alt="'+a.nombre+'">'
+        ? '<div class="hist-foto" style="background-image:url(\''+a.foto.replace(/'/g,"\\'")+'\')" role="img" aria-label="'+a.nombre+'"></div>'
         : '<div class="hist-foto-ph">'+especieEmoji(a.especie)+'</div>';
       html += '<a href="/p/'+encodeURIComponent(a.slug)+'" class="hist-card">'
         + foto
