@@ -236,6 +236,16 @@ async function enviarEntrada(){
 
 function renderCardVotoEmail(){
   var card = document.getElementById('cardVotarEmail');
+  if(sessionEmail){
+    // Ya inició sesión en PetMi — no le volvemos a pedir el correo, se usa el de su cuenta.
+    card.querySelector('p').textContent = 'Votando como: ' + emailVotante;
+    card.querySelector('.input-email-voto').style.display = 'none';
+    card.querySelector('.check-ofertas').style.display = 'none';
+    card.querySelector('.btn-guardar-email').style.display = 'none';
+    document.getElementById('votosRestantesTxt').style.display = 'block';
+    actualizarVotosRestantesTxt();
+    return;
+  }
   if(emailVotante){
     card.querySelector('p').textContent = 'Votando como: ' + emailVotante;
     card.querySelector('.input-email-voto').style.display = 'none';
@@ -256,6 +266,7 @@ function actualizarVotosRestantesTxt(){
 }
 
 function guardarEmailVoto(){
+  if(sessionEmail) return; // logueado: no hay boton que llame esto
   var input = document.getElementById('emailVotoInput');
   if(!emailVotante){
     var val = input.value.trim().toLowerCase();
@@ -383,6 +394,7 @@ function checkMisVotos(){
 }
 
 if(sessionEmail){
+  emailVotante = sessionEmail; // logueado: usamos directo el correo de su cuenta, sin volver a pedirlo
   fetch('/api/galeria?action=checkEmail', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ action:'checkEmail', email: sessionEmail })
@@ -390,6 +402,12 @@ if(sessionEmail){
   .then(function(d){
     if(d.found && d.mascotas && d.mascotas.length){
       misMascotas = d.mascotas.filter(function(m){ return m.angelito !== 'Si' && m.angelito !== true; });
+      // Registra el lead en silencio, respetando su preferencia de ofertas ya guardada
+      // en su perfil (no le volvemos a preguntar nada).
+      fetch('/api/galeria?action=registrarLeadConcurso', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ concurso: CONCURSO_ID, email: sessionEmail, acepta_ofertas: misMascotas[0].ofertas === 'Si' })
+      }).catch(function(){});
     }
     renderFormularioEnvio();
   }).catch(function(){ renderFormularioEnvio(); });
