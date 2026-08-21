@@ -1057,35 +1057,43 @@ export default async function handler(req, res) {
       return res.status(200).json({ entradas: Array.isArray(data) ? data : [] });
     }
 
-    // ── checkVotoConcurso (consulta si ese email ya voto en este concurso) ──
+    // ── checkVotoConcurso (lista de mascotas por las que ya voto este email, y cuantos le quedan) ──
     if (action === 'checkVotoConcurso') {
       const concurso = req.query.concurso || '';
       const email = (req.query.email || '').trim().toLowerCase();
-      if (!concurso || !email) return res.status(200).json({ ya_voto: false });
+      const LIMITE_VOTOS = 5;
+      if (!concurso || !email) return res.status(200).json({ votadas: [], restantes: LIMITE_VOTOS });
       const r = await fetch(
         SUPABASE_URL + '/rest/v1/concurso_votos?concurso=eq.' + encodeURIComponent(concurso) + '&email=eq.' + encodeURIComponent(email) + '&select=entrada_id',
         { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
       );
       const data = await r.json();
-      if (Array.isArray(data) && data.length) {
-        return res.status(200).json({ ya_voto: true, entrada_id: data[0].entrada_id });
-      }
-      return res.status(200).json({ ya_voto: false });
+      const votadas = Array.isArray(data) ? data.map(v => v.entrada_id) : [];
+      return res.status(200).json({ votadas, restantes: Math.max(0, LIMITE_VOTOS - votadas.length) });
     }
 
-    // ── votarConcurso — 1 voto por email por concurso, para siempre ──
+    // ── votarConcurso — hasta 5 votos por email por concurso, 1 por mascota. ──
+    // No requiere cuenta de PetMi: cualquiera puede votar solo con su email.
     if (action === 'votarConcurso' && req.method === 'POST') {
       const { concurso, entrada_id, email } = req.body;
-      if (!concurso || !entrada_id || !email) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const LIMITE_VOTOS = 5;
+      if (!concurso || !entrada_id || !email || !email.includes('@')) {
+        return res.status(200).json({ ok: false, error: 'Correo inválido' });
+      }
       const emailL = email.trim().toLowerCase();
 
       const rCheck = await fetch(
-        SUPABASE_URL + '/rest/v1/concurso_votos?concurso=eq.' + encodeURIComponent(concurso) + '&email=eq.' + encodeURIComponent(emailL) + '&select=id',
+        SUPABASE_URL + '/rest/v1/concurso_votos?concurso=eq.' + encodeURIComponent(concurso) + '&email=eq.' + encodeURIComponent(emailL) + '&select=entrada_id',
         { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
       );
-      const existente = await rCheck.json();
-      if (Array.isArray(existente) && existente.length) {
-        return res.status(200).json({ ok: false, ya_voto: true, error: 'Ya votaste en este concurso' });
+      const existentes = await rCheck.json();
+      const votadasArr = Array.isArray(existentes) ? existentes.map(v => v.entrada_id) : [];
+
+      if (votadasArr.includes(entrada_id)) {
+        return res.status(200).json({ ok: false, ya_voto_esta: true, error: 'Ya votaste por esta mascota' });
+      }
+      if (votadasArr.length >= LIMITE_VOTOS) {
+        return res.status(200).json({ ok: false, limite_alcanzado: true, error: 'Ya usaste tus ' + LIMITE_VOTOS + ' votos en este concurso' });
       }
 
       const rVoto = await fetch(SUPABASE_URL + '/rest/v1/concurso_votos', {
@@ -1095,10 +1103,8 @@ export default async function handler(req, res) {
       });
       if (!rVoto.ok) {
         const errTxt = await rVoto.text().catch(() => '');
-        // Si choca con la unique (concurso,email) por una carrera de 2 clics simultaneos,
-        // lo tratamos igual como "ya votaste" en vez de un error feo.
         if (rVoto.status === 409 || errTxt.toLowerCase().indexOf('duplicate') >= 0) {
-          return res.status(200).json({ ok: false, ya_voto: true, error: 'Ya votaste en este concurso' });
+          return res.status(200).json({ ok: false, ya_voto_esta: true, error: 'Ya votaste por esta mascota' });
         }
         console.error('votarConcurso insert failed:', rVoto.status, errTxt);
         return res.status(200).json({ ok: false, error: errTxt || ('HTTP ' + rVoto.status) });
@@ -1117,7 +1123,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({ votos: votosActuales + 1 })
       });
 
-      return res.status(200).json({ ok: true, ya_voto: false });
+      return res.status(200).json({ ok: true, restantes: LIMITE_VOTOS - votadasArr.length - 1 });
     }
 
     // ── getConcursoEntradasAdmin (admin — incluye ocultas) ──────
@@ -1163,6 +1169,53 @@ export default async function handler(req, res) {
       );
       const data = await r.json();
       return res.status(200).json({ fotos: Array.isArray(data) ? data : [] });
+    }
+
+    // ── registrarLeadConcurso (guarda el correo de quien vota + su preferencia de contacto) ──
+    // Se llama apenas la persona escribe su correo en concurso.html, sin importar
+    // si llega a votar o no — es el lead para la campaña posterior.
+    if (action === 'registrarLeadConcurso' && req.method === 'POST') {
+      const { concurso, email, acepta_ofertas } = req.body;
+      if (!concurso || !email || !email.includes('@')) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/concurso_leads?on_conflict=concurso,email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ concurso, email: email.trim().toLowerCase(), acepta_ofertas: !!acepta_ofertas })
+      });
+      if (!r.ok) {
+        const errTxt = await r.text().catch(() => '');
+        console.error('registrarLeadConcurso failed:', r.status, errTxt);
+        return res.status(200).json({ ok: false, error: errTxt });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── getLeadsConcursoAdmin (admin — para armar la campaña despues) ──
+    // Devuelve los leads que SI aceptaron ofertas, separados en:
+    // - yaRegistrados: su email ya tiene cuenta en PetMi (mascotas)
+    // - nuevos: nunca se han registrado — son leads frescos para invitar
+    if (action === 'getLeadsConcursoAdmin') {
+      const concurso = req.query.concurso || '';
+      let url = SUPABASE_URL + '/rest/v1/concurso_leads?acepta_ofertas=eq.true&select=email,created_at';
+      if (concurso) url += '&concurso=eq.' + encodeURIComponent(concurso);
+      const r = await fetch(url, { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const leads = await r.json();
+      const emails = (Array.isArray(leads) ? leads : []).map(l => l.email);
+      if (!emails.length) return res.status(200).json({ yaRegistrados: [], nuevos: [] });
+
+      const rMasc = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?email=in.(' + emails.map(e => '"' + e + '"').join(',') + ')&select=email,dueno',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const mascData = await rMasc.json();
+      const emailsRegistrados = new Set((Array.isArray(mascData) ? mascData : []).map(m => m.email));
+      const duenoPorEmail = {};
+      (Array.isArray(mascData) ? mascData : []).forEach(m => { if (!duenoPorEmail[m.email]) duenoPorEmail[m.email] = m.dueno || ''; });
+
+      const yaRegistrados = emails.filter(e => emailsRegistrados.has(e)).map(e => ({ email: e, dueno: duenoPorEmail[e] || '' }));
+      const nuevos = emails.filter(e => !emailsRegistrados.has(e));
+
+      return res.status(200).json({ yaRegistrados, nuevos });
     }
 
     // ── getImpacto ────────────────────────────────────────────
