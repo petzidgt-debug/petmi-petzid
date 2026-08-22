@@ -33,7 +33,7 @@
   }
 })();
 
-// header.js — Header compartido PetMi v5
+// header.js — Header compartido PetMi v6 (se quito Ruleta de Premios del menu de usuario)
 (function(){
   function initHeader(){
     var sessionEmail = localStorage.getItem('petzid_email') || '';
@@ -168,7 +168,6 @@
             '<a href="/amigos.html" class="h-drop-item">👥 Amigos</a>' +
             '<a href="/mensajes.html" class="h-drop-item">💬 Mensajes</a>' +
             '<a href="/salud.html" class="h-drop-item">🩺 Mi Registro de Salud</a>' +
-            '<a href="/ruleta.html" class="h-drop-item">🎡 Ruleta de Premios</a>' +
             '<a href="/tienda.html" class="h-drop-item">🛍️ Tienda</a>' +
             '<a href="/buscar.html" class="h-drop-item">🔍 Buscar</a>' +
             '<a href="/mis-avisos.html" class="h-drop-item">📝 Mis avisos</a>' +
