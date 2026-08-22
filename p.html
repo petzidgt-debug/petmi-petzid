@@ -69,6 +69,12 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .no-premium-titulo{font-size:20px;font-weight:900;color:#222;margin-bottom:8px}
 .no-premium-sub{font-size:14px;color:#888;line-height:1.7;margin-bottom:24px}
 
+/* MI GALERIA (fotos de concursos) */
+.mi-galeria-titulo{font-size:14px;font-weight:700;color:#222;margin:4px 0 10px}
+.mi-galeria-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+.mi-galeria-foto{aspect-ratio:1;border-radius:10px;background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#e8ddd0;cursor:pointer}
+.mi-galeria-nota{font-size:11px;color:#aaa;margin-bottom:16px}
+
 /* FOOTER (igual a galeria.html) */
 .footer{background:#1a1a2e;padding:24px;text-align:center;margin-top:40px}
 .footer-brand{font-size:18px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;margin-bottom:8px}
@@ -206,6 +212,9 @@ function renderNoPremium(m){
       html+='</div>';
     }
 
+    // Mi Galería (fotos de concursos) — se llena vía cargarGaleriaConcursos si tiene fotos
+    html+='<div id="miGaleriaWrap"></div>';
+
     // El mensaje de activar Premium solo se muestra al dueño
     if(esVisitanteDueno){
       html+='<div style="text-align:center;padding:20px 0;border-top:1px solid #f0f0ee;margin-top:16px">';
@@ -218,6 +227,7 @@ function renderNoPremium(m){
   html+='</div>';
   html+=renderBrand();
   document.getElementById('root').innerHTML=html;
+  cargarGaleriaConcursos(m.uid);
 }
 
 function renderPerfil(m){
@@ -266,6 +276,9 @@ function renderPerfil(m){
     html+='</div>';
   }
 
+  // Mi Galería (fotos de concursos) — se llena vía cargarGaleriaConcursos si tiene fotos
+  html+='<div id="miGaleriaWrap"></div>';
+
   // Botones
   html+='<div class="btns">';
   if(!esAngelito && !esVisitanteDueno){
@@ -301,6 +314,7 @@ function renderPerfil(m){
 
   document.getElementById('root').innerHTML=html;
 
+  cargarGaleriaConcursos(m.uid);
   if(esAngelito) cargarCondolencias(m.uid);
 }
 
@@ -384,6 +398,23 @@ function enviarCondolencia(uidMascota, nombreMascota){
   }).catch(function(){
     alert('No se pudo enviar el mensaje. Intenta de nuevo.');
   });
+}
+
+// ── Mi Galería (fotos que la mascota ha enviado a concursos de PetMi) ──
+function cargarGaleriaConcursos(uid){
+  fetch('/api/galeria?action=getGaleriaMascota&uid='+encodeURIComponent(uid))
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var fotos=(d && d.fotos) || [];
+    var wrap=document.getElementById('miGaleriaWrap');
+    if(!wrap || !fotos.length) return; // sin fotos: la sección no aparece
+    var html='<div class="mi-galeria-titulo">Mi galería</div><div class="mi-galeria-grid">';
+    fotos.forEach(function(f){
+      html+='<div class="mi-galeria-foto" style="background-image:url(\''+(f.foto_url||'').replace(/'/g,"\\'")+'\')" onclick="window.open(\'https://petmi-petzid.vercel.app/api/share?tipo=concurso&id='+f.id+'\',\'_blank\')"></div>';
+    });
+    html+='</div><div class="mi-galeria-nota">Fotos enviadas a concursos de PetMi</div>';
+    wrap.innerHTML=html;
+  }).catch(function(){});
 }
 
 function renderBrand(){
