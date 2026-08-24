@@ -1088,10 +1088,32 @@ var SUPA_ADM = 'https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_ADM_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
 var SUPA_ADM_H = {'apikey': SUPA_ADM_KEY, 'Authorization': 'Bearer ' + SUPA_ADM_KEY};
 
+// ── Cuentas excluidas de TODAS las métricas/estadísticas ────────
+// (Elsa y la cuenta oficial de PetMi) — sus datos se siguen guardando
+// normal en Supabase (no se borran, no se ocultan del listado de
+// Mascotas), solo se excluyen al CALCULAR números/promedios/rankings
+// para que no influyan en las estadísticas reales de usuarios.
+// Fuente única — si algun dia hay que agregar/quitar un correo, es
+// aqui y solo aqui.
+var ADMIN_EXCLUIDOS = ['elsamoralesg@gmail.com', 'info@revistapetmi.com', 'petzid.gt@gmail.com'];
+function esCuentaExcluida(email){
+  return ADMIN_EXCLUIDOS.indexOf(String(email||'').trim().toLowerCase()) !== -1;
+}
+// Filtra un array de filas (o de objetos) por su campo de email, aceptando
+// tanto arrays estilo Sheet (email en un indice numerico) como objetos.
+function filtrarExcluidos(rows, campoEmail){
+  if(!Array.isArray(rows)) return rows;
+  return rows.filter(function(r){
+    var email = typeof campoEmail === 'number' ? r[campoEmail] : r[campoEmail || 'email'];
+    return !esCuentaExcluida(email);
+  });
+}
+
 function loadPuntos(){
   fetch(SUPA_ADM + '/rest/v1/puntos?select=email,accion,puntos,created_at&order=created_at.desc&limit=500', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
   .then(function(rows){
+    rows = filtrarExcluidos(rows, 'email');
     if(!rows||!rows.length){
       document.getElementById('puntosBody').innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Sin registros</td></tr>';
       return;
@@ -1155,7 +1177,7 @@ function exportPuntos(){
 }
 
 function loadEstadisticas(){
-  var EXCLUIR_EMAILS = ['elsamoralesg@gmail.com', 'petzid.gt@gmail.com'];
+  var EXCLUIR_EMAILS = ADMIN_EXCLUIDOS;
   var hace7 = new Date(Date.now() - 7*86400000).toISOString();
   var hace30 = new Date(Date.now() - 30*86400000).toISOString();
 
@@ -1506,7 +1528,7 @@ function verDetalle(tipo){
 
 // ── Juegos ────────────────────────────────────────────────────
 function loadJuegos(){
-  var EXCLUIR_EMAILS = ['elsamoralesg@gmail.com', 'petzid.gt@gmail.com'];
+  var EXCLUIR_EMAILS = ADMIN_EXCLUIDOS;
   var hoy = new Date().toISOString().split('T')[0];
   fetch(SUPA_ADM + '/rest/v1/puntos?accion=eq.juego_diario&select=email,puntos,created_at&order=created_at.desc&limit=1000', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
@@ -1818,31 +1840,35 @@ function buildFamilias(){
 
 // ── Dashboard ─────────────────────────────────────────────────
 function renderDashboard(){
-  var total=allData.length;
-  var perros=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('perro')>=0;}).length;
-  var gatos=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('gato')>=0;}).length;
-  var enviados=allData.filter(function(r){return String(r[24])==='Si';}).length;
+  // Se excluyen las cuentas de ADMIN_EXCLUIDOS solo para los NUMEROS/graficas
+  // de este Dashboard — allData en si no se toca, asi que la tabla de
+  // Mascotas sigue mostrando/permitiendo editar esas filas normal.
+  var datosStats = filtrarExcluidos(allData, 11); // columna 11 = Email
+  var total=datosStats.length;
+  var perros=datosStats.filter(function(r){return String(r[4]).toLowerCase().indexOf('perro')>=0;}).length;
+  var gatos=datosStats.filter(function(r){return String(r[4]).toLowerCase().indexOf('gato')>=0;}).length;
+  var enviados=datosStats.filter(function(r){return String(r[24])==='Si';}).length;
   document.getElementById('statTotal').textContent=total;
   document.getElementById('statPerros').textContent=perros;
   document.getElementById('statGatos').textContent=gatos;
   document.getElementById('statEnviados').textContent=enviados;
 
-  var zonas={};allData.forEach(function(r){var z=String(r[9]||'Sin zona').toUpperCase();zonas[z]=(zonas[z]||0)+1;});
+  var zonas={};datosStats.forEach(function(r){var z=String(r[9]||'Sin zona').toUpperCase();zonas[z]=(zonas[z]||0)+1;});
   renderBars('chartZonas',zonas,6,'#00B4B4');
   var mn=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  var meses={};allData.forEach(function(r){if(!r[0])return;var d=new Date(r[0]);var k=mn[d.getMonth()]+' '+d.getFullYear();meses[k]=(meses[k]||0)+1;});
+  var meses={};datosStats.forEach(function(r){if(!r[0])return;var d=new Date(r[0]);var k=mn[d.getMonth()]+' '+d.getFullYear();meses[k]=(meses[k]||0)+1;});
   renderBars('chartMeses',meses,6,'#E05090');
-  var alimentos={};allData.forEach(function(r){var a=String(r[16]||'Sin registrar').trim()||'Sin registrar';alimentos[a]=(alimentos[a]||0)+1;});
+  var alimentos={};datosStats.forEach(function(r){var a=String(r[16]||'Sin registrar').trim()||'Sin registrar';alimentos[a]=(alimentos[a]||0)+1;});
   renderBars('chartAlimentos',alimentos,6,'#534AB7');
   renderBars('chartEnvios',{'Enviado':enviados,'Pendiente':total-enviados},2,'#3B6D11');
 
-  var razas={};allData.forEach(function(r){var raza=String(r[6]||'Sin registrar').trim()||'Sin registrar';razas[raza]=(razas[raza]||0)+1;});
+  var razas={};datosStats.forEach(function(r){var raza=String(r[6]||'Sin registrar').trim()||'Sin registrar';razas[raza]=(razas[raza]||0)+1;});
   renderBars('chartRazas',razas,8,'#00B4B4');
-  var conFoto=allData.filter(function(r){return String(r[27]||'').indexOf('http')>=0;}).length;
+  var conFoto=datosStats.filter(function(r){return String(r[27]||'').indexOf('http')>=0;}).length;
   renderBars('chartFotos',{'Con foto':conFoto,'Sin foto':total-conFoto},2,'#E05090');
 
   var cumples={};mn.forEach(function(m){cumples[m]=0;});
-  allData.forEach(function(r){
+  datosStats.forEach(function(r){
     var fecha=String(r[8]||'').trim();if(!fecha)return;
     var mes=null;
     var m=fecha.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -1853,11 +1879,11 @@ function renderDashboard(){
   renderBars('chartCumples',cumples,12,'#F5C842');
 
   document.getElementById('statSinFoto').textContent=total-conFoto;
-  document.getElementById('statAngelitos').textContent=allData.filter(function(r){return String(r[28]||'').toLowerCase()==='si';}).length;
-  var emails={};allData.forEach(function(r){var e=String(r[11]||'').trim().toLowerCase();if(e)emails[e]=1;});
+  document.getElementById('statAngelitos').textContent=datosStats.filter(function(r){return String(r[28]||'').toLowerCase()==='si';}).length;
+  var emails={};datosStats.forEach(function(r){var e=String(r[11]||'').trim().toLowerCase();if(e)emails[e]=1;});
   document.getElementById('statFamilias').textContent=Object.keys(emails).length;
   var mesActual=new Date().getMonth();
-  document.getElementById('statEsteMes').textContent=allData.filter(function(r){
+  document.getElementById('statEsteMes').textContent=datosStats.filter(function(r){
     if(!r[0])return false;
     return new Date(r[0]).getMonth()===mesActual&&new Date(r[0]).getFullYear()===new Date().getFullYear();
   }).length;
@@ -1957,7 +1983,7 @@ function viewFamilia(email){
 // ── Ver ID ────────────────────────────────────────────────────
 function viewID(idx){
   var r=filtered[idx];
-  var foto=String(r[27]||'').indexOf('http')>=0?'<div style="width:140px;height:175px;background-image:url(\''+String(r[27]).replace(/'/g,"\\'")+'\');background-size:cover;background-position:center;background-repeat:no-repeat"></div>':'<div style="width:140px;height:175px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">🐾</div>';
+  var foto=String(r[27]||'').indexOf('http')>=0?'<img src="'+r[27]+'" style="width:140px;height:175px;object-fit:cover">':'<div style="width:140px;height:175px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">🐾</div>';
   var html='<div id="pngPreview" style="font-family:Arial,sans-serif;border-radius:12px;overflow:hidden">'
     +'<div style="background:#00B4B4;display:flex;align-items:stretch"><div style="flex-shrink:0;overflow:hidden">'+foto+'</div>'
     +'<div style="flex:1;padding:16px 20px 14px;display:flex;flex-direction:column;justify-content:flex-end"><div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.7);margin-bottom:4px">NOMBRE</div>'
@@ -2837,7 +2863,7 @@ function loadRuletaGiros(){
   fetch('/api/galeria?action=getRuletaGiros')
   .then(function(r){return r.json();})
   .then(function(d){
-    var giros = d.giros || [];
+    var giros = filtrarExcluidos(d.giros || [], 'email');
     document.getElementById('ruletaGirosTotal').textContent = giros.length;
 
     // Resumen: cuántos ganaron cada premio
