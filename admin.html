@@ -538,6 +538,17 @@ tbody tr:last-child td{border-bottom:none}
           </table>
         </div>
       </div>
+
+      <h2 class="screen-title" style="font-size:18px;margin-top:24px">😴 Nunca han vuelto</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Registrados pero nunca volvieron a entrar desde que se dieron de alta. Incluye cuáles semanas de la serie de correos ya recibieron, y un link directo para escribirles por WhatsApp.</p>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Dueño</th><th>Mascota(s)</th><th>Correo</th><th>Registrado</th><th>Correos ya enviados</th><th>WhatsApp</th></tr></thead>
+            <tbody id="nuncaVolvieronBody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div id="screenTienda" class="screen">
@@ -1088,10 +1099,32 @@ var SUPA_ADM = 'https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_ADM_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
 var SUPA_ADM_H = {'apikey': SUPA_ADM_KEY, 'Authorization': 'Bearer ' + SUPA_ADM_KEY};
 
+// ── Cuentas excluidas de TODAS las métricas/estadísticas ────────
+// (Elsa y la cuenta oficial de PetMi) — sus datos se siguen guardando
+// normal en Supabase (no se borran, no se ocultan del listado de
+// Mascotas), solo se excluyen al CALCULAR números/promedios/rankings
+// para que no influyan en las estadísticas reales de usuarios.
+// Fuente única — si algun dia hay que agregar/quitar un correo, es
+// aqui y solo aqui.
+var ADMIN_EXCLUIDOS = ['elsamoralesg@gmail.com', 'info@revistapetmi.com', 'petzid.gt@gmail.com'];
+function esCuentaExcluida(email){
+  return ADMIN_EXCLUIDOS.indexOf(String(email||'').trim().toLowerCase()) !== -1;
+}
+// Filtra un array de filas (o de objetos) por su campo de email, aceptando
+// tanto arrays estilo Sheet (email en un indice numerico) como objetos.
+function filtrarExcluidos(rows, campoEmail){
+  if(!Array.isArray(rows)) return rows;
+  return rows.filter(function(r){
+    var email = typeof campoEmail === 'number' ? r[campoEmail] : r[campoEmail || 'email'];
+    return !esCuentaExcluida(email);
+  });
+}
+
 function loadPuntos(){
   fetch(SUPA_ADM + '/rest/v1/puntos?select=email,accion,puntos,created_at&order=created_at.desc&limit=500', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
   .then(function(rows){
+    rows = filtrarExcluidos(rows, 'email');
     if(!rows||!rows.length){
       document.getElementById('puntosBody').innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Sin registros</td></tr>';
       return;
@@ -1155,7 +1188,7 @@ function exportPuntos(){
 }
 
 function loadEstadisticas(){
-  var EXCLUIR_EMAILS = ['elsamoralesg@gmail.com', 'petzid.gt@gmail.com'];
+  var EXCLUIR_EMAILS = ADMIN_EXCLUIDOS;
   var hace7 = new Date(Date.now() - 7*86400000).toISOString();
   var hace30 = new Date(Date.now() - 30*86400000).toISOString();
 
@@ -1506,7 +1539,7 @@ function verDetalle(tipo){
 
 // ── Juegos ────────────────────────────────────────────────────
 function loadJuegos(){
-  var EXCLUIR_EMAILS = ['elsamoralesg@gmail.com', 'petzid.gt@gmail.com'];
+  var EXCLUIR_EMAILS = ADMIN_EXCLUIDOS;
   var hoy = new Date().toISOString().split('T')[0];
   fetch(SUPA_ADM + '/rest/v1/puntos?accion=eq.juego_diario&select=email,puntos,created_at&order=created_at.desc&limit=1000', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
@@ -1784,7 +1817,7 @@ function showScreen(name,el){
   if(name==='mundial') { try { loadWCAdmin(); } catch(e) { console.error('WC Error:', e); } }
   if(name==='saludreglas') { loadReglasSalud(); loadCondicionesAdmin(); }
   if(name==='ruletapremios') { loadRuletaPremios(); loadRuletaGiros(); }
-  if(name==='reactivacion') loadReactivacionEfectividad();
+  if(name==='reactivacion') { loadReactivacionEfectividad(); loadNuncaHanVuelto(); }
   if(name==='tienda') loadTiendaProductos();
   if(name==='busquedas') loadBusquedas();
   if(name==='pedidos') loadPedidos();
@@ -1818,31 +1851,35 @@ function buildFamilias(){
 
 // ── Dashboard ─────────────────────────────────────────────────
 function renderDashboard(){
-  var total=allData.length;
-  var perros=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('perro')>=0;}).length;
-  var gatos=allData.filter(function(r){return String(r[4]).toLowerCase().indexOf('gato')>=0;}).length;
-  var enviados=allData.filter(function(r){return String(r[24])==='Si';}).length;
+  // Se excluyen las cuentas de ADMIN_EXCLUIDOS solo para los NUMEROS/graficas
+  // de este Dashboard — allData en si no se toca, asi que la tabla de
+  // Mascotas sigue mostrando/permitiendo editar esas filas normal.
+  var datosStats = filtrarExcluidos(allData, 11); // columna 11 = Email
+  var total=datosStats.length;
+  var perros=datosStats.filter(function(r){return String(r[4]).toLowerCase().indexOf('perro')>=0;}).length;
+  var gatos=datosStats.filter(function(r){return String(r[4]).toLowerCase().indexOf('gato')>=0;}).length;
+  var enviados=datosStats.filter(function(r){return String(r[24])==='Si';}).length;
   document.getElementById('statTotal').textContent=total;
   document.getElementById('statPerros').textContent=perros;
   document.getElementById('statGatos').textContent=gatos;
   document.getElementById('statEnviados').textContent=enviados;
 
-  var zonas={};allData.forEach(function(r){var z=String(r[9]||'Sin zona').toUpperCase();zonas[z]=(zonas[z]||0)+1;});
+  var zonas={};datosStats.forEach(function(r){var z=String(r[9]||'Sin zona').toUpperCase();zonas[z]=(zonas[z]||0)+1;});
   renderBars('chartZonas',zonas,6,'#00B4B4');
   var mn=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  var meses={};allData.forEach(function(r){if(!r[0])return;var d=new Date(r[0]);var k=mn[d.getMonth()]+' '+d.getFullYear();meses[k]=(meses[k]||0)+1;});
+  var meses={};datosStats.forEach(function(r){if(!r[0])return;var d=new Date(r[0]);var k=mn[d.getMonth()]+' '+d.getFullYear();meses[k]=(meses[k]||0)+1;});
   renderBars('chartMeses',meses,6,'#E05090');
-  var alimentos={};allData.forEach(function(r){var a=String(r[16]||'Sin registrar').trim()||'Sin registrar';alimentos[a]=(alimentos[a]||0)+1;});
+  var alimentos={};datosStats.forEach(function(r){var a=String(r[16]||'Sin registrar').trim()||'Sin registrar';alimentos[a]=(alimentos[a]||0)+1;});
   renderBars('chartAlimentos',alimentos,6,'#534AB7');
   renderBars('chartEnvios',{'Enviado':enviados,'Pendiente':total-enviados},2,'#3B6D11');
 
-  var razas={};allData.forEach(function(r){var raza=String(r[6]||'Sin registrar').trim()||'Sin registrar';razas[raza]=(razas[raza]||0)+1;});
+  var razas={};datosStats.forEach(function(r){var raza=String(r[6]||'Sin registrar').trim()||'Sin registrar';razas[raza]=(razas[raza]||0)+1;});
   renderBars('chartRazas',razas,8,'#00B4B4');
-  var conFoto=allData.filter(function(r){return String(r[27]||'').indexOf('http')>=0;}).length;
+  var conFoto=datosStats.filter(function(r){return String(r[27]||'').indexOf('http')>=0;}).length;
   renderBars('chartFotos',{'Con foto':conFoto,'Sin foto':total-conFoto},2,'#E05090');
 
   var cumples={};mn.forEach(function(m){cumples[m]=0;});
-  allData.forEach(function(r){
+  datosStats.forEach(function(r){
     var fecha=String(r[8]||'').trim();if(!fecha)return;
     var mes=null;
     var m=fecha.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -1853,11 +1890,11 @@ function renderDashboard(){
   renderBars('chartCumples',cumples,12,'#F5C842');
 
   document.getElementById('statSinFoto').textContent=total-conFoto;
-  document.getElementById('statAngelitos').textContent=allData.filter(function(r){return String(r[28]||'').toLowerCase()==='si';}).length;
-  var emails={};allData.forEach(function(r){var e=String(r[11]||'').trim().toLowerCase();if(e)emails[e]=1;});
+  document.getElementById('statAngelitos').textContent=datosStats.filter(function(r){return String(r[28]||'').toLowerCase()==='si';}).length;
+  var emails={};datosStats.forEach(function(r){var e=String(r[11]||'').trim().toLowerCase();if(e)emails[e]=1;});
   document.getElementById('statFamilias').textContent=Object.keys(emails).length;
   var mesActual=new Date().getMonth();
-  document.getElementById('statEsteMes').textContent=allData.filter(function(r){
+  document.getElementById('statEsteMes').textContent=datosStats.filter(function(r){
     if(!r[0])return false;
     return new Date(r[0]).getMonth()===mesActual&&new Date(r[0]).getFullYear()===new Date().getFullYear();
   }).length;
@@ -2007,7 +2044,7 @@ function tarjetaAmigoHTML(m){
       }).join('')+'</div>'
     : '';
   return '<div style="width:100%;height:220px;overflow:hidden;position:relative">'
-    +'<img src="'+m.foto+'" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;display:block">'
+    +'<div crossorigin="anonymous" style="width:100%;height:100%;background-image:url(\''+String(m.foto||'').replace(/'/g,"\\'")+'\');background-size:cover;background-position:center;background-repeat:no-repeat"></div>'
     +'<div style="position:absolute;top:14px;left:14px;background:#F5C842;color:#1a1a2e;font-size:11px;font-weight:900;padding:6px 14px;border-radius:99px">🎲 AMIGO DE LA SEMANA</div>'
     +'</div>'
     +'<div style="padding:20px 22px 24px;background:#fff">'
@@ -2731,6 +2768,86 @@ function verDetalleRaza(raza){
 }
 
 // ── Ruleta de Premios (CRUD) ─────────────────────────────────────
+// ── Nunca han vuelto: quiénes nunca entraron desde su registro,
+// qué correos de la serie ya recibieron, y link directo de WhatsApp ──
+function loadNuncaHanVuelto(){
+  var tbody = document.getElementById('nuncaVolvieronBody');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr>';
+
+  fetch(SUPA_ADM + '/rest/v1/mascotas?ultima_actividad=is.null&angelito=eq.false&select=uid,nombre,dueno,email,whatsapp,created_at', {headers: SUPA_ADM_H})
+  .then(function(r){return r.json();})
+  .then(function(rows){
+    rows = filtrarExcluidos(rows||[], 'email');
+    if(!rows.length){
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Nadie en esta situación — todos han vuelto al menos una vez. 🎉</td></tr>';
+      return;
+    }
+
+    // Agrupar por email (familia) — juntar nombres de mascotas, quedarse
+    // con el whatsapp y la fecha de registro más antigua del grupo
+    var grupos = {};
+    rows.forEach(function(r){
+      var email = String(r.email||'').trim().toLowerCase();
+      if(!email) return;
+      if(!grupos[email]) grupos[email] = { dueno: r.dueno||'Amigo PetMi', email: email, nombres: [], whatsapp: '', createdAt: r.created_at };
+      if(r.nombre) grupos[email].nombres.push(r.nombre);
+      if(!grupos[email].whatsapp && r.whatsapp) grupos[email].whatsapp = r.whatsapp;
+      if(r.created_at && new Date(r.created_at) < new Date(grupos[email].createdAt)) grupos[email].createdAt = r.created_at;
+    });
+    var emails = Object.keys(grupos);
+
+    // Cruzar contra reactivacion_envios para saber qué semanas ya recibió cada quien
+    fetch(SUPA_ADM + '/rest/v1/reactivacion_envios?email=in.(' + emails.map(function(e){return encodeURIComponent(e);}).join(',') + ')&select=email,semana', {headers: SUPA_ADM_H})
+    .then(function(r){return r.json();})
+    .then(function(envios){
+      var semanasPorEmail = {};
+      (envios||[]).forEach(function(e){
+        var k = (e.email||'').toLowerCase();
+        if(!semanasPorEmail[k]) semanasPorEmail[k] = [];
+        if(semanasPorEmail[k].indexOf(e.semana) === -1) semanasPorEmail[k].push(e.semana);
+      });
+
+      var hoy = Date.now();
+      var lista = emails.map(function(email){ return grupos[email]; });
+      lista.sort(function(a,b){ return new Date(a.createdAt) - new Date(b.createdAt); }); // más antiguos primero
+
+      tbody.innerHTML = lista.map(function(g){
+        var diasRegistrado = g.createdAt ? Math.floor((hoy - new Date(g.createdAt).getTime())/86400000) : null;
+        var registradoTxt = diasRegistrado !== null ? (diasRegistrado===0?'Hoy':'Hace '+diasRegistrado+' día'+(diasRegistrado!==1?'s':'')) : '—';
+
+        var semanas = (semanasPorEmail[g.email]||[]).sort();
+        var semanasHtml = semanas.length
+          ? semanas.map(function(s){ return '<span style="background:#E0F7F7;color:#007a7a;border-radius:99px;padding:3px 9px;font-size:11px;margin:2px;display:inline-block">Sem '+s+'</span>'; }).join('')
+          : '<span style="color:#c0392b;font-size:12px">Ninguno todavía</span>';
+
+        var waHtml = '<span style="color:#bbb;font-size:12px">Sin WhatsApp</span>';
+        if(g.whatsapp){
+          var digits = String(g.whatsapp).replace(/[^\d]/g,'');
+          if(digits){
+            var nombreMasc = g.nombres[0] || 'tu mascota';
+            var mensaje = '¡Hola ' + g.dueno + '! Somos del equipo de PetMi 🐾 Notamos que hace tiempo no entras — ¿todo bien con ' + nombreMasc + '? Si tuviste algún problema con la app o tienes dudas, aquí estamos para ayudarte.';
+            var waUrl = 'https://wa.me/' + digits + '?text=' + encodeURIComponent(mensaje);
+            waHtml = '<a href="'+waUrl+'" target="_blank" style="display:inline-block;background:#25D366;color:#fff;padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none">💬 Escribir</a>';
+          }
+        }
+
+        return '<tr>'
+          + '<td>'+g.dueno+'</td>'
+          + '<td>'+(g.nombres.join(', ')||'—')+'</td>'
+          + '<td>'+g.email+'</td>'
+          + '<td>'+registradoTxt+'</td>'
+          + '<td>'+semanasHtml+'</td>'
+          + '<td>'+waHtml+'</td>'
+          + '</tr>';
+      }).join('');
+    }).catch(function(){
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#c0392b">Error al cruzar con los correos enviados</td></tr>';
+    });
+  }).catch(function(){
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#c0392b">Error al cargar</td></tr>';
+  });
+}
+
 function loadReactivacionEfectividad(){
   document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#aaa">Cargando...</div>';
   fetch(SUPA_ADM + '/rest/v1/reactivacion_envios?select=email,semana,enviado_at&order=semana.asc', {headers: SUPA_ADM_H})
@@ -2837,7 +2954,7 @@ function loadRuletaGiros(){
   fetch('/api/galeria?action=getRuletaGiros')
   .then(function(r){return r.json();})
   .then(function(d){
-    var giros = d.giros || [];
+    var giros = filtrarExcluidos(d.giros || [], 'email');
     document.getElementById('ruletaGirosTotal').textContent = giros.length;
 
     // Resumen: cuántos ganaron cada premio
