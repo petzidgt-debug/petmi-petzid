@@ -1010,6 +1010,259 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
 
+    // ══════════════════════════════════════════════════════════
+    // CARRERA A BENEFICIO — inscripciones
+    // ══════════════════════════════════════════════════════════
+
+    // ── inscribirCarrera — guarda la inscripción como "pendiente" ──
+    // El pago se completa aparte, en el link de Recurrente — el webhook
+    // (por separado) es el que marca esta fila como "pagado" cuando
+    // confirma el pago, cruzando por email.
+    if (action === 'inscribirCarrera' && req.method === 'POST') {
+      const { nombre, email, telefono, uid_mascota, nombre_mascota, foto_mascota, talla_playera } = req.body;
+      if (!nombre || !email || !email.includes('@')) {
+        return res.status(200).json({ ok: false, error: 'Faltan nombre o correo válido' });
+      }
+      const r = await fetch(SUPABASE_URL + '/rest/v1/carrera_inscripciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
+        body: JSON.stringify({
+          nombre, email: email.trim().toLowerCase(), telefono: telefono || null,
+          uid_mascota: uid_mascota || null, nombre_mascota: nombre_mascota || null,
+          foto_mascota: foto_mascota || null, talla_playera: talla_playera || null,
+          estado: 'pendiente'
+        })
+      });
+      if (!r.ok) {
+        const errTxt = await r.text().catch(() => '');
+        console.error('inscribirCarrera failed:', r.status, errTxt);
+        return res.status(200).json({ ok: false, error: errTxt });
+      }
+      const data = await r.json();
+      return res.status(200).json({ ok: true, id: data[0]?.id });
+    }
+
+    // ── getEstadoInscripcionCarrera — consulta si ya pagó ────────
+    if (action === 'getEstadoInscripcionCarrera') {
+      const email = (req.query.email || '').trim().toLowerCase();
+      if (!email) return res.status(200).json({ found: false });
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/carrera_inscripciones?email=eq.' + encodeURIComponent(email) + '&select=*&order=created_at.desc&limit=1',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const data = await r.json();
+      if (!Array.isArray(data) || !data.length) return res.status(200).json({ found: false });
+      return res.status(200).json({ found: true, inscripcion: data[0] });
+    }
+
+    // ── getInscripcionesCarreraAdmin (admin) ─────────────────────
+    if (action === 'getInscripcionesCarreraAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/carrera_inscripciones?select=*&order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ inscripciones: Array.isArray(data) ? data : [] });
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // CONCURSOS — envío de fotos y votación pública
+    // ══════════════════════════════════════════════════════════
+
+    // ── enviarConcurso — el dueño sube la foto de su mascota ────
+    if (action === 'enviarConcurso' && req.method === 'POST') {
+      const { concurso, uid_mascota, nombre_mascota, foto_url, caption, email } = req.body;
+      if (!concurso || !uid_mascota || !foto_url || !email) {
+        return res.status(200).json({ ok: false, error: 'Faltan campos (concurso, uid_mascota, foto_url, email)' });
+      }
+      const r = await fetch(SUPABASE_URL + '/rest/v1/concurso_entradas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          concurso,
+          uid_mascota: uid_mascota.toUpperCase(),
+          nombre_mascota: nombre_mascota || '',
+          foto_url,
+          caption: caption || '',
+          email: email.trim().toLowerCase(),
+          activo: true,
+          votos: 0
+        })
+      });
+      if (!r.ok) {
+        const errTxt = await r.text().catch(() => '');
+        console.error('enviarConcurso failed:', r.status, errTxt);
+        return res.status(200).json({ ok: false, error: errTxt || ('HTTP ' + r.status) });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── getConcursoEntradas (público — galería para votar) ──────
+    if (action === 'getConcursoEntradas') {
+      const concurso = req.query.concurso || '';
+      if (!concurso) return res.status(200).json({ entradas: [] });
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/concurso_entradas?concurso=eq.' + encodeURIComponent(concurso) + '&activo=eq.true&select=*&order=votos.desc',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+      );
+      const data = await r.json();
+      return res.status(200).json({ entradas: Array.isArray(data) ? data : [] });
+    }
+
+    // ── checkVotoConcurso (lista de mascotas por las que ya voto este email, y cuantos le quedan) ──
+    if (action === 'checkVotoConcurso') {
+      const concurso = req.query.concurso || '';
+      const email = (req.query.email || '').trim().toLowerCase();
+      const LIMITE_VOTOS = 5;
+      if (!concurso || !email) return res.status(200).json({ votadas: [], restantes: LIMITE_VOTOS });
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/concurso_votos?concurso=eq.' + encodeURIComponent(concurso) + '&email=eq.' + encodeURIComponent(email) + '&select=entrada_id',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const data = await r.json();
+      const votadas = Array.isArray(data) ? data.map(v => v.entrada_id) : [];
+      return res.status(200).json({ votadas, restantes: Math.max(0, LIMITE_VOTOS - votadas.length) });
+    }
+
+    // ── votarConcurso — hasta 5 votos por email por concurso, 1 por mascota ──
+    // No requiere cuenta de PetMi: cualquiera puede votar solo con su email.
+    if (action === 'votarConcurso' && req.method === 'POST') {
+      const { concurso, entrada_id, email } = req.body;
+      const LIMITE_VOTOS = 5;
+      if (!concurso || !entrada_id || !email || !email.includes('@')) {
+        return res.status(200).json({ ok: false, error: 'Correo inválido' });
+      }
+      const emailL = email.trim().toLowerCase();
+
+      const rCheck = await fetch(
+        SUPABASE_URL + '/rest/v1/concurso_votos?concurso=eq.' + encodeURIComponent(concurso) + '&email=eq.' + encodeURIComponent(emailL) + '&select=entrada_id',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const existentes = await rCheck.json();
+      const votadasArr = Array.isArray(existentes) ? existentes.map(v => v.entrada_id) : [];
+
+      if (votadasArr.includes(entrada_id)) {
+        return res.status(200).json({ ok: false, ya_voto_esta: true, error: 'Ya votaste por esta mascota' });
+      }
+      if (votadasArr.length >= LIMITE_VOTOS) {
+        return res.status(200).json({ ok: false, limite_alcanzado: true, error: 'Ya usaste tus ' + LIMITE_VOTOS + ' votos en este concurso' });
+      }
+
+      const rVoto = await fetch(SUPABASE_URL + '/rest/v1/concurso_votos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ concurso, entrada_id, email: emailL })
+      });
+      if (!rVoto.ok) {
+        const errTxt = await rVoto.text().catch(() => '');
+        if (rVoto.status === 409 || errTxt.toLowerCase().indexOf('duplicate') >= 0) {
+          return res.status(200).json({ ok: false, ya_voto_esta: true, error: 'Ya votaste por esta mascota' });
+        }
+        console.error('votarConcurso insert failed:', rVoto.status, errTxt);
+        return res.status(200).json({ ok: false, error: errTxt || ('HTTP ' + rVoto.status) });
+      }
+
+      const rEntrada = await fetch(
+        SUPABASE_URL + '/rest/v1/concurso_entradas?id=eq.' + encodeURIComponent(entrada_id) + '&select=votos',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const entradaData = await rEntrada.json();
+      const votosActuales = (Array.isArray(entradaData) && entradaData[0] && entradaData[0].votos) || 0;
+      await fetch(SUPABASE_URL + '/rest/v1/concurso_entradas?id=eq.' + encodeURIComponent(entrada_id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ votos: votosActuales + 1 })
+      });
+
+      return res.status(200).json({ ok: true, restantes: LIMITE_VOTOS - votadasArr.length - 1 });
+    }
+
+    // ── getConcursoEntradasAdmin (admin — incluye ocultas) ──────
+    if (action === 'getConcursoEntradasAdmin') {
+      const concurso = req.query.concurso || '';
+      let url = SUPABASE_URL + '/rest/v1/concurso_entradas?select=*&order=votos.desc';
+      if (concurso) url += '&concurso=eq.' + encodeURIComponent(concurso);
+      const r = await fetch(url, { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const data = await r.json();
+      return res.status(200).json({ entradas: Array.isArray(data) ? data : [] });
+    }
+
+    // ── toggleConcursoEntrada (admin — ocultar entrada inapropiada) ──
+    if (action === 'toggleConcursoEntrada' && req.method === 'POST') {
+      const { id, activo } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/concurso_entradas?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ activo })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── eliminarConcursoEntrada (admin) ──────────────────────────
+    if (action === 'eliminarConcursoEntrada' && req.method === 'POST') {
+      const { id } = req.body;
+      if (!id) return res.status(200).json({ ok: false });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/concurso_entradas?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── getGaleriaMascota (fotos de concursos para "Mi Galería" en el perfil) ──
+    if (action === 'getGaleriaMascota') {
+      const uid = (req.query.uid || '').toUpperCase();
+      if (!uid) return res.status(200).json({ fotos: [] });
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/concurso_entradas?uid_mascota=eq.' + encodeURIComponent(uid) + '&activo=eq.true&select=id,foto_url,caption,concurso,votos,created_at&order=created_at.desc',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+      );
+      const data = await r.json();
+      return res.status(200).json({ fotos: Array.isArray(data) ? data : [] });
+    }
+
+    // ── registrarLeadConcurso (guarda el correo de quien vota + su preferencia de contacto) ──
+    if (action === 'registrarLeadConcurso' && req.method === 'POST') {
+      const { concurso, email, acepta_ofertas } = req.body;
+      if (!concurso || !email || !email.includes('@')) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/concurso_leads?on_conflict=concurso,email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ concurso, email: email.trim().toLowerCase(), acepta_ofertas: !!acepta_ofertas })
+      });
+      if (!r.ok) {
+        const errTxt = await r.text().catch(() => '');
+        console.error('registrarLeadConcurso failed:', r.status, errTxt);
+        return res.status(200).json({ ok: false, error: errTxt });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── getLeadsConcursoAdmin (admin — para armar la campaña despues) ──
+    if (action === 'getLeadsConcursoAdmin') {
+      const concurso = req.query.concurso || '';
+      let url = SUPABASE_URL + '/rest/v1/concurso_leads?acepta_ofertas=eq.true&select=email,created_at';
+      if (concurso) url += '&concurso=eq.' + encodeURIComponent(concurso);
+      const r = await fetch(url, { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
+      const leads = await r.json();
+      const emails = (Array.isArray(leads) ? leads : []).map(l => l.email);
+      if (!emails.length) return res.status(200).json({ yaRegistrados: [], nuevos: [] });
+
+      const rMasc = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?email=in.(' + emails.map(e => '"' + e + '"').join(',') + ')&select=email,dueno',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const mascData = await rMasc.json();
+      const emailsRegistrados = new Set((Array.isArray(mascData) ? mascData : []).map(m => m.email));
+      const duenoPorEmail = {};
+      (Array.isArray(mascData) ? mascData : []).forEach(m => { if (!duenoPorEmail[m.email]) duenoPorEmail[m.email] = m.dueno || ''; });
+
+      const yaRegistrados = emails.filter(e => emailsRegistrados.has(e)).map(e => ({ email: e, dueno: duenoPorEmail[e] || '' }));
+      const nuevos = emails.filter(e => !emailsRegistrados.has(e));
+
+      return res.status(200).json({ yaRegistrados, nuevos });
+    }
+
     // ── getImpacto ────────────────────────────────────────────
     if (action === 'getImpacto') {
       const [rMascotas, rAdopciones, rPerdidos, rRecuperados] = await Promise.all([
