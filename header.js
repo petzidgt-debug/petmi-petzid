@@ -458,7 +458,7 @@
         if(d.mascotas&&d.mascotas[0]&&d.mascotas[0].especie)
           localStorage.setItem('petmi_especie',d.mascotas[0].especie);
         petmiLoginMsg3('¡Bienvenido/a!','success');
-        setTimeout(function(){window.location.reload();},1000);
+        setTimeout(function(){window.location.href='/galeria.html';},1000);
       } else {
         petmiLoginMsg3(d.msg||'Código incorrecto','error');
         if(btn){btn.disabled=false;btn.textContent='Verificar código';}
@@ -499,7 +499,7 @@
         if(d.mascotas&&d.mascotas[0]&&d.mascotas[0].especie)
           localStorage.setItem('petmi_especie',d.mascotas[0].especie);
         petmiLoginMsg2('¡Bienvenido/a!','success');
-        setTimeout(function(){window.location.reload();},1000);
+        setTimeout(function(){window.location.href='/galeria.html';},1000);
       } else if(d.code==='NO_ACCOUNT') {
         var el2=document.getElementById('petmiLoginMsg2');
         if(el2){
