@@ -4,23 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="icon" href="/favico.jpg" type="image/jpeg">
-<title>Mascota Más Patriota — PetMi</title>
-<meta property="og:title" content="Mascota Más Patriota — PetMi">
-<meta property="og:description" content="Vota por la mascota más patriota de la comunidad PetMi.">
+<title>Patitas Patriotas — PetMi</title>
+<meta property="og:title" content="Patitas Patriotas — PetMi">
+<meta property="og:description" content="Presume el orgullo chapín de tu peludito — vota por tu favorita.">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .wrap{max-width:640px;margin:0 auto;padding:0 16px 60px}
 
 .titulo-pagina{text-align:center;padding:32px 0 8px}
-.titulo-pagina h1{font-size:24px;font-weight:900;color:#1a1a2e}
-.titulo-pagina p{font-size:13px;color:#888;margin-top:6px}
-.chips-info{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
-.chip{background:#E0F7F7;color:#007a7a;font-size:11px;font-weight:700;padding:6px 14px;border-radius:99px}
-.chip.premio{background:#FFF8E1;color:#856404}
+.badge-concurso{display:inline-block;background:#1a5fd9;color:#fff;font-weight:900;font-size:12px;letter-spacing:.3px;padding:8px 18px;border-radius:99px;margin-bottom:14px}
+.titulo-pagina h1{font-size:44px;font-weight:900;line-height:0.95;color:#fff;text-shadow:-2px -2px 0 #1a5fd9,2px -2px 0 #1a5fd9,-2px 2px 0 #1a5fd9,2px 2px 0 #1a5fd9,0 3px 0 #1a5fd9}
+.titulo-pagina p{font-size:14px;color:#555;margin-top:14px;max-width:320px;margin-left:auto;margin-right:auto}
+.tagline-bubble{display:inline-block;background:#F5C842;color:#5c4400;font-weight:700;font-size:13px;padding:12px 20px;border-radius:16px;line-height:1.4;max-width:260px;margin-top:16px}
+.chips-info{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+.chip{background:#E6F1FB;color:#0c447c;font-size:11px;font-weight:700;padding:6px 14px;border-radius:99px}
+.chip.premio{background:#FBEAF0;color:#993556}
 
 .reglas-toggle{text-align:center;margin:14px 0 4px}
-.reglas-toggle button{background:none;border:none;color:#00838f;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer}
+.reglas-toggle button{background:none;border:none;color:#1a5fd9;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer}
 .reglas-box{display:none;background:#fff;border-radius:14px;padding:16px 18px;margin:10px 0;font-size:12.5px;color:#555;line-height:1.8}
 .reglas-box.open{display:block}
 .reglas-box ul{padding-left:18px}
@@ -29,22 +31,22 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .card-envio h2{font-size:16px;font-weight:900;color:#1a1a2e;margin-bottom:14px}
 .selectMascota{width:100%;padding:12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:12px;background:#fff}
 .foto-upload{border:2px dashed #e0e0e0;border-radius:12px;padding:12px;text-align:center;cursor:pointer;margin-bottom:12px;position:relative;transition:all .2s}
-.foto-upload:hover{border-color:#00B4B4;background:#f8fffe}
+.foto-upload:hover{border-color:#1a5fd9;background:#f5f9ff}
 .foto-upload input{display:none}
 .foto-upload img{width:100%;max-height:220px;object-fit:cover;border-radius:8px;display:none}
 .foto-upload-label{font-size:13px;color:#aaa;padding:20px 0;display:block}
-.foto-upload-label span{color:#00B4B4;font-weight:700}
+.foto-upload-label span{color:#1a5fd9;font-weight:700}
 textarea.caption{width:100%;padding:12px;border:1.5px solid #eee;border-radius:10px;font-size:14px;font-family:inherit;resize:vertical;min-height:70px;margin-bottom:14px}
-.btn-enviar{width:100%;background:#00B4B4;color:#fff;border:none;padding:14px;border-radius:99px;font-weight:900;font-size:15px;cursor:pointer}
+.btn-enviar{width:100%;background:#1a5fd9;color:#fff;border:none;padding:14px;border-radius:99px;font-weight:900;font-size:15px;cursor:pointer}
 .btn-enviar:disabled{opacity:.6;cursor:default}
 .login-aviso{text-align:center;padding:20px;color:#888;font-size:14px}
-.login-aviso a{color:#00B4B4;font-weight:700;text-decoration:none}
+.login-aviso a{color:#1a5fd9;font-weight:700;text-decoration:none}
 
 .card-votar-email{background:#fff;border-radius:14px;padding:16px 18px;margin:20px 0 16px;text-align:center}
 .card-votar-email p{font-size:13px;color:#666;margin-bottom:10px}
 .input-email-voto{width:100%;max-width:280px;padding:11px 14px;border:1.5px solid #eee;border-radius:99px;font-size:14px;text-align:center;margin-bottom:8px}
 .btn-guardar-email{background:#1a1a2e;color:#fff;border:none;padding:10px 22px;border-radius:99px;font-weight:700;font-size:13px;cursor:pointer}
-.votos-restantes{font-size:12px;color:#00838f;font-weight:700;margin-top:8px}
+.votos-restantes{font-size:12px;color:#0c447c;font-weight:700;margin-top:8px}
 .check-ofertas{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:10px;cursor:pointer}
 .check-ofertas input{width:14px;height:14px}
 
@@ -56,11 +58,11 @@ textarea.caption{width:100%;padding:12px;border:1.5px solid #eee;border-radius:1
 .entrada-nombre{font-size:13px;font-weight:900;color:#1a1a2e}
 .entrada-caption{font-size:11px;color:#888;margin-top:2px;line-height:1.4;min-height:14px}
 .entrada-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:6px}
-.entrada-votos{font-size:12px;font-weight:700;color:#00838f;flex-shrink:0}
+.entrada-votos{font-size:12px;font-weight:700;color:#0c447c;flex-shrink:0}
 .entrada-btns{display:flex;gap:6px}
-.btn-votar{background:#F5C842;color:#1a1a2e;border:none;padding:6px 12px;border-radius:99px;font-weight:700;font-size:11px;cursor:pointer;white-space:nowrap}
+.btn-votar{background:#1a5fd9;color:#fff;border:none;padding:6px 12px;border-radius:99px;font-weight:700;font-size:11px;cursor:pointer;white-space:nowrap}
 .btn-votar:disabled{background:#eee;color:#aaa;cursor:default}
-.btn-votar.votado{background:#E0F7F7;color:#007a7a}
+.btn-votar.votado{background:#FBEAF0;color:#993556}
 .btn-compartir{background:#f0f0f0;color:#555;border:none;width:28px;height:28px;border-radius:50%;font-size:13px;cursor:pointer;flex-shrink:0}
 
 .vacio{text-align:center;padding:40px 20px;color:#aaa;font-size:14px}
@@ -71,8 +73,10 @@ textarea.caption{width:100%;padding:12px;border:1.5px solid #eee;border-radius:1
 
 <div class="wrap">
   <div class="titulo-pagina">
-    <h1>🇬🇹 Mascota Más Patriota</h1>
-    <p>Sube una foto de tu mascota con algo patrio y vota por tus favoritas</p>
+    <div class="badge-concurso">CONCURSO DE MASCOTAS</div>
+    <h1>Patitas<br>patriotas</h1>
+    <p>Sube una foto de tu mascota con algo patrio o en un lugar de nuestra bella Guatemala! Descarga y comparte tu foto y vota por tus favoritas</p>
+    <div><span class="tagline-bubble">¡Presume el orgullo chapín de tu peludito!</span></div>
     <div class="chips-info">
       <div class="chip">Del 21 de agosto al 15 de septiembre</div>
       <div class="chip premio">🧺 Premio: canasta PetMi</div>
@@ -176,7 +180,7 @@ function previsualizarFoto(input){
     prev.src = e.target.result;
     prev.style.display = 'block';
     document.getElementById('fotoLabel').style.display = 'none';
-    document.getElementById('fotoWrap').style.borderColor = '#00B4B4';
+    document.getElementById('fotoWrap').style.borderColor = '#1a5fd9';
   };
   reader.readAsDataURL(file);
 }
