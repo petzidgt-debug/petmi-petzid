@@ -145,6 +145,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('saludreglas',this)"><span class="nav-icon">🩺</span>Reglas de Salud</div>
       <div class="nav-item" onclick="showScreen('ruletapremios',this)"><span class="nav-icon">🎡</span>Ruleta de Premios</div>
       <div class="nav-item" onclick="showScreen('reactivacion',this)"><span class="nav-icon">📧</span>Reactivación</div>
+      <div class="nav-item" onclick="showScreen('concurso',this)"><span class="nav-icon">🇬🇹</span>Concurso</div>
       <div class="nav-item" onclick="showScreen('tienda',this)"><span class="nav-icon">🛍️</span>Tienda</div>
       <div class="nav-item" onclick="showScreen('busquedas',this)"><span class="nav-icon">🔍</span>Búsquedas</div>
       <div class="nav-item" onclick="showScreen('pedidos',this)"><span class="nav-icon">📦</span>Pedidos</div>
@@ -546,6 +547,26 @@ tbody tr:last-child td{border-bottom:none}
           <table>
             <thead><tr><th>Dueño</th><th>Mascota(s)</th><th>Correo</th><th>Registrado</th><th>Correos ya enviados</th><th>WhatsApp</th></tr></thead>
             <tbody id="nuncaVolvieronBody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="screenConcurso" class="screen">
+      <h2 class="screen-title">🇬🇹 Concurso — Mascota Más Patriota</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Todas las fotos enviadas al concurso, ordenadas por votos. Puedes ocultar una entrada (deja de verse en la galería pública, sin borrar el dato) o eliminarla por completo.</p>
+
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="stat-card" style="flex:1;min-width:120px"><div class="stat-icon">🐾</div><div class="stat-num" id="concursoTotal">-</div><div class="stat-lbl">Participantes</div></div>
+        <div class="stat-card" style="flex:1;min-width:120px"><div class="stat-icon">🗳️</div><div class="stat-num" id="concursoVotosTotal">-</div><div class="stat-lbl">Votos totales</div></div>
+        <div class="stat-card" style="flex:1;min-width:120px"><div class="stat-icon">🙈</div><div class="stat-num" id="concursoOcultas">-</div><div class="stat-lbl">Ocultas</div></div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Foto</th><th>Mascota</th><th>Correo</th><th>Votos</th><th>Enviado</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="concursoBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1818,6 +1839,7 @@ function showScreen(name,el){
   if(name==='saludreglas') { loadReglasSalud(); loadCondicionesAdmin(); }
   if(name==='ruletapremios') { loadRuletaPremios(); loadRuletaGiros(); }
   if(name==='reactivacion') { loadReactivacionEfectividad(); loadNuncaHanVuelto(); }
+  if(name==='concurso') loadConcurso();
   if(name==='tienda') loadTiendaProductos();
   if(name==='busquedas') loadBusquedas();
   if(name==='pedidos') loadPedidos();
@@ -2770,6 +2792,74 @@ function verDetalleRaza(raza){
 // ── Ruleta de Premios (CRUD) ─────────────────────────────────────
 // ── Nunca han vuelto: quiénes nunca entraron desde su registro,
 // qué correos de la serie ya recibieron, y link directo de WhatsApp ──
+// ── Concurso: participantes, votos, ocultar/eliminar ────────────
+function loadConcurso(){
+  var tbody = document.getElementById('concursoBody');
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr>';
+
+  fetch('/api/galeria?action=getConcursoEntradasAdmin')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var entradas = d.entradas || [];
+    if(!entradas.length){
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Todavía no hay participantes.</td></tr>';
+      document.getElementById('concursoTotal').textContent = 0;
+      document.getElementById('concursoVotosTotal').textContent = 0;
+      document.getElementById('concursoOcultas').textContent = 0;
+      return;
+    }
+
+    var votosTotal = entradas.reduce(function(s,e){ return s + (e.votos||0); }, 0);
+    var ocultas = entradas.filter(function(e){ return !e.activo; }).length;
+    document.getElementById('concursoTotal').textContent = entradas.length;
+    document.getElementById('concursoVotosTotal').textContent = votosTotal;
+    document.getElementById('concursoOcultas').textContent = ocultas;
+
+    tbody.innerHTML = entradas.map(function(e){
+      var fecha = e.created_at ? new Date(e.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'short'}) : '—';
+      var fotoHtml = e.foto_url
+        ? '<div style="width:44px;height:44px;border-radius:8px;background-image:url(\''+e.foto_url.replace(/'/g,"\\'")+'\');background-size:cover;background-position:center"></div>'
+        : '<div style="width:44px;height:44px;border-radius:8px;background:#eee"></div>';
+      var estadoHtml = e.activo
+        ? '<span style="background:#e0f0e0;color:#2e7d32;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700">Visible</span>'
+        : '<span style="background:#f0f0f0;color:#888;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700">Oculta</span>';
+      return '<tr>'
+        + '<td>'+fotoHtml+'</td>'
+        + '<td>'+(e.nombre_mascota||'—')+(e.caption?'<div style="font-size:11px;color:#999;margin-top:2px">'+e.caption+'</div>':'')+'</td>'
+        + '<td>'+(e.email||'—')+'</td>'
+        + '<td style="font-weight:700">'+(e.votos||0)+'</td>'
+        + '<td>'+fecha+'</td>'
+        + '<td>'+estadoHtml+'</td>'
+        + '<td>'
+          + '<button class="btn-sm" onclick="toggleConcursoAdmin(\''+e.id+'\','+(!e.activo)+')">'+(e.activo?'Ocultar':'Mostrar')+'</button>'
+          + '<button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarConcursoAdmin(\''+e.id+'\')">🗑️ Eliminar</button>'
+        + '</td>'
+        + '</tr>';
+    }).join('');
+  }).catch(function(){
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c0392b">Error al cargar</td></tr>';
+  });
+}
+
+function toggleConcursoAdmin(id, nuevoActivo){
+  fetch('/api/galeria?action=toggleConcursoEntrada', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ id: id, activo: nuevoActivo })
+  }).then(function(r){return r.json();})
+  .then(function(){ loadConcurso(); })
+  .catch(function(){ alert('No se pudo actualizar.'); });
+}
+
+function eliminarConcursoAdmin(id){
+  if(!confirm('¿Eliminar esta entrada del concurso? Esto no se puede deshacer.')) return;
+  fetch('/api/galeria?action=eliminarConcursoEntrada', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ id: id })
+  }).then(function(r){return r.json();})
+  .then(function(){ loadConcurso(); })
+  .catch(function(){ alert('No se pudo eliminar.'); });
+}
+
 function loadNuncaHanVuelto(){
   var tbody = document.getElementById('nuncaVolvieronBody');
   tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr>';
