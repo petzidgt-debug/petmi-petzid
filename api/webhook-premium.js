@@ -1,70 +1,66 @@
 // /api/webhook-premium.js
-// Recibe webhooks de Recurrente via Svix y activa Premium en Supabase.
+// Recibe webhooks de Recurrente (vía Svix) y activa Premium en Supabase.
 //
-// v2 (25 ago 2026) — reescrito con la estructura REAL del payload de
-// Recurrente, confirmada en su Event Catalog (Svix). El codigo anterior
-// asumia un formato tipo Stripe (event.type + event.data.customer_email)
-// que NUNCA coincide con lo que Recurrente manda de verdad:
+// v3 (26 ago 2026) — reescrito desde cero después de encontrar varios
+// bugs acumulados en la versión anterior:
+//   1. El archivo nunca se había desplegado con el nombre/ruta correctos.
+//   2. El código asumía un formato de payload tipo Stripe (event.type +
+//      event.data.customer_email) que Recurrente NO usa — todo viene
+//      plano en la raíz: event_type, customer.email, product.id.
+//   3. La verificación de firma reconstruía el cuerpo con JSON.stringify
+//      en vez de leer el cuerpo crudo — eso hacía que la firma SIEMPRE
+//      fallara, sin importar si el secreto estaba bien puesto.
+//   4. El endpoint se había desactivado solo en Svix por tantos fallos.
 //
-//   {
-//     "event_type": "bank_transfer_intent.succeeded",   <- NO "type"
-//     "customer": { "email": "...", "full_name": "..." },  <- NO "data.customer_email"
-//     "product": { "id": "pr_..." },
-//     "amount_in_cents": 2500,
-//     ...
-//   }
-//
-// Todo viene en la RAIZ del payload, no dentro de un objeto "data".
-// Ademas el bloque de payment_intent estaba anidado DENTRO del bloque de
-// subscription, asi que nunca se podia ejecutar — codigo muerto.
+// Diseño nuevo:
+//   - Guarda TODO evento recibido en la tabla "webhook_logs" de Supabase
+//     (pasó o no la verificación, se haya procesado o no) — así se puede
+//     depurar sin depender de los logs de Vercel, que en el plan gratis
+//     solo guardan los últimos 30 minutos.
+//   - Enrutado por product.id: cada producto de Recurrente (Premium, y
+//     más adelante la Carrera) tiene su propio manejador. Si llega un
+//     product.id que no está en PRODUCTOS, se registra pero se ignora
+//     sin romper nada.
+
+export const config = { api: { bodyParser: false } };
 
 const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
-const GAS_URL     = 'https://script.google.com/macros/s/AKfycbzuBevjWzfX021aM7n29nB2feFAk3s3gbSW4MmstS0VPaaK24UcYitHcaEDtZzUDcWh/exec';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-
-// Token de verificacion de Svix — el de tu dashboard de Svix
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzuBevjWzfX021aM7n29nB2feFAk3s3gbSW4MmstS0VPaaK24UcYitHcaEDtZzUDcWh/exec';
 const SVIX_SECRET = 'whsec_XECG6MKLlkD7eTynodhQ098IW68sF9oF';
 
-// IMPORTANTE: pon aqui el product.id real de tu link de Premium en Recurrente.
-// Lo ves en el JSON de cualquier webhook de Premium ya recibido (campo "product.id"),
-// o en el panel de Recurrente al abrir el producto. Mientras esto quede vacio,
-// el codigo activa Premium para CUALQUIER bank_transfer_intent.succeeded que
-// llegue a este endpoint — lo cual esta bien SOLO SI este endpoint únicamente
-// recibe eventos de Premium. En cuanto conectes otro producto (ej. la carrera)
-// a este mismo endpoint, hay que llenar este valor para no activar Premium
-// por error con el pago de otra cosa.
-const PRODUCT_ID_PREMIUM = ''; // ej: 'pr_ab12cd34'
+// ── Mapa de productos conocidos ──────────────────────────────────
+// IMPORTANTE: llenar PREMIUM con el product.id real en cuanto se
+// confirme (se puede ver consultando webhook_logs después de un
+// primer intento — ver instrucciones al final del archivo).
+const PRODUCTOS = {
+  PREMIUM: '', // ej: 'pr_ab12cd34' — mientras esté vacío, CUALQUIER
+               // evento de bank_transfer_intent.succeeded activa Premium
+               // (correcto solo mientras este endpoint reciba únicamente
+               // pagos de Premium)
+};
 
-// ── Email de bienvenida Premium ───────────────────────────────
-async function enviarBienvenidaPremium(email, nombre, dueno, hasta) {
-  try {
-    const hastaStr = hasta
-      ? new Date(hasta).toLocaleDateString('es-GT', {day:'2-digit', month:'long', year:'numeric'})
-      : 'un año completo';
-
-    await fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action:      'notificarPremiumActivado',
-        emailDueno:  email,
-        nombreDueno: dueno  || '',
-        nombreMasc:  nombre || '',
-        hastaStr:    hastaStr
-      }),
-      redirect: 'follow'
-    });
-    console.log('Email bienvenida premium enviado a:', email);
-  } catch(err) {
-    console.error('Error email premium:', err.message);
-  }
+function leerCuerpoCrudo(req) {
+  return new Promise(function(resolve, reject) {
+    var data = '';
+    req.on('data', function(chunk) { data += chunk; });
+    req.on('end', function() { resolve(data); });
+    req.on('error', reject);
+  });
 }
 
-async function activarPremium(email, res, tipoEvento) {
-  if (!email) {
-    console.error('activarPremium: sin email en el payload. Evento:', tipoEvento);
-    return res.status(200).json({ ok: false, error: 'No email found' });
-  }
+async function guardarLog(datos) {
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/webhook_logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+      body: JSON.stringify(datos)
+    });
+  } catch(e) { console.error('No se pudo guardar en webhook_logs:', e.message); }
+}
+
+async function activarPremium(email) {
+  if (!email) return { ok: false, motivo: 'sin_email' };
 
   const hasta = new Date();
   hasta.setFullYear(hasta.getFullYear() + 1);
@@ -73,31 +69,28 @@ async function activarPremium(email, res, tipoEvento) {
     SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email.toLowerCase()),
     {
       method: 'PATCH',
-      headers: {
-        'Content-Type':  'application/json',
-        'apikey':        SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Prefer':        'return=minimal'
-      },
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ premium: true, premium_hasta: hasta.toISOString() })
     }
   );
-
-  console.log('Supabase PATCH status:', r.status, 'email:', email, 'evento:', tipoEvento);
 
   if (r.ok) {
     try {
       const uRes = await fetch(
         SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email.toLowerCase()) + '&select=nombre,dueno&limit=1',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
       );
       const uData = await uRes.json();
-      const u = uData && uData[0] ? uData[0] : {};
-      await enviarBienvenidaPremium(email, u.nombre || '', u.dueno || '', hasta.toISOString());
-    } catch(e) { console.error('Fetch usuario:', e.message); }
+      const u = (uData && uData[0]) || {};
+      const hastaStr = hasta.toLocaleDateString('es-GT', { day: '2-digit', month: 'long', year: 'numeric' });
+      await fetch(GAS_URL, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'notificarPremiumActivado', emailDueno: email, nombreDueno: u.dueno || '', nombreMasc: u.nombre || '', hastaStr })
+      }).catch(function(){});
+    } catch(e) { console.error('Fetch usuario / email bienvenida:', e.message); }
   }
 
-  return res.status(200).json({ ok: r.ok, action: 'activated', email, evento: tipoEvento });
+  return { ok: r.ok, motivo: r.ok ? 'activado' : ('supabase_status_' + r.status) };
 }
 
 export default async function handler(req, res) {
@@ -106,61 +99,60 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const payload = JSON.stringify(req.body);
+  const payload = await leerCuerpoCrudo(req);
   const svixId        = req.headers['svix-id'];
   const svixTimestamp = req.headers['svix-timestamp'];
   const svixSignature = req.headers['svix-signature'];
 
-  console.log('Webhook recibido:', svixId);
-  console.log('Payload:', payload.substring(0, 400));
-
+  let firmaValida = false;
   try {
     const { Webhook } = await import('svix');
     const wh = new Webhook(SVIX_SECRET);
-    wh.verify(payload, {
-      'svix-id':        svixId,
-      'svix-timestamp': svixTimestamp,
-      'svix-signature': svixSignature
-    });
+    wh.verify(payload, { 'svix-id': svixId, 'svix-timestamp': svixTimestamp, 'svix-signature': svixSignature });
+    firmaValida = true;
   } catch(err) {
-    console.error('Firma invalida:', err.message);
+    await guardarLog({ fuente: 'recurrente', payload_completo: safeParse(payload), firma_valida: false, procesado: false, resultado: 'firma_invalida: ' + err.message });
     return res.status(400).json({ error: 'Invalid signature' });
   }
 
-  const event      = req.body;
-  const tipoEvento = event.event_type || event.type || ''; // event_type es el real; type queda de respaldo
-  const email      = (event.customer && event.customer.email) || event.customer_email || '';
+  const event      = safeParse(payload) || {};
+  const tipoEvento = event.event_type || '';
+  const email      = (event.customer && event.customer.email) || '';
   const productId  = (event.product && event.product.id) || '';
 
-  console.log('event_type:', tipoEvento, '| email:', email, '| product.id:', productId);
+  // Guardar SIEMPRE, pase lo que pase después — esto es lo que permite
+  // depurar sin depender de los logs de Vercel.
+  const logBase = { fuente: 'recurrente', event_type: tipoEvento, email, product_id: productId, payload_completo: event, firma_valida: true };
 
-  // Si ya se configuro el product.id de Premium, solo procesar eventos de ESE producto.
-  // Si se dejo vacio (todavia no se sabe cual es), procesa cualquier evento — util
-  // mientras se confirma el product.id real viendo estos logs.
-  if (PRODUCT_ID_PREMIUM && productId && productId !== PRODUCT_ID_PREMIUM) {
-    console.log('Evento de otro producto, ignorado para Premium. product.id:', productId);
+  // Si ya se configuró el product.id de Premium, filtrar por él.
+  // Si está vacío todavía (no confirmado), procesar cualquier evento —
+  // así el primer intento real sirve para descubrir el product.id en
+  // la tabla webhook_logs.
+  const esDePremium = !PRODUCTOS.PREMIUM || productId === PRODUCTOS.PREMIUM;
+
+  if (!esDePremium) {
+    await guardarLog({ ...logBase, procesado: false, resultado: 'ignorado_otro_producto' });
     return res.status(200).json({ ok: true, action: 'ignored_other_product', productId });
   }
 
-  // ── Pago por transferencia bancaria completado ──────────────
-  if (tipoEvento === 'bank_transfer_intent.succeeded') {
-    return activarPremium(email, res, tipoEvento);
+  const EVENTOS_QUE_ACTIVAN = ['bank_transfer_intent.succeeded', 'payment_intent.succeeded', 'balance_intent.succeeded'];
+  const EVENTOS_SIN_COMPLETAR = ['bank_transfer_intent.failed', 'bank_transfer_intent.pending', 'bank_transfer_intent.create', 'bank_transfer_intent.update'];
+
+  if (EVENTOS_QUE_ACTIVAN.includes(tipoEvento)) {
+    const resultado = await activarPremium(email);
+    await guardarLog({ ...logBase, procesado: true, resultado: JSON.stringify(resultado) });
+    return res.status(200).json({ ok: resultado.ok, action: resultado.motivo, email });
   }
 
-  // ── Pago con tarjeta / balance completado (nombres probables,
-  // aun no confirmados con un ejemplo real — mismo formato plano que
-  // bank_transfer_intent, por consistencia con el resto de la API) ──
-  if (tipoEvento === 'payment_intent.succeeded' || tipoEvento === 'balance_intent.succeeded') {
-    return activarPremium(email, res, tipoEvento);
-  }
-
-  // Eventos de transferencia que fallo o quedo pendiente — no hacer nada,
-  // pero registrar para poder revisar despues si hace falta.
-  if (tipoEvento === 'bank_transfer_intent.failed' || tipoEvento === 'bank_transfer_intent.pending') {
-    console.log('Transferencia sin completar (' + tipoEvento + '), no se activa Premium. email:', email);
+  if (EVENTOS_SIN_COMPLETAR.includes(tipoEvento)) {
+    await guardarLog({ ...logBase, procesado: true, resultado: 'sin_completar_aun' });
     return res.status(200).json({ ok: true, action: 'not_completed', evento: tipoEvento });
   }
 
-  console.log('Evento no manejado:', tipoEvento);
+  await guardarLog({ ...logBase, procesado: false, resultado: 'evento_no_manejado' });
   return res.status(200).json({ ok: true, action: 'ignored', type: tipoEvento });
+}
+
+function safeParse(str) {
+  try { return JSON.parse(str); } catch(e) { return { _no_parseable: true, raw: String(str).substring(0, 500) }; }
 }
