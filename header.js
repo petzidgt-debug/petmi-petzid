@@ -369,6 +369,19 @@
   window.petmiToggleHam = function(){ var m=document.getElementById('petmiMobMenu'); if(m) m.classList.toggle('open'); };
   window.petmiLimpiarNotif = function(){ var b=document.getElementById('petmiNotifBadge'); if(b) b.style.display='none'; };
   window.petmiCerrarSesion = function(){ localStorage.removeItem('petzid_email'); localStorage.removeItem('petzid_dueno'); window.location.href='/galeria.html'; };
+
+  // Tras iniciar sesión: si estabas en index.html (la pantalla de entrada,
+  // sin nada más que hacer ahí), te manda a la galería. Si iniciaste sesión
+  // desde cualquier otra página (ej. el concurso), te quedas ahí mismo —
+  // así no pierdes el progreso de lo que estabas haciendo.
+  function petmiRedirigirTrasLogin(){
+    var path = window.location.pathname;
+    if(path === '/' || path === '' || path.indexOf('index.html') >= 0){
+      window.location.href = '/galeria.html';
+    } else {
+      window.location.reload();
+    }
+  }
   window.petmiAbrirLogin = function(){
     var o=document.getElementById('petmiLoginOverlay');
     if(o){
@@ -458,7 +471,7 @@
         if(d.mascotas&&d.mascotas[0]&&d.mascotas[0].especie)
           localStorage.setItem('petmi_especie',d.mascotas[0].especie);
         petmiLoginMsg3('¡Bienvenido/a!','success');
-        setTimeout(function(){window.location.href='/galeria.html';},1000);
+        setTimeout(function(){petmiRedirigirTrasLogin();},1000);
       } else {
         petmiLoginMsg3(d.msg||'Código incorrecto','error');
         if(btn){btn.disabled=false;btn.textContent='Verificar código';}
@@ -499,7 +512,7 @@
         if(d.mascotas&&d.mascotas[0]&&d.mascotas[0].especie)
           localStorage.setItem('petmi_especie',d.mascotas[0].especie);
         petmiLoginMsg2('¡Bienvenido/a!','success');
-        setTimeout(function(){window.location.href='/galeria.html';},1000);
+        setTimeout(function(){petmiRedirigirTrasLogin();},1000);
       } else if(d.code==='NO_ACCOUNT') {
         var el2=document.getElementById('petmiLoginMsg2');
         if(el2){
