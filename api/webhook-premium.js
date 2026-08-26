@@ -15,7 +15,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbzuBevjWzfX021aM7n29nB2
 const SVIX_SECRET = 'whsec_XECG6MKLlkD7eTynodhQ098IW68sF9oF';
 
 const PRODUCTOS = {
-  PREMIUM: '', // llenar con el product.id real en cuanto se confirme via webhook_logs
+  PREMIUM: 'pay_bjshuwfn', // confirmado el 26 ago 2026 via webhook_logs (pago real de cesar.combox@gmail.com)
 };
 
 async function guardarLog(datos) {
