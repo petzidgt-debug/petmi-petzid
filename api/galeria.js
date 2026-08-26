@@ -1128,10 +1128,12 @@ export default async function handler(req, res) {
     if (action === 'votarConcurso' && req.method === 'POST') {
       const { concurso, entrada_id, email } = req.body;
       const LIMITE_VOTOS = 5;
+      const LIMITE_VOTOS_POR_IP = 15; // ~3 personas de una misma casa/oficina, para no bloquear redes compartidas
       if (!concurso || !entrada_id || !email || !email.includes('@')) {
         return res.status(200).json({ ok: false, error: 'Correo inválido' });
       }
       const emailL = email.trim().toLowerCase();
+      const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || 'desconocida';
 
       const rCheck = await fetch(
         SUPABASE_URL + '/rest/v1/concurso_votos?concurso=eq.' + encodeURIComponent(concurso) + '&email=eq.' + encodeURIComponent(emailL) + '&select=entrada_id',
@@ -1147,10 +1149,23 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: false, limite_alcanzado: true, error: 'Ya usaste tus ' + LIMITE_VOTOS + ' votos en este concurso' });
       }
 
+      // Limite adicional por IP — protege contra alguien inventando muchos
+      // correos distintos desde la misma conexion.
+      if (ip !== 'desconocida') {
+        const rIp = await fetch(
+          SUPABASE_URL + '/rest/v1/concurso_votos?concurso=eq.' + encodeURIComponent(concurso) + '&ip=eq.' + encodeURIComponent(ip) + '&select=id',
+          { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'count=exact' } }
+        );
+        const ipVotos = await rIp.json();
+        if (Array.isArray(ipVotos) && ipVotos.length >= LIMITE_VOTOS_POR_IP) {
+          return res.status(200).json({ ok: false, error: 'Se alcanzó el límite de votos desde esta red. Intenta desde otra conexión.' });
+        }
+      }
+
       const rVoto = await fetch(SUPABASE_URL + '/rest/v1/concurso_votos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ concurso, entrada_id, email: emailL })
+        body: JSON.stringify({ concurso, entrada_id, email: emailL, ip })
       });
       if (!rVoto.ok) {
         const errTxt = await rVoto.text().catch(() => '');
@@ -1236,6 +1251,118 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: false, error: errTxt });
       }
       return res.status(200).json({ ok: true });
+    }
+
+    // ── enviarOTPVotoConcurso — codigo de verificacion para votar sin cuenta ──
+    // Mismo mecanismo que el login (enviarOTP/verificarOTP), pero SIN exigir
+    // que el correo ya tenga una mascota registrada — cualquier correo real
+    // puede recibir el codigo, ya que cualquiera puede votar (no solo usuarios
+    // de PetMi). Esto evita que se voten con correos inventados al azar.
+    if (action === 'enviarOTPVotoConcurso' && req.method === 'POST') {
+      const { email } = req.body;
+      if (!email || !email.includes('@')) return res.status(200).json({ ok: false, error: 'Correo inválido' });
+      const emailL = email.trim().toLowerCase();
+
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+      const rSave = await fetch(SUPABASE_URL + '/rest/v1/otp_codes', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ email: emailL, code, expires_at: expires, used: false })
+      });
+      if (!rSave.ok) {
+        const errTxt = await rSave.text().catch(() => '');
+        console.error('enviarOTPVotoConcurso guardar codigo failed:', rSave.status, errTxt);
+        return res.status(200).json({ ok: false, error: 'No se pudo generar el código' });
+      }
+
+      const scriptUrl = process.env.APPS_SCRIPT_URL || '';
+      if (scriptUrl) {
+        await fetch(scriptUrl, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'enviarOTP', email: emailL, code, dueno: '' })
+        }).catch(() => {});
+      }
+
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── verificarOTPVotoConcurso ──────────────────────────────────
+    if (action === 'verificarOTPVotoConcurso' && req.method === 'POST') {
+      const { email, code } = req.body;
+      if (!email || !code) return res.status(200).json({ ok: false });
+      const emailL = email.trim().toLowerCase();
+      const now = new Date().toISOString();
+
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/otp_codes?email=ilike.' + encodeURIComponent(emailL) +
+        '&code=eq.' + encodeURIComponent(code.trim()) +
+        '&used=eq.false&expires_at=gte.' + encodeURIComponent(now) +
+        '&select=id&order=created_at.desc&limit=1',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const rows = await r.json();
+      if (!rows || !rows.length) {
+        return res.status(200).json({ ok: false, msg: 'Código incorrecto o expirado' });
+      }
+
+      await fetch(SUPABASE_URL + '/rest/v1/otp_codes?id=eq.' + rows[0].id, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ used: true })
+      });
+
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── sortearGanadorConcurso (admin) — sortea al azar entre el TOP 5
+    // mas votados. Igual que el sorteo de la quiniela: la primera vez que
+    // se llama, elige y GUARDA el resultado (on_conflict + ignore-duplicates
+    // evita que 2 clics casi simultaneos elijan ganadores distintos); las
+    // siguientes veces devuelve siempre el mismo resultado ya guardado.
+    if (action === 'sortearGanadorConcurso' && req.method === 'POST') {
+      const { concurso } = req.body;
+      if (!concurso) return res.status(200).json({ ok: false, error: 'Falta concurso' });
+      const claveConfig = 'concurso_' + concurso + '_ganador';
+
+      const rConf = await fetch(SUPABASE_URL + '/rest/v1/config?clave=eq.' + encodeURIComponent(claveConfig) + '&select=valor', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const confRows = await rConf.json();
+      if (Array.isArray(confRows) && confRows.length && confRows[0].valor) {
+        const rGanador = await fetch(SUPABASE_URL + '/rest/v1/concurso_entradas?id=eq.' + encodeURIComponent(confRows[0].valor) + '&select=*', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        const ganadorRows = await rGanador.json();
+        return res.status(200).json({ ok: true, ya_sorteado: true, ganador: (ganadorRows && ganadorRows[0]) || null });
+      }
+
+      const rTop = await fetch(
+        SUPABASE_URL + '/rest/v1/concurso_entradas?concurso=eq.' + encodeURIComponent(concurso) + '&activo=eq.true&select=*&order=votos.desc&limit=5',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const top5 = await rTop.json();
+      if (!Array.isArray(top5) || !top5.length) return res.status(200).json({ ok: false, error: 'No hay participantes activos en este concurso' });
+
+      const elegido = top5[Math.floor(Math.random() * top5.length)];
+
+      await fetch(SUPABASE_URL + '/rest/v1/config?on_conflict=clave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+        body: JSON.stringify({ clave: claveConfig, valor: elegido.id })
+      });
+
+      // Releer el config para devolver siempre el que realmente quedo
+      // guardado (por si 2 llamadas casi simultaneas compitieron)
+      const rFinal = await fetch(SUPABASE_URL + '/rest/v1/config?clave=eq.' + encodeURIComponent(claveConfig) + '&select=valor', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const finalRows = await rFinal.json();
+      const idFinal = (Array.isArray(finalRows) && finalRows[0] && finalRows[0].valor) || elegido.id;
+      const ganadorFinal = top5.find(e => e.id === idFinal) || elegido;
+
+      return res.status(200).json({ ok: true, ya_sorteado: false, ganador: ganadorFinal, candidatos: top5 });
     }
 
     // ── getLeadsConcursoAdmin (admin — para armar la campaña despues) ──
