@@ -132,7 +132,7 @@
       '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-link' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
       '<a href="/mensajes.html" class="h-link' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '">💬 Mensajes <span id="petmiMsgBadge" class="h-avisos-badge"></span></a>' +
 
-      '<a href="/juego.html" class="h-link' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '" style="color:#F5C842!important;font-weight:700">🎮 Juego del Día</a>' +
+      '<a href="/concurso.html" class="h-link' + (currentPath.indexOf('concurso') >= 0 ? ' active' : '') + '" style="background:#1a5fd9;color:#fff!important;font-weight:700">🇬🇹 Patitas Patriotas</a>' +
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
       '<a href="/buscar.html" class="h-link' + (currentPath.indexOf('buscar') >= 0 ? ' active' : '') + '">🔍 Buscar</a>' +
       // Tienda oculta por ahora — para reactivar, descomentar este bloque
@@ -192,11 +192,11 @@
       '</a>' +
       '<a href="/registro.html" class="h-fab-tab">' +
         '<div class="h-fab-circle">➕</div>' +
-        '<span class="h-fab-lbl">Crear PetzID</span>' +
+        '<span class="h-fab-lbl">Unirme a PetMi</span>' +
       '</a>' +
-      '<a href="/juego.html" class="h-btab' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '">' +
-        '<span class="h-btab-ico">🎮</span>' +
-        '<span class="h-btab-lbl">Juego</span>' +
+      '<a href="/concurso.html" class="h-btab' + (currentPath.indexOf('concurso') >= 0 ? ' active' : '') + '">' +
+        '<span class="h-btab-ico" style="background:#1a5fd9;border-radius:10px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;font-size:16px">🇬🇹</span>' +
+        '<span class="h-btab-lbl" style="color:#1a5fd9;font-weight:700">Patitas Patriotas</span>' +
       '</a>' +
       '<a href="/buscar.html" class="h-btab' + (currentPath.indexOf('buscar') >= 0 ? ' active' : '') + '">' +
         '<span class="h-btab-ico">🔍</span>' +
