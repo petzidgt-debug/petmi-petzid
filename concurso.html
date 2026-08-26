@@ -13,8 +13,8 @@ body{font-family:Arial,sans-serif;background:#1a5fd9;min-height:100vh}
 .wrap{max-width:640px;margin:0 auto;padding:0 16px 60px}
 
 .titulo-pagina{text-align:center;padding:32px 0 8px}
-.badge-concurso{display:inline-block;background:#fff;color:##1a5fd9;font-weight:900;font-size:12px;letter-spacing:.3px;padding:8px 18px;border-radius:120px;margin-bottom:14px}
-.titulo-pagina h1{font-size:44px;font-weight:900;line-height:0.95;color:#1a5fd9;text-shadow:-1px -2px 0 #fff,2px -2px 0 #fff,-3px 2px 0 #fff,2px 2px 0 #1a5fd9,0 2px 0 #fff}
+.badge-concurso{display:inline-block;background:#fff;color:#1a5fd9;font-weight:900;font-size:12px;letter-spacing:.3px;padding:8px 18px;border-radius:120px;margin-bottom:14px}
+.titulo-pagina h1{font-size:44px;font-weight:900;line-height:0.95;color:#1a5fd9;-webkit-text-stroke:3px #fff;paint-order:stroke fill;text-shadow:-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff,2px 2px 0 #fff,0 -2px 0 #fff,0 2px 0 #fff,-2px 0 0 #fff,2px 0 0 #fff}
 .titulo-pagina p{font-size:14px;color:#fff;margin-top:14px;max-width:320px;margin-left:auto;margin-right:auto}
 .tagline-bubble{display:inline-block;background:#F5C842;color:#5c4400;font-weight:700;font-size:13px;padding:12px 20px;border-radius:16px;line-height:1.4;max-width:260px;margin-top:16px}
 .chips-info{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
@@ -22,7 +22,7 @@ body{font-family:Arial,sans-serif;background:#1a5fd9;min-height:100vh}
 .chip.premio{background:#FBEAF0;color:#993556}
 
 .reglas-toggle{text-align:center;margin:14px 0 4px}
-.reglas-toggle button{background:none;border:none;color:#1a5fd9;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer}
+.reglas-toggle button{background:none;border:none;color:#fff;font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer}
 .reglas-box{display:none;background:#fff;border-radius:14px;padding:16px 18px;margin:10px 0;font-size:12.5px;color:#555;line-height:1.8}
 .reglas-box.open{display:block}
 .reglas-box ul{padding-left:18px}
@@ -50,7 +50,7 @@ textarea.caption{width:100%;padding:12px;border:1.5px solid #eee;border-radius:1
 .check-ofertas{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:10px;cursor:pointer}
 .check-ofertas input{width:14px;height:14px}
 
-.galeria-titulo{font-size:16px;font-weight:900;color:#1a1a2e;margin:28px 0 14px}
+.galeria-titulo{font-size:16px;font-weight:900;color:#fff;margin:28px 0 14px}
 .galeria-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
 .entrada-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.08)}
 .entrada-foto{width:100%;height:150px;background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#e8ddd0}
@@ -65,7 +65,7 @@ textarea.caption{width:100%;padding:12px;border:1.5px solid #eee;border-radius:1
 .btn-votar.votado{background:#FBEAF0;color:#993556}
 .btn-compartir{background:#f0f0f0;color:#555;border:none;width:28px;height:28px;border-radius:50%;font-size:13px;cursor:pointer;flex-shrink:0}
 
-.vacio{text-align:center;padding:40px 20px;color:#aaa;font-size:14px}
+.vacio{text-align:center;padding:40px 20px;color:#eee;font-size:14px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -143,7 +143,10 @@ function especieEmoji(especie){
 function renderFormularioEnvio(){
   var cont = document.getElementById('contenedorEnvio');
   if(!sessionEmail){
-    cont.innerHTML = '<div class="card-envio"><div class="login-aviso">Inicia sesión en PetMi para participar con tu mascota.<br><br><a href="/index.html">Iniciar sesión →</a></div></div>';
+    cont.innerHTML = '<div class="card-envio"><div class="login-aviso">Inicia sesión en PetMi para participar con tu mascota.<br><br>'
+      +'<button onclick="petmiAbrirLogin()" style="background:#1a5fd9;color:#fff;border:none;padding:12px 28px;border-radius:99px;font-weight:700;font-size:14px;cursor:pointer">Iniciar sesión →</button>'
+      +'<div style="margin-top:14px;font-size:13px">¿No tienes cuenta? <a href="/registro.html">Registra a tu mascota →</a></div>'
+      +'</div></div>';
     return;
   }
   if(!misMascotas.length){
@@ -242,7 +245,6 @@ async function enviarEntrada(){
 function renderCardVotoEmail(){
   var card = document.getElementById('cardVotarEmail');
   if(sessionEmail){
-    // Ya inició sesión en PetMi — no le volvemos a pedir el correo, se usa el de su cuenta.
     card.querySelector('p').textContent = 'Votando como: ' + emailVotante;
     card.querySelector('.input-email-voto').style.display = 'none';
     card.querySelector('.check-ofertas').style.display = 'none';
@@ -271,7 +273,7 @@ function actualizarVotosRestantesTxt(){
 }
 
 function guardarEmailVoto(){
-  if(sessionEmail) return; // logueado: no hay boton que llame esto
+  if(sessionEmail) return;
   var input = document.getElementById('emailVotoInput');
   if(!emailVotante){
     var val = input.value.trim().toLowerCase();
@@ -281,7 +283,6 @@ function guardarEmailVoto(){
     localStorage.setItem('concurso_email_votante', emailVotante);
     renderCardVotoEmail();
     checkMisVotos();
-    // Guarda el lead + su preferencia de contacto, sin importar si llega a votar o no
     fetch('/api/galeria?action=registrarLeadConcurso', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ concurso: CONCURSO_ID, email: emailVotante, acepta_ofertas: aceptaOfertas })
@@ -332,9 +333,6 @@ function renderGaleria(entradas){
   cont.innerHTML = html;
 }
 
-// Genera la imagen real de la tarjeta (foto + nombre + "Vota por mí" +
-// botón app.revistapetmi.com, SIN el conteo de votos) y la comparte
-// directo como imagen si el dispositivo lo permite — si no, la descarga.
 async function compartirImagenEntrada(entradaId){
   var e = entradasPorId[entradaId];
   if(!e) return;
@@ -347,8 +345,6 @@ async function compartirImagenEntrada(entradaId){
     var fotoDiv = document.getElementById('shareCardFoto');
     fotoDiv.style.backgroundImage = "url('" + (e.foto_url||'').replace(/'/g,"\\'") + "')";
 
-    // Esperar a que la foto realmente termine de cargar antes de capturar,
-    // si no, html2canvas a veces la captura en blanco.
     await new Promise(function(resolve){
       var img = new Image();
       img.crossOrigin = 'anonymous';
@@ -368,10 +364,9 @@ async function compartirImagenEntrada(entradaId){
           await navigator.share({ files: [file], title: '¡Vota por ' + (e.nombre_mascota||'mi mascota') + ' en PetMi!' });
           btn.textContent = textoOriginal; btn.disabled = false;
           return;
-        }catch(err){ /* si cancela el share nativo, cae a la descarga de abajo */ }
+        }catch(err){ }
       }
 
-      // Sin soporte para compartir archivos (ej. desktop) — se descarga
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url; a.download = nombreArchivo;
@@ -441,7 +436,7 @@ function checkMisVotos(){
 }
 
 if(sessionEmail){
-  emailVotante = sessionEmail; // logueado: usamos directo el correo de su cuenta, sin volver a pedirlo
+  emailVotante = sessionEmail;
   fetch('/api/galeria?action=checkEmail', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ action:'checkEmail', email: sessionEmail })
@@ -449,8 +444,6 @@ if(sessionEmail){
   .then(function(d){
     if(d.found && d.mascotas && d.mascotas.length){
       misMascotas = d.mascotas.filter(function(m){ return m.angelito !== 'Si' && m.angelito !== true; });
-      // Registra el lead en silencio, respetando su preferencia de ofertas ya guardada
-      // en su perfil (no le volvemos a preguntar nada).
       fetch('/api/galeria?action=registrarLeadConcurso', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ concurso: CONCURSO_ID, email: sessionEmail, acepta_ofertas: misMascotas[0].ofertas === 'Si' })
@@ -467,7 +460,6 @@ cargarGaleria();
 if(emailVotante) checkMisVotos();
 </script>
 <script src="/header.js"></script>
-<!-- Plantilla oculta — se usa para generar la imagen de "compartir", no se ve en pantalla -->
 <div id="shareCardWrap" style="position:fixed;left:-9999px;top:0">
   <div id="shareCard" style="width:340px;background:#fff;border-radius:20px;overflow:hidden;font-family:Arial,sans-serif">
     <div id="shareCardFoto" style="width:100%;height:340px;background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#e8ddd0"></div>
