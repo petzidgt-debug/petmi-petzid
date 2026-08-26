@@ -100,12 +100,21 @@ textarea.caption{width:100%;padding:12px;border:1.5px solid #eee;border-radius:1
   <div id="contenedorEnvio"></div>
 
   <div class="card-votar-email" id="cardVotarEmail">
-    <p>Escribe tu correo para poder votar:</p>
+    <p id="votoEmailTexto">Escribe tu correo para poder votar:</p>
     <input type="email" class="input-email-voto" id="emailVotoInput" placeholder="tu@correo.com">
     <br>
     <label class="check-ofertas"><input type="checkbox" id="checkOfertas"> Quiero recibir promociones de PetMi</label>
     <br>
-    <button class="btn-guardar-email" onclick="guardarEmailVoto()">Listo, quiero votar</button>
+    <button class="btn-guardar-email" id="btnGuardarEmail" onclick="guardarEmailVoto()">Listo, quiero votar</button>
+
+    <div id="votoOtpWrap" style="display:none;margin-top:12px">
+      <p style="font-size:12.5px;color:#666;margin-bottom:8px">Te mandamos un código de 6 dígitos — revisa tu correo:</p>
+      <input type="text" class="input-email-voto" id="votoOtpInput" placeholder="000000" inputmode="numeric" maxlength="6" style="letter-spacing:6px;text-align:center;font-size:18px">
+      <br>
+      <button class="btn-guardar-email" onclick="verificarOtpVoto()">Verificar código</button>
+      <div><button onclick="reenviarOtpVoto()" style="background:none;border:none;color:#1a5fd9;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:8px">Reenviar código</button></div>
+    </div>
+
     <div class="votos-restantes" id="votosRestantesTxt" style="display:none"></div>
   </div>
 
@@ -245,19 +254,24 @@ async function enviarEntrada(){
 function renderCardVotoEmail(){
   var card = document.getElementById('cardVotarEmail');
   if(sessionEmail){
-    card.querySelector('p').textContent = 'Votando como: ' + emailVotante;
+    // Ya inició sesión en PetMi — no le pedimos correo NI código, se usa
+    // directo el de su cuenta (ya está verificado por ser una cuenta real).
+    document.getElementById('votoEmailTexto').textContent = 'Votando como: ' + emailVotante;
     card.querySelector('.input-email-voto').style.display = 'none';
     card.querySelector('.check-ofertas').style.display = 'none';
-    card.querySelector('.btn-guardar-email').style.display = 'none';
+    document.getElementById('btnGuardarEmail').style.display = 'none';
+    document.getElementById('votoOtpWrap').style.display = 'none';
     document.getElementById('votosRestantesTxt').style.display = 'block';
     actualizarVotosRestantesTxt();
     return;
   }
   if(emailVotante){
-    card.querySelector('p').textContent = 'Votando como: ' + emailVotante;
+    document.getElementById('votoEmailTexto').textContent = 'Votando como: ' + emailVotante;
     card.querySelector('.input-email-voto').style.display = 'none';
     card.querySelector('.check-ofertas').style.display = 'none';
-    card.querySelector('.btn-guardar-email').textContent = 'Cambiar correo';
+    document.getElementById('votoOtpWrap').style.display = 'none';
+    document.getElementById('btnGuardarEmail').style.display = 'inline-block';
+    document.getElementById('btnGuardarEmail').textContent = 'Cambiar correo';
     document.getElementById('votosRestantesTxt').style.display = 'block';
     actualizarVotosRestantesTxt();
   }
@@ -272,36 +286,99 @@ function actualizarVotosRestantesTxt(){
   }
 }
 
-function guardarEmailVoto(){
+// Paso 1: pide el correo y manda el código — no guarda nada como "verificado"
+// todavía, eso pasa solo si el código es correcto (ver verificarOtpVoto).
+async function guardarEmailVoto(){
   if(sessionEmail) return;
-  var input = document.getElementById('emailVotoInput');
-  if(!emailVotante){
-    var val = input.value.trim().toLowerCase();
-    if(!val || val.indexOf('@') < 0){ alert('Escribe un correo válido.'); return; }
-    var aceptaOfertas = document.getElementById('checkOfertas').checked;
-    emailVotante = val;
-    localStorage.setItem('concurso_email_votante', emailVotante);
-    renderCardVotoEmail();
-    checkMisVotos();
-    fetch('/api/galeria?action=registrarLeadConcurso', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ concurso: CONCURSO_ID, email: emailVotante, acepta_ofertas: aceptaOfertas })
-    }).catch(function(){});
-  } else {
+
+  if(emailVotante){
+    // Ya estaba verificado — este botón ahora dice "Cambiar correo"
     emailVotante = '';
     localStorage.removeItem('concurso_email_votante');
     votadasPorMi = [];
     votosRestantes = LIMITE_VOTOS;
     var card = document.getElementById('cardVotarEmail');
-    card.querySelector('p').textContent = 'Escribe tu correo para poder votar:';
+    document.getElementById('votoEmailTexto').textContent = 'Escribe tu correo para poder votar:';
     card.querySelector('.input-email-voto').style.display = 'block';
     card.querySelector('.input-email-voto').value = '';
-    card.querySelector('.btn-guardar-email').textContent = 'Listo, quiero votar';
+    document.getElementById('btnGuardarEmail').textContent = 'Listo, quiero votar';
     document.getElementById('votosRestantesTxt').style.display = 'none';
     var chk = document.getElementById('checkOfertas');
     if(chk){ chk.parentElement.style.display = 'inline-flex'; chk.checked = false; }
     cargarGaleria();
+    return;
   }
+
+  var input = document.getElementById('emailVotoInput');
+  var val = input.value.trim().toLowerCase();
+  if(!val || val.indexOf('@') < 0){ alert('Escribe un correo válido.'); return; }
+
+  var btn = document.getElementById('btnGuardarEmail');
+  btn.disabled = true; btn.textContent = 'Enviando código...';
+
+  try{
+    var r = await fetch('/api/galeria?action=enviarOTPVotoConcurso', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email: val })
+    });
+    var d = await r.json();
+    if(d.ok){
+      document.getElementById('votoOtpWrap').style.display = 'block';
+      input.disabled = true;
+      btn.style.display = 'none';
+      document.getElementById('votoOtpInput').focus();
+    } else {
+      alert('No se pudo enviar el código: ' + (d.error || 'intenta de nuevo'));
+    }
+  }catch(e){
+    alert('No se pudo enviar el código. Intenta de nuevo.');
+  }
+  btn.disabled = false; if(btn.style.display !== 'none') btn.textContent = 'Listo, quiero votar';
+}
+
+async function verificarOtpVoto(){
+  var email = document.getElementById('emailVotoInput').value.trim().toLowerCase();
+  var code = document.getElementById('votoOtpInput').value.trim();
+  if(!code || code.length !== 6){ alert('Escribe el código de 6 dígitos.'); return; }
+
+  try{
+    var r = await fetch('/api/galeria?action=verificarOTPVotoConcurso', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email: email, code: code })
+    });
+    var d = await r.json();
+    if(d.ok){
+      var aceptaOfertas = document.getElementById('checkOfertas').checked;
+      emailVotante = email;
+      localStorage.setItem('concurso_email_votante', emailVotante);
+      renderCardVotoEmail();
+      checkMisVotos();
+      fetch('/api/galeria?action=registrarLeadConcurso', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ concurso: CONCURSO_ID, email: emailVotante, acepta_ofertas: aceptaOfertas })
+      }).catch(function(){});
+    } else {
+      alert(d.msg || 'Código incorrecto o expirado.');
+    }
+  }catch(e){
+    alert('No se pudo verificar el código. Intenta de nuevo.');
+  }
+}
+
+function reenviarOtpVoto(){
+  document.getElementById('votoOtpInput').value = '';
+  guardarEmailVoto_forzarReenvio();
+}
+async function guardarEmailVoto_forzarReenvio(){
+  var email = document.getElementById('emailVotoInput').value.trim().toLowerCase();
+  if(!email) return;
+  try{
+    await fetch('/api/galeria?action=enviarOTPVotoConcurso', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email: email })
+    });
+    alert('Te reenviamos el código.');
+  }catch(e){ alert('No se pudo reenviar. Intenta de nuevo.'); }
 }
 
 var entradasPorId = {};
