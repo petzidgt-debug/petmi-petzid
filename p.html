@@ -288,7 +288,7 @@ function renderPerfil(m){
       html+='<button class="btn-enviar-msj" onclick="enviarMensajeAlDueno(\''+m.uid+'\')">💬 Enviar mensaje</button>';
       html+='</div>';
     } else {
-      html+='<a href="/index.html" class="btn-contactar" style="display:block;text-align:center;text-decoration:none">🔒 Inicia sesión en PetMi para contactar</a>';
+      html+='<button onclick="petmiAbrirLogin()" class="btn-contactar" style="display:block;width:100%;text-align:center;text-decoration:none;border:none;cursor:pointer">🔒 Inicia sesión en PetMi para contactar</button>';
     }
   }
   html+='</div>';

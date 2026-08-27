@@ -85,7 +85,7 @@ var SUPA_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 var sessionEmail = localStorage.getItem('petzid_email') || sessionStorage.getItem('petmiEmail') || '';
 if (!sessionEmail) {
-  document.getElementById('avisoSinSesion').innerHTML = '<div style="background:#FFF8E1;border:1px solid #F5C842;border-radius:12px;padding:12px 16px;margin-top:10px;font-size:12.5px;color:#8a6200;text-align:center">🔒 Estás jugando sin iniciar sesión — no vas a ganar puntos. <a href="/index.html" style="color:#8a6200;font-weight:700;text-decoration:underline">Inicia sesión</a> para que cuenten.</div>';
+  document.getElementById('avisoSinSesion').innerHTML = '<div style="background:#FFF8E1;border:1px solid #F5C842;border-radius:12px;padding:12px 16px;margin-top:10px;font-size:12.5px;color:#8a6200;text-align:center">🔒 Estás jugando sin iniciar sesión — no vas a ganar puntos. <button onclick="petmiAbrirLogin()" style="background:none;border:none;padding:0;color:#8a6200;font-weight:700;text-decoration:underline;cursor:pointer;font-size:12.5px">Inicia sesión</button> para que cuenten.</div>';
 }
 
 // ── Patrocinio (banner de imagen) ────────────────────────────────
@@ -253,7 +253,7 @@ function mostrarResultados() {
 
   var bloquePuntos = sessionEmail
     ? '<div class="resultado-puntos"><div class="resultado-puntos-n">+' + puntosGanados + '</div><div class="resultado-puntos-l">Puntos ganados</div></div>'
-    : '<div class="resultado-puntos" style="background:#FFF8E1"><div style="font-size:13px;color:#8a6200;line-height:1.6">🔒 No se guardó ningún punto — <a href="/index.html" style="color:#8a6200;font-weight:700;text-decoration:underline">inicia sesión</a> para que la próxima cuenten</div></div>';
+    : '<div class="resultado-puntos" style="background:#FFF8E1"><div style="font-size:13px;color:#8a6200;line-height:1.6">🔒 No se guardó ningún punto — <button onclick="petmiAbrirLogin()" style="background:none;border:none;padding:0;color:#8a6200;font-weight:700;text-decoration:underline;cursor:pointer;font-size:inherit">inicia sesión</button> para que la próxima cuenten</div></div>';
 
   document.getElementById('contenedor').innerHTML =
     '<div class="resultado-card">'
