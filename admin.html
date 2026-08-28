@@ -299,7 +299,7 @@ tbody tr:last-child td{border-bottom:none}
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>#</th><th>Email</th><th>Total pts</th><th>Perfiles</th><th>App</th><th>Referidos</th><th>Racha</th><th>Juego</th></tr></thead>
+            <thead><tr><th>#</th><th>Email</th><th>Total pts</th><th>Perfiles</th><th>App</th><th>Referidos</th><th>Racha</th><th>Juego</th><th>Trivia</th></tr></thead>
             <tbody id="puntosBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
@@ -1160,13 +1160,14 @@ function loadPuntos(){
     // Aggregate by email
     var byEmail = {};
     rows.forEach(function(r){
-      if(!byEmail[r.email]) byEmail[r.email]={total:0,perfil:0,app:0,ref:0,racha:0,juego:0};
+      if(!byEmail[r.email]) byEmail[r.email]={total:0,perfil:0,app:0,ref:0,racha:0,juego:0,trivia:0};
       byEmail[r.email].total += r.puntos;
       if(r.accion==='perfil_completo') byEmail[r.email].perfil += r.puntos;
       if(r.accion==='instalar_app')    byEmail[r.email].app    += r.puntos;
       if(r.accion==='referir_amigo')   byEmail[r.email].ref    += r.puntos;
       if(r.accion==='racha_7dias')     byEmail[r.email].racha  += r.puntos;
       if(r.accion==='juego_diario')    byEmail[r.email].juego  += r.puntos;
+      if(r.accion==='trivia_diaria')   byEmail[r.email].trivia += r.puntos;
     });
     var sorted = Object.keys(byEmail).sort(function(a,b){return byEmail[b].total - byEmail[a].total;});
     var totalSum = rows.reduce(function(s,r){return s+r.puntos;},0);
@@ -1189,13 +1190,14 @@ function loadPuntos(){
         +'<td>'+(d.ref||'')+'</td>'
         +'<td>'+(d.racha||'')+'</td>'
         +'<td>'+(d.juego||'')+'</td>'
+        +'<td>'+(d.trivia||'')+'</td>'
         +'</tr>';
     }).join('');
     document.getElementById('puntosBody').innerHTML = html;
 
     // Historial
     var histHTML = rows.slice(0,50).map(function(r){
-      var LABELS = {perfil_completo:'🐾 Perfil completo',instalar_app:'📲 App instalada',referir_amigo:'👥 Referido',racha_7dias:'🔥 Racha 7 días',juego_diario:'🎮 Juego'};
+      var LABELS = {perfil_completo:'🐾 Perfil completo',instalar_app:'📲 App instalada',referir_amigo:'👥 Referido',racha_7dias:'🔥 Racha 7 días',juego_diario:'🎮 Juego',trivia_diaria:'⚡ Trivia',registro_salud:'🩺 Registro de salud',ruleta_premio:'🎡 Ruleta',reactivacion:'👋 Reactivación'};
       return '<tr><td>'+r.email+'</td><td>'+(LABELS[r.accion]||r.accion)+'</td><td>+'+r.puntos+'</td><td>'+new Date(r.created_at).toLocaleDateString('es-GT')+'</td></tr>';
     }).join('');
     document.getElementById('puntosHistBody').innerHTML = histHTML || '<tr><td colspan="4" style="text-align:center;color:#aaa">Sin historial</td></tr>';
