@@ -61,7 +61,7 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 <div class="hero">
   <div class="hero-label">Trivia PetMi</div>
   <div class="hero-title">⚡ Trivia Relámpago</div>
-  <div class="hero-sub">5 preguntas diarias — responde rápido, gana más puntos</div>
+  <div class="hero-sub">5 preguntas diarias — hasta 2 puntos si aciertas alguna</div>
 </div>
 
 <div id="avisoSinSesion" style="max-width:480px;margin:0 auto;padding:0 16px"></div>
@@ -193,7 +193,7 @@ function renderPregunta() {
 
   document.getElementById('contenedor').innerHTML =
     '<div class="progreso-wrap">'
-    + '<div class="progreso-top"><span>Pregunta ' + (idx+1) + ' de ' + preguntas.length + '</span><span id="puntosVista">' + puntosGanados + ' pts</span></div>'
+    + '<div class="progreso-top"><span>Pregunta ' + (idx+1) + ' de ' + preguntas.length + '</span><span id="puntosVista">' + aciertos + ' aciertos</span></div>'
     + '<div class="progreso-bar-bg"><div class="progreso-bar" style="width:' + pct + '%"></div></div>'
     + '</div>'
     + '<div class="timer-wrap"><div class="timer-bar" id="timerBar"></div></div>'
@@ -234,8 +234,6 @@ function responder(elegida) {
 
   if (elegida === q.r) {
     aciertos++;
-    var pts = 2 + (tiempoUsado <= 5 ? 1 : 0);
-    puntosGanados += pts;
   }
 
   setTimeout(function() {
@@ -247,6 +245,10 @@ function responder(elegida) {
 
 function mostrarResultados() {
   localStorage.setItem('trivia_ultimo_dia', new Date().toDateString());
+
+  // Tope diario: máximo 2 puntos en total, sin importar cuántas preguntas
+  // se acierten (antes era hasta 3 pts por pregunta, hasta 15 al día).
+  puntosGanados = aciertos > 0 ? 2 : 0;
 
   var emoji = aciertos === preguntas.length ? '🏆' : aciertos >= 3 ? '🎉' : '💪';
   var titulo = aciertos === preguntas.length ? '¡Perfecto!' : aciertos >= 3 ? '¡Muy bien!' : '¡Sigue intentando!';
