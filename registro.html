@@ -875,6 +875,36 @@ async function submitPetzID(){
     return;
   }
 
+  // Evitar dos mascotas con el mismo nombre en la misma cuenta — antes de
+  // mandar, revisamos si ese correo ya tiene una mascota (no angelito) con
+  // exactamente ese nombre. Si la persona de verdad quiere registrar otra
+  // con el mismo nombre (ej. gemelos), puede confirmar y seguir de todas
+  // formas — esto solo previene el registro accidental por confusión.
+  var emailParaValidar = document.getElementById('inEmail').value.trim().toLowerCase();
+  var nombreParaValidar = document.getElementById('inNombre').value.trim().toLowerCase();
+  if(emailParaValidar && nombreParaValidar){
+    try{
+      var rCheck = await fetch('/api/galeria?action=checkEmail',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'checkEmail',email:emailParaValidar})
+      });
+      var dCheck = await rCheck.json();
+      if(dCheck.found && dCheck.mascotas && dCheck.mascotas.length){
+        var yaExiste = dCheck.mascotas.some(function(m){
+          return m.angelito !== 'Si' && m.angelito !== true && (m.nombre||'').trim().toLowerCase() === nombreParaValidar;
+        });
+        if(yaExiste){
+          var seguro = confirm('Ya tienes una mascota registrada con el nombre "'+document.getElementById('inNombre').value.trim()+'" en esta cuenta.\n\n¿Seguro que quieres registrar otra con el mismo nombre?');
+          if(!seguro){
+            cur=1;showStep(1);updateProgress();
+            document.getElementById('inNombre').focus();
+            return;
+          }
+        }
+      }
+    }catch(e){ /* si falla la validación, no bloqueamos el registro por eso */ }
+  }
+
   _isSubmitting = true;
   var btn=document.getElementById('btnNext');
   btn.textContent='Procesando...';btn.disabled=true;
