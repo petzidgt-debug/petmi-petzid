@@ -269,6 +269,7 @@ export default async function handler(req, res) {
         especial:     m.especial       || '',
         foto:         m.foto           || '',
         angelito:     m.angelito       ? 'Si' : 'No',
+        fechaAngelito:m.fecha_angelito || '',
         notifMensajes:m.notif_mensajes ? 'Si' : 'No',
         ofertas:      m.ofertas        ? 'Si' : 'No',
         premium:      m.premium        === true,
