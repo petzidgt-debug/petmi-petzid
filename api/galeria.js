@@ -1285,7 +1285,8 @@ export default async function handler(req, res) {
             body: JSON.stringify({ action: 'enviarOTP', email: emailL, code, dueno: '' }),
             redirect: 'follow'
           });
-          console.log('enviarOTP -> Apps Script status:', rGas.status);
+          const bodyGas = await rGas.text();
+          console.log('enviarOTP -> Apps Script status:', rGas.status, '| respuesta:', bodyGas);
         } catch(eGas) { console.error('enviarOTP -> Apps Script error:', eGas.message); }
       }
 
@@ -2604,7 +2605,8 @@ export default async function handler(req, res) {
             body: JSON.stringify({ action: 'enviarOTP', email: emailL, code, dueno: rows[0].dueno || '' }),
             redirect: 'follow'
           });
-          console.log('enviarOTP (login) -> Apps Script status:', rGas.status);
+          const bodyGas = await rGas.text();
+          console.log('enviarOTP (login) -> Apps Script status:', rGas.status, '| respuesta:', bodyGas);
         } catch(eGas) { console.error('enviarOTP (login) -> Apps Script error:', eGas.message); }
       }
 
