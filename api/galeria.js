@@ -1277,7 +1277,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: false, error: 'No se pudo generar el código' });
       }
 
-      const scriptUrl = process.env.APPS_SCRIPT_URL || '';
+      const scriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec';
       if (scriptUrl) {
         await fetch(scriptUrl, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2591,7 +2591,7 @@ export default async function handler(req, res) {
       });
 
       // Enviar via Apps Script
-      const scriptUrl = process.env.APPS_SCRIPT_URL || '';
+      const scriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec';
       if (scriptUrl) {
         await fetch(scriptUrl, {
           method: 'POST',
