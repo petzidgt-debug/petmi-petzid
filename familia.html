@@ -278,6 +278,8 @@ function renderCard(m){
   }
   if(!esAngel){
     html += '<button onclick="confirmarAngelito(\''+m.uid+'\',\''+m.nombre+'\')" style="flex:1;padding:7px;background:#764ba2;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🌈 Angelito</button>';
+  } else {
+    html += '<button onclick="confirmarAngelito(\''+m.uid+'\',\''+m.nombre+'\')" style="flex:1;padding:7px;background:none;color:#764ba2;border:1.5px solid #764ba2;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">✏️ Editar fecha</button>';
   }
   html += '<button onclick="confirmarEliminar(\''+m.uid+'\',\''+m.nombre+'\')" style="padding:7px 10px;background:#fbeaf0;color:#c0392b;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">🗑️</button>';
   html += '</div>';
@@ -481,7 +483,8 @@ function confirmarAngelito(uid, nombre){
     + '<button onclick="confirmarAngelitoConFecha()" style="flex:1;padding:12px;background:#764ba2;color:#fff;border:none;border-radius:99px;font-weight:700;cursor:pointer">Confirmar</button>'
     + '</div></div>';
   document.body.appendChild(overlay);
-  document.getElementById('fechaAngelitoInput').value = new Date().toISOString().split('T')[0];
+  var mascotaActual = misMascotas.find(function(x){ return x.uid === uid; });
+  document.getElementById('fechaAngelitoInput').value = (mascotaActual && mascotaActual.fechaAngelito) ? mascotaActual.fechaAngelito : new Date().toISOString().split('T')[0];
 }
 
 function confirmarAngelitoConFecha(){
