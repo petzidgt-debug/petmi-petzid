@@ -388,6 +388,18 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
         autocomplete="off" onkeydown="if(event.key==='Enter') verificarLogin()">
       <button class="btn-login" id="btnLogin" onclick="verificarLogin()">Ingresar</button>
       <button class="btn-login-cancel" onclick="volverPaso1()">← Cambiar correo</button>
+      <button style="width:100%;padding:10px;background:none;border:none;color:#00B4B4;font-size:13px;cursor:pointer;margin-top:4px" onclick="enviarOTPLogin()">📧 No recuerdo el nombre</button>
+    </div>
+
+    <!-- Paso 3: Código por correo (si no recuerda el nombre) -->
+    <div id="loginStep3" style="display:none">
+      <div class="login-title">📬 Revisa tu correo</div>
+      <div class="login-sub" id="loginOTPSub">Enviamos un código de 6 dígitos a tu correo.</div>
+      <div class="login-msg" id="loginMsg3"></div>
+      <input type="text" class="login-input" id="loginOTP" placeholder="000000" inputmode="numeric" maxlength="6" style="letter-spacing:8px;font-size:22px;text-align:center"
+        onkeydown="if(event.key==='Enter') verificarOTPLogin()">
+      <button class="btn-login" id="btnLogin3" onclick="verificarOTPLogin()">Verificar código</button>
+      <button class="btn-login-cancel" onclick="volverPaso2()">← Volver</button>
     </div>
   </div>
 </div>
@@ -1317,6 +1329,9 @@ function openLoginModal(){
   document.getElementById('loginMsg').style.display='none';
   document.getElementById('btnLogin').disabled=false;
   document.getElementById('btnLogin').textContent='Ingresar';
+  document.getElementById('loginStep1').style.display='block';
+  document.getElementById('loginStep2').style.display='none';
+  document.getElementById('loginStep3').style.display='none';
   document.getElementById('loginOverlay').classList.add('open');
 }
 function closeLoginModal(){document.getElementById('loginOverlay').classList.remove('open');}
@@ -1390,6 +1405,87 @@ function mostrarMsgLogin2(texto,tipo){
   var el=document.getElementById('loginMsg2');
   if(!el)return;
   el.textContent=texto;el.className='login-msg '+(tipo||'');el.style.display=texto?'block':'none';
+}
+
+function mostrarMsgLogin3(texto,tipo){
+  var el=document.getElementById('loginMsg3');
+  if(!el)return;
+  el.textContent=texto;el.className='login-msg '+(tipo||'');el.style.display=texto?'block':'none';
+}
+
+// ── Paso 3: código por correo — mismo mecanismo que header.js ────
+function enviarOTPLogin(){
+  var email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  var btn=document.getElementById('btnLogin');
+  if(btn) btn.disabled=true;
+  fetch('/api/galeria?action=enviarOTP',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(btn) btn.disabled=false;
+    if(d.ok){
+      document.getElementById('loginStep2').style.display='none';
+      document.getElementById('loginStep3').style.display='block';
+      document.getElementById('loginOTPSub').textContent='Enviamos un código a '+email+'. Válido 10 minutos.';
+      setTimeout(function(){
+        document.getElementById('loginOTP').value='';
+        document.getElementById('loginOTP').focus();
+      },100);
+    } else {
+      mostrarMsgLogin2(d.msg||'No se pudo enviar el código','error');
+    }
+  })
+  .catch(function(){
+    if(btn) btn.disabled=false;
+    mostrarMsgLogin2('Error de conexión','error');
+  });
+}
+
+function volverPaso2(){
+  document.getElementById('loginStep3').style.display='none';
+  document.getElementById('loginStep2').style.display='block';
+  mostrarMsgLogin3('','');
+}
+
+function verificarOTPLogin(){
+  var email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  var code=document.getElementById('loginOTP').value.trim();
+  if(!code||code.length!==6){mostrarMsgLogin3('Ingresa el código de 6 dígitos','error');return;}
+  var btn=document.getElementById('btnLogin3');
+  btn.disabled=true;btn.textContent='Verificando...';
+  fetch('/api/galeria?action=verificarOTP',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email,code:code})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      sessionEmail=d.email||email;
+      sessionDueno=d.dueno||'';
+      localStorage.setItem('petzid_email',sessionEmail);
+      localStorage.setItem('petzid_dueno',sessionDueno);
+      if(d.mascotas&&d.mascotas[0]&&d.mascotas[0].especie)
+        localStorage.setItem('petmi_especie',d.mascotas[0].especie);
+      mostrarMsgLogin3('¡Bienvenido/a '+(sessionDueno||'')+'!','success');
+      setTimeout(function(){
+        closeLoginModal();
+        shown=0;applyFilter();
+        window._datosCompletosDashboard = true;
+        cargarDashboardPersonalizado();
+        if(currentModalPet) renderModalFooter(currentModalPet);
+        else closeModal();
+      },1200);
+    } else {
+      mostrarMsgLogin3(d.msg||'Código incorrecto o expirado','error');
+      btn.disabled=false;btn.textContent='Verificar código';
+    }
+  })
+  .catch(function(){
+    mostrarMsgLogin3('Error de conexión','error');
+    btn.disabled=false;btn.textContent='Verificar código';
+  });
 }
 
 // ── Formato de fecha ──────────────────────────────────────────
