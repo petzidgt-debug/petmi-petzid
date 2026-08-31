@@ -862,13 +862,14 @@ function renderCumpleaneros(){
     var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
       ?'<img src="'+p.foto+'" onerror="this.style.display=\'none\'">'
       :'<div style="width:130px;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px;background:#fff3cd">'+(esGato?'🐱':'🐶')+'</div>';
-    var hoy=new Date().getMonth()===mesActual;
+    var hoy=(new Date().getMonth()===mesActual)&&(new Date().getDate()===getDiaFecha(p.fecha));
     var fechaLabel=(p.tipoFecha==='llegada'||p.tipoFecha==='casa')?'Llegó a casa':'Cumpleaños';
-    var badgeHoy=hoy?'<div style="position:absolute;top:5px;left:5px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px;background:#c0392b;color:#fff">Hoy</div>':'';
+    var fechaTexto=getDiaMesLabel(p.fecha);
+    var badgeHoy=hoy?'<div style="position:absolute;top:5px;left:5px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px;background:#c0392b;color:#fff">¡Hoy!</div>':'';
     return '<div class="cumple-card">'
       +'<div class="cumple-foto" style="position:relative">'+fotoHTML+badgeHoy+'<div class="cumple-badge">🎂</div></div>'
       +'<div class="cumple-info"><div class="cumple-nombre">"'+p.nombre+'"</div>'
-      +'<div class="cumple-fecha">'+fechaLabel+'</div>'
+      +'<div class="cumple-fecha">'+fechaLabel+(fechaTexto?' · '+fechaTexto:'')+'</div>'
       +'<button class="btn-felicitar" data-uid="'+p.uid+'" data-nombre="'+p.nombre+'" onclick="felicitarDesdeBtn(this)">🎉 Felicitar</button>'
       +'</div></div>';
   }).join('');
@@ -1497,6 +1498,23 @@ function getMesFecha(val){
   var m2=s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
   if(m2)return parseInt(m2[2],10)-1;
   return null;
+}
+
+function getDiaFecha(val){
+  if(!val||val==='-')return null;
+  var s=String(val).trim();
+  var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return parseInt(m[3],10);
+  var m2=s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if(m2)return parseInt(m2[1],10);
+  return null;
+}
+
+var MESES_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function getDiaMesLabel(val){
+  var mes=getMesFecha(val), dia=getDiaFecha(val);
+  if(mes===null||dia===null)return '';
+  return dia+' de '+MESES_ES[mes];
 }
 
 function formatFecha(val){
