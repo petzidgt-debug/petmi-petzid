@@ -1279,10 +1279,14 @@ export default async function handler(req, res) {
 
       const scriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec';
       if (scriptUrl) {
-        await fetch(scriptUrl, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'enviarOTP', email: emailL, code, dueno: '' })
-        }).catch(() => {});
+        try {
+          const rGas = await fetch(scriptUrl, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'enviarOTP', email: emailL, code, dueno: '' }),
+            redirect: 'follow'
+          });
+          console.log('enviarOTP -> Apps Script status:', rGas.status);
+        } catch(eGas) { console.error('enviarOTP -> Apps Script error:', eGas.message); }
       }
 
       return res.status(200).json({ ok: true });
@@ -2593,11 +2597,15 @@ export default async function handler(req, res) {
       // Enviar via Apps Script
       const scriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec';
       if (scriptUrl) {
-        await fetch(scriptUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'enviarOTP', email: emailL, code, dueno: rows[0].dueno || '' })
-        }).catch(() => {});
+        try {
+          const rGas = await fetch(scriptUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'enviarOTP', email: emailL, code, dueno: rows[0].dueno || '' }),
+            redirect: 'follow'
+          });
+          console.log('enviarOTP (login) -> Apps Script status:', rGas.status);
+        } catch(eGas) { console.error('enviarOTP (login) -> Apps Script error:', eGas.message); }
       }
 
       return res.status(200).json({ ok: true });
