@@ -127,6 +127,29 @@ async function _obtenerOElegirGanadoresSorteo() {
   return elegidos;
 }
 
+// ── Servicio OTP aislado — la URL vive AQUÍ, en un solo lugar ──────
+// Usado tanto por el login "No recuerdo el nombre" como por la
+// verificación de voto sin cuenta del concurso. Antes esto estaba
+// duplicado en 2 bloques distintos, cada uno con su propia copia de
+// la URL — eso fue justo lo que causó que un bloque quedara con la
+// URL vieja al actualizar el otro. Ahora solo hay una copia.
+const OTP_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbxrE4a8FX3e1FWPfKeNjMPzBWPKiJl94MaHa0sQFVVJgJzKCYkwH60A_N_zFrqihDWt/exec';
+
+async function _enviarCodigoOTPPorCorreo(email, code, dueno, etiquetaLog) {
+  try {
+    const rGas = await fetch(OTP_SERVICE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'enviarOTP', email, code, dueno: dueno || '' }),
+      redirect: 'follow'
+    });
+    const bodyGas = await rGas.text();
+    console.log((etiquetaLog || 'enviarOTP') + ' -> status:', rGas.status, '| respuesta:', bodyGas);
+  } catch(eGas) {
+    console.error((etiquetaLog || 'enviarOTP') + ' -> error:', eGas.message);
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -1277,19 +1300,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: false, error: 'No se pudo generar el código' });
       }
 
-      const scriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec';
-      if (scriptUrl) {
-        try {
-          const rGas = await fetch(scriptUrl, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'enviarOTP', email: emailL, code, dueno: '' }),
-            redirect: 'follow'
-          });
-          const bodyGas = await rGas.text();
-          console.log('enviarOTP -> Apps Script status:', rGas.status, '| respuesta:', bodyGas);
-        } catch(eGas) { console.error('enviarOTP -> Apps Script error:', eGas.message); }
-      }
-
+      await _enviarCodigoOTPPorCorreo(emailL, code, '', 'enviarOTPVotoConcurso');
       return res.status(200).json({ ok: true });
     }
 
@@ -2595,21 +2606,8 @@ export default async function handler(req, res) {
         body: JSON.stringify({ email: emailL, code, expires_at: expires, used: false })
       });
 
-      // Enviar via Apps Script
-      const scriptUrl = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec';
-      if (scriptUrl) {
-        try {
-          const rGas = await fetch(scriptUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'enviarOTP', email: emailL, code, dueno: rows[0].dueno || '' }),
-            redirect: 'follow'
-          });
-          const bodyGas = await rGas.text();
-          console.log('enviarOTP (login) -> Apps Script status:', rGas.status, '| respuesta:', bodyGas);
-        } catch(eGas) { console.error('enviarOTP (login) -> Apps Script error:', eGas.message); }
-      }
-
+      // Enviar via el servicio OTP aislado
+      await _enviarCodigoOTPPorCorreo(emailL, code, rows[0].dueno || '', 'enviarOTP (login)');
       return res.status(200).json({ ok: true });
     }
 
