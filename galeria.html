@@ -458,7 +458,7 @@ function cloudinarySmartCrop(url, w, h){
   var marker = '/upload/';
   var idx = url.indexOf(marker);
   if(idx<0) return url;
-  var transform = 'c_fill,g_auto,w_'+(w||400)+',h_'+(h||400)+'/';
+  var transform = 'c_fill,g_auto:subject,w_'+(w||400)+',h_'+(h||400)+'/';
   return url.slice(0, idx+marker.length) + transform + url.slice(idx+marker.length);
 }
 
