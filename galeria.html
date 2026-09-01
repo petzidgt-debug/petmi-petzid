@@ -448,6 +448,20 @@ function supaMarkAngelito(uid,esAngel,fecha){
 function cerrarSesion(){ if(typeof petmiCerrarSesion==='function') petmiCerrarSesion(); }
 
 // ── Dashboard personalizado ─────────────────────────────────────
+// ── Recorte inteligente de Cloudinary — centra la parte relevante de
+// la foto (cara/cuerpo de la mascota) en vez de cortar por el centro
+// geométrico. No distorsiona: mantiene proporción, solo recorta.
+// Se queda intacta cualquier URL que no sea de Cloudinary (ej. si
+// alguna foto vieja quedó en otro proveedor).
+function cloudinarySmartCrop(url, w, h){
+  if(!url || url.indexOf('res.cloudinary.com')<0) return url;
+  var marker = '/upload/';
+  var idx = url.indexOf(marker);
+  if(idx<0) return url;
+  var transform = 'c_fill,g_auto,w_'+(w||400)+',h_'+(h||400)+'/';
+  return url.slice(0, idx+marker.length) + transform + url.slice(idx+marker.length);
+}
+
 function edadMesesDeDash(mascota) {
   if (!mascota.fecha) return null;
   var f = new Date(mascota.fecha);
@@ -1122,7 +1136,7 @@ function _renderModal(p){
   }
   if(p.foto&&p.foto.indexOf('http')>=0){
     var img=document.createElement('img');
-    img.src=p.foto;
+    img.src=cloudinarySmartCrop(p.foto,600,560);
     img.style='width:100%;height:280px;object-fit:cover'+(p.angelito?';filter:grayscale(20%)':'');
     img.onerror=function(){photoEl.innerHTML=emoji;};
     photoEl.appendChild(img);

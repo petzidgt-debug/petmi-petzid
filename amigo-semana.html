@@ -82,6 +82,18 @@ if(sessionEmailVisitante){
   }).catch(function(){});
 }
 
+// ── Recorte inteligente de Cloudinary — centra la parte relevante de
+// la foto (cara/cuerpo de la mascota) en vez de cortar por el centro
+// geométrico. No distorsiona: mantiene proporción, solo recorta.
+function cloudinarySmartCrop(url, w, h){
+  if(!url || url.indexOf('res.cloudinary.com')<0) return url;
+  var marker = '/upload/';
+  var idx = url.indexOf(marker);
+  if(idx<0) return url;
+  var transform = 'c_fill,g_auto,w_'+(w||400)+',h_'+(h||400)+'/';
+  return url.slice(0, idx+marker.length) + transform + url.slice(idx+marker.length);
+}
+
 function especieEmoji(especie){
   var e=(especie||'').toLowerCase();
   if(e.indexOf('gato')>=0) return '🐱';
@@ -153,7 +165,7 @@ fetch('/api/galeria?action=getAmigoSemanaHistorial')
   var anteriores = historial.slice(1);
 
   var fotoHtml = actual.foto && actual.foto.indexOf('http')>=0
-    ? '<div class="actual-foto-bg" style="background-image:url(\''+actual.foto.replace(/'/g,"\\'")+'\')" role="img" aria-label="'+actual.nombre+'"></div>'
+    ? '<div class="actual-foto-bg" style="background-image:url(\''+cloudinarySmartCrop(actual.foto,700,700).replace(/'/g,"\\'")+'\')" role="img" aria-label="'+actual.nombre+'"></div>'
     : '<div class="ph">'+especieEmoji(actual.especie)+'</div>';
 
   var actividadesArr=(actual.actividades||'').split(',').map(function(a){return a.trim();}).filter(Boolean);
@@ -186,7 +198,7 @@ fetch('/api/galeria?action=getAmigoSemanaHistorial')
     var html = '<div class="historial-titulo">Amigos anteriores</div><div class="historial-grid">';
     anteriores.forEach(function(a){
       var foto = a.foto && a.foto.indexOf('http')>=0
-        ? '<div class="hist-foto" style="background-image:url(\''+a.foto.replace(/'/g,"\\'")+'\')" role="img" aria-label="'+a.nombre+'"></div>'
+        ? '<div class="hist-foto" style="background-image:url(\''+cloudinarySmartCrop(a.foto,300,300).replace(/'/g,"\\'")+'\')" role="img" aria-label="'+a.nombre+'"></div>'
         : '<div class="hist-foto-ph">'+especieEmoji(a.especie)+'</div>';
       html += '<a href="/p/'+encodeURIComponent(a.slug)+'" class="hist-card">'
         + foto

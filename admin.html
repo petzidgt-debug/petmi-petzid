@@ -2065,6 +2065,18 @@ function calcularEdadTexto(fechaStr){
   }catch(e){ return '—'; }
 }
 
+// ── Recorte inteligente de Cloudinary — centra la parte relevante de
+// la foto (cara/cuerpo de la mascota) en vez de cortar por el centro
+// geométrico. No distorsiona: mantiene proporción, solo recorta.
+function cloudinarySmartCrop(url, w, h){
+  if(!url || url.indexOf('res.cloudinary.com')<0) return url;
+  var marker = '/upload/';
+  var idx = url.indexOf(marker);
+  if(idx<0) return url;
+  var transform = 'c_fill,g_auto,w_'+(w||400)+',h_'+(h||400)+'/';
+  return url.slice(0, idx+marker.length) + transform + url.slice(idx+marker.length);
+}
+
 function tarjetaAmigoHTML(m){
   var especieRaza=(m.especie||'')+(m.raza?' · '+m.raza:'');
   var actividadesArr=(m.actividades||'').split(',').map(function(a){return a.trim();}).filter(Boolean);
@@ -2075,7 +2087,7 @@ function tarjetaAmigoHTML(m){
       }).join('')+'</div>'
     : '';
   return '<div style="width:100%;height:220px;overflow:hidden;position:relative">'
-    +'<div crossorigin="anonymous" style="width:100%;height:100%;background-image:url(\''+String(m.foto||'').replace(/'/g,"\\'")+'\');background-size:cover;background-position:center;background-repeat:no-repeat"></div>'
+    +'<div crossorigin="anonymous" style="width:100%;height:100%;background-image:url(\''+cloudinarySmartCrop(String(m.foto||''),700,440).replace(/'/g,"\\'")+'\');background-size:cover;background-position:center;background-repeat:no-repeat"></div>'
     +'<div style="position:absolute;top:14px;left:14px;background:#F5C842;color:#1a1a2e;font-size:11px;font-weight:900;padding:6px 14px;border-radius:99px">🎲 AMIGO DE LA SEMANA</div>'
     +'</div>'
     +'<div style="padding:20px 22px 24px;background:#fff">'
