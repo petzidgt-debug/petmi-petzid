@@ -4,6 +4,7 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 
 // ── Web Push (notificaciones) ───────────────────────────────
 const webpush = require('web-push');
+const dns = require('dns').promises;
 webpush.setVapidDetails(
   'mailto:info@revistapetmi.com',
   'BETkQ-teJGtPmnLMFc0OC6HqFvhFoMZySxoywrKincHOJIoixLxuDUSD5RelsWYQiq32p2wuRgn9StrCOcYhD8U',
@@ -145,8 +146,35 @@ async function _enviarCodigoOTPPorCorreo(email, code, dueno, etiquetaLog) {
     });
     const bodyGas = await rGas.text();
     console.log((etiquetaLog || 'enviarOTP') + ' -> status:', rGas.status, '| respuesta:', bodyGas);
+    let parsed;
+    try { parsed = JSON.parse(bodyGas); } catch(e) { parsed = null; }
+    // Si el servicio de OTP respondió pero con ok:false (ej. cuota de
+    // Gmail agotada), esto AHORA se propaga como fallo real — antes
+    // se ignoraba y siempre se le decía al usuario "código enviado".
+    if (parsed && parsed.ok === false) {
+      return { ok: false, error: parsed.msg || 'No se pudo enviar el código' };
+    }
+    return { ok: true };
   } catch(eGas) {
     console.error((etiquetaLog || 'enviarOTP') + ' -> error:', eGas.message);
+    return { ok: false, error: 'Error de conexión al enviar el código' };
+  }
+}
+
+// ── Validar que el dominio del correo exista de verdad ──────────
+// No manda ningún correo (no consume cuota de Gmail) — solo revisa
+// si el dominio tiene registros MX (servidores de correo configurados).
+// Detiene dominios inventados al azar; NO detiene un usuario inventado
+// sobre un dominio real (ej. gmail.com) — es un filtro parcial, no
+// una verificación completa de que la persona sea dueña del correo.
+async function dominioTieneCorreoValido(email) {
+  try {
+    const dominio = String(email || '').split('@')[1];
+    if (!dominio) return false;
+    const registros = await dns.resolveMx(dominio);
+    return Array.isArray(registros) && registros.length > 0;
+  } catch (e) {
+    return false; // dominio no existe o no tiene MX configurado
   }
 }
 
@@ -1157,6 +1185,12 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: false, error: 'Correo inválido' });
       }
       const emailL = email.trim().toLowerCase();
+
+      const dominioValido = await dominioTieneCorreoValido(emailL);
+      if (!dominioValido) {
+        return res.status(200).json({ ok: false, error: 'Ese correo no parece existir — revisa que esté bien escrito.' });
+      }
+
       const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || 'desconocida';
 
       const rCheck = await fetch(
@@ -1301,7 +1335,8 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: false, error: 'No se pudo generar el código' });
       }
 
-      await _enviarCodigoOTPPorCorreo(emailL, code, '', 'enviarOTPVotoConcurso');
+      const resultado = await _enviarCodigoOTPPorCorreo(emailL, code, '', 'enviarOTPVotoConcurso');
+      if (!resultado.ok) return res.status(200).json({ ok: false, error: resultado.error });
       return res.status(200).json({ ok: true });
     }
 
@@ -2608,7 +2643,8 @@ export default async function handler(req, res) {
       });
 
       // Enviar via el servicio OTP aislado
-      await _enviarCodigoOTPPorCorreo(emailL, code, rows[0].dueno || '', 'enviarOTP (login)');
+      const resultadoLogin = await _enviarCodigoOTPPorCorreo(emailL, code, rows[0].dueno || '', 'enviarOTP (login)');
+      if (!resultadoLogin.ok) return res.status(200).json({ ok: false, msg: resultadoLogin.error });
       return res.status(200).json({ ok: true });
     }
 
