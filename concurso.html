@@ -313,27 +313,23 @@ async function guardarEmailVoto(){
   var val = input.value.trim().toLowerCase();
   if(!val || val.indexOf('@') < 0){ alert('Escribe un correo válido.'); return; }
 
-  var btn = document.getElementById('btnGuardarEmail');
-  btn.disabled = true; btn.textContent = 'Enviando código...';
-
-  try{
-    var r = await fetch('/api/galeria?action=enviarOTPVotoConcurso', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ email: val })
-    });
-    var d = await r.json();
-    if(d.ok){
-      document.getElementById('votoOtpWrap').style.display = 'block';
-      input.disabled = true;
-      btn.style.display = 'none';
-      document.getElementById('votoOtpInput').focus();
-    } else {
-      alert('No se pudo enviar el código: ' + (d.error || 'intenta de nuevo'));
-    }
-  }catch(e){
-    alert('No se pudo enviar el código. Intenta de nuevo.');
-  }
-  btn.disabled = false; if(btn.style.display !== 'none') btn.textContent = 'Listo, quiero votar';
+  // ── PLAN B TEMPORAL (1 sep) — se quitó la verificación por código
+  // porque la cuota diaria de Gmail se agotó y estaba bloqueando a
+  // votantes reales durante el concurso. Queda como única protección
+  // el límite de 15 votos por IP (en el backend). Las funciones de
+  // OTP (enviarOTPLogin/verificarOtpVoto abajo) NO se borraron —
+  // en cuanto se resuelva la cuota de correo, se puede reactivar
+  // reemplazando este bloque por el que llama a
+  // action=enviarOTPVotoConcurso (ver historial de este archivo).
+  var aceptaOfertas = document.getElementById('checkOfertas').checked;
+  emailVotante = val;
+  localStorage.setItem('concurso_email_votante', emailVotante);
+  renderCardVotoEmail();
+  checkMisVotos();
+  fetch('/api/galeria?action=registrarLeadConcurso', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ concurso: CONCURSO_ID, email: emailVotante, acepta_ofertas: aceptaOfertas })
+  }).catch(function(){});
 }
 
 async function verificarOtpVoto(){
