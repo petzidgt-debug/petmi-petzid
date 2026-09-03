@@ -149,6 +149,9 @@ function renderGrid(){
       ? '<img class="prod-foto" src="'+p.imagen+'">'
       : '<div class="prod-foto-ph">🐾</div>';
     var precioTxt = p.precio ? ('Q'+Number(p.precio).toFixed(2)) : 'Consultar precio';
+    var envioTxt = p.envio_incluido
+      ? '<div style="font-size:10.5px;color:#00838f;font-weight:700;margin:-4px 0 8px">🚚 Envío incluido</div>'
+      : (p.costo_envio ? '<div style="font-size:10.5px;color:#888;margin:-4px 0 8px">🚚 Envío: '+p.costo_envio+'</div>' : '');
     var mensaje = encodeURIComponent('Hola! Quiero pedir: ' + p.nombre);
     return '<div class="prod-card">'
       + foto
@@ -156,6 +159,7 @@ function renderGrid(){
       + '<div class="prod-nombre">'+p.nombre+'</div>'
       + (p.descripcion ? '<div class="prod-desc">'+p.descripcion+'</div>' : '')
       + '<div class="prod-precio">'+precioTxt+'</div>'
+      + envioTxt
       + '<a class="prod-btn" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank" onclick="registrarPedido(\''+p.nombre.replace(/'/g,"\\'")+'\',\''+(mascotaPersonal?mascotaPersonal.nombre:'').replace(/'/g,"\\'")+'\',\'producto\')">💬 Pedir por WhatsApp</a>'
       + '</div></div>';
   }).join('');

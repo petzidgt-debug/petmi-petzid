@@ -134,7 +134,6 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('lugares',this)"><span class="nav-icon">📍</span>Lugares</div>
       <div class="nav-item" onclick="showScreen('grupos',this)"><span class="nav-icon">👥</span>Grupos</div>
       <div class="nav-item" onclick="showScreen('campanas',this)"><span class="nav-icon">📧</span>Campanas</div>
-      <div class="nav-item" onclick="showScreen('whatsapp',this)"><span class="nav-icon">📲</span>Envios WhatsApp</div>
       <a class="nav-item" href="/admin-afiliados.html" style="text-decoration:none"><span class="nav-icon">🤝</span>Afiliados</a>
       <a class="nav-item" href="/admin-premium.html" style="text-decoration:none"><span class="nav-icon">⭐</span>Premium</a>
       <div class="nav-item" onclick="showScreen('puntos',this)"><span class="nav-icon">🏆</span>Puntos</div>
@@ -159,6 +158,32 @@ tbody tr:last-child td{border-bottom:none}
 
   <div class="content">
 
+    <!--
+    ╔══════════════════════════════════════════════════════════════╗
+    ║  REGLA: Cómo agregar un nuevo screen al admin               ║
+    ╠══════════════════════════════════════════════════════════════╣
+    ║  1. INSERTAR antes de: <!-- AFILIADOS --><!-- MODAL EDITAR ► ║
+    ║  2. VERIFICAR que el screen anterior cierra bien (balance=0)║
+    ║     Si balance=1, agregar </div> antes de tu nuevo screen   ║
+    ║  3. INDENT: 4 espacios (igual que screenDashboard/Mascotas) ║
+    ║  4. ESTRUCTURA obligatoria:                                  ║
+    ║       <div class="screen" id="screenNombreExacto">          ║
+    ║         <div class="page-header">                           ║
+    ║           <div>                                             ║
+    ║             <div class="page-title">Título</div>            ║
+    ║             <div class="page-sub">Subtítulo</div>           ║
+    ║           </div>                                            ║
+    ║         </div>                                              ║
+    ║         ...contenido...                                     ║
+    ║       </div>                                                ║
+    ║  5. El id debe ser: "screen" + PrimeraMayuscula + resto     ║
+    ║     Ej: showScreen('emailfix') → id="screenEmailfix"        ║
+    ║  6. NAV ITEM: onclick="showScreen('nombreexacto', this)"    ║
+    ║  7. Si necesita auto-carga, agregar en showScreen():        ║
+    ║     if(name==='nombreexacto') setTimeout(miFuncion, 100);   ║
+    ║  8. JS del screen: agregar en el bloque <script> principal  ║
+    ╚══════════════════════════════════════════════════════════════╝
+    -->
     <div class="screen active" id="screenDashboard">
       <div class="page-header">
         <div><div class="page-title">Dashboard</div><div class="page-sub">Resumen general</div></div>
@@ -254,22 +279,6 @@ tbody tr:last-child td{border-bottom:none}
           <table>
             <thead><tr><th>Fecha</th><th>Segmento</th><th>Asunto</th><th>Enviados</th><th>Errores</th></tr></thead>
             <tbody id="campanaBody"><tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="screen" id="screenWhatsapp">
-      <div class="page-header">
-        <div><div class="page-title">Envios por WhatsApp</div><div class="page-sub" id="waEnviosInfo">Cargando...</div></div>
-        <button class="btn-primary" onclick="loadWhatsappEnviados()">🔄 Actualizar</button>
-      </div>
-      <p style="color:#888;font-size:13px;margin-bottom:16px">Esto registra cada vez que alguien del equipo le dio clic a "💬 WhatsApp" y se abrió el chat — <strong>no confirma que la persona lo haya recibido o leído</strong>, solo que se intentó enviar. Para confirmación real de entrega se necesitaría la API oficial de WhatsApp Business.</p>
-      <div class="table-card">
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Fecha</th><th>Mascota</th><th>Dueño</th><th>Teléfono</th></tr></thead>
-            <tbody id="waEnviosBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -971,6 +980,14 @@ tbody tr:last-child td{border-bottom:none}
     </select>
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">URL de la foto</label>
     <input type="text" id="prodImagen" placeholder="https://..." style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#333;margin:14px 0 4px;cursor:pointer">
+      <input type="checkbox" id="prodEnvioIncluido" onchange="document.getElementById('prodCostoEnvioWrap').style.display=this.checked?'none':'block'" style="width:16px;height:16px">
+      🚚 Envío incluido
+    </label>
+    <div id="prodCostoEnvioWrap">
+      <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:6px 0 4px">Costo de envío (opcional — ej. "Q15" o "Depende de la zona")</label>
+      <input type="text" id="prodCostoEnvio" placeholder="ej. Q15" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('modalProducto')">Cancelar</button>
       <button class="btn-save" onclick="guardarProducto()">Guardar</button>
@@ -1213,11 +1230,15 @@ function loadEstadisticas(){
   var hace7 = new Date(Date.now() - 7*86400000).toISOString();
   var hace30 = new Date(Date.now() - 30*86400000).toISOString();
 
+  // ── Mascotas: crecimiento, retención, perfil completo, premium ──
   fetch(SUPA_ADM + '/rest/v1/mascotas?uid=neq.PETMI-OFICIAL&select=uid,nombre,email,foto,raza,especie,dueno,zona,veterinario,angelito,premium,created_at,ultima_actividad', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
   .then(function(todas){
     if(!Array.isArray(todas)){ console.error('[mascotas]', todas); return; }
 
+    // Excluir la cuenta de pruebas de TODO — guardamos sus uids para
+    // poder filtrarla también de las tablas que se relacionan por uid,
+    // no solo las que tienen el correo directo.
     var misUids = todas.filter(function(m){ return EXCLUIR_EMAILS.indexOf((m.email||'').toLowerCase()) !== -1; }).map(function(m){ return String(m.uid).toUpperCase(); });
     var rows = todas.filter(function(m){ return EXCLUIR_EMAILS.indexOf((m.email||'').toLowerCase()) === -1; });
 
@@ -1251,6 +1272,7 @@ function loadEstadisticas(){
     window._estDatos = window._estDatos || {};
     window._estDatos.activas = activas;
 
+    // North Star Metric: mascotas activas este mes (ultima_actividad este mes)
     var hoy = new Date();
     var inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
     var inicioMesPasado = new Date(hoy.getFullYear(), hoy.getMonth()-1, 1);
@@ -1273,10 +1295,11 @@ function loadEstadisticas(){
     }
     document.getElementById('estNorthStarComparacion').textContent = compTexto;
 
+    // Razas de perros más comunes (para campañas por "Día de la raza X")
     function normalizarRaza(raza) {
       return raza.trim().toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-        .replace(/\s+/g,' ');
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // quitar acentos
+        .replace(/\s+/g,' '); // colapsar espacios de más
     }
     function capitalizar(txt) {
       return txt.replace(/\b\w/g, function(c){ return c.toUpperCase(); });
@@ -1286,7 +1309,7 @@ function loadEstadisticas(){
 
     fetch('/api/galeria?action=getSinonimosRaza').then(function(r){return r.json();}).then(function(sd){
       var sinonimos = sd.sinonimos || [];
-      window._razaSinonimosMapa = {};
+      window._razaSinonimosMapa = {}; // clave normalizada -> nombre canónico (para el botón Unificar)
       var sinonimosMapa = {};
       sinonimos.forEach(function(s){ sinonimosMapa[s.raza_variante] = s.raza_canonica; window._razaSinonimosMapa[s.raza_variante] = s.raza_canonica; });
 
@@ -1331,6 +1354,7 @@ function loadEstadisticas(){
 function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
   window._estDatos = window._estDatos || {};
 
+  // ── Cuentas eliminadas (últimos 90 días) ──────────────────────
   var hace90 = new Date(Date.now() - 90*86400000).toISOString();
   fetch(SUPA_ADM + '/rest/v1/cuentas_eliminadas?created_at=gte.' + hace90 + '&select=*&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
@@ -1344,6 +1368,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
     document.getElementById('estBajasBody').innerHTML = '<tr><td colspan="4" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de cuentas_eliminadas?</td></tr>';
   });
 
+  // ── Mensajes públicos (muro) ──────────────────────────────────
   fetch(SUPA_ADM + '/rest/v1/mensajes?select=id,uid_mascota,autor,mensaje,nombre_mascota,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(Array.isArray(rows)){
@@ -1353,6 +1378,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
     }
   }).catch(function(){});
 
+  // ── Mensajes privados ──────────────────────────────────────────
   fetch(SUPA_ADM + '/rest/v1/conversaciones?select=id,uid_emisor,uid_receptor,mensaje,leido,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(Array.isArray(rows)){
@@ -1364,6 +1390,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
     }
   }).catch(function(){});
 
+  // ── Avisos activos ───────────────────────────────────────────
   fetch(SUPA_ADM + '/rest/v1/actividades?select=*&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(Array.isArray(rows)){
@@ -1373,6 +1400,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
     }
   }).catch(function(){});
 
+  // ── Push activados (mascotas únicas con suscripción) ──────────
   fetch(SUPA_ADM + '/rest/v1/push_subscriptions?select=uid_mascota,created_at', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(Array.isArray(rows)){
@@ -1383,6 +1411,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
     }
   }).catch(function(){});
 
+  // ── Apps instaladas ──────────────────────────────────────────
   fetch(SUPA_ADM + '/rest/v1/pwa_installs?select=email,plataforma,dispositivo,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(Array.isArray(rows)){
@@ -1392,6 +1421,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
     }
   }).catch(function(){});
 
+  // ── Visitas a perfiles (30 días) ───────────────────────────────
   fetch(SUPA_ADM + '/rest/v1/visitas_perfil?created_at=gte.' + hace30 + '&select=uid_mascota,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();}).then(function(rows){
     if(!Array.isArray(rows)){ document.getElementById('estVisitasPerfil').textContent = '—'; return; }
@@ -1402,6 +1432,7 @@ function cargarRestoEstadisticas(misUids, EXCLUIR_EMAILS, hace30){
     cargarVisitasTop();
   }).catch(function(){ document.getElementById('estVisitasPerfil').textContent = '—'; });
 
+  // ── Canjes pendientes ───────────────────────────────────────────
   fetch(SUPA_ADM + '/rest/v1/canjes?estado=eq.pendiente&select=dueno,email,premio,puntos_usados,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
   .then(function(rows){
@@ -1441,6 +1472,7 @@ function cargarVisitasTop(){
   }).join('');
 }
 
+// ── Modal genérico de detalle para las tarjetas clickeables ─────
 function abrirDetalleModal(titulo, headers, filas){
   document.getElementById('modalDetalleTitle').textContent = titulo + ' (' + filas.length + ')';
   document.getElementById('modalDetalleHead').innerHTML = '<tr>' + headers.map(function(h){return '<th>'+h+'</th>';}).join('') + '</tr>';
@@ -1493,7 +1525,7 @@ function verDetalle(tipo){
     var filas = (D.activas||[]).map(function(m){
       var completo = (D.completos||[]).indexOf(m) >= 0;
       return [m.nombre, m.dueno||'—', completo ? '✅ Completo' : '⚠️ Incompleto'];
-    }).sort(function(a,b){ return a[2].indexOf('⚠️') - b[2].indexOf('⚠️'); });
+    }).sort(function(a,b){ return a[2].indexOf('⚠️') - b[2].indexOf('⚠️'); }); // incompletos primero
     abrirDetalleModal('Estado del perfil por mascota', ['Nombre','Dueño','Estado'], filas);
   }
   else if(tipo === 'msgPublicos'){
@@ -1542,6 +1574,8 @@ function verDetalle(tipo){
   }
 }
 
+
+// ── Juegos ────────────────────────────────────────────────────
 function loadJuegos(){
   var EXCLUIR_EMAILS = ADMIN_EXCLUIDOS;
   var hoy = new Date().toISOString().split('T')[0];
@@ -1555,6 +1589,7 @@ function loadJuegos(){
     }
     window._juegosDatos = { rows: rows };
 
+    // Stats generales
     var emails = [...new Set(rows.map(function(r){return r.email;}))];
     var hoyRows = rows.filter(function(r){return r.created_at && r.created_at.startsWith(hoy);});
     document.getElementById('jTotalPartidas').textContent = rows.length;
@@ -1563,6 +1598,7 @@ function loadJuegos(){
     window._juegosDatos.hoyRows = hoyRows;
     window._juegosDatos.emails = emails;
 
+    // Racha más larga (por email)
     var maxRacha = 0;
     var rachasPorEmail = [];
     emails.forEach(function(email){
@@ -1578,6 +1614,7 @@ function loadJuegos(){
     document.getElementById('jRacha').textContent = maxRacha + ' días';
     window._juegosDatos.rachasPorEmail = rachasPorEmail.sort(function(a,b){ return b.racha - a.racha; });
 
+    // Por día
     var porDia = {};
     rows.forEach(function(r){
       var d = r.created_at.split('T')[0];
@@ -1592,6 +1629,7 @@ function loadJuegos(){
       return '<tr><td>'+d+'</td><td>'+x.total+'</td><td>'+x.emails.size+'</td><td>'+(x.pts/x.total).toFixed(1)+'</td></tr>';
     }).join('') || '<tr><td colspan="4" style="text-align:center;color:#aaa">Sin datos</td></tr>';
 
+    // Ranking
     var byEmail = {};
     rows.forEach(function(r){
       if(!byEmail[r.email]) byEmail[r.email]={total:0,pts:0,ultima:r.created_at.split('T')[0]};
@@ -1609,6 +1647,7 @@ function loadJuegos(){
   });
 }
 
+// ── Detalle clickeable de las tarjetas de Juegos ────────────────
 function verDetalleJuegos(tipo){
   var D = window._juegosDatos || {};
   if(tipo === 'totalPartidas'){
@@ -1629,6 +1668,7 @@ function verDetalleJuegos(tipo){
   }
 }
 
+// ── Amigos ────────────────────────────────────────────────────
 function loadAmigos(){
   Promise.all([
     fetch(SUPA_ADM + '/rest/v1/amigos?select=*&limit=500', {headers: SUPA_ADM_H}).then(function(r){return r.json();}),
@@ -1639,6 +1679,7 @@ function loadAmigos(){
     var mensajes = results[1] || [];
     var convs = results[2] || [];
 
+    // Detectar columnas de estado en amigos
     var pendientes = amigos.filter(function(a){
       return a.estado === 'pendiente' || a.status === 'pendiente' || a.aceptado === false;
     });
@@ -1652,6 +1693,7 @@ function loadAmigos(){
     document.getElementById('aMensajes').textContent = mensajes.length;
     document.getElementById('aConversaciones').textContent = convs.length;
 
+    // Usuarios más conectados
     var emailConns = {};
     aceptados.forEach(function(a){
       var e1 = a.email_solicitante || a.email1 || a.emisor || a.from_email || '';
@@ -1669,6 +1711,7 @@ function loadAmigos(){
       ? topEmails.map(function(em){ return '<tr><td>'+em+'</td><td>'+emailConns[em]+'</td><td>'+(emailMsgs[em]||0)+'</td></tr>'; }).join('')
       : '<tr><td colspan="3" style="text-align:center;color:#aaa">Sin datos</td></tr>';
 
+    // Solicitudes recientes
     var ESTADO = function(a){ return a.estado || a.status || (a.aceptado===true?'aceptado':a.aceptado===false?'pendiente':'—'); };
     var recent = amigos.slice(0,20);
     document.getElementById('aSolicitudesBody').innerHTML = recent.length
@@ -1689,6 +1732,7 @@ function loadAmigos(){
   });
 }
 
+// ── cargarListaPremium ────────────────────────────────────────
 function cargarListaPremium() {
   var lista = document.getElementById('premiumLista');
   if (lista) lista.innerHTML = '<div class="spinner"></div>';
@@ -1750,6 +1794,7 @@ function mostrarPremiumMsg(msg, tipo) {
   setTimeout(function(){ el.style.display='none'; }, 3000);
 }
 
+// ── cargarAfiliados ───────────────────────────────────────────
 function cargarAfiliados() {
   fetch(SUPA_ADM + '/rest/v1/actividades?es_afiliado=eq.true&select=id,afiliado_email,afiliado_plan,afiliado_vence,afiliado_periodo,titulo,tipo,activo,pausado,pausado_razon,created_at&order=created_at.desc&limit=100', {headers: SUPA_ADM_H})
   .then(function(r) { return r.json(); })
@@ -1788,6 +1833,10 @@ function togglePausar(id, pausar) {
   .then(function(d){ if(d.ok) cargarAfiliados(); });
 }
 
+
+
+
+
 function showScreen(name,el){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   var _sc=document.getElementById('screen'+name.charAt(0).toUpperCase()+name.slice(1)); if(_sc) _sc.classList.add('active');
@@ -1812,13 +1861,13 @@ function showScreen(name,el){
   if(name==='busquedas') loadBusquedas();
   if(name==='pedidos') loadPedidos();
   if(name==='alimentos') loadAlimentos();
-  if(name==='whatsapp') loadWhatsappEnviados();
   if(name==='_unused'){
     var ifr=document.getElementById('iframeAfiliados');
     if(ifr&&!ifr.src) ifr.src='/admin-afiliados-embed.html';
   }
 }
 
+// ── Carga de datos ────────────────────────────────────────────
 function loadData(){
   fetch('/api/admin?action=getData')
   .then(function(r){return r.json();})
@@ -1839,8 +1888,12 @@ function buildFamilias(){
   });
 }
 
+// ── Dashboard ─────────────────────────────────────────────────
 function renderDashboard(){
-  var datosStats = filtrarExcluidos(allData, 11);
+  // Se excluyen las cuentas de ADMIN_EXCLUIDOS solo para los NUMEROS/graficas
+  // de este Dashboard — allData en si no se toca, asi que la tabla de
+  // Mascotas sigue mostrando/permitiendo editar esas filas normal.
+  var datosStats = filtrarExcluidos(allData, 11); // columna 11 = Email
   var total=datosStats.length;
   var perros=datosStats.filter(function(r){return String(r[4]).toLowerCase().indexOf('perro')>=0;}).length;
   var gatos=datosStats.filter(function(r){return String(r[4]).toLowerCase().indexOf('gato')>=0;}).length;
@@ -1895,6 +1948,7 @@ function renderBars(id,obj,top,color){
   }).join('')||'<p style="color:#888;font-size:13px">Sin datos</p>';
 }
 
+// ── Filtros y tabla ───────────────────────────────────────────
 function applyFilters(){
   var n=document.getElementById('searchNombre').value.toLowerCase();
   var du=document.getElementById('searchDueno').value.toLowerCase();
@@ -1942,17 +1996,19 @@ function renderTable(){
     var fotoSrc=String(r[27]||'');
     var foto=fotoSrc.indexOf('http')>=0?'<img src="'+fotoSrc+'" style="width:40px;height:40px;border-radius:8px;object-fit:cover" onerror="this.style.display=\'none\'">':'<div style="width:40px;height:40px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:18px">🐾</div>';
     return '<tr><td>'+foto+'</td><td><strong>'+String(r[2]||'-')+'</strong><br><span style="font-size:11px;color:#888">'+String(r[3]||'')+'</span></td><td>'+esp+'</td><td style="font-size:12px">'+String(r[9]||'-')+'</td><td style="font-size:12px">'+String(r[10]||'-')+'</td><td style="font-size:11px;color:#534AB7">'+String(r[11]||'-')+'</td><td style="font-size:12px">'+String(r[16]||'-')+'</td><td style="font-size:11px;color:#888">'+fecha+'</td><td>'+estB+'</td>'
+    // Premium badge + toggle
     +'<td id="prem-'+idx+'">'
     +'<span style="display:inline-flex;align-items:center;gap:4px">'
     +'<span id="prem-badge-'+idx+'" style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:'+(String(r[31]||'')===String(true)||r[31]===true?'#f3e8ff':'#f0f0ee')+';color:'+(String(r[31]||'')===String(true)||r[31]===true?'#534AB7':'#888')+'">'+(String(r[31]||'')===String(true)||r[31]===true?'⭐ Activo':'—')+'</span>'
     +'<button class="btn-sm" style="font-size:10px" onclick="togglePremium('+idx+')">'+(String(r[31]||'')===String(true)||r[31]===true?'Quitar':'Dar')+'</button>'
     +'</span>'
     +'</td>'
-    +'<td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#25D366;color:#fff" onclick="reenviarWhatsApp('+idx+')">💬 WhatsApp</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
+    +'<td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
   }).join('');
   document.getElementById('tableBody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
 }
 
+// ── Familias ──────────────────────────────────────────────────
 function renderFamilias(){
   var buscar=(document.getElementById('searchFamilia')?document.getElementById('searchFamilia').value||'':'').toLowerCase();
   var keys=Object.keys(familias).filter(function(k){var f=familias[k];return !buscar||f.dueno.toLowerCase().indexOf(buscar)>=0||k.indexOf(buscar)>=0;}).sort(function(a,b){return familias[b].mascotas.length-familias[a].mascotas.length;});
@@ -1974,6 +2030,7 @@ function viewFamilia(email){
   document.getElementById('modalFamilia').classList.add('open');
 }
 
+// ── Ver ID ────────────────────────────────────────────────────
 function viewID(idx){
   var r=filtered[idx];
   var foto=String(r[27]||'').indexOf('http')>=0?'<img src="'+r[27]+'" style="width:140px;height:175px;object-fit:cover">':'<div style="width:140px;height:175px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">🐾</div>';
@@ -2016,6 +2073,9 @@ function calcularEdadTexto(fechaStr){
   }catch(e){ return '—'; }
 }
 
+// ── Recorte inteligente de Cloudinary — centra la parte relevante de
+// la foto (cara/cuerpo de la mascota) en vez de cortar por el centro
+// geométrico. No distorsiona: mantiene proporción, solo recorta.
 function cloudinarySmartCrop(url, w, h){
   if(!url || url.indexOf('res.cloudinary.com')<0) return url;
   var marker = '/upload/';
@@ -2054,6 +2114,7 @@ function tarjetaAmigoHTML(m){
     +'</div>';
 }
 
+// ── Amigo de la Semana ──────────────────────────────────────────
 function elegirAmigoSemana(){
   document.getElementById('asVacio').textContent='Eligiendo...';
   document.getElementById('asContenedor').style.display='none';
@@ -2087,6 +2148,7 @@ function descargarTarjetaAmigo(){
   });
 }
 
+// ── Editar mascota ────────────────────────────────────────────
 function openEdit(idx){
   editIdx=idx; var r=filtered[idx];
   document.getElementById('modalEditTitle').textContent='Editar: '+String(r[2]||'');
@@ -2125,65 +2187,9 @@ function reenviarID(idx){
   }).catch(function(){alert('Error al reenviar');});
 }
 
-// ── Reenviar PetzID por WhatsApp (manual — abre WhatsApp Web con el
-// mensaje ya escrito, para que el equipo le dé clic a "Enviar") ──────
-function normalizarWA(raw){
-  var d=String(raw||'').replace(/[^\d]/g,'');
-  if(!d) return '';
-  if(d.length===8) return '502'+d; // numero local GT sin lada -> agrega 502
-  if(d.indexOf('00')===0) return d.replace(/^0+/,''); // quita prefijo internacional 00
-  return d;
-}
-function reenviarWhatsApp(idx){
-  var r=filtered[idx];
-  var wa=normalizarWA(r[12]);
-  if(!wa){ alert('Esta mascota no tiene número de WhatsApp registrado.\n\nPuedes agregarlo desde "Editar".'); return; }
-  var nombre=String(r[2]||'tu mascota');
-  var dueno=String(r[10]||'').trim();
-  var uid=String(r[1]||'').trim();
-  var email=String(r[11]||'').trim();
-  var perfilUrl='https://app.revistapetmi.com/p/'+uid;
-  var mensaje='¡Hola'+(dueno?' '+dueno:'')+'! 🐾 Aquí está el PetzID de '+nombre+': '+perfilUrl+' — ¡Gracias por ser parte de la comunidad PetMi!';
-  var waLink='https://wa.me/'+wa+'?text='+encodeURIComponent(mensaje);
-
-  // Registra el intento de envío antes de abrir el chat — si esta tabla
-  // no existe todavía en Supabase, el link se abre igual (no bloquea al
-  // usuario), solo no queda el registro histórico.
-  fetch(SUPA_ADM + '/rest/v1/whatsapp_envios', {
-    method: 'POST',
-    headers: Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'}, SUPA_ADM_H),
-    body: JSON.stringify({ uid: uid, nombre: nombre, dueno: dueno, telefono: wa, email: email })
-  }).catch(function(){}).finally(function(){
-    window.open(waLink, '_blank');
-  });
-}
-
-function loadWhatsappEnviados(){
-  var tbody = document.getElementById('waEnviosBody');
-  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr>';
-  fetch(SUPA_ADM + '/rest/v1/whatsapp_envios?select=nombre,dueno,telefono,created_at&order=created_at.desc&limit=500', {headers: SUPA_ADM_H})
-  .then(function(r){return r.json();})
-  .then(function(rows){
-    if(!Array.isArray(rows)){
-      document.getElementById('waEnviosInfo').textContent = 'Error al cargar';
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#c0392b">Error — ¿ya creaste la tabla "whatsapp_envios" en Supabase? Pídele el SQL a Claude.</td></tr>';
-      return;
-    }
-    document.getElementById('waEnviosInfo').textContent = rows.length + ' envío(s) registrado(s)';
-    if(!rows.length){
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Aún no se ha enviado ningún PetzID por WhatsApp desde el panel</td></tr>';
-      return;
-    }
-    tbody.innerHTML = rows.map(function(r){
-      var fecha = new Date(r.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-      return '<tr><td>'+fecha+'</td><td>'+(r.nombre||'—')+'</td><td>'+(r.dueno||'—')+'</td><td>'+(r.telefono||'—')+'</td></tr>';
-    }).join('');
-  }).catch(function(){
-    document.getElementById('waEnviosInfo').textContent = 'Error al cargar';
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#c0392b">Error de conexión</td></tr>';
-  });
-}
-
+// ── Eliminar mascota ──────────────────────────────────────────
+// Corregido: usa /api/submit (proxy al Apps Script)
+// action: 'deleteMascota' borra UNA sola mascota por uid
 function eliminarMascota(idx){
   var r=filtered[idx];
   if(!r) return;
@@ -2209,6 +2215,7 @@ function eliminarMascota(idx){
   }).catch(function(){alert('Error de conexión');});
 }
 
+// ── Campañas ──────────────────────────────────────────────────
 function renderCampanas(){
   var html=campanas.map(function(c){
     var f=c[0]?new Date(c[0]).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'-';
@@ -2217,6 +2224,7 @@ function renderCampanas(){
   document.getElementById('campanaBody').innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:#888">Sin campanas</td></tr>';
 }
 
+// ── Modal foto ────────────────────────────────────────────────
 function abrirSubirFoto(idx){
   var r=filtered[idx]; if(!r) return;
   adminFotoUID=String(r[1]||'').trim();
@@ -2314,6 +2322,8 @@ async function subirFotoAdmin(){
   btn.disabled=false; btn.textContent='Guardar foto';
 }
 
+// ── Sync Supabase ─────────────────────────────────────────────
+// Usa /api/galeria para no exponer la service_role key en el cliente
 async function syncSupabase(){
   var btn=document.getElementById('btnSync');
   var status=document.getElementById('syncStatus');
@@ -2342,6 +2352,7 @@ async function syncSupabase(){
     });
   });
 
+  // Enviar en lotes a través del servidor (sin exponer keys)
   var LOTE=50, migradas=0, errores=0, total=payloads.length;
   for(var i=0;i<payloads.length;i+=LOTE){
     var lote=payloads.slice(i,i+LOTE);
@@ -2364,6 +2375,7 @@ async function syncSupabase(){
   setTimeout(function(){status.style.display='none';},5000);
 }
 
+// ── Eventos y Lugares (vía /api/galeria, sin keys en cliente) ─
 function cargarEventosAdmin(){
   fetch('/api/galeria?action=getEventosAdmin')
   .then(function(r){return r.json();})
@@ -2495,6 +2507,7 @@ function togglePremium(idx){
 
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
+// ── Avisos pendientes ─────────────────────────────────────────
 var SUPA_ADMIN='https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_ADMIN_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
 
@@ -2665,6 +2678,7 @@ function cargarAdminGrupos(){
   var sub=document.getElementById('subGrupos');
   if(sub) sub.textContent='Cargando...';
 
+  // Cargar solicitudes pendientes (activo=false)
   fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?activo=eq.false&select=*&order=created_at.desc',{
     headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}
   }).then(function(r){return r.json();})
@@ -2688,6 +2702,7 @@ function cargarAdminGrupos(){
     }
   }).catch(function(){document.getElementById('solicitudesGruposBody').innerHTML='<tr><td colspan="4" style="color:red;padding:12px">Error</td></tr>';});
 
+  // Cargar grupos activos + conteo miembros
   Promise.all([
     fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?activo=eq.true&select=*&order=nombre.asc',{headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}}).then(function(r){return r.json();}),
     fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/miembros_grupo?select=grupo_id',{headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM'}}).then(function(r){return r.json();})
@@ -2772,6 +2787,8 @@ function mostrarToastAdmin(msg){
   clearTimeout(el._t);el._t=setTimeout(function(){el.style.opacity='0';},2500);
 }
 
+// ── Mundial Admin ─────────────────────────────────────────────
+// ── Reglas de Salud (CRUD) ───────────────────────────────────────
 function abrirModalUnificarRaza(variante, nombreActual){
   document.getElementById('urVariante').value = variante;
   document.getElementById('urNombreActual').textContent = nombreActual;
@@ -2801,6 +2818,10 @@ function verDetalleRaza(raza){
     entrada.mascotas.map(function(m){ return [m.nombre, m.dueno||'—', m.email||'—']; }));
 }
 
+// ── Ruleta de Premios (CRUD) ─────────────────────────────────────
+// ── Nunca han vuelto: quiénes nunca entraron desde su registro,
+// qué correos de la serie ya recibieron, y link directo de WhatsApp ──
+// ── Concurso: participantes, votos, ocultar/eliminar ────────────
 function loadConcurso(){
   var tbody = document.getElementById('concursoBody');
   tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr>';
@@ -2905,6 +2926,8 @@ function loadNuncaHanVuelto(){
       return;
     }
 
+    // Agrupar por email (familia) — juntar nombres de mascotas, quedarse
+    // con el whatsapp y la fecha de registro más antigua del grupo
     var grupos = {};
     rows.forEach(function(r){
       var email = String(r.email||'').trim().toLowerCase();
@@ -2916,6 +2939,7 @@ function loadNuncaHanVuelto(){
     });
     var emails = Object.keys(grupos);
 
+    // Cruzar contra reactivacion_envios para saber qué semanas ya recibió cada quien
     fetch(SUPA_ADM + '/rest/v1/reactivacion_envios?email=in.(' + emails.map(function(e){return encodeURIComponent(e);}).join(',') + ')&select=email,semana', {headers: SUPA_ADM_H})
     .then(function(r){return r.json();})
     .then(function(envios){
@@ -2928,7 +2952,7 @@ function loadNuncaHanVuelto(){
 
       var hoy = Date.now();
       var lista = emails.map(function(email){ return grupos[email]; });
-      lista.sort(function(a,b){ return new Date(a.createdAt) - new Date(b.createdAt); });
+      lista.sort(function(a,b){ return new Date(a.createdAt) - new Date(b.createdAt); }); // más antiguos primero
 
       tbody.innerHTML = lista.map(function(g){
         var diasRegistrado = g.createdAt ? Math.floor((hoy - new Date(g.createdAt).getTime())/86400000) : null;
@@ -3013,6 +3037,7 @@ function loadReactivacionEfectividad(){
       });
       document.getElementById('reactivacionResumen').innerHTML = html;
 
+      // ── Detalle de quiénes volvieron: premio de ruleta + acciones ──
       var volvieronDetalle = [];
       envios.forEach(function(e){
         var email = (e.email||'').toLowerCase();
@@ -3021,6 +3046,7 @@ function loadReactivacionEfectividad(){
           volvieronDetalle.push({ email: e.email, semana: e.semana, volvioEn: ua, enviadoAt: e.enviado_at });
         }
       });
+      // Si alguien volvió más de una vez (varias semanas), dejar solo la primera
       var vistos = {};
       volvieronDetalle = volvieronDetalle.filter(function(v){
         var k = v.email.toLowerCase();
@@ -3074,6 +3100,7 @@ function loadRuletaGiros(){
     var giros = filtrarExcluidos(d.giros || [], 'email');
     document.getElementById('ruletaGirosTotal').textContent = giros.length;
 
+    // Resumen: cuántos ganaron cada premio
     var resumen = {};
     giros.forEach(function(g){
       var nombre = (g.ruleta_premios && g.ruleta_premios.nombre) || 'Premio borrado';
@@ -3187,6 +3214,7 @@ function eliminarRuletaPremio(id){
   }).then(function(){ loadRuletaPremios(); }).catch(function(){});
 }
 
+// ── Tienda (CRUD) ────────────────────────────────────────────────
 function loadTiendaProductos(){
   fetch('/api/galeria?action=getProductosTiendaAdmin')
   .then(function(r){return r.json();})
@@ -3223,6 +3251,9 @@ function abrirModalProducto(){
   document.getElementById('prodCategoria').value = '';
   document.getElementById('prodEspecie').value = 'Todos';
   document.getElementById('prodImagen').value = '';
+  document.getElementById('prodEnvioIncluido').checked = false;
+  document.getElementById('prodCostoEnvio').value = '';
+  document.getElementById('prodCostoEnvioWrap').style.display = 'block';
   document.getElementById('modalProducto').classList.add('open');
 }
 
@@ -3235,18 +3266,24 @@ function editarProducto(p){
   document.getElementById('prodCategoria').value = p.categoria;
   document.getElementById('prodEspecie').value = p.especie || 'Todos';
   document.getElementById('prodImagen').value = p.imagen || '';
+  document.getElementById('prodEnvioIncluido').checked = !!p.envio_incluido;
+  document.getElementById('prodCostoEnvio').value = p.costo_envio || '';
+  document.getElementById('prodCostoEnvioWrap').style.display = p.envio_incluido ? 'none' : 'block';
   document.getElementById('modalProducto').classList.add('open');
 }
 
 function guardarProducto(){
   var id = document.getElementById('prodId').value;
+  var envioIncluido = document.getElementById('prodEnvioIncluido').checked;
   var payload = {
     nombre: document.getElementById('prodNombre').value.trim(),
     descripcion: document.getElementById('prodDescripcion').value.trim(),
     precio: document.getElementById('prodPrecio').value ? parseFloat(document.getElementById('prodPrecio').value) : null,
     categoria: document.getElementById('prodCategoria').value.trim(),
     especie: document.getElementById('prodEspecie').value,
-    imagen: document.getElementById('prodImagen').value.trim() || null
+    imagen: document.getElementById('prodImagen').value.trim() || null,
+    envio_incluido: envioIncluido,
+    costo_envio: envioIncluido ? null : (document.getElementById('prodCostoEnvio').value.trim() || null)
   };
   if(!payload.nombre || !payload.categoria){ alert('Nombre y categoría son obligatorios.'); return; }
   var action = id ? 'actualizarProductoTienda' : 'crearProductoTienda';
@@ -3273,6 +3310,7 @@ function eliminarProducto(id){
   }).then(function(){ loadTiendaProductos(); }).catch(function(){});
 }
 
+// ── Búsquedas de usuarios ────────────────────────────────────────
 function loadBusquedas(){
   fetch(SUPA_ADM + '/rest/v1/busquedas_log?select=query,resultados,created_at&order=created_at.desc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
@@ -3310,6 +3348,7 @@ function loadBusquedas(){
   });
 }
 
+// ── Pedidos de la tienda ─────────────────────────────────────────
 function loadPedidos(){
   fetch('/api/galeria?action=getPedidosTienda')
   .then(function(r){return r.json();})
@@ -3338,6 +3377,7 @@ function marcarPedidoAtendido(id){
   }).then(function(){ loadPedidos(); }).catch(function(){});
 }
 
+// ── Catálogo de alimentos ────────────────────────────────────────
 function loadAlimentos(){
   fetch('/api/galeria?action=getAlimentosUsadosAdmin')
   .then(function(r){return r.json();})
@@ -3702,6 +3742,10 @@ function wcMarcarResultado() {
   }).catch(function(){msg.textContent='Error de conexion';msg.style.color='#e53935';});
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// Email Fix — Detección y corrección de emails mal escritos
+// ══════════════════════════════════════════════════════════════
 var _efAllRows = [];
 
 function _efEsSospechoso(email) {
