@@ -128,35 +128,64 @@ async function _obtenerOElegirGanadoresSorteo() {
   return elegidos;
 }
 
-// ── Servicio OTP aislado — la URL vive AQUÍ, en un solo lugar ──────
+// ── Envío del código OTP — vive en un solo lugar (Resend) ──────
 // Usado tanto por el login "No recuerdo el nombre" como por la
-// verificación de voto sin cuenta del concurso. Antes esto estaba
-// duplicado en 2 bloques distintos, cada uno con su propia copia de
-// la URL — eso fue justo lo que causó que un bloque quedara con la
-// URL vieja al actualizar el otro. Ahora solo hay una copia.
-const OTP_SERVICE_URL = 'https://script.google.com/macros/s/AKfycbxrE4a8FX3e1FWPfKeNjMPzBWPKiJl94MaHa0sQFVVJgJzKCYkwH60A_N_zFrqihDWt/exec';
+// verificación de voto sin cuenta del concurso. Antes mandaba el correo
+// via Apps Script/Gmail — se cambió a Resend (1 sep) porque Gmail estaba
+// bloqueando/retrasando la entrega de correos de "código de verificación"
+// por reputación del remitente, sin importar la cuota disponible.
+//
+// IMPORTANTE: mientras el dominio revistapetmi.com no esté verificado en
+// Resend, esto SOLO puede mandar correos a la cuenta con la que te
+// registraste en Resend (limitación de su modo de prueba) — no va a
+// funcionar todavía para votantes/usuarios reales. En cuanto el dominio
+// quede "Verified" en el panel de Resend, esto empieza a funcionar para
+// cualquiera sin tocar nada más de este archivo.
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const RESEND_FROM = 'PetMi <onboarding@resend.dev>'; // cambiar a noreply@revistapetmi.com en cuanto el dominio esté verificado
 
 async function _enviarCodigoOTPPorCorreo(email, code, dueno, etiquetaLog) {
+  if (!RESEND_API_KEY) {
+    console.error((etiquetaLog || 'enviarOTP') + ' -> falta la variable de entorno RESEND_API_KEY en Vercel (Settings → Environment Variables).');
+    return { ok: false, error: 'El servicio de correo no está configurado (falta RESEND_API_KEY en Vercel).' };
+  }
+  const saludo = dueno ? ('Hola ' + dueno + '!') : 'Hola!';
+  const htmlBody = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
+    + '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">'
+    + '<div style="background:#1a1a2e;padding:28px;text-align:center;border-radius:12px 12px 0 0">'
+    + '<div style="display:inline-block;background:#fff;border-radius:12px;padding:8px 18px"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi" style="height:36px;width:auto;display:block"></div>'
+    + '</div>'
+    + '<div style="background:#fff;padding:28px;border:1px solid #eee">'
+    + '<h2 style="color:#1a1a2e;margin-top:0;text-align:center">Tu código de verificación</h2>'
+    + '<p style="color:#555;line-height:1.7;font-size:14px;text-align:center">' + saludo + ' Usa este código para continuar — es válido por 10 minutos.</p>'
+    + '<div style="text-align:center;margin:24px 0"><span style="display:inline-block;background:#f8f8f8;border-radius:12px;padding:16px 28px;font-size:32px;font-weight:900;letter-spacing:8px;color:#1a1a2e">' + code + '</span></div>'
+    + '<p style="text-align:center;color:#999;font-size:12px">Si tú no pediste este código, puedes ignorar este correo con confianza.</p>'
+    + '<p style="color:#aaa;font-size:12px;margin-top:24px">Con amor, el equipo de PetMi</p>'
+    + '</div>'
+    + '<div style="background:#F5C842;padding:12px;text-align:center;border-radius:0 0 12px 12px">'
+    + '<p style="margin:0;font-size:12px;color:#555">PetMi Guatemala</p>'
+    + '</div></div></body></html>';
+
   try {
-    const rGas = await fetch(OTP_SERVICE_URL, {
+    const rResend = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'enviarOTP', email, code, dueno: dueno || '' }),
-      redirect: 'follow'
+      headers: { 'Authorization': 'Bearer ' + RESEND_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: RESEND_FROM,
+        to: [email],
+        subject: 'Tu código de verificación: ' + code,
+        html: htmlBody
+      })
     });
-    const bodyGas = await rGas.text();
-    console.log((etiquetaLog || 'enviarOTP') + ' -> status:', rGas.status, '| respuesta:', bodyGas);
-    let parsed;
-    try { parsed = JSON.parse(bodyGas); } catch(e) { parsed = null; }
-    // Si el servicio de OTP respondió pero con ok:false (ej. cuota de
-    // Gmail agotada), esto AHORA se propaga como fallo real — antes
-    // se ignoraba y siempre se le decía al usuario "código enviado".
-    if (parsed && parsed.ok === false) {
-      return { ok: false, error: parsed.msg || 'No se pudo enviar el código' };
+    const bodyResend = await rResend.text();
+    console.log((etiquetaLog || 'enviarOTP') + ' -> Resend status:', rResend.status, '| respuesta:', bodyResend);
+    if (!rResend.ok) {
+      let parsed; try { parsed = JSON.parse(bodyResend); } catch(e) { parsed = null; }
+      return { ok: false, error: (parsed && parsed.message) || 'No se pudo enviar el código' };
     }
     return { ok: true };
-  } catch(eGas) {
-    console.error((etiquetaLog || 'enviarOTP') + ' -> error:', eGas.message);
+  } catch(eResend) {
+    console.error((etiquetaLog || 'enviarOTP') + ' -> Resend error:', eResend.message);
     return { ok: false, error: 'Error de conexión al enviar el código' };
   }
 }
@@ -2092,12 +2121,12 @@ export default async function handler(req, res) {
 
     // ── crearProductoTienda (admin) ─────────────────────────────
     if (action === 'crearProductoTienda' && req.method === 'POST') {
-      const { nombre, descripcion, precio, imagen, categoria, especie, orden } = req.body;
+      const { nombre, descripcion, precio, imagen, categoria, especie, orden, envio_incluido, costo_envio } = req.body;
       if (!nombre || !categoria) return res.status(200).json({ ok: false, error: 'Faltan campos' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, especie: especie || 'Todos', orden: orden || 0, activo: true })
+        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, especie: especie || 'Todos', orden: orden || 0, activo: true, envio_incluido: envio_incluido || false, costo_envio: costo_envio || null })
       });
       if (!r.ok) {
         const errTxt = await r.text().catch(() => '');
