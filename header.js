@@ -166,10 +166,7 @@
             '<a href="/mis-ids.html" class="h-drop-item">🆔 Mis IDs</a>' +
             '<a href="/amigos.html" class="h-drop-item">👥 Amigos</a>' +
             '<a href="/mensajes.html" class="h-drop-item">💬 Mensajes</a>' +
-            '<a href="/salud.html" class="h-drop-item">🩺 Mi Registro de Salud</a>' +
-            '<a href="/tienda.html" class="h-drop-item">🛍️ Tienda</a>' +
-            '<a href="/buscar.html" class="h-drop-item">🔍 Buscar</a>' +
-            '<a href="/mis-avisos.html" class="h-drop-item">📝 Mis avisos</a>' +
+            '<a href="/salud.html" class="h-drop-item">🩺 Registro de Salud</a>' +
             '<a href="/mi-cuenta.html" class="h-drop-item">⚙️ Mi cuenta</a>' +
             '<a href="/puntos.html" class="h-drop-item">🏆 Mis puntos</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
