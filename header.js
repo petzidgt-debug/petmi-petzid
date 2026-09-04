@@ -343,7 +343,7 @@
           badge.style.display = 'inline-block';
         }
       });
-      return fetch('/api/galeria?action=getMensajesNoLeidos&uid='+encodeURIComponent(d.mascotas[0].uid));
+      return fetch('/api/galeria?action=getMensajesNoLeidos&uids='+encodeURIComponent(d.mascotas.map(function(m){return m.uid;}).join(',')));
     }).then(function(r){return r&&r.json();})
     .then(function(d){
       if(!d||!d.count) return;
@@ -356,9 +356,16 @@
       if(badgeMob && d.count > 0){
         badgeMob.textContent = d.count > 99 ? '99+' : d.count;
         badgeMob.style.display = 'inline-block';
+      } else if(badgeMob){
+        badgeMob.style.display = 'none';
       }
+      if(badge && (!d.count || d.count===0)) badge.style.display = 'none';
     }).catch(function(){});
   }
+  window.petmiRefrescarBadgeMensajes = function(){
+    var email = localStorage.getItem('petzid_email') || '';
+    if(email) cargarNotifHeader(email);
+  };
 
   window.petmiTogglePF = function(e){ e.stopPropagation(); var m=document.getElementById('pfMenu'); if(m) m.classList.toggle('open'); };
   window.petmiToggleMenu = function(e){ e.stopPropagation(); var m=document.getElementById('petmiMenuDropdown'); if(m) m.classList.toggle('open'); };

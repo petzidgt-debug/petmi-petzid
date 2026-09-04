@@ -211,7 +211,10 @@ function abrirChat(miUid,miNombreParam,otroUid,otroNombre){
 
   cargarChat();
   fetch('/api/galeria?action=marcarLeidos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid_emisor:otroUid,uid_receptor:miUid})})
-    .then(function(){ cargarConversaciones(); });
+    .then(function(){
+      cargarConversaciones();
+      if(typeof petmiRefrescarBadgeMensajes==='function') petmiRefrescarBadgeMensajes();
+    });
 }
 
 function volverALista(){
