@@ -595,6 +595,69 @@ export default async function handler(req, res) {
     }
 
     // ── getConversaciones (lista, para el inbox) ──────────────
+    // ── getConversacionesFamilia — buzón unificado ──────────────
+    // A diferencia de getConversaciones (una sola mascota), esta junta
+    // las conversaciones de TODAS las mascotas de la cuenta en una sola
+    // lista, agrupando por (mi mascota, la otra persona) para poder
+    // mostrar con cuál de mis mascotas es cada conversación.
+    if (action === 'getConversacionesFamilia') {
+      const uidsParam = (req.query.uids || '').split(',').map(u => u.trim().toUpperCase()).filter(Boolean);
+      if (!uidsParam.length) return res.status(200).json({ conversaciones: [] });
+
+      const misUids = new Set(uidsParam);
+      const orClauses = uidsParam.map(u => 'uid_emisor.eq.' + encodeURIComponent(u) + ',uid_receptor.eq.' + encodeURIComponent(u)).join(',');
+      const response = await fetch(
+        SUPABASE_URL + '/rest/v1/conversaciones?or=(' + orClauses + ')&order=created_at.desc&limit=500',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+      );
+      const msgs = await response.json();
+      if (!msgs || !msgs.length) return res.status(200).json({ conversaciones: [] });
+
+      // Agrupar por (miUid, otroUid) — así una conversación con la misma
+      // persona pero dirigida a mascotas mías distintas queda separada.
+      const porPar = {};
+      msgs.forEach(m => {
+        let miUid, otro;
+        if (misUids.has(m.uid_emisor)) { miUid = m.uid_emisor; otro = m.uid_receptor; }
+        else { miUid = m.uid_receptor; otro = m.uid_emisor; }
+        const key = miUid + '|' + otro;
+        if (!porPar[key]) {
+          porPar[key] = { miUid, otroUid: otro, ultimoMensaje: m.mensaje, ultimaFecha: m.created_at, noLeidos: 0, ultimoEsMio: m.uid_emisor === miUid };
+        }
+        if (m.uid_receptor === miUid && !m.leido) porPar[key].noLeidos++;
+      });
+
+      const pares = Object.values(porPar);
+      const todosUids = [...new Set(pares.flatMap(p => [p.miUid, p.otroUid]))];
+      let info = {};
+      if (todosUids.length) {
+        const rMasc = await fetch(
+          SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + todosUids.map(u => '"' + u + '"').join(',') + ')&select=uid,nombre,foto,angelito',
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+        );
+        (await rMasc.json() || []).forEach(r => { info[r.uid] = r; });
+      }
+
+      const conversaciones = pares.map(p => {
+        const otroInfo = info[p.otroUid] || {};
+        const miInfo = info[p.miUid] || {};
+        return {
+          miUid: p.miUid,
+          miNombre: miInfo.nombre || 'Mi mascota',
+          otroUid: p.otroUid,
+          otroNombre: otroInfo.nombre || 'Mascota',
+          otroFoto: otroInfo.foto || '',
+          otroAngelito: !!otroInfo.angelito,
+          ultimoMensaje: p.ultimoMensaje,
+          ultimaFecha: p.ultimaFecha,
+          ultimoEsMio: p.ultimoEsMio,
+          noLeidos: p.noLeidos
+        };
+      }).sort((a, b) => new Date(b.ultimaFecha) - new Date(a.ultimaFecha));
+
+      return res.status(200).json({ conversaciones });
+    }
+
     if (action === 'getConversaciones') {
       const uid = (req.query.uid || '').toUpperCase();
       if (!uid) return res.status(200).json({ conversaciones: [] });
@@ -1047,11 +1110,11 @@ export default async function handler(req, res) {
           if (av && av.tipo === 'perdido') {
             const cuerpo = (av.descripcion || '') + (av.ubicacion ? ' · ' + av.ubicacion : '');
             const resultado = await _enviarPushATodos({ title: '🚨 Mascota perdida', body: cuerpo, url: '/avisos.html' }, 'notif_perdidos');
-            await _enviarMensajeOficialAUids(resultado.uids, '🚨 Mascota perdida: ' + cuerpo);
+            await _enviarMensajeOficialAUids(resultado.uids, '🚨 Mascota perdida: ' + cuerpo + '<br><a href="https://app.revistapetmi.com/avisos.html" style="color:#00B4B4;font-weight:700">Ver aviso →</a>');
           } else if (av && av.tipo === 'evento') {
             const cuerpo = (av.fecha || '') + (av.ubicacion ? ' · ' + av.ubicacion : '');
             const resultado = await _enviarPushATodos({ title: '🎉 Nuevo evento: ' + (av.titulo || ''), body: cuerpo, url: '/avisos.html' }, 'notif_eventos');
-            await _enviarMensajeOficialAUids(resultado.uids, '🎉 Nuevo evento: ' + (av.titulo || '') + ' — ' + cuerpo);
+            await _enviarMensajeOficialAUids(resultado.uids, '🎉 Nuevo evento: ' + (av.titulo || '') + ' — ' + cuerpo + '<br><a href="https://app.revistapetmi.com/avisos.html" style="color:#00B4B4;font-weight:700">Ver evento →</a>');
           }
         } catch(e) { console.error('Push aviso:', e.message); }
       }
