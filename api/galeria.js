@@ -2367,26 +2367,26 @@ export default async function handler(req, res) {
     // para aparecer en la página de promo de cumpleaños ─────────────
     if (action === 'getPromoCumpleProductos') {
       const r = await fetch(
-        SUPABASE_URL + '/rest/v1/promo_cumple_productos?select=orden,descuento_pct,tienda_productos(*)&order=orden.asc',
+        SUPABASE_URL + '/rest/v1/promo_cumple_productos?select=orden,descuento_pct,regalo_texto,tienda_productos(*)&order=orden.asc',
         { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
       );
       const data = await r.json();
       const productos = (Array.isArray(data) ? data : [])
         .filter(row => row.tienda_productos && row.tienda_productos.activo)
-        .map(row => Object.assign({}, row.tienda_productos, { descuento_pct: row.descuento_pct || null }));
+        .map(row => Object.assign({}, row.tienda_productos, { descuento_pct: row.descuento_pct || null, regalo_texto: row.regalo_texto || null }));
       return res.status(200).json({ productos });
     }
 
     // ── togglePromoCumpleProducto (admin) — agregar o quitar un
-    // producto de la promo de cumpleaños, con descuento opcional ────
+    // producto de la promo de cumpleaños, con descuento y/o regalo ──
     if (action === 'togglePromoCumpleProducto' && req.method === 'POST') {
-      const { producto_id, activo, descuento_pct } = req.body;
+      const { producto_id, activo, descuento_pct, regalo_texto } = req.body;
       if (!producto_id) return res.status(200).json({ ok: false, error: 'Falta producto_id' });
       if (activo) {
         const r = await fetch(SUPABASE_URL + '/rest/v1/promo_cumple_productos?on_conflict=producto_id', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-          body: JSON.stringify({ producto_id, descuento_pct: descuento_pct || null })
+          body: JSON.stringify({ producto_id, descuento_pct: descuento_pct || null, regalo_texto: regalo_texto || null })
         });
         return res.status(200).json({ ok: r.ok });
       } else {
@@ -2398,15 +2398,19 @@ export default async function handler(req, res) {
       }
     }
 
-    // ── getPromoCumpleProductosAdmin — ids + descuento ya guardados,
-    // para pintar los checkboxes y el campo de % en el admin ────────
+    // ── getPromoCumpleProductosAdmin — ids + descuento + regalo ya
+    // guardados, para pintar los campos en el admin ──────────────────
     if (action === 'getPromoCumpleProductosAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/promo_cumple_productos?select=producto_id,descuento_pct', {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/promo_cumple_productos?select=producto_id,descuento_pct,regalo_texto', {
         headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
       });
       const data = await r.json();
       const filas = Array.isArray(data) ? data : [];
-      return res.status(200).json({ ids: filas.map(r => r.producto_id), descuentos: filas.reduce((acc, r) => { acc[r.producto_id] = r.descuento_pct; return acc; }, {}) });
+      return res.status(200).json({
+        ids: filas.map(r => r.producto_id),
+        descuentos: filas.reduce((acc, r) => { acc[r.producto_id] = r.descuento_pct; return acc; }, {}),
+        regalos: filas.reduce((acc, r) => { acc[r.producto_id] = r.regalo_texto; return acc; }, {})
+      });
     }
 
     // ── getProductosTiendaAdmin (todos, incluye inactivos) ──────
