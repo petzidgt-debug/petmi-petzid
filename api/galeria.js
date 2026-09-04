@@ -222,6 +222,14 @@ async function dominioTieneCorreoValido(email) {
 // por enviarPushExterno (uid_mascota:'TODOS'), y por la activación de
 // eventos y avisos de mascota perdida. Si se pasa "categoria", solo
 // manda a quienes no la hayan desactivado en sus preferencias.
+//
+// Las mascotas angelito NUNCA califican directamente para push de
+// eventos/perdidos — en vez de eso, se busca otra mascota VIVA del
+// mismo correo (grupo familiar) y se usa SU preferencia para decidir
+// si mandar. El push sigue llegando al mismo dispositivo/suscripción
+// (nada que ver con qué mascota está "activa" en el navegador), solo
+// cambia de quién se toma la preferencia. Si no hay ninguna mascota
+// viva en esa familia, no se manda nada para esa suscripción.
 async function _enviarPushATodos(payload, categoria) {
   const r = await fetch(SUPABASE_URL + '/rest/v1/push_subscriptions?select=uid_mascota', {
     headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
@@ -230,17 +238,47 @@ async function _enviarPushATodos(payload, categoria) {
   let uidsUnicos = [...new Set((rows || []).map(x => x.uid_mascota))];
   if (!uidsUnicos.length) return { count: 0, uids: [] };
 
-  if (categoria) {
-    const rPref = await fetch(SUPABASE_URL + '/rest/v1/mascotas?' + categoria + '=eq.true&select=uid', {
-      headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-    });
-    const prefRows = await rPref.json();
-    const permitidos = new Set((prefRows || []).map(x => String(x.uid || '').toUpperCase()));
-    uidsUnicos = uidsUnicos.filter(u => permitidos.has(String(u || '').toUpperCase()));
+  const camposExtra = categoria ? ',' + categoria : '';
+  const rInfo = await fetch(
+    SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uidsUnicos.map(u => '"' + u + '"').join(',') + ')&select=uid,email,angelito' + camposExtra,
+    { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+  );
+  const infoRows = await rInfo.json();
+  const infoPorUid = {};
+  (infoRows || []).forEach(x => { infoPorUid[String(x.uid || '').toUpperCase()] = x; });
+
+  // Para cada email con al menos una mascota angelito en la lista, buscar
+  // una mascota viva del mismo correo para usar como reemplazo.
+  const emailsConAngelito = [...new Set(Object.values(infoPorUid).filter(x => x.angelito).map(x => x.email).filter(Boolean))];
+  let reemplazoPorEmail = {};
+  if (emailsConAngelito.length) {
+    const rFam = await fetch(
+      SUPABASE_URL + '/rest/v1/mascotas?angelito=eq.false&email=in.(' + emailsConAngelito.map(e => '"' + e + '"').join(',') + ')&select=uid,email' + camposExtra,
+      { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+    );
+    (await rFam.json() || []).forEach(x => { if (!reemplazoPorEmail[x.email]) reemplazoPorEmail[x.email] = x; });
   }
 
-  await Promise.all(uidsUnicos.map(u => _enviarPush(u, payload)));
-  return { count: uidsUnicos.length, uids: uidsUnicos };
+  // pushUid = a quién se le manda el push de verdad (el dispositivo real,
+  // nunca cambia — no se puede "mover" una suscripción a otra mascota).
+  // mensajeUid = bajo cuál mascota se guarda el mensaje en el buzón — para
+  // una angelito, se guarda bajo su reemplazo vivo, para que alguien lo vea.
+  const pares = uidsUnicos.map(u => {
+    const info = infoPorUid[String(u || '').toUpperCase()];
+    if (!info) return null; // suscripción huérfana, sin mascota asociada
+    if (info.angelito) {
+      const reemplazo = reemplazoPorEmail[info.email];
+      if (!reemplazo) return null; // angelito sin ninguna mascota viva en su familia
+      if (categoria && reemplazo[categoria] === false) return null;
+      return { pushUid: u, mensajeUid: reemplazo.uid };
+    }
+    if (categoria && info[categoria] === false) return null;
+    return { pushUid: u, mensajeUid: u };
+  }).filter(Boolean);
+
+  await Promise.all(pares.map(p => _enviarPush(p.pushUid, payload)));
+  const uidsMensaje = [...new Set(pares.map(p => p.mensajeUid))];
+  return { count: pares.length, uids: uidsMensaje };
 }
 
 // Guarda un mensaje de "PETMI-OFICIAL" en el buzón de cada uid — mismo
