@@ -148,13 +148,16 @@ function renderGrid(){
     var foto = p.imagen && p.imagen.indexOf('http')>=0
       ? '<img class="prod-foto" src="'+p.imagen+'">'
       : '<div class="prod-foto-ph">🐾</div>';
+    var usadoBadge = p.condicion === 'Usado'
+      ? '<div style="position:absolute;top:8px;left:8px;background:#1a1a2e;color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px">Usado</div>'
+      : '';
     var precioTxt = p.precio ? ('Q'+Number(p.precio).toFixed(2)) : 'Consultar precio';
     var envioTxt = p.envio_incluido
       ? '<div style="font-size:10.5px;color:#00838f;font-weight:700;margin:-4px 0 8px">🚚 Envío incluido</div>'
       : (p.costo_envio ? '<div style="font-size:10.5px;color:#888;margin:-4px 0 8px">🚚 Envío: '+p.costo_envio+'</div>' : '');
     var mensaje = encodeURIComponent('Hola! Quiero pedir: ' + p.nombre);
     return '<div class="prod-card">'
-      + foto
+      + '<div style="position:relative">'+foto+usadoBadge+'</div>'
       + '<div class="prod-info">'
       + '<div class="prod-nombre">'+p.nombre+'</div>'
       + (p.descripcion ? '<div class="prod-desc">'+p.descripcion+'</div>' : '')

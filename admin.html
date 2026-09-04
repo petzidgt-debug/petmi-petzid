@@ -978,6 +978,11 @@ tbody tr:last-child td{border-bottom:none}
       <option value="Perro">Solo perros</option>
       <option value="Gato">Solo gatos</option>
     </select>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Condición</label>
+    <select id="prodCondicion" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+      <option value="Nuevo">Nuevo</option>
+      <option value="Usado">Usado</option>
+    </select>
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">URL de la foto</label>
     <input type="text" id="prodImagen" placeholder="https://..." style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#333;margin:14px 0 4px;cursor:pointer">
@@ -3250,6 +3255,7 @@ function abrirModalProducto(){
   document.getElementById('prodPrecio').value = '';
   document.getElementById('prodCategoria').value = '';
   document.getElementById('prodEspecie').value = 'Todos';
+  document.getElementById('prodCondicion').value = 'Nuevo';
   document.getElementById('prodImagen').value = '';
   document.getElementById('prodEnvioIncluido').checked = false;
   document.getElementById('prodCostoEnvio').value = '';
@@ -3265,6 +3271,7 @@ function editarProducto(p){
   document.getElementById('prodPrecio').value = p.precio || '';
   document.getElementById('prodCategoria').value = p.categoria;
   document.getElementById('prodEspecie').value = p.especie || 'Todos';
+  document.getElementById('prodCondicion').value = p.condicion || 'Nuevo';
   document.getElementById('prodImagen').value = p.imagen || '';
   document.getElementById('prodEnvioIncluido').checked = !!p.envio_incluido;
   document.getElementById('prodCostoEnvio').value = p.costo_envio || '';
@@ -3281,6 +3288,7 @@ function guardarProducto(){
     precio: document.getElementById('prodPrecio').value ? parseFloat(document.getElementById('prodPrecio').value) : null,
     categoria: document.getElementById('prodCategoria').value.trim(),
     especie: document.getElementById('prodEspecie').value,
+    condicion: document.getElementById('prodCondicion').value,
     imagen: document.getElementById('prodImagen').value.trim() || null,
     envio_incluido: envioIncluido,
     costo_envio: envioIncluido ? null : (document.getElementById('prodCostoEnvio').value.trim() || null)
