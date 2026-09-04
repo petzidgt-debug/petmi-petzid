@@ -952,10 +952,16 @@ export default async function handler(req, res) {
 
     // ── getMensajesNoLeidos ───────────────────────────────────
     if (action === 'getMensajesNoLeidos') {
-      const uid = req.query.uid || '';
-      if (!uid) return res.status(200).json({ count: 0 });
+      // Acepta "uid" (uno) o "uids" (varios, separados por coma) — para
+      // que el contador cuente TODAS las mascotas de la cuenta, no solo
+      // la primera (mismo arreglo que ya hicimos en el buzón unificado).
+      const uidsParam = req.query.uids
+        ? req.query.uids.split(',').map(u => u.trim()).filter(Boolean)
+        : (req.query.uid ? [req.query.uid] : []);
+      if (!uidsParam.length) return res.status(200).json({ count: 0 });
+      const orClauses = uidsParam.map(u => 'uid_receptor.eq.' + encodeURIComponent(u)).join(',');
       const response = await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones?uid_receptor=eq.' + encodeURIComponent(uid) + '&leido=eq.false&select=id',
+        SUPABASE_URL + '/rest/v1/conversaciones?or=(' + orClauses + ')&leido=eq.false&select=id',
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact' } }
       );
       const count = parseInt(response.headers.get('content-range')?.split('/')[1] || '0');
