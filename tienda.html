@@ -163,7 +163,7 @@ function renderGrid(){
       : '<div class="prod-foto-ph">🐾</div>';
     var usadoBadge = p.condicion === 'Usado'
       ? '<div style="position:absolute;top:8px;left:8px;background:#1a1a2e;color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px">Usado</div>'
-      : '';
+      : '<div style="position:absolute;top:8px;left:8px;background:#2e7d32;color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px">Nuevo</div>';
     var precioTxt = p.precio ? ('Q'+Number(p.precio).toFixed(2)) : 'Consultar precio';
     var envioTxt = p.envio_incluido
       ? '<div style="font-size:10.5px;color:#00838f;font-weight:700;margin:-4px 0 8px">🚚 Envío incluido</div>'
@@ -187,7 +187,7 @@ function abrirModalProducto(p){
     : '<div class="modal-prod-foto-ph">🐾</div>';
   var usadoBadge = p.condicion === 'Usado'
     ? '<div style="position:absolute;top:14px;left:14px;background:#1a1a2e;color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:99px">Usado</div>'
-    : '';
+    : '<div style="position:absolute;top:14px;left:14px;background:#2e7d32;color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:99px">Nuevo</div>';
   var precioTxt = p.precio ? ('Q'+Number(p.precio).toFixed(2)) : 'Consultar precio';
   var envioTxt = p.envio_incluido
     ? '<div style="font-size:12px;color:#00838f;font-weight:700;margin-bottom:14px">🚚 Envío incluido</div>'
