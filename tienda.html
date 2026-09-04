@@ -28,6 +28,19 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 .prod-btn{display:block;background:#25D366;color:#fff;text-align:center;padding:9px;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none}
 
 .vacio{text-align:center;padding:60px 20px;color:#aaa}
+
+.prod-card{cursor:pointer}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-prod{background:#fff;border-radius:20px 20px 0 0;max-width:480px;width:100%;max-height:88vh;overflow-y:auto;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-prod-close{position:absolute;top:14px;right:14px;background:rgba(0,0,0,.5);color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;z-index:2}
+.modal-prod-foto{width:100%;aspect-ratio:1;object-fit:cover;background:#e8ddd0;display:block}
+.modal-prod-foto-ph{width:100%;aspect-ratio:1;background:#e8ddd0;display:flex;align-items:center;justify-content:center;font-size:56px}
+.modal-prod-body{padding:20px}
+.modal-prod-nombre{font-size:19px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
+.modal-prod-precio{font-size:20px;font-weight:900;color:#00B4B4;margin-bottom:10px}
+.modal-prod-desc{font-size:14px;color:#555;line-height:1.6;margin-bottom:16px;white-space:pre-wrap}
 </style>
 </head>
 <body>
@@ -156,18 +169,53 @@ function renderGrid(){
       ? '<div style="font-size:10.5px;color:#00838f;font-weight:700;margin:-4px 0 8px">🚚 Envío incluido</div>'
       : (p.costo_envio ? '<div style="font-size:10.5px;color:#888;margin:-4px 0 8px">🚚 Envío: '+p.costo_envio+'</div>' : '');
     var mensaje = encodeURIComponent('Hola! Quiero pedir: ' + p.nombre);
-    return '<div class="prod-card">'
+    return '<div class="prod-card" onclick=\'abrirModalProducto('+JSON.stringify(p)+')\'>'
       + '<div style="position:relative">'+foto+usadoBadge+'</div>'
       + '<div class="prod-info">'
       + '<div class="prod-nombre">'+p.nombre+'</div>'
       + (p.descripcion ? '<div class="prod-desc">'+p.descripcion+'</div>' : '')
       + '<div class="prod-precio">'+precioTxt+'</div>'
       + envioTxt
-      + '<a class="prod-btn" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank" onclick="registrarPedido(\''+p.nombre.replace(/'/g,"\\'")+'\',\''+(mascotaPersonal?mascotaPersonal.nombre:'').replace(/'/g,"\\'")+'\',\'producto\')">💬 Pedir por WhatsApp</a>'
+      + '<a class="prod-btn" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank" onclick="event.stopPropagation();registrarPedido(\''+p.nombre.replace(/'/g,"\\'")+'\',\''+(mascotaPersonal?mascotaPersonal.nombre:'').replace(/'/g,"\\'")+'\',\'producto\')">💬 Pedir por WhatsApp</a>'
       + '</div></div>';
   }).join('');
 }
+
+function abrirModalProducto(p){
+  var foto = p.imagen && p.imagen.indexOf('http')>=0
+    ? '<img class="modal-prod-foto" src="'+p.imagen+'">'
+    : '<div class="modal-prod-foto-ph">🐾</div>';
+  var usadoBadge = p.condicion === 'Usado'
+    ? '<div style="position:absolute;top:14px;left:14px;background:#1a1a2e;color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:99px">Usado</div>'
+    : '';
+  var precioTxt = p.precio ? ('Q'+Number(p.precio).toFixed(2)) : 'Consultar precio';
+  var envioTxt = p.envio_incluido
+    ? '<div style="font-size:12px;color:#00838f;font-weight:700;margin-bottom:14px">🚚 Envío incluido</div>'
+    : (p.costo_envio ? '<div style="font-size:12px;color:#888;margin-bottom:14px">🚚 Envío: '+p.costo_envio+'</div>' : '<div style="margin-bottom:14px"></div>');
+  var mensaje = encodeURIComponent('Hola! Quiero pedir: ' + p.nombre);
+  document.getElementById('modalProdContent').innerHTML =
+    '<div style="position:relative">'
+    + '<button class="modal-prod-close" onclick="cerrarModalProducto()">✕</button>'
+    + foto + usadoBadge
+    + '</div>'
+    + '<div class="modal-prod-body">'
+    + '<div class="modal-prod-nombre">'+p.nombre+'</div>'
+    + '<div class="modal-prod-precio">'+precioTxt+'</div>'
+    + envioTxt
+    + (p.descripcion ? '<div class="modal-prod-desc">'+p.descripcion+'</div>' : '')
+    + '<a class="prod-btn" style="display:block;padding:13px" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank" onclick="registrarPedido(\''+p.nombre.replace(/'/g,"\\'")+'\',\''+(mascotaPersonal?mascotaPersonal.nombre:'').replace(/'/g,"\\'")+'\',\'producto\')">💬 Pedir por WhatsApp</a>'
+    + '</div>';
+  document.getElementById('modalProdOverlay').classList.add('open');
+}
+
+function cerrarModalProducto(){
+  document.getElementById('modalProdOverlay').classList.remove('open');
+}
 </script>
+<div class="modal-overlay" id="modalProdOverlay" onclick="if(event.target===this)cerrarModalProducto()">
+  <div class="modal-prod" id="modalProdContent"></div>
+</div>
+
 <script src="/header.js"></script>
 </body>
 </html>
