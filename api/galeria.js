@@ -12,10 +12,21 @@ webpush.setVapidDetails(
 );
 
 // Manda un push a todas las suscripciones guardadas de un uid.
+// Si se pasa "categoria" (ej. 'notif_amigos'), primero revisa si esa
+// mascota tiene esa categoría activada — si la desactivó, no manda nada.
 // Si una suscripción ya no es válida (410/404 — el usuario desinstaló
 // o revocó permiso), se borra sola de la tabla.
-async function _enviarPush(uidMascota, payload) {
+async function _enviarPush(uidMascota, payload, categoria) {
   try {
+    if (categoria) {
+      const rPref = await fetch(
+        SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uidMascota) + '&select=' + categoria,
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const prefRows = await rPref.json();
+      const pref = prefRows && prefRows[0];
+      if (pref && pref[categoria] === false) return; // el usuario desactivó esta categoría
+    }
     const r = await fetch(
       SUPABASE_URL + '/rest/v1/push_subscriptions?uid_mascota=eq.' + encodeURIComponent(uidMascota) + '&select=id,endpoint,p256dh,auth',
       { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
@@ -207,6 +218,31 @@ async function dominioTieneCorreoValido(email) {
   }
 }
 
+// Manda un push a TODAS las suscripciones únicas guardadas — usado
+// por enviarPushExterno (uid_mascota:'TODOS'), y por la activación de
+// eventos y avisos de mascota perdida. Si se pasa "categoria", solo
+// manda a quienes no la hayan desactivado en sus preferencias.
+async function _enviarPushATodos(payload, categoria) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/push_subscriptions?select=uid_mascota', {
+    headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+  });
+  const rows = await r.json();
+  let uidsUnicos = [...new Set((rows || []).map(x => x.uid_mascota))];
+  if (!uidsUnicos.length) return 0;
+
+  if (categoria) {
+    const rPref = await fetch(SUPABASE_URL + '/rest/v1/mascotas?' + categoria + '=eq.true&select=uid', {
+      headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+    });
+    const prefRows = await rPref.json();
+    const permitidos = new Set((prefRows || []).map(x => String(x.uid || '').toUpperCase()));
+    uidsUnicos = uidsUnicos.filter(u => permitidos.has(String(u || '').toUpperCase()));
+  }
+
+  await Promise.all(uidsUnicos.map(u => _enviarPush(u, payload)));
+  return uidsUnicos.length;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -328,6 +364,9 @@ export default async function handler(req, res) {
         angelito:     m.angelito       ? 'Si' : 'No',
         fechaAngelito:m.fecha_angelito || '',
         notifMensajes:m.notif_mensajes ? 'Si' : 'No',
+        notifAmigos:  m.notif_amigos   !== false,
+        notifPerdidos:m.notif_perdidos !== false,
+        notifEventos: m.notif_eventos  !== false,
         ofertas:      m.ofertas        ? 'Si' : 'No',
         premium:      m.premium        === true,
         premium_hasta:m.premium_hasta  || null,
@@ -359,6 +398,23 @@ export default async function handler(req, res) {
       }
 
       return res.status(200).json({ found: mascotas.length > 0, mascotas });
+    }
+
+    // ── guardarPreferenciasNotif ────────────────────────────────
+    if (action === 'guardarPreferenciasNotif' && req.method === 'POST') {
+      const { uid, notif_mensajes, notif_amigos, notif_perdidos, notif_eventos } = req.body;
+      if (!uid) return res.status(200).json({ ok: false, error: 'Falta uid' });
+      const campos = {};
+      if (notif_mensajes !== undefined) campos.notif_mensajes = !!notif_mensajes;
+      if (notif_amigos   !== undefined) campos.notif_amigos   = !!notif_amigos;
+      if (notif_perdidos !== undefined) campos.notif_perdidos = !!notif_perdidos;
+      if (notif_eventos  !== undefined) campos.notif_eventos  = !!notif_eventos;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid.toUpperCase()), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(campos)
+      });
+      return res.status(200).json({ ok: r.ok });
     }
 
     // ── getMensajes ───────────────────────────────────────────
@@ -401,6 +457,20 @@ export default async function handler(req, res) {
           body: JSON.stringify({ uid_solicitante, uid_receptor, email_solicitante, email_receptor, estado: 'pendiente' })
         }
       );
+      if (response.ok) {
+        try {
+          const rNom = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid_solicitante) + '&select=nombre', {
+            headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+          });
+          const nomRows = await rNom.json();
+          const nombreSolicitante = (nomRows && nomRows[0] && nomRows[0].nombre) || 'Alguien';
+          _enviarPush(uid_receptor, {
+            title: '🐾 Nueva solicitud de amistad',
+            body: nombreSolicitante + ' quiere ser tu amigo en PetMi',
+            url: '/galeria.html'
+          }, 'notif_amigos').catch(() => {});
+        } catch(e) { console.error('Push solicitud amistad:', e.message); }
+      }
       return res.status(200).json({ ok: response.ok });
     }
 
@@ -447,11 +517,30 @@ export default async function handler(req, res) {
             'Content-Type':  'application/json',
             'apikey':        SUPABASE_SERVICE_KEY,
             'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
-            'Prefer':        'return=minimal'
+            'Prefer':        'return=representation'
           },
           body: JSON.stringify({ estado, updated_at: new Date().toISOString() })
         }
       );
+      if (response.ok && estado === 'aceptado') {
+        try {
+          const rows = await response.json();
+          const fila = rows && rows[0];
+          if (fila) {
+            const rNom = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(fila.uid_receptor) + '&select=nombre', {
+              headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+            });
+            const nomRows = await rNom.json();
+            const nombreReceptor = (nomRows && nomRows[0] && nomRows[0].nombre) || 'Tu amigo/a';
+            _enviarPush(fila.uid_solicitante, {
+              title: '🎉 ¡Solicitud aceptada!',
+              body: nombreReceptor + ' aceptó tu solicitud de amistad',
+              url: '/galeria.html'
+            }, 'notif_amigos').catch(() => {});
+          }
+        } catch(e) { console.error('Push solicitud aceptada:', e.message); }
+        return res.status(200).json({ ok: true });
+      }
       return res.status(200).json({ ok: response.ok });
     }
 
@@ -691,13 +780,8 @@ export default async function handler(req, res) {
       const payload = { title, body, url: url || '/mensajes.html', tag: tag || '' };
 
       if (uid_mascota === 'TODOS') {
-        const r = await fetch(SUPABASE_URL + '/rest/v1/push_subscriptions?select=uid_mascota', {
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        });
-        const rows = await r.json();
-        const uidsUnicos = [...new Set((rows || []).map(x => x.uid_mascota))];
-        await Promise.all(uidsUnicos.map(u => _enviarPush(u, payload)));
-        return res.status(200).json({ ok: true, destinatarios: uidsUnicos.length });
+        const destinatarios = await _enviarPushATodos(payload);
+        return res.status(200).json({ ok: true, destinatarios });
       }
 
       if (!uid_mascota) return res.status(200).json({ ok: false, error: 'uid_mascota requerido' });
@@ -728,7 +812,7 @@ export default async function handler(req, res) {
           body: String(mensaje || '').substring(0, 100),
           url: '/mensajes.html?abrir=' + encodeURIComponent(uid_emisor),
           tag: 'mensaje-' + uid_emisor
-        }).catch(() => {});
+        }, 'notif_mensajes').catch(() => {});
       }
       return res.status(200).json({ ok: response.ok });
     }
@@ -903,6 +987,20 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, avisos: data || [] });
     }
 
+    // ── editarAviso (admin) ─────────────────────────────────────
+    if (action === 'editarAviso' && req.method === 'POST') {
+      const { id, titulo, descripcion, fecha, hora, ubicacion, especie, sexo, raza, whatsapp, recompensa } = req.body;
+      if (!id) return res.status(200).json({ ok: false, error: 'Falta id' });
+      const campos = { titulo, descripcion, fecha: fecha || null, hora: hora || null, ubicacion: ubicacion || null, especie: especie || null, sexo: sexo || null, raza: raza || null, whatsapp: whatsapp || null, recompensa: recompensa || null };
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(campos)
+      });
+      if (!r.ok) console.error('editarAviso failed:', r.status, await r.text().catch(() => ''));
+      return res.status(200).json({ ok: r.ok });
+    }
+
     // ── aprobarAviso ──────────────────────────────────────────────
     if (action === 'aprobarAviso' && req.method === 'POST') {
       const { id } = req.body;
@@ -911,6 +1009,33 @@ export default async function handler(req, res) {
         headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify({ activo: true })
       });
+
+      // Push masivo para mascotas perdidas (urgente) y eventos nuevos —
+      // otros tipos de aviso (plan, busco, adopcion) no lo mandan, para
+      // no saturar de notificaciones.
+      if (r.ok) {
+        try {
+          const rAv = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + id + '&select=tipo,titulo,descripcion,zona,fecha', {
+            headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+          });
+          const avRows = await rAv.json();
+          const av = avRows && avRows[0];
+          if (av && av.tipo === 'perdido') {
+            await _enviarPushATodos({
+              title: '🚨 Mascota perdida',
+              body: (av.descripcion || '') + (av.zona ? ' · Zona ' + av.zona : ''),
+              url: '/avisos.html'
+            }, 'notif_perdidos');
+          } else if (av && av.tipo === 'evento') {
+            await _enviarPushATodos({
+              title: '🎉 Nuevo evento: ' + (av.titulo || ''),
+              body: (av.fecha || '') + (av.zona ? ' · Zona ' + av.zona : ''),
+              url: '/avisos.html'
+            }, 'notif_eventos');
+          }
+        } catch(e) { console.error('Push aviso:', e.message); }
+      }
+
       return res.status(200).json({ ok: r.ok, status: r.status });
     }
 
@@ -1041,7 +1166,8 @@ export default async function handler(req, res) {
       return res.status(200).json({ eventos: await r.json() });
     }
 
-    // ── toggleEvento ──────────────────────────────────────────
+    // ── toggleEvento (tabla "eventos" — NO es el sistema activo hoy;
+    // el real es tipo='evento' dentro de actividades, ver aprobarAviso) ──
     if (action === 'toggleEvento' && req.method === 'POST') {
       const { id, activo } = req.body;
       const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?id=eq.' + encodeURIComponent(id), {
