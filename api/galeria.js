@@ -987,6 +987,15 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, avisos: data || [] });
     }
 
+    // ── getAvisosAprobados (admin) — mismos avisos, pero ya activos ──
+    if (action === 'getAvisosAprobados') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?activo=eq.true&order=created_at.desc&select=*', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const data = await r.json();
+      return res.status(200).json({ ok: true, avisos: data || [] });
+    }
+
     // ── editarAviso (admin) ─────────────────────────────────────
     if (action === 'editarAviso' && req.method === 'POST') {
       const { id, titulo, descripcion, fecha, hora, ubicacion, especie, sexo, raza, whatsapp, recompensa } = req.body;
