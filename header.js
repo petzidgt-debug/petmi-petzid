@@ -164,15 +164,14 @@
             '</div>' +
             '<a href="/familia.html" class="h-drop-item">🏠 Mi familia</a>' +
             '<a href="/mis-ids.html" class="h-drop-item">🆔 Mis IDs</a>' +
-            '<a href="/premium.html" class="h-drop-item">⭐ Premium</a>' +
             '<a href="/amigos.html" class="h-drop-item">👥 Amigos</a>' +
             '<a href="/mensajes.html" class="h-drop-item">💬 Mensajes</a>' +
             '<a href="/salud.html" class="h-drop-item">🩺 Mi Registro de Salud</a>' +
             '<a href="/tienda.html" class="h-drop-item">🛍️ Tienda</a>' +
             '<a href="/buscar.html" class="h-drop-item">🔍 Buscar</a>' +
             '<a href="/mis-avisos.html" class="h-drop-item">📝 Mis avisos</a>' +
+            '<a href="/mi-cuenta.html" class="h-drop-item">⚙️ Mi cuenta</a>' +
             '<a href="/puntos.html" class="h-drop-item">🏆 Mis puntos</a>' +
-            '<a href="/mensajes.html?abrir=PETMI-OFICIAL&nombre=' + encodeURIComponent('PetMi Oficial') + '" class="h-drop-item">💬 &#191;Tienes dudas? Cont&aacute;ctanos</a>' +
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
         '</div>'

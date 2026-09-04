@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Mi cuenta — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:110px}
+.wrap{max-width:520px;margin:0 auto;padding:24px 20px}
+.titulo{font-size:22px;font-weight:900;color:#1a1a2e;margin-bottom:4px}
+.sub{font-size:13.5px;color:#888;margin-bottom:24px}
+.card{background:#fff;border-radius:14px;padding:6px 18px;margin-bottom:16px}
+.fila{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid #f0f0f0}
+.fila:last-child{border-bottom:none}
+.fila-txt{flex:1;padding-right:16px}
+.fila-nombre{font-size:14.5px;font-weight:700;color:#1a1a2e;margin-bottom:2px}
+.fila-desc{font-size:12px;color:#888;line-height:1.4}
+.switch{position:relative;width:46px;height:26px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ddd;border-radius:99px;transition:.2s}
+.slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked + .slider{background:#00B4B4}
+input:checked + .slider:before{transform:translateX(20px)}
+.aviso{background:#FFF8E1;border:1px solid #F5C842;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:#8a6200;text-align:center}
+.vacio{text-align:center;padding:40px 20px;color:#aaa}
+.seccion-titulo{font-size:13px;font-weight:900;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:24px 0 10px}
+.premium-card{background:linear-gradient(135deg,#1a1a2e,#333);border-radius:14px;padding:18px 20px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.premium-card.activo{background:linear-gradient(135deg,#F5C842,#e0ac00)}
+.premium-txt-nombre{font-size:14.5px;font-weight:900}
+.premium-txt-desc{font-size:12px;opacity:.85;margin-top:2px}
+.premium-btn{background:#fff;color:#1a1a2e;padding:9px 18px;border-radius:99px;font-size:12.5px;font-weight:800;text-decoration:none;white-space:nowrap;flex-shrink:0}
+.contacto-btn{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:16px 18px;text-decoration:none;color:#1a1a2e;font-size:14px;font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="titulo">⚙️ Mi cuenta</div>
+  <div class="sub">Tus notificaciones, tu Premium, y cómo contactarnos.</div>
+
+  <div id="avisoSinSesion"></div>
+  <div id="contenedor"><div class="vacio">Cargando...</div></div>
+</div>
+
+<script>
+var sessionEmail = localStorage.getItem('petzid_email') || '';
+var miMascota = null;
+
+var CATEGORIAS = [
+  { key: 'notif_mensajes', campo: 'notifMensajes', nombre: '💬 Mensajes', desc: 'Cuando alguien te escribe un mensaje privado.' },
+  { key: 'notif_amigos', campo: 'notifAmigos', nombre: '🐾 Solicitudes de amistad', desc: 'Cuando alguien te pide ser amigo, o acepta tu solicitud.' },
+  { key: 'notif_perdidos', campo: 'notifPerdidos', nombre: '🚨 Mascotas perdidas', desc: 'Avisos urgentes de mascotas perdidas en la comunidad.' },
+  { key: 'notif_eventos', campo: 'notifEventos', nombre: '🎉 Eventos', desc: 'Cuando se publica un evento nuevo de PetMi.' }
+];
+
+function iniciar(){
+  if(!sessionEmail){
+    document.getElementById('avisoSinSesion').innerHTML = '<div class="aviso">🔒 Inicia sesión para ver tus preferencias. <button onclick="petmiAbrirLogin()" style="background:none;border:none;color:#8a6200;font-weight:700;text-decoration:underline;cursor:pointer;font-size:12.5px">Iniciar sesión</button></div>';
+    document.getElementById('contenedor').innerHTML = '';
+    return;
+  }
+  fetch('/api/galeria?action=checkEmail', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'checkEmail', email: sessionEmail })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(!d.found || !d.mascotas || !d.mascotas.length){
+      document.getElementById('contenedor').innerHTML = '<div class="vacio">No encontramos mascotas en tu cuenta.</div>';
+      return;
+    }
+    miMascota = d.mascotas[0];
+    renderToggles();
+  })
+  .catch(function(){
+    document.getElementById('contenedor').innerHTML = '<div class="vacio">Error al cargar. Intenta de nuevo.</div>';
+  });
+}
+
+function renderToggles(){
+  var html = '<div class="seccion-titulo">Notificaciones</div>';
+  html += '<div class="card">';
+  CATEGORIAS.forEach(function(c, i){
+    var activo = miMascota[c.campo] === 'Si' || miMascota[c.campo] === true;
+    html += '<div class="fila">'
+      + '<div class="fila-txt"><div class="fila-nombre">'+c.nombre+'</div><div class="fila-desc">'+c.desc+'</div></div>'
+      + '<label class="switch"><input type="checkbox" '+(activo?'checked':'')+' onchange="cambiarPreferencia(\''+c.key+'\', this.checked)"><span class="slider"></span></label>'
+      + '</div>';
+  });
+  html += '</div>';
+
+  html += '<div class="seccion-titulo">Premium</div>';
+  var esPremium = miMascota.premium === true;
+  if(esPremium){
+    var hastaTxt = miMascota.premium_hasta ? new Date(miMascota.premium_hasta).toLocaleDateString('es-GT',{day:'2-digit',month:'long',year:'numeric'}) : '';
+    html += '<a href="/premium.html" class="premium-card activo" style="text-decoration:none">'
+      + '<div><div class="premium-txt-nombre" style="color:#1a1a2e">⭐ Ya eres Premium</div><div class="premium-txt-desc" style="color:#5c4400">'+(hastaTxt?'Válido hasta '+hastaTxt:'Disfruta tus beneficios')+'</div></div>'
+      + '</a>';
+  } else {
+    html += '<a href="/premium.html" class="premium-card" style="text-decoration:none">'
+      + '<div><div class="premium-txt-nombre">Hazte Premium</div><div class="premium-txt-desc">Desbloquea beneficios exclusivos</div></div>'
+      + '<span class="premium-btn">Ver más →</span>'
+      + '</a>';
+  }
+
+  html += '<div class="seccion-titulo">Ayuda</div>';
+  html += '<a href="/mensajes.html?abrir=PETMI-OFICIAL&nombre='+encodeURIComponent('PetMi Oficial')+'" class="contacto-btn">💬 ¿Tienes dudas? Contáctanos</a>';
+
+  document.getElementById('contenedor').innerHTML = html;
+}
+
+function cambiarPreferencia(campo, activo){
+  var payload = { uid: miMascota.uid };
+  payload[campo] = activo;
+  fetch('/api/galeria?action=guardarPreferenciasNotif', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  }).catch(function(){});
+}
+
+iniciar();
+</script>
+<script src="/header.js"></script>
+</body>
+</html>
