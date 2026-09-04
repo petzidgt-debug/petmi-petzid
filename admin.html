@@ -586,8 +586,8 @@ tbody tr:last-child td{border-bottom:none}
       <div class="table-card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Foto</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Activo</th><th></th></tr></thead>
-            <tbody id="tiendaProductosBody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            <thead><tr><th>Foto</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Activo</th><th>🎂 Promo cumple</th><th></th></tr></thead>
+            <tbody id="tiendaProductosBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -3342,30 +3342,41 @@ function eliminarRuletaPremio(id){
 
 // ── Tienda (CRUD) ────────────────────────────────────────────────
 function loadTiendaProductos(){
-  fetch('/api/galeria?action=getProductosTiendaAdmin')
-  .then(function(r){return r.json();})
-  .then(function(d){
-    var productos = d.productos || [];
+  Promise.all([
+    fetch('/api/galeria?action=getProductosTiendaAdmin').then(function(r){return r.json();}),
+    fetch('/api/galeria?action=getPromoCumpleProductosAdmin').then(function(r){return r.json();})
+  ]).then(function(res){
+    var productos = res[0].productos || [];
+    var idsEnPromo = res[1].ids || [];
     if(!productos.length){
-      document.getElementById('tiendaProductosBody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Sin productos — crea el primero</td></tr>';
+      document.getElementById('tiendaProductosBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Sin productos — crea el primero</td></tr>';
       return;
     }
     document.getElementById('tiendaProductosBody').innerHTML = productos.map(function(p){
       var foto = p.imagen ? '<img src="'+p.imagen+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover">' : '—';
       var precio = p.precio ? ('Q'+Number(p.precio).toFixed(2)) : 'Consultar';
+      var enPromo = idsEnPromo.indexOf(p.id) >= 0;
       return '<tr>'
         + '<td>'+foto+'</td>'
         + '<td>'+p.nombre+'</td>'
         + '<td>'+p.categoria+'</td>'
         + '<td>'+precio+'</td>'
         + '<td><input type="checkbox" '+(p.activo?'checked':'')+' onchange="toggleProducto('+p.id+',this.checked)"></td>'
+        + '<td><input type="checkbox" '+(enPromo?'checked':'')+' onchange="togglePromoCumple(\''+p.id+'\',this.checked)"></td>'
         + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'editarProducto('+JSON.stringify(p)+')\'>Editar</button> '
         + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px;color:#c0392b" onclick="eliminarProducto('+p.id+')">Borrar</button></td>'
         + '</tr>';
     }).join('');
   }).catch(function(){
-    document.getElementById('tiendaProductosBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de tienda_productos?</td></tr>';
+    document.getElementById('tiendaProductosBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de tienda_productos?</td></tr>';
   });
+}
+
+function togglePromoCumple(productoId, activo){
+  fetch('/api/galeria?action=togglePromoCumpleProducto', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ producto_id: productoId, activo: activo })
+  }).catch(function(){ alert('No se pudo actualizar.'); });
 }
 
 function abrirModalProducto(){
