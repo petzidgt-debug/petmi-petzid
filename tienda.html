@@ -176,7 +176,7 @@ function renderGrid(){
       + (p.descripcion ? '<div class="prod-desc">'+p.descripcion+'</div>' : '')
       + '<div class="prod-precio">'+precioTxt+'</div>'
       + envioTxt
-      + '<a class="prod-btn" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank" onclick="event.stopPropagation();registrarPedido(\''+p.nombre.replace(/'/g,"\\'")+'\',\''+(mascotaPersonal?mascotaPersonal.nombre:'').replace(/'/g,"\\'")+'\',\'producto\')">💬 Pedir por WhatsApp</a>'
+      + '<a class="prod-btn" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank" onclick="event.stopPropagation();registrarPedido(\''+p.nombre.replace(/'/g,"\\'")+'\',\''+(mascotaPersonal?mascotaPersonal.nombre:'').replace(/'/g,"\\'")+'\',\'producto\')">💬 Hacer Pedido!</a>'
       + '</div></div>';
   }).join('');
 }
