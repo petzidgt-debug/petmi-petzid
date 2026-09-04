@@ -228,7 +228,7 @@ async function _enviarPushATodos(payload, categoria) {
   });
   const rows = await r.json();
   let uidsUnicos = [...new Set((rows || []).map(x => x.uid_mascota))];
-  if (!uidsUnicos.length) return 0;
+  if (!uidsUnicos.length) return { count: 0, uids: [] };
 
   if (categoria) {
     const rPref = await fetch(SUPABASE_URL + '/rest/v1/mascotas?' + categoria + '=eq.true&select=uid', {
@@ -240,7 +240,20 @@ async function _enviarPushATodos(payload, categoria) {
   }
 
   await Promise.all(uidsUnicos.map(u => _enviarPush(u, payload)));
-  return uidsUnicos.length;
+  return { count: uidsUnicos.length, uids: uidsUnicos };
+}
+
+// Guarda un mensaje de "PETMI-OFICIAL" en el buzón de cada uid — mismo
+// patrón que el mensaje de bienvenida al registrarse. Para que un aviso
+// masivo no solo salga como notificación (que se puede perder/descartar)
+// sino que también quede guardado en Mensajes dentro de la app.
+async function _enviarMensajeOficialAUids(uids, mensaje) {
+  if (!uids || !uids.length) return;
+  await Promise.all(uids.map(u => fetch(SUPABASE_URL + '/rest/v1/conversaciones', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ uid_emisor: 'PETMI-OFICIAL', uid_receptor: u, mensaje, leido: false })
+  }).catch(() => {})));
 }
 
 export default async function handler(req, res) {
@@ -780,8 +793,8 @@ export default async function handler(req, res) {
       const payload = { title, body, url: url || '/mensajes.html', tag: tag || '' };
 
       if (uid_mascota === 'TODOS') {
-        const destinatarios = await _enviarPushATodos(payload);
-        return res.status(200).json({ ok: true, destinatarios });
+        const resultado = await _enviarPushATodos(payload);
+        return res.status(200).json({ ok: true, destinatarios: resultado.count });
       }
 
       if (!uid_mascota) return res.status(200).json({ ok: false, error: 'uid_mascota requerido' });
@@ -1021,7 +1034,9 @@ export default async function handler(req, res) {
 
       // Push masivo para mascotas perdidas (urgente) y eventos nuevos —
       // otros tipos de aviso (plan, busco, adopcion) no lo mandan, para
-      // no saturar de notificaciones.
+      // no saturar de notificaciones. Además del push, se guarda el
+      // mismo aviso en el buzón de Mensajes (PETMI-OFICIAL) de cada
+      // destinatario, para que quede un registro que no se pierda.
       if (r.ok) {
         try {
           const rAv = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + id + '&select=tipo,titulo,descripcion,ubicacion,fecha', {
@@ -1030,17 +1045,13 @@ export default async function handler(req, res) {
           const avRows = await rAv.json();
           const av = avRows && avRows[0];
           if (av && av.tipo === 'perdido') {
-            await _enviarPushATodos({
-              title: '🚨 Mascota perdida',
-              body: (av.descripcion || '') + (av.ubicacion ? ' · ' + av.ubicacion : ''),
-              url: '/avisos.html'
-            }, 'notif_perdidos');
+            const cuerpo = (av.descripcion || '') + (av.ubicacion ? ' · ' + av.ubicacion : '');
+            const resultado = await _enviarPushATodos({ title: '🚨 Mascota perdida', body: cuerpo, url: '/avisos.html' }, 'notif_perdidos');
+            await _enviarMensajeOficialAUids(resultado.uids, '🚨 Mascota perdida: ' + cuerpo);
           } else if (av && av.tipo === 'evento') {
-            await _enviarPushATodos({
-              title: '🎉 Nuevo evento: ' + (av.titulo || ''),
-              body: (av.fecha || '') + (av.ubicacion ? ' · ' + av.ubicacion : ''),
-              url: '/avisos.html'
-            }, 'notif_eventos');
+            const cuerpo = (av.fecha || '') + (av.ubicacion ? ' · ' + av.ubicacion : '');
+            const resultado = await _enviarPushATodos({ title: '🎉 Nuevo evento: ' + (av.titulo || ''), body: cuerpo, url: '/avisos.html' }, 'notif_eventos');
+            await _enviarMensajeOficialAUids(resultado.uids, '🎉 Nuevo evento: ' + (av.titulo || '') + ' — ' + cuerpo);
           }
         } catch(e) { console.error('Push aviso:', e.message); }
       }
