@@ -2363,6 +2363,52 @@ export default async function handler(req, res) {
       return res.status(200).json({ productos: Array.isArray(data) ? data : [] });
     }
 
+    // ── getPromoCumpleProductos (público) — los productos que Elsa marcó
+    // para aparecer en la página de promo de cumpleaños ─────────────
+    if (action === 'getPromoCumpleProductos') {
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/promo_cumple_productos?select=orden,descuento_pct,tienda_productos(*)&order=orden.asc',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const data = await r.json();
+      const productos = (Array.isArray(data) ? data : [])
+        .filter(row => row.tienda_productos && row.tienda_productos.activo)
+        .map(row => Object.assign({}, row.tienda_productos, { descuento_pct: row.descuento_pct || null }));
+      return res.status(200).json({ productos });
+    }
+
+    // ── togglePromoCumpleProducto (admin) — agregar o quitar un
+    // producto de la promo de cumpleaños, con descuento opcional ────
+    if (action === 'togglePromoCumpleProducto' && req.method === 'POST') {
+      const { producto_id, activo, descuento_pct } = req.body;
+      if (!producto_id) return res.status(200).json({ ok: false, error: 'Falta producto_id' });
+      if (activo) {
+        const r = await fetch(SUPABASE_URL + '/rest/v1/promo_cumple_productos?on_conflict=producto_id', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify({ producto_id, descuento_pct: descuento_pct || null })
+        });
+        return res.status(200).json({ ok: r.ok });
+      } else {
+        const r = await fetch(SUPABASE_URL + '/rest/v1/promo_cumple_productos?producto_id=eq.' + encodeURIComponent(producto_id), {
+          method: 'DELETE',
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        return res.status(200).json({ ok: r.ok });
+      }
+    }
+
+    // ── getPromoCumpleProductosAdmin — ids + descuento ya guardados,
+    // para pintar los checkboxes y el campo de % en el admin ────────
+    if (action === 'getPromoCumpleProductosAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/promo_cumple_productos?select=producto_id,descuento_pct', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const data = await r.json();
+      const filas = Array.isArray(data) ? data : [];
+      return res.status(200).json({ ids: filas.map(r => r.producto_id), descuentos: filas.reduce((acc, r) => { acc[r.producto_id] = r.descuento_pct; return acc; }, {}) });
+    }
+
     // ── getProductosTiendaAdmin (todos, incluye inactivos) ──────
     if (action === 'getProductosTiendaAdmin') {
       const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?select=*&order=categoria.asc,orden.asc', {
