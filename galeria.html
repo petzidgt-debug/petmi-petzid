@@ -868,6 +868,8 @@ function renderCumpleaneros(){
     if(!p.fecha||p.angelito)return false;
     var mes=getMesFecha(p.fecha);
     return mes!==null&&mes===mesActual;
+  }).sort(function(a,b){
+    return getDiaFecha(a.fecha)-getDiaFecha(b.fecha);
   });
   if(cumpleMes.length===0)return;
   document.getElementById('seccionCumple').style.display='block';
