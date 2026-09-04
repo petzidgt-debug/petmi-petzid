@@ -1024,7 +1024,7 @@ export default async function handler(req, res) {
       // no saturar de notificaciones.
       if (r.ok) {
         try {
-          const rAv = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + id + '&select=tipo,titulo,descripcion,zona,fecha', {
+          const rAv = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + id + '&select=tipo,titulo,descripcion,ubicacion,fecha', {
             headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
           });
           const avRows = await rAv.json();
@@ -1032,13 +1032,13 @@ export default async function handler(req, res) {
           if (av && av.tipo === 'perdido') {
             await _enviarPushATodos({
               title: '🚨 Mascota perdida',
-              body: (av.descripcion || '') + (av.zona ? ' · Zona ' + av.zona : ''),
+              body: (av.descripcion || '') + (av.ubicacion ? ' · ' + av.ubicacion : ''),
               url: '/avisos.html'
             }, 'notif_perdidos');
           } else if (av && av.tipo === 'evento') {
             await _enviarPushATodos({
               title: '🎉 Nuevo evento: ' + (av.titulo || ''),
-              body: (av.fecha || '') + (av.zona ? ' · Zona ' + av.zona : ''),
+              body: (av.fecha || '') + (av.ubicacion ? ' · ' + av.ubicacion : ''),
               url: '/avisos.html'
             }, 'notif_eventos');
           }
