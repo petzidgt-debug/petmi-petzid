@@ -120,7 +120,7 @@ textarea.caption{width:100%;padding:12px;border:1.5px solid #eee;border-radius:1
         <input type="text" class="input-email-voto" id="votoOtpInput" placeholder="000000" inputmode="numeric" maxlength="6" style="letter-spacing:6px;text-align:center;font-size:18px">
         <br>
         <button class="btn-guardar-email" onclick="verificarOtpVoto()">Verificar código</button>
-        <div><button onclick="reenviarOtpVoto()" style="background:none;border:none;color:#1a5fd9;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:8px">Reenviar código</button></div>
+        <div><button onclick="reenviarOtpVoto(this)" style="background:none;border:none;color:#1a5fd9;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:8px">Reenviar código</button></div>
       </div>
     </div>
   </div>
@@ -328,6 +328,11 @@ async function guardarEmailVoto(){
   var val = input.value.trim().toLowerCase();
   if(!val || val.indexOf('@') < 0){ alert('Escribe un correo válido.'); return; }
 
+  var btn = document.getElementById('btnGuardarEmail');
+  var textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Enviando código...';
+
   // ── Verificación por código reactivada (7 sep) — antes estaba en
   // "Plan B" (sin código) por la cuota de Gmail; ahora se manda el
   // código de nuevo. Si Gmail vuelve a agotar cuota, revisar los
@@ -340,16 +345,20 @@ async function guardarEmailVoto(){
     var dEnvio = await rEnvio.json();
     if(dEnvio && dEnvio.ok === false){
       alert(dEnvio.error || 'No se pudo enviar el código. Intenta de nuevo.');
+      btn.disabled = false;
+      btn.textContent = textoOriginal;
       return;
     }
   }catch(e){
     alert('No se pudo enviar el código. Intenta de nuevo.');
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
     return;
   }
   document.getElementById('votoModalTitulo').textContent = 'Revisa tu correo:';
   document.getElementById('emailVotoInput').style.display = 'none';
   document.getElementById('checkOfertas').parentElement.style.display = 'none';
-  document.getElementById('btnGuardarEmail').style.display = 'none';
+  btn.style.display = 'none';
   document.getElementById('votoOtpWrap').style.display = 'block';
   document.getElementById('votoOtpInput').focus();
 }
@@ -385,13 +394,15 @@ async function verificarOtpVoto(){
   }
 }
 
-function reenviarOtpVoto(){
+function reenviarOtpVoto(btn){
   document.getElementById('votoOtpInput').value = '';
-  guardarEmailVoto_forzarReenvio();
+  guardarEmailVoto_forzarReenvio(btn);
 }
-async function guardarEmailVoto_forzarReenvio(){
+async function guardarEmailVoto_forzarReenvio(btn){
   var email = document.getElementById('emailVotoInput').value.trim().toLowerCase();
   if(!email) return;
+  var textoOriginal;
+  if(btn){ textoOriginal = btn.textContent; btn.disabled = true; btn.textContent = 'Enviando...'; }
   try{
     await fetch('/api/galeria?action=enviarOTPVotoConcurso', {
       method: 'POST', headers: {'Content-Type':'application/json'},
@@ -399,6 +410,7 @@ async function guardarEmailVoto_forzarReenvio(){
     });
     alert('Te reenviamos el código.');
   }catch(e){ alert('No se pudo reenviar. Intenta de nuevo.'); }
+  if(btn){ btn.disabled = false; btn.textContent = textoOriginal; }
 }
 
 var entradasPorId = {};
