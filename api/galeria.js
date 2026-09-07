@@ -1462,7 +1462,7 @@ export default async function handler(req, res) {
     if (action === 'votarConcurso' && req.method === 'POST') {
       const { concurso, entrada_id, email } = req.body;
       const LIMITE_VOTOS = 5;
-      const LIMITE_VOTOS_POR_IP = 15; // ~3 personas de una misma casa/oficina, para no bloquear redes compartidas
+      const LIMITE_VOTOS_POR_IP = 5; // igual que el límite por correo — así lo dicen las reglas publicadas del concurso
       if (!concurso || !entrada_id || !email || !email.includes('@')) {
         return res.status(200).json({ ok: false, error: 'Correo inválido' });
       }
