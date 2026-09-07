@@ -139,29 +139,25 @@ async function _obtenerOElegirGanadoresSorteo() {
   return elegidos;
 }
 
-// ── Envío del código OTP — vive en un solo lugar (Resend) ──────
+// ── Envío de código OTP por correo ──────────────────────────────
 // Usado tanto por el login "No recuerdo el nombre" como por la
-// verificación de voto sin cuenta del concurso. Antes mandaba el correo
-// via Apps Script/Gmail — se cambió a Resend (1 sep) porque Gmail estaba
-// bloqueando/retrasando la entrega de correos de "código de verificación"
-// por reputación del remitente, sin importar la cuota disponible.
+// verificación de voto sin cuenta del concurso.
 //
-// IMPORTANTE: mientras el dominio revistapetmi.com no esté verificado en
-// Resend, esto SOLO puede mandar correos a la cuenta con la que te
-// registraste en Resend (limitación de su modo de prueba) — no va a
-// funcionar todavía para votantes/usuarios reales. En cuanto el dominio
-// quede "Verified" en el panel de Resend, esto empieza a funcionar para
-// cualquiera sin tocar nada más de este archivo.
-const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const RESEND_FROM = 'PetMi <onboarding@resend.dev>'; // cambiar a noreply@revistapetmi.com en cuanto el dominio esté verificado
+// Orden de intento (7 sep):
+// 1. Wix Email Transmissions API — cuota de 5,000 correos/mes (muy
+//    por encima del límite diario de Gmail). Requiere WIX_API_KEY
+//    configurada en Vercel (Settings → Environment Variables). Sin
+//    esa variable, se salta directo a Gmail.
+// 2. Gmail/Apps Script — respaldo si Wix no está configurado, o si
+//    la llamada a Wix falla por cualquier razón.
+const WIX_API_KEY = process.env.WIX_API_KEY || '';
+const WIX_SITE_ID = '25b3d584-29fb-4861-b757-d9640d37c01f';
+const WIX_SENDER_NAME = 'PETmi';
+const WIX_SENDER_EMAIL = 'revistapetmi@gmail.com'; // remitente ya verificado en Wix
+const APPS_SCRIPT_OTP_URL = 'https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec';
 
-async function _enviarCodigoOTPPorCorreo(email, code, dueno, etiquetaLog) {
-  if (!RESEND_API_KEY) {
-    console.error((etiquetaLog || 'enviarOTP') + ' -> falta la variable de entorno RESEND_API_KEY en Vercel (Settings → Environment Variables).');
-    return { ok: false, error: 'El servicio de correo no está configurado (falta RESEND_API_KEY en Vercel).' };
-  }
-  const saludo = dueno ? ('Hola ' + dueno + '!') : 'Hola!';
-  const htmlBody = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
+function _htmlOTP(saludo, code) {
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
     + '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">'
     + '<div style="background:#1a1a2e;padding:28px;text-align:center;border-radius:12px 12px 0 0">'
     + '<div style="display:inline-block;background:#fff;border-radius:12px;padding:8px 18px"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi" style="height:36px;width:auto;display:block"></div>'
@@ -176,27 +172,64 @@ async function _enviarCodigoOTPPorCorreo(email, code, dueno, etiquetaLog) {
     + '<div style="background:#F5C842;padding:12px;text-align:center;border-radius:0 0 12px 12px">'
     + '<p style="margin:0;font-size:12px;color:#555">PetMi Guatemala</p>'
     + '</div></div></body></html>';
+}
 
+async function _enviarOTPPorWix(email, code, dueno, etiquetaLog) {
+  if (!WIX_API_KEY) return { ok: false, error: 'WIX_API_KEY no configurada' };
+  const saludo = dueno ? ('Hola ' + dueno + '!') : 'Hola!';
   try {
-    const rResend = await fetch('https://api.resend.com/emails', {
+    const r = await fetch('https://www.wixapis.com/email-transmissions/v1/email-transmissions/send', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + RESEND_API_KEY, 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': WIX_API_KEY,
+        'wix-site-id': WIX_SITE_ID
+      },
       body: JSON.stringify({
-        from: RESEND_FROM,
-        to: [email],
-        subject: 'Tu código de verificación: ' + code,
-        html: htmlBody
+        emailTransmission: {
+          emailSubject: 'Tu código de verificación: ' + code,
+          emailHtmlContent: _htmlOTP(saludo, code),
+          senderName: WIX_SENDER_NAME,
+          senderEmailAddress: WIX_SENDER_EMAIL,
+          toRecipients: [{ emailAddress: email }],
+          type: 'TRANSACTIONAL'
+        },
+        idempotencyKey: (etiquetaLog || 'otp') + '-' + email + '-' + code
       })
     });
-    const bodyResend = await rResend.text();
-    console.log((etiquetaLog || 'enviarOTP') + ' -> Resend status:', rResend.status, '| respuesta:', bodyResend);
-    if (!rResend.ok) {
-      let parsed; try { parsed = JSON.parse(bodyResend); } catch(e) { parsed = null; }
-      return { ok: false, error: (parsed && parsed.message) || 'No se pudo enviar el código' };
+    const bodyTxt = await r.text();
+    console.log((etiquetaLog || 'enviarOTP') + ' -> Wix status:', r.status, '| respuesta:', bodyTxt);
+    if (!r.ok) {
+      let parsed; try { parsed = JSON.parse(bodyTxt); } catch(e) { parsed = null; }
+      return { ok: false, error: (parsed && parsed.message) || 'No se pudo enviar por Wix' };
     }
     return { ok: true };
-  } catch(eResend) {
-    console.error((etiquetaLog || 'enviarOTP') + ' -> Resend error:', eResend.message);
+  } catch(eWix) {
+    console.error((etiquetaLog || 'enviarOTP') + ' -> Wix error:', eWix.message);
+    return { ok: false, error: 'Error de conexión con Wix' };
+  }
+}
+
+async function _enviarCodigoOTPPorCorreo(email, code, dueno, etiquetaLog) {
+  const porWix = await _enviarOTPPorWix(email, code, dueno, etiquetaLog);
+  if (porWix.ok) return porWix;
+  console.log((etiquetaLog || 'enviarOTP') + ' -> Wix falló ('+porWix.error+'), probando Gmail como respaldo...');
+
+  try {
+    const rGas = await fetch(APPS_SCRIPT_OTP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'enviarOTP', email, code, dueno: dueno || '' })
+    });
+    const bodyGas = await rGas.text();
+    console.log((etiquetaLog || 'enviarOTP') + ' -> Apps Script status:', rGas.status, '| respuesta:', bodyGas);
+    let parsed; try { parsed = JSON.parse(bodyGas); } catch(e) { parsed = null; }
+    if (!rGas.ok || !parsed || parsed.emailEnviado === false) {
+      return { ok: false, error: (parsed && parsed.error) || 'No se pudo enviar el código' };
+    }
+    return { ok: true };
+  } catch(eGas) {
+    console.error((etiquetaLog || 'enviarOTP') + ' -> Apps Script error:', eGas.message);
     return { ok: false, error: 'Error de conexión al enviar el código' };
   }
 }
