@@ -5,6 +5,7 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 // ── Web Push (notificaciones) ───────────────────────────────
 const webpush = require('web-push');
 const dns = require('dns').promises;
+const crypto = require('crypto');
 webpush.setVapidDetails(
   'mailto:info@revistapetmi.com',
   'BETkQ-teJGtPmnLMFc0OC6HqFvhFoMZySxoywrKincHOJIoixLxuDUSD5RelsWYQiq32p2wuRgn9StrCOcYhD8U',
@@ -194,7 +195,7 @@ async function _enviarOTPPorWix(email, code, dueno, etiquetaLog) {
           toRecipients: [{ emailAddress: email }],
           type: 'TRANSACTIONAL'
         },
-        idempotencyKey: (etiquetaLog || 'otp') + '-' + email + '-' + code
+        idempotencyKey: crypto.randomUUID()
       })
     });
     const bodyTxt = await r.text();
