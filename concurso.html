@@ -100,23 +100,35 @@ textarea.caption{width:100%;padding:12px;border:1.5px solid #eee;border-radius:1
   <div id="contenedorEnvio"></div>
 
   <div class="card-votar-email" id="cardVotarEmail">
-    <p id="votoEmailTexto">Escribe tu correo para poder votar:</p>
-    <input type="email" class="input-email-voto" id="emailVotoInput" placeholder="tu@correo.com">
-    <br>
-    <label class="check-ofertas"><input type="checkbox" id="checkOfertas"> 🎁 ¡Quiero unirme a PetMi para recibir sorteos y promos como esta!</label>
-    <br>
-    <button class="btn-guardar-email" id="btnGuardarEmail" onclick="guardarEmailVoto()">Listo, quiero votar</button>
-
-    <div id="votoOtpWrap" style="display:none;margin-top:12px">
-      <p style="font-size:12.5px;color:#666;margin-bottom:8px">Te mandamos un código de 6 dígitos — revisa tu correo:</p>
-      <input type="text" class="input-email-voto" id="votoOtpInput" placeholder="000000" inputmode="numeric" maxlength="6" style="letter-spacing:6px;text-align:center;font-size:18px">
-      <br>
-      <button class="btn-guardar-email" onclick="verificarOtpVoto()">Verificar código</button>
-      <div><button onclick="reenviarOtpVoto()" style="background:none;border:none;color:#1a5fd9;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:8px">Reenviar código</button></div>
-    </div>
-
+    <p id="votoEmailTexto" style="display:none">Votando como:</p>
+    <button class="btn-guardar-email" id="btnAbrirModalVoto" onclick="abrirModalVoto()">🔐 Enviar código para votar</button>
     <div class="votos-restantes" id="votosRestantesTxt" style="display:none"></div>
   </div>
+
+  <div class="modal-overlay-voto" id="modalVotoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center" onclick="if(event.target===this)cerrarModalVoto()">
+    <div style="background:#fff;border-radius:16px;padding:24px 20px;max-width:340px;width:90%;position:relative">
+      <button onclick="cerrarModalVoto()" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:18px;color:#888;cursor:pointer">✕</button>
+      <p style="font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:10px" id="votoModalTitulo">Escribe tu correo para votar:</p>
+      <input type="email" class="input-email-voto" id="emailVotoInput" placeholder="tu@correo.com">
+      <br>
+      <label class="check-ofertas"><input type="checkbox" id="checkOfertas"> 🎁 ¡Quiero unirme a PetMi para recibir sorteos y promos como esta!</label>
+      <br>
+      <button class="btn-guardar-email" id="btnGuardarEmail" onclick="guardarEmailVoto()">Enviar código</button>
+
+      <div id="votoOtpWrap" style="display:none;margin-top:12px">
+        <p style="font-size:12.5px;color:#666;margin-bottom:8px">Te mandamos un código de 6 dígitos — revisa tu correo:</p>
+        <input type="text" class="input-email-voto" id="votoOtpInput" placeholder="000000" inputmode="numeric" maxlength="6" style="letter-spacing:6px;text-align:center;font-size:18px">
+        <br>
+        <button class="btn-guardar-email" onclick="verificarOtpVoto()">Verificar código</button>
+        <div><button onclick="reenviarOtpVoto()" style="background:none;border:none;color:#1a5fd9;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:8px">Reenviar código</button></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function abrirModalVoto(){ document.getElementById('modalVotoOverlay').style.display = 'flex'; }
+    function cerrarModalVoto(){ document.getElementById('modalVotoOverlay').style.display = 'none'; }
+  </script>
 
   <div class="galeria-titulo">Todas las participantes</div>
   <div id="contenedorGaleria"></div>
@@ -252,29 +264,47 @@ async function enviarEntrada(){
 }
 
 function renderCardVotoEmail(){
-  var card = document.getElementById('cardVotarEmail');
+  var btnAbrir = document.getElementById('btnAbrirModalVoto');
   if(sessionEmail){
     // Ya inició sesión en PetMi — no le pedimos correo NI código, se usa
     // directo el de su cuenta (ya está verificado por ser una cuenta real).
     document.getElementById('votoEmailTexto').textContent = 'Votando como: ' + emailVotante;
-    card.querySelector('.input-email-voto').style.display = 'none';
-    card.querySelector('.check-ofertas').style.display = 'none';
-    document.getElementById('btnGuardarEmail').style.display = 'none';
-    document.getElementById('votoOtpWrap').style.display = 'none';
+    document.getElementById('votoEmailTexto').style.display = 'block';
+    btnAbrir.style.display = 'none';
     document.getElementById('votosRestantesTxt').style.display = 'block';
     actualizarVotosRestantesTxt();
     return;
   }
   if(emailVotante){
     document.getElementById('votoEmailTexto').textContent = 'Votando como: ' + emailVotante;
-    card.querySelector('.input-email-voto').style.display = 'none';
-    card.querySelector('.check-ofertas').style.display = 'none';
-    document.getElementById('votoOtpWrap').style.display = 'none';
-    document.getElementById('btnGuardarEmail').style.display = 'inline-block';
-    document.getElementById('btnGuardarEmail').textContent = 'Cambiar correo';
+    document.getElementById('votoEmailTexto').style.display = 'block';
+    btnAbrir.style.display = 'inline-block';
+    btnAbrir.textContent = 'Cambiar correo';
+    btnAbrir.setAttribute('onclick', 'cambiarCorreoVoto()');
     document.getElementById('votosRestantesTxt').style.display = 'block';
     actualizarVotosRestantesTxt();
   }
+}
+
+function cambiarCorreoVoto(){
+  emailVotante = '';
+  localStorage.removeItem('concurso_email_votante');
+  votadasPorMi = [];
+  votosRestantes = LIMITE_VOTOS;
+  document.getElementById('votoEmailTexto').style.display = 'none';
+  document.getElementById('votosRestantesTxt').style.display = 'none';
+  var btnAbrir = document.getElementById('btnAbrirModalVoto');
+  btnAbrir.textContent = '🔐 Enviar código para votar';
+  btnAbrir.setAttribute('onclick', 'abrirModalVoto()');
+  document.getElementById('emailVotoInput').value = '';
+  document.getElementById('emailVotoInput').style.display = 'block';
+  document.getElementById('btnGuardarEmail').style.display = 'inline-block';
+  document.getElementById('votoOtpWrap').style.display = 'none';
+  document.getElementById('votoModalTitulo').textContent = 'Escribe tu correo para votar:';
+  var chk = document.getElementById('checkOfertas');
+  if(chk){ chk.parentElement.style.display = 'inline-flex'; chk.checked = false; }
+  cargarGaleria();
+  abrirModalVoto();
 }
 
 function actualizarVotosRestantesTxt(){
@@ -288,49 +318,42 @@ function actualizarVotosRestantesTxt(){
 
 // Paso 1: pide el correo y manda el código — no guarda nada como "verificado"
 // todavía, eso pasa solo si el código es correcto (ver verificarOtpVoto).
+// El caso "ya estaba verificado, cambiar correo" ahora vive en
+// cambiarCorreoVoto() — este botón dentro del modal solo se usa para
+// mandar el código por primera vez.
 async function guardarEmailVoto(){
   if(sessionEmail) return;
-
-  if(emailVotante){
-    // Ya estaba verificado — este botón ahora dice "Cambiar correo"
-    emailVotante = '';
-    localStorage.removeItem('concurso_email_votante');
-    votadasPorMi = [];
-    votosRestantes = LIMITE_VOTOS;
-    var card = document.getElementById('cardVotarEmail');
-    document.getElementById('votoEmailTexto').textContent = 'Escribe tu correo para poder votar:';
-    card.querySelector('.input-email-voto').style.display = 'block';
-    card.querySelector('.input-email-voto').value = '';
-    document.getElementById('btnGuardarEmail').textContent = 'Listo, quiero votar';
-    document.getElementById('votosRestantesTxt').style.display = 'none';
-    var chk = document.getElementById('checkOfertas');
-    if(chk){ chk.parentElement.style.display = 'inline-flex'; chk.checked = false; }
-    cargarGaleria();
-    return;
-  }
 
   var input = document.getElementById('emailVotoInput');
   var val = input.value.trim().toLowerCase();
   if(!val || val.indexOf('@') < 0){ alert('Escribe un correo válido.'); return; }
 
-  // ── PLAN B TEMPORAL (1 sep) — se quitó la verificación por código
-  // porque la cuota diaria de Gmail se agotó y estaba bloqueando a
-  // votantes reales durante el concurso. Queda como única protección
-  // el límite de 15 votos por IP (en el backend). Las funciones de
-  // OTP (enviarOTPLogin/verificarOtpVoto abajo) NO se borraron —
-  // en cuanto se resuelva la cuota de correo, se puede reactivar
-  // reemplazando este bloque por el que llama a
-  // action=enviarOTPVotoConcurso (ver historial de este archivo).
-  var aceptaOfertas = document.getElementById('checkOfertas').checked;
-  emailVotante = val;
-  localStorage.setItem('concurso_email_votante', emailVotante);
-  renderCardVotoEmail();
-  checkMisVotos();
-  fetch('/api/galeria?action=registrarLeadConcurso', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ concurso: CONCURSO_ID, email: emailVotante, acepta_ofertas: aceptaOfertas })
-  }).catch(function(){});
+  // ── Verificación por código reactivada (7 sep) — antes estaba en
+  // "Plan B" (sin código) por la cuota de Gmail; ahora se manda el
+  // código de nuevo. Si Gmail vuelve a agotar cuota, revisar los
+  // logs de Vercel (acción enviarOTPVotoConcurso) para confirmarlo.
+  try{
+    var rEnvio = await fetch('/api/galeria?action=enviarOTPVotoConcurso', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email: val })
+    });
+    var dEnvio = await rEnvio.json();
+    if(dEnvio && dEnvio.ok === false){
+      alert(dEnvio.error || 'No se pudo enviar el código. Intenta de nuevo.');
+      return;
+    }
+  }catch(e){
+    alert('No se pudo enviar el código. Intenta de nuevo.');
+    return;
+  }
+  document.getElementById('votoModalTitulo').textContent = 'Revisa tu correo:';
+  document.getElementById('emailVotoInput').style.display = 'none';
+  document.getElementById('checkOfertas').parentElement.style.display = 'none';
+  document.getElementById('btnGuardarEmail').style.display = 'none';
+  document.getElementById('votoOtpWrap').style.display = 'block';
+  document.getElementById('votoOtpInput').focus();
 }
+
 
 async function verificarOtpVoto(){
   var email = document.getElementById('emailVotoInput').value.trim().toLowerCase();
@@ -349,6 +372,7 @@ async function verificarOtpVoto(){
       localStorage.setItem('concurso_email_votante', emailVotante);
       renderCardVotoEmail();
       checkMisVotos();
+      cerrarModalVoto();
       fetch('/api/galeria?action=registrarLeadConcurso', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ concurso: CONCURSO_ID, email: emailVotante, acepta_ofertas: aceptaOfertas })
