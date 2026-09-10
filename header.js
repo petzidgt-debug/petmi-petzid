@@ -346,7 +346,12 @@
       return fetch('/api/galeria?action=getMensajesNoLeidos&uids='+encodeURIComponent(d.mascotas.map(function(m){return m.uid;}).join(',')));
     }).then(function(r){return r&&r.json();})
     .then(function(d){
-      if(!d||!d.count) return;
+      // ANTES: "if(!d||!d.count) return;" se salía apenas count llegaba a 0,
+      // y por eso NUNCA llegaba a la línea de abajo que oculta el badge —
+      // se quedaba pegado mostrando el último número visto (ej. "38
+      // mensajes") aunque ya estuvieran todos leídos. Ahora solo se sale
+      // si la respuesta ni siquiera trae un campo "count" (fetch falló).
+      if(!d || typeof d.count === 'undefined') return;
       var badge = document.getElementById('petmiMsgBadge');
       if(badge && d.count > 0){
         badge.textContent = d.count + (d.count===1?' mensaje':' mensajes');
