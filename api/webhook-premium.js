@@ -1,6 +1,12 @@
 // /api/webhook-premium.js
 // Recibe webhooks de Recurrente (vía Svix) y activa Premium en Supabase.
 //
+// v5 (9 sep 2026) — ahora TAMBIÉN maneja pagos de la tienda (carrito):
+// cuando el producto pagado es un pedido de tienda (identificado por
+// metadata.pedido_id, no por PRODUCTOS.PREMIUM), marca el pedido como
+// pagado y resta el stock vendido. Todo lo de Premium sigue exactamente
+// igual que antes.
+//
 // v4 (26 ago 2026) — blindado para que SIEMPRE quede un registro en
 // webhook_logs, incluso si algo truena de forma inesperada (por eso el
 // try/catch envuelve TODO el handler, no solo partes). Esto es clave
@@ -77,19 +83,67 @@ async function activarPremium(email) {
   return { ok: r.ok, motivo: r.ok ? 'activado' : ('supabase_status_' + r.status) };
 }
 
+// ── Tienda: marca el pedido como pagado y resta stock ──────────
+async function procesarPagoTienda(pedidoId) {
+  if (!pedidoId) return { ok: false, motivo: 'sin_pedido_id' };
+
+  // Trae el pedido (para no procesarlo 2 veces si Recurrente reintenta
+  // el webhook, y para saber qué items/cantidades restar del stock)
+  const rGet = await fetch(
+    SUPABASE_URL + '/rest/v1/pedidos_tienda?id=eq.' + encodeURIComponent(pedidoId) + '&select=*',
+    { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+  );
+  const rows = await rGet.json();
+  const pedido = rows && rows[0];
+  if (!pedido) return { ok: false, motivo: 'pedido_no_encontrado' };
+  if (pedido.estado === 'pagado') return { ok: true, motivo: 'ya_estaba_pagado' }; // evita restar stock 2 veces
+
+  // Restar stock de cada producto (solo si el producto controla stock —
+  // si stock es NULL, es inventario ilimitado, no se toca)
+  for (const item of (pedido.items || [])) {
+    try {
+      const rProd = await fetch(
+        SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + item.producto_id + '&select=stock',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const prodRows = await rProd.json();
+      const stockActual = prodRows && prodRows[0] ? prodRows[0].stock : null;
+      if (stockActual != null) {
+        const nuevoStock = Math.max(0, stockActual - item.cantidad);
+        await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + item.producto_id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ stock: nuevoStock })
+        });
+      }
+    } catch(e) { console.error('Error restando stock de ' + item.producto_id + ':', e.message); }
+  }
+
+  // Marca el pedido como pagado
+  const rPatch = await fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda?id=eq.' + pedidoId, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ estado: 'pagado', pagado_at: new Date().toISOString() })
+  });
+
+  // Avisa al dueño de la tienda (mensaje simple por ahora vía GAS/Gmail-Wix)
+  try {
+    const itemsTexto = (pedido.items || []).map(i => i.cantidad + 'x ' + i.nombre).join(', ');
+    await fetch(GAS_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'notificarPedidoTiendaPagado', email: pedido.email, items: itemsTexto, total: (pedido.total_centavos/100).toFixed(2) })
+    }).catch(function(){});
+  } catch(e) { console.error('Aviso pedido tienda:', e.message); }
+
+  return { ok: rPatch.ok, motivo: rPatch.ok ? 'pedido_pagado' : ('supabase_status_' + rPatch.status) };
+}
+
 export default async function handler(req, res) {
-  // TODO el cuerpo del handler va dentro de un solo try/catch — cualquier
-  // cosa inesperada que truene, cae aquí y se guarda un log con el error
-  // real en vez de morir en silencio sin dejar rastro.
   try {
     if (req.method !== 'POST') {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // Paso 1: leer el cuerpo. Si esto falla (por ejemplo porque el runtime
-    // ya consumió el stream y req.on no sirve aquí), caemos a usar
-    // req.body ya parseado por Vercel como respaldo — la firma podría no
-    // verificar en ese caso, pero al menos queda registrado qué pasó.
     let payload;
     let metodoLectura = 'raw_stream';
     try {
@@ -119,6 +173,7 @@ export default async function handler(req, res) {
     const tipoEvento = event.event_type || '';
     const email      = (event.customer && event.customer.email) || '';
     const productId  = (event.product && event.product.id) || '';
+    const pedidoId   = (event.metadata && event.metadata.pedido_id) || '';
 
     const logBase = {
       fuente: 'recurrente',
@@ -134,14 +189,28 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid signature' });
     }
 
+    const EVENTOS_QUE_ACTIVAN = ['bank_transfer_intent.succeeded', 'payment_intent.succeeded', 'balance_intent.succeeded'];
+    const EVENTOS_SIN_COMPLETAR = ['bank_transfer_intent.failed', 'bank_transfer_intent.pending', 'bank_transfer_intent.create', 'bank_transfer_intent.update'];
+
+    // ── Pedido de tienda (identificado por metadata.pedido_id) ──────
+    // Se revisa ANTES que el flujo de Premium, ya que un pedido de
+    // tienda no tiene product.id === PRODUCTOS.PREMIUM.
+    if (pedidoId && EVENTOS_QUE_ACTIVAN.includes(tipoEvento)) {
+      const resultado = await procesarPagoTienda(pedidoId);
+      await guardarLog({ ...logBase, procesado: true, resultado: 'tienda: ' + JSON.stringify(resultado) });
+      return res.status(200).json({ ok: resultado.ok, action: resultado.motivo, pedidoId });
+    }
+    if (pedidoId && EVENTOS_SIN_COMPLETAR.includes(tipoEvento)) {
+      await guardarLog({ ...logBase, procesado: true, resultado: 'tienda: sin_completar_aun' });
+      return res.status(200).json({ ok: true, action: 'not_completed', evento: tipoEvento });
+    }
+
+    // ── Flujo de Premium (sin cambios respecto a v4) ────────────────
     const esDePremium = !PRODUCTOS.PREMIUM || productId === PRODUCTOS.PREMIUM;
     if (!esDePremium) {
       await guardarLog({ ...logBase, procesado: false, resultado: 'ignorado_otro_producto' });
       return res.status(200).json({ ok: true, action: 'ignored_other_product', productId });
     }
-
-    const EVENTOS_QUE_ACTIVAN = ['bank_transfer_intent.succeeded', 'payment_intent.succeeded', 'balance_intent.succeeded'];
-    const EVENTOS_SIN_COMPLETAR = ['bank_transfer_intent.failed', 'bank_transfer_intent.pending', 'bank_transfer_intent.create', 'bank_transfer_intent.update'];
 
     if (EVENTOS_QUE_ACTIVAN.includes(tipoEvento)) {
       const resultado = await activarPremium(email);
@@ -158,8 +227,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, action: 'ignored', type: tipoEvento });
 
   } catch(errFatal) {
-    // Red de seguridad final — si algo truena en cualquier punto de arriba
-    // que no haya sido atrapado, esto SIEMPRE deja un rastro.
     await guardarLog({
       fuente: 'recurrente',
       payload_completo: { _error_fatal: true },
