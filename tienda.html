@@ -29,6 +29,36 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 
 .vacio{text-align:center;padding:60px 20px;color:#aaa}
 
+/* ── Carrito ─────────────────────────────────────────────── */
+.carrito-fab{position:fixed;bottom:90px;right:18px;z-index:150;background:#1a1a2e;color:#fff;border:none;border-radius:50%;width:56px;height:56px;box-shadow:0 4px 14px rgba(0,0,0,.25);font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.carrito-badge{position:absolute;top:-4px;right:-4px;background:#E05090;color:#fff;font-size:11px;font-weight:900;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.carrito-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:210;align-items:flex-end;justify-content:center}
+.carrito-overlay.open{display:flex}
+.carrito-panel{background:#fff;border-radius:20px 20px 0 0;max-width:480px;width:100%;max-height:85vh;display:flex;flex-direction:column;animation:slideUp .25s ease}
+.carrito-header{padding:18px 20px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+.carrito-header h2{font-size:17px;font-weight:900;color:#1a1a2e}
+.carrito-close{background:#f0f0f0;border:none;width:30px;height:30px;border-radius:50%;font-size:14px;cursor:pointer;color:#555}
+.carrito-lista{flex:1;overflow-y:auto;padding:8px 20px}
+.carrito-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid #f2f2f2}
+.carrito-item-foto{width:56px;height:56px;border-radius:10px;object-fit:cover;background:#e8ddd0;flex-shrink:0}
+.carrito-item-info{flex:1;min-width:0}
+.carrito-item-nombre{font-size:13.5px;font-weight:700;color:#1a1a2e;margin-bottom:2px}
+.carrito-item-precio{font-size:12.5px;color:#00B4B4;font-weight:700}
+.carrito-item-controles{display:flex;align-items:center;gap:10px;margin-top:6px}
+.carrito-qty-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid #ddd;background:#fff;font-size:14px;font-weight:700;cursor:pointer;color:#555;display:flex;align-items:center;justify-content:center}
+.carrito-qty-num{font-size:13px;font-weight:700;min-width:16px;text-align:center}
+.carrito-item-quitar{font-size:11px;color:#c0392b;background:none;border:none;cursor:pointer;margin-left:auto;font-weight:700}
+.carrito-footer{padding:16px 20px;border-top:1px solid #eee}
+.carrito-subtotal{display:flex;justify-content:space-between;font-size:15px;font-weight:900;color:#1a1a2e;margin-bottom:12px}
+.carrito-pagar-btn{display:block;width:100%;background:#00B4B4;color:#fff;border:none;padding:14px;border-radius:99px;font-size:14.5px;font-weight:900;cursor:pointer}
+.carrito-pagar-btn:disabled{background:#ccc;cursor:not-allowed}
+.carrito-error{background:#fdecea;color:#c0392b;font-size:12.5px;padding:10px 12px;border-radius:10px;margin-bottom:12px;display:none}
+.carrito-email-wrap{margin-bottom:12px}
+.carrito-email-wrap input{width:100%;padding:11px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:13.5px}
+.agregar-carrito-btn{display:block;width:100%;background:#1a1a2e;color:#fff;text-align:center;padding:9px;border-radius:99px;font-size:12px;font-weight:700;border:none;cursor:pointer;margin-top:6px}
+.stock-bajo{font-size:10.5px;color:#c0392b;font-weight:700;margin:-4px 0 8px}
+.sin-stock{font-size:10.5px;color:#999;font-weight:700;margin:-4px 0 8px}
+
 .prod-card{cursor:pointer}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
 .modal-overlay.open{display:flex}
@@ -64,7 +94,145 @@ var especiesFamilia = [];
 var alimentosCatalogo = {};
 var sessionEmail = localStorage.getItem('petzid_email') || '';
 
+// ── Carrito (localStorage, por dispositivo) ────────────────────
+var CARRITO_KEY = 'petmi_carrito';
+var carrito = JSON.parse(localStorage.getItem(CARRITO_KEY) || '[]');
+
+function guardarCarrito(){
+  localStorage.setItem(CARRITO_KEY, JSON.stringify(carrito));
+  actualizarBadgeCarrito();
+}
+
+function actualizarBadgeCarrito(){
+  var total = carrito.reduce(function(s,i){return s+i.cantidad;}, 0);
+  var badge = document.getElementById('carritoBadge');
+  if(total > 0){ badge.style.display='flex'; badge.textContent = total; }
+  else badge.style.display='none';
+}
+
+function agregarAlCarrito(p, ev){
+  if(ev) ev.stopPropagation();
+  var existente = carrito.find(function(i){ return i.producto_id === p.id; });
+  var stockDisponible = p.stock == null ? Infinity : p.stock;
+  if(existente){
+    if(existente.cantidad >= stockDisponible){ alert('No hay más stock disponible de "'+p.nombre+'".'); return; }
+    existente.cantidad++;
+  } else {
+    if(stockDisponible < 1){ alert('"'+p.nombre+'" está agotado.'); return; }
+    carrito.push({ producto_id: p.id, nombre: p.nombre, precio: Number(p.precio), imagen: p.imagen||'', stock: p.stock, cantidad: 1 });
+  }
+  guardarCarrito();
+  renderCarrito();
+}
+
+function cambiarCantidad(producto_id, delta){
+  var item = carrito.find(function(i){ return i.producto_id === producto_id; });
+  if(!item) return;
+  var stockDisponible = item.stock == null ? Infinity : item.stock;
+  item.cantidad += delta;
+  if(item.cantidad > stockDisponible) item.cantidad = stockDisponible;
+  if(item.cantidad <= 0){ carrito = carrito.filter(function(i){ return i.producto_id !== producto_id; }); }
+  guardarCarrito();
+  renderCarrito();
+}
+
+function quitarDelCarrito(producto_id){
+  carrito = carrito.filter(function(i){ return i.producto_id !== producto_id; });
+  guardarCarrito();
+  renderCarrito();
+}
+
+function abrirCarrito(){
+  renderCarrito();
+  document.getElementById('carritoOverlay').classList.add('open');
+}
+function cerrarCarrito(){
+  document.getElementById('carritoOverlay').classList.remove('open');
+}
+
+function renderCarrito(){
+  var lista = document.getElementById('carritoLista');
+  var footer = document.getElementById('carritoFooter');
+  if(!carrito.length){
+    lista.innerHTML = '<div class="vacio" style="padding:40px 10px">Tu carrito está vacío</div>';
+    footer.style.display = 'none';
+    return;
+  }
+  footer.style.display = 'block';
+  lista.innerHTML = carrito.map(function(i){
+    var foto = i.imagen ? '<img class="carrito-item-foto" src="'+i.imagen+'">' : '<div class="carrito-item-foto" style="display:flex;align-items:center;justify-content:center;font-size:22px">🐾</div>';
+    return '<div class="carrito-item">'
+      + foto
+      + '<div class="carrito-item-info">'
+      + '<div class="carrito-item-nombre">'+i.nombre+'</div>'
+      + '<div class="carrito-item-precio">Q'+i.precio.toFixed(2)+'</div>'
+      + '<div class="carrito-item-controles">'
+      + '<button class="carrito-qty-btn" onclick="cambiarCantidad(\''+i.producto_id+'\',-1)">−</button>'
+      + '<span class="carrito-qty-num">'+i.cantidad+'</span>'
+      + '<button class="carrito-qty-btn" onclick="cambiarCantidad(\''+i.producto_id+'\',1)">+</button>'
+      + '<button class="carrito-item-quitar" onclick="quitarDelCarrito(\''+i.producto_id+'\')">Quitar</button>'
+      + '</div></div></div>';
+  }).join('');
+
+  var subtotal = carrito.reduce(function(s,i){return s+(i.precio*i.cantidad);}, 0);
+  document.getElementById('carritoSubtotalMonto').textContent = 'Q'+subtotal.toFixed(2);
+
+  var emailGuardado = sessionEmail || localStorage.getItem('petzid_carrito_email') || '';
+  document.getElementById('carritoEmailWrap').style.display = emailGuardado ? 'none' : 'block';
+  document.getElementById('carritoErrorMsg').style.display = 'none';
+}
+
+function irAPagar(){
+  var btn = document.getElementById('carritoPagarBtn');
+  var errorMsg = document.getElementById('carritoErrorMsg');
+  errorMsg.style.display = 'none';
+
+  var email = sessionEmail || localStorage.getItem('petzid_carrito_email') || document.getElementById('carritoEmailInput').value.trim().toLowerCase();
+  if(!email || email.indexOf('@') < 0){
+    errorMsg.textContent = 'Escribe un correo válido para poder mandarte la confirmación de tu compra.';
+    errorMsg.style.display = 'block';
+    return;
+  }
+  if(!sessionEmail) localStorage.setItem('petzid_carrito_email', email);
+
+  btn.disabled = true;
+  btn.textContent = 'Generando link de pago...';
+
+  var itemsPayload = carrito.map(function(i){ return { producto_id: i.producto_id, cantidad: i.cantidad }; });
+
+  fetch('/api/crear-checkout', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ email: email, items: itemsPayload })
+  }).then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.ok && d.checkout_url){
+      window.location.href = d.checkout_url;
+    } else {
+      errorMsg.textContent = d.error || 'No se pudo generar el pago. Intenta de nuevo.';
+      errorMsg.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Pagar en línea';
+    }
+  }).catch(function(){
+    errorMsg.textContent = 'Error de conexión. Intenta de nuevo.';
+    errorMsg.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Pagar en línea';
+  });
+}
+
+// Si venimos de un pago exitoso de Recurrente, vacía el carrito y avisa
+(function chequearRetornoPago(){
+  var params = new URLSearchParams(window.location.search);
+  if(params.get('pago') === 'exito'){
+    carrito = [];
+    guardarCarrito();
+    setTimeout(function(){ alert('¡Gracias por tu compra! Te llegará un correo con la confirmación.'); }, 300);
+  }
+})();
+
 function iniciar(){
+  actualizarBadgeCarrito();
   Promise.all([
     sessionEmail ? fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:sessionEmail})}).then(function(r){return r.json();}).catch(function(){return {mascotas:[]};}) : Promise.resolve({mascotas:[]}),
     fetch('/api/galeria?action=getAlimentosCatalogo').then(function(r){return r.json();}).catch(function(){return {alimentos:[]};})
@@ -168,15 +336,23 @@ function renderGrid(){
     var envioTxt = p.envio_incluido
       ? '<div style="font-size:10.5px;color:#00838f;font-weight:700;margin:-4px 0 8px">🚚 Envío incluido</div>'
       : (p.costo_envio ? '<div style="font-size:10.5px;color:#888;margin:-4px 0 8px">🚚 Envío: '+p.costo_envio+'</div>' : '');
+    var stockTxt = '';
+    var agotado = p.stock != null && p.stock <= 0;
+    if(p.stock != null && p.stock > 0 && p.stock <= 3) stockTxt = '<div class="stock-bajo">¡Solo quedan '+p.stock+'!</div>';
+    else if(agotado) stockTxt = '<div class="sin-stock">Agotado</div>';
     var mensaje = encodeURIComponent('Hola! Quiero pedir: ' + p.nombre);
+    var carritoBtn = p.precio && !agotado
+      ? '<button class="agregar-carrito-btn" onclick=\'agregarAlCarrito('+JSON.stringify(p)+',event)\'>🛒 Agregar al carrito</button>'
+      : '';
     return '<div class="prod-card" onclick=\'abrirModalProducto('+JSON.stringify(p)+')\'>'
       + '<div style="position:relative">'+foto+usadoBadge+'</div>'
       + '<div class="prod-info">'
       + '<div class="prod-nombre">'+p.nombre+'</div>'
       + (p.descripcion ? '<div class="prod-desc">'+p.descripcion+'</div>' : '')
       + '<div class="prod-precio">'+precioTxt+'</div>'
-      + envioTxt
-      + '<a class="prod-btn" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank" onclick="event.stopPropagation();registrarPedido(\''+p.nombre.replace(/'/g,"\\'")+'\',\''+(mascotaPersonal?mascotaPersonal.nombre:'').replace(/'/g,"\\'")+'\',\'producto\')">💬 Hacer Pedido!</a>'
+      + envioTxt + stockTxt
+      + '<a class="prod-btn" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank" onclick="event.stopPropagation();registrarPedido(\''+p.nombre.replace(/'/g,"\\'")+'\',\''+(mascotaPersonal?mascotaPersonal.nombre:'').replace(/'/g,"\\'")+'\',\'producto\')">💬 Pedir por WhatsApp</a>'
+      + carritoBtn
       + '</div></div>';
   }).join('');
 }
@@ -193,6 +369,13 @@ function abrirModalProducto(p){
     ? '<div style="font-size:12px;color:#00838f;font-weight:700;margin-bottom:14px">🚚 Envío incluido</div>'
     : (p.costo_envio ? '<div style="font-size:12px;color:#888;margin-bottom:14px">🚚 Envío: '+p.costo_envio+'</div>' : '<div style="margin-bottom:14px"></div>');
   var mensaje = encodeURIComponent('Hola! Quiero pedir: ' + p.nombre);
+  var stockTxtModal = '';
+  var agotadoModal = p.stock != null && p.stock <= 0;
+  if(p.stock != null && p.stock > 0 && p.stock <= 3) stockTxtModal = '<div class="stock-bajo" style="margin-bottom:10px">¡Solo quedan '+p.stock+'!</div>';
+  else if(agotadoModal) stockTxtModal = '<div class="sin-stock" style="margin-bottom:10px">Agotado</div>';
+  var carritoBtnModal = p.precio && !agotadoModal
+    ? '<button class="agregar-carrito-btn" style="padding:13px;margin-top:10px" onclick=\'agregarAlCarrito('+JSON.stringify(p)+');cerrarModalProducto();abrirCarrito()\'>🛒 Agregar al carrito</button>'
+    : '';
   document.getElementById('modalProdContent').innerHTML =
     '<div style="position:relative">'
     + '<button class="modal-prod-close" onclick="cerrarModalProducto()">✕</button>'
@@ -201,9 +384,10 @@ function abrirModalProducto(p){
     + '<div class="modal-prod-body">'
     + '<div class="modal-prod-nombre">'+p.nombre+'</div>'
     + '<div class="modal-prod-precio">'+precioTxt+'</div>'
-    + envioTxt
+    + envioTxt + stockTxtModal
     + (p.descripcion ? '<div class="modal-prod-desc">'+p.descripcion+'</div>' : '')
     + '<a class="prod-btn" style="display:block;padding:13px" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank" onclick="registrarPedido(\''+p.nombre.replace(/'/g,"\\'")+'\',\''+(mascotaPersonal?mascotaPersonal.nombre:'').replace(/'/g,"\\'")+'\',\'producto\')">💬 Pedir por WhatsApp</a>'
+    + carritoBtnModal
     + '</div>';
   document.getElementById('modalProdOverlay').classList.add('open');
 }
@@ -214,6 +398,28 @@ function cerrarModalProducto(){
 </script>
 <div class="modal-overlay" id="modalProdOverlay" onclick="if(event.target===this)cerrarModalProducto()">
   <div class="modal-prod" id="modalProdContent"></div>
+</div>
+
+<button class="carrito-fab" onclick="abrirCarrito()">
+  🛒<span class="carrito-badge" id="carritoBadge" style="display:none">0</span>
+</button>
+
+<div class="carrito-overlay" id="carritoOverlay" onclick="if(event.target===this)cerrarCarrito()">
+  <div class="carrito-panel">
+    <div class="carrito-header">
+      <h2>Tu carrito</h2>
+      <button class="carrito-close" onclick="cerrarCarrito()">✕</button>
+    </div>
+    <div class="carrito-lista" id="carritoLista"></div>
+    <div class="carrito-footer" id="carritoFooter">
+      <div class="carrito-error" id="carritoErrorMsg"></div>
+      <div class="carrito-email-wrap" id="carritoEmailWrap">
+        <input type="email" id="carritoEmailInput" placeholder="Tu correo (para la confirmación)">
+      </div>
+      <div class="carrito-subtotal"><span>Subtotal</span><span id="carritoSubtotalMonto">Q0.00</span></div>
+      <button class="carrito-pagar-btn" id="carritoPagarBtn" onclick="irAPagar()">Pagar en línea</button>
+    </div>
+  </div>
 </div>
 
 <script src="/header.js"></script>
