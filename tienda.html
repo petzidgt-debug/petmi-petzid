@@ -104,8 +104,9 @@ function guardarCarrito(){
 }
 
 function actualizarBadgeCarrito(){
-  var total = carrito.reduce(function(s,i){return s+i.cantidad;}, 0);
   var badge = document.getElementById('carritoBadge');
+  if(!badge) return; // el elemento vive al final del HTML, todavía no existe al cargar
+  var total = carrito.reduce(function(s,i){return s+i.cantidad;}, 0);
   if(total > 0){ badge.style.display='flex'; badge.textContent = total; }
   else badge.style.display='none';
 }
@@ -230,6 +231,8 @@ function irAPagar(){
     setTimeout(function(){ alert('¡Gracias por tu compra! Te llegará un correo con la confirmación.'); }, 300);
   }
 })();
+
+document.addEventListener('DOMContentLoaded', actualizarBadgeCarrito);
 
 function iniciar(){
   actualizarBadgeCarrito();
