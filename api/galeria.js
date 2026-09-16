@@ -1656,7 +1656,32 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    // ── verificarOTPVotoConcurso ──────────────────────────────────
+    // ── girarRuletaAdoptado — ruleta especial del 23 sep, un giro
+    // por correo, premios limitados (Q100 y baño se controlan en la
+    // función de Supabase; ver crear_ruleta_adoptado.sql) ──────────
+    if (action === 'girarRuletaAdoptado' && req.method === 'POST') {
+      const { email, uid_mascota } = req.body;
+      if (!email || !email.includes('@')) return res.status(200).json({ ok: false, error: 'Correo inválido' });
+      const emailL = email.trim().toLowerCase();
+
+      const rGiro = await fetch(SUPABASE_URL + '/rest/v1/rpc/girar_ruleta_adoptado', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_param: emailL, uid_mascota_param: uid_mascota || null })
+      });
+
+      if (!rGiro.ok) {
+        const errTxt = await rGiro.text().catch(() => '');
+        if (errTxt.includes('ya_giro')) return res.status(200).json({ ok: false, error: 'Este correo ya giró la ruleta — solo se puede una vez.' });
+        console.error('girarRuletaAdoptado failed:', rGiro.status, errTxt);
+        return res.status(200).json({ ok: false, error: 'No se pudo girar la ruleta. Intenta de nuevo.' });
+      }
+      const resultado = await rGiro.json();
+      const fila = Array.isArray(resultado) ? resultado[0] : resultado;
+      return res.status(200).json({ ok: true, premio: fila.premio_resultado, codigo: fila.codigo_resultado });
+    }
+
+
     if (action === 'verificarOTPVotoConcurso' && req.method === 'POST') {
       const { email, code } = req.body;
       if (!email || !code) return res.status(200).json({ ok: false });
