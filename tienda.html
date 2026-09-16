@@ -183,6 +183,17 @@ function renderCarrito(){
   document.getElementById('carritoErrorMsg').style.display = 'none';
 }
 
+var cuponActual = '';
+function aplicarCupon(){
+  var val = document.getElementById('carritoCuponInput').value.trim().toUpperCase();
+  var msg = document.getElementById('carritoCuponMsg');
+  if(!val){ cuponActual=''; msg.style.display='none'; return; }
+  cuponActual = val;
+  msg.style.display = 'block';
+  msg.style.color = '#00838f';
+  msg.textContent = 'Cupón "'+val+'" listo — se valida al momento de pagar.';
+}
+
 function irAPagar(){
   var btn = document.getElementById('carritoPagarBtn');
   var errorMsg = document.getElementById('carritoErrorMsg');
@@ -203,7 +214,7 @@ function irAPagar(){
 
   fetch('/api/crear-checkout', {
     method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ email: email, items: itemsPayload })
+    body: JSON.stringify({ email: email, items: itemsPayload, cupon: cuponActual || undefined })
   }).then(function(r){ return r.json(); })
   .then(function(d){
     if(d.ok && d.checkout_url){
@@ -419,6 +430,11 @@ function cerrarModalProducto(){
       <div class="carrito-email-wrap" id="carritoEmailWrap">
         <input type="email" id="carritoEmailInput" placeholder="Tu correo (para la confirmación)">
       </div>
+      <div class="carrito-email-wrap" style="display:flex;gap:8px">
+        <input type="text" id="carritoCuponInput" placeholder="¿Tienes un cupón?" style="text-transform:uppercase">
+        <button onclick="aplicarCupon()" style="background:#1a1a2e;color:#fff;border:none;border-radius:10px;padding:0 16px;font-size:12.5px;font-weight:700;cursor:pointer">Aplicar</button>
+      </div>
+      <div id="carritoCuponMsg" style="font-size:12px;margin-bottom:10px;display:none"></div>
       <div class="carrito-subtotal"><span>Subtotal</span><span id="carritoSubtotalMonto">Q0.00</span></div>
       <button class="carrito-pagar-btn" id="carritoPagarBtn" onclick="irAPagar()">Pagar en línea</button>
     </div>
