@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, items } = req.body || {};
+    const { email, items, cupon } = req.body || {};
 
     if (!email || !email.includes('@')) {
       return res.status(400).json({ ok: false, error: 'Correo inválido' });
@@ -60,7 +60,34 @@ export default async function handler(req, res) {
       itemsFinal.push({ producto_id: p.id, nombre: p.nombre, precio: Number(p.precio), cantidad });
     }
 
-    const totalCentavos = itemsFinal.reduce((sum, i) => sum + Math.round(i.precio * 100) * i.cantidad, 0);
+    const totalCentavosSinDescuento = itemsFinal.reduce((sum, i) => sum + Math.round(i.precio * 100) * i.cantidad, 0);
+
+    // ── 2.5 Validar cupón (opcional) — solo cupones de % existen
+    // hoy (ej. de la ruleta de adopción); se aplica repartiendo el
+    // descuento proporcionalmente entre los items, ya que Recurrente
+    // no admite una línea de "descuento" separada. ──────────────────
+    let cuponAplicado = null;
+    let porcentajeDescuento = 0;
+    if (cupon && String(cupon).trim()) {
+      const codigoCupon = String(cupon).trim().toUpperCase();
+      const rCupon = await fetch(
+        SUPABASE_URL + '/rest/v1/cupones_tienda?codigo=eq.' + encodeURIComponent(codigoCupon) + '&select=*',
+        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
+      );
+      const cuponRows = await rCupon.json();
+      const c = cuponRows && cuponRows[0];
+      if (!c) return res.status(400).json({ ok: false, error: 'Ese cupón no existe.' });
+      if (c.usado) return res.status(400).json({ ok: false, error: 'Ese cupón ya fue usado.' });
+      if (c.tipo === 'porcentaje') porcentajeDescuento = Number(c.valor) || 0;
+      cuponAplicado = c.codigo;
+    }
+
+    const itemsConDescuento = itemsFinal.map(i => ({
+      ...i,
+      precio: porcentajeDescuento ? Number((i.precio * (1 - porcentajeDescuento / 100)).toFixed(2)) : i.precio
+    }));
+
+    const totalCentavos = itemsConDescuento.reduce((sum, i) => sum + Math.round(i.precio * 100) * i.cantidad, 0);
     if (totalCentavos < 500) {
       return res.status(400).json({ ok: false, error: 'El total mínimo para pagar en línea es Q5.00' });
     }
@@ -69,7 +96,7 @@ export default async function handler(req, res) {
     const rPedido = await fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
-      body: JSON.stringify({ email: email.toLowerCase(), items: itemsFinal, total_centavos: totalCentavos, estado: 'pendiente' })
+      body: JSON.stringify({ email: email.toLowerCase(), items: itemsConDescuento, total_centavos: totalCentavos, estado: 'pendiente' })
     });
     if (!rPedido.ok) {
       console.error('Error creando pedido:', await rPedido.text());
@@ -82,8 +109,8 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: { 'X-SECRET-KEY': RECURRENTE_SECRET_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        items: itemsFinal.map(i => ({
-          name: i.nombre,
+        items: itemsConDescuento.map(i => ({
+          name: i.nombre + (porcentajeDescuento ? ' (-' + porcentajeDescuento + '%)' : ''),
           amount_in_cents: Math.round(i.precio * 100),
           currency: 'GTQ',
           quantity: i.cantidad
@@ -103,6 +130,20 @@ export default async function handler(req, res) {
         body: JSON.stringify({ estado: 'cancelado' })
       }).catch(() => {});
       return res.status(500).json({ ok: false, error: 'No se pudo generar el link de pago. Intenta pedir por WhatsApp.' });
+    }
+
+    // Marca el cupón como usado — se hace aquí (al crear el checkout,
+    // no al confirmarse el pago) para mantenerlo simple: si alguien
+    // abandona el pago después de esto, el cupón queda gastado. Dado
+    // que cada persona solo tiene 1 cupón de por vida (de la ruleta),
+    // el caso es raro — se puede reactivar a mano desde Supabase si
+    // pasa (UPDATE cupones_tienda SET usado=false WHERE codigo=...).
+    if (cuponAplicado) {
+      await fetch(SUPABASE_URL + '/rest/v1/cupones_tienda?codigo=eq.' + encodeURIComponent(cuponAplicado), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ usado: true, usado_en_pedido: pedidoCreado.id })
+      }).catch(() => {});
     }
 
     // ── 5. Guardar el checkout_id/url en el pedido ──────────────────
