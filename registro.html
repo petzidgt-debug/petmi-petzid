@@ -137,7 +137,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 
     <!-- Foto izquierda (42%) — cuadro centrado, sin estirar -->
     <div id="pngPhoto" style="width:441px;flex-shrink:0;background:#c8e8e8;overflow:hidden;position:relative">
-      <!-- la imagen se inyecta con object-fit:cover -->
+      <!-- la imagen y la insignia de adoptado se inyectan por JS en updatePngCard() -->
     </div>
 
     <!-- Panel derecho -->
@@ -372,6 +372,10 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
       <input type="text" id="inAlimento" placeholder="Marca y tipo de comida">
       <label>Algo especial sobre tu mascota</label>
       <textarea id="inEspecial" placeholder="Un dato curioso, su historia..."></textarea>
+      <div class="toggle-row" style="border:1px solid #eee;border-radius:12px;padding:12px 14px;margin-top:14px;background:#fff8f0">
+        <span class="toggle-lbl" style="font-weight:700;color:#333">🏠 ¿Es una mascota adoptada?</span>
+        <label class="toggle"><input type="checkbox" id="togAdoptado" onchange="updatePngCard()"><span class="tog-slider"></span></label>
+      </div>
       <div style="margin-top:18px;background:#fafafa;border-radius:12px;padding:14px 16px;border:1px solid #eee">
         <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Comunicaciones</div>
         <div style="font-size:12px;color:#aaa;margin-bottom:12px">Quieres recibir ofertas, actividades pet-friendly y novedades de la comunidad PetMi?</div>
@@ -685,11 +689,13 @@ function updatePngCard(){
   // Foto — cuadro cuadrado centrado, sin estirar ni recortar
   var img=document.getElementById('petPhoto');
   var pngPhoto=document.getElementById('pngPhoto');
+  var esAdoptado=document.getElementById('togAdoptado') && document.getElementById('togAdoptado').checked;
+  var badgeHtml=esAdoptado?'<div style="position:absolute;top:14px;left:14px;background:#F5C842;color:#1a1a2e;font-weight:900;font-size:14px;padding:7px 14px;border-radius:15px;z-index:2">🏠 ADOPTADO</div>':'';
   if(img.src&&img.style.display!=='none'){
     // Tamaño del cuadro: el menor entre el ancho (441) y el alto disponible (532), con 24px de margen
-    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:441px;height:532px;object-fit:cover;object-position:center;display:block" crossorigin="anonymous">';
+    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:441px;height:532px;object-fit:cover;object-position:center;display:block" crossorigin="anonymous">'+badgeHtml;
   } else {
-    pngPhoto.innerHTML='';
+    pngPhoto.innerHTML=badgeHtml;
   }
 
   // Datos
@@ -766,6 +772,19 @@ async function generatePNGBase64(){
 
   // ── Teal derecha ───────────────────────────────────────
   ctx.fillStyle='#00B4B4';ctx.fillRect(FW,0,IW,TEAL_H);
+
+  // ── Insignia de adoptado (9 sep) — cintillo en la esquina
+  // superior izquierda de la foto, solo si el toggle está activo.
+  if(document.getElementById('togAdoptado') && document.getElementById('togAdoptado').checked){
+    ctx.font='900 15px Arial';
+    var badgeTxt='🏠 ADOPTADO';
+    var badgeW=ctx.measureText(badgeTxt).width+24;
+    ctx.fillStyle='#F5C842';
+    ctx.beginPath();ctx.roundRect(14,14,badgeW,30,15);ctx.fill();
+    ctx.fillStyle='#1a1a2e';ctx.textAlign='left';
+    ctx.fillText(badgeTxt,14+12,14+21);
+  }
+
   var px=FW+20,pw=IW-40;
   ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='700 11px Arial';ctx.textAlign='left';
   ctx.letterSpacing='3px';ctx.fillText('N O M B R E',px,TEAL_H-116);ctx.letterSpacing='0px';
@@ -954,6 +973,7 @@ async function submitPetzID(){
     recibeActividades:document.getElementById('togOfertas').checked,
     recibeComunidad:  document.getElementById('togOfertas').checked,
     especial:    document.getElementById('inEspecial').value.trim(),
+    adoptado:    document.getElementById('togAdoptado').checked,
     photoBase64: photoBase64,
     photoMime:   photoMime||'image/jpeg'
   };
