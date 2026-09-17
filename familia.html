@@ -432,17 +432,18 @@ async function generarPosterFam(){
   var btn=document.getElementById('btnGenerarPosterFam');
   btn.disabled=true;btn.textContent='Generando...';
 
-  // Subir foto si hay nueva
+  // Subir foto si hay nueva (a Wix Media Manager — antes Cloudinary,
+  // que llegó a su límite de espacio; fotos viejas se quedan ahí tal cual)
   var fotoFinal=m.foto||'';
   if(perdidoNuevaFotoBase64Fam){
     try{
-      var fd=new FormData();
-      var blob=await fetch('data:'+(perdidoNuevaFotoMimeFam||'image/jpeg')+';base64,'+perdidoNuevaFotoBase64Fam).then(function(r){return r.blob();});
-      fd.append('file',blob);fd.append('upload_preset','petzid');fd.append('folder','petzid/perdidos');
-      var res=await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload',{method:'POST',body:fd});
+      var res=await fetch('/api/subir-foto',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ photoBase64: perdidoNuevaFotoBase64Fam, mimeType: perdidoNuevaFotoMimeFam||'image/jpeg', fileName: 'perdido_'+Date.now()+'.jpg' })
+      });
       var data=await res.json();
-      fotoFinal=data.secure_url||fotoFinal;
-    }catch(e){console.log('Cloudinary:',e);}
+      fotoFinal=(data.ok && data.url)?data.url:fotoFinal;
+    }catch(e){console.log('Wix upload:',e);}
   }
 
   // Publicar en actividades

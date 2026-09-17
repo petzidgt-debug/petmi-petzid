@@ -148,6 +148,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
         <div style="font-size:11px;font-weight:700;letter-spacing:10px;color:#c8f0f0;margin-bottom:6px">N O M B R E</div>
         <div id="pngNombre" style="font-size:42px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;line-height:1.1;margin-bottom:8px">"NOMBRE"</div>
         <div id="pngApodoBadge" style="display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:13px;font-weight:700;padding:4px 14px;border-radius:6px;align-self:flex-start"></div>
+        <div id="pngAdoptadoBadge" style="display:none;align-items:center;gap:6px;margin-top:7px;font-size:13px;font-style:italic;font-weight:700;color:#FFE9A8"><span>🏆</span><span>Adoptado con amor</span></div>
       </div>
 
       <!-- Panel blanco — 3 filas (255px) -->
@@ -690,12 +691,12 @@ function updatePngCard(){
   var img=document.getElementById('petPhoto');
   var pngPhoto=document.getElementById('pngPhoto');
   var esAdoptado=document.getElementById('togAdoptado') && document.getElementById('togAdoptado').checked;
-  var badgeHtml=esAdoptado?'<div style="position:absolute;top:14px;left:14px;background:#F5C842;color:#1a1a2e;font-weight:900;font-size:14px;padding:7px 14px;border-radius:15px;z-index:2">🏠 ADOPTADO</div>':'';
+  document.getElementById('pngAdoptadoBadge').style.display=esAdoptado?'flex':'none';
   if(img.src&&img.style.display!=='none'){
     // Tamaño del cuadro: el menor entre el ancho (441) y el alto disponible (532), con 24px de margen
-    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:441px;height:532px;object-fit:cover;object-position:center;display:block" crossorigin="anonymous">'+badgeHtml;
+    pngPhoto.innerHTML='<img src="'+img.src+'" style="width:441px;height:532px;object-fit:cover;object-position:center;display:block" crossorigin="anonymous">';
   } else {
-    pngPhoto.innerHTML=badgeHtml;
+    pngPhoto.innerHTML='';
   }
 
   // Datos
@@ -773,18 +774,6 @@ async function generatePNGBase64(){
   // ── Teal derecha ───────────────────────────────────────
   ctx.fillStyle='#00B4B4';ctx.fillRect(FW,0,IW,TEAL_H);
 
-  // ── Insignia de adoptado (9 sep) — cintillo en la esquina
-  // superior izquierda de la foto, solo si el toggle está activo.
-  if(document.getElementById('togAdoptado') && document.getElementById('togAdoptado').checked){
-    ctx.font='900 15px Arial';
-    var badgeTxt='🏠 ADOPTADO';
-    var badgeW=ctx.measureText(badgeTxt).width+24;
-    ctx.fillStyle='#F5C842';
-    ctx.beginPath();ctx.roundRect(14,14,badgeW,30,15);ctx.fill();
-    ctx.fillStyle='#1a1a2e';ctx.textAlign='left';
-    ctx.fillText(badgeTxt,14+12,14+21);
-  }
-
   var px=FW+20,pw=IW-40;
   ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='700 11px Arial';ctx.textAlign='left';
   ctx.letterSpacing='3px';ctx.fillText('N O M B R E',px,TEAL_H-116);ctx.letterSpacing='0px';
@@ -794,6 +783,17 @@ async function generatePNGBase64(){
     var bw=ctx.measureText(apodo).width+26;
     ctx.fillStyle='#F4A0B0';ctx.beginPath();ctx.roundRect(px,TEAL_H-48,bw,26,13);ctx.fill();
     ctx.fillStyle='#7a1a2e';ctx.textAlign='center';ctx.fillText(apodo,px+bw/2,TEAL_H-30);
+  }
+
+  // ── Insignia de adoptado (9 sep) — debajo del apodo, con
+  // ícono de trofeo y texto en cursiva, solo si el toggle está activo.
+  if(document.getElementById('togAdoptado') && document.getElementById('togAdoptado').checked){
+    ctx.textAlign='left';
+    ctx.font='13px Arial';
+    ctx.fillText('🏆', px, TEAL_H-8);
+    ctx.font='italic 700 12.5px Arial';
+    ctx.fillStyle='#FFE9A8';
+    ctx.fillText('Adoptado con amor', px+18, TEAL_H-8);
   }
 
   // ── Blanco 3 filas ─────────────────────────────────────

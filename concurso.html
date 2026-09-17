@@ -212,14 +212,13 @@ function previsualizarFoto(input){
 async function subirFotoCloudinary(){
   if(!fotoBase64) return null;
   try{
-    var fd = new FormData();
-    fd.append('file', 'data:'+fotoMime+';base64,'+fotoBase64);
-    fd.append('upload_preset', UPLOAD_PRESET);
-    fd.append('folder', 'petzid/concurso');
-    var res = await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload', { method:'POST', body: fd });
+    var res = await fetch('/api/subir-foto', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ photoBase64: fotoBase64, mimeType: fotoMime, fileName: 'concurso_'+Date.now()+'.jpg' })
+    });
     var data = await res.json();
-    return data.secure_url || null;
-  }catch(e){ console.log('Cloudinary concurso:', e); return null; }
+    return data.ok ? (data.url || null) : null;
+  }catch(e){ console.log('Wix concurso:', e); return null; }
 }
 
 async function enviarEntrada(){

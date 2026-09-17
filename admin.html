@@ -2348,15 +2348,14 @@ async function subirFotoAdmin(){
   } else {
     if(!adminFotoBase64){alert('Selecciona una foto');btn.disabled=false;return;}
     btn.textContent='Subiendo...';
-    var fd=new FormData();
-    fd.append('file','data:image/jpeg;base64,'+adminFotoBase64);
-    fd.append('upload_preset',UPLOAD_PRESET);
-    fd.append('folder','petzid');
     try{
-      var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
+      var res=await fetch('/api/subir-foto',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ photoBase64: adminFotoBase64, mimeType: 'image/jpeg', fileName: 'admin_'+Date.now()+'.jpg' })
+      });
       var data=await res.json();
-      url=data.secure_url;
-      if(!url) throw new Error('Sin URL de Cloudinary');
+      url=data.ok?data.url:null;
+      if(!url) throw new Error(data.error||'Sin URL de Wix');
     }catch(err){alert('Error subiendo foto: '+err.message);btn.disabled=false;btn.textContent='Guardar foto';return;}
   }
   btn.textContent='Guardando...';

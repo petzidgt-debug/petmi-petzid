@@ -2168,17 +2168,19 @@ async function publicarPerdidoEnActividades(p, ubicacion, telefono, mensaje, fec
     + (recompensa ? '\n🏆 ' + recompensa : '')
     + '\n📞 ' + telefono;
 
-  // Subir imagen del poster a Cloudinary
+  // Subir imagen del poster a Wix Media Manager (antes Cloudinary —
+  // llegó a su límite de espacio, las fotos nuevas van a Wix)
   var imagenURL = '';
   try {
-    var fd = new FormData();
-    fd.append('file', posterURL);
-    fd.append('upload_preset', 'petzid');
-    fd.append('folder', 'petzid_perdidos');
-    var res = await fetch('https://api.cloudinary.com/v1_1/dh5wgqgmk/image/upload', {method:'POST', body:fd});
+    var partesDataUrl = posterURL.split(',');
+    var mimeMatch = partesDataUrl[0].match(/data:(.*?);/);
+    var res = await fetch('/api/subir-foto', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ photoBase64: partesDataUrl[1], mimeType: (mimeMatch && mimeMatch[1]) || 'image/png', fileName: 'perdido_'+Date.now()+'.png' })
+    });
     var data = await res.json();
-    imagenURL = data.secure_url || '';
-  } catch(e){ console.log('Cloudinary poster:', e); }
+    imagenURL = data.ok ? (data.url || '') : '';
+  } catch(e){ console.log('Wix poster:', e); }
 
   await fetch('/api/galeria?action=publicarActividad', {
     method: 'POST',

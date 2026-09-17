@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Carrera a Beneficio — Alas de Esperanza — PetMi</title>
+<meta property="og:title" content="Carrera a Beneficio Alas de Esperanza — PetMi">
+<meta property="og:description" content="Corre o camina junto a tu mascota — todo lo recaudado apoya a Alas de Esperanza.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
+.wrap{max-width:480px;margin:0 auto;padding:0 16px 60px}
+
+.titulo-pagina{text-align:center;padding:32px 0 8px}
+.titulo-pagina h1{font-size:22px;font-weight:900;color:#1a1a2e}
+.titulo-pagina p{font-size:13px;color:#888;margin-top:6px}
+.chip-causa{display:inline-block;margin-top:10px;background:#E0F7F7;color:#007a7a;font-size:12px;font-weight:700;padding:6px 16px;border-radius:99px}
+
+.card{background:#fff;border-radius:18px;padding:20px;margin:20px 0;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+.card h2{font-size:15px;font-weight:900;color:#1a1a2e;margin-bottom:14px}
+.field{width:100%;padding:12px 14px;border:1.5px solid #eee;border-radius:10px;font-size:14px;margin-bottom:12px;font-family:inherit}
+.tallas{display:flex;gap:6px;margin-bottom:16px}
+.talla{flex:1;text-align:center;padding:10px;border:1.5px solid #eee;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;color:#555}
+.talla.sel{border-color:#00B4B4;color:#00B4B4;background:#E0F7F7}
+
+.foto-upload{border:2px dashed #e0e0e0;border-radius:12px;padding:12px;text-align:center;cursor:pointer;margin-bottom:14px;position:relative}
+.foto-upload:hover{border-color:#00B4B4;background:#f8fffe}
+.foto-upload input{display:none}
+.foto-upload img{width:100%;max-height:160px;object-fit:cover;border-radius:8px;display:none}
+.foto-upload-label{font-size:13px;color:#aaa;padding:16px 0;display:block}
+
+.precio-box{text-align:center;padding:14px;background:#FFF8E1;border-radius:10px;margin-bottom:16px}
+.precio-box .lbl{font-size:11px;color:#856404;text-transform:uppercase;letter-spacing:.5px}
+.precio-box .num{font-size:24px;font-weight:900;color:#1a1a2e;margin-top:2px}
+
+.btn-inscribir{width:100%;background:#00B4B4;color:#fff;border:none;padding:15px;border-radius:99px;font-weight:900;font-size:15px;cursor:pointer}
+.btn-inscribir:disabled{opacity:.6;cursor:default}
+
+.confirmacion{text-align:center;padding:20px 4px}
+.confirmacion .ico{font-size:40px;margin-bottom:10px}
+.confirmacion h2{font-size:17px;color:#1a1a2e;margin-bottom:8px}
+.confirmacion p{font-size:13.5px;color:#666;line-height:1.7;margin-bottom:16px}
+.btn-pagar{display:inline-block;width:100%;background:#F5C842;color:#1a1a2e;padding:15px;border-radius:99px;font-weight:900;font-size:15px;text-decoration:none;box-sizing:border-box}
+.nota-correo{font-size:12px;color:#999;margin-top:12px;line-height:1.6}
+.nota-correo strong{color:#555}
+
+.ya-inscrito{text-align:center;padding:24px}
+.badge-estado{display:inline-block;padding:6px 16px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:12px}
+.badge-estado.pagado{background:#e0f0e0;color:#2e7d32}
+.badge-estado.pendiente{background:#FFF8E1;color:#856404}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="titulo-pagina">
+    <h1>🐾 Carrera a Beneficio</h1>
+    <p>Todo lo recaudado apoya a Alas de Esperanza</p>
+    <div class="chip-causa">Corre o camina junto a tu mascota</div>
+  </div>
+
+  <div id="contenedorPrincipal"></div>
+</div>
+
+<script>
+// ── AJUSTAR ANTES DE PUBLICAR ──
+var PRECIO_INSCRIPCION = 'XXX'; // Q por persona — pendiente de confirmar
+var LINK_PAGO_RECURRENTE = 'https://app.recurrente.com/s/revista-petmi/o/carrera-alas-de-esperanza-nt9bil';
+// ────────────────────────────────
+
+var CLOUD_NAME = 'dh5wgqgmk';
+var UPLOAD_PRESET = 'petzid';
+
+var fotoBase64 = null, fotoMime = null;
+var tallaSeleccionada = null;
+
+function renderFormulario(){
+  var cont = document.getElementById('contenedorPrincipal');
+  cont.innerHTML =
+    '<div class="card">'
+    +'<h2>Datos del participante</h2>'
+    +'<input type="text" class="field" id="inNombre" placeholder="Tu nombre completo">'
+    +'<input type="email" class="field" id="inEmail" placeholder="tu@correo.com">'
+    +'<input type="tel" class="field" id="inTelefono" placeholder="WhatsApp (opcional)">'
+
+    +'<h2 style="margin-top:6px">Tu compañero de carrera (opcional)</h2>'
+    +'<input type="text" class="field" id="inNombreMascota" placeholder="Nombre de tu mascota">'
+    +'<div class="foto-upload" id="fotoWrap" onclick="document.getElementById(\'fotoInput\').click()">'
+      +'<img id="fotoPreview">'
+      +'<div class="foto-upload-label" id="fotoLabel">📷 Foto de tu mascota (opcional)</div>'
+      +'<input type="file" id="fotoInput" accept="image/*" onchange="previsualizarFoto(this)">'
+    +'</div>'
+
+    +'<h2>Talla de playera</h2>'
+    +'<div class="tallas" id="tallasWrap">'
+      +['S','M','L','XL'].map(function(t){ return '<div class="talla" data-talla="'+t+'" onclick="elegirTalla(\''+t+'\')">'+t+'</div>'; }).join('')
+    +'</div>'
+
+    +'<div class="precio-box"><div class="lbl">Inscripción</div><div class="num">Q '+PRECIO_INSCRIPCION+'</div></div>'
+
+    +'<button class="btn-inscribir" id="btnInscribir" onclick="enviarInscripcion()">Inscribirme y pagar →</button>'
+    +'</div>';
+}
+
+function elegirTalla(t){
+  tallaSeleccionada = t;
+  document.querySelectorAll('.talla').forEach(function(el){
+    el.classList.toggle('sel', el.getAttribute('data-talla') === t);
+  });
+}
+
+function previsualizarFoto(input){
+  var file = input.files[0];
+  if(!file) return;
+  fotoMime = file.type;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    fotoBase64 = e.target.result.split(',')[1];
+    var prev = document.getElementById('fotoPreview');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+    document.getElementById('fotoLabel').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function subirFotoCloudinary(){
+  if(!fotoBase64) return null;
+  try{
+    var res = await fetch('/api/subir-foto', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ photoBase64: fotoBase64, mimeType: fotoMime, fileName: 'carrera_'+Date.now()+'.jpg' })
+    });
+    var data = await res.json();
+    return data.ok ? (data.url || null) : null;
+  }catch(e){ return null; }
+}
+
+async function enviarInscripcion(){
+  var nombre = document.getElementById('inNombre').value.trim();
+  var email = document.getElementById('inEmail').value.trim().toLowerCase();
+  var telefono = document.getElementById('inTelefono').value.trim();
+  var nombreMascota = document.getElementById('inNombreMascota').value.trim();
+
+  if(!nombre){ alert('Escribe tu nombre.'); return; }
+  if(!email || email.indexOf('@') < 0){ alert('Escribe un correo válido.'); return; }
+  if(!tallaSeleccionada){ alert('Elige una talla de playera.'); return; }
+
+  var btn = document.getElementById('btnInscribir');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  var fotoUrl = null;
+  if(fotoBase64){
+    btn.textContent = 'Subiendo foto...';
+    fotoUrl = await subirFotoCloudinary();
+  }
+
+  try{
+    var r = await fetch('/api/galeria?action=inscribirCarrera', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        nombre: nombre, email: email, telefono: telefono || null,
+        nombre_mascota: nombreMascota || null, foto_mascota: fotoUrl,
+        talla_playera: tallaSeleccionada
+      })
+    });
+    var d = await r.json();
+    if(d.ok){
+      localStorage.setItem('carrera_email', email);
+      renderConfirmacion(email);
+    } else {
+      alert('No se pudo guardar tu inscripción: ' + (d.error || 'intenta de nuevo'));
+      btn.disabled = false; btn.textContent = 'Inscribirme y pagar →';
+    }
+  }catch(e){
+    alert('No se pudo guardar tu inscripción. Intenta de nuevo.');
+    btn.disabled = false; btn.textContent = 'Inscribirme y pagar →';
+  }
+}
+
+function renderConfirmacion(email){
+  var cont = document.getElementById('contenedorPrincipal');
+  cont.innerHTML =
+    '<div class="card confirmacion">'
+    +'<div class="ico">✅</div>'
+    +'<h2>¡Ya casi! Falta el pago</h2>'
+    +'<p>Guardamos tu inscripción. Ahora complétala pagando Q '+PRECIO_INSCRIPCION+' — en cuanto se confirme, tu lugar queda asegurado.</p>'
+    +'<a href="'+LINK_PAGO_RECURRENTE+'" target="_blank" class="btn-pagar">Pagar mi inscripción →</a>'
+    +'<div class="nota-correo">Importante: usa <strong>'+email+'</strong> al pagar — con ese correo confirmamos tu inscripción automáticamente.</div>'
+    +'</div>';
+}
+
+function checkInscripcionExistente(){
+  var email = localStorage.getItem('carrera_email');
+  if(!email) { renderFormulario(); return; }
+  fetch('/api/galeria?action=getEstadoInscripcionCarrera&email='+encodeURIComponent(email))
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(!d.found){ renderFormulario(); return; }
+    var i = d.inscripcion;
+    var cont = document.getElementById('contenedorPrincipal');
+    if(i.estado === 'pagado'){
+      cont.innerHTML =
+        '<div class="card ya-inscrito">'
+        +'<div class="badge-estado pagado">✓ Inscripción confirmada</div>'
+        +'<h2 style="margin-bottom:8px">¡Nos vemos en la carrera, '+i.nombre+'!</h2>'
+        +(i.numero_corredor ? '<p style="color:#666;font-size:14px">Tu número de corredor: <strong>#'+i.numero_corredor+'</strong></p>' : '')
+        +'</div>';
+    } else {
+      cont.innerHTML =
+        '<div class="card confirmacion">'
+        +'<div class="badge-estado pendiente">⏳ Pago pendiente</div>'
+        +'<h2>Tu inscripción está guardada</h2>'
+        +'<p>Todavía no hemos confirmado tu pago. Si ya pagaste, puede tardar unos minutos en reflejarse.</p>'
+        +'<a href="'+LINK_PAGO_RECURRENTE+'" target="_blank" class="btn-pagar">Pagar mi inscripción →</a>'
+        +'<div class="nota-correo">Usa <strong>'+i.email+'</strong> al pagar.</div>'
+        +'</div>';
+    }
+  }).catch(function(){ renderFormulario(); });
+}
+
+checkInscripcionExistente();
+</script>
+<script src="/header.js"></script>
+</body>
+</html>
