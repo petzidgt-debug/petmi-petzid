@@ -91,9 +91,9 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
               <th class="congelada col2" style="cursor:pointer" onclick="ordenarPor('telefono')">Teléfono ⇅</th>
               <th class="congelada col3" style="cursor:pointer" onclick="ordenarPor('mascota')">Mascota ⇅</th>
               <th style="cursor:pointer" onclick="ordenarPor('ultima_compra')">Última compra ⇅</th>
-              <th>Producto</th><th>Giró</th><th></th>
+              <th>Producto</th><th>Giró</th><th>Contactado</th><th></th>
             </tr></thead>
-            <tbody id="clientesBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            <tbody id="clientesBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -176,13 +176,13 @@ function cargarClientes(){
     document.getElementById('statClientesTotal').textContent = clientes.length;
     renderClientes(clientes);
   }).catch(function(){
-    document.getElementById('clientesBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de wazu_clientes?</td></tr>';
+    document.getElementById('clientesBody').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de wazu_clientes?</td></tr>';
   });
 }
 
 function renderClientes(lista){
   if(!lista.length){
-    document.getElementById('clientesBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Sin resultados</td></tr>';
+    document.getElementById('clientesBody').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Sin resultados</td></tr>';
     return;
   }
   var telsQueGiraron = {};
@@ -194,6 +194,7 @@ function renderClientes(lista){
     if(yaGiro) giraronCount++;
     var waLink = wazuLinkWA(c);
     return '<tr><td class="congelada col1">'+(c.nombre_cliente||'—')+'</td><td class="congelada col2">'+c.telefono+'</td><td class="congelada col3">'+(c.mascota||'—')+'</td><td>'+(c.ultima_compra||'—')+'</td><td class="truncar" title="'+(c.producto||'').replace(/"/g,'&quot;')+'">'+(c.producto||'—')+'</td><td>'+(yaGiro?'✓':'—')+'</td>'
+      + '<td style="text-align:center"><input type="checkbox" '+(c.contactado?'checked':'')+' onchange="marcarClienteContactado(\''+c.id+'\',this.checked)" style="width:16px;height:16px;cursor:pointer"></td>'
       + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank" title="Enviar por WhatsApp">💬</a> '
       + '<button class="btn-mini" onclick="copiarLinkCliente(this,\''+c.id+'\')" title="Copiar link">🔗</button> '
       + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajeCliente(this,\''+c.id+'\')" title="Copiar mensaje">📋</button> '
@@ -239,6 +240,14 @@ function ordenarPor(campo){
     return 0;
   });
   renderClientes(copia);
+}
+
+function marcarClienteContactado(id, contactado){
+  var c = wazuBuscarCliente(id);
+  if(c) c.contactado = contactado;
+  fetch('/api/galeria?action=marcarClienteContactado', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, contactado: contactado })
+  }).catch(function(){ alert('No se pudo guardar. Intenta de nuevo.'); });
 }
 
 function eliminarCliente(id){
