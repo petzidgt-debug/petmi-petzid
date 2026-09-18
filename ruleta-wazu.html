@@ -55,11 +55,17 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
   <div class="form-card">
     <label>Nombre de tu mascota</label>
     <input type="text" id="inNombre" placeholder="Ej. Luna">
-    <label>Tu número de WhatsApp</label>
-    <input type="tel" id="inTelefono" placeholder="Ej. 5555 5555">
     <div class="error-msg" id="errorMsg"></div>
-    <button class="btn-girar-form" id="btnIniciar" onclick="validarYGirar()">¡Girar la ruleta!</button>
   </div>
+
+  <div class="rueda-wrap">
+    <div class="puntero"></div>
+    <div class="rueda" id="rueda"></div>
+    <div class="centro-rueda">🐾</div>
+  </div>
+
+  <button class="btn-girar-form" id="btnIniciar" onclick="validarYGirar()">¡Girar la ruleta!</button>
+
   <div class="premios-list">
     <div class="premio-chip"><div class="emoji">1️⃣ 🦴</div><div class="txt">50% en accesorios FreeDog</div></div>
     <div class="premio-chip"><div class="emoji">2️⃣ 🛁</div><div class="txt">50% off Baños</div></div>
@@ -67,7 +73,9 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
     <div class="premio-chip"><div class="emoji">4️⃣ 🍖</div><div class="txt">1 Bolsa de treats</div></div>
     <div class="premio-chip" style="grid-column:span 2"><div class="emoji">5️⃣ 🥣</div><div class="txt">10% off alimento</div></div>
   </div>
+
   <div class="aviso" style="margin-top:16px">Solo se permite <b>una participación por número de teléfono</b>. Wazu te contactará por WhatsApp para coordinar tu premio.</div>
+  <div id="resultadoWrap"></div>
 </div>
 
 <script>
@@ -86,27 +94,26 @@ var PREMIOS_INFO = {
 // personalizado, sin tener que escribir nada)
 var wazuUltimaCompra = '';
 var wazuProducto = '';
+var wazuTelefono = '';
 
 (function prellenarDesdeLink(){
   var params = new URLSearchParams(window.location.search);
-  var tel = params.get('tel');
+  wazuTelefono = params.get('tel') || '';
   var mascota = params.get('mascota');
   wazuUltimaCompra = params.get('fecha') || '';
   wazuProducto = params.get('producto') || '';
   window.addEventListener('DOMContentLoaded', function(){
-    if(tel) document.getElementById('inTelefono').value = tel;
     if(mascota) document.getElementById('inNombre').value = mascota;
   });
 })();
 
 function validarYGirar(){
   var nombre = document.getElementById('inNombre').value.trim();
-  var telefono = document.getElementById('inTelefono').value.trim();
   var err = document.getElementById('errorMsg');
   err.style.display = 'none';
 
   if(!nombre){ err.textContent='Escribe el nombre de tu mascota.'; err.style.display='block'; return; }
-  if(!telefono || telefono.replace(/\D/g,'').length < 8){ err.textContent='Escribe un número de WhatsApp válido.'; err.style.display='block'; return; }
+  if(!wazuTelefono || wazuTelefono.replace(/\D/g,'').length < 8){ err.textContent='Este link no tiene un número de teléfono válido — pide uno nuevo.'; err.style.display='block'; return; }
 
   var btn = document.getElementById('btnIniciar');
   btn.disabled = true;
@@ -114,7 +121,7 @@ function validarYGirar(){
 
   fetch('/api/galeria?action=girarRuletaWazu', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ nombreMascota: nombre, telefono: telefono, ultimaCompra: wazuUltimaCompra, producto: wazuProducto })
+    body: JSON.stringify({ nombreMascota: nombre, telefono: wazuTelefono, ultimaCompra: wazuUltimaCompra, producto: wazuProducto })
   }).then(function(r){return r.json();})
   .then(function(d){
     if(!d.ok){
@@ -124,7 +131,7 @@ function validarYGirar(){
       btn.textContent = '¡Girar la ruleta!';
       return;
     }
-    mostrarRueda(d.premio);
+    animarGiro(d.premio);
   }).catch(function(){
     err.textContent = 'Error de conexión. Intenta de nuevo.';
     err.style.display = 'block';
@@ -135,9 +142,10 @@ function validarYGirar(){
 
 var WAZU_COLORES = ['#00B4B4', '#1a1a2e', '#E05090', '#F5C842', '#7B61FF'];
 
-function mostrarRueda(premio){
-  // Mismo cálculo que la ruleta principal de PetMi: 5 segmentos
-  // iguales (72° cada uno), números centrados por trigonometría.
+// Pinta la rueda quieta, apenas carga la página (igual que la
+// ruleta principal de PetMi) — 5 segmentos iguales, números
+// centrados por trigonometría.
+function pintarRueda(){
   var nombres = WAZU_PREMIOS_ORDEN;
   var n = nombres.length;
   var gradiente = nombres.map(function(nombre, i){
@@ -154,32 +162,32 @@ function mostrarRueda(premio){
     return '<div class="rueda-num" style="left:'+x+'px;top:'+y+'px">'+(i+1)+'</div>';
   }).join('');
 
-  document.getElementById('contenedor').innerHTML =
-    '<div class="rueda-wrap">'
-    + '<div class="puntero"></div>'
-    + '<div class="rueda" id="rueda" style="background:conic-gradient(' + gradiente + ')">' + numeros + '</div>'
-    + '<div class="centro-rueda">🐾</div>'
-    + '</div>'
-    + '<div id="resultadoWrap"></div>';
+  var rueda = document.getElementById('rueda');
+  rueda.style.background = 'conic-gradient(' + gradiente + ')';
+  rueda.innerHTML = numeros;
+}
+pintarRueda();
+
+function animarGiro(premio){
+  document.getElementById('btnIniciar').style.display = 'none';
+  var nombres = WAZU_PREMIOS_ORDEN;
+  var n = nombres.length;
+  var idxGanado = nombres.indexOf(premio);
+  var medioGanado = idxGanado * (360/n) + (360/n)/2;
+  var vueltas = 5;
+  var anguloFinal = (360 * vueltas) + (360 - medioGanado);
+  document.getElementById('rueda').style.transform = 'rotate(' + anguloFinal + 'deg)';
 
   setTimeout(function(){
-    var idxGanado = nombres.indexOf(premio);
-    var medioGanado = idxGanado * (360/n) + (360/n)/2;
-    var vueltas = 5;
-    var anguloFinal = (360 * vueltas) + (360 - medioGanado);
-    document.getElementById('rueda').style.transform = 'rotate(' + anguloFinal + 'deg)';
-
-    setTimeout(function(){
-      var info = PREMIOS_INFO[premio] || { emoji:'🎁' };
-      document.getElementById('resultadoWrap').innerHTML =
-        '<div class="resultado-card">'
-        + '<div class="resultado-emoji">' + info.emoji + '</div>'
-        + '<div class="resultado-nombre">¡Ganaste: ' + premio + '!</div>'
-        + '<div class="resultado-sub">Wazu te va a contactar por WhatsApp al número que diste para coordinar tu premio. ¡Gracias por participar!</div>'
-        + '</div>';
-      lanzarConfeti();
-    }, 4300);
-  }, 60);
+    var info = PREMIOS_INFO[premio] || { emoji:'🎁' };
+    document.getElementById('resultadoWrap').innerHTML =
+      '<div class="resultado-card">'
+      + '<div class="resultado-emoji">' + info.emoji + '</div>'
+      + '<div class="resultado-nombre">¡Ganaste: ' + premio + '!</div>'
+      + '<div class="resultado-sub">Wazu te va a contactar por WhatsApp al número que diste para coordinar tu premio. ¡Gracias por participar!</div>'
+      + '</div>';
+    lanzarConfeti();
+  }, 4300);
 }
 
 function lanzarConfeti(){
