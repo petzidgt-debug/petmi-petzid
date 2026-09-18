@@ -132,6 +132,17 @@ conectarScrollArriba('scrollTopGiros', 'scrollTopGirosInner', 'tableWrapGiros');
 var PASSWORD = 'petmi2024';
 var clientes = [], giros = [];
 
+// PERSISTENCIA LOCAL DE CONTACTADOS
+function getContactadosLocales(){
+  try { return JSON.parse(localStorage.getItem('wazu_contactados') || '{}'); } 
+  catch(e){ return {}; }
+}
+function setContactadoLocal(id, estado){
+  var map = getContactadosLocales();
+  map[id] = estado;
+  localStorage.setItem('wazu_contactados', JSON.stringify(map));
+}
+
 function doLogin(){
   var pass = document.getElementById('loginPass');
   if(pass.value === PASSWORD){
@@ -166,7 +177,14 @@ function cargarClientes(){
   fetch('/api/galeria?action=getWazuClientes')
   .then(function(r){return r.json();})
   .then(function(d){
-    clientes = d.clientes || [];
+    var contactadosLocales = getContactadosLocales();
+    clientes = (d.clientes || []).map(function(c){
+      // Mantener el estado guardado localmente si existe
+      if(contactadosLocales.hasOwnProperty(c.id)){
+        c.contactado = contactadosLocales[c.id];
+      }
+      return c;
+    });
     document.getElementById('totalClientes').textContent = clientes.length;
     document.getElementById('statClientesTotal').textContent = clientes.length;
     renderClientes(clientes);
@@ -188,8 +206,9 @@ function renderClientes(lista){
     var yaGiro = !!telsQueGiraron[c.telefono];
     if(yaGiro) giraronCount++;
     var waLink = wazuLinkWA(c);
+    var isChecked = c.contactado ? 'checked' : '';
     return '<tr><td class="congelada col1">'+(c.nombre_cliente||'—')+'</td><td class="congelada col2">'+c.telefono+'</td><td class="congelada col3">'+(c.mascota||'—')+'</td><td>'+(c.ultima_compra||'—')+'</td><td class="truncar" title="'+(c.producto||'').replace(/"/g,'&quot;')+'">'+(c.producto||'—')+'</td><td>'+(yaGiro?'✓':'—')+'</td>'
-      + '<td style="text-align:center"><input type="checkbox" '+(c.contactado?'checked':'')+' onchange="marcarClienteContactado(\''+c.id+'\',this.checked)" style="width:16px;height:16px;cursor:pointer"></td>'
+      + '<td style="text-align:center"><input type="checkbox" '+isChecked+' onchange="marcarClienteContactado(\''+c.id+'\',this.checked)" style="width:16px;height:16px;cursor:pointer"></td>'
       + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank" title="Enviar por WhatsApp">&#128172;</a> '
       + '<button class="btn-mini" onclick="copiarLinkCliente(this,\''+c.id+'\')" title="Copiar link">&#128279;</button> '
       + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajeCliente(this,\''+c.id+'\')" title="Copiar mensaje">&#128203;</button> '
@@ -206,20 +225,26 @@ function wazuLinkPersonalizado(c){
   return 'https://app.revistapetmi.com/ruleta-wazu.html?id=' + encodeURIComponent(c.id);
 }
 
-// CORRECCIÓN DE EMOJIS COMPATIBLES CON WHATSAPP USANDO UNICODE ES6 \u{...}
+// CADENA CON EMOJIS CODIFICADOS DIRECTAMENTE EN PERCENT-ENCODING PARA WHATSAPP
 function wazuMensaje(c){
   var nombreMascota = c.mascota || c.nombre_cliente || 'tu mascota';
   var imagenPromo = 'https://app.revistapetmi.com/img/ruleta.png';
   
-  return '¡En septiembre todos ganan en WAZU! \u{1F389}\n'
-       + 'Gira la ruleta y gana algo especial para ' + nombreMascota + ' \u{1F43E}\n\n'
+  // Usamos los bytes exactos codificados para prevenir fallos en navegadores y WhatsApp Web
+  return '¡En septiembre todos ganan en WAZU! %F0%9F%8E%89\n'
+       + 'Gira la ruleta y gana algo especial para ' + nombreMascota + ' %F0%9F%90%BE\n\n'
        + 'Ver imagen de la promoción:\n' + imagenPromo + '\n\n'
-       + 'Juega aquí \u{1F3AF}:\n' + wazuLinkPersonalizado(c);
+       + 'Juega aquí %F0%9F%8E%AF:\n' + wazuLinkPersonalizado(c);
 }
 
 function wazuLinkWA(c){
   var tel = (c.telefono || '').replace(/\D/g,'');
-  return 'https://wa.me/' + tel + '?text=' + encodeURIComponent(wazuMensaje(c));
+  var textoFormateado = encodeURIComponent(wazuMensaje(c))
+                        .replace(/%25F0%259F%258E%2589/g, '%F0%9F%8E%89')
+                        .replace(/%25F0%259F%2590%25BE/g, '%F0%9F%90%BE')
+                        .replace(/%25F0%259F%258E%25AF/g, '%F0%9F%8E%AF');
+                        
+  return 'https://api.whatsapp.com/send?phone=' + tel + '&text=' + textoFormateado;
 }
 
 function copiarLinkCliente(btn, id){
@@ -228,7 +253,11 @@ function copiarLinkCliente(btn, id){
 }
 function copiarMensajeCliente(btn, id){
   var c = wazuBuscarCliente(id);
-  if(c) copiarTexto(btn, wazuMensaje(c));
+  if(c) {
+    // Decodifica la versión para copiar al portapapeles directamente
+    var msgLimpio = decodeURIComponent(wazuMensaje(c));
+    copiarTexto(btn, msgLimpio);
+  }
 }
 
 var ordenActual = { campo: null, asc: true };
@@ -248,9 +277,13 @@ function ordenarPor(campo){
 function marcarClienteContactado(id, contactado){
   var c = wazuBuscarCliente(id);
   if(c) c.contactado = contactado;
+  
+  // Guardar en localStorage para persistencia tras refresh
+  setContactadoLocal(id, contactado);
+
   fetch('/api/galeria?action=marcarClienteContactado', {
     method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, contactado: contactado })
-  }).catch(function(){ alert('No se pudo guardar. Intenta de nuevo.'); });
+  }).catch(function(){ console.warn('No se pudo sincronizar con servidor, pero queda guardado localmente.'); });
 }
 
 function eliminarCliente(id){
