@@ -1725,6 +1725,15 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── getWazuClientes (Admin — admin-wazu.html) ────────────────
+    if (action === 'getWazuClientes') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_clientes?select=*&order=nombre_cliente.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const clientes = await r.json();
+      return res.status(200).json({ ok: true, clientes });
+    }
+
     // ── getRuletaWazuGiros (Admin) ──────────────────────────────
     if (action === 'getRuletaWazuGiros') {
       const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros?select=*&order=created_at.desc', {
