@@ -336,6 +336,21 @@ async function uploadToCloudinary(base64,mime){
   var res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUD_NAME+'/image/upload',{method:'POST',body:fd});
   var data=await res.json();return data.secure_url||null;
 }
+// Fotos nuevas suben a Wix Media Manager (9 sep) — Cloudinary llegó
+// a su límite de espacio del plan gratis. Las fotos viejas se quedan
+// en Cloudinary tal cual, sin tocarlas.
+async function uploadToWix(base64,mime){
+  try{
+    var res=await fetch('/api/subir-foto',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({photoBase64:base64,mimeType:mime,fileName:'mascota_'+Date.now()+'.jpg'})
+    });
+    var data=await res.json();
+    if(data.ok&&data.url)return data.url;
+    console.log('Wix upload error:',data.error);
+    return null;
+  }catch(e){console.log('Wix upload error:',e);return null;}
+}
 async function guardar(){
   var btn=document.getElementById('btnGuardar');
   var err=document.getElementById('errorBox');
@@ -347,7 +362,7 @@ async function guardar(){
   var fotoUrl=null;
   if(nuevaFotoBase64){
     btn.textContent='Subiendo foto...';
-    try{fotoUrl=await uploadToCloudinary(nuevaFotoBase64,nuevaFotoMime);}catch(e){}
+    try{fotoUrl=await uploadToWix(nuevaFotoBase64,nuevaFotoMime);}catch(e){}
   }
   var wa=document.getElementById('eWA').value.trim();
   wa=wa.replace(/^\+502/,'').replace(/^502/,'').trim();
