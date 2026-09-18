@@ -210,10 +210,10 @@ function wazuBuscarCliente(id){
   return clientes.find(function(c){ return String(c.id) === String(id); });
 }
 function wazuLinkPersonalizado(c){
-  return 'https://app.revistapetmi.com/ruleta-wazu.html?tel=' + encodeURIComponent(c.telefono) + '&mascota=' + encodeURIComponent(c.mascota||'') + '&fecha=' + encodeURIComponent(c.ultima_compra||'') + '&producto=' + encodeURIComponent(c.producto||'');
+  return 'https://app.revistapetmi.com/ruleta-wazu.html?tel=' + encodeURIComponent(c.telefono) + '&mascota=' + encodeURIComponent(c.mascota||'');
 }
 function wazuMensaje(c){
-  return '¡En septiembre todos ganan en WAZU! 🎉\nGira la ruleta y gana algo especial para ' + (c.mascota||c.nombre_cliente) + ' 🐾\n\n' + wazuLinkPersonalizado(c);
+  return '¡En septiembre todos ganan en WAZU! \nGira la ruleta y gana algo especial para ' + (c.mascota||c.nombre_cliente) + ' \n\n' + wazuLinkPersonalizado(c);
 }
 function wazuLinkWA(c){
   return 'https://wa.me/' + c.telefono.replace(/\D/g,'') + '?text=' + encodeURIComponent(wazuMensaje(c));
