@@ -36,9 +36,7 @@ table{min-width:900px;width:max-content;border-collapse:collapse;font-size:13px}
 .scroll-top::-webkit-scrollbar-track{background:#f2f2f2}
 .scroll-top > div{height:1px}
 
-/* Columnas congeladas — primeras 3 (Nombre/Fecha, Teléfono/Mascota,
-   Mascota/Teléfono) se quedan fijas al hacer scroll horizontal.
-   Anchos fijos para poder calcular el "left" de cada una. */
+/* Columnas congeladas */
 th.congelada, td.congelada{position:sticky;background:#fff;z-index:2}
 th.congelada{background:#f8f7f4;z-index:3}
 .col1{left:0;width:140px;min-width:140px;max-width:140px}
@@ -60,7 +58,7 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
 
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
-    <div class="login-logo">🎡 Admin Ruleta Wazu</div>
+    <div class="login-logo">&#127921; Admin Ruleta Wazu</div>
     <div class="login-sub">Panel exclusivo de la promoción Wazu</div>
     <input type="password" id="loginPass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Ingresar</button>
@@ -69,7 +67,7 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
 </div>
 
 <div class="app-wrap" id="appWrap">
-  <div class="topbar"><div class="topbar-title">🎡 Ruleta Wazu — Admin</div></div>
+  <div class="topbar"><div class="topbar-title">&#127921; Ruleta Wazu — Admin</div></div>
   <div class="tabs">
     <button class="tab-btn active" id="tabClientesBtn" onclick="mostrarTab('clientes')">Clientes (<span id="totalClientes">0</span>)</button>
     <button class="tab-btn" id="tabGirosBtn" onclick="mostrarTab('giros')">Giros (<span id="totalGiros">0</span>)</button>
@@ -87,10 +85,10 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
         <div class="table-wrap" id="tableWrapClientes">
           <table>
             <thead><tr>
-              <th class="congelada col1" style="cursor:pointer" onclick="ordenarPor('nombre_cliente')">Nombre ⇅</th>
-              <th class="congelada col2" style="cursor:pointer" onclick="ordenarPor('telefono')">Teléfono ⇅</th>
-              <th class="congelada col3" style="cursor:pointer" onclick="ordenarPor('mascota')">Mascota ⇅</th>
-              <th style="cursor:pointer" onclick="ordenarPor('ultima_compra')">Última compra ⇅</th>
+              <th class="congelada col1" style="cursor:pointer" onclick="ordenarPor('nombre_cliente')">Nombre &#8645;</th>
+              <th class="congelada col2" style="cursor:pointer" onclick="ordenarPor('telefono')">Teléfono &#8645;</th>
+              <th class="congelada col3" style="cursor:pointer" onclick="ordenarPor('mascota')">Mascota &#8645;</th>
+              <th style="cursor:pointer" onclick="ordenarPor('ultima_compra')">Última compra &#8645;</th>
               <th>Producto</th><th>Giró</th><th>Contactado</th><th></th>
             </tr></thead>
             <tbody id="clientesBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
@@ -114,7 +112,6 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
 </div>
 
 <script>
-// Sincroniza la barra de scroll de arriba con la tabla de abajo
 function conectarScrollArriba(idScrollTop, idInner, idTableWrap){
   var scrollTop = document.getElementById(idScrollTop);
   var inner = document.getElementById(idInner);
@@ -193,10 +190,10 @@ function renderClientes(lista){
     var waLink = wazuLinkWA(c);
     return '<tr><td class="congelada col1">'+(c.nombre_cliente||'—')+'</td><td class="congelada col2">'+c.telefono+'</td><td class="congelada col3">'+(c.mascota||'—')+'</td><td>'+(c.ultima_compra||'—')+'</td><td class="truncar" title="'+(c.producto||'').replace(/"/g,'&quot;')+'">'+(c.producto||'—')+'</td><td>'+(yaGiro?'✓':'—')+'</td>'
       + '<td style="text-align:center"><input type="checkbox" '+(c.contactado?'checked':'')+' onchange="marcarClienteContactado(\''+c.id+'\',this.checked)" style="width:16px;height:16px;cursor:pointer"></td>'
-      + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank" title="Enviar por WhatsApp">💬</a> '
-      + '<button class="btn-mini" onclick="copiarLinkCliente(this,\''+c.id+'\')" title="Copiar link">🔗</button> '
-      + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajeCliente(this,\''+c.id+'\')" title="Copiar mensaje">📋</button> '
-      + '<button class="btn-mini" style="background:#c0392b" onclick="eliminarCliente(\''+c.id+'\')" title="Eliminar">🗑️</button></td></tr>';
+      + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank" title="Enviar por WhatsApp">&#128172;</a> '
+      + '<button class="btn-mini" onclick="copiarLinkCliente(this,\''+c.id+'\')" title="Copiar link">&#128279;</button> '
+      + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajeCliente(this,\''+c.id+'\')" title="Copiar mensaje">&#128203;</button> '
+      + '<button class="btn-mini" style="background:#c0392b" onclick="eliminarCliente(\''+c.id+'\')" title="Eliminar">&#128465;&#65039;</button></td></tr>';
   }).join('');
   document.getElementById('statClientesGirado').textContent = giraronCount;
 }
@@ -205,13 +202,19 @@ function wazuBuscarCliente(id){
   return clientes.find(function(c){ return String(c.id) === String(id); });
 }
 
-// FIX: Enlace acortado pasando únicamente el ID del cliente
 function wazuLinkPersonalizado(c){
   return 'https://app.revistapetmi.com/ruleta-wazu.html?id=' + encodeURIComponent(c.id);
 }
 
+// FIX: Se agregaron entidades Unicode de emojis para garantizar compatibilidad y se incluyó la imagen de la promo
 function wazuMensaje(c){
-  return '¡En septiembre todos ganan en WAZU 🎉! \nGira la ruleta y gana algo especial para 🐾' + (c.mascota||c.nombre_cliente||'tu mascota') + ' 🐾\n\n' + wazuLinkPersonalizado(c);
+  var nombreMascota = c.mascota || c.nombre_cliente || 'tu mascota';
+  var imagenPromo = 'https://app.revistapetmi.com/img/ruleta.png';
+  
+  return '¡En septiembre todos ganan en WAZU! \uD83C\uDF89\n'
+       + 'Gira la ruleta y gana algo especial para ' + nombreMascota + ' \uD83D\uDC3E\n\n'
+       + 'Ver imagen de la promoción:\n' + imagenPromo + '\n\n'
+       + 'Juega aquí:\n' + wazuLinkPersonalizado(c);
 }
 
 function wazuLinkWA(c){
@@ -288,7 +291,7 @@ function cargarGiros(){
       document.getElementById('girosBody').innerHTML = giros.map(function(g){
         var fecha = new Date(g.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
         var contactadoHtml = g.contactado
-          ? '<span style="color:#2ecc71;font-weight:700">✓ Contactado</span>'
+          ? '<span style="color:#2ecc71;font-weight:700">&#10003; Contactado</span>'
           : '<button class="btn-mini" onclick="marcarContactado(\''+g.id+'\')">Marcar contactado</button>';
         return '<tr><td class="congelada col1">'+fecha+'</td><td class="congelada col2">'+(g.nombre_mascota||'—')+'</td><td class="congelada col3">'+g.telefono+'</td><td>'+g.premio+'</td><td>'+(g.ultima_compra||'—')+'</td><td>'+(g.producto||'—')+'</td><td>'+contactadoHtml+'</td></tr>';
       }).join('');
