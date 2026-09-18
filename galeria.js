@@ -155,7 +155,7 @@ const WIX_API_KEY = process.env.WIX_API_KEY || '';
 const WIX_SITE_ID = '25b3d584-29fb-4861-b757-d9640d37c01f';
 const WIX_SENDER_NAME = 'PETmi';
 const WIX_SENDER_EMAIL = 'revistapetmi@gmail.com'; // remitente ya verificado en Wix
-const APPS_SCRIPT_OTP_URL = 'https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec';
+const APPS_SCRIPT_OTP_URL = 'https://script.google.com/macros/s/AKfycbxrE4a8FX3e1FWPfKeNjMPzBWPKiJl94MaHa0sQFVVJgJzKCYkwH60A_N_zFrqihDWt/exec';
 
 function _htmlOTP(saludo, code) {
   return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
@@ -1656,7 +1656,106 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    // ── verificarOTPVotoConcurso ──────────────────────────────────
+    // ── girarRuletaAdoptado — ruleta especial del 23 sep, un giro
+    // por correo, premios limitados (Q100 y baño se controlan en la
+    // función de Supabase; ver crear_ruleta_adoptado.sql) ──────────
+    if (action === 'girarRuletaAdoptado' && req.method === 'POST') {
+      const { email, uid_mascota } = req.body;
+      if (!email || !email.includes('@')) return res.status(200).json({ ok: false, error: 'Correo inválido' });
+      const emailL = email.trim().toLowerCase();
+
+      const rGiro = await fetch(SUPABASE_URL + '/rest/v1/rpc/girar_ruleta_adoptado', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_param: emailL, uid_mascota_param: uid_mascota || null })
+      });
+
+      if (!rGiro.ok) {
+        const errTxt = await rGiro.text().catch(() => '');
+        if (errTxt.includes('ya_giro')) return res.status(200).json({ ok: false, error: 'Este correo ya giró la ruleta — solo se puede una vez.' });
+        console.error('girarRuletaAdoptado failed:', rGiro.status, errTxt);
+        return res.status(200).json({ ok: false, error: 'No se pudo girar la ruleta. Intenta de nuevo.' });
+      }
+      const resultado = await rGiro.json();
+      const fila = Array.isArray(resultado) ? resultado[0] : resultado;
+      return res.status(200).json({ ok: true, premio: fila.premio_resultado, codigo: fila.codigo_resultado });
+    }
+
+    // ── girarRuletaWazu (18 sep, movido a Supabase el mismo día) —
+    // ruleta pública para Wazu, sin cuenta. 1 giro por teléfono, sin
+    // límite de premios. Ya NO pasa por Apps Script/Google Sheets —
+    // eso causaba demasiados conflictos de despliegue (doPost
+    // duplicado entre varios archivos). Todo directo a Supabase,
+    // visible desde el Admin.
+    if (action === 'girarRuletaWazu' && req.method === 'POST') {
+      const { nombreMascota, telefono, ultimaCompra, producto } = req.body || {};
+      const telLimpio = String(telefono || '').replace(/\D/g, '');
+      const nombreLimpio = String(nombreMascota || '').trim();
+
+      if (!telLimpio || telLimpio.length < 8) {
+        return res.status(200).json({ ok: false, error: 'Número de teléfono inválido.' });
+      }
+      if (!nombreLimpio) {
+        return res.status(200).json({ ok: false, error: 'Escribe el nombre de tu mascota.' });
+      }
+
+      try {
+        const WAZU_PREMIOS = ['50% en accesorios FreeDog', '50% off Baños', 'Ozonoterapia GRATIS', '1 Bolsa de treats', '10% off alimento'];
+        const premioElegido = WAZU_PREMIOS[Math.floor(Math.random() * WAZU_PREMIOS.length)];
+
+        const rInsert = await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ nombre_mascota: nombreLimpio, telefono: telLimpio, premio: premioElegido, ultima_compra: ultimaCompra || null, producto: producto || null })
+        });
+
+        if (!rInsert.ok) {
+          const errTxt = await rInsert.text().catch(() => '');
+          if (errTxt.includes('duplicate key') || rInsert.status === 409) {
+            return res.status(200).json({ ok: false, error: 'Este número ya participó — solo se permite un giro por teléfono.' });
+          }
+          console.error('girarRuletaWazu insert error:', rInsert.status, errTxt);
+          return res.status(200).json({ ok: false, error: 'No se pudo girar la ruleta. Intenta de nuevo.' });
+        }
+
+        return res.status(200).json({ ok: true, premio: premioElegido });
+      } catch (eWazu) {
+        console.error('girarRuletaWazu error:', eWazu.message);
+        return res.status(200).json({ ok: false, error: 'Error de conexión. Intenta de nuevo.' });
+      }
+    }
+
+    // ── getWazuClientes (Admin — admin-wazu.html) ────────────────
+    if (action === 'getWazuClientes') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_clientes?select=*&order=nombre_cliente.asc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const clientes = await r.json();
+      return res.status(200).json({ ok: true, clientes });
+    }
+
+    // ── getRuletaWazuGiros (Admin) ──────────────────────────────
+    if (action === 'getRuletaWazuGiros') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros?select=*&order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const giros = await r.json();
+      return res.status(200).json({ ok: true, giros });
+    }
+
+    // ── marcarWazuContactado (Admin) ─────────────────────────────
+    if (action === 'marcarWazuContactado' && req.method === 'POST') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ contactado: true })
+      });
+      return res.status(200).json({ ok: true });
+    }
+
+
     if (action === 'verificarOTPVotoConcurso' && req.method === 'POST') {
       const { email, code } = req.body;
       if (!email || !code) return res.status(200).json({ ok: false });
@@ -2818,7 +2917,7 @@ export default async function handler(req, res) {
       }
 
       // Notificar por correo — al ganador y a info@revistapetmi.com (no bloqueante)
-      fetch('https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec', {
+      fetch('https://script.google.com/macros/s/AKfycbxrE4a8FX3e1FWPfKeNjMPzBWPKiJl94MaHa0sQFVVJgJzKCYkwH60A_N_zFrqihDWt/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'notificarPremioRuleta', email: emailL, dueno: dueno || '', premio: elegido.nombre, tipo: elegido.tipo, patrocinador: elegido.patrocinador || '' })
