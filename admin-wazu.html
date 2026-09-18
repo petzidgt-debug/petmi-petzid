@@ -67,7 +67,13 @@ td{padding:10px 14px;border-top:1px solid #f2f2f2;white-space:nowrap}
       <div class="table-card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Nombre</th><th>Teléfono</th><th>Mascota</th><th>Última compra</th><th>Producto</th><th>Giró</th><th></th></tr></thead>
+            <thead><tr>
+              <th style="cursor:pointer" onclick="ordenarPor('nombre_cliente')">Nombre ⇅</th>
+              <th style="cursor:pointer" onclick="ordenarPor('telefono')">Teléfono ⇅</th>
+              <th style="cursor:pointer" onclick="ordenarPor('mascota')">Mascota ⇅</th>
+              <th style="cursor:pointer" onclick="ordenarPor('ultima_compra')">Última compra ⇅</th>
+              <th>Producto</th><th>Giró</th><th></th>
+            </tr></thead>
             <tbody id="clientesBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
@@ -148,10 +154,35 @@ function renderClientes(lista){
     if(yaGiro) giraronCount++;
     var link = 'https://app.revistapetmi.com/ruleta-wazu.html?tel=' + encodeURIComponent(c.telefono) + '&mascota=' + encodeURIComponent(c.mascota||'') + '&fecha=' + encodeURIComponent(c.ultima_compra||'') + '&producto=' + encodeURIComponent(c.producto||'');
     var mensaje = '¡En septiembre todos ganan en WAZU! 🎉\nGira la ruleta y gana algo especial para ' + (c.mascota||c.nombre_cliente) + ' 🐾\n\n' + link;
+    var waLink = 'https://wa.me/' + c.telefono.replace(/\D/g,'') + '?text=' + encodeURIComponent(mensaje);
     return '<tr><td>'+(c.nombre_cliente||'—')+'</td><td>'+c.telefono+'</td><td>'+(c.mascota||'—')+'</td><td>'+(c.ultima_compra||'—')+'</td><td>'+(c.producto||'—')+'</td><td>'+(yaGiro?'✓':'—')+'</td>'
-      + '<td><button class="btn-mini" onclick="copiarTexto(this,'+JSON.stringify(link)+')">Copiar link</button> <button class="btn-mini btn-mini-alt" onclick="copiarTexto(this,'+JSON.stringify(mensaje)+')">Copiar mensaje</button></td></tr>';
+      + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank">💬 WhatsApp</a> '
+      + '<button class="btn-mini" onclick="copiarTexto(this,'+JSON.stringify(link)+')">Link</button> '
+      + '<button class="btn-mini btn-mini-alt" onclick="copiarTexto(this,'+JSON.stringify(mensaje)+')">Mensaje</button> '
+      + '<button class="btn-mini" style="background:#c0392b" onclick="eliminarCliente('+JSON.stringify(c.id)+','+JSON.stringify(c.nombre_cliente||c.telefono)+')">Eliminar</button></td></tr>';
   }).join('');
   document.getElementById('statClientesGirado').textContent = giraronCount;
+}
+
+var ordenActual = { campo: null, asc: true };
+function ordenarPor(campo){
+  if(ordenActual.campo === campo) ordenActual.asc = !ordenActual.asc;
+  else { ordenActual.campo = campo; ordenActual.asc = true; }
+  var copia = clientes.slice().sort(function(a,b){
+    var va = (a[campo]||'').toString().toLowerCase();
+    var vb = (b[campo]||'').toString().toLowerCase();
+    if(va < vb) return ordenActual.asc ? -1 : 1;
+    if(va > vb) return ordenActual.asc ? 1 : -1;
+    return 0;
+  });
+  renderClientes(copia);
+}
+
+function eliminarCliente(id, nombre){
+  if(!confirm('¿Eliminar a "'+nombre+'" de la lista de clientes de Wazu? Esto no se puede deshacer.')) return;
+  fetch('/api/galeria?action=eliminarWazuCliente', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
+  }).then(function(){ cargarClientes(); }).catch(function(){ alert('No se pudo eliminar. Intenta de nuevo.'); });
 }
 
 function filtrarClientes(){
