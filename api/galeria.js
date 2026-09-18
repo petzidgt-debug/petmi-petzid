@@ -155,7 +155,7 @@ const WIX_API_KEY = process.env.WIX_API_KEY || '';
 const WIX_SITE_ID = '25b3d584-29fb-4861-b757-d9640d37c01f';
 const WIX_SENDER_NAME = 'PETmi';
 const WIX_SENDER_EMAIL = 'revistapetmi@gmail.com'; // remitente ya verificado en Wix
-const APPS_SCRIPT_OTP_URL = 'https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec';
+const APPS_SCRIPT_OTP_URL = 'https://script.google.com/macros/s/AKfycbxrE4a8FX3e1FWPfKeNjMPzBWPKiJl94MaHa0sQFVVJgJzKCYkwH60A_N_zFrqihDWt/exec';
 
 function _htmlOTP(saludo, code) {
   return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
@@ -2862,7 +2862,7 @@ export default async function handler(req, res) {
       }
 
       // Notificar por correo — al ganador y a info@revistapetmi.com (no bloqueante)
-      fetch('https://script.google.com/macros/s/AKfycbx3nn6M61a1Jcsx9FofnWfVBiuGMI6IhSvXHih0kDxIoh2cvh1xveWVEipMlARRW5l2/exec', {
+      fetch('https://script.google.com/macros/s/AKfycbxrE4a8FX3e1FWPfKeNjMPzBWPKiJl94MaHa0sQFVVJgJzKCYkwH60A_N_zFrqihDWt/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'notificarPremioRuleta', email: emailL, dueno: dueno || '', premio: elegido.nombre, tipo: elegido.tipo, patrocinador: elegido.patrocinador || '' })
