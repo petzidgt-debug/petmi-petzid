@@ -114,9 +114,7 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
 </div>
 
 <script>
-// Sincroniza la barra de scroll de arriba con la tabla de abajo,
-// para no tener que bajar hasta el final de 546 filas para
-// encontrar el scroll horizontal.
+// Sincroniza la barra de scroll de arriba con la tabla de abajo
 function conectarScrollArriba(idScrollTop, idInner, idTableWrap){
   var scrollTop = document.getElementById(idScrollTop);
   var inner = document.getElementById(idInner);
@@ -203,18 +201,19 @@ function renderClientes(lista){
   document.getElementById('statClientesGirado').textContent = giraronCount;
 }
 
-// Helpers — buscan los datos del cliente por id en vez de meterlos
-// directo en el HTML (evita romper comillas cuando el nombre o
-// mensaje contiene caracteres especiales).
 function wazuBuscarCliente(id){
   return clientes.find(function(c){ return String(c.id) === String(id); });
 }
+
+// FIX: Enlace acortado pasando únicamente el ID del cliente
 function wazuLinkPersonalizado(c){
-  return 'https://app.revistapetmi.com/ruleta-wazu.html?tel=' + encodeURIComponent(c.telefono) + '&mascota=' + encodeURIComponent(c.mascota||'') + '&fecha=' + encodeURIComponent(c.ultima_compra||'') + '&producto=' + encodeURIComponent(c.producto||'');
+  return 'https://app.revistapetmi.com/ruleta-wazu.html?id=' + encodeURIComponent(c.id);
 }
+
 function wazuMensaje(c){
-  return '¡En septiembre todos ganan en WAZU! 🎉\nGira la ruleta y gana algo especial para ' + (c.mascota||c.nombre_cliente) + ' 🐾\n\n' + wazuLinkPersonalizado(c);
+  return '¡En septiembre todos ganan en WAZU! 🎉\nGira la ruleta y gana algo especial para ' + (c.mascota||c.nombre_cliente||'tu mascota') + ' 🐾\n\n' + wazuLinkPersonalizado(c);
 }
+
 function wazuLinkWA(c){
   return 'https://wa.me/' + c.telefono.replace(/\D/g,'') + '?text=' + encodeURIComponent(wazuMensaje(c));
 }
