@@ -1745,6 +1745,37 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // ── marcarClienteContactado (Admin) ───────────────────────────
+    if (action === 'marcarClienteContactado' && req.method === 'POST') {
+      const { id, contactado } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      await fetch(SUPABASE_URL + '/rest/v1/wazu_clientes?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ contactado: !!contactado })
+      });
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── enviarMensajeDirectoAdmin (18 sep) — el Admin le manda un
+    // mensaje puntual a UNA mascota específica, directo a su buzón
+    // de Mensajes (misma tabla que usa el resto de la app). ────────
+    if (action === 'enviarMensajeDirectoAdmin' && req.method === 'POST') {
+      const { uid, mensaje } = req.body || {};
+      if (!uid || !mensaje) return res.status(400).json({ ok: false, error: 'Falta uid o mensaje' });
+      const rMsg = await fetch(SUPABASE_URL + '/rest/v1/conversaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ uid_emisor: 'PETMI-OFICIAL', uid_receptor: uid, mensaje: mensaje, leido: false })
+      });
+      if (!rMsg.ok) {
+        const errTxt = await rMsg.text().catch(() => '');
+        console.error('enviarMensajeDirectoAdmin error:', rMsg.status, errTxt);
+        return res.status(200).json({ ok: false, error: 'No se pudo guardar el mensaje.' });
+      }
+      return res.status(200).json({ ok: true });
+    }
+
     // ── getRuletaWazuGiros (Admin) ──────────────────────────────
     if (action === 'getRuletaWazuGiros') {
       const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros?select=*&order=created_at.desc', {
