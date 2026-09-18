@@ -1734,6 +1734,29 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, clientes });
     }
 
+    // ── eliminarWazuCliente (Admin) ───────────────────────────────
+    if (action === 'eliminarWazuCliente' && req.method === 'POST') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      await fetch(SUPABASE_URL + '/rest/v1/wazu_clientes?id=eq.' + id, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
+      });
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── marcarClienteContactado (Admin) ───────────────────────────
+    if (action === 'marcarClienteContactado' && req.method === 'POST') {
+      const { id, contactado } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      await fetch(SUPABASE_URL + '/rest/v1/wazu_clientes?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ contactado: !!contactado })
+      });
+      return res.status(200).json({ ok: true });
+    }
+
     // ── getRuletaWazuGiros (Admin) ──────────────────────────────
     if (action === 'getRuletaWazuGiros') {
       const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros?select=*&order=created_at.desc', {
