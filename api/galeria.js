@@ -1681,23 +1681,69 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, premio: fila.premio_resultado, codigo: fila.codigo_resultado });
     }
 
-    // ── girarRuletaWazu (18 sep) — ruleta pública para Wazu, sin
-    // cuenta. Guarda en un Google Sheet aparte (vía Apps Script), no
-    // en Supabase — 1 giro por teléfono, sin límite de premios.
+    // ── girarRuletaWazu (18 sep, movido a Supabase el mismo día) —
+    // ruleta pública para Wazu, sin cuenta. 1 giro por teléfono, sin
+    // límite de premios. Ya NO pasa por Apps Script/Google Sheets —
+    // eso causaba demasiados conflictos de despliegue (doPost
+    // duplicado entre varios archivos). Todo directo a Supabase,
+    // visible desde el Admin.
     if (action === 'girarRuletaWazu' && req.method === 'POST') {
       const { nombreMascota, telefono, ultimaCompra, producto } = req.body || {};
+      const telLimpio = String(telefono || '').replace(/\D/g, '');
+      const nombreLimpio = String(nombreMascota || '').trim();
+
+      if (!telLimpio || telLimpio.length < 8) {
+        return res.status(200).json({ ok: false, error: 'Número de teléfono inválido.' });
+      }
+      if (!nombreLimpio) {
+        return res.status(200).json({ ok: false, error: 'Escribe el nombre de tu mascota.' });
+      }
+
       try {
-        const rWazu = await fetch(APPS_SCRIPT_OTP_URL, {
+        const WAZU_PREMIOS = ['50% en accesorios FreeDog', '50% off Baños', 'Ozonoterapia GRATIS', '1 Bolsa de treats', '10% off alimento'];
+        const premioElegido = WAZU_PREMIOS[Math.floor(Math.random() * WAZU_PREMIOS.length)];
+
+        const rInsert = await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'girarRuletaWazu', nombreMascota, telefono, ultimaCompra, producto })
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ nombre_mascota: nombreLimpio, telefono: telLimpio, premio: premioElegido, ultima_compra: ultimaCompra || null, producto: producto || null })
         });
-        const dWazu = await rWazu.json();
-        return res.status(200).json(dWazu);
+
+        if (!rInsert.ok) {
+          const errTxt = await rInsert.text().catch(() => '');
+          if (errTxt.includes('duplicate key') || rInsert.status === 409) {
+            return res.status(200).json({ ok: false, error: 'Este número ya participó — solo se permite un giro por teléfono.' });
+          }
+          console.error('girarRuletaWazu insert error:', rInsert.status, errTxt);
+          return res.status(200).json({ ok: false, error: 'No se pudo girar la ruleta. Intenta de nuevo.' });
+        }
+
+        return res.status(200).json({ ok: true, premio: premioElegido });
       } catch (eWazu) {
-        console.error('girarRuletaWazu proxy error:', eWazu.message);
+        console.error('girarRuletaWazu error:', eWazu.message);
         return res.status(200).json({ ok: false, error: 'Error de conexión. Intenta de nuevo.' });
       }
+    }
+
+    // ── getRuletaWazuGiros (Admin) ──────────────────────────────
+    if (action === 'getRuletaWazuGiros') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros?select=*&order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const giros = await r.json();
+      return res.status(200).json({ ok: true, giros });
+    }
+
+    // ── marcarWazuContactado (Admin) ─────────────────────────────
+    if (action === 'marcarWazuContactado' && req.method === 'POST') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ contactado: true })
+      });
+      return res.status(200).json({ ok: true });
     }
 
 
