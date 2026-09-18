@@ -30,6 +30,20 @@ table{min-width:900px;width:max-content;border-collapse:collapse;font-size:13px}
 .table-wrap::-webkit-scrollbar{height:10px}
 .table-wrap::-webkit-scrollbar-thumb{background:#ccc;border-radius:5px}
 .table-wrap::-webkit-scrollbar-track{background:#f2f2f2}
+.scroll-top{overflow-x:auto;overflow-y:hidden;height:14px;border-bottom:1px solid #eee}
+.scroll-top::-webkit-scrollbar{height:10px}
+.scroll-top::-webkit-scrollbar-thumb{background:#ccc;border-radius:5px}
+.scroll-top::-webkit-scrollbar-track{background:#f2f2f2}
+.scroll-top > div{height:1px}
+
+/* Columnas congeladas — primeras 3 (Nombre/Fecha, Teléfono/Mascota,
+   Mascota/Teléfono) se quedan fijas al hacer scroll horizontal.
+   Anchos fijos para poder calcular el "left" de cada una. */
+th.congelada, td.congelada{position:sticky;background:#fff;z-index:2}
+th.congelada{background:#f8f7f4;z-index:3}
+.col1{left:0;width:140px;min-width:140px;max-width:140px}
+.col2{left:140px;width:130px;min-width:130px;max-width:130px}
+.col3{left:270px;width:120px;min-width:120px;max-width:120px;box-shadow:2px 0 4px rgba(0,0,0,.06)}
 th{background:#f8f7f4;padding:10px 14px;text-align:left;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap}
 td{padding:10px 14px;border-top:1px solid #f2f2f2;white-space:nowrap}
 td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -69,12 +83,13 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
       </div>
       <input type="text" class="search-box" id="buscarCliente" placeholder="Buscar por nombre, teléfono o mascota..." oninput="filtrarClientes()">
       <div class="table-card">
-        <div class="table-wrap">
+        <div class="scroll-top" id="scrollTopClientes"><div id="scrollTopClientesInner"></div></div>
+        <div class="table-wrap" id="tableWrapClientes">
           <table>
             <thead><tr>
-              <th style="cursor:pointer" onclick="ordenarPor('nombre_cliente')">Nombre ⇅</th>
-              <th style="cursor:pointer" onclick="ordenarPor('telefono')">Teléfono ⇅</th>
-              <th style="cursor:pointer" onclick="ordenarPor('mascota')">Mascota ⇅</th>
+              <th class="congelada col1" style="cursor:pointer" onclick="ordenarPor('nombre_cliente')">Nombre ⇅</th>
+              <th class="congelada col2" style="cursor:pointer" onclick="ordenarPor('telefono')">Teléfono ⇅</th>
+              <th class="congelada col3" style="cursor:pointer" onclick="ordenarPor('mascota')">Mascota ⇅</th>
               <th style="cursor:pointer" onclick="ordenarPor('ultima_compra')">Última compra ⇅</th>
               <th>Producto</th><th>Giró</th><th></th>
             </tr></thead>
@@ -86,9 +101,10 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
 
     <div id="panelGiros" style="display:none">
       <div class="table-card">
-        <div class="table-wrap">
+        <div class="scroll-top" id="scrollTopGiros"><div id="scrollTopGirosInner"></div></div>
+        <div class="table-wrap" id="tableWrapGiros">
           <table>
-            <thead><tr><th>Fecha</th><th>Mascota</th><th>Teléfono</th><th>Premio</th><th>Última compra</th><th>Producto</th><th>Contactado</th></tr></thead>
+            <thead><tr><th class="congelada col1">Fecha</th><th class="congelada col2">Mascota</th><th class="congelada col3">Teléfono</th><th>Premio</th><th>Última compra</th><th>Producto</th><th>Contactado</th></tr></thead>
             <tbody id="girosBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
@@ -97,6 +113,26 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
   </div>
 </div>
 
+<script>
+// Sincroniza la barra de scroll de arriba con la tabla de abajo,
+// para no tener que bajar hasta el final de 546 filas para
+// encontrar el scroll horizontal.
+function conectarScrollArriba(idScrollTop, idInner, idTableWrap){
+  var scrollTop = document.getElementById(idScrollTop);
+  var inner = document.getElementById(idInner);
+  var wrap = document.getElementById(idTableWrap);
+  function actualizarAncho(){
+    var tabla = wrap.querySelector('table');
+    if(tabla) inner.style.width = tabla.scrollWidth + 'px';
+  }
+  actualizarAncho();
+  new MutationObserver(actualizarAncho).observe(wrap, { childList:true, subtree:true });
+  scrollTop.addEventListener('scroll', function(){ wrap.scrollLeft = scrollTop.scrollLeft; });
+  wrap.addEventListener('scroll', function(){ scrollTop.scrollLeft = wrap.scrollLeft; });
+}
+conectarScrollArriba('scrollTopClientes', 'scrollTopClientesInner', 'tableWrapClientes');
+conectarScrollArriba('scrollTopGiros', 'scrollTopGirosInner', 'tableWrapGiros');
+</script>
 <script>
 var PASSWORD = 'petmi2024';
 var clientes = [], giros = [];
@@ -157,7 +193,7 @@ function renderClientes(lista){
     var yaGiro = !!telsQueGiraron[c.telefono];
     if(yaGiro) giraronCount++;
     var waLink = wazuLinkWA(c);
-    return '<tr><td>'+(c.nombre_cliente||'—')+'</td><td>'+c.telefono+'</td><td>'+(c.mascota||'—')+'</td><td>'+(c.ultima_compra||'—')+'</td><td class="truncar" title="'+(c.producto||'').replace(/"/g,'&quot;')+'">'+(c.producto||'—')+'</td><td>'+(yaGiro?'✓':'—')+'</td>'
+    return '<tr><td class="congelada col1">'+(c.nombre_cliente||'—')+'</td><td class="congelada col2">'+c.telefono+'</td><td class="congelada col3">'+(c.mascota||'—')+'</td><td>'+(c.ultima_compra||'—')+'</td><td class="truncar" title="'+(c.producto||'').replace(/"/g,'&quot;')+'">'+(c.producto||'—')+'</td><td>'+(yaGiro?'✓':'—')+'</td>'
       + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank" title="Enviar por WhatsApp">💬</a> '
       + '<button class="btn-mini" onclick="copiarLinkCliente(this,\''+c.id+'\')" title="Copiar link">🔗</button> '
       + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajeCliente(this,\''+c.id+'\')" title="Copiar mensaje">📋</button> '
@@ -246,7 +282,7 @@ function cargarGiros(){
         var contactadoHtml = g.contactado
           ? '<span style="color:#2ecc71;font-weight:700">✓ Contactado</span>'
           : '<button class="btn-mini" onclick="marcarContactado(\''+g.id+'\')">Marcar contactado</button>';
-        return '<tr><td>'+fecha+'</td><td>'+(g.nombre_mascota||'—')+'</td><td>'+g.telefono+'</td><td>'+g.premio+'</td><td>'+(g.ultima_compra||'—')+'</td><td>'+(g.producto||'—')+'</td><td>'+contactadoHtml+'</td></tr>';
+        return '<tr><td class="congelada col1">'+fecha+'</td><td class="congelada col2">'+(g.nombre_mascota||'—')+'</td><td class="congelada col3">'+g.telefono+'</td><td>'+g.premio+'</td><td>'+(g.ultima_compra||'—')+'</td><td>'+(g.producto||'—')+'</td><td>'+contactadoHtml+'</td></tr>';
       }).join('');
     }
     renderClientes(clientes.length ? (document.getElementById('buscarCliente').value ? clientes.filter(function(c){return true;}) : clientes) : []);
