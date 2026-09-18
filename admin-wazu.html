@@ -152,16 +152,39 @@ function renderClientes(lista){
   document.getElementById('clientesBody').innerHTML = lista.map(function(c){
     var yaGiro = !!telsQueGiraron[c.telefono];
     if(yaGiro) giraronCount++;
-    var link = 'https://app.revistapetmi.com/ruleta-wazu.html?tel=' + encodeURIComponent(c.telefono) + '&mascota=' + encodeURIComponent(c.mascota||'') + '&fecha=' + encodeURIComponent(c.ultima_compra||'') + '&producto=' + encodeURIComponent(c.producto||'');
-    var mensaje = '¡En septiembre todos ganan en WAZU! 🎉\nGira la ruleta y gana algo especial para ' + (c.mascota||c.nombre_cliente) + ' 🐾\n\n' + link;
-    var waLink = 'https://wa.me/' + c.telefono.replace(/\D/g,'') + '?text=' + encodeURIComponent(mensaje);
+    var waLink = wazuLinkWA(c);
     return '<tr><td>'+(c.nombre_cliente||'—')+'</td><td>'+c.telefono+'</td><td>'+(c.mascota||'—')+'</td><td>'+(c.ultima_compra||'—')+'</td><td>'+(c.producto||'—')+'</td><td>'+(yaGiro?'✓':'—')+'</td>'
       + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank">💬 WhatsApp</a> '
-      + '<button class="btn-mini" onclick="copiarTexto(this,'+JSON.stringify(link)+')">Link</button> '
-      + '<button class="btn-mini btn-mini-alt" onclick="copiarTexto(this,'+JSON.stringify(mensaje)+')">Mensaje</button> '
-      + '<button class="btn-mini" style="background:#c0392b" onclick="eliminarCliente('+JSON.stringify(c.id)+','+JSON.stringify(c.nombre_cliente||c.telefono)+')">Eliminar</button></td></tr>';
+      + '<button class="btn-mini" onclick="copiarLinkCliente(this,\''+c.id+'\')">Link</button> '
+      + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajeCliente(this,\''+c.id+'\')">Mensaje</button> '
+      + '<button class="btn-mini" style="background:#c0392b" onclick="eliminarCliente(\''+c.id+'\')">Eliminar</button></td></tr>';
   }).join('');
   document.getElementById('statClientesGirado').textContent = giraronCount;
+}
+
+// Helpers — buscan los datos del cliente por id en vez de meterlos
+// directo en el HTML (evita romper comillas cuando el nombre o
+// mensaje contiene caracteres especiales).
+function wazuBuscarCliente(id){
+  return clientes.find(function(c){ return String(c.id) === String(id); });
+}
+function wazuLinkPersonalizado(c){
+  return 'https://app.revistapetmi.com/ruleta-wazu.html?tel=' + encodeURIComponent(c.telefono) + '&mascota=' + encodeURIComponent(c.mascota||'') + '&fecha=' + encodeURIComponent(c.ultima_compra||'') + '&producto=' + encodeURIComponent(c.producto||'');
+}
+function wazuMensaje(c){
+  return '¡En septiembre todos ganan en WAZU! 🎉\nGira la ruleta y gana algo especial para ' + (c.mascota||c.nombre_cliente) + ' 🐾\n\n' + wazuLinkPersonalizado(c);
+}
+function wazuLinkWA(c){
+  return 'https://wa.me/' + c.telefono.replace(/\D/g,'') + '?text=' + encodeURIComponent(wazuMensaje(c));
+}
+
+function copiarLinkCliente(btn, id){
+  var c = wazuBuscarCliente(id);
+  if(c) copiarTexto(btn, wazuLinkPersonalizado(c));
+}
+function copiarMensajeCliente(btn, id){
+  var c = wazuBuscarCliente(id);
+  if(c) copiarTexto(btn, wazuMensaje(c));
 }
 
 var ordenActual = { campo: null, asc: true };
@@ -178,7 +201,9 @@ function ordenarPor(campo){
   renderClientes(copia);
 }
 
-function eliminarCliente(id, nombre){
+function eliminarCliente(id){
+  var c = wazuBuscarCliente(id);
+  var nombre = c ? (c.nombre_cliente||c.telefono) : id;
   if(!confirm('¿Eliminar a "'+nombre+'" de la lista de clientes de Wazu? Esto no se puede deshacer.')) return;
   fetch('/api/galeria?action=eliminarWazuCliente', {
     method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
