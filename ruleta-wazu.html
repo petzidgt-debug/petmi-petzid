@@ -23,9 +23,8 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 .btn-girar-form:disabled{opacity:.5}
 
 .rueda-wrap{position:relative;width:280px;height:280px;margin:24px auto}
-.rueda{width:280px;height:280px;border-radius:50%;position:relative;transition:transform 4.2s cubic-bezier(.15,.6,.15,1);box-shadow:0 8px 26px rgba(0,0,0,.2);border:7px solid #fff;
-  background:conic-gradient(#00B4B4 0deg 72deg, #1a1a2e 72deg 144deg, #E05090 144deg 216deg, #F5C842 216deg 288deg, #7B61FF 288deg 360deg)}
-.rueda-num{position:absolute;width:36px;height:36px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#1a1a2e}
+.rueda{width:280px;height:280px;border-radius:50%;position:relative;transition:transform 4.2s cubic-bezier(.15,.6,.15,1);box-shadow:0 8px 26px rgba(0,0,0,.2);border:7px solid #fff}
+.rueda-num{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 1px 5px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#1a1a2e}
 .puntero{position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-top:26px solid #F5C842;z-index:10;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
 .centro-rueda{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;font-size:28px;z-index:5}
 
@@ -72,6 +71,8 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 </div>
 
 <script>
+var WAZU_PREMIOS_ORDEN = ['50% en accesorios FreeDog', '50% off Baños', 'Ozonoterapia GRATIS', '1 Bolsa de treats', '10% off alimento'];
+
 var PREMIOS_INFO = {
   '50% en accesorios FreeDog': { emoji:'🦴', angulo:36 },
   '50% off Baños':             { emoji:'🛁', angulo:108 },
@@ -83,10 +84,15 @@ var PREMIOS_INFO = {
 // Pre-llena el formulario si el link trae ?tel= y ?mascota= (para
 // los clientes de la base de datos de Wazu — llegan con su link
 // personalizado, sin tener que escribir nada)
+var wazuUltimaCompra = '';
+var wazuProducto = '';
+
 (function prellenarDesdeLink(){
   var params = new URLSearchParams(window.location.search);
   var tel = params.get('tel');
   var mascota = params.get('mascota');
+  wazuUltimaCompra = params.get('fecha') || '';
+  wazuProducto = params.get('producto') || '';
   window.addEventListener('DOMContentLoaded', function(){
     if(tel) document.getElementById('inTelefono').value = tel;
     if(mascota) document.getElementById('inNombre').value = mascota;
@@ -108,7 +114,7 @@ function validarYGirar(){
 
   fetch('/api/galeria?action=girarRuletaWazu', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ nombreMascota: nombre, telefono: telefono })
+    body: JSON.stringify({ nombreMascota: nombre, telefono: telefono, ultimaCompra: wazuUltimaCompra, producto: wazuProducto })
   }).then(function(r){return r.json();})
   .then(function(d){
     if(!d.ok){
@@ -127,28 +133,44 @@ function validarYGirar(){
   });
 }
 
+var WAZU_COLORES = ['#00B4B4', '#1a1a2e', '#E05090', '#F5C842', '#7B61FF'];
+
 function mostrarRueda(premio){
+  // Mismo cálculo que la ruleta principal de PetMi: 5 segmentos
+  // iguales (72° cada uno), números centrados por trigonometría.
+  var nombres = WAZU_PREMIOS_ORDEN;
+  var n = nombres.length;
+  var gradiente = nombres.map(function(nombre, i){
+    var desde = i * (360/n), hasta = (i+1) * (360/n);
+    return WAZU_COLORES[i] + ' ' + desde + 'deg ' + hasta + 'deg';
+  }).join(', ');
+
+  var numeros = nombres.map(function(nombre, i){
+    var medio = i * (360/n) + (360/n)/2;
+    var rad = (medio - 90) * Math.PI / 180;
+    var radio = 95;
+    var x = 140 + radio * Math.cos(rad);
+    var y = 140 + radio * Math.sin(rad);
+    return '<div class="rueda-num" style="left:'+x+'px;top:'+y+'px">'+(i+1)+'</div>';
+  }).join('');
+
   document.getElementById('contenedor').innerHTML =
     '<div class="rueda-wrap">'
     + '<div class="puntero"></div>'
-    + '<div class="rueda" id="rueda">'
-    +   '<div class="rueda-num" style="top:56px;right:38px">1</div>'
-    +   '<div class="rueda-num" style="bottom:56px;right:38px">2</div>'
-    +   '<div class="rueda-num" style="bottom:32px;left:82px">3</div>'
-    +   '<div class="rueda-num" style="top:82px;left:32px">4</div>'
-    +   '<div class="rueda-num" style="top:32px;left:82px">5</div>'
-    + '</div>'
+    + '<div class="rueda" id="rueda" style="background:conic-gradient(' + gradiente + ')">' + numeros + '</div>'
     + '<div class="centro-rueda">🐾</div>'
     + '</div>'
     + '<div id="resultadoWrap"></div>';
 
   setTimeout(function(){
-    var info = PREMIOS_INFO[premio] || { emoji:'🎁', angulo:0 };
+    var idxGanado = nombres.indexOf(premio);
+    var medioGanado = idxGanado * (360/n) + (360/n)/2;
     var vueltas = 5;
-    var anguloFinal = (360 * vueltas) + (360 - info.angulo);
+    var anguloFinal = (360 * vueltas) + (360 - medioGanado);
     document.getElementById('rueda').style.transform = 'rotate(' + anguloFinal + 'deg)';
 
     setTimeout(function(){
+      var info = PREMIOS_INFO[premio] || { emoji:'🎁' };
       document.getElementById('resultadoWrap').innerHTML =
         '<div class="resultado-card">'
         + '<div class="resultado-emoji">' + info.emoji + '</div>'
@@ -157,7 +179,7 @@ function mostrarRueda(premio){
         + '</div>';
       lanzarConfeti();
     }, 4300);
-  }, 100);
+  }, 60);
 }
 
 function lanzarConfeti(){
