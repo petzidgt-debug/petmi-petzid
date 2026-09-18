@@ -2060,7 +2060,7 @@ function renderTable(){
     +'<button class="btn-sm" style="font-size:10px" onclick="togglePremium('+idx+')">'+(String(r[31]||'')===String(true)||r[31]===true?'Quitar':'Dar')+'</button>'
     +'</span>'
     +'</td>'
-    +'<td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
+    +'<td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#e5f9e5;color:#1a8a1a" onclick="contactarWhatsApp('+idx+')">💬 WA</button><button class="btn-sm" style="background:#fff4d6;color:#8a6200" onclick="contactarMensajeDirecto('+idx+')">✉️ Mensaje</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
   }).join('');
   document.getElementById('tableBody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
 }
@@ -2270,6 +2270,39 @@ function eliminarMascota(idx){
       alert('Error al eliminar');
     }
   }).catch(function(){alert('Error de conexión');});
+}
+
+// ── Contactar usuario directo (18 sep) ──────────────────────────
+function contactarWhatsApp(idx){
+  var r=filtered[idx];
+  if(!r) return;
+  var nombreMasc=String(r[2]||'tu mascota');
+  var dueno=String(r[10]||'');
+  var tel=String(r[12]||'').replace(/\D/g,'');
+  if(!tel){ alert('Esta mascota no tiene un número de WhatsApp guardado.'); return; }
+  if(tel.length===8) tel='502'+tel; // agrega código de país si falta
+  var mensaje=prompt('Mensaje para '+(dueno||nombreMasc)+' (se abrirá WhatsApp con esto ya escrito):',
+    'Hola '+(dueno||'')+'! Te escribimos de PetMi sobre '+nombreMasc+'. ');
+  if(mensaje===null) return; // canceló
+  window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(mensaje), '_blank');
+}
+
+function contactarMensajeDirecto(idx){
+  var r=filtered[idx];
+  if(!r) return;
+  var nombreMasc=String(r[2]||'tu mascota');
+  var uid=String(r[1]||'').trim();
+  if(!uid){ alert('UID no encontrado'); return; }
+  var mensaje=prompt('Mensaje directo para el dueño de '+nombreMasc+' (llega a su buzón de Mensajes en la app):', '');
+  if(!mensaje || !mensaje.trim()) return;
+  fetch('/api/galeria?action=enviarMensajeDirectoAdmin', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ uid: uid, mensaje: mensaje.trim() })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok) alert('✅ Mensaje enviado — ya le llegó a su buzón de Mensajes.');
+    else alert('Error: '+(d.error||'No se pudo enviar.'));
+  }).catch(function(){ alert('Error de conexión.'); });
 }
 
 // ── Campañas ──────────────────────────────────────────────────
