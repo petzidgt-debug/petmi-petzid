@@ -1,1 +1,310 @@
-test
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Ruleta Wazu 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh}
+
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#1a1a2e}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.login-logo{font-size:24px;font-weight:900;text-align:center;margin-bottom:8px;color:#1a1a2e}
+.login-sub{text-align:center;font-size:13px;color:#888;margin-bottom:24px}
+.login-box input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:15px;margin-bottom:12px;outline:none}
+.login-btn{width:100%;padding:13px;background:#7B61FF;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
+.login-err{color:#c0392b;font-size:13px;text-align:center;margin-top:8px;display:none}
+
+.app-wrap{display:none}
+.topbar{background:#1a1a2e;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
+.topbar-title{color:#fff;font-size:17px;font-weight:900}
+.tabs{display:flex;gap:6px;padding:16px 24px 0}
+.tab-btn{background:#fff;border:1px solid #eee;padding:9px 18px;border-radius:99px;font-size:13px;font-weight:700;color:#555;cursor:pointer}
+.tab-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+
+.content{padding:20px 24px 60px}
+.table-card{background:#fff;border-radius:14px;border:0.5px solid #eee;overflow:hidden}
+table{min-width:900px;width:max-content;border-collapse:collapse;font-size:13px}
+.table-wrap{overflow-x:auto;scrollbar-width:auto;-webkit-overflow-scrolling:touch}
+.table-wrap::-webkit-scrollbar{height:10px}
+.table-wrap::-webkit-scrollbar-thumb{background:#ccc;border-radius:5px}
+.table-wrap::-webkit-scrollbar-track{background:#f2f2f2}
+.scroll-top{overflow-x:auto;overflow-y:hidden;height:14px;border-bottom:1px solid #eee}
+.scroll-top::-webkit-scrollbar{height:10px}
+.scroll-top::-webkit-scrollbar-thumb{background:#ccc;border-radius:5px}
+.scroll-top::-webkit-scrollbar-track{background:#f2f2f2}
+.scroll-top > div{height:1px}
+
+/* Columnas congeladas — primeras 3 (Nombre/Fecha, Teléfono/Mascota,
+   Mascota/Teléfono) se quedan fijas al hacer scroll horizontal.
+   Anchos fijos para poder calcular el "left" de cada una. */
+th.congelada, td.congelada{position:sticky;background:#fff;z-index:2}
+th.congelada{background:#f8f7f4;z-index:3}
+.col1{left:0;width:140px;min-width:140px;max-width:140px}
+.col2{left:140px;width:130px;min-width:130px;max-width:130px}
+.col3{left:270px;width:120px;min-width:120px;max-width:120px;box-shadow:2px 0 4px rgba(0,0,0,.06)}
+th{background:#f8f7f4;padding:10px 14px;text-align:left;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap}
+td{padding:10px 14px;border-top:1px solid #f2f2f2;white-space:nowrap}
+td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-mini{background:#1a1a2e;color:#fff;border:none;padding:6px 9px;border-radius:8px;font-size:13px;cursor:pointer}
+.btn-mini-alt{background:#F5C842;color:#1a1a2e}
+.search-box{width:100%;max-width:320px;padding:10px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:13px;margin-bottom:14px}
+.stat-row{display:flex;gap:12px;margin-bottom:16px}
+.stat-card{background:#fff;border-radius:12px;border:0.5px solid #eee;padding:14px 18px;flex:1}
+.stat-num{font-size:22px;font-weight:900;color:#1a1a2e}
+.stat-lbl{font-size:11px;color:#888;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">🎡 Admin Ruleta Wazu</div>
+    <div class="login-sub">Panel exclusivo de la promoción Wazu</div>
+    <input type="password" id="loginPass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-err" id="loginErr">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<div class="app-wrap" id="appWrap">
+  <div class="topbar"><div class="topbar-title">🎡 Ruleta Wazu — Admin</div></div>
+  <div class="tabs">
+    <button class="tab-btn active" id="tabClientesBtn" onclick="mostrarTab('clientes')">Clientes (<span id="totalClientes">0</span>)</button>
+    <button class="tab-btn" id="tabGirosBtn" onclick="mostrarTab('giros')">Giros (<span id="totalGiros">0</span>)</button>
+  </div>
+
+  <div class="content">
+    <div id="panelClientes">
+      <div class="stat-row">
+        <div class="stat-card"><div class="stat-num" id="statClientesTotal">–</div><div class="stat-lbl">Total clientes</div></div>
+        <div class="stat-card"><div class="stat-num" id="statClientesGirado">–</div><div class="stat-lbl">Ya giraron</div></div>
+      </div>
+      <input type="text" class="search-box" id="buscarCliente" placeholder="Buscar por nombre, teléfono o mascota..." oninput="filtrarClientes()">
+      <div class="table-card">
+        <div class="scroll-top" id="scrollTopClientes"><div id="scrollTopClientesInner"></div></div>
+        <div class="table-wrap" id="tableWrapClientes">
+          <table>
+            <thead><tr>
+              <th class="congelada col1" style="cursor:pointer" onclick="ordenarPor('nombre_cliente')">Nombre ⇅</th>
+              <th class="congelada col2" style="cursor:pointer" onclick="ordenarPor('telefono')">Teléfono ⇅</th>
+              <th class="congelada col3" style="cursor:pointer" onclick="ordenarPor('mascota')">Mascota ⇅</th>
+              <th style="cursor:pointer" onclick="ordenarPor('ultima_compra')">Última compra ⇅</th>
+              <th>Producto</th><th>Giró</th><th>Contactado</th><th></th>
+            </tr></thead>
+            <tbody id="clientesBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="panelGiros" style="display:none">
+      <div class="table-card">
+        <div class="scroll-top" id="scrollTopGiros"><div id="scrollTopGirosInner"></div></div>
+        <div class="table-wrap" id="tableWrapGiros">
+          <table>
+            <thead><tr><th class="congelada col1">Fecha</th><th class="congelada col2">Mascota</th><th class="congelada col3">Teléfono</th><th>Premio</th><th>Última compra</th><th>Producto</th><th>Contactado</th></tr></thead>
+            <tbody id="girosBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Sincroniza la barra de scroll de arriba con la tabla de abajo,
+// para no tener que bajar hasta el final de 546 filas para
+// encontrar el scroll horizontal.
+function conectarScrollArriba(idScrollTop, idInner, idTableWrap){
+  var scrollTop = document.getElementById(idScrollTop);
+  var inner = document.getElementById(idInner);
+  var wrap = document.getElementById(idTableWrap);
+  function actualizarAncho(){
+    var tabla = wrap.querySelector('table');
+    if(tabla) inner.style.width = tabla.scrollWidth + 'px';
+  }
+  actualizarAncho();
+  new MutationObserver(actualizarAncho).observe(wrap, { childList:true, subtree:true });
+  scrollTop.addEventListener('scroll', function(){ wrap.scrollLeft = scrollTop.scrollLeft; });
+  wrap.addEventListener('scroll', function(){ scrollTop.scrollLeft = wrap.scrollLeft; });
+}
+conectarScrollArriba('scrollTopClientes', 'scrollTopClientesInner', 'tableWrapClientes');
+conectarScrollArriba('scrollTopGiros', 'scrollTopGirosInner', 'tableWrapGiros');
+</script>
+<script>
+var PASSWORD = 'petmi2024';
+var clientes = [], giros = [];
+
+function doLogin(){
+  var pass = document.getElementById('loginPass');
+  if(pass.value === PASSWORD){
+    localStorage.setItem('wazu_admin', '1');
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('appWrap').style.display = 'block';
+    cargarTodo();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+  }
+}
+
+if(localStorage.getItem('wazu_admin') === '1'){
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('appWrap').style.display = 'block';
+  cargarTodo();
+}
+
+function mostrarTab(nombre){
+  document.getElementById('panelClientes').style.display = nombre === 'clientes' ? 'block' : 'none';
+  document.getElementById('panelGiros').style.display = nombre === 'giros' ? 'block' : 'none';
+  document.getElementById('tabClientesBtn').classList.toggle('active', nombre === 'clientes');
+  document.getElementById('tabGirosBtn').classList.toggle('active', nombre === 'giros');
+}
+
+function cargarTodo(){
+  cargarClientes();
+  cargarGiros();
+}
+
+function cargarClientes(){
+  fetch('/api/galeria?action=getWazuClientes')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    clientes = d.clientes || [];
+    document.getElementById('totalClientes').textContent = clientes.length;
+    document.getElementById('statClientesTotal').textContent = clientes.length;
+    renderClientes(clientes);
+  }).catch(function(){
+    document.getElementById('clientesBody').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de wazu_clientes?</td></tr>';
+  });
+}
+
+function renderClientes(lista){
+  if(!lista.length){
+    document.getElementById('clientesBody').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Sin resultados</td></tr>';
+    return;
+  }
+  var telsQueGiraron = {};
+  giros.forEach(function(g){ telsQueGiraron[g.telefono] = true; });
+  var giraronCount = 0;
+
+  document.getElementById('clientesBody').innerHTML = lista.map(function(c){
+    var yaGiro = !!telsQueGiraron[c.telefono];
+    if(yaGiro) giraronCount++;
+    var waLink = wazuLinkWA(c);
+    return '<tr><td class="congelada col1">'+(c.nombre_cliente||'—')+'</td><td class="congelada col2">'+c.telefono+'</td><td class="congelada col3">'+(c.mascota||'—')+'</td><td>'+(c.ultima_compra||'—')+'</td><td class="truncar" title="'+(c.producto||'').replace(/"/g,'&quot;')+'">'+(c.producto||'—')+'</td><td>'+(yaGiro?'✓':'—')+'</td>'
+      + '<td style="text-align:center"><input type="checkbox" '+(c.contactado?'checked':'')+' onchange="marcarClienteContactado(\''+c.id+'\',this.checked)" style="width:16px;height:16px;cursor:pointer"></td>'
+      + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank" title="Enviar por WhatsApp">💬</a> '
+      + '<button class="btn-mini" onclick="copiarLinkCliente(this,\''+c.id+'\')" title="Copiar link">🔗</button> '
+      + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajeCliente(this,\''+c.id+'\')" title="Copiar mensaje">📋</button> '
+      + '<button class="btn-mini" style="background:#c0392b" onclick="eliminarCliente(\''+c.id+'\')" title="Eliminar">🗑️</button></td></tr>';
+  }).join('');
+  document.getElementById('statClientesGirado').textContent = giraronCount;
+}
+
+// Helpers — buscan los datos del cliente por id en vez de meterlos
+// directo en el HTML (evita romper comillas cuando el nombre o
+// mensaje contiene caracteres especiales).
+function wazuBuscarCliente(id){
+  return clientes.find(function(c){ return String(c.id) === String(id); });
+}
+function wazuLinkPersonalizado(c){
+  return 'https://app.revistapetmi.com/ruleta-wazu.html?tel=' + encodeURIComponent(c.telefono) + '&mascota=' + encodeURIComponent(c.mascota||'');
+}
+function wazuMensaje(c){
+  return '¡En septiembre todos ganan en WAZU! \nGira la ruleta y gana algo especial para ' + (c.mascota||c.nombre_cliente) + ' \n\n' + wazuLinkPersonalizado(c);
+}
+function wazuLinkWA(c){
+  return 'https://wa.me/' + c.telefono.replace(/\D/g,'') + '?text=' + encodeURIComponent(wazuMensaje(c));
+}
+
+function copiarLinkCliente(btn, id){
+  var c = wazuBuscarCliente(id);
+  if(c) copiarTexto(btn, wazuLinkPersonalizado(c));
+}
+function copiarMensajeCliente(btn, id){
+  var c = wazuBuscarCliente(id);
+  if(c) copiarTexto(btn, wazuMensaje(c));
+}
+
+var ordenActual = { campo: null, asc: true };
+function ordenarPor(campo){
+  if(ordenActual.campo === campo) ordenActual.asc = !ordenActual.asc;
+  else { ordenActual.campo = campo; ordenActual.asc = true; }
+  var copia = clientes.slice().sort(function(a,b){
+    var va = (a[campo]||'').toString().toLowerCase();
+    var vb = (b[campo]||'').toString().toLowerCase();
+    if(va < vb) return ordenActual.asc ? -1 : 1;
+    if(va > vb) return ordenActual.asc ? 1 : -1;
+    return 0;
+  });
+  renderClientes(copia);
+}
+
+function marcarClienteContactado(id, contactado){
+  var c = wazuBuscarCliente(id);
+  if(c) c.contactado = contactado;
+  fetch('/api/galeria?action=marcarClienteContactado', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, contactado: contactado })
+  }).catch(function(){ alert('No se pudo guardar. Intenta de nuevo.'); });
+}
+
+function eliminarCliente(id){
+  var c = wazuBuscarCliente(id);
+  var nombre = c ? (c.nombre_cliente||c.telefono) : id;
+  if(!confirm('¿Eliminar a "'+nombre+'" de la lista de clientes de Wazu? Esto no se puede deshacer.')) return;
+  fetch('/api/galeria?action=eliminarWazuCliente', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
+  }).then(function(){ cargarClientes(); }).catch(function(){ alert('No se pudo eliminar. Intenta de nuevo.'); });
+}
+
+function filtrarClientes(){
+  var q = document.getElementById('buscarCliente').value.trim().toLowerCase();
+  if(!q){ renderClientes(clientes); return; }
+  renderClientes(clientes.filter(function(c){
+    return (c.nombre_cliente||'').toLowerCase().indexOf(q) >= 0
+      || (c.telefono||'').indexOf(q) >= 0
+      || (c.mascota||'').toLowerCase().indexOf(q) >= 0;
+  }));
+}
+
+function copiarTexto(btn, texto){
+  navigator.clipboard.writeText(texto).then(function(){
+    var original = btn.textContent;
+    btn.textContent = '¡Copiado!';
+    setTimeout(function(){ btn.textContent = original; }, 1500);
+  });
+}
+
+function cargarGiros(){
+  fetch('/api/galeria?action=getRuletaWazuGiros')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    giros = d.giros || [];
+    document.getElementById('totalGiros').textContent = giros.length;
+    if(!giros.length){
+      document.getElementById('girosBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Aún no hay giros</td></tr>';
+    } else {
+      document.getElementById('girosBody').innerHTML = giros.map(function(g){
+        var fecha = new Date(g.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        var contactadoHtml = g.contactado
+          ? '<span style="color:#2ecc71;font-weight:700">✓ Contactado</span>'
+          : '<button class="btn-mini" onclick="marcarContactado(\''+g.id+'\')">Marcar contactado</button>';
+        return '<tr><td class="congelada col1">'+fecha+'</td><td class="congelada col2">'+(g.nombre_mascota||'—')+'</td><td class="congelada col3">'+g.telefono+'</td><td>'+g.premio+'</td><td>'+(g.ultima_compra||'—')+'</td><td>'+(g.producto||'—')+'</td><td>'+contactadoHtml+'</td></tr>';
+      }).join('');
+    }
+    renderClientes(clientes.length ? (document.getElementById('buscarCliente').value ? clientes.filter(function(c){return true;}) : clientes) : []);
+  }).catch(function(){
+    document.getElementById('girosBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de ruleta_wazu_giros?</td></tr>';
+  });
+}
+
+function marcarContactado(id){
+  fetch('/api/galeria?action=marcarWazuContactado', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
+  }).then(function(){ cargarGiros(); }).catch(function(){});
+}
+</script>
+</body>
+</html>
