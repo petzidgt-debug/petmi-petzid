@@ -1681,6 +1681,25 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, premio: fila.premio_resultado, codigo: fila.codigo_resultado });
     }
 
+    // ── girarRuletaWazu (18 sep) — ruleta pública para Wazu, sin
+    // cuenta. Guarda en un Google Sheet aparte (vía Apps Script), no
+    // en Supabase — 1 giro por teléfono, sin límite de premios.
+    if (action === 'girarRuletaWazu' && req.method === 'POST') {
+      const { nombreMascota, telefono, ultimaCompra, producto } = req.body || {};
+      try {
+        const rWazu = await fetch(APPS_SCRIPT_OTP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'girarRuletaWazu', nombreMascota, telefono, ultimaCompra, producto })
+        });
+        const dWazu = await rWazu.json();
+        return res.status(200).json(dWazu);
+      } catch (eWazu) {
+        console.error('girarRuletaWazu proxy error:', eWazu.message);
+        return res.status(200).json({ ok: false, error: 'Error de conexión. Intenta de nuevo.' });
+      }
+    }
+
 
     if (action === 'verificarOTPVotoConcurso' && req.method === 'POST') {
       const { email, code } = req.body;
