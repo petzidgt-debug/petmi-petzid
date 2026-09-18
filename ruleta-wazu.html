@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Ruleta Wazu — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:60px}
+
+.hero{background:#1a1a2e;padding:26px 20px 22px;text-align:center}
+.hero-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.hero-title{font-size:23px;font-weight:900;color:#fff;margin-bottom:4px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.75)}
+
+.wrap{max-width:420px;margin:0 auto;padding:24px 16px;text-align:center}
+
+.form-card{background:#fff;border-radius:16px;padding:24px 20px;border:0.5px solid #eee;text-align:left}
+.form-card label{display:block;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:16px}
+.form-card label:first-child{margin-top:0}
+.form-card input{width:100%;padding:13px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px}
+.btn-girar-form{display:block;width:100%;background:#7B61FF;color:#fff;border:none;padding:15px;border-radius:99px;font-weight:900;font-size:15px;cursor:pointer;margin-top:20px;box-shadow:0 4px 14px rgba(123,97,255,.35)}
+.btn-girar-form:disabled{opacity:.5}
+
+.rueda-wrap{position:relative;width:280px;height:280px;margin:24px auto}
+.rueda{width:280px;height:280px;border-radius:50%;position:relative;transition:transform 4.2s cubic-bezier(.15,.6,.15,1);box-shadow:0 8px 26px rgba(0,0,0,.2);border:7px solid #fff;
+  background:conic-gradient(#00B4B4 0deg 72deg, #1a1a2e 72deg 144deg, #E05090 144deg 216deg, #F5C842 216deg 288deg, #7B61FF 288deg 360deg)}
+.rueda-num{position:absolute;width:36px;height:36px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#1a1a2e}
+.puntero{position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-top:26px solid #F5C842;z-index:10;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+.centro-rueda{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;font-size:28px;z-index:5}
+
+.resultado-card{background:#fff;border-radius:16px;padding:28px 20px;border:0.5px solid #eee;margin-top:20px}
+.resultado-emoji{font-size:48px;margin-bottom:10px}
+.resultado-nombre{font-size:19px;font-weight:900;color:#1a1a2e;margin-bottom:8px}
+.resultado-sub{font-size:13px;color:#888;line-height:1.7}
+
+.aviso{background:#FFF8E1;border:1px solid #F5C842;border-radius:12px;padding:14px 16px;margin:14px 0;font-size:13px;color:#8a6200;text-align:center;line-height:1.6}
+.premios-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.premio-chip{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px 10px;text-align:center}
+.premio-chip .emoji{font-size:22px;margin-bottom:4px}
+.premio-chip .txt{font-size:11px;font-weight:700;color:#1a1a2e;line-height:1.3}
+.error-msg{color:#c0392b;font-size:12.5px;margin-top:10px;display:none}
+.confeti-pieza{position:fixed;top:-10px;width:9px;height:14px;z-index:999;pointer-events:none;animation:caerConfeti linear forwards}
+@keyframes caerConfeti{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-label">🐾 PetMi × Wazu</div>
+  <div class="hero-title">Ruleta Wazu</div>
+  <div class="hero-sub">Gira y gana un premio para consentir a tu mascota</div>
+</div>
+
+<div class="wrap" id="contenedor">
+  <div class="form-card">
+    <label>Nombre de tu mascota</label>
+    <input type="text" id="inNombre" placeholder="Ej. Luna">
+    <label>Tu número de WhatsApp</label>
+    <input type="tel" id="inTelefono" placeholder="Ej. 5555 5555">
+    <div class="error-msg" id="errorMsg"></div>
+    <button class="btn-girar-form" id="btnIniciar" onclick="validarYGirar()">¡Girar la ruleta!</button>
+  </div>
+  <div class="premios-list">
+    <div class="premio-chip"><div class="emoji">1️⃣ 🦴</div><div class="txt">50% en accesorios FreeDog</div></div>
+    <div class="premio-chip"><div class="emoji">2️⃣ 🛁</div><div class="txt">50% off Baños</div></div>
+    <div class="premio-chip"><div class="emoji">3️⃣ 💨</div><div class="txt">Ozonoterapia GRATIS</div></div>
+    <div class="premio-chip"><div class="emoji">4️⃣ 🍖</div><div class="txt">1 Bolsa de treats</div></div>
+    <div class="premio-chip" style="grid-column:span 2"><div class="emoji">5️⃣ 🥣</div><div class="txt">10% off alimento</div></div>
+  </div>
+  <div class="aviso" style="margin-top:16px">Solo se permite <b>una participación por número de teléfono</b>. Wazu te contactará por WhatsApp para coordinar tu premio.</div>
+</div>
+
+<script>
+var PREMIOS_INFO = {
+  '50% en accesorios FreeDog': { emoji:'🦴', angulo:36 },
+  '50% off Baños':             { emoji:'🛁', angulo:108 },
+  'Ozonoterapia GRATIS':       { emoji:'💨', angulo:180 },
+  '1 Bolsa de treats':         { emoji:'🍖', angulo:252 },
+  '10% off alimento':          { emoji:'🥣', angulo:324 }
+};
+
+// Pre-llena el formulario si el link trae ?tel= y ?mascota= (para
+// los clientes de la base de datos de Wazu — llegan con su link
+// personalizado, sin tener que escribir nada)
+(function prellenarDesdeLink(){
+  var params = new URLSearchParams(window.location.search);
+  var tel = params.get('tel');
+  var mascota = params.get('mascota');
+  window.addEventListener('DOMContentLoaded', function(){
+    if(tel) document.getElementById('inTelefono').value = tel;
+    if(mascota) document.getElementById('inNombre').value = mascota;
+  });
+})();
+
+function validarYGirar(){
+  var nombre = document.getElementById('inNombre').value.trim();
+  var telefono = document.getElementById('inTelefono').value.trim();
+  var err = document.getElementById('errorMsg');
+  err.style.display = 'none';
+
+  if(!nombre){ err.textContent='Escribe el nombre de tu mascota.'; err.style.display='block'; return; }
+  if(!telefono || telefono.replace(/\D/g,'').length < 8){ err.textContent='Escribe un número de WhatsApp válido.'; err.style.display='block'; return; }
+
+  var btn = document.getElementById('btnIniciar');
+  btn.disabled = true;
+  btn.textContent = 'Girando...';
+
+  fetch('/api/galeria?action=girarRuletaWazu', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ nombreMascota: nombre, telefono: telefono })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.ok){
+      err.textContent = d.error || 'No se pudo girar la ruleta.';
+      err.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '¡Girar la ruleta!';
+      return;
+    }
+    mostrarRueda(d.premio);
+  }).catch(function(){
+    err.textContent = 'Error de conexión. Intenta de nuevo.';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '¡Girar la ruleta!';
+  });
+}
+
+function mostrarRueda(premio){
+  document.getElementById('contenedor').innerHTML =
+    '<div class="rueda-wrap">'
+    + '<div class="puntero"></div>'
+    + '<div class="rueda" id="rueda">'
+    +   '<div class="rueda-num" style="top:56px;right:38px">1</div>'
+    +   '<div class="rueda-num" style="bottom:56px;right:38px">2</div>'
+    +   '<div class="rueda-num" style="bottom:32px;left:82px">3</div>'
+    +   '<div class="rueda-num" style="top:82px;left:32px">4</div>'
+    +   '<div class="rueda-num" style="top:32px;left:82px">5</div>'
+    + '</div>'
+    + '<div class="centro-rueda">🐾</div>'
+    + '</div>'
+    + '<div id="resultadoWrap"></div>';
+
+  setTimeout(function(){
+    var info = PREMIOS_INFO[premio] || { emoji:'🎁', angulo:0 };
+    var vueltas = 5;
+    var anguloFinal = (360 * vueltas) + (360 - info.angulo);
+    document.getElementById('rueda').style.transform = 'rotate(' + anguloFinal + 'deg)';
+
+    setTimeout(function(){
+      document.getElementById('resultadoWrap').innerHTML =
+        '<div class="resultado-card">'
+        + '<div class="resultado-emoji">' + info.emoji + '</div>'
+        + '<div class="resultado-nombre">¡Ganaste: ' + premio + '!</div>'
+        + '<div class="resultado-sub">Wazu te va a contactar por WhatsApp al número que diste para coordinar tu premio. ¡Gracias por participar!</div>'
+        + '</div>';
+      lanzarConfeti();
+    }, 4300);
+  }, 100);
+}
+
+function lanzarConfeti(){
+  var colores = ['#00B4B4','#F5C842','#E05090','#7B61FF','#FF8A5B'];
+  for(var i=0;i<40;i++){
+    (function(){
+      var p = document.createElement('div');
+      p.className = 'confeti-pieza';
+      p.style.left = Math.random()*100+'vw';
+      p.style.background = colores[Math.floor(Math.random()*colores.length)];
+      p.style.animationDuration = (2+Math.random()*1.5)+'s';
+      document.body.appendChild(p);
+      setTimeout(function(){ p.remove(); }, 4000);
+    })();
+  }
+}
+</script>
+</body>
+</html>
