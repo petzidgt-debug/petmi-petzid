@@ -25,11 +25,15 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh}
 
 .content{padding:20px 24px 60px}
 .table-card{background:#fff;border-radius:14px;border:0.5px solid #eee;overflow:hidden}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
+table{min-width:900px;width:max-content;border-collapse:collapse;font-size:13px}
+.table-wrap{overflow-x:auto;scrollbar-width:auto;-webkit-overflow-scrolling:touch}
+.table-wrap::-webkit-scrollbar{height:10px}
+.table-wrap::-webkit-scrollbar-thumb{background:#ccc;border-radius:5px}
+.table-wrap::-webkit-scrollbar-track{background:#f2f2f2}
 th{background:#f8f7f4;padding:10px 14px;text-align:left;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap}
 td{padding:10px 14px;border-top:1px solid #f2f2f2;white-space:nowrap}
-.btn-mini{background:#1a1a2e;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:11px;cursor:pointer}
+td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-mini{background:#1a1a2e;color:#fff;border:none;padding:6px 9px;border-radius:8px;font-size:13px;cursor:pointer}
 .btn-mini-alt{background:#F5C842;color:#1a1a2e}
 .search-box{width:100%;max-width:320px;padding:10px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:13px;margin-bottom:14px}
 .stat-row{display:flex;gap:12px;margin-bottom:16px}
@@ -153,11 +157,11 @@ function renderClientes(lista){
     var yaGiro = !!telsQueGiraron[c.telefono];
     if(yaGiro) giraronCount++;
     var waLink = wazuLinkWA(c);
-    return '<tr><td>'+(c.nombre_cliente||'—')+'</td><td>'+c.telefono+'</td><td>'+(c.mascota||'—')+'</td><td>'+(c.ultima_compra||'—')+'</td><td>'+(c.producto||'—')+'</td><td>'+(yaGiro?'✓':'—')+'</td>'
-      + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank">💬 WhatsApp</a> '
-      + '<button class="btn-mini" onclick="copiarLinkCliente(this,\''+c.id+'\')">Link</button> '
-      + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajeCliente(this,\''+c.id+'\')">Mensaje</button> '
-      + '<button class="btn-mini" style="background:#c0392b" onclick="eliminarCliente(\''+c.id+'\')">Eliminar</button></td></tr>';
+    return '<tr><td>'+(c.nombre_cliente||'—')+'</td><td>'+c.telefono+'</td><td>'+(c.mascota||'—')+'</td><td>'+(c.ultima_compra||'—')+'</td><td class="truncar" title="'+(c.producto||'').replace(/"/g,'&quot;')+'">'+(c.producto||'—')+'</td><td>'+(yaGiro?'✓':'—')+'</td>'
+      + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank" title="Enviar por WhatsApp">💬</a> '
+      + '<button class="btn-mini" onclick="copiarLinkCliente(this,\''+c.id+'\')" title="Copiar link">🔗</button> '
+      + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajeCliente(this,\''+c.id+'\')" title="Copiar mensaje">📋</button> '
+      + '<button class="btn-mini" style="background:#c0392b" onclick="eliminarCliente(\''+c.id+'\')" title="Eliminar">🗑️</button></td></tr>';
   }).join('');
   document.getElementById('statClientesGirado').textContent = giraronCount;
 }
