@@ -147,6 +147,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('reactivacion',this)"><span class="nav-icon">📧</span>Reactivación</div>
       <div class="nav-item" onclick="showScreen('concurso',this)"><span class="nav-icon">🇬🇹</span>Concurso</div>
       <div class="nav-item" onclick="showScreen('tienda',this)"><span class="nav-icon">🛍️</span>Tienda</div>
+      <div class="nav-item" onclick="showScreen('wazu',this)"><span class="nav-icon">🎡</span>Ruleta Wazu</div>
       <div class="nav-item" onclick="showScreen('cumpleanos',this)"><span class="nav-icon">🎂</span>Cumpleaños</div>
       <div class="nav-item" onclick="showScreen('busquedas',this)"><span class="nav-icon">🔍</span>Búsquedas</div>
       <div class="nav-item" onclick="showScreen('pedidos',this)"><span class="nav-icon">📦</span>Pedidos</div>
@@ -635,6 +636,19 @@ tbody tr:last-child td{border-bottom:none}
           <table>
             <thead><tr><th>Fecha</th><th>Mascota</th><th>Correo</th><th>Producto</th><th>Origen</th><th>Estado</th></tr></thead>
             <tbody id="pedidosBody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="screenWazu" class="screen">
+      <h2 class="screen-title">🎡 Ruleta Wazu</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Cada giro de la ruleta de Wazu (ruleta-wazu.html) queda registrado aquí. Marca "Contactado" cuando ya le hayas escrito por WhatsApp para coordinar su premio.</p>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Mascota</th><th>Teléfono</th><th>Premio</th><th>Última compra</th><th>Producto comprado</th><th>Contactado</th></tr></thead>
+            <tbody id="wazuBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1914,6 +1928,7 @@ function showScreen(name,el){
   if(name==='reactivacion') { loadReactivacionEfectividad(); loadNuncaHanVuelto(); }
   if(name==='concurso') loadConcurso();
   if(name==='tienda') loadTiendaProductos();
+  if(name==='wazu') loadWazuGiros();
   if(name==='cumpleanos') loadCumpleanosPromo();
   if(name==='busquedas') loadBusquedas();
   if(name==='pedidos') loadPedidos();
@@ -3569,6 +3584,34 @@ function marcarPedidoAtendido(id){
   fetch('/api/galeria?action=actualizarPedido', {
     method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, estado: 'atendido' })
   }).then(function(){ loadPedidos(); }).catch(function(){});
+}
+
+// ── Ruleta Wazu ─────────────────────────────────────────────────
+function loadWazuGiros(){
+  fetch('/api/galeria?action=getRuletaWazuGiros')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var giros = d.giros || [];
+    if(!giros.length){
+      document.getElementById('wazuBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Aún no hay giros</td></tr>';
+      return;
+    }
+    document.getElementById('wazuBody').innerHTML = giros.map(function(g){
+      var fecha = new Date(g.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      var contactadoHtml = g.contactado
+        ? '<span style="color:#2ecc71;font-weight:700;font-size:12px">✓ Contactado</span>'
+        : '<button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick="marcarWazuContactado(\''+g.id+'\')">Marcar contactado</button>';
+      return '<tr><td>'+fecha+'</td><td>'+(g.nombre_mascota||'—')+'</td><td>'+g.telefono+'</td><td>'+g.premio+'</td><td>'+(g.ultima_compra||'—')+'</td><td>'+(g.producto||'—')+'</td><td>'+contactadoHtml+'</td></tr>';
+    }).join('');
+  }).catch(function(){
+    document.getElementById('wazuBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de ruleta_wazu_giros?</td></tr>';
+  });
+}
+
+function marcarWazuContactado(id){
+  fetch('/api/galeria?action=marcarWazuContactado', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
+  }).then(function(){ loadWazuGiros(); }).catch(function(){});
 }
 
 // ── Catálogo de alimentos ────────────────────────────────────────
