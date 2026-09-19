@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin — Ruleta Wazu</title>
+<title>Admin — Ruleta Wazu 2026</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh}
@@ -36,7 +36,9 @@ table{min-width:900px;width:max-content;border-collapse:collapse;font-size:13px}
 .scroll-top::-webkit-scrollbar-track{background:#f2f2f2}
 .scroll-top > div{height:1px}
 
-/* Columnas congeladas */
+/* Columnas congeladas — primeras 3 (Nombre/Fecha, Teléfono/Mascota,
+   Mascota/Teléfono) se quedan fijas al hacer scroll horizontal.
+   Anchos fijos para poder calcular el "left" de cada una. */
 th.congelada, td.congelada{position:sticky;background:#fff;z-index:2}
 th.congelada{background:#f8f7f4;z-index:3}
 .col1{left:0;width:140px;min-width:140px;max-width:140px}
@@ -58,7 +60,7 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
 
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
-    <div class="login-logo">&#127921; Admin Ruleta Wazu</div>
+    <div class="login-logo">🎡 Admin Ruleta Wazu</div>
     <div class="login-sub">Panel exclusivo de la promoción Wazu</div>
     <input type="password" id="loginPass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Ingresar</button>
@@ -67,7 +69,7 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
 </div>
 
 <div class="app-wrap" id="appWrap">
-  <div class="topbar"><div class="topbar-title">&#127921; Ruleta Wazu — Admin</div></div>
+  <div class="topbar"><div class="topbar-title">🎡 Ruleta Wazu — Admin</div></div>
   <div class="tabs">
     <button class="tab-btn active" id="tabClientesBtn" onclick="mostrarTab('clientes')">Clientes (<span id="totalClientes">0</span>)</button>
     <button class="tab-btn" id="tabGirosBtn" onclick="mostrarTab('giros')">Giros (<span id="totalGiros">0</span>)</button>
@@ -85,10 +87,10 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
         <div class="table-wrap" id="tableWrapClientes">
           <table>
             <thead><tr>
-              <th class="congelada col1" style="cursor:pointer" onclick="ordenarPor('nombre_cliente')">Nombre &#8645;</th>
-              <th class="congelada col2" style="cursor:pointer" onclick="ordenarPor('telefono')">Teléfono &#8645;</th>
-              <th class="congelada col3" style="cursor:pointer" onclick="ordenarPor('mascota')">Mascota &#8645;</th>
-              <th style="cursor:pointer" onclick="ordenarPor('ultima_compra')">Última compra &#8645;</th>
+              <th class="congelada col1" style="cursor:pointer" onclick="ordenarPor('nombre_cliente')">Nombre ⇅</th>
+              <th class="congelada col2" style="cursor:pointer" onclick="ordenarPor('telefono')">Teléfono ⇅</th>
+              <th class="congelada col3" style="cursor:pointer" onclick="ordenarPor('mascota')">Mascota ⇅</th>
+              <th style="cursor:pointer" onclick="ordenarPor('ultima_compra')">Última compra ⇅</th>
               <th>Producto</th><th>Giró</th><th>Contactado</th><th></th>
             </tr></thead>
             <tbody id="clientesBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
@@ -112,6 +114,9 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
 </div>
 
 <script>
+// Sincroniza la barra de scroll de arriba con la tabla de abajo,
+// para no tener que bajar hasta el final de 546 filas para
+// encontrar el scroll horizontal.
 function conectarScrollArriba(idScrollTop, idInner, idTableWrap){
   var scrollTop = document.getElementById(idScrollTop);
   var inner = document.getElementById(idInner);
@@ -128,30 +133,9 @@ function conectarScrollArriba(idScrollTop, idInner, idTableWrap){
 conectarScrollArriba('scrollTopClientes', 'scrollTopClientesInner', 'tableWrapClientes');
 conectarScrollArriba('scrollTopGiros', 'scrollTopGirosInner', 'tableWrapGiros');
 </script>
-
 <script>
 var PASSWORD = 'petmi2024';
 var clientes = [], giros = [];
-
-// PERSISTENCIA DEL CHECKBOX "CONTACTADO" EN LOCALSTORAGE
-function getContactadosLocales(){
-  try { return JSON.parse(localStorage.getItem('wazu_contactados_v3') || '{}'); } 
-  catch(e){ return {}; }
-}
-
-function setContactadoLocal(id, tel, estado){
-  var map = getContactadosLocales();
-  if(id) map['id_' + id] = estado;
-  if(tel) map['tel_' + tel] = estado;
-  localStorage.setItem('wazu_contactados_v3', JSON.stringify(map));
-}
-
-function esContactado(c){
-  var map = getContactadosLocales();
-  if(c.id && map.hasOwnProperty('id_' + c.id)) return map['id_' + c.id];
-  if(c.telefono && map.hasOwnProperty('tel_' + c.telefono)) return map['tel_' + c.telefono];
-  return !!c.contactado;
-}
 
 function doLogin(){
   var pass = document.getElementById('loginPass');
@@ -188,14 +172,11 @@ function cargarClientes(){
   .then(function(r){return r.json();})
   .then(function(d){
     clientes = d.clientes || [];
-    clientes.forEach(function(c){
-      c.contactado = esContactado(c);
-    });
     document.getElementById('totalClientes').textContent = clientes.length;
     document.getElementById('statClientesTotal').textContent = clientes.length;
     renderClientes(clientes);
   }).catch(function(){
-    document.getElementById('clientesBody').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#c0392b">Error al cargar datos</td></tr>';
+    document.getElementById('clientesBody').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de wazu_clientes?</td></tr>';
   });
 }
 
@@ -212,46 +193,36 @@ function renderClientes(lista){
     var yaGiro = !!telsQueGiraron[c.telefono];
     if(yaGiro) giraronCount++;
     var waLink = wazuLinkWA(c);
-    var isChecked = esContactado(c) ? 'checked' : '';
-
     return '<tr><td class="congelada col1">'+(c.nombre_cliente||'—')+'</td><td class="congelada col2">'+c.telefono+'</td><td class="congelada col3">'+(c.mascota||'—')+'</td><td>'+(c.ultima_compra||'—')+'</td><td class="truncar" title="'+(c.producto||'').replace(/"/g,'&quot;')+'">'+(c.producto||'—')+'</td><td>'+(yaGiro?'✓':'—')+'</td>'
-      + '<td style="text-align:center"><input type="checkbox" '+isChecked+' onchange="marcarClienteContactado(\''+c.id+'\', \''+c.telefono+'\', this.checked)" style="width:16px;height:16px;cursor:pointer"></td>'
-      + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank" title="Enviar por WhatsApp">&#128172;</a> '
-      + '<button class="btn-mini" onclick="copiarLinkCliente(this,\''+c.id+'\')" title="Copiar link">&#128279;</button> '
-      + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajeCliente(this,\''+c.id+'\')" title="Copiar mensaje">&#128203;</button> '
-      + '<button class="btn-mini" style="background:#c0392b" onclick="eliminarCliente(\''+c.id+'\')" title="Eliminar">&#128465;&#65039;</button></td></tr>';
+      + '<td style="text-align:center"><input type="checkbox" '+(c.contactado?'checked':'')+' onchange="marcarClienteContactado(\''+c.id+'\',this.checked)" style="width:16px;height:16px;cursor:pointer"></td>'
+      + '<td style="white-space:nowrap"><a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+waLink+'" target="_blank" title="Enviar por WhatsApp">💬</a> '
+      + '<button class="btn-mini" onclick="copiarLinkCliente(this,\''+c.id+'\')" title="Copiar link">🔗</button> '
+      + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajeCliente(this,\''+c.id+'\')" title="Copiar mensaje">📋</button> '
+      + '<button class="btn-mini" style="background:#c0392b" onclick="eliminarCliente(\''+c.id+'\')" title="Eliminar">🗑️</button></td></tr>';
   }).join('');
   document.getElementById('statClientesGirado').textContent = giraronCount;
 }
 
+// Helpers — buscan los datos del cliente por id en vez de meterlos
+// directo en el HTML (evita romper comillas cuando el nombre o
+// mensaje contiene caracteres especiales).
 function wazuBuscarCliente(id){
   return clientes.find(function(c){ return String(c.id) === String(id); });
 }
-
 function wazuLinkPersonalizado(c){
-  return 'https://app.revistapetmi.com/ruleta-wazu.html?id=' + encodeURIComponent(c.id);
+  return 'https://app.revistapetmi.com/ruleta-wazu.html?tel=' + encodeURIComponent(c.telefono) + '&mascota=' + encodeURIComponent(c.mascota||'');
 }
-
-// FORMATO DE MENSAJE CON LINK PERSONALIZADO Y EMOJIS NATIVOS UNICODE
 function wazuMensaje(c){
-  var nombreMascota = c.mascota || c.nombre_cliente || 'tu mascota';
-  
-  return '¡En septiembre todos ganan en WAZU! \u{1F389}\n'
-       + 'Gira la ruleta y gana algo especial para ' + nombreMascota + ' \u{1F43E}\n\n'
-       + 'Juega aquí \u{1F3AF}:\n' + wazuLinkPersonalizado(c);
+  return '¡En septiembre todos ganan en WAZU! \nGira la ruleta y gana algo especial para ' + (c.mascota||c.nombre_cliente) + ' \n\n' + wazuLinkPersonalizado(c);
 }
-
-// GENERACIÓN DEL LINK DE WHATSAPP COMPATIBLE
 function wazuLinkWA(c){
-  var tel = (c.telefono || '').replace(/\D/g,'');
-  return 'https://wa.me/' + tel + '?text=' + encodeURIComponent(wazuMensaje(c));
+  return 'https://wa.me/' + c.telefono.replace(/\D/g,'') + '?text=' + encodeURIComponent(wazuMensaje(c));
 }
 
 function copiarLinkCliente(btn, id){
   var c = wazuBuscarCliente(id);
   if(c) copiarTexto(btn, wazuLinkPersonalizado(c));
 }
-
 function copiarMensajeCliente(btn, id){
   var c = wazuBuscarCliente(id);
   if(c) copiarTexto(btn, wazuMensaje(c));
@@ -271,18 +242,12 @@ function ordenarPor(campo){
   renderClientes(copia);
 }
 
-function marcarClienteContactado(id, tel, contactado){
+function marcarClienteContactado(id, contactado){
   var c = wazuBuscarCliente(id);
   if(c) c.contactado = contactado;
-  
-  // Guardar en el almacenamiento local del navegador
-  setContactadoLocal(id, tel, contactado);
-
   fetch('/api/galeria?action=marcarClienteContactado', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ id: id, contactado: contactado })
-  }).catch(function(){});
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, contactado: contactado })
+  }).catch(function(){ alert('No se pudo guardar. Intenta de nuevo.'); });
 }
 
 function eliminarCliente(id){
@@ -324,13 +289,14 @@ function cargarGiros(){
       document.getElementById('girosBody').innerHTML = giros.map(function(g){
         var fecha = new Date(g.created_at).toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
         var contactadoHtml = g.contactado
-          ? '<span style="color:#2ecc71;font-weight:700">&#10003; Contactado</span>'
+          ? '<span style="color:#2ecc71;font-weight:700">✓ Contactado</span>'
           : '<button class="btn-mini" onclick="marcarContactado(\''+g.id+'\')">Marcar contactado</button>';
         return '<tr><td class="congelada col1">'+fecha+'</td><td class="congelada col2">'+(g.nombre_mascota||'—')+'</td><td class="congelada col3">'+g.telefono+'</td><td>'+g.premio+'</td><td>'+(g.ultima_compra||'—')+'</td><td>'+(g.producto||'—')+'</td><td>'+contactadoHtml+'</td></tr>';
       }).join('');
     }
+    renderClientes(clientes.length ? (document.getElementById('buscarCliente').value ? clientes.filter(function(c){return true;}) : clientes) : []);
   }).catch(function(){
-    document.getElementById('girosBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c0392b">Error al cargar giros</td></tr>';
+    document.getElementById('girosBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de ruleta_wazu_giros?</td></tr>';
   });
 }
 
