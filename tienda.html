@@ -356,7 +356,7 @@ function renderGrid(){
     else if(agotado) stockTxt = '<div class="sin-stock">Agotado</div>';
     var mensaje = encodeURIComponent('Hola! Quiero pedir: ' + p.nombre);
     var carritoBtn = p.precio && !agotado
-      ? '<button class="agregar-carrito-btn" onclick=\'agregarAlCarrito('+JSON.stringify(p)+',event)\'>🛒 Agregar al carrito</button>'
+      ? '<button class="agregar-carrito-btn" onclick=\'agregarAlCarrito('+JSON.stringify(p)+',event)\'><img src="/img/cart.png" alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px">Agregar al carrito</button>'
       : '';
     return '<div class="prod-card" onclick=\'abrirModalProducto('+JSON.stringify(p)+')\'>'
       + '<div style="position:relative">'+foto+usadoBadge+'</div>'
@@ -388,7 +388,7 @@ function abrirModalProducto(p){
   if(p.stock != null && p.stock > 0 && p.stock <= 3) stockTxtModal = '<div class="stock-bajo" style="margin-bottom:10px">¡Solo quedan '+p.stock+'!</div>';
   else if(agotadoModal) stockTxtModal = '<div class="sin-stock" style="margin-bottom:10px">Agotado</div>';
   var carritoBtnModal = p.precio && !agotadoModal
-    ? '<button class="agregar-carrito-btn" style="padding:13px;margin-top:10px" onclick=\'agregarAlCarrito('+JSON.stringify(p)+');cerrarModalProducto();abrirCarrito()\'>🛒 Agregar al carrito</button>'
+    ? '<button class="agregar-carrito-btn" style="padding:13px;margin-top:10px" onclick=\'agregarAlCarrito('+JSON.stringify(p)+');cerrarModalProducto();abrirCarrito()\'><img src="/img/cart.png" alt="" style="width:16px;height:16px;vertical-align:-3px;margin-right:5px">Agregar al carrito</button>'
     : '';
   document.getElementById('modalProdContent').innerHTML =
     '<div style="position:relative">'
@@ -415,7 +415,7 @@ function cerrarModalProducto(){
 </div>
 
 <button class="carrito-fab" onclick="abrirCarrito()">
-  🛒<span class="carrito-badge" id="carritoBadge" style="display:none">0</span>
+  <img src="/img/cart.png" alt="Carrito" style="width:26px;height:26px;object-fit:contain"><span class="carrito-badge" id="carritoBadge" style="display:none">0</span>
 </button>
 
 <div class="carrito-overlay" id="carritoOverlay" onclick="if(event.target===this)cerrarCarrito()">
