@@ -1752,6 +1752,38 @@ export default async function handler(req, res) {
     // eso causaba demasiados conflictos de despliegue (doPost
     // duplicado entre varios archivos). Todo directo a Supabase,
     // visible desde el Admin.
+    // ── getCarreraReservas (Admin) ───────────────────────────────
+    if (action === 'getCarreraReservas') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?select=*&order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const reservas = await r.json();
+      return res.status(200).json({ ok: true, reservas });
+    }
+
+    // ── marcarBandanaEntregada (Admin) ────────────────────────────
+    if (action === 'marcarBandanaEntregada' && req.method === 'POST') {
+      const { id, entregada } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ bandana_entregada: !!entregada })
+      });
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── eliminarReservaCarrera (Admin) ────────────────────────────
+    if (action === 'eliminarReservaCarrera' && req.method === 'POST') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?id=eq.' + id, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
+      });
+      return res.status(200).json({ ok: true });
+    }
+
     if (action === 'girarRuletaWazu' && req.method === 'POST') {
       const { nombreMascota, telefono, ultimaCompra, producto } = req.body || {};
       const telLimpio = String(telefono || '').replace(/\D/g, '');
