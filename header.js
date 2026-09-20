@@ -128,7 +128,7 @@
 
     // ── Desktop nav ──────────────────────────────────────────
     var navHTML =
-      '<a href="/galeria.html" class="h-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">🐾 Galería</a>' +
+      '<a href="/galeria.html" class="h-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '" style="display:inline-flex;align-items:center;gap:5px"><img src="/ID.png" alt="" style="width:16px;height:16px;object-fit:contain">Galería</a>' +
       '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-link' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
       '<a href="/mensajes.html" class="h-link' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '">💬 Mensajes <span id="petmiMsgBadge" class="h-avisos-badge"></span></a>' +
 
@@ -136,6 +136,7 @@
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
       '<a href="/buscar.html" class="h-link' + (currentPath.indexOf('buscar') >= 0 ? ' active' : '') + '">🔍 Buscar</a>' +
       '<a href="/tienda.html" class="h-link' + (currentPath.indexOf('tienda') >= 0 ? ' active' : '') + '">🛍️ Tienda</a>' +
+      '<a href="/QueEsPetmi.html" class="h-link" style="opacity:.6;font-size:12.5px">¿Qué es PetMi?</a>' +
       '';
     // ── Right: avatar o botones ──────────────────────────────
     var userInitials = sessionDueno
@@ -169,7 +170,7 @@
     // ── Bottom nav mobile ─────────────────────────────────────
     var bottomNavHTML =
       '<a href="/galeria.html" class="h-btab' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">' +
-        '<span class="h-btab-ico">🐾</span>' +
+        '<span class="h-btab-ico"><img src="/ID.png" alt="PetMi" style="width:22px;height:22px;object-fit:contain;display:block"></span>' +
         '<span class="h-btab-lbl">Galería</span>' +
       '</a>' +
       '<a href="/mensajes.html" class="h-btab' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '" style="position:relative">' +
@@ -177,10 +178,15 @@
         '<span class="h-btab-bdg" id="petmiMsgBadgeMob"></span>' +
         '<span class="h-btab-lbl">Mensajes</span>' +
       '</a>' +
-      '<a href="/registro.html" class="h-fab-tab">' +
-        '<div class="h-fab-circle">➕</div>' +
-        '<span class="h-fab-lbl">Unirme a PetMi</span>' +
-      '</a>' +
+      (sessionEmail
+        ? '<a href="/familia.html" class="h-fab-tab">' +
+            '<div class="h-fab-circle">🐾</div>' +
+            '<span class="h-fab-lbl">Mi Familia</span>' +
+          '</a>'
+        : '<a href="/registro.html" class="h-fab-tab">' +
+            '<div class="h-fab-circle">➕</div>' +
+            '<span class="h-fab-lbl">Unirme a PetMi</span>' +
+          '</a>') +
       '<a href="/juego.html" class="h-btab' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '">' +
         '<span class="h-btab-ico">🎮</span>' +
         '<span class="h-btab-lbl">Juegos</span>' +
@@ -231,7 +237,7 @@
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
       '<div class="h-right">' +
-        '<a href="/galeria.html" class="h-search" aria-label="Ir a la galería" style="text-decoration:none;padding:4px"><img src="https://app.revistapetmi.com/ID.png" alt="PetzID" style="width:22px;height:22px;object-fit:contain;display:block"></a>' +
+        '<a href="/tienda.html" class="h-search" aria-label="Ir a la tienda" style="text-decoration:none;padding:4px;font-size:22px;line-height:1;display:block">🛍️</a>' +
         rightHTML +
       '</div>';
     document.body.insertBefore(header, document.body.firstChild);
