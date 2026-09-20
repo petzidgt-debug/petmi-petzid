@@ -39,6 +39,10 @@
     var sessionEmail = localStorage.getItem('petzid_email') || '';
     var sessionDueno = localStorage.getItem('petzid_dueno') || '';
     var currentPath  = window.location.pathname;
+    // El dominio raíz ("/") ahora muestra galeria.html por debajo
+    // (ver vercel.json) — pero la URL que ve el navegador ahí es
+    // solo "/", sin la palabra "galeria". Este helper cubre ambos casos.
+    var esPaginaGaleria = currentPath.indexOf('galeria') >= 0 || currentPath === '/';
     var style = document.createElement('style');
     style.textContent = [
       // ── Estilos nuevo header ──
@@ -128,7 +132,7 @@
 
     // ── Desktop nav ──────────────────────────────────────────
     var navHTML =
-      '<a href="/galeria.html" class="h-link' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '" style="display:inline-flex;align-items:center;gap:5px"><img src="/ID.png" alt="" style="width:16px;height:16px;object-fit:contain">Galería</a>' +
+      '<a href="/galeria.html" class="h-link' + (esPaginaGaleria ? ' active' : '') + '" style="display:inline-flex;align-items:center;gap:5px"><img src="/ID.png" alt="" style="width:16px;height:16px;object-fit:contain">Galería</a>' +
       '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-link' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
       '<a href="/mensajes.html" class="h-link' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '">💬 Mensajes <span id="petmiMsgBadge" class="h-avisos-badge"></span></a>' +
 
@@ -164,12 +168,14 @@
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
         '</div>'
-      : (currentPath.indexOf('galeria') >= 0 ? '' :
-        '<a href="/registro.html" class="h-btn-reg">Registrar mascota</a>' +
-        '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>');
+      : (esPaginaGaleria ? '<a href="/QueEsPetmi.html" class="h-link" style="opacity:.6;font-size:12px;white-space:nowrap">¿Qué es PetMi?</a>' :
+        currentPath.indexOf('tienda') >= 0
+          ? '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>'
+          : '<a href="/registro.html" class="h-btn-reg">Registrar mascota</a>' +
+            '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>');
     // ── Bottom nav mobile ─────────────────────────────────────
     var bottomNavHTML =
-      '<a href="/galeria.html" class="h-btab' + (currentPath.indexOf('galeria') >= 0 ? ' active' : '') + '">' +
+      '<a href="/galeria.html" class="h-btab' + (esPaginaGaleria ? ' active' : '') + '">' +
         '<span class="h-btab-ico"><img src="/ID.png" alt="PetMi" style="width:22px;height:22px;object-fit:contain;display:block"></span>' +
         '<span class="h-btab-lbl">Galería</span>' +
       '</a>' +
