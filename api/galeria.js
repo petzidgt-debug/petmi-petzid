@@ -1687,6 +1687,71 @@ export default async function handler(req, res) {
     // eso causaba demasiados conflictos de despliegue (doPost
     // duplicado entre varios archivos). Todo directo a Supabase,
     // visible desde el Admin.
+    // ── crearReservaCarrera (19 sep) — reserva de bandana para la
+    // Carrera Alas de Esperanza. Todo en Supabase, sin Google Sheets.
+    // Genera un cupón (15% o 25% si tiene PetzID verificado) y avisa
+    // por correo con los datos de recolección (vía Apps Script, solo
+    // para el envío del correo — los datos NO viven ahí).
+    if (action === 'crearReservaCarrera' && req.method === 'POST') {
+      const { nombre, mascota, telefono, email, tienePetzid, uidPetzid } = req.body || {};
+      const telLimpio = String(telefono || '').replace(/\D/g, '');
+      const nombreLimpio = String(nombre || '').trim();
+
+      if (!telLimpio || telLimpio.length < 8) return res.status(200).json({ ok: false, error: 'Teléfono inválido.' });
+      if (!nombreLimpio) return res.status(200).json({ ok: false, error: 'Escribe tu nombre.' });
+
+      try {
+        const descuentoPct = tienePetzid ? 25 : 15;
+        const codigoCupon = 'CARRERA-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        const rInsert = await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            nombre: nombreLimpio, telefono: telLimpio, email: email || null,
+            nombre_mascota: mascota || null, tiene_petzid: !!tienePetzid, uid_petzid: uidPetzid || null,
+            codigo_cupon: codigoCupon, descuento_pct: descuentoPct
+          })
+        });
+
+        if (!rInsert.ok) {
+          const errTxt = await rInsert.text().catch(() => '');
+          if (errTxt.includes('duplicate key') || rInsert.status === 409) {
+            return res.status(200).json({ ok: false, error: 'Este teléfono ya reservó una bandana.' });
+          }
+          console.error('crearReservaCarrera insert error:', rInsert.status, errTxt);
+          return res.status(200).json({ ok: false, error: 'No se pudo completar la reserva. Intenta de nuevo.' });
+        }
+
+        // Cupón usable en la tienda (misma tabla que usa el checkout)
+        await fetch(SUPABASE_URL + '/rest/v1/cupones_tienda', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ codigo: codigoCupon, tipo: 'porcentaje', valor: descuentoPct })
+        }).catch(() => {});
+
+        // Correo de confirmación con recordatorio — no bloquea la respuesta
+        if (email) {
+          fetch(APPS_SCRIPT_OTP_URL, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'notificarReservaCarrera', nombre: nombreLimpio, mascota: mascota || '', email, codigo: codigoCupon, descuento: descuentoPct })
+          }).catch(() => {});
+        }
+
+        return res.status(200).json({ ok: true, codigo: codigoCupon, descuento: descuentoPct });
+      } catch (eCarrera) {
+        console.error('crearReservaCarrera error:', eCarrera.message);
+        return res.status(200).json({ ok: false, error: 'Error de conexión. Intenta de nuevo.' });
+      }
+    }
+
+
+    // ── girarRuletaWazu (18 sep, movido a Supabase el mismo día) —
+    // ruleta pública para Wazu, sin cuenta. 1 giro por teléfono, sin
+    // límite de premios. Ya NO pasa por Apps Script/Google Sheets —
+    // eso causaba demasiados conflictos de despliegue (doPost
+    // duplicado entre varios archivos). Todo directo a Supabase,
+    // visible desde el Admin.
     if (action === 'girarRuletaWazu' && req.method === 'POST') {
       const { nombreMascota, telefono, ultimaCompra, producto } = req.body || {};
       const telLimpio = String(telefono || '').replace(/\D/g, '');
