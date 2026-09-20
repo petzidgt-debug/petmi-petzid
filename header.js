@@ -82,7 +82,7 @@
       '.h-btab-lbl{font-size:9px;color:#aaa;font-weight:600}',
       '.h-btab.active .h-btab-lbl{color:#00B4B4;font-weight:700}',
       '.h-btab-bdg{position:absolute;top:-2px;right:8px;background:#E24B4A;color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:99px;display:none}',
-      '.h-fab-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border:none;background:none;font-family:Arial,sans-serif;padding:0}',
+      '.h-fab-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border:none;background:none;font-family:Arial,sans-serif;padding:0;text-decoration:none}',
       '.h-fab-circle{width:48px;height:48px;border-radius:99px;background:#F5C842;display:flex;align-items:center;justify-content:center;font-size:24px;margin-top:-18px;box-shadow:0 4px 14px rgba(0,0,0,.18);border:3px solid #fff;color:#1a1a2e;font-weight:900;line-height:1}',
       '.h-fab-lbl{font-size:9px;color:#cc9800;font-weight:700;white-space:nowrap}',
       // Mobile body padding
@@ -237,7 +237,7 @@
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
       '<div class="h-right">' +
-        '<a href="/tienda.html" class="h-search" aria-label="Ir a la tienda" style="text-decoration:none;padding:4px;font-size:22px;line-height:1;display:block">🛍️</a>' +
+        '<a href="/tienda.html" class="h-search" aria-label="Ir a la tienda" title="TIENDA PETMI" style="text-decoration:none;padding:4px;font-size:22px;line-height:1;display:block">🛍️</a>' +
         rightHTML +
       '</div>';
     document.body.insertBefore(header, document.body.firstChild);
