@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Carrera Alas de Esperanza — Reserva tu bandana | PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:60px}
+
+.hero-img{width:100%;max-width:520px;display:block;margin:0 auto}
+
+.wrap{max-width:520px;margin:0 auto;padding:0 16px 24px}
+
+.banda-precio{background:#F5941C;color:#fff;text-align:center;padding:16px;border-radius:0 0 14px 14px;margin-bottom:20px}
+.banda-precio .q{font-size:32px;font-weight:900}
+.banda-precio .txt{font-size:12.5px;opacity:.95}
+
+.card{background:#fff;border-radius:16px;padding:20px;border:0.5px solid #eee;margin-bottom:16px}
+.card h3{font-size:15px;color:#1a1a2e;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.card p{font-size:13px;color:#666;line-height:1.7}
+.card ul{margin:8px 0 0 18px;font-size:13px;color:#666;line-height:1.9}
+
+.giveaway{background:linear-gradient(135deg,#E05090,#1a1a2e);color:#fff;border-radius:16px;padding:20px;margin-bottom:16px}
+.giveaway h3{font-size:16px;margin-bottom:8px}
+.giveaway p{font-size:13px;opacity:.92;line-height:1.7}
+.giveaway .fecha{display:inline-block;background:rgba(255,255,255,.2);border-radius:99px;padding:5px 14px;font-size:11.5px;font-weight:700;margin-top:8px}
+
+.descuento-box{background:#FFF8E1;border:2px dashed #F5C842;border-radius:14px;padding:16px;text-align:center;margin-bottom:20px}
+.descuento-box .pct{font-size:26px;font-weight:900;color:#1a1a2e}
+.descuento-box .sub{font-size:12px;color:#8a6200;margin-top:4px;line-height:1.6}
+
+.form-card{background:#fff;border-radius:16px;padding:22px;border:0.5px solid #eee}
+.form-card label{display:block;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:14px}
+.form-card label:first-child{margin-top:0}
+.form-card input[type=text],.form-card input[type=tel],.form-card input[type=email]{width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding:12px 14px;background:#f8f7f4;border-radius:10px}
+.toggle-row span{font-size:13px;font-weight:700;color:#333}
+.toggle{position:relative;display:inline-block;width:44px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.tog-slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:99px;transition:.2s}
+.tog-slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked + .tog-slider{background:#00B4B4}
+.toggle input:checked + .tog-slider:before{transform:translateX(20px)}
+.email-verif-wrap{display:none;margin-top:10px}
+.verif-msg{font-size:12px;margin-top:6px;display:none}
+
+.btn-reservar{display:block;width:100%;background:#1a1a2e;color:#fff;border:none;padding:15px;border-radius:99px;font-weight:900;font-size:15px;cursor:pointer;margin-top:20px}
+.btn-reservar:disabled{opacity:.5}
+.error-msg{color:#c0392b;font-size:12.5px;margin-top:10px;display:none}
+
+.logistica{display:flex;gap:10px;margin-top:16px}
+.logistica-item{flex:1;background:#1a1a2e;color:#fff;border-radius:12px;padding:14px}
+.logistica-item .titulo{font-size:11px;font-weight:900;text-transform:uppercase;color:#F5C842;margin-bottom:4px}
+.logistica-item .fecha{font-size:15px;font-weight:900}
+.logistica-item .lugar{font-size:11.5px;opacity:.85;margin-top:3px;line-height:1.5}
+
+.confirmacion{background:#fff;border-radius:16px;padding:28px 22px;text-align:center;border:0.5px solid #eee}
+.confirmacion .emoji{font-size:48px;margin-bottom:10px}
+.confirmacion h2{font-size:19px;color:#1a1a2e;margin-bottom:8px}
+.confirmacion p{font-size:13px;color:#888;line-height:1.7}
+.codigo-box{background:#f8f8f8;border:1.5px dashed #ccc;border-radius:10px;padding:14px;margin:16px 0;font-family:monospace;font-size:18px;font-weight:900;color:#1a1a2e;letter-spacing:1px}
+
+.paso-card{background:#fff;border-radius:16px;padding:24px 20px;border:0.5px solid #eee;text-align:center}
+.paso-card h2{font-size:17px;color:#1a1a2e;margin-bottom:16px}
+.btn-opcion{display:block;width:100%;padding:15px;border-radius:12px;font-weight:900;font-size:14.5px;cursor:pointer;border:none;margin-bottom:10px}
+.btn-opcion-si{background:#00B4B4;color:#fff}
+.btn-opcion-no{background:#f0f0f0;color:#333}
+.btn-opcion-crear{background:#F5C842;color:#1a1a2e}
+.btn-volver{background:none;border:none;color:#888;font-size:12.5px;text-decoration:underline;cursor:pointer;margin-top:10px}
+.mascota-opcion{display:flex;align-items:center;gap:10px;padding:12px;border:1.5px solid #eee;border-radius:10px;margin-bottom:8px;cursor:pointer;text-align:left}
+.mascota-opcion:hover{border-color:#00B4B4}
+.mascota-opcion img{width:40px;height:40px;border-radius:50%;object-fit:cover;background:#eee}
+.badge-verificado{display:inline-block;background:#E0F7F7;color:#006060;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;margin-bottom:14px}
+</style>
+</head>
+<body>
+
+<img class="hero-img" src="/img/carrera-flyer.jpg" alt="Carrera Alas de Esperanza">
+
+<div class="banda-precio">
+  <div class="q">🐾 Q25</div>
+  <div class="txt">Bandana oficial para tu mascota — se paga al recogerla</div>
+</div>
+
+<div class="wrap">
+
+  <div id="vistaForm">
+    <div class="giveaway">
+      <h3>🎁 Participa en el GIVEAWAY</h3>
+      <p>Todos los que reserven su bandana entran al sorteo:</p>
+      <ul style="margin:8px 0 0 18px;line-height:1.9">
+        <li>4 pases dobles a la carrera</li>
+        <li>1 Primer Lugar: pase doble + correa manos libres</li>
+      </ul>
+      <div class="fecha">🎡 Sorteo en vivo — 1 de octubre</div>
+    </div>
+
+    <div class="descuento-box">
+      <div class="pct">15% de descuento</div>
+      <div class="sub">en la correa manos libres, solo por reservar<br>
+      <b>¿Tienes PetzID?</b> Suma +10% adicional (25% en total)</div>
+    </div>
+
+    <!-- Paso 1: ¿Ya tienes PetzID? -->
+    <div class="paso-card" id="paso1">
+      <h2>🐾 ¿Ya tienes tu PetzID en PetMi?</h2>
+      <button class="btn-opcion btn-opcion-si" onclick="irAPaso('pasoVerificar')">Sí, ya tengo</button>
+      <button class="btn-opcion btn-opcion-no" onclick="irAPaso('pasoSinPetzid')">No tengo todavía</button>
+    </div>
+
+    <!-- Paso: verificar por correo -->
+    <div class="paso-card" id="pasoVerificar" style="display:none">
+      <h2>Escribe tu correo para verificarte</h2>
+      <input type="email" id="inEmailVerificar" placeholder="tucorreo@ejemplo.com" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;margin-bottom:12px">
+      <div class="error-msg" id="errorVerificar" style="text-align:left"></div>
+      <button class="btn-opcion btn-opcion-si" id="btnVerificar" onclick="verificarPetzid()">Verificar</button>
+      <button class="btn-volver" onclick="irAPaso('paso1')">← Volver</button>
+    </div>
+
+    <!-- Paso: elegir mascota (si tiene varias) -->
+    <div class="paso-card" id="pasoElegirMascota" style="display:none">
+      <h2>¿Cuál es la mascota que va a correr?</h2>
+      <div id="listaMascotasVerificadas"></div>
+      <button class="btn-volver" onclick="irAPaso('paso1')">← Volver</button>
+    </div>
+
+    <!-- Paso: no tiene PetzID, elegir camino -->
+    <div class="paso-card" id="pasoSinPetzid" style="display:none">
+      <h2>Sin problema — ¿qué prefieres?</h2>
+      <button class="btn-opcion btn-opcion-crear" onclick="irAPaso('pasoCrearRapido')">🐾 Crear mi PetzID ahora (25% dto.)</button>
+      <button class="btn-opcion btn-opcion-no" onclick="irAPasoFormSimple()">Solo reservar mi bandana (15% dto.)</button>
+      <button class="btn-volver" onclick="irAPaso('paso1')">← Volver</button>
+    </div>
+
+    <!-- Paso: crear PetzID rápido -->
+    <div class="paso-card" id="pasoCrearRapido" style="display:none;text-align:left">
+      <h2 style="text-align:center">Crea tu PetzID en 30 segundos</h2>
+      <label style="display:block;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:6px">Nombre de tu mascota</label>
+      <input type="text" id="crNombreMascota" placeholder="Ej. Luna" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;margin-bottom:12px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:6px">Especie</label>
+      <select id="crEspecie" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;margin-bottom:12px">
+        <option value="Perro">Perro</option><option value="Gato">Gato</option>
+      </select>
+      <label style="display:block;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:6px">Tu nombre</label>
+      <input type="text" id="crDueno" placeholder="Nombre completo" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;margin-bottom:12px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:6px">Correo</label>
+      <input type="email" id="crEmail" placeholder="tucorreo@ejemplo.com" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;margin-bottom:12px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:6px">WhatsApp</label>
+      <input type="tel" id="crWhatsapp" placeholder="Ej. 5555 5555" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;margin-bottom:12px">
+      <label style="display:block;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:6px">Foto de tu mascota (opcional)</label>
+      <input type="file" id="crFoto" accept="image/*" onchange="previsualizarFotoCrear(event)" style="width:100%;font-size:13px;margin-bottom:8px">
+      <img id="crFotoPreview" style="display:none;width:70px;height:70px;border-radius:50%;object-fit:cover;margin-bottom:12px">
+      <input type="hidden" id="crFotoBase64">
+      <input type="hidden" id="crFotoMime">
+      <div class="error-msg" id="errorCrear"></div>
+      <button class="btn-opcion btn-opcion-si" id="btnCrear" onclick="crearPetzidYReservar()">Crear PetzID y reservar</button>
+      <button class="btn-volver" style="display:block;margin:10px auto 0" onclick="irAPaso('pasoSinPetzid')">← Volver</button>
+    </div>
+
+    <!-- Paso final: formulario de reserva (pre-llenado si viene verificado) -->
+    <div class="form-card" id="pasoFormFinal" style="display:none">
+      <div class="badge-verificado" id="badgeVerificado" style="display:none">✓ PetzID verificado — 25% de descuento</div>
+      <label>Tu nombre</label>
+      <input type="text" id="inNombre" placeholder="Nombre completo">
+      <label>Nombre de tu mascota</label>
+      <input type="text" id="inMascota" placeholder="Ej. Luna">
+      <label>Teléfono (WhatsApp)</label>
+      <input type="tel" id="inTelefono" placeholder="Ej. 5555 5555">
+      <label>Correo</label>
+      <input type="email" id="inEmail" placeholder="tucorreo@ejemplo.com">
+
+      <div class="error-msg" id="errorMsg"></div>
+      <button class="btn-reservar" id="btnReservar" onclick="reservar()">Reservar mi bandana</button>
+      <button class="btn-volver" style="display:block;margin:10px auto 0" onclick="irAPaso('paso1')">← Empezar de nuevo</button>
+    </div>
+  </div>
+
+  <div id="vistaConfirmacion" style="display:none">
+    <div class="confirmacion">
+      <div class="emoji">🎉</div>
+      <h2>¡Reserva confirmada!</h2>
+      <p id="confirmacionTexto"></p>
+      <div class="codigo-box" id="codigoCupon"></div>
+      <p style="font-size:12px;color:#aaa">Usa este código en la Tienda de PetMi al comprar la correa manos libres.</p>
+    </div>
+  </div>
+
+  <div class="logistica">
+    <div class="logistica-item">
+      <div class="titulo">📅 Expo</div>
+      <div class="fecha">3 de octubre</div>
+      <div class="lugar">9:00 AM – 6:00 PM<br>Salón de eventos del Zoológico La Aurora</div>
+    </div>
+    <div class="logistica-item">
+      <div class="titulo">🏃 Carrera</div>
+      <div class="fecha">4 de octubre</div>
+      <div class="lugar">8:00 AM<br>Circuito Obelisco, Avenida Reforma</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var tienePetzidVerificado = false;
+var uidPetzidVerificado = '';
+var mascotasEncontradas = [];
+
+function irAPaso(idPaso){
+  ['paso1','pasoVerificar','pasoElegirMascota','pasoSinPetzid','pasoCrearRapido','pasoFormFinal'].forEach(function(id){
+    document.getElementById(id).style.display = (id===idPaso) ? 'block' : 'none';
+  });
+}
+
+function irAPasoFormSimple(){
+  tienePetzidVerificado = false;
+  uidPetzidVerificado = '';
+  document.getElementById('badgeVerificado').style.display = 'none';
+  document.getElementById('inNombre').value = '';
+  document.getElementById('inMascota').value = '';
+  document.getElementById('inTelefono').value = '';
+  document.getElementById('inEmail').value = '';
+  irAPaso('pasoFormFinal');
+}
+
+function verificarPetzid(){
+  var email = document.getElementById('inEmailVerificar').value.trim().toLowerCase();
+  var err = document.getElementById('errorVerificar');
+  err.style.display = 'none';
+  if(!email || email.indexOf('@')<0){ err.textContent='Escribe un correo válido.'; err.style.display='block'; return; }
+
+  var btn = document.getElementById('btnVerificar');
+  btn.disabled = true; btn.textContent = 'Verificando...';
+
+  fetch('/api/galeria?action=checkEmail', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'checkEmail', email: email })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    btn.disabled = false; btn.textContent = 'Verificar';
+    if(!d.found || !d.mascotas || !d.mascotas.length){
+      err.textContent = 'No encontramos ningún PetzID con ese correo. Puedes crear uno rápido en el paso anterior.';
+      err.style.display = 'block';
+      return;
+    }
+    mascotasEncontradas = d.mascotas;
+    if(mascotasEncontradas.length === 1){
+      seleccionarMascotaVerificada(0);
+    } else {
+      document.getElementById('listaMascotasVerificadas').innerHTML = mascotasEncontradas.map(function(m,i){
+        var foto = m.foto ? '<img src="'+m.foto+'">' : '<img src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 40 40\'%3E%3Crect width=\'40\' height=\'40\' fill=\'%23eee\'/%3E%3C/svg%3E">';
+        return '<div class="mascota-opcion" onclick="seleccionarMascotaVerificada('+i+')">'+foto+'<div><b>'+m.nombre+'</b><div style="font-size:11px;color:#888">'+(m.especie||'')+'</div></div></div>';
+      }).join('');
+      irAPaso('pasoElegirMascota');
+    }
+  }).catch(function(){
+    btn.disabled = false; btn.textContent = 'Verificar';
+    err.textContent = 'Error de conexión. Intenta de nuevo.';
+    err.style.display = 'block';
+  });
+}
+
+function seleccionarMascotaVerificada(i){
+  var m = mascotasEncontradas[i];
+  tienePetzidVerificado = true;
+  uidPetzidVerificado = m.uid || '';
+  document.getElementById('badgeVerificado').style.display = 'inline-block';
+  document.getElementById('inNombre').value = m.dueno || '';
+  document.getElementById('inMascota').value = m.nombre || '';
+  document.getElementById('inTelefono').value = m.whatsapp || '';
+  document.getElementById('inEmail').value = m.email || '';
+  irAPaso('pasoFormFinal');
+}
+
+function previsualizarFotoCrear(ev){
+  var file = ev.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var base64 = e.target.result.split(',')[1];
+    document.getElementById('crFotoBase64').value = base64;
+    document.getElementById('crFotoMime').value = file.type || 'image/jpeg';
+    var img = document.getElementById('crFotoPreview');
+    img.src = e.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function crearPetzidYReservar(){
+  var mascota = document.getElementById('crNombreMascota').value.trim();
+  var especie = document.getElementById('crEspecie').value;
+  var dueno = document.getElementById('crDueno').value.trim();
+  var email = document.getElementById('crEmail').value.trim();
+  var whatsapp = document.getElementById('crWhatsapp').value.trim();
+  var err = document.getElementById('errorCrear');
+  err.style.display = 'none';
+
+  if(!mascota){ err.textContent='Escribe el nombre de tu mascota.'; err.style.display='block'; return; }
+  if(!dueno){ err.textContent='Escribe tu nombre.'; err.style.display='block'; return; }
+  if(!email || email.indexOf('@')<0){ err.textContent='Escribe un correo válido.'; err.style.display='block'; return; }
+  if(!whatsapp || whatsapp.replace(/\D/g,'').length<8){ err.textContent='Escribe un WhatsApp válido.'; err.style.display='block'; return; }
+
+  var btn = document.getElementById('btnCrear');
+  btn.disabled = true; btn.textContent = 'Creando...';
+
+  var fotoBase64 = document.getElementById('crFotoBase64').value;
+  var fotoMime = document.getElementById('crFotoMime').value;
+
+  var subirFotoPromise = fotoBase64
+    ? fetch('/api/subir-foto', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ photoBase64: fotoBase64, mimeType: fotoMime, fileName: 'carrera_'+Date.now()+'.jpg' }) }).then(function(r){return r.json();}).then(function(d){ return d.ok ? d.url : ''; }).catch(function(){ return ''; })
+    : Promise.resolve('');
+
+  subirFotoPromise.then(function(fotoUrl){
+    return fetch('/api/submit', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ nombre: mascota, especie: especie, dueno: dueno, email: email, whatsapp: whatsapp, tipoFecha:'nacimiento', foto: fotoUrl||'' })
+    });
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    btn.disabled = false; btn.textContent = 'Crear PetzID y reservar';
+    if(!d.ok){ err.textContent='No se pudo crear tu PetzID. Intenta de nuevo.'; err.style.display='block'; return; }
+    tienePetzidVerificado = true;
+    uidPetzidVerificado = d.uid || '';
+    document.getElementById('badgeVerificado').style.display = 'inline-block';
+    document.getElementById('inNombre').value = dueno;
+    document.getElementById('inMascota').value = mascota;
+    document.getElementById('inTelefono').value = whatsapp;
+    document.getElementById('inEmail').value = email;
+    irAPaso('pasoFormFinal');
+  }).catch(function(){
+    btn.disabled = false; btn.textContent = 'Crear PetzID y reservar';
+    err.textContent = 'Error de conexión. Intenta de nuevo.';
+    err.style.display = 'block';
+  });
+}
+
+function reservar(){
+  var nombre = document.getElementById('inNombre').value.trim();
+  var mascota = document.getElementById('inMascota').value.trim();
+  var telefono = document.getElementById('inTelefono').value.trim();
+  var email = document.getElementById('inEmail').value.trim();
+  var err = document.getElementById('errorMsg');
+  err.style.display = 'none';
+
+  if(!nombre){ err.textContent='Escribe tu nombre.'; err.style.display='block'; return; }
+  if(!telefono || telefono.replace(/\D/g,'').length < 8){ err.textContent='Escribe un teléfono válido.'; err.style.display='block'; return; }
+
+  var btn = document.getElementById('btnReservar');
+  btn.disabled = true;
+  btn.textContent = 'Reservando...';
+
+  fetch('/api/galeria?action=crearReservaCarrera', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ nombre: nombre, mascota: mascota, telefono: telefono, email: email, tienePetzid: tienePetzidVerificado, uidPetzid: uidPetzidVerificado })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.ok){
+      err.textContent = d.error || 'No se pudo completar la reserva.';
+      err.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Reservar mi bandana';
+      return;
+    }
+    document.getElementById('vistaForm').style.display = 'none';
+    document.getElementById('vistaConfirmacion').style.display = 'block';
+    document.getElementById('confirmacionTexto').textContent = 'Tu bandana para ' + (mascota||'tu mascota') + ' te espera — recógela el 3 o 4 de octubre. Obtuviste ' + d.descuento + '% de descuento en la correa manos libres:';
+    document.getElementById('codigoCupon').textContent = d.codigo;
+    window.scrollTo(0,0);
+  }).catch(function(){
+    err.textContent = 'Error de conexión. Intenta de nuevo.';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Reservar mi bandana';
+  });
+}
+</script>
+</body>
+</html>
