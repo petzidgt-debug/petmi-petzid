@@ -135,16 +135,7 @@
       '<a href="/juego.html" class="h-link' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '">🎮 Juegos</a>' +
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
       '<a href="/buscar.html" class="h-link' + (currentPath.indexOf('buscar') >= 0 ? ' active' : '') + '">🔍 Buscar</a>' +
-      // Tienda oculta por ahora — para reactivar, descomentar este bloque
-      /* (function(){
-        var _esp = localStorage.getItem('petmi_especie') || '';
-        var _url = 'https://www.revistapetmi.com/tienda';
-        if (_esp.toLowerCase().indexOf('gato') >= 0)
-          _url = 'https://www.revistapetmi.com/tienda/coleccion/gatos';
-        else if (_esp.toLowerCase().indexOf('perro') >= 0)
-          _url = 'https://www.revistapetmi.com/tienda/coleccion/perros';
-        return '<a href="' + _url + '" target="_blank" class="h-link">🛍️ Tienda</a>';
-      })(); */
+      '<a href="/tienda.html" class="h-link' + (currentPath.indexOf('tienda') >= 0 ? ' active' : '') + '">🛍️ Tienda</a>' +
       '';
     // ── Right: avatar o botones ──────────────────────────────
     var userInitials = sessionDueno
