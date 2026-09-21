@@ -177,12 +177,11 @@
     var bottomNavHTML =
       '<a href="/galeria.html" class="h-btab' + (esPaginaGaleria ? ' active' : '') + '">' +
         '<span class="h-btab-ico"><img src="/ID.png" alt="PetMi" style="width:22px;height:22px;object-fit:contain;display:block"></span>' +
-        '<span class="h-btab-lbl">Galería</span>' +
+        '<span class="h-btab-lbl">Inicio</span>' +
       '</a>' +
-      '<a href="/mensajes.html" class="h-btab' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '" style="position:relative">' +
-        '<span class="h-btab-ico">💬</span>' +
-        '<span class="h-btab-bdg" id="petmiMsgBadgeMob"></span>' +
-        '<span class="h-btab-lbl">Mensajes</span>' +
+      '<a href="/juego.html" class="h-btab' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '">' +
+        '<span class="h-btab-ico">🎮</span>' +
+        '<span class="h-btab-lbl">Juegos</span>' +
       '</a>' +
       (sessionEmail
         ? '<a href="/familia.html" class="h-fab-tab">' +
@@ -193,9 +192,9 @@
             '<div class="h-fab-circle">➕</div>' +
             '<span class="h-fab-lbl">Unirme a PetMi</span>' +
           '</a>') +
-      '<a href="/juego.html" class="h-btab' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '">' +
-        '<span class="h-btab-ico">🎮</span>' +
-        '<span class="h-btab-lbl">Juegos</span>' +
+      '<a href="/tienda.html" class="h-btab' + (currentPath.indexOf('tienda') >= 0 ? ' active' : '') + '">' +
+        '<span class="h-btab-ico">🛍️</span>' +
+        '<span class="h-btab-lbl">Tienda</span>' +
       '</a>' +
       '<a href="/buscar.html" class="h-btab' + (currentPath.indexOf('buscar') >= 0 ? ' active' : '') + '">' +
         '<span class="h-btab-ico">🔍</span>' +
@@ -243,7 +242,7 @@
       '</a>' +
       '<nav class="h-nav">' + navHTML + '</nav>' +
       '<div class="h-right">' +
-        '<a href="/tienda.html" class="h-search" aria-label="Ir a la tienda" title="TIENDA PETMI" style="text-decoration:none;padding:4px;font-size:22px;line-height:1;display:block">🛍️</a>' +
+        '<a href="/mensajes.html" class="h-search" aria-label="Ir a mensajes" title="Mensajes" style="text-decoration:none;font-size:15px;position:relative">💬<span class="h-btab-bdg" id="petmiMsgBadgeMob" style="position:absolute;top:-4px;right:-4px"></span></a>' +
         rightHTML +
       '</div>';
     document.body.insertBefore(header, document.body.firstChild);
