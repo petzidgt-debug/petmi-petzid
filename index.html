@@ -33,7 +33,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .dash-busqueda-premio{display:flex;flex-direction:column;gap:14px;margin:16px 0}
 @media(min-width:768px){.dash-busqueda-premio{flex-direction:row}.dash-busqueda-premio>div{flex:1}}
 .dash-acciones{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;flex:1}
-.dash-accion{text-align:center;text-decoration:none;display:block;position:relative;background:#fff;border:1px solid #f0f0f0;border-radius:16px;padding:18px 8px}
+.dash-accion{text-align:center;text-decoration:none;display:block;position:relative;background:#fff;border-radius:16px;padding:18px 8px;box-shadow:0 3px 10px rgba(0,0,0,.08)}
 .dash-accion-ico{border-radius:16px;padding:10px 4px;font-size:38px;display:flex;align-items:center;justify-content:center;height:76px;margin:0 auto 10px;width:76px}
 .dash-accion-lbl{font-size:12px;color:#1a1a2e;margin-top:2px;font-weight:700}
 .dash-accion-badge{position:absolute;top:-4px;right:6px;background:#E05090;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px}
@@ -695,7 +695,7 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
     + '<a href="/puntos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#E3F5EA">&#127873;</div><div class="dash-accion-lbl">Beneficios<br>y puntos</div>'
     + (puntosTotal>0?'<div class="dash-accion-badge">'+puntosTotal+'</div>':'') + '</a>'
     + '<a href="/tienda.html?uid='+mascota.uid+'#alimento" class="dash-accion"><div class="dash-accion-ico" style="background:#EDE7F6">&#127860;</div><div class="dash-accion-lbl">Alimentaci&oacute;n</div></a>'
-    + '<a href="/tienda.html?uid='+mascota.uid+'" class="dash-accion"><div class="dash-accion-ico" style="background:#E8F9F0">&#128717;</div><div class="dash-accion-lbl">Shop<br>Tienda en linea</div></a>'
+    + '<a href="/tienda.html?uid='+mascota.uid+'" class="dash-accion"><div class="dash-accion-ico" style="background:#E8F9F0">&#128717;</div><div class="dash-accion-lbl">Tienda en<br>l&iacute;nea</div></a>'
     + '</div>'
 
     // ── Cuidados del día (avisos puntuales, si hay) ──
@@ -722,7 +722,7 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
           : sm.saludDetalle.hoy.length
             ? '<div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;color:#E05090;font-weight:700">&#9888;&#65039; '+sm.saludDetalle.hoy.length+' de '+sm.totalCuidados+' cuidados pendientes</div>'
             : '<div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;color:#999">Sin recomendaciones a&uacute;n</div>';
-        return '<a href="/p/'+idSuf+'" style="display:block;background:#fff;border:1px solid #eee;border-radius:14px;padding:12px;text-decoration:none;color:inherit">'
+        return '<a href="/salud.html?uid='+idSuf+'" style="display:block;background:#fff;border:1px solid #eee;border-radius:14px;padding:12px;text-decoration:none;color:inherit">'
         + '<div style="display:flex;align-items:center;gap:8px">'
         + fotoHtml
         + '<div style="font-weight:900;color:#1a1a2e;font-size:13.5px;flex:1">&#128062; '+sm.mascota.nombre+'</div>'
