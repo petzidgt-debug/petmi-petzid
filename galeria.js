@@ -1687,6 +1687,103 @@ export default async function handler(req, res) {
     // eso causaba demasiados conflictos de despliegue (doPost
     // duplicado entre varios archivos). Todo directo a Supabase,
     // visible desde el Admin.
+    // ── crearReservaCarrera (19 sep) — reserva de bandana para la
+    // Carrera Alas de Esperanza. Todo en Supabase, sin Google Sheets.
+    // Genera un cupón (15% o 25% si tiene PetzID verificado) y avisa
+    // por correo con los datos de recolección (vía Apps Script, solo
+    // para el envío del correo — los datos NO viven ahí).
+    if (action === 'crearReservaCarrera' && req.method === 'POST') {
+      const { nombre, mascota, telefono, email, tienePetzid, uidPetzid } = req.body || {};
+      const telLimpio = String(telefono || '').replace(/\D/g, '');
+      const nombreLimpio = String(nombre || '').trim();
+
+      if (!telLimpio || telLimpio.length < 8) return res.status(200).json({ ok: false, error: 'Teléfono inválido.' });
+      if (!nombreLimpio) return res.status(200).json({ ok: false, error: 'Escribe tu nombre.' });
+
+      try {
+        const descuentoPct = tienePetzid ? 25 : 15;
+        const codigoCupon = 'CARRERA-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        const rInsert = await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            nombre: nombreLimpio, telefono: telLimpio, email: email || null,
+            nombre_mascota: mascota || null, tiene_petzid: !!tienePetzid, uid_petzid: uidPetzid || null,
+            codigo_cupon: codigoCupon, descuento_pct: descuentoPct
+          })
+        });
+
+        if (!rInsert.ok) {
+          const errTxt = await rInsert.text().catch(() => '');
+          if (errTxt.includes('duplicate key') || rInsert.status === 409) {
+            return res.status(200).json({ ok: false, error: 'Este teléfono ya reservó una bandana.' });
+          }
+          console.error('crearReservaCarrera insert error:', rInsert.status, errTxt);
+          return res.status(200).json({ ok: false, error: 'No se pudo completar la reserva. Intenta de nuevo.' });
+        }
+
+        // Cupón usable en la tienda (misma tabla que usa el checkout)
+        await fetch(SUPABASE_URL + '/rest/v1/cupones_tienda', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ codigo: codigoCupon, tipo: 'porcentaje', valor: descuentoPct })
+        }).catch(() => {});
+
+        // Correo de confirmación con recordatorio — no bloquea la respuesta
+        if (email) {
+          fetch(APPS_SCRIPT_OTP_URL, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'notificarReservaCarrera', nombre: nombreLimpio, mascota: mascota || '', email, codigo: codigoCupon, descuento: descuentoPct })
+          }).catch(() => {});
+        }
+
+        return res.status(200).json({ ok: true, codigo: codigoCupon, descuento: descuentoPct });
+      } catch (eCarrera) {
+        console.error('crearReservaCarrera error:', eCarrera.message);
+        return res.status(200).json({ ok: false, error: 'Error de conexión. Intenta de nuevo.' });
+      }
+    }
+
+
+    // ── girarRuletaWazu (18 sep, movido a Supabase el mismo día) —
+    // ruleta pública para Wazu, sin cuenta. 1 giro por teléfono, sin
+    // límite de premios. Ya NO pasa por Apps Script/Google Sheets —
+    // eso causaba demasiados conflictos de despliegue (doPost
+    // duplicado entre varios archivos). Todo directo a Supabase,
+    // visible desde el Admin.
+    // ── getCarreraReservas (Admin) ───────────────────────────────
+    if (action === 'getCarreraReservas') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?select=*&order=created_at.desc', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const reservas = await r.json();
+      return res.status(200).json({ ok: true, reservas });
+    }
+
+    // ── marcarBandanaEntregada (Admin) ────────────────────────────
+    if (action === 'marcarBandanaEntregada' && req.method === 'POST') {
+      const { id, entregada } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ bandana_entregada: !!entregada })
+      });
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── eliminarReservaCarrera (Admin) ────────────────────────────
+    if (action === 'eliminarReservaCarrera' && req.method === 'POST') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?id=eq.' + id, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
+      });
+      return res.status(200).json({ ok: true });
+    }
+
     if (action === 'girarRuletaWazu' && req.method === 'POST') {
       const { nombreMascota, telefono, ultimaCompra, producto } = req.body || {};
       const telLimpio = String(telefono || '').replace(/\D/g, '');
@@ -1754,6 +1851,25 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ contactado: !!contactado })
       });
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── enviarMensajeDirectoAdmin (18 sep) — el Admin le manda un
+    // mensaje puntual a UNA mascota específica, directo a su buzón
+    // de Mensajes (misma tabla que usa el resto de la app). ────────
+    if (action === 'enviarMensajeDirectoAdmin' && req.method === 'POST') {
+      const { uid, mensaje } = req.body || {};
+      if (!uid || !mensaje) return res.status(400).json({ ok: false, error: 'Falta uid o mensaje' });
+      const rMsg = await fetch(SUPABASE_URL + '/rest/v1/conversaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ uid_emisor: 'PETMI-OFICIAL', uid_receptor: uid, mensaje: mensaje, leido: false })
+      });
+      if (!rMsg.ok) {
+        const errTxt = await rMsg.text().catch(() => '');
+        console.error('enviarMensajeDirectoAdmin error:', rMsg.status, errTxt);
+        return res.status(200).json({ ok: false, error: 'No se pudo guardar el mensaje.' });
+      }
       return res.status(200).json({ ok: true });
     }
 
@@ -2336,27 +2452,6 @@ export default async function handler(req, res) {
       } catch (e) {
         return res.status(200).json({ posts: [], error: e.message });
       }
-    }
-
-    // ── registrarPedido (log cada vez que alguien pide por WhatsApp) ──
-    if (action === 'registrarPedido' && req.method === 'POST') {
-      const { email, mascotaNombre, item, tipo } = req.body;
-      if (!item) return res.status(200).json({ ok: false });
-      fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda_log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ email: (email||'').toLowerCase() || null, mascota_nombre: mascotaNombre || null, item, tipo: tipo || 'alimento' })
-      }).catch(() => {});
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── getPedidosTiendaAdmin (admin) ────────────────────────────
-    if (action === 'getPedidosTiendaAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda_log?select=*&order=created_at.desc&limit=200', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ pedidos: Array.isArray(data) ? data : [] });
     }
 
     // ── getAlimentosCatalogo (público — para buscar la foto de un alimento) ──
