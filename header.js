@@ -132,7 +132,7 @@
 
     // ── Desktop nav ──────────────────────────────────────────
     var navHTML =
-      '<a href="/galeria.html" class="h-link' + (esPaginaGaleria ? ' active' : '') + '" style="display:inline-flex;align-items:center;gap:5px"><img src="/ID.png" alt="" style="width:16px;height:16px;object-fit:contain">Galería</a>' +
+      '<a href="/" class="h-link' + (esPaginaGaleria ? ' active' : '') + '" style="display:inline-flex;align-items:center;gap:5px"><img src="/ID.png" alt="" style="width:16px;height:16px;object-fit:contain">Inicio</a>' +
       '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-link' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
       '<a href="/mensajes.html" class="h-link' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '">💬 Mensajes <span id="petmiMsgBadge" class="h-avisos-badge"></span></a>' +
 
@@ -175,7 +175,7 @@
             '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>');
     // ── Bottom nav mobile ─────────────────────────────────────
     var bottomNavHTML =
-      '<a href="/galeria.html" class="h-btab' + (esPaginaGaleria ? ' active' : '') + '">' +
+      '<a href="/" class="h-btab' + (esPaginaGaleria ? ' active' : '') + '">' +
         '<span class="h-btab-ico"><img src="/ID.png" alt="PetMi" style="width:22px;height:22px;object-fit:contain;display:block"></span>' +
         '<span class="h-btab-lbl">Inicio</span>' +
       '</a>' +
@@ -378,7 +378,7 @@
   window.petmiToggleMenu = function(e){ e.stopPropagation(); var m=document.getElementById('petmiMenuDropdown'); if(m) m.classList.toggle('open'); };
   window.petmiToggleHam = function(){ var m=document.getElementById('petmiMobMenu'); if(m) m.classList.toggle('open'); };
   window.petmiLimpiarNotif = function(){ var b=document.getElementById('petmiNotifBadge'); if(b) b.style.display='none'; };
-  window.petmiCerrarSesion = function(){ localStorage.removeItem('petzid_email'); localStorage.removeItem('petzid_dueno'); window.location.href='/galeria.html'; };
+  window.petmiCerrarSesion = function(){ localStorage.removeItem('petzid_email'); localStorage.removeItem('petzid_dueno'); window.location.href='/'; };
 
   // Tras iniciar sesión: si estabas en index.html (la pantalla de entrada,
   // sin nada más que hacer ahí), te manda a la galería. Si iniciaste sesión
@@ -387,7 +387,7 @@
   function petmiRedirigirTrasLogin(){
     var path = window.location.pathname;
     if(path === '/' || path === '' || path.indexOf('index.html') >= 0){
-      window.location.href = '/galeria.html';
+      window.location.href = '/';
     } else {
       window.location.reload();
     }
