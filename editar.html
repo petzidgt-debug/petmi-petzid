@@ -254,6 +254,12 @@ function renderForm(){
     +'<div class="edit-hero-sub">'+heroSub+'</div>'
     +'</div></div>'
     +angelBanner
+    +'<div class="seccion" style="background:#fff8f0;border:1.5px solid #F5C842">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between">'
+    +'<div><div style="font-weight:700;color:#333;font-size:14px">🏆 ¿Es una mascota adoptada?</div>'
+    +'<div style="font-size:11.5px;color:#999;margin-top:2px">Actívalo para mostrar la insignia en su carnet</div></div>'
+    +'<label class="toggle"><input type="checkbox" id="eAdoptado" '+(m.adoptado?'checked':'')+'><span class="tog-slider"></span></label>'
+    +'</div></div>'
     +'<div class="error-box" id="errorBox"></div>'
     +'<div class="seccion"><div class="seccion-titulo">🐾 Datos de la mascota</div>'
     +'<label>Nombre *</label><input type="text" id="eNombre" value="'+((m.nombre||'').replace(/"/g,'&quot;'))+'" oninput="document.getElementById(\'heroNombre\').textContent=\'&quot;\'+this.value.toUpperCase()+\'&quot;\'">'
@@ -384,7 +390,8 @@ async function guardar(){
       instagram:document.getElementById('eInsta').value.trim(),
       alimento:document.getElementById('eAlimento').value.trim(),
       especial:document.getElementById('eEspecial').value.trim(),
-      ofertas:document.getElementById('togOfertas').checked?'Si':'No'
+      ofertas:document.getElementById('togOfertas').checked?'Si':'No',
+      adoptado:document.getElementById('eAdoptado').checked
     }
   };
   if(fotoUrl) payload.data.foto=fotoUrl;
