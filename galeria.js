@@ -1,3470 +1,2310 @@
-const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galeria — PetMi</title>
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
-// ── Web Push (notificaciones) ───────────────────────────────
-const webpush = require('web-push');
-const dns = require('dns').promises;
-const crypto = require('crypto');
-webpush.setVapidDetails(
-  'mailto:info@revistapetmi.com',
-  'BETkQ-teJGtPmnLMFc0OC6HqFvhFoMZySxoywrKincHOJIoixLxuDUSD5RelsWYQiq32p2wuRgn9StrCOcYhD8U',
-  'QR9-huYL22s0wrUpc6Ou_kCAW86LfCOYqXZJY5bzx40'
-);
+  
+/* HEADER */
+.header{background:#fff;border-bottom:1px solid #eee;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.header-logo img{height:38px;display:block}
+.header-logo-fallback{font-size:20px;font-weight:900;color:#00B4B4;font-family:'Arial Black',Arial,sans-serif}
+.header-logo-fallback span{color:#E05090}
+.btn-registro{padding:8px 18px;background:#00B4B4;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
+.header-user{display:flex;align-items:center;gap:10px}
+.user-badge{font-size:12px;color:#007a7a;font-weight:600;background:#e0f7f7;padding:6px 12px;border-radius:20px}
+.btn-salir{font-size:12px;color:#aaa;background:none;border:none;cursor:pointer;padding:4px 8px}
 
-// Manda un push a todas las suscripciones guardadas de un uid.
-// Si se pasa "categoria" (ej. 'notif_amigos'), primero revisa si esa
-// mascota tiene esa categoría activada — si la desactivó, no manda nada.
-// Si una suscripción ya no es válida (410/404 — el usuario desinstaló
-// o revocó permiso), se borra sola de la tabla.
-async function _enviarPush(uidMascota, payload, categoria) {
-  try {
-    if (categoria) {
-      const rPref = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uidMascota) + '&select=' + categoria,
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const prefRows = await rPref.json();
-      const pref = prefRows && prefRows[0];
-      if (pref && pref[categoria] === false) return; // el usuario desactivó esta categoría
-    }
-    const r = await fetch(
-      SUPABASE_URL + '/rest/v1/push_subscriptions?uid_mascota=eq.' + encodeURIComponent(uidMascota) + '&select=id,endpoint,p256dh,auth',
-      { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-    );
-    const subs = await r.json();
-    if (!Array.isArray(subs) || !subs.length) return;
+/* HERO */
+.hero{background:#00B4B4;padding:40px 20px;text-align:center}
 
-    await Promise.all(subs.map(async (s) => {
-      const subscription = { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } };
-      try {
-        await webpush.sendNotification(subscription, JSON.stringify(payload));
-      } catch (err) {
-        if (err.statusCode === 410 || err.statusCode === 404) {
-          // Suscripción muerta — borrarla
-          await fetch(SUPABASE_URL + '/rest/v1/push_subscriptions?id=eq.' + s.id, {
-            method: 'DELETE',
-            headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-          }).catch(() => {});
-        } else {
-          console.error('Push error uid ' + uidMascota + ':', err.message);
-        }
-      }
-    }));
-  } catch (e) {
-    console.error('_enviarPush error:', e.message);
-  }
+.dash-card{background:linear-gradient(135deg,#1a1a2e,#00B4B4);padding:22px 20px}
+.dash-card-inner{max-width:900px;margin:0 auto}
+.dash-saludo{font-size:19px;font-weight:900;color:#fff;margin-bottom:4px}
+.dash-sub{font-size:13.5px;color:rgba(255,255,255,.85)}
+.dash-body{background:#fff;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.dash-body-inner{max-width:900px;margin:0 auto}
+.dash-main-row{display:flex;flex-direction:column;gap:16px}
+.dash-acciones{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex:1}
+.dash-accion{text-align:center;text-decoration:none;display:block;position:relative;background:#fff;border-radius:14px;padding:14px 6px}
+.dash-accion-ico{border-radius:12px;padding:10px 4px;font-size:22px;display:flex;align-items:center;justify-content:center;height:44px;margin:0 auto 8px;width:44px}
+.dash-accion-lbl{font-size:11px;color:#1a1a2e;margin-top:2px;font-weight:700}
+.dash-accion-badge{position:absolute;top:-4px;right:6px;background:#E05090;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px}
+.dash-premio{border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;text-decoration:none;flex:1}
+.dash-premio-lbl{font-size:10.5px;font-weight:700}
+.dash-premio-titulo{font-size:13.5px;font-weight:900;color:#1a1a2e}
+.dash-premio-btn{color:#fff;font-size:11.5px;font-weight:700;padding:7px 14px;border-radius:99px;white-space:nowrap}
+.dash-seccion-titulo{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
+.dash-cuidado-item{background:#f8f7f4;border-radius:12px;padding:11px 14px;margin-bottom:6px;font-size:12.5px;color:#333}
+.dash-comunidad-scroll{display:flex;gap:8px;overflow-x:auto}
+.dash-comunidad-foto{width:70px;height:70px;border-radius:10px;object-fit:cover;flex-shrink:0}
+@media(min-width:768px){
+  .dash-main-row{flex-direction:row;align-items:stretch}
+  .dash-acciones{grid-template-columns:repeat(3,120px)}
+  #dashboardPersonal{max-width:900px;margin:24px auto;padding:0 20px}
+  .dash-card{border-radius:16px 16px 0 0}
+  .dash-body{border-radius:0 0 16px 16px}
 }
+.dash-nuevo-lista{font-size:12.5px;color:#555;line-height:2;text-align:left;margin-bottom:14px}
+.dash-nuevo-cta{display:block;background:#00B4B4;color:#fff;text-align:center;padding:12px;border-radius:99px;font-weight:700;font-size:13.5px;text-decoration:none}
+.hero h1{font-size:28px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:8px}
+.hero h1 span{color:#F5C842}
+.hero p{font-size:15px;color:rgba(255,255,255,.85);margin-bottom:20px}
+.hero-stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
+.hero-stat{text-align:center}
+.hero-stat-num{font-size:28px;font-weight:900;color:#fff}
+.hero-stat-lbl{font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1px}
 
-// Elige 2 ganadores al azar entre quienes participaron en la quiniela,
-// la primera vez que se llama — y guarda la elección en la tabla
-// "config" para que sea consistente para todos los que pregunten después.
-// Usa on_conflict=clave con ignore-duplicates: si 2 peticiones llegan
-// casi al mismo tiempo, solo una "gana" el insert, y ambas terminan
-// leyendo el mismo resultado final guardado (sin condición de carrera).
-async function _obtenerOElegirGanadoresSorteo() {
-  const rConf = await fetch(
-    SUPABASE_URL + '/rest/v1/config?clave=eq.sorteo_ganadores&select=valor',
-    { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-  );
-  const confRows = await rConf.json();
-  if (Array.isArray(confRows) && confRows.length && confRows[0].valor) {
-    return confRows[0].valor.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-  }
+/* SECCION CUMPLEAÑEROS */
+.seccion-solicitudes{background:#fff;padding:16px;border-bottom:0.5px solid #eee}
+.sol-card{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid #f5f5f5}
+.sol-card:last-child{border-bottom:none}
+.sol-foto{width:48px;height:48px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:22px}
+.sol-foto img{width:100%;height:100%;object-fit:cover}
+.sol-nombre{font-size:14px;font-weight:700;color:#00B4B4;cursor:pointer;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sol-meta{font-size:12px;color:#888;margin-top:2px}
+.sol-btns{display:flex;gap:6px;flex-shrink:0;margin-left:auto}
+.btn-sol-aceptar{padding:7px 14px;background:#00B4B4;color:#fff;border:none;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-sol-rechazar{padding:7px 10px;background:#f0f0ee;color:#888;border:1px solid #ddd;border-radius:999px;font-size:12px;cursor:pointer}
+.seccion-grupos{background:#00B4B4;padding:18px 16px}
+.seccion-grupos .seccion-titulo{color:#fff;font-family:'Arial Black',Arial,sans-serif}
+.seccion-grupos .seccion-sub{color:rgba(255,255,255,.75);font-size:13px;margin-bottom:12px}
+.grupos-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;-ms-overflow-style:none;scrollbar-width:none}
+.grupos-scroll::-webkit-scrollbar{display:none}
+.grupo-chip{background:rgba(255,255,255,.95);border-radius:999px;padding:7px 12px 7px 7px;display:flex;align-items:center;gap:7px;white-space:nowrap;cursor:pointer;flex-shrink:0;border:2px solid transparent;transition:border-color .15s}
+.grupo-chip.joined{border-color:#F5C842}
+.grupo-chip-ico{width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:13px}
+.grupo-chip-ico img{width:100%;height:100%;object-fit:cover}
+.grupo-chip-nom{font-size:12px;font-weight:700;color:#222}
+.grupo-chip-cnt{font-size:10px;color:#888}
+.grupo-cta{display:block;margin-top:10px;text-align:center;font-size:12px;font-weight:700;color:#fff;cursor:pointer;padding:8px;background:rgba(255,255,255,.2);border-radius:10px;border:1.5px solid rgba(255,255,255,.35);text-decoration:none}
+.seccion-cumple{background:linear-gradient(135deg,#F5C842,#ffaa00);padding:18px 16px}
+.seccion-titulo{font-size:18px;font-weight:900;color:#1a1a1a;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.seccion-sub{font-size:13px;color:rgba(0,0,0,.6);margin-bottom:12px}
+.cumple-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;-ms-overflow-style:none;scrollbar-width:none}
+.cumple-scroll::-webkit-scrollbar{display:none}
 
-  // Calcular el Top 3 (mismo criterio que wc_ranking: puntos, luego aciertos)
-  // para excluirlo del sorteo — quien ya va ganando por su desempeño no
-  // debe llevarse también el premio sorpresa.
-  let top3Emails = [];
-  try {
-    const PAGE = 1000;
-    let allPreds = [], offset = 0, keepGoing = true;
-    while (keepGoing) {
-      const rP = await fetch(
-        SUPABASE_URL + '/rest/v1/wc_predicciones?select=email,puntos,acerto&acerto=not.is.null&limit=' + PAGE + '&offset=' + offset,
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const page = await rP.json();
-      if (!Array.isArray(page) || page.length === 0) { keepGoing = false; break; }
-      allPreds = allPreds.concat(page);
-      if (page.length < PAGE) keepGoing = false;
-      offset += PAGE;
-    }
-    const byEmail = {};
-    allPreds.forEach(p => {
-      const em = (p.email || '').toLowerCase();
-      if (!em) return;
-      if (!byEmail[em]) byEmail[em] = { email: em, puntos: 0, aciertos: 0 };
-      byEmail[em].puntos += (p.puntos || 0);
-      byEmail[em].aciertos += (p.acerto ? 1 : 0);
-    });
-    top3Emails = Object.values(byEmail)
-      .sort((a, b) => b.puntos - a.puntos || b.aciertos - a.aciertos)
-      .slice(0, 3)
-      .map(x => x.email);
-  } catch (e) { /* si falla, simplemente no se excluye a nadie */ }
-
-  const rEmails = await fetch(
-    SUPABASE_URL + '/rest/v1/wc_predicciones?select=email',
-    { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-  );
-  const emailRows = await rEmails.json();
-  const unicos = [...new Set((Array.isArray(emailRows) ? emailRows : []).map(r => (r.email || '').toLowerCase()).filter(Boolean))]
-    .filter(e => !top3Emails.includes(e));
-  if (unicos.length < 2) return [];
-
-  for (let i = unicos.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [unicos[i], unicos[j]] = [unicos[j], unicos[i]];
-  }
-  const elegidos = unicos.slice(0, 2);
-
-  await fetch(SUPABASE_URL + '/rest/v1/config?on_conflict=clave', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
-      'Prefer': 'resolution=ignore-duplicates,return=minimal'
-    },
-    body: JSON.stringify({ clave: 'sorteo_ganadores', valor: elegidos.join(',') })
-  }).catch(() => {});
-
-  const rFinal = await fetch(
-    SUPABASE_URL + '/rest/v1/config?clave=eq.sorteo_ganadores&select=valor',
-    { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-  );
-  const finalRows = await rFinal.json();
-  if (Array.isArray(finalRows) && finalRows.length && finalRows[0].valor) {
-    return finalRows[0].valor.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-  }
-  return elegidos;
+.scroll-arrow{display:none;position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:#fff;border:1px solid #eee;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:20px;color:#555;cursor:pointer;z-index:5;align-items:center;justify-content:center;line-height:1}
+.scroll-arrow-left{left:-14px}
+.scroll-arrow-right{right:-14px}
+@media (min-width:700px){
+  .scroll-arrow{display:flex}
 }
+.cumple-card{background:#fff;border-radius:14px;overflow:hidden;min-width:110px;max-width:110px;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-shrink:0;position:relative;cursor:pointer}
+.cumple-foto{width:110px;height:95px;object-fit:cover;background:#fff3cd;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden}
+.cumple-foto img{width:110px;height:95px;object-fit:cover}
+.cumple-info{padding:6px 8px}
+.cumple-nombre{font-size:12px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cumple-fecha{font-size:10px;color:#888;margin-bottom:5px}
+.cumple-badge{position:absolute;top:5px;right:5px;font-size:13px}
+.btn-felicitar{width:100%;padding:5px;background:#F5C842;color:#1a1a1a;border:none;border-radius:999px;font-size:10px;font-weight:700;cursor:pointer}
 
-// ── Envío de código OTP por correo ──────────────────────────────
-// Usado tanto por el login "No recuerdo el nombre" como por la
-// verificación de voto sin cuenta del concurso.
-//
-// Orden de intento (7 sep):
-// 1. Wix Email Transmissions API — cuota de 5,000 correos/mes (muy
-//    por encima del límite diario de Gmail). Requiere WIX_API_KEY
-//    configurada en Vercel (Settings → Environment Variables). Sin
-//    esa variable, se salta directo a Gmail.
-// 2. Gmail/Apps Script — respaldo si Wix no está configurado, o si
-//    la llamada a Wix falla por cualquier razón.
-const WIX_API_KEY = process.env.WIX_API_KEY || '';
-const WIX_SITE_ID = '25b3d584-29fb-4861-b757-d9640d37c01f';
-const WIX_SENDER_NAME = 'PETmi';
-const WIX_SENDER_EMAIL = 'revistapetmi@gmail.com'; // remitente ya verificado en Wix
-const APPS_SCRIPT_OTP_URL = 'https://script.google.com/macros/s/AKfycbxrE4a8FX3e1FWPfKeNjMPzBWPKiJl94MaHa0sQFVVJgJzKCYkwH60A_N_zFrqihDWt/exec';
+/* SECCION ACTIVIDADES */
+.seccion-actividades{background:linear-gradient(135deg,#764ba2,#E05090);padding:24px 20px}
+.act-prev-card{background:#fff;border-radius:14px;overflow:hidden;min-width:160px;max-width:160px;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-shrink:0;cursor:pointer;transition:transform .2s}
+.act-prev-card:hover{transform:translateY(-2px)}
+.act-prev-card .act-prev-body{padding:8px 10px}
+.act-prev-body{padding:8px 10px}
+.act-prev-titulo{font-size:12px;font-weight:900;color:#222;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act-prev-meta{font-size:10px;color:#aaa}
 
-function _htmlOTP(saludo, code) {
-  return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
-    + '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">'
-    + '<div style="background:#1a1a2e;padding:28px;text-align:center;border-radius:12px 12px 0 0">'
-    + '<div style="display:inline-block;background:#fff;border-radius:12px;padding:8px 18px"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi" style="height:36px;width:auto;display:block"></div>'
-    + '</div>'
-    + '<div style="background:#fff;padding:28px;border:1px solid #eee">'
-    + '<h2 style="color:#1a1a2e;margin-top:0;text-align:center">Tu código de verificación</h2>'
-    + '<p style="color:#555;line-height:1.7;font-size:14px;text-align:center">' + saludo + ' Usa este código para continuar — es válido por 10 minutos.</p>'
-    + '<div style="text-align:center;margin:24px 0"><span style="display:inline-block;background:#f8f8f8;border-radius:12px;padding:16px 28px;font-size:32px;font-weight:900;letter-spacing:8px;color:#1a1a2e">' + code + '</span></div>'
-    + '<p style="text-align:center;color:#999;font-size:12px">Si tú no pediste este código, puedes ignorar este correo con confianza.</p>'
-    + '<p style="color:#aaa;font-size:12px;margin-top:24px">Con amor, el equipo de PetMi</p>'
-    + '</div>'
-    + '<div style="background:#F5C842;padding:12px;text-align:center;border-radius:0 0 12px 12px">'
-    + '<p style="margin:0;font-size:12px;color:#555">PetMi Guatemala</p>'
-    + '</div></div></body></html>';
+/* SECCION ANGELES */
+.seccion-angeles{background:linear-gradient(135deg,#667eea,#764ba2);padding:18px 16px}
+.seccion-angeles .seccion-titulo{color:#fff}
+.seccion-angeles .seccion-sub{color:rgba(255,255,255,.7)}
+.btn-mensaje-angel{width:100%;padding:5px;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:999px;font-size:10px;font-weight:700;cursor:pointer}
+.angel-card{background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.3);border-radius:14px;overflow:hidden;min-width:130px;max-width:130px;flex-shrink:0;position:relative;cursor:pointer;transition:transform .2s}
+.angel-foto{width:130px;height:130px;object-fit:cover;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:36px;position:relative}
+.angel-foto img{width:130px;height:130px;object-fit:cover;filter:grayscale(30%)}
+.angel-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(102,126,234,.2)}
+.angel-emoji{position:absolute;top:6px;right:6px;font-size:20px}
+.angel-info{padding:8px 10px}
+.angel-nombre{font-size:13px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.angel-fecha{font-size:11px;color:rgba(255,255,255,.6)}
+
+/* FILTERS */
+.filters{background:#fff;border-bottom:1px solid #eee;padding:12px 20px;position:sticky;top:60px;z-index:90}
+.filters-pills{display:flex;align-items:center;gap:8px;overflow-x:auto;padding-bottom:2px;-ms-overflow-style:none;scrollbar-width:none}
+.filters-pills::-webkit-scrollbar{display:none}
+.filter-btn{padding:8px 16px;border-radius:24px;border:1.5px solid #ddd;font-size:13px;font-weight:600;color:#888;cursor:pointer;background:#fff;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.filter-btn.active{border-color:#00B4B4;background:#e0f7f7;color:#007a7a}
+.search-input{width:100%;padding:9px 14px;border:1.5px solid #e0e0e0;border-radius:24px;font-size:13px;outline:none;margin-bottom:10px;box-sizing:border-box}
+.search-input:focus{border-color:#00B4B4}
+.results-count{font-size:12px;color:#888;white-space:nowrap;margin-top:6px;display:block}
+
+/* GRID */
+.gallery-wrap{padding:20px;max-width:1200px;margin:0 auto}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.pet-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative}
+.like-btn{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#999;background:none;border:none;padding:4px 6px;cursor:pointer;border-radius:99px}
+.like-btn.liked{color:#E05090}
+.like-btn:active{transform:scale(1.15)}
+.pet-card:hover{transform:translateY(-4px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.pet-photo{width:100%;aspect-ratio:1;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+.pet-photo img{width:100%;aspect-ratio:1;object-fit:cover}
+.angel-icon{position:absolute;top:6px;right:6px;font-size:22px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.pet-info{padding:10px 12px}
+.pet-name{font-size:14px;font-weight:900;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+.pet-especie{font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px}
+.pet-especie.perro{background:#e0f7f7;color:#007a7a}
+.pet-especie.gato{background:#fbeaf0;color:#993556}
+
+/* LOAD MORE */
+.load-more-wrap{text-align:center;padding:24px}
+.btn-load{padding:12px 32px;background:#00B4B4;color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer}
+
+/* MODAL */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 12px 48px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+.modal-photo{width:100%;height:280px;background:#e0f7f7;display:flex;align-items:center;justify-content:center;font-size:80px;position:relative}
+.modal-photo img{width:100%;height:280px;object-fit:cover}
+.modal-angel-badge{position:absolute;top:12px;right:12px;font-size:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+.modal-body{padding:20px}
+.modal-name{font-size:24px;font-weight:900;color:#222;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
+.modal-apodo{display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:14px}
+.modal-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.modal-field-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:3px}
+.modal-field-val{font-size:14px;font-weight:700;color:#222}
+.modal-footer{display:flex;gap:8px;padding:0 20px 20px;flex-wrap:wrap}
+.btn-primary{flex:1;padding:11px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;min-width:100px}
+.btn-secondary{flex:1;padding:11px;background:#f0f0ee;color:#555;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;min-width:80px}
+.btn-pink{background:#E05090;color:#fff}
+.btn-purple{background:#764ba2;color:#fff}
+.btn-danger{background:#fff0f0;color:#c0392b;border:1px solid #fcc}
+.btn-cerrar{padding:11px 16px;background:#f0f0ee;color:#666;border:none;border-radius:10px;font-size:13px;cursor:pointer}
+
+/* LOGIN MODAL */
+.login-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.login-modal-overlay.open{display:flex}
+.login-modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;box-shadow:0 12px 48px rgba(0,0,0,.2)}
+.login-title{font-size:20px;font-weight:900;color:#222;margin-bottom:6px}
+.login-sub{font-size:13px;color:#888;margin-bottom:20px;line-height:1.5}
+.login-input{width:100%;padding:13px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;color:#222;outline:none;transition:border .2s;margin-bottom:12px}
+.login-input:focus{border-color:#00B4B4}
+.btn-login{width:100%;padding:14px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.btn-login:disabled{background:#aaa;cursor:not-allowed}
+.btn-login-cancel{width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer}
+.login-msg{font-size:13px;text-align:center;padding:8px;border-radius:8px;margin-bottom:10px;display:none}
+.login-msg.error{background:#fbeaf0;color:#993556}
+.login-msg.success{background:#e0f7f7;color:#007a7a}
+
+/* CONFIRM MODAL */
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:700;display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-overlay.open{display:flex}
+.confirm-modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center}
+.confirm-icon{font-size:48px;margin-bottom:12px}
+.confirm-title{font-size:18px;font-weight:900;color:#222;margin-bottom:8px}
+.confirm-sub{font-size:13px;color:#888;margin-bottom:24px;line-height:1.5}
+.confirm-btns{display:flex;gap:10px}
+
+/* EMPTY / LOADING */
+.empty{text-align:center;padding:60px 20px;color:#aaa}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.loading{text-align:center;padding:60px}
+.spinner{width:40px;height:40px;border:3px solid #f0f0f0;border-top-color:#00B4B4;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* FOOTER */
+.footer{background:#1a1a2e;padding:24px;text-align:center;margin-top:40px}
+.footer-brand{font-size:18px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;color:#fff;margin-bottom:8px}
+.footer-brand span{color:#F5C842}
+.footer-sub{font-size:12px;color:rgba(255,255,255,.4)}
+
+@media(max-width:480px){
+  .gallery-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .hero h1{font-size:22px}
+  .hero-stats{gap:20px}
+  .modal-footer{flex-direction:column}
 }
+.header-nav{display:flex;align-items:center;gap:6px;margin-right:8px}
+.nav-link{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#555;text-decoration:none;transition:all .2s;white-space:nowrap;border:1.5px solid transparent}
+.nav-link:hover{background:#f0f0ee;color:#00B4B4}
+@media(max-width:480px){.header-nav{display:none}}
+.header-menu{position:relative;display:inline-block}
+.menu-btn{padding:7px 14px;border:1.5px solid #00B4B4;border-radius:20px;font-size:12px;font-weight:700;color:#00B4B4;background:#fff;cursor:pointer;white-space:nowrap}
+.menu-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.15);min-width:180px;overflow:hidden;display:none;z-index:500}
+.menu-dropdown.open{display:block}
+.menu-item{display:block;padding:12px 16px;font-size:14px;font-weight:600;color:#333;text-decoration:none;border:none;background:none;width:100%;text-align:left;border-bottom:1px solid #f5f5f5;cursor:pointer;box-sizing:border-box}
+.menu-item:last-child{border-bottom:none}
+.menu-item:hover{background:#f8f8f8}
+.menu-item.danger{color:#c0392b}
+.fab-pill{position:fixed;bottom:24px;right:20px;display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:99px;color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:70;text-decoration:none}
+</style>
+</head>
+<body>
 
-async function _enviarOTPPorWix(email, code, dueno, etiquetaLog) {
-  if (!WIX_API_KEY) return { ok: false, error: 'WIX_API_KEY no configurada' };
-  const saludo = dueno ? ('Hola ' + dueno + '!') : 'Hola!';
-  try {
-    const r = await fetch('https://www.wixapis.com/email-transmissions/v1/email-transmissions/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': WIX_API_KEY,
-        'wix-site-id': WIX_SITE_ID
-      },
-      body: JSON.stringify({
-        emailTransmission: {
-          emailSubject: 'Tu código de verificación: ' + code,
-          emailHtmlContent: _htmlOTP(saludo, code),
-          senderName: WIX_SENDER_NAME,
-          senderEmailAddress: WIX_SENDER_EMAIL,
-          toRecipients: [{ emailAddress: email }],
-          type: 'TRANSACTIONAL'
-        },
-        idempotencyKey: crypto.randomUUID()
-      })
-    });
-    const bodyTxt = await r.text();
-    console.log((etiquetaLog || 'enviarOTP') + ' -> Wix status:', r.status, '| respuesta:', bodyTxt);
-    if (!r.ok) {
-      let parsed; try { parsed = JSON.parse(bodyTxt); } catch(e) { parsed = null; }
-      return { ok: false, error: (parsed && parsed.message) || 'No se pudo enviar por Wix' };
-    }
-    return { ok: true };
-  } catch(eWix) {
-    console.error((etiquetaLog || 'enviarOTP') + ' -> Wix error:', eWix.message);
-    return { ok: false, error: 'Error de conexión con Wix' };
-  }
-}
+<div id="dashboardPersonal"></div>
 
-async function _enviarCodigoOTPPorCorreo(email, code, dueno, etiquetaLog) {
-  const porWix = await _enviarOTPPorWix(email, code, dueno, etiquetaLog);
-  if (porWix.ok) return porWix;
-  console.log((etiquetaLog || 'enviarOTP') + ' -> Wix falló ('+porWix.error+'), probando Gmail como respaldo...');
+<div style="background:#f0f7f7;padding:20px 20px 16px">
+  <div style="max-width:900px;margin:0 auto;font-size:22px;font-weight:900;color:#1a1a2e">🐾 Actividad de la comunidad</div>
+</div>
 
-  try {
-    const rGas = await fetch(APPS_SCRIPT_OTP_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'enviarOTP', email, code, dueno: dueno || '' })
-    });
-    const bodyGas = await rGas.text();
-    console.log((etiquetaLog || 'enviarOTP') + ' -> Apps Script status:', rGas.status, '| respuesta:', bodyGas);
-    let parsed; try { parsed = JSON.parse(bodyGas); } catch(e) { parsed = null; }
-    if (!rGas.ok || !parsed || parsed.emailEnviado === false) {
-      return { ok: false, error: (parsed && parsed.error) || 'No se pudo enviar el código' };
-    }
-    return { ok: true };
-  } catch(eGas) {
-    console.error((etiquetaLog || 'enviarOTP') + ' -> Apps Script error:', eGas.message);
-    return { ok: false, error: 'Error de conexión al enviar el código' };
-  }
-}
+<!-- SOLICITUDES PENDIENTES -->
+<div class="seccion-solicitudes" id="seccionSolicitudes" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <span style="font-size:14px;font-weight:700;color:#222">Solicitudes de amistad</span>
+    <span id="solicitudesCount" style="background:#E05090;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px"></span>
+  </div>
+  <div id="solicitudesWrap"></div>
+</div>
 
-// ── Validar que el dominio del correo exista de verdad ──────────
-// No manda ningún correo (no consume cuota de Gmail) — solo revisa
-// si el dominio tiene registros MX (servidores de correo configurados).
-// Detiene dominios inventados al azar; NO detiene un usuario inventado
-// sobre un dominio real (ej. gmail.com) — es un filtro parcial, no
-// una verificación completa de que la persona sea dueña del correo.
-async function dominioTieneCorreoValido(email) {
-  try {
-    const dominio = String(email || '').split('@')[1];
-    if (!dominio) return false;
-    const registros = await dns.resolveMx(dominio);
-    return Array.isArray(registros) && registros.length > 0;
-  } catch (e) {
-    return false; // dominio no existe o no tiene MX configurado
-  }
-}
+<!-- CUMPLEAÑEROS DEL MES -->
+<!-- GRUPOS -->
+<div class="seccion-grupos" id="seccionGrupos" style="display:none">
+  <div class="seccion-titulo">Grupos 🐕</div>
+  <div class="seccion-sub">Comunidades de mascotas en Guatemala</div>
+  <div class="grupos-scroll" id="gruposScroll"></div>
+  <a href="/grupos.html" class="grupo-cta">Únete a tu grupo o Crea tu grupo aquí →</a>
+</div>
 
-// Manda un push a TODAS las suscripciones únicas guardadas — usado
-// por enviarPushExterno (uid_mascota:'TODOS'), y por la activación de
-// eventos y avisos de mascota perdida. Si se pasa "categoria", solo
-// manda a quienes no la hayan desactivado en sus preferencias.
-//
-// Las mascotas angelito NUNCA califican directamente para push de
-// eventos/perdidos — en vez de eso, se busca otra mascota VIVA del
-// mismo correo (grupo familiar) y se usa SU preferencia para decidir
-// si mandar. El push sigue llegando al mismo dispositivo/suscripción
-// (nada que ver con qué mascota está "activa" en el navegador), solo
-// cambia de quién se toma la preferencia. Si no hay ninguna mascota
-// viva en esa familia, no se manda nada para esa suscripción.
-async function _enviarPushATodos(payload, categoria) {
-  const r = await fetch(SUPABASE_URL + '/rest/v1/push_subscriptions?select=uid_mascota', {
-    headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+<div class="seccion-cumple" id="seccionCumple" style="display:none">
+  <div class="seccion-titulo">🎂 Cumpleañeros de <span id="mesActualNombre"></span></div>
+  <div class="seccion-sub">Mascotas que cumplen años o llegaron a casa este mes</div>
+  <div style="position:relative">
+    <button class="scroll-arrow scroll-arrow-left" onclick="document.getElementById('cumpleScroll').scrollBy({left:-260,behavior:'smooth'})">‹</button>
+    <div class="cumple-scroll" id="cumpleScroll"></div>
+    <button class="scroll-arrow scroll-arrow-right" onclick="document.getElementById('cumpleScroll').scrollBy({left:260,behavior:'smooth'})">›</button>
+  </div>
+</div>
+
+<!-- QUIEN SE APUNTA -->
+<div class="seccion-actividades" id="seccionActividades" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+    <div class="seccion-titulo" style="color:#fff">🐾 ¿Quién se apunta?</div>
+    <a href="/avisos.html" style="font-size:12px;color:rgba(255,255,255,.8);text-decoration:none;font-weight:600;margin-top:4px">Ver todas →</a>
+  </div>
+  <div class="seccion-sub" style="color:rgba(255,255,255,.7)">Planes y anuncios de la comunidad</div>
+  <div class="cumple-scroll" id="actividadesScroll"></div>
+</div>
+
+<div style="max-width:900px;margin:8px auto 4px;padding:0 20px">
+  <div style="font-size:20px;font-weight:900;color:#1a1a2e">🐾 Amigos PetMi</div>
+</div>
+
+<!-- FILTERS -->
+<div class="filters">
+  <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nombre..." oninput="applyFilter()">
+  <div class="filters-pills">
+    <button class="filter-btn active" onclick="setFilter('todos',this)">Todos</button>
+    <button class="filter-btn" onclick="setFilter('perro',this)">🐶 Perros</button>
+    <button class="filter-btn" onclick="setFilter('gato',this)">🐱 Gatos</button>
+    <button class="filter-btn" onclick="setFilter('angelito',this)">🐾🌈 Angelitos</button>
+  </div>
+  <span class="results-count" id="resultsCount"></span>
+</div>
+
+<!-- GALLERY -->
+<div class="gallery-wrap">
+  <div class="gallery-grid" id="galleryGrid">
+    <div style="grid-column:1/-1" id="skeletonWrap">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">
+        <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)"><div style="width:100%;aspect-ratio:1;background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div><div style="padding:10px 12px"><div style="height:14px;background:#f0f0ee;border-radius:4px;margin-bottom:6px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div><div style="height:10px;width:60%;background:#f0f0ee;border-radius:4px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div></div></div>
+        <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)"><div style="width:100%;aspect-ratio:1;background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div><div style="padding:10px 12px"><div style="height:14px;background:#f0f0ee;border-radius:4px;margin-bottom:6px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div><div style="height:10px;width:60%;background:#f0f0ee;border-radius:4px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div></div></div>
+        <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)"><div style="width:100%;aspect-ratio:1;background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div><div style="padding:10px 12px"><div style="height:14px;background:#f0f0ee;border-radius:4px;margin-bottom:6px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div><div style="height:10px;width:60%;background:#f0f0ee;border-radius:4px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div></div></div>
+        <div style="background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)"><div style="width:100%;aspect-ratio:1;background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmer 1.2s infinite"></div><div style="padding:10px 12px"><div style="height:14px;background:#f0f0ee;border-radius:4px;margin-bottom:6px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div><div style="height:10px;width:60%;background:#f0f0ee;border-radius:4px;animation:shimmer 1.2s infinite;background-size:200% 100%;background-image:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%)"></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+    <button class="btn-load" onclick="loadMore()">Ver mas mascotas</button>
+  </div>
+</div>
+
+<div class="seccion-angeles" id="seccionAngeles" style="display:none">
+  <div class="seccion-titulo">🐾 Ángeles de 4 Patas</div>
+  <div class="seccion-sub" style="color:rgba(255,255,255,.7)">Siempre en nuestros corazones 🌈</div>
+  <div class="cumple-scroll" id="angelesScroll"></div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer" style="background:#1a1a2e;padding:28px 20px;text-align:center">
+  <div class="footer-brand" style="font-size:20px;font-weight:900;color:#fff;margin-bottom:4px">petz<span style="color:#00B4B4">ID</span></div>
+  <div class="footer-sub" style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:16px">PetMi Guatemala — Comunidad de mascotas</div>
+  <div style="display:flex;justify-content:center;gap:32px;flex-wrap:wrap">
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statTotal">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Mascotas</div></div>
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statPerros">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Perros</div></div>
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statGatos">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Gatos</div></div>
+    <div><div style="font-size:24px;font-weight:900;color:#fff" id="statAngeles">-</div><div style="font-size:11px;color:rgba(255,255,255,.6)">Angelitos 🐾</div></div>
+  </div>
+  <a href="/mensajes.html?abrir=PETMI-OFICIAL&nombre=PetMi%20Oficial" style="display:inline-block;margin-top:20px;color:rgba(255,255,255,.7);font-size:12px;text-decoration:underline">💬 ¿Tienes dudas? Contáctanos</a>
+</div>
+
+<!-- MODAL MASCOTA -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="position:relative">
+    <div id="modalPhoto" class="modal-photo">🐾</div>
+    <button onclick="closeModal()" style="position:absolute;top:10px;right:10px;width:32px;height:32px;background:rgba(0,0,0,.5);border:none;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;line-height:1">×</button>
+    <div class="modal-body">
+      <div class="modal-name" id="modalName">-</div>
+      <div class="modal-apodo" id="modalApodo">-</div>
+      <div class="modal-fields" style="grid-template-columns:1fr 1fr 1fr">
+        <div><div class="modal-field-lbl">Especie</div><div class="modal-field-val" id="modalEspecie">-</div></div>
+        <div><div class="modal-field-lbl">Sexo</div><div class="modal-field-val" id="modalSexo">-</div></div>
+        <div><div class="modal-field-lbl" id="modalFechaLbl">Fecha</div><div class="modal-field-val" id="modalFecha">-</div></div>
+      </div>
+      <div id="modalComentario" style="display:none">
+        <div id="modalComentarioText"></div>
+      </div>
+      <div id="actividadesWrap" style="display:none;margin-bottom:10px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Le gustaba / Le gusta</div>
+        <div id="modalActividades" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+      </div>
+      <div id="modalEspecial" style="display:none;background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #F5C842">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:6px">Algo especial</div>
+        <div id="modalEspecialText" style="font-size:13px;color:#555;line-height:1.6"></div>
+      </div>
+      <div id="mensajesSection" style="margin-top:4px;display:none">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:8px">Mensajes 💬</div>
+        <div id="mensajesLista" style="max-height:160px;overflow-y:auto;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="mensajeAutor" placeholder="Tu nombre" style="width:35%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none">
+          <input type="text" id="mensajeTxt" placeholder="Deja un mensaje..." style="flex:1;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none">
+          <button onclick="enviarMensaje()" style="padding:10px 14px;background:#00B4B4;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">✉️</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- MODAL LOGIN -->
+<div class="login-modal-overlay" id="loginOverlay">
+  <div class="login-modal" style="position:relative">
+    <button onclick="closeLoginModal()" style="position:absolute;top:12px;right:12px;width:28px;height:28px;background:#f0f0ee;border:none;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+
+    <!-- Paso 1: Email -->
+    <div id="loginStep1">
+      <div class="login-title">¿Ya tienes PetzID?</div>
+      <div class="login-sub">Ingresa tu correo para continuar.</div>
+      <div class="login-msg" id="loginMsg"></div>
+      <input type="email" class="login-input" id="loginEmail" placeholder="tu@correo.com" inputmode="email"
+        onkeydown="if(event.key==='Enter') irAPaso2()">
+      <button class="btn-login" id="btnPaso1" onclick="irAPaso2()">Continuar →</button>
+      <button class="btn-login-cancel" onclick="closeLoginModal()">Cancelar</button>
+    </div>
+
+    <!-- Paso 2: Nombre mascota -->
+    <div id="loginStep2" style="display:none">
+      <div class="login-title">🐾 ¿Cómo se llama?</div>
+      <div class="login-sub">Escribe el nombre de una de tus mascotas registradas.</div>
+      <div class="login-msg" id="loginMsg2"></div>
+      <input type="text" class="login-input" id="loginNombre" placeholder="Nombre de tu mascota"
+        autocomplete="off" onkeydown="if(event.key==='Enter') verificarLogin()">
+      <button class="btn-login" id="btnLogin" onclick="verificarLogin()">Ingresar</button>
+      <button class="btn-login-cancel" onclick="volverPaso1()">← Cambiar correo</button>
+      <button style="width:100%;padding:10px;background:none;border:none;color:#00B4B4;font-size:13px;cursor:pointer;margin-top:4px" onclick="enviarOTPLogin()">📧 No recuerdo el nombre</button>
+    </div>
+
+    <!-- Paso 3: Código por correo (si no recuerda el nombre) -->
+    <div id="loginStep3" style="display:none">
+      <div class="login-title">📬 Revisa tu correo</div>
+      <div class="login-sub" id="loginOTPSub">Enviamos un código de 6 dígitos a tu correo.</div>
+      <div class="login-msg" id="loginMsg3"></div>
+      <input type="text" class="login-input" id="loginOTP" placeholder="000000" inputmode="numeric" maxlength="6" style="letter-spacing:8px;font-size:22px;text-align:center"
+        onkeydown="if(event.key==='Enter') verificarOTPLogin()">
+      <button class="btn-login" id="btnLogin3" onclick="verificarOTPLogin()">Verificar código</button>
+      <button class="btn-login-cancel" onclick="volverPaso2()">← Volver</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-modal" style="position:relative">
+    <button onclick="closeConfirm()" style="position:absolute;top:12px;right:12px;width:28px;height:28px;background:#f0f0ee;border:none;border-radius:50%;font-size:16px;cursor:pointer">×</button>
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirmTitle">¿Estás seguro?</div>
+    <div class="confirm-sub" id="confirmSub">Esta acción no se puede deshacer.</div>
+    <div class="confirm-btns">
+      <button class="btn-primary btn-danger" style="flex:1;padding:12px" id="confirmOk">Confirmar</button>
+      <button class="btn-secondary" style="flex:1;padding:12px" onclick="closeConfirm()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Estado global ─────────────────────────────────────────────
+var allPets=[], filtered=[], shown=0, perPage=(window.innerWidth>=768?12:8), currentFilter='todos';
+
+var sessionEmail=localStorage.getItem('petzid_email')||'';
+var sessionDueno=localStorage.getItem('petzid_dueno')||'';
+var currentModalPet=null;
+var misAmigosCache=[];
+
+var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+
+function supaDeleteMascota(uid){
+  return fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toUpperCase()),{
+    method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'}
   });
-  const rows = await r.json();
-  let uidsUnicos = [...new Set((rows || []).map(x => x.uid_mascota))];
-  if (!uidsUnicos.length) return { count: 0, uids: [] };
+}
+function supaMarkAngelito(uid,esAngel,fecha){
+  return fetch(SUPA_URL+'/rest/v1/mascotas?uid=eq.'+encodeURIComponent(uid.toUpperCase()),{
+    method:'PATCH',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({angelito:esAngel,fecha_angelito:esAngel?(fecha||new Date().toISOString().split('T')[0]):null})
+  });
+}
 
-  const camposExtra = categoria ? ',' + categoria : '';
-  const rInfo = await fetch(
-    SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uidsUnicos.map(u => '"' + u + '"').join(',') + ')&select=uid,email,angelito' + camposExtra,
-    { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-  );
-  const infoRows = await rInfo.json();
-  const infoPorUid = {};
-  (infoRows || []).forEach(x => { infoPorUid[String(x.uid || '').toUpperCase()] = x; });
+// ── Header ────────────────────────────────────────────────────
+function cerrarSesion(){ if(typeof petmiCerrarSesion==='function') petmiCerrarSesion(); }
 
-  // Para cada email con al menos una mascota angelito en la lista, buscar
-  // una mascota viva del mismo correo para usar como reemplazo.
-  const emailsConAngelito = [...new Set(Object.values(infoPorUid).filter(x => x.angelito).map(x => x.email).filter(Boolean))];
-  let reemplazoPorEmail = {};
-  if (emailsConAngelito.length) {
-    const rFam = await fetch(
-      SUPABASE_URL + '/rest/v1/mascotas?angelito=eq.false&email=in.(' + emailsConAngelito.map(e => '"' + e + '"').join(',') + ')&select=uid,email' + camposExtra,
-      { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-    );
-    (await rFam.json() || []).forEach(x => { if (!reemplazoPorEmail[x.email]) reemplazoPorEmail[x.email] = x; });
+// ── Dashboard personalizado ─────────────────────────────────────
+// ── Recorte inteligente de Cloudinary — centra la parte relevante de
+// la foto (cara/cuerpo de la mascota) en vez de cortar por el centro
+// geométrico. No distorsiona: mantiene proporción, solo recorta.
+// Se queda intacta cualquier URL que no sea de Cloudinary (ej. si
+// alguna foto vieja quedó en otro proveedor).
+function cloudinarySmartCrop(url, w, h){
+  if(!url || url.indexOf('res.cloudinary.com')<0) return url;
+  var marker = '/upload/';
+  var idx = url.indexOf(marker);
+  if(idx<0) return url;
+  var transform = 'c_fill,g_auto:subject,w_'+(w||400)+',h_'+(h||400)+'/';
+  return url.slice(0, idx+marker.length) + transform + url.slice(idx+marker.length);
+}
+
+function edadMesesDeDash(mascota) {
+  if (!mascota.fecha) return null;
+  var f = new Date(mascota.fecha);
+  if (isNaN(f)) return null;
+  var h = new Date();
+  return (h.getFullYear()-f.getFullYear())*12 + (h.getMonth()-f.getMonth());
+}
+
+function toggleSaludDash(uid){
+  var det = document.getElementById('saludDetalle_'+uid);
+  var arrow = document.getElementById('saludArrow_'+uid);
+  if (!det || !arrow) return;
+  var abierto = det.style.display === 'block';
+  det.style.display = abierto ? 'none' : 'block';
+  arrow.style.transform = abierto ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+function abrirPerdidoDesdeDashboard(uid){
+  var p = allPets.find(function(x){ return x.uid === uid; });
+  if(!p){ return; }
+  currentModalPet = p;
+  abrirModalPerdido();
+}
+
+function cargarDashboardPersonalizado() {
+  var wrap = document.getElementById('dashboardPersonal');
+
+  // Estado 1: sin sesión
+  if (!sessionEmail) {
+    wrap.innerHTML =
+      '<div class="dash-card" style="border-radius:16px 16px 0 0;text-align:center"><div class="dash-card-inner">'
+      + '<div class="dash-saludo">&#161;Hola! &#x1F44B;</div>'
+      + '<div class="dash-sub">&#191;A&uacute;n no eres parte de la comunidad? Mira todo lo que se est&aacute; perdiendo tu mascota</div>'
+      + '</div></div>'
+      + '<div class="dash-body" style="border-radius:0 0 16px 16px"><div class="dash-body-inner" style="max-width:420px;margin:0 auto;text-align:center">'
+      + '<img src="https://app.revistapetmi.com/img/petzID01.gif" alt="Carnet PetzID" style="max-width:220px;width:100%;margin:6px 0 16px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12)">'
+      + '<div style="background:#f8f7f4;border-radius:14px;padding:18px;text-align:left;margin-bottom:16px">'
+      + '<div style="font-size:14px;font-weight:900;color:#1a1a2e;margin-bottom:10px">Con tu cuenta de PetMi puedes:</div>'
+      + '<div class="dash-nuevo-lista" style="margin-bottom:0">'
+      + '<div>&#x2713; Ganar puntos y premios reales</div>'
+      + '<div>&#x2713; Ver lugares pet-friendly cerca de ti</div>'
+      + '<div>&#x2713; Enterarte de eventos para tu mascota</div>'
+      + '<div>&#x2713; Recordatorios de salud autom&aacute;ticos</div>'
+      + '</div></div>'
+      + '<div style="display:flex;gap:10px">'
+      + '<button onclick="openLoginModal()" style="flex:1;background:#fff;color:#00B4B4;border:1.5px solid #00B4B4;padding:13px;border-radius:99px;font-weight:700;font-size:13.5px;cursor:pointer">Iniciar sesi&oacute;n</button>'
+      + '<a href="/registro.html" style="flex:1;background:#00B4B4;color:#fff;padding:13px;border-radius:99px;font-weight:700;font-size:13.5px;text-decoration:none;text-align:center">Registrarme</a>'
+      + '</div></div></div>';
+    return;
   }
 
-  // pushUid = a quién se le manda el push de verdad (el dispositivo real,
-  // nunca cambia — no se puede "mover" una suscripción a otra mascota).
-  // mensajeUid = bajo cuál mascota se guarda el mensaje en el buzón — para
-  // una angelito, se guarda bajo su reemplazo vivo, para que alguien lo vea.
-  const pares = uidsUnicos.map(u => {
-    const info = infoPorUid[String(u || '').toUpperCase()];
-    if (!info) return null; // suscripción huérfana, sin mascota asociada
-    if (info.angelito) {
-      const reemplazo = reemplazoPorEmail[info.email];
-      if (!reemplazo) return null; // angelito sin ninguna mascota viva en su familia
-      if (categoria && reemplazo[categoria] === false) return null;
-      return { pushUid: u, mensajeUid: reemplazo.uid };
-    }
-    if (categoria && info[categoria] === false) return null;
-    return { pushUid: u, mensajeUid: u };
-  }).filter(Boolean);
+  var misMascotas = allPets.filter(function(p){ return p.email === sessionEmail && !p.angelito; });
 
-  await Promise.all(pares.map(p => _enviarPush(p.pushUid, payload)));
-  const uidsMensaje = [...new Set(pares.map(p => p.mensajeUid))];
-  return { count: pares.length, uids: uidsMensaje };
+  // Estado 2: con sesión, pero sin ninguna mascota registrada
+  if (!misMascotas.length) {
+    wrap.innerHTML =
+      '<div class="dash-card" style="text-align:center"><div class="dash-card-inner">'
+      + '<div class="dash-saludo">&#161;Hola! &#x1F44B; &#191;A&uacute;n no eres parte de la comunidad?</div>'
+      + '<div class="dash-sub">Mira todo lo que tu mascota se est&aacute; perdiendo&hellip;</div>'
+      + '</div></div>'
+      + '<div class="dash-body"><div class="dash-body-inner" style="text-align:center;max-width:420px">'
+      + '<img src="https://app.revistapetmi.com/img/petzID01.gif" alt="Carnet PetzID" style="max-width:260px;width:100%;margin:6px 0 16px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12)">'
+      + '<div style="background:#f8f7f4;border-radius:14px;padding:16px;text-align:left;margin-bottom:14px">'
+      + '<div class="dash-nuevo-lista" style="margin-bottom:0">'
+      + '<div>&#x2713; Su propio carnet digital, listo para compartir</div>'
+      + '<div>&#x2713; Recordatorios de salud autom&aacute;ticos</div>'
+      + '<div>&#x2713; Puntos, premios reales y la ruleta</div>'
+      + '<div>&#x2713; Una comunidad entera de pet lovers en Guatemala</div>'
+      + '</div></div>'
+      + '<a href="/registro.html" class="dash-nuevo-cta"><span style="text-decoration:none">+</span> Agregar mascota</a>'
+      + '</div></div>';
+    return;
+  }
+
+  var mascota = misMascotas[0];
+  var duenoRaw = (sessionDueno || 'Amigo PetMi').trim().split(' ')[0];
+  var dueno = duenoRaw ? duenoRaw.charAt(0).toUpperCase() + duenoRaw.slice(1).toLowerCase() : 'Amigo PetMi';
+  var nombresMascotas = misMascotas.map(function(p){ return p.nombre; });
+  var nombresTexto = nombresMascotas.length > 1
+    ? nombresMascotas.slice(0,-1).join(', ') + ' y ' + nombresMascotas[nombresMascotas.length-1]
+    : nombresMascotas[0];
+  var verboEstar = nombresMascotas.length > 1 ? 'est&aacute;n' : 'est&aacute;';
+
+  Promise.all([
+    fetch('/api/galeria?action=getReglasSalud').then(function(r){return r.json();}).catch(function(){return {reglas:[]};}),
+    Promise.all(misMascotas.map(function(m){
+      return fetch('/api/galeria?action=getRegistrosSalud&uid='+encodeURIComponent(m.uid)).then(function(r){return r.json();}).catch(function(){return {registros:[]};});
+    })),
+    fetch('/api/galeria?action=getPuntos&email='+encodeURIComponent(sessionEmail)).then(function(r){return r.json();}).catch(function(){return {total:0};}),
+    fetch('/api/galeria?action=checkRuletaGiro&email='+encodeURIComponent(sessionEmail)).then(function(r){return r.json();}).catch(function(){return {ya_giro:false};}),
+    fetch('/api/galeria?action=getEventos').then(function(r){return r.json();}).catch(function(){return {eventos:[]};})
+  ]).then(function(res){
+    var registrosPorMascota = misMascotas.map(function(m, i){ return { mascota: m, registros: (res[1][i]&&res[1][i].registros)||[] }; });
+    renderDashboardPersonalizado(mascota, dueno, res[0].reglas||[], registrosPorMascota, res[2].total||0, res[3], res[4].eventos||[], nombresTexto, verboEstar);
+  });
 }
 
-// Guarda un mensaje de "PETMI-OFICIAL" en el buzón de cada uid — mismo
-// patrón que el mensaje de bienvenida al registrarse. Para que un aviso
-// masivo no solo salga como notificación (que se puede perder/descartar)
-// sino que también quede guardado en Mensajes dentro de la app.
-async function _enviarMensajeOficialAUids(uids, mensaje) {
-  if (!uids || !uids.length) return;
-  await Promise.all(uids.map(u => fetch(SUPABASE_URL + '/rest/v1/conversaciones', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-    body: JSON.stringify({ uid_emisor: 'PETMI-OFICIAL', uid_receptor: u, mensaje, leido: false })
-  }).catch(() => {})));
+function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosTotal, ruletaEstado, eventos, nombresTexto, verboEstar) {
+  var wrap = document.getElementById('dashboardPersonal');
+  var edadMeses = edadMesesDeDash(mascota);
+
+  // ── Calcular salud de CADA mascota de la familia ──
+  function edadMesesDeOtra(m){
+    if (!m.fecha) return null;
+    var f = new Date(m.fecha);
+    if (isNaN(f)) return null;
+    var h = new Date();
+    return (h.getFullYear()-f.getFullYear())*12 + (h.getMonth()-f.getMonth());
+  }
+
+  var saludPorMascota = registros.map(function(entrada){
+    var m = entrada.mascota;
+    var edadM = edadMesesDeOtra(m);
+    var aplicablesM = reglas.filter(function(r){
+      var especieOk = r.especie === 'Todos' || r.especie === m.especie;
+      var edadMinOk = r.edad_min_meses == null || edadM == null || edadM >= r.edad_min_meses;
+      var edadMaxOk = r.edad_max_meses == null || edadM == null || edadM <= r.edad_max_meses;
+      return especieOk && edadMinOk && edadMaxOk;
+    });
+
+    function ultimoRegistroDeM(reglaId) {
+      var filtr = entrada.registros.filter(function(r){ return r.nombre_especifico === String(reglaId); });
+      if (!filtr.length) return null;
+      return filtr.sort(function(a,b){ return new Date(b.fecha_aplicacion) - new Date(a.fecha_aplicacion); })[0];
+    }
+
+    var detalle = { hoy: [], proximamente: [], completados: [] };
+    aplicablesM.forEach(function(regla){
+      var ultimo = ultimoRegistroDeM(regla.id);
+      if (!ultimo) { detalle.hoy.push({ nombre: regla.nombre, sub: 'Sin registro' }); return; }
+      var vence = new Date(ultimo.fecha_aplicacion);
+      vence.setDate(vence.getDate() + Math.round(regla.frecuencia_meses*30));
+      var dias = Math.round((vence-new Date())/86400000);
+      if (dias < 0) { detalle.hoy.push({ nombre: regla.nombre, sub: 'Venci\u00f3' }); return; }
+      if (dias <= 30) { detalle.proximamente.push({ nombre: regla.nombre, sub: vence.toLocaleDateString('es-GT',{day:'2-digit',month:'long'}) }); return; }
+      detalle.completados.push({ nombre: regla.nombre, sub: '' });
+    });
+
+    var total = aplicablesM.length;
+    var alDia = detalle.completados.length;
+    var pct = total > 0 ? Math.round((alDia/total)*100) : 0;
+    var color = pct >= 80 ? '#2ecc71' : pct >= 50 ? '#F5C842' : '#E05090';
+    return { mascota: m, totalCuidados: total, alDiaCount: alDia, porcentajeSalud: pct, colorBarra: color, saludDetalle: detalle };
+  });
+
+  var cuidados = [];
+
+  // Cumpleaños
+  if (mascota.fecha) {
+    var f = new Date(mascota.fecha);
+    var hoy = new Date();
+    var prox = new Date(hoy.getFullYear(), f.getMonth(), f.getDate());
+    if (prox < hoy) prox.setFullYear(hoy.getFullYear()+1);
+    var faltan = Math.round((prox-hoy)/86400000);
+    if (faltan <= 60) {
+      cuidados.unshift({ texto: '&#127874; Cumplea&ntilde;os de ' + mascota.nombre + ' &mdash; en ' + faltan + ' d&iacute;as', prioridad: 5 });
+      cuidados = cuidados.slice(0,3);
+    }
+  }
+
+  // Evento más próximo
+  var eventoTxt = '';
+  if (eventos.length) {
+    var ev = eventos[0];
+    eventoTxt = '<div class="dash-cuidado-item">&#128197; ' + ev.titulo + ' &mdash; ' + new Date(ev.fecha).toLocaleDateString('es-GT',{day:'2-digit',month:'short'}) + '</div>';
+  }
+
+  // ── Premio de hoy: ruleta si no ha girado, si no juego del dia ──
+  var premioHtml;
+  if (!ruletaEstado.ya_giro) {
+    premioHtml = '<a href="/ruleta.html" class="dash-premio" style="background:#F5C842">'
+      + '<div><div class="dash-premio-lbl" style="color:#856404">TU PREMIO DE HOY</div><div class="dash-premio-titulo">&#127920; Gira la ruleta</div></div>'
+      + '<div class="dash-premio-btn" style="background:#1a1a2e">Girar &rarr;</div></a>';
+  } else {
+    premioHtml = '<a href="/juego.html" class="dash-premio" style="background:#e8f4ff">'
+      + '<div><div class="dash-premio-lbl" style="color:#0070cc">JUEGO DEL D&Iacute;A</div><div class="dash-premio-titulo">&#127918; Encuentra al Peludo</div></div>'
+      + '<div class="dash-premio-btn" style="background:#00B4B4">Jugar &rarr;</div></a>';
+  }
+
+  // ── Actividad de comunidad (fotos recientes de otros) ──
+  var fotosComunidad = allPets.filter(function(p){ return p.foto && p.foto.indexOf('http')>=0 && !p.angelito; })
+    .sort(function(a,b){ return new Date(b.createdAt)-new Date(a.createdAt); })
+    .slice(0, 8);
+  var comunidadHtml = fotosComunidad.map(function(p){
+    return '<img src="'+p.foto+'" class="dash-comunidad-foto" title="'+p.nombre+'">';
+  }).join('');
+
+  // ── Perfil incompleto: mismo criterio que puntos.html (nombre, foto, raza, zona, veterinario) ──
+  // Solo se calcula con datos completos — el primer render (rápido) no trae zona/veterinario,
+  // así que calcularlo ahí daría falsos positivos.
+  var incompletas = [];
+  if (window._datosCompletosDashboard) {
+    incompletas = registros.map(function(e){ return e.mascota; }).filter(function(m){
+      return !m.nombre || !m.foto || !m.raza || !m.zona || !m.veterinario;
+    }).map(function(m){ return m.nombre; });
+  }
+  var bannerPerfilHtml = '';
+  if (incompletas.length) {
+    var textoIncompletas = incompletas.length > 1 ? incompletas.join(', ') : incompletas[0];
+    bannerPerfilHtml = '<a href="/familia.html?highlight=perfil" style="display:flex;justify-content:space-between;align-items:center;background:#FFF8E1;border:1px solid #F5C842;border-radius:12px;padding:12px 14px;margin-bottom:12px;text-decoration:none">'
+      + '<div><div style="font-size:12.5px;font-weight:700;color:#856404">Completa el perfil de ' + textoIncompletas + '</div><div style="font-size:11px;color:#a08030">Gana 5 puntos por cada mascota</div></div>'
+      + '<div style="color:#856404;font-weight:700;font-size:12px">&rarr;</div>'
+      + '</a>';
+  }
+
+  wrap.innerHTML =
+    '<div class="dash-card"><div class="dash-card-inner">'
+    + '<div class="dash-saludo">Hola ' + dueno + ' &#128075;</div>'
+    + '<div class="dash-sub">&#191;C&oacute;mo ' + verboEstar + ' ' + nombresTexto + ' hoy?</div>'
+    + '</div></div>'
+    + '<div class="dash-body"><div class="dash-body-inner">'
+    + bannerPerfilHtml
+
+    // ── Acciones rápidas (6 tiles) ──
+    + '<div class="dash-seccion-titulo" style="margin-top:0">&#9889; Acciones r&aacute;pidas</div>'
+    + '<div class="dash-acciones">'
+    + '<a href="/salud.html?uid='+mascota.uid+'" class="dash-accion"><div class="dash-accion-ico" style="background:#FFF3D6">&#128137;</div><div class="dash-accion-lbl">Registro de<br>Salud</div></a>'
+    + '<a href="/lugares.html" class="dash-accion"><div class="dash-accion-ico" style="background:#E3F2FD">&#128205;</div><div class="dash-accion-lbl">Lugares y<br>Eventos</div></a>'
+    + '<a href="javascript:void(0)" onclick="abrirPerdidoDesdeDashboard(\''+mascota.uid+'\')" class="dash-accion"><div class="dash-accion-ico" style="background:#FCE4E4">&#128680;</div><div class="dash-accion-lbl">Emergencia<br>&iexcl;Se perdi&oacute;!</div></a>'
+    + '<a href="/puntos.html" class="dash-accion"><div class="dash-accion-ico" style="background:#E3F5EA">&#127873;</div><div class="dash-accion-lbl">Beneficios<br>y puntos</div>'
+    + (puntosTotal>0?'<div class="dash-accion-badge">'+puntosTotal+'</div>':'') + '</a>'
+    + '<a href="/tienda.html?uid='+mascota.uid+'#alimento" class="dash-accion"><div class="dash-accion-ico" style="background:#EDE7F6">&#127860;</div><div class="dash-accion-lbl">Alimentaci&oacute;n</div></a>'
+    + '<a href="/tienda.html?uid='+mascota.uid+'" class="dash-accion"><div class="dash-accion-ico" style="background:#E8F9F0">&#128717;</div><div class="dash-accion-lbl">Shop<br>Productos y m&aacute;s</div></a>'
+    + '</div>'
+
+    // ── Cuidados del día (avisos puntuales, si hay) ──
+    + (cuidados.length ? '<div class="dash-seccion-titulo">&#129658; Cuidados del d&iacute;a</div>' + cuidados.map(function(c){ return '<div class="dash-cuidado-item">'+c.texto+'</div>'; }).join('') : '')
+    + eventoTxt
+
+    // ── Mis mascotas (tarjetas con foto, en cuadrícula) ──
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">'
+    + '<div class="dash-seccion-titulo" style="margin:0">Mis mascotas</div>'
+    + '<a href="/familia.html" style="font-size:11.5px;color:#00B4B4;font-weight:700;text-decoration:none">Ver perfil &rarr;</a>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:8px">'
+    + saludPorMascota.map(function(sm){
+        var idSuf = sm.mascota.uid;
+        var fotoHtml = sm.mascota.foto && sm.mascota.foto.indexOf('http')>=0
+          ? '<img src="'+sm.mascota.foto+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover">'
+          : '<div style="width:36px;height:36px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:16px">&#128062;</div>';
+        var proxima = sm.saludDetalle.hoy[0] || sm.saludDetalle.proximamente[0];
+        var proximoHtml = proxima
+          ? '<div style="font-size:11px;color:#888;margin-top:6px">&#128197; Pr&oacute;ximo cuidado:<br><b style="color:#333">'+proxima.nombre+'</b> '+(proxima.sub?'&mdash; '+proxima.sub:'')+'</div>'
+          : '<div style="font-size:11px;color:#888;margin-top:6px">&#128197; Sin cuidados pendientes</div>';
+        var estadoHtml = sm.totalCuidados > 0 && sm.alDiaCount === sm.totalCuidados
+          ? '<div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;color:#2ecc71;font-weight:700">&#9989; Todo al d&iacute;a</div>'
+          : sm.saludDetalle.hoy.length
+            ? '<div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;color:#E05090;font-weight:700">&#9888;&#65039; '+sm.saludDetalle.hoy.length+' de '+sm.totalCuidados+' cuidados pendientes</div>'
+            : '<div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;color:#999">Sin recomendaciones a&uacute;n</div>';
+        return '<div onclick="toggleSaludDash(\''+idSuf+'\')" style="background:#fff;border:1px solid #eee;border-radius:14px;padding:12px;cursor:pointer">'
+        + '<div style="display:flex;align-items:center;gap:8px">'
+        + fotoHtml
+        + '<div style="font-weight:900;color:#1a1a2e;font-size:13.5px">&#128062; '+sm.mascota.nombre+'</div>'
+        + '</div>'
+        + proximoHtml
+        + estadoHtml
+        + '<div id="saludDetalle_'+idSuf+'" style="display:none;background:#f8f7f4;border-radius:10px;padding:10px;margin-top:10px">'
+        + (sm.saludDetalle.hoy.length ? '<div style="font-size:9.5px;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:5px">Hoy</div>' + sm.saludDetalle.hoy.map(function(x){ return '<div style="font-size:12px;color:#333;padding:3px 0">&#10060; ' + x.nombre + ' <span style="color:#999;font-size:10.5px">&mdash; '+x.sub+'</span></div>'; }).join('') : '')
+        + (sm.saludDetalle.proximamente.length ? '<div style="font-size:9.5px;font-weight:700;color:#999;text-transform:uppercase;margin:10px 0 5px">Pr&oacute;ximamente</div>' + sm.saludDetalle.proximamente.map(function(x){ return '<div style="font-size:12px;color:#333;padding:3px 0">&#128993; ' + x.nombre + ' <span style="color:#999;font-size:10.5px">&mdash; '+x.sub+'</span></div>'; }).join('') : '')
+        + '<a href="/salud.html" style="display:block;text-align:center;margin-top:10px;color:#00B4B4;font-weight:700;font-size:11.5px;text-decoration:none">Ver todo en Salud &rarr;</a>'
+        + '</div></div>';
+      }).join('')
+    + '</div>'
+    + '<a href="/registro.html" style="display:block;text-align:center;background:#e0f7f7;color:#00838f;padding:12px;border-radius:12px;text-decoration:none;font-weight:700;font-size:13px;margin-top:10px">+ Agregar mascota</a>'
+
+    // ── Módulo de búsqueda ──
+    + '<div class="dash-seccion-titulo">&#128269; &#191;Qu&eacute; est&aacute;s buscando?</div>'
+    + '<form onsubmit="window.location.href=\'/buscar.html?q=\'+encodeURIComponent(this.q.value);return false;" style="display:flex;gap:8px">'
+    + '<input name="q" type="text" placeholder="Ej: vacunas, alimento, veterinarios..." style="flex:1;padding:12px 14px;border:1.5px solid #ddd;border-radius:99px;font-size:13.5px">'
+    + '<button type="submit" style="background:#1a1a2e;color:#fff;border:none;width:44px;border-radius:50%;font-size:15px;cursor:pointer">&#128269;</button>'
+    + '</form>'
+
+    // ── Módulo de gamificación ──
+    + '<div class="dash-seccion-titulo">&#127918; Tu recompensa de hoy</div>'
+    + premioHtml
+
+    // ── Del blog ──
+    + '<div class="dash-seccion-titulo">&#128214; Del blog</div>'
+    + '<div id="dashBlogCard"><div style="background:#f8f7f4;border-radius:12px;padding:14px;font-size:12px;color:#999;text-align:center">Cargando...</div></div>'
+
+    + '</div></div>';
+  cargarBlogDashboard();
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-
-  const action = req.query.action || '';
-
-  try {
-    // ── getBasic — galería principal ─────────────────────────
-    if (action === 'getBasic') {
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?uid=neq.PETMI-OFICIAL&select=uid,nombre,apodo,especie,sexo,raza,tipo_fecha,fecha,email,foto,angelito,fecha_angelito,created_at,slug&order=created_at.desc',
-        {
-          headers: {
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY
-          }
-        }
-      );
-      const data = await response.json();
-      // Convertir al formato que espera la galería
-      const rows = data.map(m => [
-        m.created_at,    // 0 — Fecha Registro (igual que Sheet col A)
-        m.uid,           // 1
-        m.nombre,        // 2
-        m.apodo,         // 3
-        m.especie,       // 4
-        m.sexo,          // 5
-        m.raza,          // 6
-        m.tipo_fecha,    // 7
-        m.fecha,         // 8
-        m.email,         // 9
-        m.foto,          // 10
-        m.angelito ? 'Si' : 'No', // 11
-        m.fecha_angelito, // 12
-        m.slug || ''      // 13 — link público legible (ej. "pepe")
-      ]);
-      return res.status(200).json({ rows });
-    }
-
-    // ── getData — datos completos ─────────────────────────────
-    if (action === 'getData') {
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?uid=neq.PETMI-OFICIAL&select=*&order=created_at.desc',
-        {
-          headers: {
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY
-          }
-        }
-      );
-      const data = await response.json();
-      const rows = data.map(m => {
-        const r = new Array(31).fill('');
-        r[1]  = m.uid            || '';
-        r[2]  = m.nombre         || '';
-        r[3]  = m.apodo          || '';
-        r[4]  = m.especie        || '';
-        r[5]  = m.sexo           || '';
-        r[6]  = m.raza           || '';
-        r[7]  = m.tipo_fecha     || '';
-        r[8]  = m.fecha          || '';
-        r[9]  = m.zona           || '';
-        r[10] = m.dueno          || '';
-        r[11] = m.email          || '';
-        r[12] = m.whatsapp       || '';
-        r[13] = m.veterinario    || '';
-        r[15] = m.instagram      || '';
-        r[16] = m.alimento       || '';
-        r[18] = m.actividades    || '';
-        r[20] = m.ofertas        ? 'Si' : 'No';
-        r[23] = m.especial       || '';
-        r[24] = m.correo_enviado || '';
-        r[27] = m.foto           || '';
-        r[28] = m.angelito       ? 'Si' : 'No';
-        r[29] = m.fecha_angelito || '';
-        r[30] = m.notif_mensajes ? 'Si' : 'No';
-        return r;
-      });
-      return res.status(200).json({ rows });
-    }
-
-    // ── checkEmail ────────────────────────────────────────────
-    if (action === 'checkEmail' || (req.method === 'POST' && req.body && req.body.action === 'checkEmail')) {
-      const email = (req.method === 'POST' ? req.body.email : req.query.email) || '';
-      if (!email) return res.status(200).json({ found: false, mascotas: [] });
-
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email.toLowerCase()) + '&select=*',
-        {
-          headers: {
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY
-          }
-        }
-      );
-      const data = await response.json();
-      const mascotas = data.map(m => ({
-        uid:          m.uid            || '',
-        nombre:       m.nombre         || '',
-        apodo:        m.apodo          || '',
-        especie:      m.especie        || '',
-        sexo:         m.sexo           || '',
-        raza:         m.raza           || '',
-        tipoFecha:    m.tipo_fecha     || '',
-        tipoPelo:     m.tipo_pelo      || '',
-        fecha:        m.fecha          || '',
-        zona:         m.zona           || '',
-        dueno:        m.dueno          || '',
-        email:        m.email          || '',
-        whatsapp:     m.whatsapp       || '',
-        veterinario:  m.veterinario    || '',
-        instagram:    m.instagram      || '',
-        alimento:     m.alimento       || '',
-        actividades:  m.actividades    || '',
-        especial:     m.especial       || '',
-        foto:         m.foto           || '',
-        angelito:     m.angelito       ? 'Si' : 'No',
-        fechaAngelito:m.fecha_angelito || '',
-        notifMensajes:m.notif_mensajes ? 'Si' : 'No',
-        notifAmigos:  m.notif_amigos   !== false,
-        notifPerdidos:m.notif_perdidos !== false,
-        notifEventos: m.notif_eventos  !== false,
-        ofertas:      m.ofertas        ? 'Si' : 'No',
-        premium:      m.premium        === true,
-        premium_hasta:m.premium_hasta  || null,
-        slug:         m.slug           || ''
-      }));
-
-      // Marcar última actividad (no bloqueante — no afecta la respuesta si falla)
-      if (mascotas.length) {
-        // Detectar reactivación: nunca había tenido actividad Y se registró
-        // hace más de 14 días (para no confundir con el primer uso normal
-        // de alguien recién registrado)
-        const primeraVezConActividad = !data[0].ultima_actividad;
-        const antiguedadMs = data[0].created_at ? (Date.now() - new Date(data[0].created_at).getTime()) : 0;
-        const esReactivacion = primeraVezConActividad && antiguedadMs > 14 * 86400000;
-
-        fetch(SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent(email.toLowerCase()), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ ultima_actividad: new Date().toISOString() })
-        }).catch(() => {});
-
-        if (esReactivacion) {
-          fetch(SUPABASE_URL + '/rest/v1/puntos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ email: email.toLowerCase(), accion: 'reactivacion', puntos: 15 })
-          }).catch(() => {});
-        }
-      }
-
-      return res.status(200).json({ found: mascotas.length > 0, mascotas });
-    }
-
-    // ── guardarPreferenciasNotif ────────────────────────────────
-    if (action === 'guardarPreferenciasNotif' && req.method === 'POST') {
-      const { uid, notif_mensajes, notif_amigos, notif_perdidos, notif_eventos } = req.body;
-      if (!uid) return res.status(200).json({ ok: false, error: 'Falta uid' });
-      const campos = {};
-      if (notif_mensajes !== undefined) campos.notif_mensajes = !!notif_mensajes;
-      if (notif_amigos   !== undefined) campos.notif_amigos   = !!notif_amigos;
-      if (notif_perdidos !== undefined) campos.notif_perdidos = !!notif_perdidos;
-      if (notif_eventos  !== undefined) campos.notif_eventos  = !!notif_eventos;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid.toUpperCase()), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(campos)
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getMensajes ───────────────────────────────────────────
-    if (action === 'getMensajes') {
-      const uid = (req.query.uid || '').toUpperCase();
-      if (!uid) return res.status(200).json({ mensajes: [] });
-
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/mensajes?uid_mascota=eq.' + encodeURIComponent(uid) + '&select=*&order=created_at.asc',
-        {
-          headers: {
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY
-          }
-        }
-      );
-      const data = await response.json();
-      const mensajes = data.map(m => ({
-        fecha:         m.created_at,
-        autor:         m.autor         || '',
-        mensaje:       m.mensaje       || '',
-        nombreMascota: m.nombre_mascota|| ''
-      }));
-      return res.status(200).json({ mensajes });
-    }
-
-    // ── enviarSolicitud ──────────────────────────────────────
-    if (action === 'enviarSolicitud' && req.method === 'POST') {
-      const { uid_solicitante, uid_receptor, email_solicitante, email_receptor } = req.body;
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/amigos?on_conflict=uid_solicitante,uid_receptor',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type':  'application/json',
-            'apikey':        SUPABASE_SERVICE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
-            'Prefer':        'resolution=merge-duplicates,return=minimal'
-          },
-          body: JSON.stringify({ uid_solicitante, uid_receptor, email_solicitante, email_receptor, estado: 'pendiente' })
-        }
-      );
-      if (response.ok) {
-        try {
-          const rNom = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid_solicitante) + '&select=nombre', {
-            headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-          });
-          const nomRows = await rNom.json();
-          const nombreSolicitante = (nomRows && nomRows[0] && nomRows[0].nombre) || 'Alguien';
-          _enviarPush(uid_receptor, {
-            title: '🐾 Nueva solicitud de amistad',
-            body: nombreSolicitante + ' quiere ser tu amigo en PetMi',
-            url: '/galeria.html'
-          }, 'notif_amigos').catch(() => {});
-        } catch(e) { console.error('Push solicitud amistad:', e.message); }
-      }
-      return res.status(200).json({ ok: response.ok });
-    }
-
-    // ── responderSolicitud ────────────────────────────────────
-    // ── updateCarnetLayout ────────────────────────────────────
-    if (action === 'updateCarnetLayout' && req.method === 'POST') {
-      const { uid, layout } = req.body;
-      if (!uid || !layout) return res.status(200).json({ ok: false });
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid),
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ carnet_layout: layout })
-        }
-      );
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── eliminarAmistad ───────────────────────────────────────
-    if (action === 'eliminarAmistad' && req.method === 'POST') {
-      const { id } = req.body;
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/amigos?id=eq.' + encodeURIComponent(id),
-        {
-          method: 'DELETE',
-          headers: {
-            'apikey':        SUPABASE_SERVICE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
-            'Prefer':        'return=minimal'
-          }
-        }
-      );
-      return res.status(200).json({ ok: response.ok });
-    }
-
-    if (action === 'responderSolicitud' && req.method === 'POST') {
-      const { id, estado } = req.body; // estado: aceptado | rechazado
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/amigos?id=eq.' + encodeURIComponent(id),
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type':  'application/json',
-            'apikey':        SUPABASE_SERVICE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
-            'Prefer':        'return=representation'
-          },
-          body: JSON.stringify({ estado, updated_at: new Date().toISOString() })
-        }
-      );
-      if (response.ok && estado === 'aceptado') {
-        try {
-          const rows = await response.json();
-          const fila = rows && rows[0];
-          if (fila) {
-            const rNom = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(fila.uid_receptor) + '&select=nombre', {
-              headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-            });
-            const nomRows = await rNom.json();
-            const nombreReceptor = (nomRows && nomRows[0] && nomRows[0].nombre) || 'Tu amigo/a';
-            _enviarPush(fila.uid_solicitante, {
-              title: '🎉 ¡Solicitud aceptada!',
-              body: nombreReceptor + ' aceptó tu solicitud de amistad',
-              url: '/galeria.html'
-            }, 'notif_amigos').catch(() => {});
-          }
-        } catch(e) { console.error('Push solicitud aceptada:', e.message); }
-        return res.status(200).json({ ok: true });
-      }
-      return res.status(200).json({ ok: response.ok });
-    }
-
-    // ── getAmigos ─────────────────────────────────────────────
-    // Devuelve amigos aceptados y solicitudes pendientes de un uid
-    if (action === 'getAmigos') {
-      const uid = req.query.uid || '';
-      if (!uid) return res.status(200).json({ amigos: [], pendientes: [] });
-
-      // Buscar donde es solicitante O receptor
-      const [r1, r2] = await Promise.all([
-        fetch(SUPABASE_URL + '/rest/v1/amigos?uid_solicitante=eq.' + encodeURIComponent(uid) + '&select=*', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-        }),
-        fetch(SUPABASE_URL + '/rest/v1/amigos?uid_receptor=eq.' + encodeURIComponent(uid) + '&select=*', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-        })
-      ]);
-
-      const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
-      const todas = [...(d1||[]), ...(d2||[])];
-
-      const amigos    = todas.filter(a => a.estado === 'aceptado');
-      const pendientes = todas.filter(a => a.estado === 'pendiente');
-
-      // Obtener UIDs de amigos para cargar sus mascotas
-      const uidsAmigos = amigos.map(a => a.uid_solicitante === uid ? a.uid_receptor : a.uid_solicitante);
-
-      let mascotasAmigos = [];
-      if (uidsAmigos.length > 0) {
-        const r3 = await fetch(
-          SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uidsAmigos.map(u => '"'+u+'"').join(',') + ')&select=uid,nombre,apodo,especie,foto,angelito,slug',
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-        );
-        mascotasAmigos = await r3.json();
-      }
-
-      return res.status(200).json({ amigos, pendientes, mascotasAmigos });
-    }
-
-    // ── getConversaciones (lista, para el inbox) ──────────────
-    // ── getConversacionesFamilia — buzón unificado ──────────────
-    // A diferencia de getConversaciones (una sola mascota), esta junta
-    // las conversaciones de TODAS las mascotas de la cuenta en una sola
-    // lista, agrupando por (mi mascota, la otra persona) para poder
-    // mostrar con cuál de mis mascotas es cada conversación.
-    if (action === 'getConversacionesFamilia') {
-      const uidsParam = (req.query.uids || '').split(',').map(u => u.trim().toUpperCase()).filter(Boolean);
-      if (!uidsParam.length) return res.status(200).json({ conversaciones: [] });
-
-      const misUids = new Set(uidsParam);
-      const orClauses = uidsParam.map(u => 'uid_emisor.eq.' + encodeURIComponent(u) + ',uid_receptor.eq.' + encodeURIComponent(u)).join(',');
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones?or=(' + orClauses + ')&order=created_at.desc&limit=500',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-      );
-      const msgs = await response.json();
-      if (!msgs || !msgs.length) return res.status(200).json({ conversaciones: [] });
-
-      // Agrupar por (miUid, otroUid) — así una conversación con la misma
-      // persona pero dirigida a mascotas mías distintas queda separada.
-      const porPar = {};
-      msgs.forEach(m => {
-        let miUid, otro;
-        if (misUids.has(m.uid_emisor)) { miUid = m.uid_emisor; otro = m.uid_receptor; }
-        else { miUid = m.uid_receptor; otro = m.uid_emisor; }
-        const key = miUid + '|' + otro;
-        if (!porPar[key]) {
-          porPar[key] = { miUid, otroUid: otro, ultimoMensaje: m.mensaje, ultimaFecha: m.created_at, noLeidos: 0, ultimoEsMio: m.uid_emisor === miUid };
-        }
-        if (m.uid_receptor === miUid && !m.leido) porPar[key].noLeidos++;
-      });
-
-      const pares = Object.values(porPar);
-      const todosUids = [...new Set(pares.flatMap(p => [p.miUid, p.otroUid]))];
-      let info = {};
-      if (todosUids.length) {
-        const rMasc = await fetch(
-          SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + todosUids.map(u => '"' + u + '"').join(',') + ')&select=uid,nombre,foto,angelito',
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-        );
-        (await rMasc.json() || []).forEach(r => { info[r.uid] = r; });
-      }
-
-      const conversaciones = pares.map(p => {
-        const otroInfo = info[p.otroUid] || {};
-        const miInfo = info[p.miUid] || {};
-        return {
-          miUid: p.miUid,
-          miNombre: miInfo.nombre || 'Mi mascota',
-          otroUid: p.otroUid,
-          otroNombre: otroInfo.nombre || 'Mascota',
-          otroFoto: otroInfo.foto || '',
-          otroAngelito: !!otroInfo.angelito,
-          ultimoMensaje: p.ultimoMensaje,
-          ultimaFecha: p.ultimaFecha,
-          ultimoEsMio: p.ultimoEsMio,
-          noLeidos: p.noLeidos
-        };
-      }).sort((a, b) => new Date(b.ultimaFecha) - new Date(a.ultimaFecha));
-
-      return res.status(200).json({ conversaciones });
-    }
-
-    if (action === 'getConversaciones') {
-      const uid = (req.query.uid || '').toUpperCase();
-      if (!uid) return res.status(200).json({ conversaciones: [] });
-
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones?or=(uid_emisor.eq.' + encodeURIComponent(uid) + ',uid_receptor.eq.' + encodeURIComponent(uid) + ')&order=created_at.desc&limit=300',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-      );
-      const msgs = await response.json();
-      if (!msgs || !msgs.length) return res.status(200).json({ conversaciones: [] });
-
-      // Agrupar por el "otro" uid — quedarnos con el mensaje más reciente
-      // de cada conversación y contar los no leídos que me tocan a mí.
-      const porUid = {};
-      msgs.forEach(m => {
-        const otro = m.uid_emisor === uid ? m.uid_receptor : m.uid_emisor;
-        if (!porUid[otro]) {
-          porUid[otro] = { otroUid: otro, ultimoMensaje: m.mensaje, ultimaFecha: m.created_at, noLeidos: 0, ultimoEsMio: m.uid_emisor === uid };
-        }
-        if (m.uid_receptor === uid && !m.leido) porUid[otro].noLeidos++;
-      });
-
-      const uids = Object.keys(porUid);
-      let mascotasInfo = {};
-      if (uids.length) {
-        const rMasc = await fetch(
-          SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uids.map(u => '"' + u + '"').join(',') + ')&select=uid,nombre,foto,angelito',
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-        );
-        const rows = await rMasc.json();
-        (rows || []).forEach(r => { mascotasInfo[r.uid] = r; });
-      }
-
-      const conversaciones = uids.map(u => {
-        const info = mascotasInfo[u] || {};
-        return {
-          otroUid: u,
-          otroNombre: info.nombre || 'Mascota',
-          otroFoto: info.foto || '',
-          otroAngelito: !!info.angelito,
-          ultimoMensaje: porUid[u].ultimoMensaje,
-          ultimaFecha: porUid[u].ultimaFecha,
-          ultimoEsMio: porUid[u].ultimoEsMio,
-          noLeidos: porUid[u].noLeidos
-        };
-      }).sort((a, b) => new Date(b.ultimaFecha) - new Date(a.ultimaFecha));
-
-      return res.status(200).json({ conversaciones });
-    }
-
-    // ── getConversacion ──────────────────────────────────────
-    if (action === 'getConversacion') {
-      const uid1 = req.query.uid1 || '';
-      const uid2 = req.query.uid2 || '';
-      if (!uid1 || !uid2) return res.status(200).json({ mensajes: [] });
-
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones?or=(and(uid_emisor.eq.' + encodeURIComponent(uid1) + ',uid_receptor.eq.' + encodeURIComponent(uid2) + '),and(uid_emisor.eq.' + encodeURIComponent(uid2) + ',uid_receptor.eq.' + encodeURIComponent(uid1) + '))&order=created_at.desc&limit=50',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-      );
-      const data = await response.json();
-      return res.status(200).json({ mensajes: data || [] });
-    }
-
-    // ── registrarCanje ─────────────────────────────────────────
-    // Guarda la solicitud real de canje (antes se perdía — el botón
-    // apuntaba a un placeholder sin llenar) y avisa al admin por correo.
-    if (action === 'registrarCanje' && req.method === 'POST') {
-      const { email, dueno, premio, puntos } = req.body;
-      if (!email || !premio || !puntos) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-
-      const r = await fetch(SUPABASE_URL + '/rest/v1/canjes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ email, dueno: dueno || '', premio, puntos_usados: puntos, estado: 'pendiente' })
-      });
-
-      if (r.ok) {
-        // Avisar al admin por correo (no bloqueante)
-        fetch('https://app.revistapetmi.com/api/submit', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'notificarCanje', email, dueno: dueno || '', premio, puntos })
-        }).catch(() => {});
-      }
-
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── registrarVisitaPerfil ──────────────────────────────────
-    if (action === 'registrarVisitaPerfil' && req.method === 'POST') {
-      const { uid_mascota } = req.body;
-      if (!uid_mascota) return res.status(200).json({ ok: false });
-      fetch(SUPABASE_URL + '/rest/v1/visitas_perfil', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ uid_mascota: uid_mascota.toUpperCase() })
-      }).catch(() => {});
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── getAmigoSemanaHistorial ────────────────────────────────
-    // Trae todo el historial (más reciente = el actual), con los
-    // datos de cada mascota, para la página pública amigo-semana.html
-    if (action === 'getAmigoSemanaHistorial') {
-      const rHist = await fetch(
-        SUPABASE_URL + '/rest/v1/amigo_semana_historial?select=uid_mascota,created_at&order=created_at.desc&limit=60',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const historial = await rHist.json();
-      if (!Array.isArray(historial) || !historial.length) return res.status(200).json({ historial: [] });
-
-      const uids = [...new Set(historial.map(h => h.uid_mascota))];
-      const rMasc = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?uid=in.(' + uids.map(u => '"' + u + '"').join(',') + ')&select=uid,nombre,apodo,especie,raza,sexo,fecha,tipo_fecha,actividades,foto,especial,slug,email',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const mascotasRows = await rMasc.json();
-      if (!Array.isArray(mascotasRows)) return res.status(200).json({ historial: [] });
-      const porUid = {};
-      mascotasRows.forEach(m => { porUid[m.uid] = m; });
-
-      const resultado = historial
-        .map(h => {
-          const m = porUid[h.uid_mascota];
-          if (!m) return null;
-          return { fecha: h.created_at, nombre: m.nombre, apodo: m.apodo, especie: m.especie, raza: m.raza, sexo: m.sexo, fechaNac: m.fecha, tipoFecha: m.tipo_fecha, actividades: m.actividades, foto: m.foto, especial: m.especial, slug: m.slug || m.uid, uid: m.uid, email: m.email };
-        })
-        .filter(Boolean);
-
-      return res.status(200).json({ historial: resultado });
-    }
-
-    // ── elegirAmigoSemana ──────────────────────────────────────
-    // Elige al azar entre mascotas activas, con foto, con "algo
-    // especial" lleno, y que no hayan salido antes. Si ya salieron
-    // todas, reinicia el ciclo automáticamente.
-    if (action === 'elegirAmigoSemana') {
-      const rCandidatos = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?angelito=eq.false&uid=neq.PETMI-OFICIAL&foto=not.is.null&especial=not.is.null&select=uid,nombre,apodo,especie,raza,sexo,fecha,tipo_fecha,actividades,foto,especial,slug',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      let candidatos = await rCandidatos.json();
-      candidatos = (Array.isArray(candidatos) ? candidatos : []).filter(m => m.foto && m.foto.indexOf('http') >= 0 && m.especial && m.especial.trim());
-
-      if (!candidatos.length) return res.status(200).json({ ok: false, error: 'No hay candidatos calificados (foto + algo especial llenos)' });
-
-      const rHist = await fetch(
-        SUPABASE_URL + '/rest/v1/amigo_semana_historial?select=uid_mascota',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const historial = await rHist.json();
-      const yaSalieron = new Set(Array.isArray(historial) ? historial.map(h => h.uid_mascota) : []);
-
-      let disponibles = candidatos.filter(m => !yaSalieron.has(m.uid));
-      let reiniciado = false;
-      if (!disponibles.length) {
-        // Ya salieron todos — reiniciar el ciclo
-        disponibles = candidatos;
-        reiniciado = true;
-      }
-
-      const elegido = disponibles[Math.floor(Math.random() * disponibles.length)];
-
-      await fetch(SUPABASE_URL + '/rest/v1/amigo_semana_historial', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ uid_mascota: elegido.uid })
-      });
-
-      return res.status(200).json({ ok: true, mascota: elegido, reiniciado, totalCandidatos: candidatos.length });
-    }
-
-    // ── guardarSuscripcionPush ────────────────────────────────
-    if (action === 'guardarSuscripcionPush' && req.method === 'POST') {
-      const { uid_mascota, endpoint, p256dh, auth } = req.body;
-      if (!uid_mascota || !endpoint || !p256dh || !auth) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/push_subscriptions?on_conflict=endpoint', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
-          'Prefer': 'resolution=merge-duplicates,return=minimal'
-        },
-        body: JSON.stringify({ uid_mascota, endpoint, p256dh, auth })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── enviarPushExterno (llamado desde Apps Script) ─────────
-    // Permite mandar push desde Code.gs/EmailsMarketing.gs sin que
-    // Apps Script tenga que hablar el protocolo VAPID directamente.
-    // uid_mascota = 'TODOS' manda a todas las suscripciones (broadcast).
-    if (action === 'enviarPushExterno' && req.method === 'POST') {
-      const { uid_mascota, title, body, url, tag } = req.body;
-      if (!title || !body) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const payload = { title, body, url: url || '/mensajes.html', tag: tag || '' };
-
-      if (uid_mascota === 'TODOS') {
-        const resultado = await _enviarPushATodos(payload);
-        return res.status(200).json({ ok: true, destinatarios: resultado.count });
-      }
-
-      if (!uid_mascota) return res.status(200).json({ ok: false, error: 'uid_mascota requerido' });
-      await _enviarPush(uid_mascota, payload);
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── enviarMensajePrivado ──────────────────────────────────
-    if (action === 'enviarMensajePrivado' && req.method === 'POST') {
-      const { uid_emisor, uid_receptor, mensaje } = req.body;
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type':  'application/json',
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Prefer':        'return=minimal'
-          },
-          body: JSON.stringify({ uid_emisor, uid_receptor, mensaje })
-        }
-      );
-      if (response.ok) {
-        // Push al receptor (no bloqueante — si falla, el mensaje ya se guardó igual)
-        _enviarPush(uid_receptor, {
-          title: 'Nuevo mensaje en PetMi',
-          body: String(mensaje || '').substring(0, 100),
-          url: '/mensajes.html?abrir=' + encodeURIComponent(uid_emisor),
-          tag: 'mensaje-' + uid_emisor
-        }, 'notif_mensajes').catch(() => {});
-      }
-      return res.status(200).json({ ok: response.ok });
-    }
-
-    // ── marcarLeidos ─────────────────────────────────────────
-    if (action === 'marcarLeidos' && req.method === 'POST') {
-      const { uid_emisor, uid_receptor } = req.body;
-      await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones?uid_emisor=eq.' + encodeURIComponent(uid_emisor) + '&uid_receptor=eq.' + encodeURIComponent(uid_receptor),
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type':  'application/json',
-            'apikey':        SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Prefer':        'return=minimal'
-          },
-          body: JSON.stringify({ leido: true })
-        }
-      );
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── getMensajesNoLeidos ───────────────────────────────────
-    if (action === 'getMensajesNoLeidos') {
-      // Acepta "uid" (uno) o "uids" (varios, separados por coma) — para
-      // que el contador cuente TODAS las mascotas de la cuenta, no solo
-      // la primera (mismo arreglo que ya hicimos en el buzón unificado).
-      const uidsParam = req.query.uids
-        ? req.query.uids.split(',').map(u => u.trim()).filter(Boolean)
-        : (req.query.uid ? [req.query.uid] : []);
-      if (!uidsParam.length) return res.status(200).json({ count: 0 });
-      const orClauses = uidsParam.map(u => 'uid_receptor.eq.' + encodeURIComponent(u)).join(',');
-      const response = await fetch(
-        SUPABASE_URL + '/rest/v1/conversaciones?or=(' + orClauses + ')&leido=eq.false&select=id',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact' } }
-      );
-      const count = parseInt(response.headers.get('content-range')?.split('/')[1] || '0');
-      return res.status(200).json({ count });
-    }
-
-    // ── EVENTOS ──────────────────────────────────────────────
-    if (action === 'getEventos') {
-      const tipo = req.query.tipo || '';
-      const hoy = new Date().toISOString().split('T')[0];
-      let url = SUPABASE_URL + '/rest/v1/eventos?select=*&or=(activo.eq.true,activo.is.null)&fecha=gte.' + hoy + '&order=fecha.asc';
-      if (tipo) url += '&tipo=eq.' + encodeURIComponent(tipo);
-      const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
-      return res.status(200).json({ eventos: await r.json() });
-    }
-
-    if (action === 'asistirEvento' && req.method === 'POST') {
-      const { evento_id, uid_mascota, email } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/evento_asistentes?on_conflict=evento_id,uid_mascota', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ evento_id, uid_mascota, email })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    if (action === 'cancelarAsistencia' && req.method === 'POST') {
-      const { evento_id, uid_mascota } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/evento_asistentes?evento_id=eq.' + evento_id + '&uid_mascota=eq.' + encodeURIComponent(uid_mascota), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    if (action === 'getAsistentes') {
-      const evento_id = req.query.evento_id || '';
-      const r = await fetch(SUPABASE_URL + '/rest/v1/evento_asistentes?evento_id=eq.' + encodeURIComponent(evento_id) + '&select=uid_mascota,email', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ asistentes: await r.json() });
-    }
-
-    // ── LUGARES ───────────────────────────────────────────────
-    if (action === 'getLugares') {
-      const tipo = req.query.tipo || '';
-      const zona = req.query.zona || '';
-      let url = SUPABASE_URL + '/rest/v1/lugares?activo=eq.true&order=nombre.asc';
-      if (tipo) url += '&tipo=eq.' + encodeURIComponent(tipo);
-      if (zona) url += '&zona=eq.' + encodeURIComponent(zona);
-      const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
-      return res.status(200).json({ lugares: await r.json() });
-    }
-
-    if (action === 'ratingLugar' && req.method === 'POST') {
-      const { lugar_id, email, rating, comentario } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/lugar_ratings?on_conflict=lugar_id,email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ lugar_id, email, rating, comentario })
-      });
-      // Actualizar rating promedio
-      if (r.ok) {
-        const ratings = await fetch(SUPABASE_URL + '/rest/v1/lugar_ratings?lugar_id=eq.' + lugar_id + '&select=rating', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-        }).then(x => x.json());
-        const avg = ratings.reduce((s, x) => s + x.rating, 0) / ratings.length;
-        await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + lugar_id, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ rating: Math.round(avg * 10) / 10 })
-        });
-      }
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── Enviar evento a revisión (usuarios) ─────────────────────
-    if (action === 'enviarEvento' && req.method === 'POST') {
-      const { titulo, tipo, fecha, hora, lugar, direccion, descripcion, imagen, link, email } = req.body;
-      if (!titulo || !fecha) return res.status(200).json({ ok: false, error: 'Faltan titulo y fecha' });
-      const payload = { titulo, tipo: tipo||'evento', fecha, hora: hora||null, lugar: lugar||null, direccion: direccion||null, descripcion: descripcion||null, imagen: imagen||null, link: link||null, creado_por: email||null, activo: false };
-      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(payload)
-      });
-      if (!r.ok) {
-        let errBody = '';
-        try { errBody = JSON.stringify(await r.json()); } catch(e) { errBody = await r.text().catch(()=>'sin detalle'); }
-        console.error('[enviarEvento] Supabase error', r.status, errBody);
-        return res.status(200).json({ ok: false, error: errBody, status: r.status });
-      }
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── Enviar lugar a revisión (usuarios) ───────────────────────
-    if (action === 'enviarLugar' && req.method === 'POST') {
-      const { nombre, tipo, zona, direccion, descripcion, imagen, google_maps, instagram, telefono, email } = req.body;
-      if (!nombre) return res.status(200).json({ ok: false, error: 'Falta el nombre' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ nombre, tipo: tipo||'restaurante', zona, direccion, descripcion, imagen, google_maps, instagram, telefono, activo: false })
-      });
-      if (!r.ok) console.error('enviarLugar insert failed:', r.status, await r.text().catch(() => ''));
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getActividades ───────────────────────────────────────
-    if (action === 'getActividades') {
-      const tipo  = req.query.tipo || '';
-      const ahora = new Date().toISOString();
-
-      // FIX: separar el or() de expiración del filtro de tipo
-      // para que Supabase los combine correctamente como AND implícito
-      let url = SUPABASE_URL + '/rest/v1/actividades'
-        + '?activo=eq.true'
-        + '&or=(expires_at.is.null,expires_at.gte.' + ahora + ')'
-        + '&order=created_at.desc'
-        + '&limit=100';
-      if (tipo) url += '&tipo=eq.' + encodeURIComponent(tipo);
-
-      const r = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } });
-      const data = await r.json();
-
-      // Doble filtro en servidor por seguridad
-      const ahora2 = Date.now();
-      const actividades = Array.isArray(data) ? data.filter(a => {
-        if (!a.activo) return false;
-        if (a.expires_at && new Date(a.expires_at).getTime() < ahora2) return false;
-        return true;
-      }) : [];
-
-      return res.status(200).json({ actividades });
-    }
-
-    // ── getAvisosPendientes ───────────────────────────────────────
-    if (action === 'getAvisosPendientes') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?activo=eq.false&order=created_at.desc&select=*', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ ok: true, avisos: data || [] });
-    }
-
-    // ── getAvisosAprobados (admin) — mismos avisos, pero ya activos ──
-    if (action === 'getAvisosAprobados') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?activo=eq.true&order=created_at.desc&select=*', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ ok: true, avisos: data || [] });
-    }
-
-    // ── editarAviso (admin) ─────────────────────────────────────
-    if (action === 'editarAviso' && req.method === 'POST') {
-      const { id, titulo, descripcion, fecha, hora, ubicacion, especie, sexo, raza, whatsapp, recompensa } = req.body;
-      if (!id) return res.status(200).json({ ok: false, error: 'Falta id' });
-      const campos = { titulo, descripcion, fecha: fecha || null, hora: hora || null, ubicacion: ubicacion || null, especie: especie || null, sexo: sexo || null, raza: raza || null, whatsapp: whatsapp || null, recompensa: recompensa || null };
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(campos)
-      });
-      if (!r.ok) console.error('editarAviso failed:', r.status, await r.text().catch(() => ''));
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── aprobarAviso ──────────────────────────────────────────────
-    if (action === 'aprobarAviso' && req.method === 'POST') {
-      const { id } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + id, {
-        method: 'PATCH',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ activo: true })
-      });
-
-      // Push masivo para mascotas perdidas (urgente) y eventos nuevos —
-      // otros tipos de aviso (plan, busco, adopcion) no lo mandan, para
-      // no saturar de notificaciones. Además del push, se guarda el
-      // mismo aviso en el buzón de Mensajes (PETMI-OFICIAL) de cada
-      // destinatario, para que quede un registro que no se pierda.
-      if (r.ok) {
-        try {
-          const rAv = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + id + '&select=tipo,titulo,descripcion,ubicacion,fecha', {
-            headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-          });
-          const avRows = await rAv.json();
-          const av = avRows && avRows[0];
-          if (av && av.tipo === 'perdido') {
-            const cuerpo = (av.descripcion || '') + (av.ubicacion ? ' · ' + av.ubicacion : '');
-            const resultado = await _enviarPushATodos({ title: '🚨 Mascota perdida', body: cuerpo, url: '/avisos.html' }, 'notif_perdidos');
-            await _enviarMensajeOficialAUids(resultado.uids, '🚨 Mascota perdida: ' + cuerpo + '<br><a href="https://app.revistapetmi.com/avisos.html" style="color:#00B4B4;font-weight:700">Ver aviso →</a>');
-          } else if (av && av.tipo === 'evento') {
-            const cuerpo = (av.fecha || '') + (av.ubicacion ? ' · ' + av.ubicacion : '');
-            const resultado = await _enviarPushATodos({ title: '🎉 Nuevo evento: ' + (av.titulo || ''), body: cuerpo, url: '/avisos.html' }, 'notif_eventos');
-            await _enviarMensajeOficialAUids(resultado.uids, '🎉 Nuevo evento: ' + (av.titulo || '') + ' — ' + cuerpo + '<br><a href="https://app.revistapetmi.com/avisos.html" style="color:#00B4B4;font-weight:700">Ver evento →</a>');
-          }
-        } catch(e) { console.error('Push aviso:', e.message); }
-      }
-
-      return res.status(200).json({ ok: r.ok, status: r.status });
-    }
-
-    // ── rechazarAviso ─────────────────────────────────────────────
-    if (action === 'rechazarAviso' && req.method === 'POST') {
-      const { id } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + id, {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
-      });
-      return res.status(200).json({ ok: r.ok, status: r.status });
-    }
-
-    // ── publicarActividad ─────────────────────────────────────────
-    if (action === 'publicarActividad' && req.method === 'POST') {
-      const { uid_creador, nombre_creador, foto_creador, tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, especie, sexo, raza, whatsapp, recompensa } = req.body;
-      if (!titulo || !uid_creador) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      // Calcular expiración: planes expiran en la fecha del plan, anuncios en 7 días
-      let expires_at = null;
-      if (tipo === 'plan' && fecha) {
-        // Planes de afiliado expiran en la fecha del plan
-        expires_at = new Date(fecha + 'T23:59:59').toISOString();
-      } else if (tipo === 'evento' && fecha) {
-        // Eventos expiran al final de su dia
-        expires_at = new Date(fecha + 'T23:59:59').toISOString();
-      } else if (tipo !== 'plan') {
-        // Avisos normales expiran en 7 dias
-        const d = new Date(); d.setDate(d.getDate() + 7);
-        expires_at = d.toISOString();
-      }
-      // perdido = activo inmediato, resto requiere aprobacion admin
-      const activo = req.body.activo_override !== undefined ? req.body.activo_override : (tipo === 'perdido');
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
-        body: JSON.stringify({ uid_creador, nombre_creador, foto_creador, email_creador: req.body.email_creador||'', tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, activo, expires_at, especie: especie||null, sexo: sexo||null, raza: raza||null, whatsapp: whatsapp||null, recompensa: recompensa||null })
-      });
-      if (!r.ok) console.error('publicarActividad insert failed:', r.status, await r.text().catch(() => ''));
-      const data = await r.json();
-      return res.status(200).json({ ok: r.ok, id: data[0]?.id });
-    }
-
-    // ── apuntarse ─────────────────────────────────────────────
-    if (action === 'apuntarse' && req.method === 'POST') {
-      const { actividad_id, uid_mascota, nombre_mascota, foto_mascota } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividad_apuntes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ actividad_id, uid_mascota, nombre_mascota, foto_mascota })
-      });
-      return res.status(200).json({ ok: r.ok || r.status === 409 });
-    }
-
-    // ── desapuntarse ──────────────────────────────────────────
-    if (action === 'desapuntarse' && req.method === 'POST') {
-      const { actividad_id, uid_mascota } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividad_apuntes?actividad_id=eq.' + encodeURIComponent(actividad_id) + '&uid_mascota=eq.' + encodeURIComponent(uid_mascota), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getApuntes ────────────────────────────────────────────
-    if (action === 'getApuntes') {
-      const actividad_id = req.query.actividad_id || '';
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividad_apuntes?actividad_id=eq.' + encodeURIComponent(actividad_id) + '&select=*', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ apuntes: await r.json() });
-    }
-
-    // ── eliminarActividad ─────────────────────────────────────
-    if (action === 'eliminarActividad' && req.method === 'POST') {
-      const { actividad_id, uid_creador } = req.body;
-      // Eliminar solo por id (RLS de Supabase protege el acceso)
-      // No filtrar por uid_creador para que "apareció" funcione desde familia.html
-      // Usa SUPABASE_SERVICE_KEY (no la anon key) — con RLS activo en "actividades",
-      // la anon key devolvía "éxito" sin borrar nada de verdad.
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      if (!r.ok) console.error('eliminarActividad failed:', r.status, await r.text().catch(() => ''));
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── marcarAparecio ────────────────────────────────────────
-    // Elimina la actividad perdido por id sin validar uid_creador
-    // Se llama desde familia.html y actividades.html cuando el dueño confirma que apareció
-    if (action === 'marcarAparecio' && req.method === 'POST') {
-      const { actividad_id } = req.body;
-      if (!actividad_id) return res.status(200).json({ ok: false, error: 'actividad_id requerido' });
-      // Misma corrección: usar SUPABASE_SERVICE_KEY para que el DELETE sí aplique con RLS activo
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(actividad_id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      if (!r.ok) console.error('marcarAparecio failed:', r.status, await r.text().catch(() => ''));
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── syncMascotas (admin) ─────────────────────────────────
-    if (action === 'syncMascotas' && req.method === 'POST') {
-      const { mascotas } = req.body;
-      if (!mascotas || !mascotas.length) return res.status(200).json({ ok: true, count: 0 });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?on_conflict=uid', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify(mascotas)
-      });
-      return res.status(200).json({ ok: r.ok, count: mascotas.length });
-    }
-
-    // ── getEventosAdmin ───────────────────────────────────────
-    if (action === 'getEventosAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?order=created_at.desc', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ eventos: await r.json() });
-    }
-
-    // ── getEventosPendientes ──────────────────────────────────
-    if (action === 'getEventosPendientes') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?activo=eq.false&order=created_at.desc', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ eventos: await r.json() });
-    }
-
-    // ── toggleEvento (tabla "eventos" — NO es el sistema activo hoy;
-    // el real es tipo='evento' dentro de actividades, ver aprobarAviso) ──
-    if (action === 'toggleEvento' && req.method === 'POST') {
-      const { id, activo } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ activo })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── eliminarEvento ────────────────────────────────────────
-    if (action === 'eliminarEvento' && req.method === 'POST') {
-      const { id } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getLugaresAdmin ───────────────────────────────────────
-    if (action === 'getLugaresAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?order=nombre.asc', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      return res.status(200).json({ lugares: await r.json() });
-    }
-
-    // ── toggleLugar ───────────────────────────────────────────
-    if (action === 'toggleLugar' && req.method === 'POST') {
-      const { id, activo } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ activo })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── eliminarLugar ─────────────────────────────────────────
-    if (action === 'eliminarLugar' && req.method === 'POST') {
-      const { id } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ══════════════════════════════════════════════════════════
-    // CARRERA A BENEFICIO — inscripciones
-    // ══════════════════════════════════════════════════════════
-
-    // ── inscribirCarrera — guarda la inscripción como "pendiente" ──
-    // El pago se completa aparte, en el link de Recurrente — el webhook
-    // (por separado) es el que marca esta fila como "pagado" cuando
-    // confirma el pago, cruzando por email.
-    if (action === 'inscribirCarrera' && req.method === 'POST') {
-      const { nombre, email, telefono, uid_mascota, nombre_mascota, foto_mascota, talla_playera } = req.body;
-      if (!nombre || !email || !email.includes('@')) {
-        return res.status(200).json({ ok: false, error: 'Faltan nombre o correo válido' });
-      }
-      const r = await fetch(SUPABASE_URL + '/rest/v1/carrera_inscripciones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
-        body: JSON.stringify({
-          nombre, email: email.trim().toLowerCase(), telefono: telefono || null,
-          uid_mascota: uid_mascota || null, nombre_mascota: nombre_mascota || null,
-          foto_mascota: foto_mascota || null, talla_playera: talla_playera || null,
-          estado: 'pendiente'
-        })
-      });
-      if (!r.ok) {
-        const errTxt = await r.text().catch(() => '');
-        console.error('inscribirCarrera failed:', r.status, errTxt);
-        return res.status(200).json({ ok: false, error: errTxt });
-      }
-      const data = await r.json();
-      return res.status(200).json({ ok: true, id: data[0]?.id });
-    }
-
-    // ── getEstadoInscripcionCarrera — consulta si ya pagó ────────
-    if (action === 'getEstadoInscripcionCarrera') {
-      const email = (req.query.email || '').trim().toLowerCase();
-      if (!email) return res.status(200).json({ found: false });
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/carrera_inscripciones?email=eq.' + encodeURIComponent(email) + '&select=*&order=created_at.desc&limit=1',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const data = await r.json();
-      if (!Array.isArray(data) || !data.length) return res.status(200).json({ found: false });
-      return res.status(200).json({ found: true, inscripcion: data[0] });
-    }
-
-    // ── getInscripcionesCarreraAdmin (admin) ─────────────────────
-    if (action === 'getInscripcionesCarreraAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/carrera_inscripciones?select=*&order=created_at.desc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ inscripciones: Array.isArray(data) ? data : [] });
-    }
-
-    // ══════════════════════════════════════════════════════════
-    // CONCURSOS — envío de fotos y votación pública
-    // ══════════════════════════════════════════════════════════
-
-    // ── enviarConcurso — el dueño sube la foto de su mascota ────
-    if (action === 'enviarConcurso' && req.method === 'POST') {
-      const { concurso, uid_mascota, nombre_mascota, foto_url, caption, email } = req.body;
-      if (!concurso || !uid_mascota || !foto_url || !email) {
-        return res.status(200).json({ ok: false, error: 'Faltan campos (concurso, uid_mascota, foto_url, email)' });
-      }
-      const r = await fetch(SUPABASE_URL + '/rest/v1/concurso_entradas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({
-          concurso,
-          uid_mascota: uid_mascota.toUpperCase(),
-          nombre_mascota: nombre_mascota || '',
-          foto_url,
-          caption: caption || '',
-          email: email.trim().toLowerCase(),
-          activo: true,
-          votos: 0
-        })
-      });
-      if (!r.ok) {
-        const errTxt = await r.text().catch(() => '');
-        console.error('enviarConcurso failed:', r.status, errTxt);
-        return res.status(200).json({ ok: false, error: errTxt || ('HTTP ' + r.status) });
-      }
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── getConcursoEntradas (público — galería para votar) ──────
-    if (action === 'getConcursoEntradas') {
-      const concurso = req.query.concurso || '';
-      if (!concurso) return res.status(200).json({ entradas: [] });
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/concurso_entradas?concurso=eq.' + encodeURIComponent(concurso) + '&activo=eq.true&select=*&order=votos.desc',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-      );
-      const data = await r.json();
-      return res.status(200).json({ entradas: Array.isArray(data) ? data : [] });
-    }
-
-    // ── checkVotoConcurso (lista de mascotas por las que ya voto este email, y cuantos le quedan) ──
-    if (action === 'checkVotoConcurso') {
-      const concurso = req.query.concurso || '';
-      const email = (req.query.email || '').trim().toLowerCase();
-      const LIMITE_VOTOS = 5;
-      if (!concurso || !email) return res.status(200).json({ votadas: [], restantes: LIMITE_VOTOS });
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/concurso_votos?concurso=eq.' + encodeURIComponent(concurso) + '&email=eq.' + encodeURIComponent(email) + '&select=entrada_id',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const data = await r.json();
-      const votadas = Array.isArray(data) ? data.map(v => v.entrada_id) : [];
-      return res.status(200).json({ votadas, restantes: Math.max(0, LIMITE_VOTOS - votadas.length) });
-    }
-
-    // ── votarConcurso — hasta 5 votos por email por concurso, 1 por mascota ──
-    // No requiere cuenta de PetMi: cualquiera puede votar solo con su email.
-    if (action === 'votarConcurso' && req.method === 'POST') {
-      const { concurso, entrada_id, email } = req.body;
-      const LIMITE_VOTOS = 5;
-      const LIMITE_VOTOS_POR_IP = 5; // igual que el límite por correo — así lo dicen las reglas publicadas del concurso
-      if (!concurso || !entrada_id || !email || !email.includes('@')) {
-        return res.status(200).json({ ok: false, error: 'Correo inválido' });
-      }
-      const emailL = email.trim().toLowerCase();
-
-      const dominioValido = await dominioTieneCorreoValido(emailL);
-      if (!dominioValido) {
-        return res.status(200).json({ ok: false, error: 'Ese correo no parece existir — revisa que esté bien escrito.' });
-      }
-
-      const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket?.remoteAddress || 'desconocida';
-
-      const rCheck = await fetch(
-        SUPABASE_URL + '/rest/v1/concurso_votos?concurso=eq.' + encodeURIComponent(concurso) + '&email=eq.' + encodeURIComponent(emailL) + '&select=entrada_id',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const existentes = await rCheck.json();
-      const votadasArr = Array.isArray(existentes) ? existentes.map(v => v.entrada_id) : [];
-
-      if (votadasArr.includes(entrada_id)) {
-        return res.status(200).json({ ok: false, ya_voto_esta: true, error: 'Ya votaste por esta mascota' });
-      }
-      if (votadasArr.length >= LIMITE_VOTOS) {
-        return res.status(200).json({ ok: false, limite_alcanzado: true, error: 'Ya usaste tus ' + LIMITE_VOTOS + ' votos en este concurso' });
-      }
-
-      // Limite adicional por IP — protege contra alguien inventando muchos
-      // correos distintos desde la misma conexion.
-      if (ip !== 'desconocida') {
-        const rIp = await fetch(
-          SUPABASE_URL + '/rest/v1/concurso_votos?concurso=eq.' + encodeURIComponent(concurso) + '&ip=eq.' + encodeURIComponent(ip) + '&select=id',
-          { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'count=exact' } }
-        );
-        const ipVotos = await rIp.json();
-        if (Array.isArray(ipVotos) && ipVotos.length >= LIMITE_VOTOS_POR_IP) {
-          return res.status(200).json({ ok: false, error: 'Se alcanzó el límite de votos desde esta red. Intenta desde otra conexión.' });
-        }
-      }
-
-      const rVoto = await fetch(SUPABASE_URL + '/rest/v1/concurso_votos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ concurso, entrada_id, email: emailL, ip })
-      });
-      if (!rVoto.ok) {
-        const errTxt = await rVoto.text().catch(() => '');
-        if (rVoto.status === 409 || errTxt.toLowerCase().indexOf('duplicate') >= 0) {
-          return res.status(200).json({ ok: false, ya_voto_esta: true, error: 'Ya votaste por esta mascota' });
-        }
-        console.error('votarConcurso insert failed:', rVoto.status, errTxt);
-        return res.status(200).json({ ok: false, error: errTxt || ('HTTP ' + rVoto.status) });
-      }
-
-      const rEntrada = await fetch(
-        SUPABASE_URL + '/rest/v1/concurso_entradas?id=eq.' + encodeURIComponent(entrada_id) + '&select=votos',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const entradaData = await rEntrada.json();
-      const votosActuales = (Array.isArray(entradaData) && entradaData[0] && entradaData[0].votos) || 0;
-      await fetch(SUPABASE_URL + '/rest/v1/concurso_entradas?id=eq.' + encodeURIComponent(entrada_id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ votos: votosActuales + 1 })
-      });
-
-      return res.status(200).json({ ok: true, restantes: LIMITE_VOTOS - votadasArr.length - 1 });
-    }
-
-    // ── getConcursoEntradasAdmin (admin — incluye ocultas) ──────
-    if (action === 'getConcursoEntradasAdmin') {
-      const concurso = req.query.concurso || '';
-      let url = SUPABASE_URL + '/rest/v1/concurso_entradas?select=*&order=votos.desc';
-      if (concurso) url += '&concurso=eq.' + encodeURIComponent(concurso);
-      const r = await fetch(url, { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
-      const data = await r.json();
-      return res.status(200).json({ entradas: Array.isArray(data) ? data : [] });
-    }
-
-    // ── toggleConcursoEntrada (admin — ocultar entrada inapropiada) ──
-    if (action === 'toggleConcursoEntrada' && req.method === 'POST') {
-      const { id, activo } = req.body;
-      if (!id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/concurso_entradas?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ activo })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── eliminarConcursoEntrada (admin) ──────────────────────────
-    if (action === 'eliminarConcursoEntrada' && req.method === 'POST') {
-      const { id } = req.body;
-      if (!id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/concurso_entradas?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getGaleriaMascota (fotos de concursos para "Mi Galería" en el perfil) ──
-    if (action === 'getGaleriaMascota') {
-      const uid = (req.query.uid || '').toUpperCase();
-      if (!uid) return res.status(200).json({ fotos: [] });
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/concurso_entradas?uid_mascota=eq.' + encodeURIComponent(uid) + '&activo=eq.true&select=id,foto_url,caption,concurso,votos,created_at&order=created_at.desc',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-      );
-      const data = await r.json();
-      return res.status(200).json({ fotos: Array.isArray(data) ? data : [] });
-    }
-
-    // ── registrarLeadConcurso (guarda el correo de quien vota + su preferencia de contacto) ──
-    if (action === 'registrarLeadConcurso' && req.method === 'POST') {
-      const { concurso, email, acepta_ofertas } = req.body;
-      if (!concurso || !email || !email.includes('@')) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/concurso_leads?on_conflict=concurso,email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ concurso, email: email.trim().toLowerCase(), acepta_ofertas: !!acepta_ofertas })
-      });
-      if (!r.ok) {
-        const errTxt = await r.text().catch(() => '');
-        console.error('registrarLeadConcurso failed:', r.status, errTxt);
-        return res.status(200).json({ ok: false, error: errTxt });
-      }
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── enviarOTPVotoConcurso — codigo de verificacion para votar sin cuenta ──
-    // Mismo mecanismo que el login (enviarOTP/verificarOTP), pero SIN exigir
-    // que el correo ya tenga una mascota registrada — cualquier correo real
-    // puede recibir el codigo, ya que cualquiera puede votar (no solo usuarios
-    // de PetMi). Esto evita que se voten con correos inventados al azar.
-    if (action === 'enviarOTPVotoConcurso' && req.method === 'POST') {
-      const { email } = req.body;
-      if (!email || !email.includes('@')) return res.status(200).json({ ok: false, error: 'Correo inválido' });
-      const emailL = email.trim().toLowerCase();
-
-      const code = String(Math.floor(100000 + Math.random() * 900000));
-      const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-
-      const rSave = await fetch(SUPABASE_URL + '/rest/v1/otp_codes', {
-        method: 'POST',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ email: emailL, code, expires_at: expires, used: false })
-      });
-      if (!rSave.ok) {
-        const errTxt = await rSave.text().catch(() => '');
-        console.error('enviarOTPVotoConcurso guardar codigo failed:', rSave.status, errTxt);
-        return res.status(200).json({ ok: false, error: 'No se pudo generar el código' });
-      }
-
-      const resultado = await _enviarCodigoOTPPorCorreo(emailL, code, '', 'enviarOTPVotoConcurso');
-      if (!resultado.ok) return res.status(200).json({ ok: false, error: resultado.error });
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── girarRuletaAdoptado — ruleta especial del 23 sep, un giro
-    // por correo, premios limitados (Q100 y baño se controlan en la
-    // función de Supabase; ver crear_ruleta_adoptado.sql) ──────────
-    if (action === 'girarRuletaAdoptado' && req.method === 'POST') {
-      const { email, uid_mascota } = req.body;
-      if (!email || !email.includes('@')) return res.status(200).json({ ok: false, error: 'Correo inválido' });
-      const emailL = email.trim().toLowerCase();
-
-      const rGiro = await fetch(SUPABASE_URL + '/rest/v1/rpc/girar_ruleta_adoptado', {
-        method: 'POST',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email_param: emailL, uid_mascota_param: uid_mascota || null })
-      });
-
-      if (!rGiro.ok) {
-        const errTxt = await rGiro.text().catch(() => '');
-        if (errTxt.includes('ya_giro')) return res.status(200).json({ ok: false, error: 'Este correo ya giró la ruleta — solo se puede una vez.' });
-        console.error('girarRuletaAdoptado failed:', rGiro.status, errTxt);
-        return res.status(200).json({ ok: false, error: 'No se pudo girar la ruleta. Intenta de nuevo.' });
-      }
-      const resultado = await rGiro.json();
-      const fila = Array.isArray(resultado) ? resultado[0] : resultado;
-      return res.status(200).json({ ok: true, premio: fila.premio_resultado, codigo: fila.codigo_resultado });
-    }
-
-    // ── girarRuletaWazu (18 sep, movido a Supabase el mismo día) —
-    // ruleta pública para Wazu, sin cuenta. 1 giro por teléfono, sin
-    // límite de premios. Ya NO pasa por Apps Script/Google Sheets —
-    // eso causaba demasiados conflictos de despliegue (doPost
-    // duplicado entre varios archivos). Todo directo a Supabase,
-    // visible desde el Admin.
-    // ── crearReservaCarrera (19 sep) — reserva de bandana para la
-    // Carrera Alas de Esperanza. Todo en Supabase, sin Google Sheets.
-    // Genera un cupón (15% o 25% si tiene PetzID verificado) y avisa
-    // por correo con los datos de recolección (vía Apps Script, solo
-    // para el envío del correo — los datos NO viven ahí).
-    if (action === 'crearReservaCarrera' && req.method === 'POST') {
-      const { nombre, mascota, telefono, email, tienePetzid, uidPetzid } = req.body || {};
-      const telLimpio = String(telefono || '').replace(/\D/g, '');
-      const nombreLimpio = String(nombre || '').trim();
-
-      if (!telLimpio || telLimpio.length < 8) return res.status(200).json({ ok: false, error: 'Teléfono inválido.' });
-      if (!nombreLimpio) return res.status(200).json({ ok: false, error: 'Escribe tu nombre.' });
-
-      try {
-        const descuentoPct = tienePetzid ? 25 : 15;
-        const codigoCupon = 'CARRERA-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-
-        const rInsert = await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({
-            nombre: nombreLimpio, telefono: telLimpio, email: email || null,
-            nombre_mascota: mascota || null, tiene_petzid: !!tienePetzid, uid_petzid: uidPetzid || null,
-            codigo_cupon: codigoCupon, descuento_pct: descuentoPct
-          })
-        });
-
-        if (!rInsert.ok) {
-          const errTxt = await rInsert.text().catch(() => '');
-          if (errTxt.includes('duplicate key') || rInsert.status === 409) {
-            return res.status(200).json({ ok: false, error: 'Este teléfono ya reservó una bandana.' });
-          }
-          console.error('crearReservaCarrera insert error:', rInsert.status, errTxt);
-          return res.status(200).json({ ok: false, error: 'No se pudo completar la reserva. Intenta de nuevo.' });
-        }
-
-        // Cupón usable en la tienda (misma tabla que usa el checkout)
-        await fetch(SUPABASE_URL + '/rest/v1/cupones_tienda', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ codigo: codigoCupon, tipo: 'porcentaje', valor: descuentoPct })
-        }).catch(() => {});
-
-        // Correo de confirmación con recordatorio — no bloquea la respuesta
-        if (email) {
-          fetch(APPS_SCRIPT_OTP_URL, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'notificarReservaCarrera', nombre: nombreLimpio, mascota: mascota || '', email, codigo: codigoCupon, descuento: descuentoPct })
-          }).catch(() => {});
-        }
-
-        return res.status(200).json({ ok: true, codigo: codigoCupon, descuento: descuentoPct });
-      } catch (eCarrera) {
-        console.error('crearReservaCarrera error:', eCarrera.message);
-        return res.status(200).json({ ok: false, error: 'Error de conexión. Intenta de nuevo.' });
-      }
-    }
-
-
-    // ── girarRuletaWazu (18 sep, movido a Supabase el mismo día) —
-    // ruleta pública para Wazu, sin cuenta. 1 giro por teléfono, sin
-    // límite de premios. Ya NO pasa por Apps Script/Google Sheets —
-    // eso causaba demasiados conflictos de despliegue (doPost
-    // duplicado entre varios archivos). Todo directo a Supabase,
-    // visible desde el Admin.
-    // ── getCarreraReservas (Admin) ───────────────────────────────
-    if (action === 'getCarreraReservas') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?select=*&order=created_at.desc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const reservas = await r.json();
-      return res.status(200).json({ ok: true, reservas });
-    }
-
-    // ── marcarBandanaEntregada (Admin) ────────────────────────────
-    if (action === 'marcarBandanaEntregada' && req.method === 'POST') {
-      const { id, entregada } = req.body || {};
-      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
-      await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?id=eq.' + id, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ bandana_entregada: !!entregada })
-      });
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── eliminarReservaCarrera (Admin) ────────────────────────────
-    if (action === 'eliminarReservaCarrera' && req.method === 'POST') {
-      const { id } = req.body || {};
-      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
-      await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?id=eq.' + id, {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
-      });
-      return res.status(200).json({ ok: true });
-    }
-
-    if (action === 'girarRuletaWazu' && req.method === 'POST') {
-      const { nombreMascota, telefono, ultimaCompra, producto } = req.body || {};
-      const telLimpio = String(telefono || '').replace(/\D/g, '');
-      const nombreLimpio = String(nombreMascota || '').trim();
-
-      if (!telLimpio || telLimpio.length < 8) {
-        return res.status(200).json({ ok: false, error: 'Número de teléfono inválido.' });
-      }
-      if (!nombreLimpio) {
-        return res.status(200).json({ ok: false, error: 'Escribe el nombre de tu mascota.' });
-      }
-
-      try {
-        const WAZU_PREMIOS = ['50% en accesorios FreeDog', '50% off Baños', 'Ozonoterapia GRATIS', '1 Bolsa de treats', '10% off alimento'];
-        const premioElegido = WAZU_PREMIOS[Math.floor(Math.random() * WAZU_PREMIOS.length)];
-
-        const rInsert = await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ nombre_mascota: nombreLimpio, telefono: telLimpio, premio: premioElegido, ultima_compra: ultimaCompra || null, producto: producto || null })
-        });
-
-        if (!rInsert.ok) {
-          const errTxt = await rInsert.text().catch(() => '');
-          if (errTxt.includes('duplicate key') || rInsert.status === 409) {
-            return res.status(200).json({ ok: false, error: 'Este número ya participó — solo se permite un giro por teléfono.' });
-          }
-          console.error('girarRuletaWazu insert error:', rInsert.status, errTxt);
-          return res.status(200).json({ ok: false, error: 'No se pudo girar la ruleta. Intenta de nuevo.' });
-        }
-
-        return res.status(200).json({ ok: true, premio: premioElegido });
-      } catch (eWazu) {
-        console.error('girarRuletaWazu error:', eWazu.message);
-        return res.status(200).json({ ok: false, error: 'Error de conexión. Intenta de nuevo.' });
-      }
-    }
-
-    // ── getWazuClientes (Admin — admin-wazu.html) ────────────────
-    if (action === 'getWazuClientes') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_clientes?select=*&order=nombre_cliente.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const clientes = await r.json();
-      return res.status(200).json({ ok: true, clientes });
-    }
-
-    // ── eliminarWazuCliente (Admin) ───────────────────────────────
-    if (action === 'eliminarWazuCliente' && req.method === 'POST') {
-      const { id } = req.body || {};
-      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
-      await fetch(SUPABASE_URL + '/rest/v1/wazu_clientes?id=eq.' + id, {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
-      });
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── marcarClienteContactado (Admin) ───────────────────────────
-    if (action === 'marcarClienteContactado' && req.method === 'POST') {
-      const { id, contactado } = req.body || {};
-      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
-      await fetch(SUPABASE_URL + '/rest/v1/wazu_clientes?id=eq.' + id, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ contactado: !!contactado })
-      });
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── enviarMensajeDirectoAdmin (18 sep) — el Admin le manda un
-    // mensaje puntual a UNA mascota específica, directo a su buzón
-    // de Mensajes (misma tabla que usa el resto de la app). ────────
-    if (action === 'enviarMensajeDirectoAdmin' && req.method === 'POST') {
-      const { uid, mensaje } = req.body || {};
-      if (!uid || !mensaje) return res.status(400).json({ ok: false, error: 'Falta uid o mensaje' });
-      const rMsg = await fetch(SUPABASE_URL + '/rest/v1/conversaciones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ uid_emisor: 'PETMI-OFICIAL', uid_receptor: uid, mensaje: mensaje, leido: false })
-      });
-      if (!rMsg.ok) {
-        const errTxt = await rMsg.text().catch(() => '');
-        console.error('enviarMensajeDirectoAdmin error:', rMsg.status, errTxt);
-        return res.status(200).json({ ok: false, error: 'No se pudo guardar el mensaje.' });
-      }
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── getRuletaWazuGiros (Admin) ──────────────────────────────
-    if (action === 'getRuletaWazuGiros') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros?select=*&order=created_at.desc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const giros = await r.json();
-      return res.status(200).json({ ok: true, giros });
-    }
-
-    // ── marcarWazuContactado (Admin) ─────────────────────────────
-    if (action === 'marcarWazuContactado' && req.method === 'POST') {
-      const { id } = req.body || {};
-      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
-      await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros?id=eq.' + id, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ contactado: true })
-      });
-      return res.status(200).json({ ok: true });
-    }
-
-
-    if (action === 'verificarOTPVotoConcurso' && req.method === 'POST') {
-      const { email, code } = req.body;
-      if (!email || !code) return res.status(200).json({ ok: false });
-      const emailL = email.trim().toLowerCase();
-      const now = new Date().toISOString();
-
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/otp_codes?email=ilike.' + encodeURIComponent(emailL) +
-        '&code=eq.' + encodeURIComponent(code.trim()) +
-        '&used=eq.false&expires_at=gte.' + encodeURIComponent(now) +
-        '&select=id&order=created_at.desc&limit=1',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const rows = await r.json();
-      if (!rows || !rows.length) {
-        return res.status(200).json({ ok: false, msg: 'Código incorrecto o expirado' });
-      }
-
-      await fetch(SUPABASE_URL + '/rest/v1/otp_codes?id=eq.' + rows[0].id, {
-        method: 'PATCH',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ used: true })
-      });
-
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── sortearGanadorConcurso (admin) — sortea al azar entre el TOP 5
-    // mas votados. Igual que el sorteo de la quiniela: la primera vez que
-    // se llama, elige y GUARDA el resultado (on_conflict + ignore-duplicates
-    // evita que 2 clics casi simultaneos elijan ganadores distintos); las
-    // siguientes veces devuelve siempre el mismo resultado ya guardado.
-    if (action === 'sortearGanadorConcurso' && req.method === 'POST') {
-      const { concurso } = req.body;
-      if (!concurso) return res.status(200).json({ ok: false, error: 'Falta concurso' });
-      const claveConfig = 'concurso_' + concurso + '_ganador';
-
-      const rConf = await fetch(SUPABASE_URL + '/rest/v1/config?clave=eq.' + encodeURIComponent(claveConfig) + '&select=valor', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const confRows = await rConf.json();
-      if (Array.isArray(confRows) && confRows.length && confRows[0].valor) {
-        const rGanador = await fetch(SUPABASE_URL + '/rest/v1/concurso_entradas?id=eq.' + encodeURIComponent(confRows[0].valor) + '&select=*', {
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        });
-        const ganadorRows = await rGanador.json();
-        return res.status(200).json({ ok: true, ya_sorteado: true, ganador: (ganadorRows && ganadorRows[0]) || null });
-      }
-
-      const rTop = await fetch(
-        SUPABASE_URL + '/rest/v1/concurso_entradas?concurso=eq.' + encodeURIComponent(concurso) + '&activo=eq.true&select=*&order=votos.desc&limit=5',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const top5 = await rTop.json();
-      if (!Array.isArray(top5) || !top5.length) return res.status(200).json({ ok: false, error: 'No hay participantes activos en este concurso' });
-
-      const elegido = top5[Math.floor(Math.random() * top5.length)];
-
-      await fetch(SUPABASE_URL + '/rest/v1/config?on_conflict=clave', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
-        body: JSON.stringify({ clave: claveConfig, valor: elegido.id })
-      });
-
-      // Releer el config para devolver siempre el que realmente quedo
-      // guardado (por si 2 llamadas casi simultaneas compitieron)
-      const rFinal = await fetch(SUPABASE_URL + '/rest/v1/config?clave=eq.' + encodeURIComponent(claveConfig) + '&select=valor', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const finalRows = await rFinal.json();
-      const idFinal = (Array.isArray(finalRows) && finalRows[0] && finalRows[0].valor) || elegido.id;
-      const ganadorFinal = top5.find(e => e.id === idFinal) || elegido;
-
-      return res.status(200).json({ ok: true, ya_sorteado: false, ganador: ganadorFinal, candidatos: top5 });
-    }
-
-    // ── getLeadsConcursoAdmin (admin — para armar la campaña despues) ──
-    if (action === 'getLeadsConcursoAdmin') {
-      const concurso = req.query.concurso || '';
-      let url = SUPABASE_URL + '/rest/v1/concurso_leads?acepta_ofertas=eq.true&select=email,created_at';
-      if (concurso) url += '&concurso=eq.' + encodeURIComponent(concurso);
-      const r = await fetch(url, { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
-      const leads = await r.json();
-      const emails = (Array.isArray(leads) ? leads : []).map(l => l.email);
-      if (!emails.length) return res.status(200).json({ yaRegistrados: [], nuevos: [] });
-
-      const rMasc = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?email=in.(' + emails.map(e => '"' + e + '"').join(',') + ')&select=email,dueno',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const mascData = await rMasc.json();
-      const emailsRegistrados = new Set((Array.isArray(mascData) ? mascData : []).map(m => m.email));
-      const duenoPorEmail = {};
-      (Array.isArray(mascData) ? mascData : []).forEach(m => { if (!duenoPorEmail[m.email]) duenoPorEmail[m.email] = m.dueno || ''; });
-
-      const yaRegistrados = emails.filter(e => emailsRegistrados.has(e)).map(e => ({ email: e, dueno: duenoPorEmail[e] || '' }));
-      const nuevos = emails.filter(e => !emailsRegistrados.has(e));
-
-      return res.status(200).json({ yaRegistrados, nuevos });
-    }
-
-    // ── getImpacto ────────────────────────────────────────────
-    if (action === 'getImpacto') {
-      const [rMascotas, rAdopciones, rPerdidos, rRecuperados] = await Promise.all([
-        // Total mascotas registradas
-        fetch(SUPABASE_URL + '/rest/v1/mascotas?select=uid', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
-        }),
-        // Adopciones publicadas (activas)
-        fetch(SUPABASE_URL + '/rest/v1/actividades?tipo=eq.adopcion&select=id', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
-        }),
-        // Mascotas perdidas activas
-        fetch(SUPABASE_URL + '/rest/v1/actividades?tipo=eq.perdido&activo=eq.true&select=id', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
-        }),
-        // Mascotas recuperadas (perdidas eliminadas = aparecieron)
-        fetch(SUPABASE_URL + '/rest/v1/actividades?tipo=eq.perdido&activo=eq.false&select=id', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'count=exact', 'Range': '0-0' }
-        })
-      ]);
-
-      const parseCount = (r) => {
-        const cr = r.headers.get('content-range');
-        return cr ? parseInt(cr.split('/')[1] || '0') : 0;
+function cargarBlogDashboard(){
+  fetch('/api/galeria?action=getBlogPosts')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var posts = d.posts || [];
+    var cont = document.getElementById('dashBlogCard');
+    if(!cont) return;
+    if(!posts.length){ cont.innerHTML = ''; return; }
+    var p = posts[0];
+    var img = p.image ? '<img src="'+p.image+'" style="width:64px;height:64px;border-radius:10px;object-fit:cover;flex-shrink:0">' : '<div style="width:64px;height:64px;border-radius:10px;background:#eee;flex-shrink:0"></div>';
+    cont.innerHTML = '<a href="'+p.link+'" target="_blank" style="display:flex;gap:10px;background:#fff;border:1px solid #eee;border-radius:12px;padding:10px;text-decoration:none;align-items:center">'
+      + img
+      + '<div><div style="font-size:12.5px;font-weight:800;color:#1a1a2e;line-height:1.3">'+p.title+'</div>'
+      + '<div style="font-size:11px;color:#00838f;margin-top:3px">Leer más &rarr;</div></div>'
+      + '</a>';
+  }).catch(function(){
+    var cont = document.getElementById('dashBlogCard');
+    if(cont) cont.innerHTML = '';
+  });
+}
+
+// ── Cargar datos ──────────────────────────────────────────────
+fetch('/api/galeria?action=getBasic')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var rows=d.rows||[];
+    allPets=rows.map(function(r){
+      return {
+        uid:          String(r[1]||'').trim(),
+        nombre:       String(r[2]||'').trim(),
+        premium:      false, // se carga desde checkEmail si hay sesion
+        apodo:        String(r[3]||'').trim(),
+        especie:      String(r[4]||'').trim(),
+        sexo:         String(r[5]||'').trim(),
+        raza:         String(r[6]||'').trim(),
+        tipoFecha:    String(r[7]||'').trim(),
+        fecha:        String(r[8]||'').trim(),
+        email:        String(r[9]||'').trim(),
+        foto:         String(r[10]||'').trim(),
+        angelito:     String(r[11]||'').trim().toLowerCase()==='si',
+        fechaAngelito:String(r[12]||'').trim(),
+        slug:         String(r[13]||'').trim(),
+        createdAt:    String(r[0]||'').trim(),
+        actividades:'', especial:'', comentario:'', alimento:'', zona:'', notifMensajes:''
       };
-
-      // Donaciones — valor manual controlado desde admin
-      const rDonaciones = await fetch(SUPABASE_URL + '/rest/v1/config?clave=eq.donaciones_total&select=valor', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const donData = await rDonaciones.json();
-      const donaciones = donData && donData[0] ? donData[0].valor : '0';
-
-      return res.status(200).json({
-        mascotas:    parseCount(rMascotas),
-        adopciones:  parseCount(rAdopciones),
-        perdidos:    parseCount(rPerdidos),
-        recuperados: parseCount(rRecuperados),
-        donaciones:  donaciones
-      });
-    }
-
-    // ── getPromos ─────────────────────────────────────────────
-    if (action === 'getPromos') {
-      const nivel = req.query.nivel || 'basico'; // basico | premium
-      // Traer promos activas y no expiradas
-      const ahora = new Date().toISOString();
-      let url = SUPABASE_URL + '/rest/v1/promos?activo=eq.true'
-        + '&or=(fecha_fin.is.null,fecha_fin.gte.' + ahora + ')'
-        + '&order=nivel.asc,created_at.desc';
-      const r = await fetch(url, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const data = await r.json();
-      // Si es basico, filtrar solo basicas. Si es premium, devolver todas
-      // Devolver todas — el frontend filtra por tab y controla el canje
-      const promos = Array.isArray(data) ? data : [];
-      return res.status(200).json({ promos });
-    }
-
-    // ── createPromo (admin) ───────────────────────────────────
-    if (action === 'createPromo' && req.method === 'POST') {
-      const { titulo, descripcion, aliado, nivel, codigo, descuento, imagen, fecha_fin, especie, zona } = req.body;
-      if (!titulo || !aliado) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/promos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
-        body: JSON.stringify({ titulo, descripcion, aliado, nivel: nivel||'basico', codigo, descuento, imagen, fecha_fin: fecha_fin||null, especie: especie||'todos', zona: zona||'todos', activo: true })
-      });
-      const data = await r.json();
-      return res.status(200).json({ ok: r.ok, id: data[0]?.id });
-    }
-
-    // ── updatePromo (admin) ───────────────────────────────────
-    if (action === 'updatePromo' && req.method === 'POST') {
-      const { id, ...fields } = req.body;
-      if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/promos?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(fields)
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── deletePromo (admin) ───────────────────────────────────
-    if (action === 'deletePromo' && req.method === 'POST') {
-      const { id } = req.body;
-      const r = await fetch(SUPABASE_URL + '/rest/v1/promos?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── activarPremium (admin) ───────────────────────────────
-    if (action === 'activarPremium' && req.method === 'POST') {
-      const { uid, meses } = req.body;
-      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
-      const hoy = new Date();
-      hoy.setMonth(hoy.getMonth() + (meses || 12));
-      const hasta = hoy.toISOString().split('T')[0];
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ premium: true, premium_hasta: hasta })
-      });
-      return res.status(200).json({ ok: r.ok, premium_hasta: hasta });
-    }
-
-    // ── desactivarPremium (admin) ─────────────────────────────
-    if (action === 'desactivarPremium' && req.method === 'POST') {
-      const { uid } = req.body;
-      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ premium: false, premium_hasta: null })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── activarPremiumGratis — 3 meses por perfil completo ───
-    if (action === 'activarPremiumGratis' && req.method === 'POST') {
-      const { uid } = req.body;
-      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
-      // Verificar que no tenga ya premium activo
-      const check = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=premium,premium_hasta', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await check.json();
-      if (data[0]?.premium) return res.status(200).json({ ok: false, error: 'ya tiene premium' });
-      const hasta = new Date();
-      hasta.setMonth(hasta.getMonth() + 3);
-      const hastaStr = hasta.toISOString().split('T')[0];
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ premium: true, premium_hasta: hastaStr })
-      });
-      return res.status(200).json({ ok: r.ok, premium_hasta: hastaStr, meses: 3 });
-    }
-
-    // ── addMensajePublico ─────────────────────────────────────
-    // Guarda mensaje publico directamente en Supabase (para angelitos/cumpleanos)
-    if (action === 'addMensajePublico' && req.method === 'POST') {
-      const { uid: uidRaw, autor, mensaje, nombreMascota } = req.body;
-      const uid = (uidRaw || '').toUpperCase();
-      if (!uid || !autor || !mensaje) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mensajes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ uid_mascota: uid, autor, mensaje, nombre_mascota: nombreMascota || '' })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── publicarMensaje ────────────────────────────────────────
-    // NUEVO: faltaba este handler. galeria.html (botón "🎉 Felicitar" /
-    // "🌈 mensaje de apoyo") llama a esta acción con un payload distinto
-    // (uid_destinatario, email_emisor) al de addMensajePublico — antes
-    // caía sin manejador y el frontend igual mostraba "✅ Mensaje enviado"
-    // aunque nunca se guardaba nada. Guarda en la MISMA tabla "mensajes"
-    // que usa perfil.html/p.html, resolviendo el nombre del emisor a
-    // partir de su email (la galería no le pide que escriba su nombre).
-    if (action === 'publicarMensaje' && req.method === 'POST') {
-      const { uid_destinatario, email_emisor, mensaje, tipo } = req.body;
-      const uid = (uid_destinatario || '').toUpperCase();
-      if (!uid || !mensaje) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-
-      let autor = email_emisor || 'Alguien';
-      let nombreMascota = '';
-      try {
-        const rEmisor = await fetch(
-          SUPABASE_URL + '/rest/v1/mascotas?email=eq.' + encodeURIComponent((email_emisor || '').toLowerCase()) + '&select=dueno&limit=1',
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-        );
-        const rowsEmisor = await rEmisor.json();
-        if (rowsEmisor && rowsEmisor[0] && rowsEmisor[0].dueno) autor = rowsEmisor[0].dueno;
-      } catch (e) { /* si falla, usamos el email tal cual */ }
-      try {
-        const rDest = await fetch(
-          SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=nombre&limit=1',
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-        );
-        const rowsDest = await rDest.json();
-        if (rowsDest && rowsDest[0] && rowsDest[0].nombre) nombreMascota = rowsDest[0].nombre;
-      } catch (e) { /* no bloquea el envío si falla */ }
-
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mensajes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ uid_mascota: uid, autor, mensaje, nombre_mascota: nombreMascota })
-      });
-      if (!r.ok) {
-        const errText = await r.text().catch(() => '');
-        console.error('publicarMensaje insert failed:', r.status, errText);
-      }
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    if (action === 'deleteMascota' && req.method === 'POST') {
-      const { uid } = req.body;
-      if (!uid) return res.status(200).json({ ok: false, error: 'Falta uid' });
-      // Use service role to bypass RLS
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid.toUpperCase()), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
-      });
-      return res.status(200).json({ ok: r.ok, status: r.status });
-    }
-
-    // ── pausarPublicacion ──────────────────────────────────────
-    if (action === 'pausarPublicacion' && req.method === 'POST') {
-      const { id, pausado, pausado_razon } = req.body;
-      if (!id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ pausado: pausado === true, pausado_razon: pausado_razon || null })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getAfiliados ───────────────────────────────────────────
-    if (action === 'getAfiliados') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/actividades?es_afiliado=eq.true&select=id,afiliado_email,afiliado_plan,afiliado_vence,afiliado_periodo,titulo,descripcion,tipo,activo,pausado,pausado_razon,created_at&order=created_at.desc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ afiliados: await r.json() });
-    }
-
-    // ── verSorteoGanadores (admin) ────────────────────────────
-    // Revela quiénes son los 2 ganadores del sorteo, con su nombre
-    // de dueño para que sea fácil identificarlos.
-    if (action === 'verSorteoGanadores') {
-      const rConf = await fetch(
-        SUPABASE_URL + '/rest/v1/config?clave=eq.sorteo_ganadores&select=valor',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const confRows = await rConf.json();
-      if (!Array.isArray(confRows) || !confRows.length || !confRows[0].valor) {
-        return res.status(200).json({ ok: true, sorteado: false, ganadores: [] });
-      }
-      const emails = confRows[0].valor.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-
-      const rDuenos = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?email=in.(' + emails.map(e => '"' + e + '"').join(',') + ')&select=email,dueno,nombre',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const duenosRows = await rDuenos.json();
-      const porEmail = {};
-      (Array.isArray(duenosRows) ? duenosRows : []).forEach(m => {
-        if (!porEmail[m.email]) porEmail[m.email] = { dueno: m.dueno, mascotas: [] };
-        porEmail[m.email].mascotas.push(m.nombre);
-      });
-
-      // Ver si ya giraron y reclamaron
-      const rGiros = await fetch(
-        SUPABASE_URL + '/rest/v1/wc_sorteo?email=in.(' + emails.map(e => '"' + e + '"').join(',') + ')&select=email,resultado,created_at',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const girosRows = await rGiros.json();
-      const giroPorEmail = {};
-      (Array.isArray(girosRows) ? girosRows : []).forEach(g => { giroPorEmail[g.email] = g; });
-
-      const ganadores = emails.map(em => ({
-        email: em,
-        dueno: (porEmail[em] && porEmail[em].dueno) || '(sin encontrar)',
-        mascotas: (porEmail[em] && porEmail[em].mascotas) || [],
-        yaGiro: !!giroPorEmail[em],
-        fechaGiro: giroPorEmail[em] ? giroPorEmail[em].created_at : null
-      }));
-
-      return res.status(200).json({ ok: true, sorteado: true, ganadores });
-    }
-
-    // ── getSinonimosRaza (admin) ────────────────────────────────
-    if (action === 'getSinonimosRaza') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/raza_sinonimos?select=*&order=raza_canonica.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ sinonimos: Array.isArray(data) ? data : [] });
-    }
-
-    // ── guardarSinonimoRaza (crear o actualizar — variante es única) ──
-    if (action === 'guardarSinonimoRaza' && req.method === 'POST') {
-      const { raza_variante, raza_canonica } = req.body;
-      if (!raza_variante || !raza_canonica) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/raza_sinonimos?on_conflict=raza_variante', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ raza_variante, raza_canonica })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── eliminarSinonimoRaza (admin) ─────────────────────────────
-    if (action === 'eliminarSinonimoRaza' && req.method === 'POST') {
-      const { raza_variante } = req.body;
-      if (!raza_variante) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/raza_sinonimos?raza_variante=eq.' + encodeURIComponent(raza_variante), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getProductosTienda (público) ────────────────────────────
-    // ── getBlogPosts (últimos artículos del blog de Wix, vía RSS) ──
-    // ── buscarContenido (buscador interno, sin IA — salud + lugares + blog) ──
-    // ── getUsuariosNuncaVolvieron (admin) ────────────────────────
-    if (action === 'getUsuariosNuncaVolvieron') {
-      const [mascotasResp, enviosResp] = await Promise.all([
-        fetch(SUPABASE_URL + '/rest/v1/mascotas?ultima_actividad=is.null&uid=neq.PETMI-OFICIAL&select=uid,nombre,email,dueno,whatsapp,angelito,created_at', {
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        }),
-        fetch(SUPABASE_URL + '/rest/v1/reactivacion_envios?select=email,semana,enviado_at', {
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        })
-      ]);
-      const mascotas = await mascotasResp.json();
-      const envios = await enviosResp.json();
-      const enviosPorEmail = {};
-      (Array.isArray(envios) ? envios : []).forEach(e => {
-        const k = (e.email || '').toLowerCase();
-        if (!enviosPorEmail[k]) enviosPorEmail[k] = [];
-        enviosPorEmail[k].push(e.semana);
-      });
-
-      const familias = {};
-      (Array.isArray(mascotas) ? mascotas : []).forEach(m => {
-        if (m.angelito) return; // no incluir angelitos
-        const k = (m.email || '').toLowerCase();
-        if (!k) return;
-        if (!familias[k]) familias[k] = { email: m.email, dueno: m.dueno || '', whatsapp: m.whatsapp || '', mascotas: [], primeraFecha: m.created_at };
-        if (m.nombre) familias[k].mascotas.push(m.nombre);
-        if (new Date(m.created_at) < new Date(familias[k].primeraFecha)) familias[k].primeraFecha = m.created_at;
-      });
-
-      const lista = Object.values(familias).map(f => {
-        const semanasEnviadas = enviosPorEmail[f.email.toLowerCase()] || [];
-        return {
-          email: f.email, dueno: f.dueno, whatsapp: f.whatsapp,
-          mascotas: f.mascotas.length ? f.mascotas.join(', ') : '(sin nombre)',
-          registradoEl: f.primeraFecha,
-          correosEnviados: semanasEnviadas.length,
-          ultimaSemanaEnviada: semanasEnviadas.length ? Math.max(...semanasEnviadas) : null
-        };
-      }).sort((a, b) => new Date(b.registradoEl) - new Date(a.registradoEl));
-
-      return res.status(200).json({ usuarios: lista });
-    }
-
-    if (action === 'buscarContenido') {
-      const qOriginal = (req.query.q || '').toLowerCase().trim();
-      if (!qOriginal || qOriginal.length < 2) return res.status(200).json({ salud: [], lugares: [], blog: [] });
-
-      // Palabras vacías que no aportan al match (para no diluir la búsqueda)
-      const stopwords = ['el','la','los','las','de','del','para','con','mi','tu','su','y','o','un','una','que','es','en','al','por','como','mejor','buen','buena'];
-      const palabras = qOriginal.split(/\s+/).filter(w => (w.length >= 3 || /^\d+$/.test(w)) && stopwords.indexOf(w) === -1);
-      // Si tras quitar stopwords no queda nada útil, usamos la frase completa tal cual
-      const terminos = palabras.length ? palabras : [qOriginal];
-
-      function puntaje(txt) {
-        const t = (txt || '').toLowerCase();
-        let score = 0;
-        terminos.forEach(function(p) { if (t.indexOf(p) >= 0) score++; });
-        return score;
-      }
-      function coincide(campos) {
-        return puntaje(campos.join(' ')) > 0;
-      }
-
-      const [reglasResp, lugaresResp] = await Promise.all([
-        fetch(SUPABASE_URL + '/rest/v1/reglas_salud?activo=eq.true&select=*', {
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        }),
-        fetch(SUPABASE_URL + '/rest/v1/lugares?activo=eq.true&select=*', {
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        })
-      ]);
-      const reglas = await reglasResp.json();
-      const lugares = await lugaresResp.json();
-
-      const saludMatches = (Array.isArray(reglas) ? reglas : [])
-        .map(r => ({ r, score: puntaje([r.nombre, r.descripcion, r.tip, r.tipo, r.especie].join(' ')) }))
-        .filter(x => x.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 8)
-        .map(x => ({ tipo: 'salud', nombre: x.r.nombre, descripcion: x.r.descripcion || x.r.tip || '', especie: x.r.especie, link: '/calendario-vacunas.html' }));
-
-      const lugaresMatches = (Array.isArray(lugares) ? lugares : [])
-        .map(l => ({ l, score: puntaje([l.nombre, l.tipo, l.zona, l.direccion].join(' ')) }))
-        .filter(x => x.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 8)
-        .map(x => ({ tipo: 'lugar', nombre: x.l.nombre, descripcion: (x.l.tipo || '') + (x.l.zona ? ' · Zona ' + x.l.zona : ''), link: '/lugares.html' }));
-
-      let blogMatches = [];
-      try {
-        const rssResp = await fetch('https://www.revistapetmi.com/blog-feed.xml');
-        const xml = await rssResp.text();
-        function extraer(bloque, tag) {
-          const m = bloque.match(new RegExp('<' + tag + '[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/' + tag + '>'));
-          return m ? m[1].trim() : '';
-        }
-        const bloques = xml.split('<item>').slice(1);
-        blogMatches = bloques
-          .map(b => ({ title: extraer(b, 'title'), link: extraer(b, 'link'), desc: extraer(b, 'description').replace(/<[^>]+>/g, '') }))
-          .map(p => ({ p, score: puntaje(p.title + ' ' + p.desc) }))
-          .filter(x => x.score > 0)
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 6)
-          .map(x => ({ tipo: 'blog', nombre: x.p.title, descripcion: x.p.desc.substring(0, 140), link: x.p.link }));
-      } catch (e) { /* si falla el blog, seguimos con lo demás */ }
-
-      // Registrar la búsqueda (no bloqueante, no afecta la respuesta si falla)
-      const totalResultados = saludMatches.length + lugaresMatches.length + blogMatches.length;
-      fetch(SUPABASE_URL + '/rest/v1/busquedas_log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ query: qOriginal, email: (req.query.email || '').toLowerCase() || null, resultados: totalResultados })
-      }).catch(() => {});
-
-      return res.status(200).json({ salud: saludMatches, lugares: lugaresMatches, blog: blogMatches });
-    }
-
-    if (action === 'getBlogPosts') {
-      try {
-        const rssUrl = 'https://www.revistapetmi.com/blog-feed.xml';
-        const rResp = await fetch(rssUrl);
-        const xml = await rResp.text();
-
-        function extraer(bloque, tag) {
-          const m = bloque.match(new RegExp('<' + tag + '[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/' + tag + '>'));
-          return m ? m[1].trim() : '';
-        }
-
-        const bloques = xml.split('<item>').slice(1).slice(0, 6);
-        const posts = bloques.map(function(b) {
-          const title = extraer(b, 'title');
-          const link = extraer(b, 'link');
-          const descRaw = extraer(b, 'description');
-          const excerpt = descRaw.replace(/<[^>]+>/g, '').trim().substring(0, 160);
-          const imgMatch = b.match(/<enclosure[^>]*url="([^"]+)"/) || b.match(/<media:content[^>]*url="([^"]+)"/) || b.match(/<img[^>]*src="([^"]+)"/);
-          const image = imgMatch ? imgMatch[1] : '';
-          const pubDate = extraer(b, 'pubDate');
-          return { title, link, excerpt, image, pubDate };
-        }).filter(function(p) { return p.title && p.link; });
-
-        return res.status(200).json({ posts });
-      } catch (e) {
-        return res.status(200).json({ posts: [], error: e.message });
-      }
-    }
-
-    // ── getAlimentosCatalogo (público — para buscar la foto de un alimento) ──
-    if (action === 'getAlimentosCatalogo') {
-      const [catResp, sinResp] = await Promise.all([
-        fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?select=*', {
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        }),
-        fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos?select=*', {
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        })
-      ]);
-      const data = await catResp.json();
-      const sinonimos = await sinResp.json();
-      return res.status(200).json({ alimentos: Array.isArray(data) ? data : [], sinonimos: Array.isArray(sinonimos) ? sinonimos : [] });
-    }
-
-    // ── getAlimentosUsadosAdmin (lista de alimentos distintos que la gente usa, para poder catalogarlos) ──
-    if (action === 'getAlimentosUsadosAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?alimento=not.is.null&select=alimento,especie&uid=neq.PETMI-OFICIAL', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      const rows = Array.isArray(data) ? data : [];
-      const conteo = {};
-      rows.forEach(m => {
-        const nombre = (m.alimento || '').trim();
-        const especie = m.especie || 'Sin especie';
-        if (!nombre) return;
-        const clave = nombre + '||' + especie;
-        if (!conteo[clave]) conteo[clave] = { nombre, especie, veces: 0 };
-        conteo[clave].veces++;
-      });
-      const catalogoResp = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?select=nombre,especie,foto', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const catalogo = await catalogoResp.json();
-      const fotosPorClave = {};
-      (Array.isArray(catalogo) ? catalogo : []).forEach(c => { fotosPorClave[c.nombre + '||' + (c.especie||'Todos')] = c.foto; });
-
-      const sinResp = await fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos?select=*', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const sinonimosData = await sinResp.json();
-      const sinonimos = Array.isArray(sinonimosData) ? sinonimosData : [];
-
-      function buscarFoto(nombre, especie) {
-        // 1. Coincidencia directa en el catálogo (misma especie)
-        if (fotosPorClave[nombre + '||' + especie]) return fotosPorClave[nombre + '||' + especie];
-        // 2. Vía sinónimo — resuelto hacia el nombre canónico, en cualquier especie que tenga foto
-        const sin = sinonimos.find(s => s.variante === nombre);
-        if (sin) {
-          const directo = fotosPorClave[sin.alimento_canonico + '||' + especie];
-          if (directo) return directo;
-          const cualquierEspecie = Object.keys(fotosPorClave).find(k => k.startsWith(sin.alimento_canonico + '||') && fotosPorClave[k]);
-          if (cualquierEspecie) return fotosPorClave[cualquierEspecie];
-        }
-        return null;
-      }
-
-      const lista = Object.values(conteo).map(x => {
-        const foto = buscarFoto(x.nombre, x.especie);
-        return { nombre: x.nombre, especie: x.especie, veces: x.veces, tieneFoto: !!foto, foto: foto || null };
-      }).sort((a, b) => b.veces - a.veces);
-
-      return res.status(200).json({ alimentos: lista });
-    }
-
-    // ── guardarAlimentoCatalogo (admin) ──────────────────────────
-    if (action === 'guardarAlimentoCatalogo' && req.method === 'POST') {
-      const { nombre, foto, especie } = req.body;
-      if (!nombre) return res.status(200).json({ ok: false, error: 'Falta nombre' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_catalogo?on_conflict=nombre,especie', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ nombre, foto: foto || null, especie: especie || 'Todos' })
-      });
-      if (!r.ok) {
-        const errTxt = await r.text().catch(() => '');
-        return res.status(200).json({ ok: false, error: errTxt });
-      }
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── registrarPedido (guarda el pedido cuando alguien toca "Pedir por WhatsApp") ──
-    if (action === 'registrarPedido' && req.method === 'POST') {
-      const { uid_mascota, nombre_mascota, email, producto, origen } = req.body;
-      if (!producto) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_pedidos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ uid_mascota: uid_mascota || null, nombre_mascota: nombre_mascota || '', email: email || '', producto, origen: origen || 'tienda' })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getPedidosTienda (admin) ────────────────────────────────
-    if (action === 'getPedidosTienda') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_pedidos?select=*&order=created_at.desc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ pedidos: Array.isArray(data) ? data : [] });
-    }
-
-    // ── actualizarPedido (admin — marcar atendido) ──────────────
-    if (action === 'actualizarPedido' && req.method === 'POST') {
-      const { id, estado } = req.body;
-      if (!id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_pedidos?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ estado })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getSinonimosAlimento (admin) ────────────────────────────
-    if (action === 'getSinonimosAlimento') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos?select=*&order=alimento_canonico.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ sinonimos: Array.isArray(data) ? data : [] });
-    }
-
-    // ── guardarSinonimoAlimento (unificar una variante con el canónico) ──
-    if (action === 'guardarSinonimoAlimento' && req.method === 'POST') {
-      const { variante, alimento_canonico } = req.body;
-      if (!variante || !alimento_canonico) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos?on_conflict=variante', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ variante, alimento_canonico })
-      });
-      if (!r.ok) {
-        const errTxt = await r.text().catch(() => '');
-        console.error('guardarSinonimoAlimento failed:', r.status, errTxt);
-        return res.status(200).json({ ok: false, error: errTxt || ('HTTP ' + r.status) });
-      }
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── eliminarSinonimoAlimento (admin) ────────────────────────
-    if (action === 'eliminarSinonimoAlimento' && req.method === 'POST') {
-      const { variante } = req.body;
-      if (!variante) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/alimentos_sinonimos?variante=eq.' + encodeURIComponent(variante), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    if (action === 'getProductosTienda') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?activo=eq.true&select=*&order=categoria.asc,orden.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ productos: Array.isArray(data) ? data : [] });
-    }
-
-    // ── getPromoCumpleProductos (público) — los productos que Elsa marcó
-    // para aparecer en la página de promo de cumpleaños ─────────────
-    if (action === 'getPromoCumpleProductos') {
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/promo_cumple_productos?select=orden,descuento_pct,regalo_texto,tienda_productos(*)&order=orden.asc',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const data = await r.json();
-      const productos = (Array.isArray(data) ? data : [])
-        .filter(row => row.tienda_productos && row.tienda_productos.activo)
-        .map(row => Object.assign({}, row.tienda_productos, { descuento_pct: row.descuento_pct || null, regalo_texto: row.regalo_texto || null }));
-      return res.status(200).json({ productos });
-    }
-
-    // ── togglePromoCumpleProducto (admin) — agregar o quitar un
-    // producto de la promo de cumpleaños, con descuento y/o regalo ──
-    if (action === 'togglePromoCumpleProducto' && req.method === 'POST') {
-      const { producto_id, activo, descuento_pct, regalo_texto } = req.body;
-      if (!producto_id) return res.status(200).json({ ok: false, error: 'Falta producto_id' });
-      if (activo) {
-        const r = await fetch(SUPABASE_URL + '/rest/v1/promo_cumple_productos?on_conflict=producto_id', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-          body: JSON.stringify({ producto_id, descuento_pct: descuento_pct || null, regalo_texto: regalo_texto || null })
-        });
-        return res.status(200).json({ ok: r.ok });
-      } else {
-        const r = await fetch(SUPABASE_URL + '/rest/v1/promo_cumple_productos?producto_id=eq.' + encodeURIComponent(producto_id), {
-          method: 'DELETE',
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        });
-        return res.status(200).json({ ok: r.ok });
-      }
-    }
-
-    // ── getPromoCumpleProductosAdmin — ids + descuento + regalo ya
-    // guardados, para pintar los campos en el admin ──────────────────
-    if (action === 'getPromoCumpleProductosAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/promo_cumple_productos?select=producto_id,descuento_pct,regalo_texto', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      const filas = Array.isArray(data) ? data : [];
-      return res.status(200).json({
-        ids: filas.map(r => r.producto_id),
-        descuentos: filas.reduce((acc, r) => { acc[r.producto_id] = r.descuento_pct; return acc; }, {}),
-        regalos: filas.reduce((acc, r) => { acc[r.producto_id] = r.regalo_texto; return acc; }, {})
-      });
-    }
-
-    // ── getProductosTiendaAdmin (todos, incluye inactivos) ──────
-    if (action === 'getProductosTiendaAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?select=*&order=categoria.asc,orden.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ productos: Array.isArray(data) ? data : [] });
-    }
-
-    // ── crearProductoTienda (admin) ─────────────────────────────
-    if (action === 'crearProductoTienda' && req.method === 'POST') {
-      const { nombre, descripcion, precio, imagen, categoria, especie, orden, envio_incluido, costo_envio, condicion } = req.body;
-      if (!nombre || !categoria) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, especie: especie || 'Todos', orden: orden || 0, activo: true, envio_incluido: envio_incluido || false, costo_envio: costo_envio || null, condicion: condicion || 'Nuevo' })
-      });
-      if (!r.ok) {
-        const errTxt = await r.text().catch(() => '');
-        console.error('crearProductoTienda failed:', r.status, errTxt);
-        return res.status(200).json({ ok: false, error: errTxt || ('HTTP ' + r.status) });
-      }
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── actualizarProductoTienda (admin) ─────────────────────────
-    if (action === 'actualizarProductoTienda' && req.method === 'POST') {
-      const { id, ...campos } = req.body;
-      if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(campos)
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── eliminarProductoTienda (admin) ─────────────────────────────
-    if (action === 'eliminarProductoTienda' && req.method === 'POST') {
-      const { id } = req.body;
-      if (!id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getLikesResumen (conteos + cuáles ya dio like el usuario) ──
-    if (action === 'getLikesResumen' && req.method === 'POST') {
-      const { uids, email } = req.body;
-      if (!Array.isArray(uids) || !uids.length) return res.status(200).json({ conteos: {}, misLikes: [] });
-      const uidsUpper = uids.map(u => String(u).toUpperCase());
-      const r = await fetch(SUPABASE_URL + '/rest/v1/likes_mascotas?uid_mascota=in.(' + uidsUpper.map(u => encodeURIComponent(u)).join(',') + ')&select=uid_mascota,email_liker', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      const conteos = {};
-      const misLikes = [];
-      const emailL = (email || '').trim().toLowerCase();
-      (Array.isArray(data) ? data : []).forEach(row => {
-        conteos[row.uid_mascota] = (conteos[row.uid_mascota] || 0) + 1;
-        if (emailL && row.email_liker === emailL) misLikes.push(row.uid_mascota);
-      });
-      return res.status(200).json({ conteos, misLikes });
-    }
-
-    // ── toggleLike ───────────────────────────────────────────────
-    if (action === 'toggleLike' && req.method === 'POST') {
-      const { uid_mascota, email } = req.body;
-      if (!uid_mascota || !email) return res.status(200).json({ ok: false });
-      const uid = uid_mascota.toUpperCase();
-      const emailL = email.trim().toLowerCase();
-
-      const rCheck = await fetch(SUPABASE_URL + '/rest/v1/likes_mascotas?uid_mascota=eq.' + encodeURIComponent(uid) + '&email_liker=eq.' + encodeURIComponent(emailL) + '&select=id', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const existente = await rCheck.json();
-
-      if (Array.isArray(existente) && existente.length) {
-        await fetch(SUPABASE_URL + '/rest/v1/likes_mascotas?id=eq.' + existente[0].id, {
-          method: 'DELETE',
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        });
-        return res.status(200).json({ ok: true, liked: false });
-      } else {
-        await fetch(SUPABASE_URL + '/rest/v1/likes_mascotas', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ uid_mascota: uid, email_liker: emailL })
-        });
-        return res.status(200).json({ ok: true, liked: true });
-      }
-    }
-
-    // ── getReglasSalud (público — usado por salud.html) ────────
-    if (action === 'getReglasSalud') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud?activo=eq.true&select=*&order=orden.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ reglas: Array.isArray(data) ? data : [] });
-    }
-
-    // ── actualizarTipoPelo ──────────────────────────────────────
-    if (action === 'actualizarTipoPelo' && req.method === 'POST') {
-      const { uid, tipo_pelo } = req.body;
-      if (!uid || !tipo_pelo) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid.toUpperCase()), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ tipo_pelo })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getReglasSaludAdmin (todas, incluye inactivas) ─────────
-    if (action === 'getReglasSaludAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud?select=*&order=especie.asc,orden.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ reglas: Array.isArray(data) ? data : [] });
-    }
-
-    // ── crearReglaSalud (admin) ─────────────────────────────────
-    if (action === 'crearReglaSalud' && req.method === 'POST') {
-      const { especie, tipo_pelo, nombre, tipo, frecuencia_meses, tip, descripcion, etiqueta, link_compra, texto_boton_compra, orden } = req.body;
-      if (!especie || !nombre || !tipo || !frecuencia_meses) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ especie, tipo_pelo: tipo_pelo || null, nombre, tipo, frecuencia_meses, tip: tip || '', descripcion: descripcion || '', etiqueta: etiqueta || null, link_compra: link_compra || null, texto_boton_compra: texto_boton_compra || null, orden: orden || 0, activo: true })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── actualizarReglaSalud (admin) ─────────────────────────────
-    if (action === 'actualizarReglaSalud' && req.method === 'POST') {
-      const { id, ...campos } = req.body;
-      if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(campos)
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── eliminarReglaSalud (admin) ────────────────────────────────
-    if (action === 'eliminarReglaSalud' && req.method === 'POST') {
-      const { id } = req.body;
-      if (!id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/reglas_salud?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getCondicionesDisponibles (público — lista para elegir) ──
-    if (action === 'getCondicionesDisponibles') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/condiciones_disponibles?activo=eq.true&select=*&order=nombre.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ condiciones: Array.isArray(data) ? data : [] });
-    }
-
-    // ── getMascotaCondiciones (condiciones de una mascota específica) ──
-    if (action === 'getMascotaCondiciones') {
-      const uid = (req.query.uid || '').toUpperCase();
-      if (!uid) return res.status(200).json({ condiciones: [] });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascota_condiciones?uid_mascota=eq.' + encodeURIComponent(uid) + '&select=*,condiciones_disponibles(*)', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ condiciones: Array.isArray(data) ? data : [] });
-    }
-
-    // ── agregarCondicionMascota ───────────────────────────────
-    if (action === 'agregarCondicionMascota' && req.method === 'POST') {
-      const { uid_mascota, condicion_id, fecha_diagnostico } = req.body;
-      const uid = (uid_mascota || '').toUpperCase();
-      if (!uid || !condicion_id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascota_condiciones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ uid_mascota: uid, condicion_id, fecha_diagnostico: fecha_diagnostico || null })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── quitarCondicionMascota ─────────────────────────────────
-    if (action === 'quitarCondicionMascota' && req.method === 'POST') {
-      const { id } = req.body;
-      if (!id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/mascota_condiciones?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getCondicionesAdmin (todas, incluye inactivas) ─────────
-    if (action === 'getCondicionesAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/condiciones_disponibles?select=*&order=nombre.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ condiciones: Array.isArray(data) ? data : [] });
-    }
-
-    // ── crearCondicion (admin) ─────────────────────────────────
-    if (action === 'crearCondicion' && req.method === 'POST') {
-      const { nombre, recomendacion, tip, link_compra, texto_boton_compra } = req.body;
-      if (!nombre || !recomendacion) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/condiciones_disponibles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ nombre, recomendacion, tip: tip || '', link_compra: link_compra || null, texto_boton_compra: texto_boton_compra || null, activo: true })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── actualizarCondicion (admin) ─────────────────────────────
-    if (action === 'actualizarCondicion' && req.method === 'POST') {
-      const { id, ...campos } = req.body;
-      if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/condiciones_disponibles?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(campos)
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── eliminarCondicion (admin) ────────────────────────────────
-    if (action === 'eliminarCondicion' && req.method === 'POST') {
-      const { id } = req.body;
-      if (!id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/condiciones_disponibles?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getRegistrosSalud ──────────────────────────────────────
-    if (action === 'getRegistrosSalud') {
-      const uid = (req.query.uid || '').toUpperCase();
-      if (!uid) return res.status(200).json({ registros: [] });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/registros_salud?uid_mascota=eq.' + encodeURIComponent(uid) + '&select=*&order=fecha_aplicacion.desc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ registros: Array.isArray(data) ? data : [] });
-    }
-
-    // ── agregarRegistroSalud ───────────────────────────────────
-    if (action === 'agregarRegistroSalud' && req.method === 'POST') {
-      const { uid_mascota, tipo, nombre_especifico, fecha_aplicacion, foto_comprobante, email } = req.body;
-      const uid = (uid_mascota || '').toUpperCase();
-      if (!uid || !tipo || !nombre_especifico || !fecha_aplicacion) {
-        return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      }
-      const r = await fetch(SUPABASE_URL + '/rest/v1/registros_salud', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ uid_mascota: uid, tipo, nombre_especifico, fecha_aplicacion, foto_comprobante: foto_comprobante || null })
-      });
-      if (!r.ok) { console.error('agregarRegistroSalud failed:', r.status, await r.text().catch(()=>'')); return res.status(200).json({ ok:false }); }
-
-      // Puntos: +2 por agregar el registro, +1 extra si subió foto (no bloqueante)
-      if (email) {
-        const pts = foto_comprobante ? 3 : 2;
-        fetch(SUPABASE_URL + '/rest/v1/puntos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ email: email.toLowerCase(), accion: 'registro_salud', puntos: pts, referencia: uid })
-        }).catch(() => {});
-      }
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── getRuletaPremios (público — para dibujar la rueda) ─────
-    if (action === 'getRuletaPremios') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios?activo=eq.true&select=*&order=orden.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ premios: Array.isArray(data) ? data : [] });
-    }
-
-    // ── girarRuleta ─────────────────────────────────────────────
-    // Una sola vez por email, para siempre. Si ya giró, devuelve el
-    // mismo resultado guardado (no vuelve a sortear).
-    // ── checkRuletaGiro (solo consulta, no dispara giro) ────────
-    if (action === 'checkRuletaGiro') {
-      const email = (req.query.email || '').trim().toLowerCase();
-      if (!email) return res.status(200).json({ ya_giro: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_giros?email=eq.' + encodeURIComponent(email) + '&select=*,ruleta_premios(*)', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      if (Array.isArray(data) && data.length) {
-        return res.status(200).json({ ya_giro: true, premio: data[0].ruleta_premios });
-      }
-      return res.status(200).json({ ya_giro: false });
-    }
-
-    if (action === 'girarRuleta' && req.method === 'POST') {
-      const { email, uid_mascota, dueno } = req.body;
-      if (!email || !uid_mascota) return res.status(200).json({ ok: false, error: 'Faltan datos' });
-      const emailL = email.trim().toLowerCase();
-
-      const rYaGiro = await fetch(SUPABASE_URL + '/rest/v1/ruleta_giros?email=eq.' + encodeURIComponent(emailL) + '&select=*,ruleta_premios(*)', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const yaGiroData = await rYaGiro.json();
-      if (Array.isArray(yaGiroData) && yaGiroData.length) {
-        return res.status(200).json({ ok: true, ya_giro: true, premio: yaGiroData[0].ruleta_premios });
-      }
-
-      const rPremios = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios?activo=eq.true&select=*', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const premios = await rPremios.json();
-      if (!Array.isArray(premios) || !premios.length) return res.status(200).json({ ok: false, error: 'Sin premios configurados' });
-
-      const totalPeso = premios.reduce((s, p) => s + Number(p.probabilidad || 0), 0);
-      let dado = Math.random() * totalPeso;
-      let elegido = premios[premios.length - 1];
-      for (const p of premios) {
-        if (dado < Number(p.probabilidad || 0)) { elegido = p; break; }
-        dado -= Number(p.probabilidad || 0);
-      }
-
-      // Guardar el giro (esto es lo que evita que vuelva a girar)
-      await fetch(SUPABASE_URL + '/rest/v1/ruleta_giros', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ uid_mascota, email: emailL, premio_id: elegido.id })
-      });
-
-      // Aplicar el premio segun su tipo
-      if (elegido.tipo === 'puntos') {
-        fetch(SUPABASE_URL + '/rest/v1/puntos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ email: emailL, accion: 'ruleta_premio', puntos: Number(elegido.valor || 0) })
-        }).catch(() => {});
-      } else if (elegido.tipo === 'premium') {
-        const hasta = new Date();
-        hasta.setMonth(hasta.getMonth() + Number(elegido.valor || 1));
-        fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid_mascota.toUpperCase()), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ premium: true, premium_hasta: hasta.toISOString().split('T')[0] })
-        }).catch(() => {});
-      } else if (elegido.tipo === 'entrega') {
-        // Crea una solicitud visible en el admin (misma tabla que los canjes de puntos.html)
-        fetch(SUPABASE_URL + '/rest/v1/canjes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ email: emailL, dueno: dueno || '', premio: elegido.nombre + (elegido.patrocinador ? ' (' + elegido.patrocinador + ')' : ''), puntos_usados: 0, estado: 'pendiente' })
-        }).catch(() => {});
-      }
-
-      // Notificar por correo — al ganador y a info@revistapetmi.com (no bloqueante)
-      fetch('https://script.google.com/macros/s/AKfycbxrE4a8FX3e1FWPfKeNjMPzBWPKiJl94MaHa0sQFVVJgJzKCYkwH60A_N_zFrqihDWt/exec', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'notificarPremioRuleta', email: emailL, dueno: dueno || '', premio: elegido.nombre, tipo: elegido.tipo, patrocinador: elegido.patrocinador || '' })
-      }).catch(() => {});
-
-      return res.status(200).json({ ok: true, ya_giro: false, premio: elegido });
-    }
-
-    // ── getRuletaPremiosAdmin (todos, incluye inactivos) ───────
-    if (action === 'getRuletaPremiosAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios?select=*&order=orden.asc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ premios: Array.isArray(data) ? data : [] });
-    }
-
-    // ── getRuletaGiros (admin — historial de quién giró y qué ganó) ──
-    if (action === 'getRuletaGiros') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_giros?select=*,ruleta_premios(nombre,tipo,patrocinador)&order=created_at.desc', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ giros: Array.isArray(data) ? data : [] });
-    }
-
-    // ── crearRuletaPremio (admin) ────────────────────────────────
-    if (action === 'crearRuletaPremio' && req.method === 'POST') {
-      const { nombre, tipo, valor, probabilidad, patrocinador, color, orden } = req.body;
-      if (!nombre || !tipo || probabilidad == null) return res.status(200).json({ ok: false, error: 'Faltan campos' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ nombre, tipo, valor: valor || null, probabilidad, patrocinador: patrocinador || null, color: color || '#00B4B4', orden: orden || 0, activo: true })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── actualizarRuletaPremio (admin) ───────────────────────────
-    if (action === 'actualizarRuletaPremio' && req.method === 'POST') {
-      const { id, ...campos } = req.body;
-      if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify(campos)
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── eliminarRuletaPremio (admin) ──────────────────────────────
-    if (action === 'eliminarRuletaPremio' && req.method === 'POST') {
-      const { id } = req.body;
-      if (!id) return res.status(200).json({ ok: false });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_premios?id=eq.' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── getPuntos ──────────────────────────────────────────────
-    if (action === 'getPuntos') {
-      const email = req.query.email || '';
-      if (!email) return res.status(200).json({ puntos: [], total: 0 });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(email) + '&select=accion,puntos,created_at&order=created_at.desc', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const rows = await r.json();
-      const total = Array.isArray(rows) ? rows.reduce((s, r) => s + (r.puntos || 0), 0) : 0;
-      return res.status(200).json({ puntos: rows || [], total });
-    }
-
-    // ── registrarPunto ─────────────────────────────────────────
-    if (action === 'registrarPunto' && req.method === 'POST') {
-      const { email, accion, puntos, referencia } = req.body;
-      if (!email || !accion || !puntos) return res.status(200).json({ ok: false });
-      // Evitar duplicados en acciones únicas
-      const UNICAS = ['perfil_completo', 'instalar_app'];
-      // juego_diario y trivia_diaria: max 1 por dia
-      const hoy = new Date().toISOString().split('T')[0];
-      const ACCIONES_DIARIAS = ['juego_diario', 'trivia_diaria'];
-      if(ACCIONES_DIARIAS.includes(accion)){
-        const checkDia = await fetch(SUPABASE_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(email) + '&accion=eq.' + accion + '&created_at=gte.' + hoy + '&select=id&limit=1', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
-        const diaRows = await checkDia.json();
-        if(Array.isArray(diaRows) && diaRows.length > 0) return res.status(200).json({ ok: false, msg: 'Ya jugaste hoy' });
-      }
-      if (UNICAS.includes(accion)) {
-        const check = await fetch(SUPABASE_URL + '/rest/v1/puntos?email=eq.' + encodeURIComponent(email) + '&accion=eq.' + accion + '&select=id&limit=1', {
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        });
-        const existing = await check.json();
-        if (Array.isArray(existing) && existing.length > 0) return res.status(200).json({ ok: false, msg: 'Ya registrado' });
-      }
-      const r = await fetch(SUPABASE_URL + '/rest/v1/puntos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ email, accion, puntos, referencia: referencia || null })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-    // ── verificarLogin ────────────────────────────────────────
-    if (action === 'verificarLogin' && req.method === 'POST') {
-      const { email, nombreMascota } = req.body;
-      if (!email || !nombreMascota) return res.status(200).json({ ok: false, msg: 'Datos incompletos' });
-
-      const emailL  = email.trim().toLowerCase();
-      const nombreL = nombreMascota.trim().toLowerCase();
-
-      // Buscar todas las mascotas con ese email (case-insensitive)
-      const queryUrl = SUPABASE_URL + '/rest/v1/mascotas?select=uid,nombre,email,dueno,foto,especie,premium,angelito&limit=20&email=eq.' + encodeURIComponent(emailL);
-      const r = await fetch(queryUrl, {
-        headers: {
-          'apikey': SUPABASE_SERVICE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY
-        }
-      });
-      const mascotas = await r.json();
-
-      // Si no es array o está vacío — email no existe
-      if (!Array.isArray(mascotas) || mascotas.length === 0) {
-        return res.status(200).json({ ok: false, msg: 'Datos incorrectos', code: 'NO_ACCOUNT' });
-      }
-
-      // Limpiar caracteres invisibles del nombre buscado
-      const limpiar = s => s
-        .normalize('NFD')           // separar acentos
-        .replace(/[\u0300-\u036f]/g, '') // quitar acentos
-        .replace(/[^a-z0-9\s]/g, '') // solo alfanuméricos
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      const nombreNorm = limpiar(nombreL);
-
-      // Buscar mascota que coincida — angelito puede ser bool o string
-      const match = mascotas.find(m => {
-        if (!m.nombre) return false;
-        const esAngelito = m.angelito === true || m.angelito === 'true' || m.angelito === 1;
-        if (esAngelito) return false;
-        const nombreDB = limpiar(m.nombre.toLowerCase());
-        return nombreDB === nombreNorm;
-      });
-
-      if (!match) {
-        return res.status(200).json({ ok: false, msg: 'Datos incorrectos' });
-      }
-
-      // ✅ Login exitoso
-      return res.status(200).json({
-        ok: true,
-        email: emailL,
-        dueno: mascotas[0].dueno || '',
-        mascotas: mascotas.filter(m => !m.angelito).map(m => ({
-          uid: m.uid, nombre: m.nombre, especie: m.especie,
-          foto: m.foto, premium: m.premium
-        }))
-      });
-    }
-
-
-    // ── enviarOTP — fallback login sin nombre ──────────────────
-    if (action === 'enviarOTP' && req.method === 'POST') {
-      const { email } = req.body;
-      if (!email) return res.status(200).json({ ok: false });
-      const emailL = email.trim().toLowerCase();
-
-      // Verificar que el email existe
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?email=ilike.' + encodeURIComponent(emailL) +
-        '&select=uid,dueno&limit=1',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const rows = await r.json();
-      if (!rows || !rows.length) {
-        return res.status(200).json({ ok: false, msg: 'No encontramos ese correo' });
-      }
-
-      // Generar código 6 dígitos
-      const code = String(Math.floor(100000 + Math.random() * 900000));
-      const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
-
-      // Guardar en Supabase
-      await fetch(SUPABASE_URL + '/rest/v1/otp_codes', {
-        method: 'POST',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ email: emailL, code, expires_at: expires, used: false })
-      });
-
-      // Enviar via el servicio OTP aislado
-      const resultadoLogin = await _enviarCodigoOTPPorCorreo(emailL, code, rows[0].dueno || '', 'enviarOTP (login)');
-      if (!resultadoLogin.ok) return res.status(200).json({ ok: false, msg: resultadoLogin.error });
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── verificarOTP ───────────────────────────────────────────
-    if (action === 'verificarOTP' && req.method === 'POST') {
-      const { email, code } = req.body;
-      if (!email || !code) return res.status(200).json({ ok: false });
-      const emailL = email.trim().toLowerCase();
-      const now = new Date().toISOString();
-
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/otp_codes?email=ilike.' + encodeURIComponent(emailL) +
-        '&code=eq.' + encodeURIComponent(code.trim()) +
-        '&used=eq.false&expires_at=gte.' + encodeURIComponent(now) +
-        '&select=id&order=created_at.desc&limit=1',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const rows = await r.json();
-      if (!rows || !rows.length) {
-        return res.status(200).json({ ok: false, msg: 'Código incorrecto o expirado' });
-      }
-
-      // Marcar como usado
-      await fetch(SUPABASE_URL + '/rest/v1/otp_codes?id=eq.' + rows[0].id, {
-        method: 'PATCH',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ used: true })
-      });
-
-      // Devolver datos del usuario
-      const mr = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?email=ilike.' + encodeURIComponent(emailL) +
-        '&select=uid,nombre,email,dueno,foto,especie,premium&limit=20',
-        { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-      );
-      const mascotas = await mr.json();
-      return res.status(200).json({
-        ok: true, email: emailL,
-        dueno: mascotas[0]?.dueno || '',
-        mascotas: mascotas.map(m => ({ uid: m.uid, nombre: m.nombre, especie: m.especie, foto: m.foto, premium: m.premium }))
-      });
-    }
-
-
-    // ── wc_predecir ───────────────────────────────────────────
-    if (action === 'wc_predecir' && req.method === 'POST') {
-      const { email, partido_id, prediccion } = req.body;
-      if (!email || !partido_id || !prediccion) return res.status(200).json({ ok: false });
-      const emailL = email.trim().toLowerCase();
-      const pr = await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id + '&select=fecha', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
-      const parts = await pr.json();
-      if (!parts || !parts[0]) return res.status(200).json({ ok: false, msg: 'Partido no encontrado' });
-      const cierre = new Date(new Date(parts[0].fecha).getTime() - 30*60*1000);
-      if (cierre <= new Date()) return res.status(200).json({ ok: false, msg: 'Predicciones cerradas (30 min antes del partido)' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?on_conflict=email,partido_id', {
-        method: 'POST',
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ email: emailL, partido_id, prediccion })
-      });
-      return res.status(200).json({ ok: r.ok });
-    }
-
-
-    // ── wc_porcentajes ────────────────────────────────────────
-    if (action === 'wc_porcentajes') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?select=partido_id,prediccion', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
-      const preds = await r.json();
-      if (!Array.isArray(preds)) return res.status(200).json({ porcentajes: {} });
-
-      const byPartido = {};
-      preds.forEach(p => {
-        if (!byPartido[p.partido_id]) byPartido[p.partido_id] = { equipo1: 0, empate: 0, equipo2: 0, total: 0 };
-        if (byPartido[p.partido_id][p.prediccion] !== undefined) {
-          byPartido[p.partido_id][p.prediccion]++;
-          byPartido[p.partido_id].total++;
-        }
-      });
-
-      const porcentajes = {};
-      Object.keys(byPartido).forEach(id => {
-        const d = byPartido[id];
-        if (d.total === 0) { porcentajes[id] = null; return; }
-        porcentajes[id] = {
-          total: d.total,
-          equipo1: Math.round((d.equipo1 / d.total) * 100),
-          empate:  Math.round((d.empate  / d.total) * 100),
-          equipo2: Math.round((d.equipo2 / d.total) * 100)
-        };
-      });
-
-      return res.status(200).json({ porcentajes });
-    }
-
-    // ── wc_ranking ────────────────────────────────────────────
-    if (action === 'wc_ranking') {
-      // Paginar para evitar el límite de 1000 filas por defecto de Supabase
-      const PAGE = 1000;
-      let allPreds = [];
-      let offset   = 0;
-      let keepGoing = true;
-      while (keepGoing) {
-        const r = await fetch(
-          SUPABASE_URL + '/rest/v1/wc_predicciones?select=email,puntos,acerto&acerto=not.is.null&limit=' + PAGE + '&offset=' + offset,
-          { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'count=none' } }
-        );
-        const page = await r.json();
-        if (!Array.isArray(page) || page.length === 0) { keepGoing = false; break; }
-        allPreds = allPreds.concat(page);
-        if (page.length < PAGE) keepGoing = false;
-        offset += PAGE;
-      }
-      if (!allPreds.length) return res.status(200).json({ ranking: [] });
-      const byEmail = {};
-      allPreds.forEach(p => {
-        if (!byEmail[p.email]) byEmail[p.email] = { email: p.email, puntos: 0, aciertos: 0, predicciones: 0 };
-        byEmail[p.email].puntos      += (p.puntos || 0);
-        byEmail[p.email].aciertos    += (p.acerto ? 1 : 0);
-        byEmail[p.email].predicciones += 1;
-      });
-      const ranking = Object.values(byEmail).sort((a,b) => b.puntos-a.puntos || b.aciertos-a.aciertos).slice(0,50);
-      return res.status(200).json({ ranking });
-    }
-
-    // ── wc_marcarResultado (admin) ────────────────────────────
-    if (action === 'wc_marcarResultado' && req.method === 'POST') {
-      const { partido_id, resultado, adminKey } = req.body;
-      if (adminKey !== 'petmiadmin2026') return res.status(200).json({ ok: false, msg: 'No autorizado' });
-      if (!partido_id || !resultado) return res.status(200).json({ ok: false });
-      // Verificar que no tenga resultado ya
-      const chk = await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id + '&select=resultado,fecha,fase', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
-      const chkData = await chk.json();
-      if (chkData && chkData[0] && chkData[0].resultado) {
-        return res.status(200).json({ ok: false, msg: 'Este partido ya tiene resultado: ' + chkData[0].resultado });
-      }
-      const fase = (chkData && chkData[0] && chkData[0].fase) || 'grupos';
-      const fasesBonus = ['ronda16', 'cuartos', 'semis', 'final', 'bronze'];
-      const esBonus = fasesBonus.includes(fase);
-      await fetch(SUPABASE_URL + '/rest/v1/wc_partidos?id=eq.' + partido_id, { method: 'PATCH', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ resultado }) });
-      const pr = await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?partido_id=eq.' + partido_id + '&select=id,email,prediccion', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } });
-      const preds = await pr.json();
-      if (!Array.isArray(preds)) return res.status(200).json({ ok: true, procesados: 0 });
-      let aciertos = 0;
-      for (const pred of preds) {
-        const acerto = pred.prediccion === resultado;
-        // Ronda 16+: 5pts por acierto. Grupos/R32: 2pts ganador, 1pt empate
-        const puntos = !acerto ? 0 : (esBonus ? 5 : (resultado === 'empate' ? 1 : 2));
-        await fetch(SUPABASE_URL + '/rest/v1/wc_predicciones?id=eq.' + pred.id, { method: 'PATCH', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, body: JSON.stringify({ acerto, puntos }) });
-        if (acerto) aciertos++;
-      }
-      return res.status(200).json({ ok: true, procesados: preds.length, aciertos, fase, esBonus });
-    }
-
-    // ── markAngel ─────────────────────────────────────────────
-    if (action === 'markAngel' && req.method === 'POST') {
-      const { uid, esAngel, fechaAngelito } = req.body;
-      if (!uid) return res.status(200).json({ ok: false, error: 'uid requerido' });
-
-      const patch = { angelito: true };
-      // Si el frontend no manda la fecha, usar HOY por defecto — sin esto,
-      // fecha_angelito se queda vacía y el correo automático diario
-      // (que busca fecha_angelito = hoy) nunca se dispara para esta mascota.
-      patch.fecha_angelito = fechaAngelito || new Date().toISOString().split('T')[0];
-
-      const r = await fetch(
-        SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid.toUpperCase()),
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_SERVICE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify(patch)
-        }
-      );
-      if (!r.ok) {
-        let errMsg = '';
-        try { errMsg = JSON.stringify(await r.json()); } catch(e) { errMsg = await r.text().catch(()=>''); }
-        console.error('[markAngel] Supabase error', r.status, errMsg);
-        return res.status(200).json({ ok: false, error: errMsg });
-      }
-      console.log('[markAngel] OK — uid:', uid, 'fecha:', fechaAngelito);
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── verificarSorteo ──────────────────────────────────────────
-    // Los 2 ganadores se eligen AL AZAR entre quienes participaron en
-    // la quiniela, la primera vez que alguien verifica — y esa elección
-    // se guarda en la tabla "config" para que sea la misma para todos
-    // (usa on_conflict=clave con ignore-duplicates para evitar que 2
-    // peticiones simultáneas elijan ganadores distintos).
-    if (action === 'verificarSorteo' && req.method === 'POST') {
-      const { email } = req.body;
-      if (!email) return res.status(200).json({ ok: false, msg: 'Email requerido' });
-      const emailL = email.trim().toLowerCase();
-      try {
-        const rPart = await fetch(
-          SUPABASE_URL + '/rest/v1/wc_predicciones?email=ilike.' + encodeURIComponent(emailL) + '&select=email&limit=1',
-          { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-        );
-        const rows = await rPart.json();
-        if (!Array.isArray(rows) || rows.length === 0)
-          return res.status(200).json({ ok: false, msg: 'Este email no participó en la quiniela.' });
-
-        const GANADORES = await _obtenerOElegirGanadoresSorteo();
-
-        let yaGiro = false, resultadoPrevio = null;
-        try {
-          const rSpin = await fetch(
-            SUPABASE_URL + '/rest/v1/wc_sorteo?email=eq.' + encodeURIComponent(emailL) + '&select=resultado,es_ganador&limit=1',
-            { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }
-          );
-          if (rSpin.ok) {
-            const s = await rSpin.json();
-            if (Array.isArray(s) && s.length > 0) { yaGiro = true; resultadoPrevio = s[0].resultado; }
+    }).filter(function(p){return p.nombre;});
+
+    var perros =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('perro')>=0;}).length;
+    var gatos  =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('gato') >=0;}).length;
+    var angeles=allPets.filter(function(p){return p.angelito;}).length;
+    document.getElementById('statTotal').textContent=allPets.length;
+    document.getElementById('statPerros').textContent=perros;
+    document.getElementById('statGatos').textContent=gatos;
+    document.getElementById('statAngeles').textContent=angeles;
+
+    window._datosCompletosDashboard = false;
+    try { cargarDashboardPersonalizado(); } catch(e) { console.error('Error en dashboard personalizado:', e); }
+
+    renderCumpleaneros();
+    renderAngeles();
+    applyFilter();
+    cargarGrupos();
+
+    fetch('/api/galeria?action=getData')
+      .then(function(r2){return r2.json();})
+      .then(function(d2){
+        var rows2=d2.rows||[];
+        rows2.forEach(function(r){
+          var uid=String(r[1]||'').trim();
+          var pet=allPets.find(function(p){return p.uid===uid;});
+          if(pet){
+            pet.actividades  =String(r[18]||'').trim();
+            pet.especial     =String(r[23]||'').trim();
+            pet.alimento     =String(r[16]||'').trim();
+            pet.zona         =String(r[9] ||'').trim();
+            pet.veterinario  =String(r[13]||'').trim();
+            pet.notifMensajes=String(r[30]||'').trim();
           }
-        } catch(e) {}
-        if (yaGiro) return res.status(200).json({ ok: true, ya_giro: true, resultado: resultadoPrevio, ganador: resultadoPrevio === 'ganador' });
-        const esGanador = GANADORES.includes(emailL);
-        try {
-          await fetch(SUPABASE_URL + '/rest/v1/wc_sorteo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ email: emailL, resultado: esGanador ? 'ganador' : 'no_ganador', es_ganador: esGanador })
-          });
-        } catch(e) {}
-        return res.status(200).json({ ok: true, ganador: esGanador, ya_giro: false });
-      } catch(err) {
-        console.error('[verificarSorteo]', err.message);
-        return res.status(200).json({ ok: false, msg: 'Error verificando participación.' });
+        });
+        // Recalcular el dashboard con los datos completos (zona/veterinario ya disponibles)
+        window._datosCompletosDashboard = true;
+        try { cargarDashboardPersonalizado(); } catch(e) { console.error('Error en dashboard (recalculo):', e); }
+      }).catch(function(){});
+  })
+  .catch(function(){
+    fetch('/api/galeria?action=getData')
+      .then(function(r){return r.json();})
+      .then(function(d){
+        var rows=d.rows||[];
+        allPets=rows.map(function(r){
+          return {
+            uid:          String(r[1] ||'').trim(),
+            nombre:       String(r[2] ||'').trim(),
+            createdAt:    String(r[0]||'').trim(),
+            apodo:        String(r[3] ||'').trim(),
+            especie:      String(r[4] ||'').trim(),
+            sexo:         String(r[5] ||'').trim(),
+            raza:         String(r[6] ||'').trim(),
+            tipoFecha:    String(r[7] ||'').trim(),
+            fecha:        String(r[8] ||'').trim(),
+            email:        String(r[11]||'').trim(),
+            foto:         String(r[27]||'').trim(),
+            angelito:     String(r[28]||'').trim().toLowerCase()==='si',
+            fechaAngelito:String(r[29]||'').trim(),
+            slug:         '', // este camino de respaldo lee del Sheet, que no tiene slug
+            actividades:  String(r[18]||'').trim(),
+            especial:     String(r[23]||'').trim(),
+            comentario:   '',
+            alimento:     String(r[16]||'').trim(),
+            zona:         String(r[9] ||'').trim(),
+            veterinario:  String(r[13]||'').trim(),
+            notifMensajes:String(r[30]||'').trim()
+          };
+        }).filter(function(p){return p.nombre;});
+        var perros =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('perro')>=0;}).length;
+        var gatos  =allPets.filter(function(p){return p.especie.toLowerCase().indexOf('gato') >=0;}).length;
+        var angeles=allPets.filter(function(p){return p.angelito;}).length;
+        document.getElementById('statTotal').textContent=allPets.length;
+        document.getElementById('statPerros').textContent=perros;
+        document.getElementById('statGatos').textContent=gatos;
+        document.getElementById('statAngeles').textContent=angeles;
+        renderCumpleaneros();
+        renderAngeles();
+        applyFilter();
+      })
+      .catch(function(){
+        document.getElementById('galleryGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:#888">Error cargando mascotas. Intenta de nuevo.</div>';
+      });
+  });
+
+// ── Cumpleañeros del mes ──────────────────────────────────────
+function renderCumpleaneros(){
+  var mesActual=new Date().getMonth();
+  document.getElementById('mesActualNombre').textContent=MESES[mesActual];
+  var cumpleMes=allPets.filter(function(p){
+    if(!p.fecha||p.angelito)return false;
+    var mes=getMesFecha(p.fecha);
+    return mes!==null&&mes===mesActual;
+  }).sort(function(a,b){
+    return getDiaFecha(a.fecha)-getDiaFecha(b.fecha);
+  });
+  if(cumpleMes.length===0)return;
+  document.getElementById('seccionCumple').style.display='block';
+  var html=cumpleMes.map(function(p){
+    var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
+    var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
+      ?'<img src="'+p.foto+'" onerror="this.style.display=\'none\'">'
+      :'<div style="width:130px;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px;background:#fff3cd">'+(esGato?'🐱':'🐶')+'</div>';
+    var hoy=(new Date().getMonth()===mesActual)&&(new Date().getDate()===getDiaFecha(p.fecha));
+    var fechaLabel=(p.tipoFecha==='llegada'||p.tipoFecha==='casa')?'Llegó a casa':'Cumpleaños';
+    var fechaTexto=getDiaMesLabel(p.fecha);
+    var badgeHoy=hoy?'<div style="position:absolute;top:5px;left:5px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px;background:#c0392b;color:#fff">¡Hoy!</div>':'';
+    return '<div class="cumple-card">'
+      +'<div class="cumple-foto" style="position:relative">'+fotoHTML+badgeHoy+'<div class="cumple-badge">🎂</div></div>'
+      +'<div class="cumple-info"><div class="cumple-nombre">"'+p.nombre+'"</div>'
+      +'<div class="cumple-fecha">'+fechaLabel+(fechaTexto?' · '+fechaTexto:'')+'</div>'
+      +'<button class="btn-felicitar" data-uid="'+p.uid+'" data-nombre="'+p.nombre+'" onclick="felicitarDesdeBtn(this)">🎉 Felicitar</button>'
+      +'</div></div>';
+  }).join('');
+  document.getElementById('cumpleScroll').innerHTML=html;
+}
+
+// ── Ángeles de 4 patas ────────────────────────────────────────
+function renderAngeles(){
+  var angeles=allPets.filter(function(p){
+    return p.angelito;
+  });
+  var sec=document.getElementById('seccionAngeles');
+  if(angeles.length===0){sec.style.display='none';return;}
+  sec.style.display='block';
+  var html=angeles.map(function(p){
+    var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
+    var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
+      ?'<img src="'+p.foto+'" onerror="this.style.display=\'none\'">'
+      :'<div style="width:130px;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px">'+(esGato?'🐱':'🐶')+'</div>';
+    var fechaPartida='';
+    if(p.fechaAngelito){
+      var fap=p.fechaAngelito.split('-');
+      var faDate=new Date(parseInt(fap[0]),parseInt(fap[1])-1,parseInt(fap[2]));
+      fechaPartida=faDate.toLocaleDateString('es-GT',{day:'2-digit',month:'short',year:'numeric'});
+    }
+    return '<div class="angel-card">'
+      +'<div class="angel-foto" style="position:relative">'+fotoHTML+'<div class="angel-overlay"></div><div class="angel-emoji">🌈</div></div>'
+      +'<div class="angel-info"><div class="angel-nombre">'+p.nombre+'</div>'
+      +'<div class="angel-fecha">'+(fechaPartida||'Siempre en nuestro corazón')+'</div>'
+      +'<button class="btn-mensaje-angel" data-uid="'+p.uid+'" data-nombre="'+p.nombre+'" onclick="mensajeAngelDesdeBtn(this)">✨ Mensaje</button>'
+      +'</div></div>';
+  }).join('');
+  document.getElementById('angelesScroll').innerHTML=html;
+}
+
+// ── Filtros ───────────────────────────────────────────────────
+function setFilter(type,el){
+  currentFilter=type;
+  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  shown=0; applyFilter();
+}
+
+window.felicitarDesdeBtn = function(btn){
+  var uid=btn.getAttribute('data-uid');
+  var nombre=btn.getAttribute('data-nombre');
+  abrirMensajePublico(uid,nombre,'cumple');
+};
+window.mensajeAngelDesdeBtn = function(btn){
+  var uid=btn.getAttribute('data-uid');
+  var nombre=btn.getAttribute('data-nombre');
+  abrirMensajePublico(uid,nombre,'angel');
+};
+function abrirMensajePublico(uid,nombre,tipo){
+  if(!sessionEmail){if(typeof petmiAbrirLogin!=='undefined')petmiAbrirLogin();return;}
+  var overlay=document.getElementById('mensajePublicoOverlay');
+  if(!overlay){
+    overlay=document.createElement('div');overlay.id='mensajePublicoOverlay';
+    overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px';
+    var box=document.createElement('div');box.style.cssText='background:#fff;border-radius:20px;padding:24px;width:100%;max-width:320px';
+    box.innerHTML='<div id="mpIco" style="font-size:32px;text-align:center;margin-bottom:8px"></div>'
+      +'<div id="mpTit" style="font-size:16px;font-weight:900;color:#222;text-align:center;margin-bottom:4px"></div>'
+      +'<div id="mpSub" style="font-size:13px;color:#888;text-align:center;margin-bottom:14px;line-height:1.5"></div>'
+      +'<div id="mpForm"><textarea id="mpTxt" placeholder="Escribe tu mensaje..." style="width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;resize:none;height:80px;outline:none;margin-bottom:12px;font-family:Arial,sans-serif"></textarea>'
+      +'<button onclick="enviarMensajePublico()" style="width:100%;padding:12px;background:#00B4B4;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">Enviar mensaje</button>'
+      +'<button onclick="cerrarMensajePublico()" style="width:100%;padding:10px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:13px;cursor:pointer">Cancelar</button></div>'
+      +'<div id="mpOk" style="display:none;text-align:center;padding:8px 0">'
+      +'<div style="font-size:36px;margin-bottom:8px">✅</div>'
+      +'<div style="font-size:15px;font-weight:700;color:#222;margin-bottom:4px">Mensaje enviado</div>'
+      +'<div style="font-size:13px;color:#888">La familia lo recibirá pronto</div></div>';
+    overlay.appendChild(box);
+    overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.style.display='none';});
+    document.body.appendChild(overlay);
+  }
+  document.getElementById('mpIco').textContent=tipo==='cumple'?'🎂':'🌈';
+  document.getElementById('mpTit').textContent=tipo==='cumple'?'Felicitar a '+nombre+'!':'Un abrazo para '+nombre;
+  document.getElementById('mpSub').textContent=tipo==='cumple'?'Déjale un mensaje de cumpleaños que verá su familia':'Deja un mensaje de apoyo para la familia de '+nombre+'. Siempre en nuestros corazones.';
+  document.getElementById('mpTxt').value='';
+  document.getElementById('mpForm').style.display='block';
+  document.getElementById('mpOk').style.display='none';
+  overlay._uid=uid;overlay._tipo=tipo;
+  overlay.style.display='flex';
+}
+function cerrarMensajePublico(){
+  var o=document.getElementById('mensajePublicoOverlay');
+  if(o) o.style.display='none';
+}
+function enviarMensajePublico(){
+  var overlay=document.getElementById('mensajePublicoOverlay');
+  var txt=document.getElementById('mpTxt').value.trim();
+  if(!txt)return;
+  fetch('/api/galeria?action=publicarMensaje',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid_destinatario:overlay._uid,email_emisor:sessionEmail,mensaje:txt,tipo:overlay._tipo})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d && d.ok){
+      document.getElementById('mpForm').style.display='none';
+      document.getElementById('mpOk').style.display='block';
+      setTimeout(function(){overlay.style.display='none';},2000);
+    } else {
+      alert('No se pudo enviar el mensaje. Intenta de nuevo.');
+    }
+  }).catch(function(){
+    alert('No se pudo enviar el mensaje. Revisa tu conexión e intenta de nuevo.');
+  });
+}
+function applyFilter(){
+  var searchEl=document.getElementById('searchInput');
+  var search=searchEl?searchEl.value.toLowerCase():'';
+  filtered=allPets.filter(function(p){
+    if(currentFilter==='angelito'){
+      if(!p.angelito)return false;
+    } else {
+      if(p.angelito)return false;
+      if(currentFilter==='perro'&&p.especie.toLowerCase().indexOf('perro')<0)return false;
+      if(currentFilter==='gato' &&p.especie.toLowerCase().indexOf('gato') <0)return false;
+    }
+    if(search&&p.nombre.toLowerCase().indexOf(search)<0)return false;
+    return true;
+  });
+  // Ordenar según currentSort
+  // Ordenar por más recientes primero
+  filtered.sort(function(a,b){
+    var da=a.createdAt&&a.createdAt.length>0?new Date(a.createdAt).getTime():0;
+    var db=b.createdAt&&b.createdAt.length>0?new Date(b.createdAt).getTime():0;
+    return db-da;
+  });
+  shown=0; renderGallery(false);
+}
+
+
+function loadMore(){renderGallery(true);}
+
+// ── Galería ───────────────────────────────────────────────────
+function renderGallery(append){
+  var grid=document.getElementById('galleryGrid');
+  var toShow=filtered.slice(shown,shown+perPage);
+  shown+=toShow.length;
+  var html=toShow.map(function(p,i){
+    var idx=shown-toShow.length+i;
+    var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
+    var emoji=esGato?'🐱':'🐶';
+    var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
+      ?'<img src="'+p.foto+'" alt="'+p.nombre+'" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover" onerror="this.style.display=\'none\'">'
+      :'<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:#e0f7f7">'+emoji+'</div>';
+    var esNuevo=false;
+    if(p.createdAt){
+      var diffDias=(Date.now()-new Date(p.createdAt).getTime())/(1000*60*60*24);
+      esNuevo=diffDias<=7;
+    }
+    var badgeNuevo='';
+    var badgePremium=p.premium?'<div style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#764ba2,#E05090);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px">⭐</div>':'';
+    return '<div class="pet-card" onclick="openModal('+idx+')">'
+      +'<div class="pet-photo" style="position:relative">'+fotoHTML+badgeNuevo+badgePremium+'</div>'
+      +'<div class="pet-info"><div class="pet-name">'+p.nombre+'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+      +'<span class="pet-especie '+(esGato?'gato':'perro')+'">'+(esGato?'Gato':'Perro')+'</span>'
+      +'<button class="like-btn" id="likeBtn_'+p.uid+'" onclick="event.stopPropagation();toggleLikeMascota(\''+p.uid+'\')">🐾 <span id="likeCount_'+p.uid+'">0</span></button>'
+      +'</div></div></div>';
+  }).join('');
+  if(!append){
+    grid.innerHTML=filtered.length===0
+      ?'<div style="grid-column:1/-1"><div class="empty"><div class="empty-icon">🔍</div><p>No se encontraron mascotas</p></div></div>'
+      :html;
+  } else {
+    grid.insertAdjacentHTML('beforeend',html);
+  }
+  document.getElementById('resultsCount').textContent=filtered.length+' mascotas';
+  document.getElementById('loadMoreWrap').style.display=shown<filtered.length?'block':'none';
+  cargarLikesVisibles();
+}
+
+function cargarLikesVisibles(){
+  var uids = filtered.slice(0, shown).map(function(p){ return p.uid; }).filter(Boolean);
+  if(!uids.length) return;
+  fetch('/api/galeria?action=getLikesResumen', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ uids: uids, email: sessionEmail })
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    var conteos = d.conteos || {}, misLikes = d.misLikes || [];
+    uids.forEach(function(uid){
+      var uidUpper = uid.toUpperCase();
+      var elCount = document.getElementById('likeCount_'+uid);
+      var elBtn = document.getElementById('likeBtn_'+uid);
+      if(elCount) elCount.textContent = conteos[uidUpper] || 0;
+      if(elBtn && misLikes.indexOf(uidUpper) >= 0) elBtn.classList.add('liked');
+    });
+  }).catch(function(){});
+}
+
+function toggleLikeMascota(uid){
+  if(!sessionEmail){
+    mostrarToastG('Inicia sesión para dar like 🐾');
+    return;
+  }
+  var elBtn = document.getElementById('likeBtn_'+uid);
+  var elCount = document.getElementById('likeCount_'+uid);
+  var yaLiked = elBtn.classList.contains('liked');
+  // Optimista: actualiza la UI de inmediato, sin esperar la respuesta
+  var actual = parseInt(elCount.textContent) || 0;
+  elCount.textContent = yaLiked ? Math.max(0, actual-1) : actual+1;
+  elBtn.classList.toggle('liked');
+
+  fetch('/api/galeria?action=toggleLike', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ uid_mascota: uid, email: sessionEmail })
+  }).catch(function(){
+    // Revertir si falló
+    elCount.textContent = actual;
+    elBtn.classList.toggle('liked');
+  });
+}
+
+// ── Modal mascota ─────────────────────────────────────────────
+function openModal(idx){
+  var p=filtered[idx];
+  if(!p)return;
+  // Angelitos abren su perfil de memorial (p.html) — la misma página
+  // que usa el correo de condolencias, para una experiencia consistente
+  if(p.angelito){
+    window.location.href='/p/'+(p.slug||p.uid);
+    return;
+  }
+  _renderModal(p);
+}
+
+function openModalByUID(uid){
+  var p=allPets.find(function(x){return x.uid===uid;});
+  if(!p)return;
+  // Angelitos abren su perfil de memorial (p.html)
+  if(p.angelito){
+    window.location.href='/p/'+(p.slug||uid);
+    return;
+  }
+  _renderModal(p);
+}
+
+function _renderModal(p){
+  currentModalPet=p;
+  var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
+  var emoji=esGato?'🐱':'🐶';
+  var photoEl=document.getElementById('modalPhoto');
+  photoEl.innerHTML='';
+  if(p.angelito){
+    var badge=document.createElement('div');
+    badge.className='modal-angel-badge';badge.textContent='🐾';
+    photoEl.appendChild(badge);
+  }
+  if(p.foto&&p.foto.indexOf('http')>=0){
+    var img=document.createElement('img');
+    img.src=cloudinarySmartCrop(p.foto,600,560);
+    img.style='width:100%;height:280px;object-fit:cover'+(p.angelito?';filter:grayscale(20%)':'');
+    img.onerror=function(){photoEl.innerHTML=emoji;};
+    photoEl.appendChild(img);
+  } else { photoEl.innerHTML=emoji; }
+
+  document.getElementById('modalName').textContent='"'+p.nombre.toUpperCase()+'"';
+  document.getElementById('modalApodo').textContent=p.apodo||p.nombre;
+  document.getElementById('modalEspecie').textContent=p.especie||'-';
+  document.getElementById('modalSexo').textContent=p.sexo||'-';
+  var fechaLbl=document.getElementById('modalFechaLbl');
+  var fechaVal=document.getElementById('modalFecha');
+  if(fechaLbl&&fechaVal){
+    fechaLbl.textContent=(p.tipoFecha==='llegada'||p.tipoFecha==='casa')?'Llegó a casa':'Nacimiento';
+    fechaVal.textContent=formatFecha(p.fecha);
+  }
+  var comentarioEl=document.getElementById('modalComentario');
+  comentarioEl.style.display=p.comentario?'block':'none';
+  document.getElementById('modalComentarioText').textContent=p.comentario||'';
+
+  var actEl=document.getElementById('modalActividades');
+  if(actEl){
+    if(p.actividades){
+      var acts=p.actividades.split(',').map(function(a){return a.trim();}).filter(Boolean);
+      actEl.innerHTML=acts.map(function(a){return '<span style="display:inline-block;background:#e0f7f7;color:#007a7a;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;margin:2px">'+a+'</span>';}).join('');
+      actEl.parentElement.style.display='block';
+    } else { actEl.parentElement.style.display='none'; }
+  }
+  var espEl=document.getElementById('modalEspecial');
+  if(espEl){
+    espEl.style.display=p.especial?'block':'none';
+    var espTxt=document.getElementById('modalEspecialText');
+    if(espTxt)espTxt.textContent=p.especial||'';
+  }
+
+  var mesActual=new Date().getMonth();
+  var esCumple=false;
+  if(p.fecha){var mesFecha=getMesFecha(p.fecha);esCumple=mesFecha!==null&&mesFecha===mesActual;}
+  var msgSection=document.getElementById('mensajesSection');
+  if(msgSection){
+    if(p.angelito||esCumple){
+      msgSection.style.display='block';
+      cargarMensajes(p.uid);
+      var autorInput=document.getElementById('mensajeAutor');
+      if(autorInput){
+        var dueno=localStorage.getItem('petzid_dueno')||'';
+        var email=localStorage.getItem('petzid_email')||'';
+        autorInput.value=dueno||(email?email.split('@')[0]:'');
+      }
+    } else { msgSection.style.display='none'; }
+  }
+  renderModalFooter(p);
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function renderModalFooter(p){
+  var footer=document.getElementById('modalFooter');
+  var esMia=sessionEmail&&p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();
+
+  // Mi propia mascota — banner + sin botones
+  if(esMia){
+    var editarFechaBtn = p.angelito
+      ? '<button onclick="toggleAngel(true)" style="margin-top:8px;background:none;border:none;color:#007a7a;font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline">✏️ Editar fecha de partida</button>'
+      : '';
+    footer.innerHTML='<div style="background:#e0f7f7;border-radius:10px;padding:10px 14px;font-size:12px;color:#007a7a;font-weight:500;width:100%;text-align:center">✏️ Para editar o gestionar a <strong>'+p.nombre+'</strong>, ve a <a href="/familia.html" style="color:#007a7a;font-weight:700">Mi Familia</a>' + editarFechaBtn + '</div>';
+    return;
+  }
+
+  // Sin sesion
+  if(!sessionEmail){
+    footer.innerHTML=
+      '<button class="btn-primary btn-pink" style="flex:1" onclick="openLoginModal()">🐾 Ser amigos</button>'+
+      (p.angelito?'':'<button class="btn-secondary" style="flex:1" onclick="irACrear()">Registrar mascota</button>');
+    return;
+  }
+
+  // Mascota ajena — solo amigos
+  footer.innerHTML='<button class="btn-primary btn-pink" style="width:100%" id="btnAmigoModal">🐾 Cargando...</button>';
+  fetch(SUPA_URL+'/rest/v1/amigos?or=(and(uid_solicitante.eq.'+encodeURIComponent(p.uid)+',email_receptor.eq.'+encodeURIComponent(sessionEmail)+'),and(uid_receptor.eq.'+encodeURIComponent(p.uid)+',email_solicitante.eq.'+encodeURIComponent(sessionEmail)+'))&select=*',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(rows){
+    if(!currentModalPet||currentModalPet.uid!==p.uid) return;
+    var btn;
+    if(!rows||!rows.length){
+      btn='<button class="btn-primary btn-pink" style="width:100%" onclick="enviarSolicitudAmistad(\''+p.uid+'\')">🐾 Agregar amigo</button>';
+    } else {
+      var rel=rows[0];
+      if(rel.estado==='aceptado'){
+        btn='<button class="btn-primary" style="width:100%;background:#e0f7f7;color:#007a7a;cursor:default">🐾 Amigos</button>'
+           +'<button class="btn-primary" style="width:100%;background:#fff0f0;color:#c0392b;border:1.5px solid #fcc;margin-top:6px" data-id="'+rel.id+'" onclick="eliminarAmistad(this.dataset.id)">Eliminar amistad</button>';
+      } else if(rel.email_solicitante.toLowerCase()===sessionEmail.toLowerCase()){
+        var diasPend=rel.created_at?Math.floor((Date.now()-new Date(rel.created_at).getTime())/86400000):0;
+        if(diasPend>=21){
+          btn='<button class="btn-primary btn-pink" style="width:100%" onclick="reenviarSolicitud(\''+p.uid+'\',\''+rel.id+'\')">🔄 Reenviar solicitud</button>';
+        } else {
+          btn='<button class="btn-primary" style="width:100%;background:#f0f0ee;color:#888;cursor:default">Solicitud enviada</button>';
+        }
+      } else {
+        btn='<button class="btn-primary btn-pink" style="width:100%" onclick="aceptarDesdeModal(\''+rel.id+'\')">Aceptar solicitud</button>';
       }
     }
+    footer.innerHTML=btn;
+  }).catch(function(){
+    footer.innerHTML='<button class="btn-primary btn-pink" style="width:100%" onclick="enviarSolicitudAmistad(\''+p.uid+'\')">🐾 Agregar amigo</button>';
+  });
+}
 
-        return res.status(200).json({ status: 'PetMi Supabase API activa' });
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+function actualizarMascota(uid){window.location.href='/editar.html?uid='+uid;}
+function agregarOtra(){window.location.href='/registro.html?agregar=1';}
 
-  } catch(err) {
-    return res.status(500).json({ ok: false, error: err.message });
+// ── Toggle angelito ───────────────────────────────────────────
+function toggleAngel(esAngel){
+  if(!currentModalPet)return;
+  var p=currentModalPet;
+  if(!esAngel){
+    mostrarConfirm('💔 Quitar de angelitos','¿Quitar a '+p.nombre+' de la sección de angelitos?',function(){
+      mostrarToastG('Guardando...');
+      supaMarkAngelito(p.uid,false,null).then(function(){
+        fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:false})});
+        p.angelito=false;p.fechaAngelito='';
+        var inAll=allPets.find(function(x){return x.uid===p.uid;});
+        if(inAll){inAll.angelito=false;inAll.fechaAngelito='';}
+        renderAngeles();applyFilter();renderSolicitudes();closeConfirm();_renderModal(p);
+        mostrarToastG('💔 '+p.nombre+' quitado de angelitos');
+      }).catch(function(){mostrarToastG('Error.');closeConfirm();});
+    });
+    return;
+  }
+  closeConfirm();
+  var overlay=document.getElementById('angelFechaOverlay');
+  if(!overlay){
+    overlay=document.createElement('div');
+    overlay.id='angelFechaOverlay';
+    overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:800;display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML='<div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;text-align:center">'
+      +'<div style="font-size:36px;margin-bottom:10px">🐾</div>'
+      +'<div style="font-size:18px;font-weight:900;color:#222;margin-bottom:6px">Fecha en que nos dejó</div>'
+      +'<div style="font-size:13px;color:#888;margin-bottom:20px">Esta fecha aparecerá en su tarjeta como <strong>2011-2026</strong></div>'
+      +'<input type="date" id="angelFechaInput" style="width:100%;padding:13px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:16px;outline:none;margin-bottom:16px">'
+      +'<button onclick="confirmarAngel()" style="width:100%;padding:14px;background:#764ba2;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">🐾 Confirmar</button>'
+      +'<button onclick="document.getElementById(\'angelFechaOverlay\').style.display=\'none\'" style="width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cancelar</button>'
+      +'</div>';
+    document.body.appendChild(overlay);
+  } else { overlay.style.display='flex'; }
+  document.getElementById('angelFechaInput').value=(currentModalPet&&currentModalPet.fechaAngelito)?currentModalPet.fechaAngelito:new Date().toISOString().split('T')[0];
+}
+
+function confirmarAngel(){
+  var p=currentModalPet;
+  var fecha=document.getElementById('angelFechaInput').value;
+  document.getElementById('angelFechaOverlay').style.display='none';
+  // Mostrar feedback inmediato
+  document.getElementById('angelFechaOverlay').style.display='none';
+  mostrarToastG('Guardando...');
+  supaMarkAngelito(p.uid,true,fecha).then(function(){
+    fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'markAngel',uid:p.uid,esAngel:true,fechaAngelito:fecha})});
+    p.angelito=true;p.fechaAngelito=fecha;
+    var inAll=allPets.find(function(x){return x.uid===p.uid;});
+    if(inAll){inAll.angelito=true;inAll.fechaAngelito=fecha;}
+    renderAngeles();applyFilter();closeConfirm();_renderModal(p);
+    mostrarToastG('🐾 '+p.nombre+' ya es un angelito');
+  }).catch(function(){mostrarToastG('Error al guardar');})
+  .catch(function(){alert('Error al actualizar.');});
+}
+
+// ── Eliminar mascota (FIX) ────────────────────────────────────
+// Antes llamaba deleteAccount (borraba TODAS las mascotas del email)
+// Ahora llama deleteMascota con el uid de la mascota actual solamente
+function confirmarEliminarMascota(){
+  if(!currentModalPet) return;
+  var p=currentModalPet;
+  mostrarConfirm(
+    '🗑️ Eliminar mascota',
+    '¿Eliminar a '+p.nombre+'? Esta acción no se puede deshacer.',
+    function(){
+      supaDeleteMascota(p.uid).then(function(){
+        fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'deleteMascota',uid:p.uid})});
+        closeModal();closeConfirm();
+        mostrarToastG('✅ Mascota eliminada');
+        setTimeout(function(){location.reload();},800);
+      }).catch(function(){
+        alert('Error de conexión. Intenta de nuevo.');
+        closeConfirm();
+      });
+    }
+  );
+}
+
+// ── Confirm modal ─────────────────────────────────────────────
+function mostrarConfirm(titulo,sub,onOk){
+  document.getElementById('confirmTitle').textContent=titulo;
+  document.getElementById('confirmSub').textContent=sub;
+  document.getElementById('confirmOk').onclick=onOk;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm(){document.getElementById('confirmOverlay').classList.remove('open');}
+
+// ── Login modal ───────────────────────────────────────────────
+function openLoginModal(){
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginMsg').style.display='none';
+  document.getElementById('btnLogin').disabled=false;
+  document.getElementById('btnLogin').textContent='Ingresar';
+  document.getElementById('loginStep1').style.display='block';
+  document.getElementById('loginStep2').style.display='none';
+  document.getElementById('loginStep3').style.display='none';
+  document.getElementById('loginOverlay').classList.add('open');
+}
+function closeLoginModal(){document.getElementById('loginOverlay').classList.remove('open');}
+
+// ── Login seguro 2 pasos ─────────────────────────────────────
+function irAPaso2(){
+  var email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  if(!email||email.indexOf('@')<0){mostrarMsgLogin('Ingresa un correo valido','error');return;}
+  // Pasar a paso 2 sin confirmar si el email existe (no revela info)
+  document.getElementById('loginStep1').style.display='none';
+  document.getElementById('loginStep2').style.display='block';
+  setTimeout(function(){document.getElementById('loginNombre').focus();},100);
+}
+
+function volverPaso1(){
+  document.getElementById('loginStep2').style.display='none';
+  document.getElementById('loginStep1').style.display='block';
+  mostrarMsgLogin2('','');
+  document.getElementById('loginNombre').value='';
+}
+
+function verificarLogin(){
+  var email  = document.getElementById('loginEmail').value.trim().toLowerCase();
+  var nombre = document.getElementById('loginNombre').value.trim();
+  if(!nombre){mostrarMsgLogin2('Escribe el nombre de tu mascota','error');return;}
+  var btn=document.getElementById('btnLogin');
+  btn.disabled=true;btn.textContent='Verificando...';
+  fetch('/api/galeria?action=verificarLogin',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email,nombreMascota:nombre})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      sessionEmail=d.email||email;
+      sessionDueno=d.dueno||'';
+      localStorage.setItem('petzid_email',sessionEmail);
+      localStorage.setItem('petzid_dueno',sessionDueno);
+      if(d.mascotas&&d.mascotas[0]&&d.mascotas[0].especie)
+        localStorage.setItem('petmi_especie',d.mascotas[0].especie);
+      mostrarMsgLogin2('¡Bienvenido/a '+(sessionDueno||'')+'!','success');
+      setTimeout(function(){
+        closeLoginModal();
+        shown=0;applyFilter();
+        window._datosCompletosDashboard = true;
+        cargarDashboardPersonalizado();
+        if(currentModalPet) renderModalFooter(currentModalPet);
+        else closeModal();
+      },1200);
+    } else {
+      mostrarMsgLogin2(d.msg||'Datos incorrectos. Intenta de nuevo.','error');
+      btn.disabled=false;btn.textContent='Ingresar';
+      // Limpiar campo nombre en caso de error
+      document.getElementById('loginNombre').value='';
+      document.getElementById('loginNombre').focus();
+    }
+  })
+  .catch(function(){
+    mostrarMsgLogin2('Error de conexion. Intenta de nuevo.','error');
+    btn.disabled=false;btn.textContent='Ingresar';
+  });
+}
+
+function mostrarMsgLogin(texto,tipo){
+  var el=document.getElementById('loginMsg');
+  if(!el)return;
+  el.textContent=texto;el.className='login-msg '+(tipo||'');el.style.display=texto?'block':'none';
+}
+
+function mostrarMsgLogin2(texto,tipo){
+  var el=document.getElementById('loginMsg2');
+  if(!el)return;
+  el.textContent=texto;el.className='login-msg '+(tipo||'');el.style.display=texto?'block':'none';
+}
+
+function mostrarMsgLogin3(texto,tipo){
+  var el=document.getElementById('loginMsg3');
+  if(!el)return;
+  el.textContent=texto;el.className='login-msg '+(tipo||'');el.style.display=texto?'block':'none';
+}
+
+// ── Paso 3: código por correo — mismo mecanismo que header.js ────
+function enviarOTPLogin(){
+  var email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  var btn=document.getElementById('btnLogin');
+  if(btn) btn.disabled=true;
+  fetch('/api/galeria?action=enviarOTP',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(btn) btn.disabled=false;
+    if(d.ok){
+      document.getElementById('loginStep2').style.display='none';
+      document.getElementById('loginStep3').style.display='block';
+      document.getElementById('loginOTPSub').textContent='Enviamos un código a '+email+'. Válido 10 minutos.';
+      setTimeout(function(){
+        document.getElementById('loginOTP').value='';
+        document.getElementById('loginOTP').focus();
+      },100);
+    } else {
+      mostrarMsgLogin2(d.msg||'No se pudo enviar el código','error');
+    }
+  })
+  .catch(function(){
+    if(btn) btn.disabled=false;
+    mostrarMsgLogin2('Error de conexión','error');
+  });
+}
+
+function volverPaso2(){
+  document.getElementById('loginStep3').style.display='none';
+  document.getElementById('loginStep2').style.display='block';
+  mostrarMsgLogin3('','');
+}
+
+function verificarOTPLogin(){
+  var email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  var code=document.getElementById('loginOTP').value.trim();
+  if(!code||code.length!==6){mostrarMsgLogin3('Ingresa el código de 6 dígitos','error');return;}
+  var btn=document.getElementById('btnLogin3');
+  btn.disabled=true;btn.textContent='Verificando...';
+  fetch('/api/galeria?action=verificarOTP',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email,code:code})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      sessionEmail=d.email||email;
+      sessionDueno=d.dueno||'';
+      localStorage.setItem('petzid_email',sessionEmail);
+      localStorage.setItem('petzid_dueno',sessionDueno);
+      if(d.mascotas&&d.mascotas[0]&&d.mascotas[0].especie)
+        localStorage.setItem('petmi_especie',d.mascotas[0].especie);
+      mostrarMsgLogin3('¡Bienvenido/a '+(sessionDueno||'')+'!','success');
+      setTimeout(function(){
+        closeLoginModal();
+        shown=0;applyFilter();
+        window._datosCompletosDashboard = true;
+        cargarDashboardPersonalizado();
+        if(currentModalPet) renderModalFooter(currentModalPet);
+        else closeModal();
+      },1200);
+    } else {
+      mostrarMsgLogin3(d.msg||'Código incorrecto o expirado','error');
+      btn.disabled=false;btn.textContent='Verificar código';
+    }
+  })
+  .catch(function(){
+    mostrarMsgLogin3('Error de conexión','error');
+    btn.disabled=false;btn.textContent='Verificar código';
+  });
+}
+
+// ── Formato de fecha ──────────────────────────────────────────
+function getMesFecha(val){
+  if(!val||val==='-')return null;
+  var s=String(val).trim();
+  var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return parseInt(m[2],10)-1;
+  var m2=s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if(m2)return parseInt(m2[2],10)-1;
+  return null;
+}
+
+function getDiaFecha(val){
+  if(!val||val==='-')return null;
+  var s=String(val).trim();
+  var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return parseInt(m[3],10);
+  var m2=s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if(m2)return parseInt(m2[1],10);
+  return null;
+}
+
+var MESES_ES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function getDiaMesLabel(val){
+  var mes=getMesFecha(val), dia=getDiaFecha(val);
+  if(mes===null||dia===null)return '';
+  return dia+' de '+MESES_ES[mes];
+}
+
+function formatFecha(val){
+  if(!val||val==='-')return'-';
+  var d;
+  var p=String(val).split('/');
+  if(p.length===3)d=new Date(p[2]+'-'+p[1]+'-'+p[0]);
+  else d=new Date(val);
+  if(isNaN(d.getTime()))return String(val);
+  return d.toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+// ── Solicitud de amistad ──────────────────────────────────────
+function getBtnAmigo(uid){
+  var estado=misAmigosCache.find(function(a){return a.uid===uid;});
+  if(!estado) return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\''+uid+'\')">🐾 Agregar amigo</button>';
+  if(estado.tipo==='amigo') return '<button class="btn-primary" style="background:#e0f7f7;color:#007a7a;cursor:default">🐾 Amigos</button>';
+  if(estado.tipo==='pendiente_enviado') return '<button class="btn-primary" style="background:#f0f0ee;color:#888;cursor:default">Solicitud enviada</button>';
+  if(estado.tipo==='pendiente_recibido') return '<button class="btn-primary btn-pink" onclick="aceptarDesdeModal(\''+uid+'\')">Aceptar solicitud</button>';
+  return '<button class="btn-primary btn-pink" onclick="enviarSolicitudAmistad(\''+uid+'\')">🐾 Agregar amigo</button>';
+}
+
+function aceptarDesdeModal(uid){
+  var sol=misAmigosCache.find(function(a){return a.uid===uid&&a.tipo==='pendiente_recibido';});
+  if(!sol)return;
+  fetch('/api/galeria?action=responderSolicitud',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:sol.id,estado:'aceptado'})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){sol.tipo='amigo';renderModalFooter(currentModalPet);mostrarToastG('✅ Ahora son amigos!');}
+  });
+}
+
+function eliminarAmistad(solicitudId){
+  if(!confirm('¿Seguro que quieres eliminar esta amistad?')) return;
+  fetch('/api/galeria?action=eliminarAmistad',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:solicitudId})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      mostrarToastG('Amistad eliminada');
+      closeModal();
+    } else {
+      mostrarToastG('Error al eliminar');
+    }
+  }).catch(function(){mostrarToastG('Error de conexión');});
+}
+function reenviarSolicitud(uid, solicitudId){
+  if(!sessionEmail)return;
+  // Eliminar solicitud anterior y enviar nueva
+  fetch(SUPA_URL+'/rest/v1/amigos?id=eq.'+encodeURIComponent(solicitudId),{
+    method:'DELETE',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(){
+    // Actualizar cache
+    misAmigosCache=misAmigosCache.filter(function(a){return a.uid!==uid;});
+    enviarSolicitudAmistad(uid);
+  });
+}
+
+function enviarSolicitudAmistad(uid){
+  if(!sessionEmail){openLoginModal();return;}
+  var mia=allPets.find(function(p){return p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();});
+  if(!mia){mostrarToastG('Primero registra tu mascota para agregar amigos');return;}
+  var receptor=allPets.find(function(p){return p.uid===uid;});
+  if(!receptor)return;
+  fetch('/api/galeria?action=enviarSolicitud',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid_solicitante:mia.uid,uid_receptor:receptor.uid,email_solicitante:sessionEmail,email_receptor:receptor.email})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      misAmigosCache.push({uid:uid,tipo:'pendiente_enviado',id:null});
+      mostrarToastG('🐾 Solicitud enviada a '+receptor.nombre+'!');
+      renderModalFooter(currentModalPet);
+      fetch('/api/submit',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'notificarSolicitud',emailReceptor:receptor.email,nombreReceptor:receptor.nombre,nombreSolicit:mia.nombre,uidReceptor:receptor.uid})
+      });
+    } else { mostrarToastG('Error al enviar solicitud'); }
+  }).catch(function(){mostrarToastG('Error de conexión');});
+}
+
+// ── Actividades preview ───────────────────────────────────────
+function irActividades(){location.href='/avisos.html';}
+
+function cargarActividadesPreview(){
+  fetch('/api/galeria?action=getActividades')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var acts=(d.actividades||[]).slice(0,6);
+      if(!acts.length)return;
+      document.getElementById('seccionActividades').style.display='block';
+      var TIPO_EMOJIS={plan:'🐾',busco:'🔍',perdido:'🚨',adopcion:'🏠'};
+      var TIPO_COLORS={plan:{bg:'#f3e8ff',color:'#764ba2'},busco:{bg:'#e8f5e9',color:'#2e7d32'},perdido:{bg:'#ffebee',color:'#c0392b'},adopcion:{bg:'#e8f5e9',color:'#2e7d32'}};
+      var html='';
+      acts.forEach(function(a){
+        var emoji=TIPO_EMOJIS[a.tipo]||'🐾';
+        var col=TIPO_COLORS[a.tipo]||{bg:'#f0f0ee',color:'#555'};
+        var fotoAvatar=a.foto_creador&&a.foto_creador.indexOf('http')>=0
+          ?'<img src="'+a.foto_creador+'" style="width:22px;height:22px;border-radius:4px;object-fit:cover">'
+          :'<span style="font-size:14px">'+emoji+'</span>';
+        var meta=(a.fecha?'📅 '+new Date(a.fecha+'T12:00:00').toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit'}):'')
+          +(a.hora?' '+a.hora:'')+(a.ubicacion?' · 📍 '+a.ubicacion:'');
+        if(!meta&&a.expires_at){
+          var dias=Math.floor((new Date(a.expires_at)-Date.now())/86400000);
+          if(dias>=0)meta='expira en '+dias+' día'+(dias!==1?'s':'');
+        }
+        var tipoLabel=a.tipo.charAt(0).toUpperCase()+a.tipo.slice(1);
+        html+='<div class="act-prev-card" onclick="irActividades()">'
+          +'<div style="height:5px;background:'+col.color+';width:100%"></div>'
+          +'<div class="act-prev-body">'
+          +'<div style="margin-bottom:5px"><span style="font-size:9px;font-weight:700;background:'+col.bg+';color:'+col.color+';padding:2px 8px;border-radius:99px">'+emoji+' '+tipoLabel+'</span></div>'
+          +'<div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">'+fotoAvatar
+          +'<span style="font-size:10px;font-weight:600;color:#333">'+a.nombre_creador+'</span></div>'
+          +'<div class="act-prev-titulo">'+a.titulo+'</div>'
+          +(meta?'<div class="act-prev-meta">'+meta+'</div>':'')
+          +'</div></div>';
+      });
+      document.getElementById('actividadesScroll').innerHTML=html;
+    });
+}
+cargarActividadesPreview();
+
+// ── Cache de amigos ───────────────────────────────────────────
+function renderSolicitudes(){
+  if(!sessionEmail) return;
+  var pendientes=misAmigosCache.filter(function(a){return a.tipo==='pendiente_recibido';});
+  var sec=document.getElementById('seccionSolicitudes');
+  if(!pendientes.length){if(sec)sec.style.display='none';return;}
+  if(sec)sec.style.display='block';
+  var cnt=document.getElementById('solicitudesCount');
+  if(cnt)cnt.textContent=pendientes.length;
+  var html=pendientes.map(function(sol){
+    var p=allPets.find(function(x){return x.uid===sol.uid;});
+    if(!p)return '';
+    var foto=p.foto&&p.foto.indexOf('http')>=0?'<img src="'+p.foto+'" alt="'+p.nombre+'">':'<span>'+(p.especie&&p.especie.toLowerCase().indexOf('gato')>=0?'🐱':'🐶')+'</span>';
+    var meta=[p.raza,p.zona].filter(function(x){return x&&x.trim()&&x.trim()!=='-';}).join(' · ');
+    return '<div class="sol-card">'
+      +'<div class="sol-foto">'+foto+'</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<span class="sol-nombre" data-uid="'+p.uid+'" onclick="openModalByUID(this.dataset.uid)">"'+p.nombre+'"</span>'
+      +(meta?'<div class="sol-meta">'+meta+'</div>':'')
+      +'</div>'
+      +'<div class="sol-btns">'
+      +'<button class="btn-sol-aceptar" data-id="'+sol.id+'" data-uid="'+sol.uid+'" onclick="aceptarSolicitudDirecto(this)">Aceptar</button>'
+      +'<button class="btn-sol-rechazar" data-id="'+sol.id+'" data-uid="'+sol.uid+'" onclick="rechazarSolicitudDirecto(this)">✕</button>'
+      +'</div></div>';
+  }).join('');
+  var wrap=document.getElementById('solicitudesWrap');
+  if(wrap)wrap.innerHTML=html;
+}
+function aceptarSolicitudDirecto(btn){
+  var id=btn.getAttribute('data-id');
+  fetch('/api/galeria?action=responderSolicitud',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,estado:'aceptado'})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d.ok){var a=misAmigosCache.find(function(x){return x.id===id;});if(a)a.tipo='amigo';mostrarToastG('🐾 Ahora son amigos!');renderSolicitudes();}
+  }).catch(function(){mostrarToastG('Error');});
+}
+function rechazarSolicitudDirecto(btn){
+  var id=btn.getAttribute('data-id');
+  fetch('/api/galeria?action=responderSolicitud',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,estado:'rechazado'})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d.ok){misAmigosCache=misAmigosCache.filter(function(a){return a.id!==id;});mostrarToastG('Solicitud rechazada');renderSolicitudes();}
+  }).catch(function(){mostrarToastG('Error');});
+}
+function cargarCacheAmigos(){
+  if(!sessionEmail)return Promise.resolve();
+  return new Promise(function(resolve){
+    var miMascota=allPets.find(function(p){return p.email&&p.email.trim().toLowerCase()===sessionEmail.trim().toLowerCase();});
+    if(!miMascota)return resolve();
+    fetch('/api/galeria?action=getAmigos&uid='+encodeURIComponent(miMascota.uid))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        misAmigosCache=[];
+        (d.amigos||[]).forEach(function(a){
+          var uidAmigo=a.uid_solicitante===miMascota.uid?a.uid_receptor:a.uid_solicitante;
+          misAmigosCache.push({uid:uidAmigo,tipo:'amigo',id:a.id});
+        });
+        var hoy=Date.now();
+        (d.pendientes||[]).forEach(function(a){
+          if(a.uid_solicitante===miMascota.uid){
+            // Verificar si expiró (>21 dias sin respuesta)
+            var diasPendiente=a.created_at?Math.floor((hoy-new Date(a.created_at).getTime())/86400000):0;
+            var tipo=diasPendiente>=21?'pendiente_expirado':'pendiente_enviado';
+            misAmigosCache.push({uid:a.uid_receptor,tipo:tipo,id:a.id,created_at:a.created_at});
+          } else {
+            misAmigosCache.push({uid:a.uid_solicitante,tipo:'pendiente_recibido',id:a.id});
+          }
+        });
+      }).catch(function(){}).finally(function(){resolve();});
+  });
+}
+if(sessionEmail) setTimeout(cargarCacheAmigos,2000);
+
+// ── Mensajes ──────────────────────────────────────────────────
+var currentMascotaUID=null;
+
+function cargarMensajes(uid){
+  currentMascotaUID=uid;
+  var lista=document.getElementById('mensajesLista');
+  lista.innerHTML='<div style="text-align:center;padding:12px;color:#bbb;font-size:13px">Cargando...</div>';
+  fetch(SUPA_URL+'/rest/v1/mensajes?uid_mascota=eq.'+encodeURIComponent(uid)+'&order=created_at.asc',{
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+  }).then(function(r){return r.json();})
+  .then(function(msgs){
+    if(!msgs||msgs.length===0){
+      lista.innerHTML='<div style="text-align:center;padding:12px;color:#bbb;font-size:13px">Sé el primero en dejar un mensaje 🐾</div>';
+      return;
+    }
+    lista.innerHTML=msgs.map(function(m){
+      var fecha=(m.created_at||m.fecha)?new Date(m.created_at||m.fecha).toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'}):'';
+      return '<div style="background:#f8f8f8;border-radius:10px;padding:10px 12px;margin-bottom:6px">'
+        +'<div style="font-size:12px;font-weight:700;color:#333">'+m.autor+'<span style="font-size:10px;color:#bbb;font-weight:400;margin-left:8px">'+fecha+'</span></div>'
+        +'<div style="font-size:13px;color:#555;margin-top:3px;line-height:1.5">'+m.mensaje+'</div></div>';
+    }).join('');
+    lista.scrollTop=lista.scrollHeight;
+  }).catch(function(){
+    lista.innerHTML='<div style="text-align:center;padding:8px;color:#bbb;font-size:13px">No se pudieron cargar los mensajes</div>';
+  });
+}
+
+function enviarMensaje(){
+  var autor=document.getElementById('mensajeAutor').value.trim();
+  var mensaje=document.getElementById('mensajeTxt').value.trim();
+  if(!autor){
+    var dueno=localStorage.getItem('petzid_dueno')||'';
+    var email=localStorage.getItem('petzid_email')||'';
+    autor=dueno||(email?email.split('@')[0]:'Anonimo');
+  }
+  if(!mensaje){alert('Escribe un mensaje');return;}
+  if(!currentMascotaUID)return;
+  fetch(SUPA_URL+'/rest/v1/mensajes',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},
+    body:JSON.stringify({uid_mascota:currentMascotaUID,autor:autor,mensaje:mensaje,nombre_mascota:currentModalPet?currentModalPet.nombre:''})
+  }).then(function(){
+    document.getElementById('mensajeTxt').value='';
+    setTimeout(function(){cargarMensajes(currentMascotaUID);},300);
+  }).catch(function(e){console.log('Error:',e);});
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function mostrarToastG(msg){
+  var el=document.getElementById('toast');
+  if(!el){el=document.createElement('div');el.id='toast';el.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap';document.body.appendChild(el);}
+  el.textContent=msg;el.style.opacity='1';
+  setTimeout(function(){el.style.opacity='0';},2500);
+}
+</script>
+<!-- ══════════════════════════════════════════════════════════
+     MODAL ME PERDÍ
+═══════════════════════════════════════════════════════════ -->
+<div id="modalPerdido" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:800;align-items:center;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 16px 60px rgba(0,0,0,.3);margin:auto">
+
+    <!-- Header rojo -->
+    <div style="background:#c0392b;padding:18px 20px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:18px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif">🚨 ME PERDÍ — Generar Póster</div>
+      <button onclick="cerrarModalPerdido()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+    </div>
+
+    <!-- Formulario -->
+    <div style="padding:20px" id="perdidoFormWrap">
+      <div style="font-size:12px;color:#888;margin-bottom:16px;line-height:1.5">Completa los datos para generar el póster y publicarlo automáticamente en la comunidad.</div>
+
+      <!-- Foto de la mascota -->
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Foto de la mascota</div>
+        <div id="perdidoFotoWrap" onclick="document.getElementById('perdidoFotoInput').click()" style="position:relative;border-radius:12px;overflow:hidden;cursor:pointer;min-height:140px;background:#f0f0ee">
+          <img id="perdidoFotoPreview" style="width:100%;height:140px;object-fit:cover;display:block">
+          <div id="perdidoFotoOverlay" style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);padding:8px 12px;display:flex;align-items:center;gap:8px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span id="perdidoFotoLabel" style="font-size:12px;font-weight:600;color:#fff">Toca para cambiar la foto</span>
+          </div>
+          <input type="file" id="perdidoFotoInput" accept="image/*" style="display:none" onchange="previsualizarFotoModal(this)">
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Última vez visto / descripción</div>
+        <textarea id="perdidoMensaje" placeholder="Ej: Se escapó del parque Central, lleva collar azul con cascabel..." style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none;resize:none;height:80px;font-family:Arial,sans-serif"></textarea>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Última ubicación conocida</div>
+        <input type="text" id="perdidoUbicacion" placeholder="Ej: Zona 10, Cayalá, Miraflores..." style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Fecha que se perdió</div>
+          <input type="date" id="perdidoFecha" style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none">
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Teléfono de contacto</div>
+          <input type="tel" id="perdidoTelefono" placeholder="+502 ####-####" inputmode="tel" style="width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;outline:none">
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <div style="font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">¿Hay recompensa?</div>
+        <div style="display:flex;gap:8px">
+          <div id="recompensaNo" onclick="selRecompensa(false)" style="flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #00B4B4;background:#e0f7f7;color:#007a7a;font-size:13px;font-weight:700;cursor:pointer">No por ahora</div>
+          <div id="recompensaSi" onclick="selRecompensa(true)"  style="flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:13px;font-weight:700;cursor:pointer">Sí, hay recompensa</div>
+        </div>
+        <input type="text" id="perdidoRecompensa" placeholder="Ej: Q500 de recompensa" style="display:none;width:100%;padding:12px 14px;border:1.5px solid #F5C842;border-radius:12px;font-size:14px;outline:none;margin-top:8px">
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button onclick="cerrarModalPerdido()" style="flex:1;padding:13px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cancelar</button>
+        <button onclick="generarPosterPerdido()" id="btnGenerarPoster" style="flex:2;padding:13px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">🚨 Generar póster y publicar</button>
+      </div>
+    </div>
+
+    <!-- Preview del poster generado -->
+    <div id="perdidoPosterWrap" style="display:none;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:#155724;background:#d4edda;border-radius:10px;padding:10px 14px;margin-bottom:16px;text-align:center">✅ Póster generado y publicado en la comunidad</div>
+
+      <!-- Canvas donde se renderiza el poster -->
+      <canvas id="posterCanvas" style="width:100%;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.15)"></canvas>
+
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button onclick="descargarPoster()" style="flex:1;padding:13px;background:#c0392b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">⬇️ Descargar</button>
+        <button onclick="compartirPoster()" style="flex:1;padding:13px;background:#25D366;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">📲 Compartir</button>
+        <button onclick="cerrarModalPerdido()" style="padding:13px 16px;background:#f0f0ee;color:#666;border:none;border-radius:12px;font-size:14px;cursor:pointer">Cerrar</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── ME PERDÍ — Estado ─────────────────────────────────────────
+var perdidoConRecompensa = false;
+var posterDataURL = null;
+
+var perdidoNuevaFotoBase64 = null;
+var perdidoNuevaFotoMime   = null;
+
+function previsualizarFotoModal(input){
+  var file=input.files[0];if(!file)return;
+  perdidoNuevaFotoMime=file.type;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    perdidoNuevaFotoBase64=e.target.result.split(',')[1];
+    var prev=document.getElementById('perdidoFotoPreview');
+    prev.src=e.target.result;
+    document.getElementById('perdidoFotoLabel').textContent='Toca para cambiar la foto';
+  };
+  reader.readAsDataURL(file);
+}
+
+function abrirModalPerdido(){
+  if(!currentModalPet) return;
+  // Mostrar foto actual de la mascota en el preview
+  perdidoNuevaFotoBase64=null;perdidoNuevaFotoMime=null;
+  var prev=document.getElementById('perdidoFotoPreview');
+  var lbl=document.getElementById('perdidoFotoLabel');
+  var wrap=document.getElementById('perdidoFotoWrap');
+  if(currentModalPet.foto && currentModalPet.foto.indexOf('http')>=0){
+    prev.src=currentModalPet.foto;
+    document.getElementById('perdidoFotoLabel').textContent='Toca para cambiar la foto';
+  } else {
+    prev.src='';
+    document.getElementById('perdidoFotoLabel').textContent='Toca para agregar una foto';
+  }
+  // Resetear formulario
+  document.getElementById('perdidoMensaje').value = '';
+  document.getElementById('perdidoUbicacion').value = '';
+  document.getElementById('perdidoFecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('perdidoTelefono').value = currentModalPet.whatsapp || '';
+  document.getElementById('perdidoRecompensa').value = '';
+  document.getElementById('perdidoRecompensa').style.display = 'none';
+  document.getElementById('perdidoFormWrap').style.display = 'block';
+  document.getElementById('perdidoPosterWrap').style.display = 'none';
+  selRecompensa(false);
+  posterDataURL = null;
+  var m = document.getElementById('modalPerdido');
+  m.style.display = 'flex';
+}
+
+function cerrarModalPerdido(){
+  document.getElementById('modalPerdido').style.display = 'none';
+}
+
+function selRecompensa(tiene){
+  perdidoConRecompensa = tiene;
+  var elNo = document.getElementById('recompensaNo');
+  var elSi = document.getElementById('recompensaSi');
+  var elTxt = document.getElementById('perdidoRecompensa');
+  if(tiene){
+    elSi.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #F5C842;background:#fff8e0;color:#856404;font-size:13px;font-weight:700;cursor:pointer';
+    elNo.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:13px;font-weight:700;cursor:pointer';
+    elTxt.style.display = 'block';
+  } else {
+    elNo.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #00B4B4;background:#e0f7f7;color:#007a7a;font-size:13px;font-weight:700;cursor:pointer';
+    elSi.style.cssText = 'flex:1;padding:10px;text-align:center;border-radius:10px;border:1.5px solid #ddd;background:#fff;color:#888;font-size:13px;font-weight:700;cursor:pointer';
+    elTxt.style.display = 'none';
   }
 }
+
+// ── Generar poster en Canvas ──────────────────────────────────
+async function generarPosterPerdido(){
+  var p = currentModalPet;
+  if(!p) return;
+
+  var ubicacion = document.getElementById('perdidoUbicacion').value.trim();
+  var telefono  = document.getElementById('perdidoTelefono').value.trim();
+  var mensaje   = document.getElementById('perdidoMensaje').value.trim();
+  var fechaStr  = document.getElementById('perdidoFecha').value;
+  var recompensa = perdidoConRecompensa ? document.getElementById('perdidoRecompensa').value.trim() : '';
+
+  if(!ubicacion){ alert('Ingresa la última ubicación conocida'); return; }
+  if(!telefono) { alert('Ingresa un teléfono de contacto'); return; }
+
+  var btn = document.getElementById('btnGenerarPoster');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generando...';
+
+  // Formatear fecha
+  var fechaDisplay = '-';
+  if(fechaStr){
+    var fd = new Date(fechaStr+'T12:00:00');
+    fechaDisplay = fd.toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric'});
+  }
+
+  // Dimensiones del poster: 800 x 1100
+  var W = 800, H = 1100;
+  var canvas = document.getElementById('posterCanvas');
+  canvas.width  = W;
+  canvas.height = H;
+  var ctx = canvas.getContext('2d');
+
+  // ── Fondo blanco ──
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Header rojo ──
+  ctx.fillStyle = '#c0392b';
+  ctx.fillRect(0, 0, W, 120);
+
+  // Ícono sirena
+  ctx.font = 'bold 52px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('🚨', 70, 78);
+
+  // Texto ME PERDÍ
+  ctx.font = 'bold 52px Arial Black, Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+  ctx.fillText('ME  PERDÍ', 110, 82);
+
+  // Subtítulo
+  ctx.font = '22px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText('¿Me has visto? Por favor comunícate', 110, 108);
+
+  // ── Foto de la mascota ──
+  var fotoY = 130, fotoH = 440;
+  ctx.fillStyle = '#f0f0ee';
+  ctx.fillRect(0, fotoY, W, fotoH);
+
+  // Usar foto nueva si el usuario la cambió, sino la del perfil
+  var fotoSrc = perdidoNuevaFotoBase64
+    ? ('data:'+(perdidoNuevaFotoMime||'image/jpeg')+';base64,'+perdidoNuevaFotoBase64)
+    : (p.foto && p.foto.indexOf('http')>=0 ? p.foto : null);
+
+  if(fotoSrc){
+    try {
+      var imgEl = await cargarImagen(fotoSrc);
+      // Crop centrado
+      var sx=0,sy=0,sw=imgEl.width,sh=imgEl.height;
+      var ratio = imgEl.width/imgEl.height;
+      var targetRatio = W/fotoH;
+      if(ratio > targetRatio){ sw = imgEl.height*targetRatio; sx=(imgEl.width-sw)/2; }
+      else { sh = imgEl.width/targetRatio; sy=(imgEl.height-sh)/2; }
+      ctx.drawImage(imgEl, sx, sy, sw, sh, 0, fotoY, W, fotoH);
+    } catch(e) {
+      // Si falla la imagen, poner emoji
+      var esGato = p.especie.toLowerCase().indexOf('gato')>=0;
+      ctx.font = '160px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#aaa';
+      ctx.fillText(esGato?'🐱':'🐶', W/2, fotoY + fotoH/2 + 50);
+    }
+  } else {
+    var esGato2 = p.especie.toLowerCase().indexOf('gato')>=0;
+    ctx.font = '160px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#aaa';
+    ctx.fillText(esGato2?'🐱':'🐶', W/2, fotoY + fotoH/2 + 50);
+  }
+
+  // Overlay degradado sobre la foto (abajo)
+  var grad = ctx.createLinearGradient(0, fotoY+fotoH-120, 0, fotoY+fotoH);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.65)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, fotoY+fotoH-120, W, 120);
+
+  // Nombre sobre la foto
+  ctx.font = 'bold 64px Arial Black, Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.fillText(p.nombre.toUpperCase(), W/2, fotoY+fotoH-30);
+
+  // ── Sección blanca — datos ──
+  var dataY = fotoY + fotoH;
+
+  // Especie / Sexo / Raza
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, dataY, W, 100);
+
+  var cols = [
+    {lbl:'ESPECIE', val:p.especie||'-'},
+    {lbl:'SEXO',    val:p.sexo||'-'},
+    {lbl:'RAZA',    val:(p.raza||'-').substring(0,14)}
+  ];
+  cols.forEach(function(c,i){
+    var cx = 40 + i*(W/3);
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#aaaaaa';
+    ctx.textAlign = 'left';
+    ctx.fillText(c.lbl, cx, dataY+30);
+    ctx.font = 'bold 24px Arial';
+    ctx.fillStyle = '#222222';
+    ctx.fillText(c.val.toUpperCase(), cx, dataY+62);
+  });
+
+  // Separador
+  ctx.fillStyle = '#f0f0ee';
+  ctx.fillRect(0, dataY+100, W, 3);
+
+  // ── Franja amarilla — última vez visto ──
+  var amarY = dataY + 103;
+  ctx.fillStyle = '#F5C842';
+  ctx.fillRect(0, amarY, W, 220);
+
+  ctx.font = 'bold 18px Arial';
+  ctx.fillStyle = '#1a1a1a';
+  ctx.textAlign = 'left';
+  ctx.fillText('ÚLTIMA VEZ VISTO', 30, amarY + 32);
+
+  // Mensaje (wrap manual)
+  ctx.font = '20px Arial';
+  ctx.fillStyle = '#333333';
+  var msgLines = wrapText(ctx, mensaje||'Sin descripción', W-60, 20);
+  msgLines.slice(0,3).forEach(function(line,i){
+    ctx.fillText(line, 30, amarY + 58 + i*26);
+  });
+
+  // Ubicación
+  ctx.font = 'bold 20px Arial';
+  ctx.fillStyle = '#c0392b';
+  ctx.fillText('📍 ' + (ubicacion||'-'), 30, amarY + 140);
+
+  // Fecha y teléfono
+  ctx.font = '18px Arial';
+  ctx.fillStyle = '#555555';
+  ctx.fillText('📅 Fecha: ' + fechaDisplay, 30, amarY + 172);
+  ctx.fillText('📞 Contacto: ' + telefono, 30, amarY + 196);
+
+  // Recompensa badge
+  if(recompensa){
+    ctx.fillStyle = '#c0392b';
+    roundRect(ctx, W-220, amarY+140, 190, 52, 10);
+    ctx.fill();
+    ctx.font = 'bold 17px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏆 ' + recompensa, W-125, amarY+172);
+  }
+
+  // ── Footer — PetzID branding ──
+  var footY = amarY + 223;
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(0, footY, W, H-footY);
+
+  ctx.font = 'bold 28px Arial Black, Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.fillText('petz', W/2 - 22, footY + 46);
+  ctx.fillStyle = '#E05090';
+  ctx.fillText('ID', W/2 + 34, footY + 46);
+
+  ctx.font = '16px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText('PetMi Guatemala — Comunidad de mascotas', W/2, footY + 72);
+
+  // PetzID del animal
+  if(p.uid){
+    ctx.font = '13px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillText('ID: ' + p.uid.substring(0,18).toUpperCase(), W/2, footY + 95);
+  }
+
+  // Guardar dataURL
+  posterDataURL = canvas.toDataURL('image/png');
+
+  // ── Publicar en actividades ───────────────────────────────
+  btn.textContent = '⏳ Publicando...';
+  try {
+    await publicarPerdidoEnActividades(p, ubicacion, telefono, mensaje, fechaStr, recompensa, posterDataURL);
+  } catch(e){
+    console.log('Error publicando actividad:', e);
+  }
+
+  // Mostrar resultado
+  document.getElementById('perdidoFormWrap').style.display = 'none';
+  document.getElementById('perdidoPosterWrap').style.display = 'block';
+  btn.disabled = false;
+  btn.textContent = '🚨 Generar póster y publicar';
+}
+
+// ── Publicar en actividades como tipo "perdido" ───────────────
+async function publicarPerdidoEnActividades(p, ubicacion, telefono, mensaje, fecha, recompensa, posterURL){
+  var titulo = '🚨 SE PERDIÓ ' + p.nombre.toUpperCase();
+  var descripcion = (mensaje ? mensaje + '\n' : '')
+    + '📍 ' + ubicacion
+    + (recompensa ? '\n🏆 ' + recompensa : '')
+    + '\n📞 ' + telefono;
+
+  // Subir imagen del poster a Wix Media Manager (antes Cloudinary —
+  // llegó a su límite de espacio, las fotos nuevas van a Wix)
+  var imagenURL = '';
+  try {
+    var partesDataUrl = posterURL.split(',');
+    var mimeMatch = partesDataUrl[0].match(/data:(.*?);/);
+    var res = await fetch('/api/subir-foto', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ photoBase64: partesDataUrl[1], mimeType: (mimeMatch && mimeMatch[1]) || 'image/png', fileName: 'perdido_'+Date.now()+'.png' })
+    });
+    var data = await res.json();
+    imagenURL = data.ok ? (data.url || '') : '';
+  } catch(e){ console.log('Wix poster:', e); }
+
+  await fetch('/api/galeria?action=publicarActividad', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      action:        'publicarActividad',
+      uid_creador:   p.uid,
+      nombre_creador: p.nombre,
+      foto_creador:  p.foto || '',
+      email_creador: p.email || sessionEmail,
+      tipo:          'perdido',
+      titulo:        titulo,
+      descripcion:   descripcion,
+      fecha:         fecha,
+      hora:          '',
+      ubicacion:     ubicacion,
+      imagen:        imagenURL
+    })
+  });
+}
+
+// ── Descargar poster ──────────────────────────────────────────
+function descargarPoster(){
+  if(!posterDataURL || !currentModalPet) return;
+  var a = document.createElement('a');
+  a.download = 'MePerdí_' + currentModalPet.nombre + '.png';
+  a.href = posterDataURL;
+  a.click();
+}
+
+// ── Compartir poster (Web Share API o fallback) ───────────────
+async function compartirPoster(){
+  if(!posterDataURL || !currentModalPet) return;
+  var nombre = currentModalPet.nombre;
+  // Intentar Web Share API con archivo
+  if(navigator.share){
+    try {
+      var blob = await (await fetch(posterDataURL)).blob();
+      var file = new File([blob], 'MePerdí_'+nombre+'.png', {type:'image/png'});
+      await navigator.share({
+        title: '🚨 SE PERDIÓ ' + nombre.toUpperCase(),
+        text:  '¿Lo has visto? Por favor comunícate. Publicado en PetzID.',
+        files: [file]
+      });
+      return;
+    } catch(e){ console.log('Share API:', e); }
+  }
+  // Fallback: descargar
+  descargarPoster();
+  mostrarToastG('📲 Guarda la imagen y compártela por WhatsApp o redes sociales');
+}
+
+// ── Helpers canvas ────────────────────────────────────────────
+function cargarImagen(url){
+  return new Promise(function(resolve, reject){
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = function(){ resolve(img); };
+    img.onerror = function(){ reject(new Error('No se pudo cargar la imagen')); };
+    // Usar proxy si es necesario para CORS
+    img.src = url;
+  });
+}
+
+function wrapText(ctx, text, maxWidth, fontSize){
+  if(!text) return [''];
+  var words = text.split(' ');
+  var lines = [], current = '';
+  words.forEach(function(word){
+    var test = current ? current+' '+word : word;
+    if(ctx.measureText(test).width > maxWidth && current){
+      lines.push(current);
+      current = word;
+    } else { current = test; }
+  });
+  if(current) lines.push(current);
+  return lines;
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+// Cerrar modal con Escape
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') cerrarModalPerdido();
+});
+</script>
+
+<button class="fab-pill" id="fabCrearPetzID" style="background:#00B4B4;text-decoration:none" onclick="irACrear()"><i class="ti ti-plus" aria-hidden="true" style="text-decoration:none"></i>Agregar mascota</button>
+<script>
+function irACrear(){
+  var email=localStorage.getItem('petzid_email');
+  if(email) window.location.href='https://app.revistapetmi.com/registro.html?agregar=1';
+  else window.location.href='https://app.revistapetmi.com/registro.html';
+}
+</script>
+<script src="/header.js"></script>
+
+</body>
+</html>
