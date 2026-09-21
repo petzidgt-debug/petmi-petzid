@@ -30,6 +30,8 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .dash-body{background:#fff;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
 .dash-body-inner{max-width:900px;margin:0 auto}
 .dash-main-row{display:flex;flex-direction:column;gap:16px}
+.dash-busqueda-premio{display:flex;flex-direction:column;gap:14px;margin:16px 0}
+@media(min-width:768px){.dash-busqueda-premio{flex-direction:row}.dash-busqueda-premio>div{flex:1}}
 .dash-acciones{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;flex:1}
 .dash-accion{text-align:center;text-decoration:none;display:block;position:relative;background:#fff;border-radius:14px;padding:14px 6px}
 .dash-accion-ico{border-radius:14px;padding:10px 4px;font-size:30px;display:flex;align-items:center;justify-content:center;height:60px;margin:0 auto 8px;width:60px}
@@ -44,8 +46,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .dash-comunidad-scroll{display:flex;gap:8px;overflow-x:auto}
 .dash-comunidad-foto{width:70px;height:70px;border-radius:10px;object-fit:cover;flex-shrink:0}
 @media(min-width:768px){
-  .dash-main-row{flex-direction:row;align-items:stretch}
-  .dash-acciones{grid-template-columns:repeat(3,120px)}
+  .dash-acciones{grid-template-columns:repeat(6,90px);justify-content:center}
   #dashboardPersonal{max-width:900px;margin:24px auto;padding:0 20px}
   .dash-card{border-radius:16px 16px 0 0}
   .dash-body{border-radius:0 0 16px 16px}
@@ -721,32 +722,36 @@ function renderDashboardPersonalizado(mascota, dueno, reglas, registros, puntosT
           : sm.saludDetalle.hoy.length
             ? '<div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;color:#E05090;font-weight:700">&#9888;&#65039; '+sm.saludDetalle.hoy.length+' de '+sm.totalCuidados+' cuidados pendientes</div>'
             : '<div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;color:#999">Sin recomendaciones a&uacute;n</div>';
-        return '<div onclick="toggleSaludDash(\''+idSuf+'\')" style="background:#fff;border:1px solid #eee;border-radius:14px;padding:12px;cursor:pointer">'
+        return '<a href="/p/'+idSuf+'" style="display:block;background:#fff;border:1px solid #eee;border-radius:14px;padding:12px;text-decoration:none;color:inherit">'
         + '<div style="display:flex;align-items:center;gap:8px">'
         + fotoHtml
-        + '<div style="font-weight:900;color:#1a1a2e;font-size:13.5px">&#128062; '+sm.mascota.nombre+'</div>'
+        + '<div style="font-weight:900;color:#1a1a2e;font-size:13.5px;flex:1">&#128062; '+sm.mascota.nombre+'</div>'
+        + '<div onclick="event.preventDefault();event.stopPropagation();toggleSaludDash(\''+idSuf+'\')" style="color:#999;font-size:12px;padding:4px;cursor:pointer" id="saludArrow_'+idSuf+'">&#9660;</div>'
         + '</div>'
         + proximoHtml
         + estadoHtml
         + '<div id="saludDetalle_'+idSuf+'" style="display:none;background:#f8f7f4;border-radius:10px;padding:10px;margin-top:10px">'
         + (sm.saludDetalle.hoy.length ? '<div style="font-size:9.5px;font-weight:700;color:#999;text-transform:uppercase;margin-bottom:5px">Hoy</div>' + sm.saludDetalle.hoy.map(function(x){ return '<div style="font-size:12px;color:#333;padding:3px 0">&#10060; ' + x.nombre + ' <span style="color:#999;font-size:10.5px">&mdash; '+x.sub+'</span></div>'; }).join('') : '')
         + (sm.saludDetalle.proximamente.length ? '<div style="font-size:9.5px;font-weight:700;color:#999;text-transform:uppercase;margin:10px 0 5px">Pr&oacute;ximamente</div>' + sm.saludDetalle.proximamente.map(function(x){ return '<div style="font-size:12px;color:#333;padding:3px 0">&#128993; ' + x.nombre + ' <span style="color:#999;font-size:10.5px">&mdash; '+x.sub+'</span></div>'; }).join('') : '')
-        + '<a href="/salud.html" style="display:block;text-align:center;margin-top:10px;color:#00B4B4;font-weight:700;font-size:11.5px;text-decoration:none">Ver todo en Salud &rarr;</a>'
-        + '</div></div>';
+        + '<a href="/salud.html" onclick="event.stopPropagation()" style="display:block;text-align:center;margin-top:10px;color:#00B4B4;font-weight:700;font-size:11.5px;text-decoration:none">Ver todo en Salud &rarr;</a>'
+        + '</div></a>';
       }).join('')
     + '</div>'
     + '<a href="/registro.html" style="display:block;text-align:center;background:#e0f7f7;color:#00838f;padding:12px;border-radius:12px;text-decoration:none;font-weight:700;font-size:13px;margin-top:10px">+ Agregar mascota</a>'
 
-    // ── Módulo de búsqueda ──
-    + '<div class="dash-seccion-titulo">&#128269; &#191;Qu&eacute; est&aacute;s buscando?</div>'
+    // ── Búsqueda + Premio (lado a lado en escritorio) ──
+    + '<div class="dash-busqueda-premio">'
+    + '<div style="background:#f0f7f7;border-radius:12px;padding:14px">'
+    + '<div style="font-size:11px;font-weight:700;color:#007a7a;text-transform:uppercase;margin-bottom:8px">&#128269; &#191;Qu&eacute; est&aacute;s buscando?</div>'
     + '<form onsubmit="window.location.href=\'/buscar.html?q=\'+encodeURIComponent(this.q.value);return false;" style="display:flex;gap:8px">'
-    + '<input name="q" type="text" placeholder="Ej: vacunas, alimento, veterinarios..." style="flex:1;padding:12px 14px;border:1.5px solid #ddd;border-radius:99px;font-size:13.5px">'
-    + '<button type="submit" style="background:#1a1a2e;color:#fff;border:none;width:44px;border-radius:50%;font-size:15px;cursor:pointer">&#128269;</button>'
+    + '<input name="q" type="text" placeholder="Ej: vacunas, alimento, veterinarios..." style="flex:1;padding:11px 14px;border:1.5px solid #ddd;border-radius:99px;font-size:12.5px;background:#fff">'
+    + '<button type="submit" style="background:#1a1a2e;color:#fff;border:none;width:40px;height:40px;flex-shrink:0;border-radius:50%;font-size:14px;cursor:pointer">&#128269;</button>'
     + '</form>'
-
-    // ── Módulo de gamificación ──
-    + '<div class="dash-seccion-titulo">&#127918; Tu recompensa de hoy</div>'
+    + '</div>'
+    + '<div>'
     + premioHtml
+    + '</div>'
+    + '</div>'
 
     // ── Del blog ──
     + '<div class="dash-seccion-titulo">&#128214; Del blog</div>'
@@ -764,13 +769,17 @@ function cargarBlogDashboard(){
     var cont = document.getElementById('dashBlogCard');
     if(!cont) return;
     if(!posts.length){ cont.innerHTML = ''; return; }
-    var p = posts[0];
-    var img = p.image ? '<img src="'+p.image+'" style="width:64px;height:64px;border-radius:10px;object-fit:cover;flex-shrink:0">' : '<div style="width:64px;height:64px;border-radius:10px;background:#eee;flex-shrink:0"></div>';
-    cont.innerHTML = '<a href="'+p.link+'" target="_blank" style="display:flex;gap:10px;background:#fff;border:1px solid #eee;border-radius:12px;padding:10px;text-decoration:none;align-items:center">'
-      + img
-      + '<div><div style="font-size:12.5px;font-weight:800;color:#1a1a2e;line-height:1.3">'+p.title+'</div>'
-      + '<div style="font-size:11px;color:#00838f;margin-top:3px">Leer más &rarr;</div></div>'
-      + '</a>';
+    var dosPosts = posts.slice(0,2);
+    cont.innerHTML = '<div style="display:grid;grid-template-columns:'+(dosPosts.length>1?'1fr 1fr':'1fr')+';gap:10px">'
+      + dosPosts.map(function(p){
+          var img = p.image ? '<img src="'+p.image+'" style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0">' : '<div style="width:56px;height:56px;border-radius:10px;background:#eee;flex-shrink:0"></div>';
+          return '<a href="'+p.link+'" target="_blank" style="display:flex;gap:10px;background:#fff;border:1px solid #eee;border-radius:12px;padding:10px;text-decoration:none;align-items:center">'
+            + img
+            + '<div><div style="font-size:12px;font-weight:800;color:#1a1a2e;line-height:1.3">'+p.title+'</div>'
+            + '<div style="font-size:10.5px;color:#00838f;margin-top:3px">Leer más &rarr;</div></div>'
+            + '</a>';
+        }).join('')
+      + '</div>';
   }).catch(function(){
     var cont = document.getElementById('dashBlogCard');
     if(cont) cont.innerHTML = '';
