@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Ruleta del Perro Adoptado — PetMi</title>
+<title>Abre tu Regalo — Día del Perro Adoptado — PetMi</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:60px}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bottom:100px}
 
 .hero{background:linear-gradient(135deg,#1a1a2e,#F5C842);padding:26px 20px 22px;text-align:center}
 .hero-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
@@ -15,23 +15,29 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 
 .wrap{max-width:420px;margin:0 auto;padding:24px 16px;text-align:center}
 
-.rueda-wrap{position:relative;width:270px;height:270px;margin:24px auto}
-.rueda{width:270px;height:270px;border-radius:50%;position:relative;transition:transform 4.2s cubic-bezier(.15,.6,.15,1);box-shadow:0 8px 30px rgba(0,0,0,.22);border:6px solid #fff;
-  background:conic-gradient(#00B4B4 0deg 90deg, #F5C842 90deg 180deg, #E05090 180deg 270deg, #7B61FF 270deg 360deg)}
-.rueda-etiqueta{position:absolute;width:80px;text-align:center;font-size:12.5px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3)}
-.puntero{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid #1a1a2e;z-index:10;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
-.centro-rueda{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;font-size:26px;z-index:5}
+.regalo-wrap{position:relative;width:220px;height:220px;margin:24px auto;cursor:pointer}
+.regalo{font-size:120px;line-height:1;transition:transform .15s ease;user-select:none}
+.regalo.temblando{animation:temblar .5s ease infinite}
+.regalo.abierto{transform:scale(0) rotate(20deg);opacity:0}
+@keyframes temblar{
+  0%,100%{transform:rotate(0deg)}
+  20%{transform:rotate(-6deg) scale(1.02)}
+  40%{transform:rotate(5deg) scale(1.02)}
+  60%{transform:rotate(-4deg) scale(1.03)}
+  80%{transform:rotate(3deg) scale(1.02)}
+}
+.toca-txt{font-size:13px;color:#8a6200;font-weight:700;margin-top:10px}
 
-.btn-girar{background:#1a1a2e;color:#fff;border:none;padding:16px 44px;border-radius:99px;font-weight:900;font-size:16px;cursor:pointer;margin-top:14px;box-shadow:0 4px 16px rgba(26,26,46,.3)}
-.btn-girar:disabled{opacity:.5;cursor:default}
-
-.resultado-card{background:#fff;border-radius:16px;padding:28px 20px;border:0.5px solid #eee;margin-top:20px}
-.resultado-emoji{font-size:48px;margin-bottom:10px}
-.resultado-nombre{font-size:20px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
+.resultado-card{background:#fff;border-radius:16px;padding:28px 20px;border:0.5px solid #eee;margin-top:20px;display:none}
+.resultado-emoji{font-size:56px;margin-bottom:10px;animation:popIn .4s cubic-bezier(.2,1.4,.4,1)}
+@keyframes popIn{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+.resultado-nombre{font-size:20px;font-weight:900;color:#1a1a2e;margin-bottom:8px}
 .resultado-sub{font-size:13px;color:#888;line-height:1.7}
 .resultado-codigo{background:#f8f8f8;border:1.5px dashed #ccc;border-radius:10px;padding:12px;margin-top:14px;font-family:monospace;font-size:18px;font-weight:900;color:#1a1a2e;letter-spacing:1px}
 
 .aviso{background:#FFF8E1;border:1px solid #F5C842;border-radius:12px;padding:14px 16px;margin:0 16px;font-size:13px;color:#8a6200;text-align:center;line-height:1.6}
+.links-cuenta{display:flex;justify-content:center;gap:16px;margin-top:20px;font-size:12.5px}
+.links-cuenta a{color:#00B4B4;text-decoration:none;font-weight:700}
 .confeti-pieza{position:fixed;top:-10px;width:9px;height:14px;z-index:999;pointer-events:none;animation:caerConfeti linear forwards}
 @keyframes caerConfeti{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:.9}}
 </style>
@@ -40,8 +46,8 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 
 <div class="hero">
   <div class="hero-label">🐾 23 de septiembre — Día del Perro Adoptado</div>
-  <div class="hero-title">Ruleta del Perro Adoptado</div>
-  <div class="hero-sub">Un giro especial para celebrar a las familias que adoptaron</div>
+  <div class="hero-title">Abre tu Regalo</div>
+  <div class="hero-sub">Un regalo especial para celebrar a las familias que adoptaron</div>
 </div>
 
 <div class="wrap" id="contenedor">
@@ -53,10 +59,10 @@ var sessionEmail = localStorage.getItem('petzid_email') || sessionStorage.getIte
 var miMascota = null;
 
 var PREMIOS_INFO = {
-  q100:            { emoji:'💵', nombre:'¡Q100 en efectivo!',        detalle:'Te vamos a contactar por WhatsApp para coordinar la entrega.', angulo:45 },
-  descuento25:     { emoji:'🎉', nombre:'25% de descuento',          detalle:'Válido en tu próxima compra en la Tienda PetMi. Usa el código al pagar.', angulo:135 },
-  descuento15:     { emoji:'✨', nombre:'15% de descuento',          detalle:'Válido en tu próxima compra en la Tienda PetMi. Usa el código al pagar.', angulo:225 },
-  bano_cortesia:   { emoji:'🛁', nombre:'¡Baño de cortesía en Wazu!', detalle:'Te vamos a contactar por WhatsApp para coordinar tu cita.', angulo:315 }
+  q100:            { emoji:'💵', nombre:'¡Q100 en efectivo!',        detalle:'Te vamos a contactar por WhatsApp para coordinar la entrega.' },
+  descuento25:     { emoji:'🎉', nombre:'25% de descuento',          detalle:'Válido en tu próxima compra en la Tienda PetMi. Usa el código al pagar.' },
+  descuento15:     { emoji:'✨', nombre:'15% de descuento',          detalle:'Válido en tu próxima compra en la Tienda PetMi. Usa el código al pagar.' },
+  bano_cortesia:   { emoji:'🛁', nombre:'¡Baño de cortesía en Wazu!', detalle:'Te vamos a contactar por WhatsApp para coordinar tu cita.' }
 };
 
 function iniciar(){
@@ -70,7 +76,9 @@ function iniciar(){
       var mascotas = (d && d.mascotas) || [];
       miMascota = mascotas.find(function(m){ return m.adoptado; }) || null;
       if(!miMascota){
-        document.getElementById('contenedor').innerHTML = '<div class="aviso">Esta ruleta es exclusiva para familias con una mascota marcada como <b>adoptada</b>. Si tu peludito fue adoptado y no lo marcaste al registrarte, edítalo desde su perfil.</div>';
+        var primeraMascota = mascotas[0];
+        var linkEditar = primeraMascota ? ('/editar.html?uid=' + primeraMascota.uid) : '/familia.html';
+        document.getElementById('contenedor').innerHTML = '<div class="aviso">Este regalo es exclusivo para familias con una mascota marcada como <b>adoptada</b>. Si tu peludito fue adoptado y no lo marcaste al registrarte, puedes editarlo aquí:<br><br><a href="'+linkEditar+'" style="color:#8a6200;font-weight:700;text-decoration:underline">✏️ Editar perfil de mi mascota</a></div>';
         return;
       }
       render();
@@ -81,24 +89,26 @@ function iniciar(){
 
 function render(){
   document.getElementById('contenedor').innerHTML =
-    '<div class="rueda-wrap">'
-    + '<div class="puntero"></div>'
-    + '<div class="rueda" id="rueda">'
-    +   '<div class="rueda-etiqueta" style="top:26px;left:135px;transform:translateX(-50%)">💵 Q100</div>'
-    +   '<div class="rueda-etiqueta" style="top:135px;right:18px;transform:translateY(-50%)">🎉 25%</div>'
-    +   '<div class="rueda-etiqueta" style="bottom:26px;left:135px;transform:translateX(-50%)">✨ 15%</div>'
-    +   '<div class="rueda-etiqueta" style="top:135px;left:18px;transform:translateY(-50%)">🛁 Baño</div>'
+    '<div class="regalo-wrap" id="regaloWrap" onclick="abrirRegalo()">'
+    + '<div class="regalo" id="regaloEmoji">🎁</div>'
     + '</div>'
-    + '<div class="centro-rueda">🐾</div>'
-    + '</div>'
-    + '<button class="btn-girar" id="btnGirar" onclick="girar()">¡Girar la ruleta!</button>'
-    + '<div id="resultadoWrap"></div>';
+    + '<div class="toca-txt" id="tocaTxt">👆 Toca el regalo para abrirlo</div>'
+    + '<div class="resultado-card" id="resultadoCard"></div>'
+    + '<div class="links-cuenta">'
+    +   '<a href="/editar.html?uid='+miMascota.uid+'">✏️ Editar perfil</a>'
+    +   '<a href="/familia.html">👨‍👩‍👧‍👦 Mi familia</a>'
+    + '</div>';
 }
 
-function girar(){
-  var btn = document.getElementById('btnGirar');
-  btn.disabled = true;
-  btn.textContent = 'Girando...';
+var yaAbriendo = false;
+function abrirRegalo(){
+  if(yaAbriendo) return;
+  yaAbriendo = true;
+  var regalo = document.getElementById('regaloEmoji');
+  var wrap = document.getElementById('regaloWrap');
+  document.getElementById('tocaTxt').textContent = 'Abriendo...';
+  regalo.classList.add('temblando');
+  wrap.style.pointerEvents = 'none';
 
   fetch('/api/galeria?action=girarRuletaAdoptado', {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -106,37 +116,38 @@ function girar(){
   }).then(function(r){return r.json();})
   .then(function(d){
     if(!d.ok){
-      alert(d.error || 'No se pudo girar la ruleta.');
-      btn.disabled = false;
-      btn.textContent = '¡Girar la ruleta!';
+      alert(d.error || 'No se pudo abrir el regalo.');
+      regalo.classList.remove('temblando');
+      document.getElementById('tocaTxt').textContent = '👆 Toca el regalo para abrirlo';
+      wrap.style.pointerEvents = 'auto';
+      yaAbriendo = false;
       return;
     }
-    var info = PREMIOS_INFO[d.premio];
-    var vueltas = 5;
-    var anguloFinal = (360 * vueltas) + (360 - info.angulo);
-    document.getElementById('rueda').style.transform = 'rotate(' + anguloFinal + 'deg)';
-
     setTimeout(function(){
-      mostrarResultado(info, d.codigo);
+      regalo.classList.remove('temblando');
+      regalo.classList.add('abierto');
+      document.getElementById('tocaTxt').style.display = 'none';
+      mostrarResultado(PREMIOS_INFO[d.premio], d.codigo);
       lanzarConfeti();
-    }, 4300);
+    }, 900);
   }).catch(function(){
     alert('Error de conexión. Intenta de nuevo.');
-    btn.disabled = false;
-    btn.textContent = '¡Girar la ruleta!';
+    regalo.classList.remove('temblando');
+    document.getElementById('tocaTxt').textContent = '👆 Toca el regalo para abrirlo';
+    wrap.style.pointerEvents = 'auto';
+    yaAbriendo = false;
   });
 }
 
 function mostrarResultado(info, codigo){
-  document.getElementById('btnGirar').style.display = 'none';
   var codigoHtml = codigo ? '<div class="resultado-codigo">'+codigo+'</div><div style="font-size:11.5px;color:#aaa;margin-top:8px">Pégalo en el campo de cupón al pagar en la Tienda</div>' : '';
-  document.getElementById('resultadoWrap').innerHTML =
-    '<div class="resultado-card">'
-    + '<div class="resultado-emoji">'+info.emoji+'</div>'
+  var card = document.getElementById('resultadoCard');
+  card.innerHTML =
+    '<div class="resultado-emoji">'+info.emoji+'</div>'
     + '<div class="resultado-nombre">'+info.nombre+'</div>'
     + '<div class="resultado-sub">'+info.detalle+'</div>'
-    + codigoHtml
-    + '</div>';
+    + codigoHtml;
+  card.style.display = 'block';
 }
 
 function lanzarConfeti(){
@@ -156,5 +167,6 @@ function lanzarConfeti(){
 
 iniciar();
 </script>
+<script src="/header.js"></script>
 </body>
 </html>
