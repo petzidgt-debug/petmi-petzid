@@ -52,6 +52,7 @@
       // Desktop nav
       '.h-nav{display:flex;align-items:center;gap:2px}',
       '@media(max-width:768px){.h-nav{display:none}}',
+      '@media(min-width:769px){.h-search{display:none}}',
       '.h-link{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;font-size:13px;font-weight:600;color:#555;text-decoration:none;border:none;background:none;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif;transition:background .15s}',
       '.h-link:hover,.h-link.active{background:#e0f7f7;color:#00B4B4}',
       '.h-drop{position:relative}',
@@ -140,7 +141,6 @@
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
       '<a href="/buscar.html" class="h-link' + (currentPath.indexOf('buscar') >= 0 ? ' active' : '') + '">🔍 Buscar</a>' +
       '<a href="/tienda.html" class="h-link' + (currentPath.indexOf('tienda') >= 0 ? ' active' : '') + '">🛍️ Tienda</a>' +
-      '<a href="/QueEsPetmi.html" class="h-link" style="opacity:.6;font-size:12.5px">¿Qué es PetMi?</a>' +
       '';
     // ── Right: avatar o botones ──────────────────────────────
     var userInitials = sessionDueno
