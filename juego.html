@@ -61,7 +61,8 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 
 .game-toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#F5C842;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .game-toast.show{opacity:1}
-.raza-foto-card{position:fixed;right:16px;bottom:80px;width:160px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.2);overflow:hidden;z-index:500;transform:translateX(200px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);border:2px solid #00B4B4}
+.raza-foto-card{position:fixed;right:16px;bottom:80px;width:220px;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.2);overflow:hidden;z-index:500;transform:translateX(260px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);border:2px solid #00B4B4}
+.raza-foto-dato{padding:8px 10px 10px;font-size:11px;line-height:1.5;color:#555;background:#fff;text-align:left}
 .raza-foto-card.show{transform:translateX(0)}
 .raza-foto-card img{width:160px;height:120px;object-fit:cover;display:block}
 .raza-foto-name{padding:7px 10px;font-size:12px;font-weight:700;color:#007a7a;text-align:center;background:#e0f7f7}
@@ -135,8 +136,9 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 <div class="game-toast" id="gameToast"></div>
 <!-- Tarjeta foto de raza -->
 <div class="raza-foto-card" id="razaFotoCard">
-  <img id="razaFotoImg" src="" alt="" width="160" height="120">
+  <img id="razaFotoImg" src="" alt="" width="220" height="140" style="display:block;object-fit:cover">
   <div class="raza-foto-name" id="razaFotoName"></div>
+  <div class="raza-foto-dato" id="razaFotoDato"></div>
 </div>
 <script src="/header.js"></script>
 <script>
@@ -554,68 +556,68 @@ function mostrarToast(msg) {
 // Info de razas para tarjeta canvas (sin APIs externas)
 var RAZA_INFO = {
   // Perros
-  'GOLDEN': { tipo: 'perro', emoji: '🐕', color: '#F5C842', label: 'Golden Retriever' , foto: 'https://static.wixstatic.com/media/11a62b_67081e3d4c5f4d2c9eb0b6a7297ce498~mv2.png'},
-  'POODLE': { tipo: 'perro', emoji: '🐩', color: '#E8A0E8', label: 'Poodle', foto: 'https://static.wixstatic.com/media/11a62b_0fb22e2a28764d028f9232d7ff09905b~mv2.png'},
-  'BEAGLE': { tipo: 'perro', emoji: '🐕', color: '#D4A574', label: 'Beagle', foto: 'https://static.wixstatic.com/media/11a62b_3123d3b257314161b6e86a52e3dd23a9~mv2.png'},
-  'HUSKY': { tipo: 'perro', emoji: '🐺', color: '#7BAFD4', label: 'Husky Siberiano', foto: 'https://static.wixstatic.com/media/11a62b_d371529105c5411c93f4c32090765787~mv2.png'},
-  'BOXER': { tipo: 'perro', emoji: '🐕', color: '#C4845C', label: 'Boxer', foto: 'https://static.wixstatic.com/media/11a62b_1418221184c34724acd9fdd430d63c47~mv2.png'},
-  'LABRADOR': { tipo: 'perro', emoji: '🐕', color: '#D4A030', label: 'Labrador', foto: 'https://static.wixstatic.com/media/11a62b_aa9a8516a51840149c48972622d343f7~mv2.png'},
-  'PITBULL': { tipo: 'perro', emoji: '🐕', color: '#8BA888', label: 'Pitbull', foto: 'https://static.wixstatic.com/media/11a62b_df3627a3b0b246508fc918cc33f35de8~mv2.png'},
-  'SCHNAUZER': { tipo: 'perro', emoji: '🐕', color: '#888888', label: 'Schnauzer', foto: 'https://static.wixstatic.com/media/11a62b_dffe8741de6f43529747075f9eccc7f1~mv2.png'},
-  'MALTESE': { tipo: 'perro', emoji: '🐩', color: '#F0E8D0', label: 'Maltese', foto: 'https://static.wixstatic.com/media/11a62b_e936c581c68b4eca9d5407da57c6203a~mv2.png'},
-  'CHIHUAHUA': { tipo: 'perro', emoji: '🐕', color: '#D4A870', label: 'Chihuahua', foto: 'https://static.wixstatic.com/media/11a62b_a9bbc0a1d7574ff398835b3b5f3f4903~mv2.png'},
-  'SHIH': { tipo: 'perro', emoji: '🐩', color: '#D4B896', label: 'Shih Tzu', foto: 'https://static.wixstatic.com/media/11a62b_3b638388073f4905bf9106d87bbb0ffb~mv2.png'},
-  'BULLDOG': { tipo: 'perro', emoji: '🐕', color: '#C4A870', label: 'Bulldog', foto: 'https://static.wixstatic.com/media/11a62b_0ab8dd2eed914bb087244d148f1afd0e~mv2.png'},
-  'DACHSHUND': { tipo: 'perro', emoji: '🌭', color: '#C47840', label: 'Dachshund', foto: 'https://static.wixstatic.com/media/11a62b_5dcbf02fbc7344beba23435e525b9be9~mv2.png'},
-  'COLLIE': { tipo: 'perro', emoji: '🐕', color: '#D4A020', label: 'Collie', foto: 'https://static.wixstatic.com/media/11a62b_bb10f773dfc84469a99744c4639e2b16~mv2.png'},
-  'SETTER': { tipo: 'perro', emoji: '🐕', color: '#C84C20', label: 'Irish Setter', foto: 'https://static.wixstatic.com/media/11a62b_a601dbf4526048b886d46e1c7ec76efd~mv2.png'},
-  'CORGI': { tipo: 'perro', emoji: '🦊', color: '#E87830', label: 'Corgi', foto: 'https://static.wixstatic.com/media/11a62b_32a7eb11b5c24b148baa59054a63018a~mv2.png'},
-  'CHOW': { tipo: 'perro', emoji: '🦁', color: '#C07830', label: 'Chow Chow', foto: 'https://static.wixstatic.com/media/11a62b_64873bf9a4b64cb7ac695cf55e18bc36~mv2.png'},
-  'DOBERMAN': { tipo: 'perro', emoji: '🐕', color: '#402010', label: 'Doberman', foto: 'https://static.wixstatic.com/media/11a62b_b25a29ef890f4d67b9ff283dc6e29834~mv2.png'},
-  'AKITA': { tipo: 'perro', emoji: '🐕', color: '#E8B060', label: 'Akita', foto: 'https://static.wixstatic.com/media/11a62b_b569e5729de747d0a936d61167f4c4e7~mv2.png'},
-  'SAMOYED': { tipo: 'perro', emoji: '🐑', color: '#F0F0F0', label: 'Samoyed', foto: 'https://static.wixstatic.com/media/11a62b_0992ddb5de884aed8f2e93902b739960~mv2.png'},
-  'VIZSLA': { tipo: 'perro', emoji: '🐕', color: '#C07040', label: 'Vizsla' },
-  'PAPILLON': { tipo: 'perro', emoji: '🦋', color: '#F0D080', label: 'Papillon' , foto: 'https://static.wixstatic.com/media/11a62b_c9874289840b452aa635c59af449a7af~mv2.png'},
-  'BASENJI': { tipo: 'perro', emoji: '🐕', color: '#C86030', label: 'Basenji' , foto: 'https://static.wixstatic.com/media/11a62b_367ffbfcec674ef791ceaab08e1b0a7f~mv2.png'},
-  'BORZOI': { tipo: 'perro', emoji: '🐕', color: '#E8D8C0', label: 'Borzoi' , foto: 'https://static.wixstatic.com/media/11a62b_13c224eeaa364763a686124b491d90d9~mv2.png'},
-  'SALUKI': { tipo: 'perro', emoji: '🐕', color: '#D4A870', label: 'Saluki' , foto: 'https://static.wixstatic.com/media/11a62b_f3d1cb866f534284a33fb906d9644e8f~mv2.jpg'},
-  'RIDGEBACK': { tipo: 'perro', emoji: '🐕', color: '#B86040', label: 'Ridgeback' },
-  'WEIMARANER': { tipo: 'perro', emoji: '🐕', color: '#9090A0', label: 'Weimaraner', foto: 'https://static.wixstatic.com/media/11a62b_e8d00cd4511c45598d171a978baeb74a~mv2.png'},
-  'POINTER': { tipo: 'perro', emoji: '🐕', color: '#D0C090', label: 'Pointer', foto: 'https://static.wixstatic.com/media/11a62b_6fea3c23b8034fd7ba278d26ff74f860~mv2.png'},
-  'SPANIEL': { tipo: 'perro', emoji: '🐕', color: '#C07830', label: 'Cocker Spaniel', foto: 'https://static.wixstatic.com/media/11a62b_c624d2b893e4452a9e8cd743f608b531~mv2.png'},
-  'WESTIE': { tipo: 'perro', emoji: '🐕', color: '#F0F0E8', label: 'West Highland Terrier', foto: 'https://static.wixstatic.com/media/11a62b_8b6b2410985b4a23ae1016794689392c~mv2.png'},
-  'BOSTON': { tipo: 'perro', emoji: '🐕', color: '#202020', label: 'Boston Terrier', foto: 'https://static.wixstatic.com/media/11a62b_9a2ee06653f845d2a21cff203e8cec7a~mv2.png'},
-  'BRIARD': { tipo: 'perro', emoji: '🐕', color: '#706040', label: 'Briard', foto: 'https://static.wixstatic.com/media/11a62b_1de7ada355df499dbbb931c3467471d4~mv2.png'},
-  'KELPIE': { tipo: 'perro', emoji: '🐕', color: '#804020', label: 'Kelpie', foto: 'https://static.wixstatic.com/media/11a62b_bb2dc345bd2d45a6a899b3538cd75198~mv2.png'},
-  'KOMONDOR': { tipo: 'perro', emoji: '🧶', color: '#E8E8E0', label: 'Komondor', foto: 'https://static.wixstatic.com/media/11a62b_4276d0f1031049e18960b9d19573470b~mv2.png'},
+  'GOLDEN': { tipo: 'perro', emoji: '🐕', color: '#F5C842', label: 'Golden Retriever' , foto: 'https://static.wixstatic.com/media/11a62b_67081e3d4c5f4d2c9eb0b6a7297ce498~mv2.png', dato: 'Es una de las razas más usadas como perro guía y de terapia, gracias a su paciencia y temperamento amable.'},
+  'POODLE': { tipo: 'perro', emoji: '🐩', color: '#E8A0E8', label: 'Poodle', foto: 'https://static.wixstatic.com/media/11a62b_0fb22e2a28764d028f9232d7ff09905b~mv2.png', dato: 'Su corte de pelo tradicional no es solo estético — originalmente protegía las articulaciones al nadar en aguas frías.'},
+  'BEAGLE': { tipo: 'perro', emoji: '🐕', color: '#D4A574', label: 'Beagle', foto: 'https://static.wixstatic.com/media/11a62b_3123d3b257314161b6e86a52e3dd23a9~mv2.png', dato: 'Tiene uno de los mejores olfatos entre los perros — se usa en aeropuertos para detectar alimentos prohibidos.'},
+  'HUSKY': { tipo: 'perro', emoji: '🐺', color: '#7BAFD4', label: 'Husky Siberiano', foto: 'https://static.wixstatic.com/media/11a62b_d371529105c5411c93f4c32090765787~mv2.png', dato: 'Sus ojos pueden ser azules, marrones, o incluso uno de cada color — una condición llamada heterocromía.'},
+  'BOXER': { tipo: 'perro', emoji: '🐕', color: '#C4845C', label: 'Boxer', foto: 'https://static.wixstatic.com/media/11a62b_1418221184c34724acd9fdd430d63c47~mv2.png', dato: 'Le encanta "boxear" con las patas delanteras al jugar — de ahí viene su nombre.'},
+  'LABRADOR': { tipo: 'perro', emoji: '🐕', color: '#D4A030', label: 'Labrador', foto: 'https://static.wixstatic.com/media/11a62b_aa9a8516a51840149c48972622d343f7~mv2.png', dato: 'Es la raza más popular en muchos países — su temperamento amigable la hace ideal como perro de familia y de servicio.'},
+  'PITBULL': { tipo: 'perro', emoji: '🐕', color: '#8BA888', label: 'Pitbull', foto: 'https://static.wixstatic.com/media/11a62b_df3627a3b0b246508fc918cc33f35de8~mv2.png', dato: 'A pesar de su fama, estudios de temperamento muestran que suelen ser cariñosos y buenos con las familias cuando se crían bien.'},
+  'SCHNAUZER': { tipo: 'perro', emoji: '🐕', color: '#888888', label: 'Schnauzer', foto: 'https://static.wixstatic.com/media/11a62b_dffe8741de6f43529747075f9eccc7f1~mv2.png', dato: 'Su nombre viene del alemán "Schnauze" (hocico), por su característico bigote y barba.'},
+  'MALTESE': { tipo: 'perro', emoji: '🐩', color: '#F0E8D0', label: 'Maltese', foto: 'https://static.wixstatic.com/media/11a62b_e936c581c68b4eca9d5407da57c6203a~mv2.png', dato: 'Es una de las razas de compañía más antiguas de Europa, con más de 2,000 años de historia documentada.'},
+  'CHIHUAHUA': { tipo: 'perro', emoji: '🐕', color: '#D4A870', label: 'Chihuahua', foto: 'https://static.wixstatic.com/media/11a62b_a9bbc0a1d7574ff398835b3b5f3f4903~mv2.png', dato: 'Es la raza de perro más pequeña del mundo, pero tiene una de las personalidades más grandes.'},
+  'SHIH': { tipo: 'perro', emoji: '🐩', color: '#D4B896', label: 'Shih Tzu', foto: 'https://static.wixstatic.com/media/11a62b_3b638388073f4905bf9106d87bbb0ffb~mv2.png', dato: 'El Shih Tzu era tan valorado en la corte imperial china que solo la realeza podía poseerlos.'},
+  'BULLDOG': { tipo: 'perro', emoji: '🐕', color: '#C4A870', label: 'Bulldog', foto: 'https://static.wixstatic.com/media/11a62b_0ab8dd2eed914bb087244d148f1afd0e~mv2.png', dato: 'Su cara arrugada y hocico corto originalmente ayudaban a respirar mientras sujetaba con fuerza durante el trabajo con toros.'},
+  'DACHSHUND': { tipo: 'perro', emoji: '🌭', color: '#C47840', label: 'Dachshund', foto: 'https://static.wixstatic.com/media/11a62b_5dcbf02fbc7344beba23435e525b9be9~mv2.png', dato: 'Su cuerpo alargado y patas cortas se diseñaron para perseguir tejones dentro de sus madrigueras.'},
+  'COLLIE': { tipo: 'perro', emoji: '🐕', color: '#D4A020', label: 'Collie', foto: 'https://static.wixstatic.com/media/11a62b_bb10f773dfc84469a99744c4639e2b16~mv2.png', dato: 'Lassie hizo famosa a esta raza, pero los Collies llevan siglos siendo pastores expertos en las tierras altas de Escocia.'},
+  'SETTER': { tipo: 'perro', emoji: '🐕', color: '#C84C20', label: 'Irish Setter', foto: 'https://static.wixstatic.com/media/11a62b_a601dbf4526048b886d46e1c7ec76efd~mv2.png', dato: 'Al detectar una presa, se agacha o "settea" en el suelo en vez de señalar de pie — de ahí su nombre.'},
+  'CORGI': { tipo: 'perro', emoji: '🦊', color: '#E87830', label: 'Corgi', foto: 'https://static.wixstatic.com/media/11a62b_32a7eb11b5c24b148baa59054a63018a~mv2.png', dato: 'Fueron los perros favoritos de la Reina Isabel II, quien llegó a tener más de 30 a lo largo de su vida.'},
+  'CHOW': { tipo: 'perro', emoji: '🦁', color: '#C07830', label: 'Chow Chow', foto: 'https://static.wixstatic.com/media/11a62b_64873bf9a4b64cb7ac695cf55e18bc36~mv2.png', dato: 'Es una de las pocas razas con la lengua azul-negra — un rasgo compartido solo con el Shar Pei.'},
+  'DOBERMAN': { tipo: 'perro', emoji: '🐕', color: '#402010', label: 'Doberman', foto: 'https://static.wixstatic.com/media/11a62b_b25a29ef890f4d67b9ff283dc6e29834~mv2.png', dato: 'Fue creado por un cobrador de impuestos alemán que quería un perro protector para acompañarlo en sus rondas.'},
+  'AKITA': { tipo: 'perro', emoji: '🐕', color: '#E8B060', label: 'Akita', foto: 'https://static.wixstatic.com/media/11a62b_b569e5729de747d0a936d61167f4c4e7~mv2.png', dato: 'En Japón, regalar una figura de Akita es un símbolo tradicional de buena salud y larga vida.'},
+  'SAMOYED': { tipo: 'perro', emoji: '🐑', color: '#F0F0F0', label: 'Samoyed', foto: 'https://static.wixstatic.com/media/11a62b_0992ddb5de884aed8f2e93902b739960~mv2.png', dato: 'Su famosa "sonrisa" no es casualidad — las comisuras curvadas de su boca evitan que babeen y se congelen los carámbanos.'},
+  'VIZSLA': { tipo: 'perro', emoji: '🐕', color: '#C07040', label: 'Vizsla' , dato: 'Es tan apegado a su familia que se le conoce como "perro velcro" por lo mucho que sigue a sus dueños por la casa.'},
+  'PAPILLON': { tipo: 'perro', emoji: '🦋', color: '#F0D080', label: 'Papillon' , foto: 'https://static.wixstatic.com/media/11a62b_c9874289840b452aa635c59af449a7af~mv2.png', dato: 'Su nombre significa "mariposa" en francés, por la forma de sus orejas grandes y erguidas.'},
+  'BASENJI': { tipo: 'perro', emoji: '🐕', color: '#C86030', label: 'Basenji' , foto: 'https://static.wixstatic.com/media/11a62b_367ffbfcec674ef791ceaab08e1b0a7f~mv2.png', dato: 'No ladra — el Basenji es conocido como "el perro que no ladra" porque hace un sonido único parecido a un yodel.'},
+  'BORZOI': { tipo: 'perro', emoji: '🐕', color: '#E8D8C0', label: 'Borzoi' , foto: 'https://static.wixstatic.com/media/11a62b_13c224eeaa364763a686124b491d90d9~mv2.png', dato: 'Antiguamente era un perro de caza de la nobleza rusa, usado para perseguir lobos en la nieve.'},
+  'SALUKI': { tipo: 'perro', emoji: '🐕', color: '#D4A870', label: 'Saluki' , foto: 'https://static.wixstatic.com/media/11a62b_f3d1cb866f534284a33fb906d9644e8f~mv2.jpg', dato: 'Se le considera una de las razas de perro más antiguas del mundo, representada en arte egipcio hace más de 5,000 años.'},
+  'RIDGEBACK': { tipo: 'perro', emoji: '🐕', color: '#B86040', label: 'Ridgeback' , dato: 'El Rhodesian Ridgeback tiene una franja de pelo que crece en dirección contraria a lo largo del lomo.'},
+  'WEIMARANER': { tipo: 'perro', emoji: '🐕', color: '#9090A0', label: 'Weimaraner', foto: 'https://static.wixstatic.com/media/11a62b_e8d00cd4511c45598d171a978baeb74a~mv2.png', dato: 'Sus llamativos ojos color ámbar o gris azulado le valieron el apodo de "fantasma gris".'},
+  'POINTER': { tipo: 'perro', emoji: '🐕', color: '#D0C090', label: 'Pointer', foto: 'https://static.wixstatic.com/media/11a62b_6fea3c23b8034fd7ba278d26ff74f860~mv2.png', dato: 'Se queda completamente inmóvil, "señalando" con el cuerpo, cuando detecta una presa — de ahí su nombre.'},
+  'SPANIEL': { tipo: 'perro', emoji: '🐕', color: '#C07830', label: 'Cocker Spaniel', foto: 'https://static.wixstatic.com/media/11a62b_c624d2b893e4452a9e8cd743f608b531~mv2.png', dato: 'Los Spaniels llevan siglos usándose para levantar aves durante la cacería, gracias a su gran energía y olfato.'},
+  'WESTIE': { tipo: 'perro', emoji: '🐕', color: '#F0F0E8', label: 'West Highland Terrier', foto: 'https://static.wixstatic.com/media/11a62b_8b6b2410985b4a23ae1016794689392c~mv2.png', dato: 'El West Highland White Terrier fue criado deliberadamente de color blanco para distinguirlo fácil de las presas durante la caza.'},
+  'BOSTON': { tipo: 'perro', emoji: '🐕', color: '#202020', label: 'Boston Terrier', foto: 'https://static.wixstatic.com/media/11a62b_9a2ee06653f845d2a21cff203e8cec7a~mv2.png', dato: 'El Boston Terrier es una de las pocas razas originarias de Estados Unidos — nació en Boston en el siglo XIX.'},
+  'BRIARD': { tipo: 'perro', emoji: '🐕', color: '#706040', label: 'Briard', foto: 'https://static.wixstatic.com/media/11a62b_1de7ada355df499dbbb931c3467471d4~mv2.png', dato: 'Tiene una doble garra en cada pata trasera — una característica única que ayudaba a identificarlo como perro pastor auténtico.'},
+  'KELPIE': { tipo: 'perro', emoji: '🐕', color: '#804020', label: 'Kelpie', foto: 'https://static.wixstatic.com/media/11a62b_bb2dc345bd2d45a6a899b3538cd75198~mv2.png', dato: 'Puede caminar sobre el lomo de las ovejas para moverse más rápido entre el rebaño mientras las arrea.'},
+  'KOMONDOR': { tipo: 'perro', emoji: '🧶', color: '#E8E8E0', label: 'Komondor', foto: 'https://static.wixstatic.com/media/11a62b_4276d0f1031049e18960b9d19573470b~mv2.png', dato: 'Su pelaje forma rastas naturales que lo protegían de los lobos mientras cuidaba rebaños en Hungría.'},
   // Gatos
-  'SIAMES': { tipo: 'gato', emoji: '🐱', color: '#B0C4DE', label: 'Siamés', foto: 'https://static.wixstatic.com/media/11a62b_a680a78b6ca149e8ab6357014121f641~mv2.png'},
-  'PERSA': { tipo: 'gato', emoji: '😺', color: '#FFFFFF', label: 'Persa', foto: 'https://static.wixstatic.com/media/11a62b_5fb24e50ab224e84ace41673bdeac629~mv2.png'},
-  'RAGDOLL': { tipo: 'gato', emoji: '🐱', color: '#D0B8C8', label: 'Ragdoll', foto: 'https://static.wixstatic.com/media/11a62b_c8f519ccd17846d48f26e1a2a628704b~mv2.png'},
-  'BENGAL': { tipo: 'gato', emoji: '🐆', color: '#C8A850', label: 'Bengalí', foto: 'https://static.wixstatic.com/media/11a62b_df570f3075a34dac90fddfc40318c54e~mv2.png'},
-  'SPHYNX': { tipo: 'gato', emoji: '🐱', color: '#D4A882', label: 'Sphynx' },
-  'MAINE': { tipo: 'gato', emoji: '🦁', color: '#A06830', label: 'Maine Coon', foto: 'https://static.wixstatic.com/media/11a62b_fa60da3f1bfc4d37b71cba0e6300c79c~mv2.png'},
-  'ABISINIO': { tipo: 'gato', emoji: '🐱', color: '#C87040', label: 'Abisinio', foto: 'https://static.wixstatic.com/media/11a62b_576b9591ce094678a79cbeea2eb3bdb4~mv2.png'},
-  'BIRMAN': { tipo: 'gato', emoji: '🐱', color: '#F0E8D8', label: 'Birmano', foto: 'https://static.wixstatic.com/media/11a62b_b4a7a0263333418aac26e9175b183d00~mv2.png'},
-  'BURMESE': { tipo: 'gato', emoji: '🐱', color: '#806040', label: 'Burmés', foto: 'https://static.wixstatic.com/media/11a62b_3866877b01d44e64bc6b2d5ae7e198f1~mv2.png'},
-  'DEVON': { tipo: 'gato', emoji: '🐱', color: '#B8A0C0', label: 'Devon Rex', foto: 'https://static.wixstatic.com/media/11a62b_bfefcf48ec8840a184581ad87d0b89e0~mv2.png'},
-  'ANGORA': { tipo: 'gato', emoji: '🐱', color: '#F8F0E0', label: 'Angora', foto: 'https://static.wixstatic.com/media/11a62b_7de234ddeca74191810f259056d1c873~mv2.png'},
-  'BALINESE': { tipo: 'gato', emoji: '🐱', color: '#C8D8F0', label: 'Balinés', foto: 'https://static.wixstatic.com/media/11a62b_845e826a7ed643729845660a484eb624~mv2.png'},
-  'BOMBAY': { tipo: 'gato', emoji: '🐈‍⬛', color: '#202020', label: 'Bombay', foto: 'https://static.wixstatic.com/media/11a62b_e4c856cabcdd460c9653f6a6497f8d75~mv2.png'},
-  'MANX': { tipo: 'gato', emoji: '🐱', color: '#D0C0A8', label: 'Manx', foto: 'https://static.wixstatic.com/media/11a62b_7f0e4cfa08ec4461a195fba0ea6f3fc3~mv2.png'},
-  'SOMALI': { tipo: 'gato', emoji: '🦊', color: '#D07838', label: 'Somalí', foto: 'https://static.wixstatic.com/media/11a62b_c6d19c1e0f1040379aa484e92cc694ba~mv2.png'},
-  'KUVASZ': { tipo: 'perro', emoji: '🐕', color: '#F0EEE0', label: 'Kuvasz', foto: 'https://static.wixstatic.com/media/11a62b_aac67ab3460c4da7b250240cf4a98fd1~mv2.png'},
-  'PULI': { tipo: 'perro', emoji: '🧶', color: '#404040', label: 'Puli', foto: 'https://static.wixstatic.com/media/11a62b_dadbdea1cfa3479fb72a5368d658d64a~mv2.png'},
-  'LYKOI': { tipo: 'gato', emoji: '🐱', color: '#707070', label: 'Lykoi', foto: 'https://static.wixstatic.com/media/11a62b_875f9dcd8ad642cf9a96b5be6670bca0~mv2.png'},
-  'OCICAT': { tipo: 'gato', emoji: '🐆', color: '#D4A850', label: 'Ocicat', foto: 'https://static.wixstatic.com/media/11a62b_38da939ee854469188bd145cd7e8cac8~mv2.png'},
-  'PIXIEBOB': { tipo: 'gato', emoji: '🐱', color: '#C09060', label: 'Pixiebob', foto: 'https://static.wixstatic.com/media/11a62b_d50463c087cd437dbaeb2af2d88fc972~mv2.png'},
-  'RAGAMUFFIN': { tipo: 'gato', emoji: '😺', color: '#E0C8B0', label: 'Ragamuffin', foto: 'https://static.wixstatic.com/media/11a62b_07f572ade0a34517a0c604b81b4eaa6a~mv2.png'},
-  'TONKINESE': { tipo: 'gato', emoji: '🐱', color: '#90A8C0', label: 'Tonkinese', foto: 'https://static.wixstatic.com/media/11a62b_7437cb9d56c44092a4feeca9a208ee23~mv2.png'},
-  'PASTOR': { tipo: 'perro', emoji: '🐕', color: '#8B6914', label: 'Pastor Alemán', foto: 'https://static.wixstatic.com/media/11a62b_5481c212b02e4f5a87e5d107ee9b6da0~mv2.png'},
-  'GALGO': { tipo: 'perro', emoji: '🐕', color: '#C0A880', label: 'Galgo', foto: 'https://static.wixstatic.com/media/11a62b_0b7d08c1f06c4a1bb596490d72756767~mv2.png'},
-  'LEVRIERO': { tipo: 'perro', emoji: '🐕', color: '#B0A898', label: 'Levriero', foto: 'https://static.wixstatic.com/media/11a62b_541da5140b8e4d2b9b40f0f153fa0b6a~mv2.png'},
-  'PODENCO': { tipo: 'perro', emoji: '🦊', color: '#D08040', label: 'Podenco'},
-  'SEGUGIO': { tipo: 'perro', emoji: '🐕', color: '#C09060', label: 'Segugio', foto: 'https://static.wixstatic.com/media/11a62b_73a66689026543e08f26c775f43b3ee5~mv2.png'},
+  'SIAMES': { tipo: 'gato', emoji: '🐱', color: '#B0C4DE', label: 'Siamés', foto: 'https://static.wixstatic.com/media/11a62b_a680a78b6ca149e8ab6357014121f641~mv2.png', dato: 'Es una de las razas de gato más vocales — les encanta "conversar" con sus dueños en voz alta.'},
+  'PERSA': { tipo: 'gato', emoji: '😺', color: '#FFFFFF', label: 'Persa', foto: 'https://static.wixstatic.com/media/11a62b_5fb24e50ab224e84ace41673bdeac629~mv2.png', dato: 'Es una de las razas de gato más antiguas conocidas, apreciada por su pelaje largo desde hace siglos.'},
+  'RAGDOLL': { tipo: 'gato', emoji: '🐱', color: '#D0B8C8', label: 'Ragdoll', foto: 'https://static.wixstatic.com/media/11a62b_c8f519ccd17846d48f26e1a2a628704b~mv2.png', dato: 'Su nombre significa "muñeco de trapo" porque tiende a relajarse por completo cuando lo cargan.'},
+  'BENGAL': { tipo: 'gato', emoji: '🐆', color: '#C8A850', label: 'Bengalí', foto: 'https://static.wixstatic.com/media/11a62b_df570f3075a34dac90fddfc40318c54e~mv2.png', dato: 'Desciende del cruce entre gatos domésticos y el gato leopardo asiático salvaje — por eso su pelaje moteado.'},
+  'SPHYNX': { tipo: 'gato', emoji: '🐱', color: '#D4A882', label: 'Sphynx' , dato: 'Aunque parece no tener pelo, en realidad tiene una fina capa de vello — y necesita protector solar en días soleados.'},
+  'MAINE': { tipo: 'gato', emoji: '🦁', color: '#A06830', label: 'Maine Coon', foto: 'https://static.wixstatic.com/media/11a62b_fa60da3f1bfc4d37b71cba0e6300c79c~mv2.png', dato: 'El Maine Coon es una de las razas de gato más grandes — algunos llegan a pesar más de 8 kilos.'},
+  'ABISINIO': { tipo: 'gato', emoji: '🐱', color: '#C87040', label: 'Abisinio', foto: 'https://static.wixstatic.com/media/11a62b_576b9591ce094678a79cbeea2eb3bdb4~mv2.png', dato: 'Es una de las razas de gato más antiguas — su apariencia recuerda a los gatos venerados en el Antiguo Egipto.'},
+  'BIRMAN': { tipo: 'gato', emoji: '🐱', color: '#F0E8D8', label: 'Birmano', foto: 'https://static.wixstatic.com/media/11a62b_b4a7a0263333418aac26e9175b183d00~mv2.png', dato: 'Según la leyenda, sus patas blancas representan la pureza del alma de un sacerdote birmano.'},
+  'BURMESE': { tipo: 'gato', emoji: '🐱', color: '#806040', label: 'Burmés', foto: 'https://static.wixstatic.com/media/11a62b_3866877b01d44e64bc6b2d5ae7e198f1~mv2.png', dato: 'Se dice que desciende de un solo gato color chocolate llevado de Birmania a EE.UU. en los años 1930.'},
+  'DEVON': { tipo: 'gato', emoji: '🐱', color: '#B8A0C0', label: 'Devon Rex', foto: 'https://static.wixstatic.com/media/11a62b_bfefcf48ec8840a184581ad87d0b89e0~mv2.png', dato: 'El Devon Rex tiene bigotes cortos y rizados, y su pelaje suave se siente casi como gamuza.'},
+  'ANGORA': { tipo: 'gato', emoji: '🐱', color: '#F8F0E0', label: 'Angora', foto: 'https://static.wixstatic.com/media/11a62b_7de234ddeca74191810f259056d1c873~mv2.png', dato: 'El Angora turco es tan valorado en Turquía que el zoológico de Ankara mantiene su propio programa de cría.'},
+  'BALINESE': { tipo: 'gato', emoji: '🐱', color: '#C8D8F0', label: 'Balinés', foto: 'https://static.wixstatic.com/media/11a62b_845e826a7ed643729845660a484eb624~mv2.png', dato: 'A pesar del nombre, no es de Bali — es un Siamés de pelo largo que surgió por una mutación genética espontánea.'},
+  'BOMBAY': { tipo: 'gato', emoji: '🐈‍⬛', color: '#202020', label: 'Bombay', foto: 'https://static.wixstatic.com/media/11a62b_e4c856cabcdd460c9653f6a6497f8d75~mv2.png', dato: 'Fue creado para parecer una mini pantera negra — su pelaje brillante es su rasgo distintivo.'},
+  'MANX': { tipo: 'gato', emoji: '🐱', color: '#D0C0A8', label: 'Manx', foto: 'https://static.wixstatic.com/media/11a62b_7f0e4cfa08ec4461a195fba0ea6f3fc3~mv2.png', dato: 'Nace sin cola (o con una muy corta) debido a una mutación genética natural originaria de la Isla de Man.'},
+  'SOMALI': { tipo: 'gato', emoji: '🦊', color: '#D07838', label: 'Somalí', foto: 'https://static.wixstatic.com/media/11a62b_c6d19c1e0f1040379aa484e92cc694ba~mv2.png', dato: 'Es básicamente un Abisinio de pelo largo — la mutación apareció de forma natural dentro de la misma raza.'},
+  'KUVASZ': { tipo: 'perro', emoji: '🐕', color: '#F0EEE0', label: 'Kuvasz', foto: 'https://static.wixstatic.com/media/11a62b_aac67ab3460c4da7b250240cf4a98fd1~mv2.png', dato: 'Durante siglos fue el perro guardián preferido de la realeza húngara, criado exclusivamente para proteger.'},
+  'PULI': { tipo: 'perro', emoji: '🧶', color: '#404040', label: 'Puli', foto: 'https://static.wixstatic.com/media/11a62b_dadbdea1cfa3479fb72a5368d658d64a~mv2.png', dato: 'Su pelaje forma cordones naturales parecidos a rastas, que lo protegían del frío mientras pastoreaba en Hungría.'},
+  'LYKOI': { tipo: 'gato', emoji: '🐱', color: '#707070', label: 'Lykoi', foto: 'https://static.wixstatic.com/media/11a62b_875f9dcd8ad642cf9a96b5be6670bca0~mv2.png', dato: 'Se le conoce como "gato lobo" por su apariencia parcialmente calva y su parecido a un pequeño licántropo.'},
+  'OCICAT': { tipo: 'gato', emoji: '🐆', color: '#D4A850', label: 'Ocicat', foto: 'https://static.wixstatic.com/media/11a62b_38da939ee854469188bd145cd7e8cac8~mv2.png', dato: 'A pesar de su apariencia salvaje moteada, no tiene ancestros silvestres — es 100% gato doméstico.'},
+  'PIXIEBOB': { tipo: 'gato', emoji: '🐱', color: '#C09060', label: 'Pixiebob', foto: 'https://static.wixstatic.com/media/11a62b_d50463c087cd437dbaeb2af2d88fc972~mv2.png', dato: 'Se creó para parecer un pequeño lince americano, con orejas de mechones y cola corta.'},
+  'RAGAMUFFIN': { tipo: 'gato', emoji: '😺', color: '#E0C8B0', label: 'Ragamuffin', foto: 'https://static.wixstatic.com/media/11a62b_07f572ade0a34517a0c604b81b4eaa6a~mv2.png', dato: 'Es conocido por ser extremadamente dócil — muchos se desploman literalmente al ser cargados, de puro relajados.'},
+  'TONKINESE': { tipo: 'gato', emoji: '🐱', color: '#90A8C0', label: 'Tonkinese', foto: 'https://static.wixstatic.com/media/11a62b_7437cb9d56c44092a4feeca9a208ee23~mv2.png', dato: 'Es una mezcla entre Siamés y Burmese, combinando la vocalidad de uno con la ternura del otro.'},
+  'PASTOR': { tipo: 'perro', emoji: '🐕', color: '#8B6914', label: 'Pastor Alemán', foto: 'https://static.wixstatic.com/media/11a62b_5481c212b02e4f5a87e5d107ee9b6da0~mv2.png', dato: 'El Pastor Alemán es una de las razas más inteligentes del mundo, usada en trabajo policial, militar y de rescate.'},
+  'GALGO': { tipo: 'perro', emoji: '🐕', color: '#C0A880', label: 'Galgo', foto: 'https://static.wixstatic.com/media/11a62b_0b7d08c1f06c4a1bb596490d72756767~mv2.png', dato: 'El Galgo español puede alcanzar velocidades cercanas a las de un Greyhound, gracias a siglos de crianza para la caza.'},
+  'LEVRIERO': { tipo: 'perro', emoji: '🐕', color: '#B0A898', label: 'Levriero', foto: 'https://static.wixstatic.com/media/11a62b_541da5140b8e4d2b9b40f0f153fa0b6a~mv2.png', dato: 'El Levriero italiano es la versión más pequeña de los galgos, criado como compañero desde la antigua Roma.'},
+  'PODENCO': { tipo: 'perro', emoji: '🦊', color: '#D08040', label: 'Podenco', dato: 'Esta raza española de caza tiene un sentido del oído tan agudo que puede girar las orejas de forma independiente.'},
+  'SEGUGIO': { tipo: 'perro', emoji: '🐕', color: '#C09060', label: 'Segugio', foto: 'https://static.wixstatic.com/media/11a62b_73a66689026543e08f26c775f43b3ee5~mv2.png', dato: 'El Segugio italiano es una raza de caza con un olfato tan fino que se usa para rastrear jabalíes en terrenos difíciles.'},
 };
 
 var _fotoTimer = null;
@@ -629,11 +631,13 @@ function mostrarFotoRaza(raza) {
   if (!card || !img || !lbl) return;
 
   lbl.textContent = info.label;
+  var datoEl = document.getElementById('razaFotoDato');
+  if (datoEl) datoEl.textContent = info.dato || '';
 
   function showCard() {
     card.classList.add('show');
     clearTimeout(_fotoTimer);
-    _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 4000);
+    _fotoTimer = setTimeout(function() { card.classList.remove('show'); }, 6500);
   }
 
   // Si tiene foto real de Wix CDN — úsala
