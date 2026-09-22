@@ -1926,7 +1926,7 @@ function showScreen(name,el){
 
 // ── Carga de datos ────────────────────────────────────────────
 function loadData(){
-  fetch('/api/admin?action=getData')
+  fetch('/api/galeria?action=getData')
   .then(function(r){return r.json();})
   .then(function(d){
     allData=d.rows||[]; campanas=d.campanas||[];
