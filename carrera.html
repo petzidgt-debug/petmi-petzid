@@ -110,19 +110,37 @@ function elegirTalla(t){
   });
 }
 
+function comprimirImagen(file, callback){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var maxDim = 1000;
+      var w = img.width, h = img.height;
+      if (w > h && w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; }
+      else if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      callback(dataUrl.split(',')[1], 'image/jpeg', dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 function previsualizarFoto(input){
   var file = input.files[0];
   if(!file) return;
-  fotoMime = file.type;
-  var reader = new FileReader();
-  reader.onload = function(e){
-    fotoBase64 = e.target.result.split(',')[1];
+  comprimirImagen(file, function(base64, mime, dataUrl){
+    fotoBase64 = base64;
+    fotoMime = mime;
     var prev = document.getElementById('fotoPreview');
-    prev.src = e.target.result;
+    prev.src = dataUrl;
     prev.style.display = 'block';
     document.getElementById('fotoLabel').style.display = 'none';
-  };
-  reader.readAsDataURL(file);
+  });
 }
 
 async function subirFotoCloudinary(){

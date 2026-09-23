@@ -157,7 +157,7 @@ function cargarFamilia(email){
     renderFamilia();
   }).catch(function(){
     document.getElementById('mainContent').innerHTML =
-      '<div style="text-align:center;padding:60px;color:#888">Error al cargar. <a href="/galeria.html" style="color:#00B4B4">Volver</a></div>';
+      '<div style="text-align:center;padding:60px;color:#888">Error al cargar. <a href="/" style="color:#00B4B4">Volver</a></div>';
   });
 }
 function renderFamilia(){
@@ -310,7 +310,7 @@ function cerrarSesion(){
   localStorage.removeItem('petzid_email');
   localStorage.removeItem('petzid_dueno');
   sessionEmail = '';
-  window.location.href = '/galeria.html';
+  window.location.href = '/';
 }
 
 // ── Login ─────────────────────────────────────────────────────
@@ -409,12 +409,30 @@ function selRecompensaFam(tiene){
 
 function previsualizarFotoFam(input){
   var file=input.files[0];if(!file)return;
-  perdidoNuevaFotoMimeFam=file.type;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    perdidoNuevaFotoBase64Fam=e.target.result.split(',')[1];
-    document.getElementById('perdidoFotoPreviewFam').src=e.target.result;
+  comprimirImagenFam(file, function(base64, mime, dataUrl){
+    perdidoNuevaFotoBase64Fam = base64;
+    perdidoNuevaFotoMimeFam = mime;
+    document.getElementById('perdidoFotoPreviewFam').src=dataUrl;
     document.getElementById('perdidoFotoLabelFam').textContent='Toca para cambiar la foto';
+  });
+}
+
+function comprimirImagenFam(file, callback){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var maxDim = 1000;
+      var w = img.width, h = img.height;
+      if (w > h && w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; }
+      else if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      callback(dataUrl.split(',')[1], 'image/jpeg', dataUrl);
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
