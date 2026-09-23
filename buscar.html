@@ -50,7 +50,7 @@ if (!sessionEmail) {
     '<div class="login-wall">'
     + '<div style="font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:6px">Inicia sesión para usar el buscador</div>'
     + '<div style="font-size:13px;color:#888">Es una de las ventajas de tener tu cuenta PetMi activa.</div>'
-    + '<a href="/galeria.html">Ir a iniciar sesión</a>'
+    + '<a href="/">Ir a iniciar sesión</a>'
     + '</div>';
 } else {
   initBuscador();
@@ -84,7 +84,7 @@ function buscar(){
   fetch('/api/galeria?action=buscarContenido&q=' + encodeURIComponent(q) + '&email=' + encodeURIComponent(sessionEmail))
   .then(function(r){ return r.json(); })
   .then(function(d){
-    var salud = d.salud || [], lugares = d.lugares || [], blog = d.blog || [];
+    var salud = d.salud || [], lugares = d.lugares || [], blog = d.blog || [], destacado = d.destacado || null;
     var total = salud.length + lugares.length + blog.length;
 
     if(!total){
@@ -93,6 +93,15 @@ function buscar(){
     }
 
     var html = '';
+    if(destacado){
+      html += '<a href="'+destacado.link+'" target="_blank" style="display:block;text-decoration:none;background:linear-gradient(135deg,#1a1a2e,#00B4B4);border-radius:14px;padding:16px;margin-bottom:14px;color:#fff">'
+        + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><span style="font-size:15px">✨</span><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.85">Esto encontramos en PetMi</span></div>'
+        + '<div style="font-weight:800;font-size:14.5px;margin-bottom:6px">'+destacado.nombre+'</div>'
+        + '<div style="font-size:12.5px;line-height:1.7;opacity:.9">'+destacado.descripcion+'…</div>'
+        + '<div style="margin-top:10px;font-size:11.5px;color:#F5C842;font-weight:700">Leer artículo completo →</div>'
+        + '</a>';
+    }
+    var blogSinDestacado = destacado ? blog.slice(1) : blog;
     if(salud.length){
       html += '<div class="seccion-titulo">🩺 Salud preventiva</div>';
       html += salud.map(function(r){
@@ -113,9 +122,9 @@ function buscar(){
           + '</a>';
       }).join('');
     }
-    if(blog.length){
+    if(blogSinDestacado.length){
       html += '<div class="seccion-titulo">📖 Del blog</div>';
-      html += blog.map(function(p){
+      html += blogSinDestacado.map(function(p){
         return '<a class="resultado" href="'+p.link+'" target="_blank">'
           + '<div class="resultado-tag tag-blog">Artículo</div>'
           + '<div class="resultado-nombre">'+p.nombre+'</div>'
