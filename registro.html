@@ -209,8 +209,8 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
   <a href="https://www.revistapetmi.com" target="_blank" onclick="toggleMenu()">Blog</a>
   <a href="https://www.revistapetmi.com/home" target="_blank" onclick="toggleMenu()">Petmi ID</a>
   <a href="https://www.revistapetmi.com/category/all-products" target="_blank" onclick="toggleMenu()">Tienda</a>
-  <a href="/galeria.html" onclick="toggleMenu()">Miembros</a>
-  <a href="/galeria.html" class="btn-ingresar" onclick="toggleMenu()">Ingresar</a>
+  <a href="/" onclick="toggleMenu()">Miembros</a>
+  <a href="/" class="btn-ingresar" onclick="toggleMenu()">Ingresar</a>
 </div>
 
 <div class="card-bar" id="cardBar">
@@ -254,7 +254,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
 <div class="main">
 <div class="form-col">
   <div style="display:flex;align-items:center;padding:8px 0 4px">
-    <a href="/galeria.html" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#888;text-decoration:none;padding:6px 10px;border-radius:99px;background:#f5f5f5">
+    <a href="/" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#888;text-decoration:none;padding:6px 10px;border-radius:99px;background:#f5f5f5">
       ← Volver a la galería
     </a>
   </div>
@@ -408,7 +408,7 @@ input:checked+.tog-slider:before{transform:translateX(20px)}
         </button>
 
         <button class="btn-action btn-hermano" onclick="addSibling()">🐾 Agregar otra mascota</button>
-        <button class="btn-action btn-comunidad" onclick="window.location.href='/galeria.html'">🌟 Ver la comunidad PetzID</button>
+        <button class="btn-action btn-comunidad" onclick="window.location.href='/'">🌟 Ver la comunidad PetzID</button>
       </div>
     </div>
 
@@ -470,7 +470,7 @@ var editEmail=null;
   if(uidParam){
     modoEdicion=true;editUID=uidParam;
     var emailGuardado=localStorage.getItem('petzid_email');
-    if(!emailGuardado){window.location.href='/galeria.html';return;}
+    if(!emailGuardado){window.location.href='/';return;}
     editEmail=emailGuardado;
     fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:emailGuardado})})
       .then(function(r){return r.json();})
@@ -842,6 +842,24 @@ async function uploadToCloudinary(base64,mime){
   }catch(e){console.log('Cloudinary error:',e);return null;}
 }
 
+// Fotos nuevas suben a Wix Media Manager — Cloudinary llegó a su
+// límite de espacio del plan gratis hace rato. Las fotos viejas se
+// quedan en Cloudinary tal cual, sin tocarlas. (23 sep: restaurada —
+// esta función había desaparecido del archivo en algún punto y el
+// registro seguía mandando fotos a Cloudinary sin que nadie lo notara.)
+async function uploadToWix(base64,mime){
+  try{
+    var res=await fetch('/api/subir-foto',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ photoBase64: base64, mimeType: mime, fileName: 'mascota_'+Date.now()+'.jpg' })
+    });
+    var data=await res.json();
+    if(data.ok&&data.url)return data.url;
+    console.log('Wix upload error:',data.error);
+    return null;
+  }catch(e){console.log('Wix upload error:',e);return null;}
+}
+
 // Descargar el PNG generado localmente
 function descargarID(){
   if(!generatedPngBase64){
@@ -981,7 +999,7 @@ async function submitPetzID(){
   // Subir foto a Cloudinary
   if(photoBase64){
     showLoading('Subiendo foto de tu mascota','Casi listo...');
-    var fotoUrl=await uploadToCloudinary(photoBase64,photoMime||'image/jpeg');
+    var fotoUrl=await uploadToWix(photoBase64,photoMime||'image/jpeg');
     if(fotoUrl)payload.foto=fotoUrl;
   }
 
