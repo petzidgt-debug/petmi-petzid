@@ -552,7 +552,7 @@ export default async function handler(req, res) {
           _enviarPush(uid_receptor, {
             title: '🐾 Nueva solicitud de amistad',
             body: nombreSolicitante + ' quiere ser tu amigo en PetMi',
-            url: '/galeria.html'
+            url: '/'
           }, 'notif_amigos').catch(() => {});
         } catch(e) { console.error('Push solicitud amistad:', e.message); }
       }
@@ -620,7 +620,7 @@ export default async function handler(req, res) {
             _enviarPush(fila.uid_solicitante, {
               title: '🎉 ¡Solicitud aceptada!',
               body: nombreReceptor + ' aceptó tu solicitud de amistad',
-              url: '/galeria.html'
+              url: '/'
             }, 'notif_amigos').catch(() => {});
           }
         } catch(e) { console.error('Push solicitud aceptada:', e.message); }
@@ -1874,6 +1874,65 @@ export default async function handler(req, res) {
     }
 
     // ── getRuletaWazuGiros (Admin) ──────────────────────────────
+    // ── getProximoCuidado (21 sep) — calcula cuál es el recordatorio
+    // de salud más próximo para UNA mascota (para mostrarlo en la
+    // tarjeta de "Mis mascotas" del nuevo home). Misma lógica de
+    // reglas/registros que ya usa RecordatoriosSalud.gs para los
+    // correos — aquí solo se expone como consulta, sin mandar nada.
+    if (action === 'getProximoCuidado') {
+      try {
+        const uid = req.query.uid || '';
+        if (!uid) return res.status(200).json({ ok: false, error: 'Falta uid' });
+
+        const [rMasc, rReglas, rRegistros] = await Promise.all([
+          fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=uid,especie,tipo_pelo,fecha&limit=1', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }),
+          fetch(SUPABASE_URL + '/rest/v1/reglas_salud?activo=eq.true&select=*', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }),
+          fetch(SUPABASE_URL + '/rest/v1/registros_salud?uid_mascota=eq.' + encodeURIComponent(uid) + '&select=nombre_especifico,fecha_aplicacion&order=fecha_aplicacion.desc', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } })
+        ]);
+        const mascotaRows = await rMasc.json();
+        const reglas = await rReglas.json();
+        const registros = await rRegistros.json();
+        const m = mascotaRows && mascotaRows[0];
+        if (!m) return res.status(200).json({ ok: false, error: 'Mascota no encontrada' });
+
+        const ultimoPorRegla = {};
+        (registros || []).forEach(r => { if (!ultimoPorRegla[r.nombre_especifico]) ultimoPorRegla[r.nombre_especifico] = r.fecha_aplicacion; });
+
+        const edad = (() => {
+          if (!m.fecha) return null;
+          const f = new Date(m.fecha);
+          if (isNaN(f)) return null;
+          const h = new Date();
+          return (h.getFullYear() - f.getFullYear()) * 12 + (h.getMonth() - f.getMonth());
+        })();
+
+        let proximo = null;
+        (reglas || []).forEach(regla => {
+          const especieOk = regla.especie === 'Todos' || regla.especie === m.especie;
+          const peloOk = !regla.tipo_pelo || regla.tipo_pelo === m.tipo_pelo;
+          const edadMinOk = regla.edad_min_meses == null || edad == null || edad >= regla.edad_min_meses;
+          const edadMaxOk = regla.edad_max_meses == null || edad == null || edad <= regla.edad_max_meses;
+          if (!(especieOk && peloOk && edadMinOk && edadMaxOk)) return;
+
+          const ultimaFecha = ultimoPorRegla[regla.id] || ultimoPorRegla[regla.nombre];
+          if (!ultimaFecha) return;
+
+          const vence = new Date(ultimaFecha);
+          vence.setDate(vence.getDate() + Math.round((regla.frecuencia_meses || 0) * 30));
+
+          if (!proximo || vence < proximo.fechaObj) {
+            proximo = { tipo: regla.nombre, fechaObj: vence, fecha: vence.toISOString().split('T')[0], vencido: vence < new Date() };
+          }
+        });
+
+        if (!proximo) return res.status(200).json({ ok: true, tiene: false });
+        return res.status(200).json({ ok: true, tiene: true, tipo: proximo.tipo, fecha: proximo.fecha, vencido: proximo.vencido });
+      } catch (eProx) {
+        console.error('getProximoCuidado error:', eProx.message);
+        return res.status(200).json({ ok: false, error: 'Error consultando recordatorios' });
+      }
+    }
+
     if (action === 'getRuletaWazuGiros') {
       const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros?select=*&order=created_at.desc', {
         headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
@@ -2387,7 +2446,7 @@ export default async function handler(req, res) {
         .filter(x => x.score > 0)
         .sort((a, b) => b.score - a.score)
         .slice(0, 8)
-        .map(x => ({ tipo: 'salud', nombre: x.r.nombre, descripcion: x.r.descripcion || x.r.tip || '', especie: x.r.especie, link: '/calendario-vacunas.html' }));
+        .map(x => ({ tipo: 'salud', nombre: x.r.nombre, descripcion: x.r.descripcion || x.r.tip || '', especie: x.r.especie, link: '/salud.html' }));
 
       const lugaresMatches = (Array.isArray(lugares) ? lugares : [])
         .map(l => ({ l, score: puntaje([l.nombre, l.tipo, l.zona, l.direccion].join(' ')) }))
