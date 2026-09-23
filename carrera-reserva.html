@@ -72,11 +72,24 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 .mascota-opcion:hover{border-color:#00B4B4}
 .mascota-opcion img{width:40px;height:40px;border-radius:50%;object-fit:cover;background:#eee}
 .badge-verificado{display:inline-block;background:#E0F7F7;color:#006060;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;margin-bottom:14px}
+
+.loading-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center}
+.loading-modal.show{display:flex}
+.loading-box{background:#fff;border-radius:20px;padding:36px 28px;text-align:center;max-width:300px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.loading-box img{width:100px;height:100px;object-fit:contain;margin-bottom:16px}
 </style>
 </head>
 <body>
 
-<img class="hero-img" src="/img/flyer.jpeg" alt="Carrera Alas de Esperanza">
+<div class="loading-modal" id="loadingModal">
+  <div class="loading-box">
+    <img src="https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/loader.gif?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9hZGVyLmdpZiIsImlhdCI6MTc3OTM4MzQ3MywiZXhwIjoyMDk0NzQzNDczfQ.VXd4jKtCFv4TI7790vhPLKSyYUn5yJN4Bkf30PIXzuU" alt="Cargando">
+    <p id="loadingMsg" style="font-weight:900;color:#1a1a2e;margin-bottom:4px">Un momento...</p>
+    <span id="loadingHint" style="font-size:12.5px;color:#888">Esto tarda unos segundos...</span>
+  </div>
+</div>
+
+<img class="hero-img" src="/img/carrera-flyer.jpg" alt="Carrera Alas de Esperanza">
 
 <div class="banda-precio">
   <div class="q">🐾 Q25</div>
@@ -208,6 +221,14 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 </div>
 
 <script>
+function showLoading(msg, hint){
+  document.getElementById('loadingMsg').textContent = msg || 'Un momento...';
+  document.getElementById('loadingHint').textContent = hint || 'Esto tarda unos segundos...';
+  document.getElementById('loadingModal').classList.add('show');
+}
+function hideLoading(){
+  document.getElementById('loadingModal').classList.remove('show');
+}
 var tienePetzidVerificado = false;
 var uidPetzidVerificado = '';
 var mascotasEncontradas = [];
@@ -278,19 +299,39 @@ function seleccionarMascotaVerificada(i){
   irAPaso('pasoFormFinal');
 }
 
+// Comprime la imagen (max 1000px de lado, JPEG calidad 0.8) antes de
+// convertirla a base64 — evita que fotos de cámara (varios MB) superen
+// el límite de tamaño de petición de Vercel (~4.5MB) y fallen en silencio.
+function comprimirImagen(file, callback){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var maxDim = 1000;
+      var w = img.width, h = img.height;
+      if (w > h && w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; }
+      else if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      callback(dataUrl.split(',')[1], 'image/jpeg', dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 function previsualizarFotoCrear(ev){
   var file = ev.target.files[0];
   if(!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e){
-    var base64 = e.target.result.split(',')[1];
+  comprimirImagen(file, function(base64, mime, dataUrl){
     document.getElementById('crFotoBase64').value = base64;
-    document.getElementById('crFotoMime').value = file.type || 'image/jpeg';
+    document.getElementById('crFotoMime').value = mime;
     var img = document.getElementById('crFotoPreview');
-    img.src = e.target.result;
+    img.src = dataUrl;
     img.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
+  });
 }
 
 function crearPetzidYReservar(){
@@ -309,12 +350,17 @@ function crearPetzidYReservar(){
 
   var btn = document.getElementById('btnCrear');
   btn.disabled = true; btn.textContent = 'Creando...';
+  showLoading('Creando tu PetzID', 'Subiendo foto y guardando datos...');
 
   var fotoBase64 = document.getElementById('crFotoBase64').value;
   var fotoMime = document.getElementById('crFotoMime').value;
+  var fotoFallo = false;
 
   var subirFotoPromise = fotoBase64
-    ? fetch('/api/subir-foto', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ photoBase64: fotoBase64, mimeType: fotoMime, fileName: 'carrera_'+Date.now()+'.jpg' }) }).then(function(r){return r.json();}).then(function(d){ return d.ok ? d.url : ''; }).catch(function(){ return ''; })
+    ? fetch('/api/subir-foto', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ photoBase64: fotoBase64, mimeType: fotoMime, fileName: 'carrera_'+Date.now()+'.jpg' }) })
+        .then(function(r){return r.json();})
+        .then(function(d){ if(d.ok && d.url) return d.url; fotoFallo = true; return ''; })
+        .catch(function(){ fotoFallo = true; return ''; })
     : Promise.resolve('');
 
   subirFotoPromise.then(function(fotoUrl){
@@ -324,17 +370,25 @@ function crearPetzidYReservar(){
     });
   }).then(function(r){return r.json();})
   .then(function(d){
+    hideLoading();
     btn.disabled = false; btn.textContent = 'Crear PetzID y reservar';
     if(!d.ok){ err.textContent='No se pudo crear tu PetzID. Intenta de nuevo.'; err.style.display='block'; return; }
     tienePetzidVerificado = true;
     uidPetzidVerificado = d.uid || '';
     document.getElementById('badgeVerificado').style.display = 'inline-block';
+    if(fotoFallo){
+      var avisoFoto = document.createElement('div');
+      avisoFoto.style.cssText = 'background:#FFF3CD;color:#856404;font-size:11.5px;padding:10px 12px;border-radius:8px;margin-bottom:12px';
+      avisoFoto.textContent = 'Tu PetzID se creó bien, pero no pudimos subir la foto (problema de conexión). Puedes agregarla después editando el perfil.';
+      document.getElementById('badgeVerificado').insertAdjacentElement('afterend', avisoFoto);
+    }
     document.getElementById('inNombre').value = dueno;
     document.getElementById('inMascota').value = mascota;
     document.getElementById('inTelefono').value = whatsapp;
     document.getElementById('inEmail').value = email;
     irAPaso('pasoFormFinal');
   }).catch(function(){
+    hideLoading();
     btn.disabled = false; btn.textContent = 'Crear PetzID y reservar';
     err.textContent = 'Error de conexión. Intenta de nuevo.';
     err.style.display = 'block';
@@ -355,12 +409,14 @@ function reservar(){
   var btn = document.getElementById('btnReservar');
   btn.disabled = true;
   btn.textContent = 'Reservando...';
+  showLoading('Reservando tu bandana', 'Un momento...');
 
   fetch('/api/galeria?action=crearReservaCarrera', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ nombre: nombre, mascota: mascota, telefono: telefono, email: email, tienePetzid: tienePetzidVerificado, uidPetzid: uidPetzidVerificado })
   }).then(function(r){return r.json();})
   .then(function(d){
+    hideLoading();
     if(!d.ok){
       err.textContent = d.error || 'No se pudo completar la reserva.';
       err.style.display = 'block';
@@ -374,6 +430,7 @@ function reservar(){
     document.getElementById('codigoCupon').textContent = d.codigo;
     window.scrollTo(0,0);
   }).catch(function(){
+    hideLoading();
     err.textContent = 'Error de conexión. Intenta de nuevo.';
     err.style.display = 'block';
     btn.disabled = false;
