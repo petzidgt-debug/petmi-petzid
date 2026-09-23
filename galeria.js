@@ -2481,7 +2481,11 @@ export default async function handler(req, res) {
         body: JSON.stringify({ query: qOriginal, email: (req.query.email || '').toLowerCase() || null, resultados: totalResultados })
       }).catch(() => {});
 
-      return res.status(200).json({ salud: saludMatches, lugares: lugaresMatches, blog: blogMatches });
+      // Fragmento destacado (sin costo de API) — el artículo de blog
+      // con más coincidencias, resaltado como respuesta rápida.
+      const destacado = blogMatches.length ? blogMatches[0] : null;
+
+      return res.status(200).json({ salud: saludMatches, lugares: lugaresMatches, blog: blogMatches, destacado });
     }
 
     if (action === 'getBlogPosts') {
