@@ -88,6 +88,11 @@
       "source": "/favicon.ico",
       "destination": "/favico.jpg",
       "permanent": true
+    },
+    {
+      "source": "/galeria.html",
+      "destination": "/",
+      "permanent": false
     }
   ]
 }
