@@ -2060,7 +2060,7 @@ function renderTable(){
     +'<button class="btn-sm" style="font-size:10px" onclick="togglePremium('+idx+')">'+(String(r[31]||'')===String(true)||r[31]===true?'Quitar':'Dar')+'</button>'
     +'</span>'
     +'</td>'
-    +'<td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button><button class="btn-sm" style="background:#e5f9e5;color:#1a8a1a" onclick="contactarWhatsApp('+idx+')">💬 WA</button><button class="btn-sm" style="background:#fff4d6;color:#8a6200" onclick="contactarMensajeDirecto('+idx+')">✉️ Mensaje</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
+    +'<td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button>'+(!r[27]?'<button class="btn-sm" style="background:#fff0e0;color:#b35900" onclick="recordarFoto('+idx+')">📸 Recordar foto</button>':'')+'<button class="btn-sm" style="background:#e5f9e5;color:#1a8a1a" onclick="contactarWhatsApp('+idx+')">💬 WA</button><button class="btn-sm" style="background:#fff4d6;color:#8a6200" onclick="contactarMensajeDirecto('+idx+')">✉️ Mensaje</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
   }).join('');
   document.getElementById('tableBody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
 }
@@ -2273,6 +2273,26 @@ function eliminarMascota(idx){
 }
 
 // ── Contactar usuario directo (18 sep) ──────────────────────────
+function recordarFoto(idx){
+  var r=filtered[idx];
+  if(!r) return;
+  var nombreMasc=String(r[2]||'tu mascota');
+  var uid=String(r[1]||'').trim();
+  var email=String(r[11]||'').trim();
+  if(!uid){ alert('UID no encontrado'); return; }
+  if(!email){ alert('Esta mascota no tiene correo guardado.'); return; }
+  if(!confirm('¿Mandar correo recordando agregar la foto de '+nombreMasc+'?')) return;
+
+  fetch('/api/submit',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'recordatorioFoto', uid:uid})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok) alert('✅ Correo enviado.');
+    else alert('Error: '+(d.error||'No se pudo enviar.'));
+  }).catch(function(){ alert('Error de conexión.'); });
+}
+
 function contactarWhatsApp(idx){
   var r=filtered[idx];
   if(!r) return;
