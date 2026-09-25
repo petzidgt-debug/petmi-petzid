@@ -1773,6 +1773,31 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // ── marcarSorteoGanador (24 sep) — sorteo en vivo de la Carrera.
+    // Marca una reserva como ganadora de un premio específico, para
+    // que quede guardado (sobrevive un refresh de la página del sorteo).
+    if (action === 'marcarSorteoGanador' && req.method === 'POST') {
+      const { id, premio } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ es_ganador: true, premio_sorteo: premio || '' })
+      });
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── resetearSorteoCarrera (24 sep) — quita todos los ganadores
+    // marcados, para volver a correr el sorteo desde cero. ──────────
+    if (action === 'resetearSorteoCarrera' && req.method === 'POST') {
+      await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?es_ganador=eq.true', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ es_ganador: false, premio_sorteo: null })
+      });
+      return res.status(200).json({ ok: true });
+    }
+
     // ── eliminarReservaCarrera (Admin) ────────────────────────────
     if (action === 'eliminarReservaCarrera' && req.method === 'POST') {
       const { id } = req.body || {};
