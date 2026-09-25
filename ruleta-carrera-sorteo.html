@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Sorteo — Carrera Alas de Esperanza</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#0d0d1a;color:#fff;min-height:100vh}
+.login-wrap{max-width:340px;margin:80px auto;padding:24px;background:#fff;color:#1a1a2e;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.login-wrap input{width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;margin-bottom:12px}
+.login-wrap button{width:100%;padding:12px;background:#1a1a2e;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer}
+
+.wrap{max-width:720px;margin:0 auto;padding:40px 20px;text-align:center}
+.hero-title{font-size:28px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;margin-bottom:6px;background:linear-gradient(135deg,#F5C842,#E05090);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{color:#aaa;font-size:14px;margin-bottom:36px}
+
+.stage{background:linear-gradient(135deg,#1a1a2e,#2d1b4e);border-radius:24px;padding:40px 24px;margin-bottom:28px;box-shadow:0 0 60px rgba(245,200,66,.15);border:1px solid rgba(255,255,255,.08)}
+.premio-actual{font-size:12px;font-weight:700;color:#F5C842;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+.nombre-display{font-size:44px;font-weight:900;font-family:'Arial Black',Arial,sans-serif;min-height:60px;display:flex;align-items:center;justify-content:center;transition:transform .1s}
+.nombre-display.shuffling{color:#888}
+.nombre-display.ganador{color:#F5C842;text-shadow:0 0 30px rgba(245,200,66,.6);animation:pop .5s ease}
+@keyframes pop{0%{transform:scale(.7)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+.mascota-sub{font-size:15px;color:#ccc;margin-top:8px;min-height:22px}
+
+.btn-sortear{background:linear-gradient(135deg,#E05090,#F5C842);color:#1a1a2e;border:none;padding:18px 48px;border-radius:99px;font-weight:900;font-size:17px;cursor:pointer;box-shadow:0 6px 20px rgba(224,80,144,.4);transition:transform .15s}
+.btn-sortear:hover{transform:scale(1.04)}
+.btn-sortear:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+.ganadores-lista{margin-top:32px;text-align:left}
+.ganadores-titulo{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;text-align:center}
+.ganador-item{background:rgba(255,255,255,.06);border-radius:14px;padding:14px 18px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid #F5C842}
+.ganador-item .nombre{font-weight:800;font-size:15px}
+.ganador-item .mascota{font-size:12px;color:#aaa}
+.ganador-item .premio{font-size:12px;font-weight:700;color:#F5C842;text-align:right}
+
+.estado-vacio{color:#666;font-size:14px;padding:40px 20px}
+.btn-reset{background:none;border:1px solid #444;color:#888;padding:8px 18px;border-radius:99px;font-size:12px;cursor:pointer;margin-top:24px}
+</style>
+</head>
+<body>
+
+<div id="loginWrap" class="login-wrap">
+  <div style="font-weight:900;font-size:18px;margin-bottom:14px;text-align:center">🎉 Sorteo Carrera</div>
+  <input type="password" id="pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()">
+  <button onclick="login()">Entrar</button>
+</div>
+
+<div id="appWrap" class="wrap" style="display:none">
+  <div class="hero-title">🎉 Sorteo — Carrera Alas de Esperanza</div>
+  <div class="hero-sub">Alas de Esperanza — 4 de octubre</div>
+
+  <div class="stage">
+    <div class="premio-actual" id="premioActual">Presiona "Sortear" para empezar</div>
+    <div class="nombre-display" id="nombreDisplay">?</div>
+    <div class="mascota-sub" id="mascotaSub"></div>
+  </div>
+
+  <button class="btn-sortear" id="btnSortear" onclick="sortear()">🎲 Sortear ganador</button>
+
+  <div class="ganadores-lista">
+    <div class="ganadores-titulo">Ganadores</div>
+    <div id="ganadoresBody"><div class="estado-vacio">Todavía no hay ganadores</div></div>
+  </div>
+
+  <button class="btn-reset" onclick="resetearSorteo()">Reiniciar sorteo (borra todos los ganadores)</button>
+</div>
+
+<script>
+var PREMIOS = [
+  '🎟️ Pase doble',
+  '🎟️ Pase doble',
+  '🎟️ Pase doble',
+  '🎟️ Pase doble',
+  '🏆 Primer lugar — Pase + correa manos libres'
+];
+
+var reservas = [];
+var ganadores = [];
+var sorteando = false;
+
+function login(){
+  var v = document.getElementById('pass').value;
+  if(v === 'petmi2024'){
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('appWrap').style.display = 'block';
+    cargarReservas();
+  } else {
+    alert('Contraseña incorrecta');
+  }
+}
+
+function cargarReservas(){
+  fetch('/api/galeria?action=getCarreraReservas')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    reservas = d.reservas || [];
+    ganadores = reservas.filter(function(r){ return r.es_ganador; });
+    renderGanadores();
+    actualizarBotonSegunProgreso();
+  });
+}
+
+function disponibles(){
+  return reservas.filter(function(r){ return !r.es_ganador; });
+}
+
+function renderGanadores(){
+  var body = document.getElementById('ganadoresBody');
+  if(!ganadores.length){ body.innerHTML = '<div class="estado-vacio">Todavía no hay ganadores</div>'; return; }
+  body.innerHTML = ganadores.map(function(g){
+    return '<div class="ganador-item">'
+      + '<div><div class="nombre">'+g.nombre+'</div><div class="mascota">'+(g.nombre_mascota?'🐾 '+g.nombre_mascota:'')+'</div></div>'
+      + '<div class="premio">'+g.premio_sorteo+'</div>'
+      + '</div>';
+  }).join('');
+}
+
+function actualizarBotonSegunProgreso(){
+  var btn = document.getElementById('btnSortear');
+  if(ganadores.length >= PREMIOS.length){
+    btn.disabled = true;
+    btn.textContent = '🎉 ¡Sorteo completo!';
+    document.getElementById('premioActual').textContent = 'Todos los premios fueron entregados';
+    return;
+  }
+  if(!disponibles().length){
+    btn.disabled = true;
+    btn.textContent = 'No hay más reservas para sortear';
+  }
+}
+
+function sortear(){
+  if(sorteando) return;
+  var pool = disponibles();
+  if(!pool.length){ alert('No hay más reservas disponibles.'); return; }
+  if(ganadores.length >= PREMIOS.length){ return; }
+
+  sorteando = true;
+  var btn = document.getElementById('btnSortear');
+  btn.disabled = true;
+  var premio = PREMIOS[ganadores.length];
+  document.getElementById('premioActual').textContent = 'Sorteando: ' + premio;
+
+  var display = document.getElementById('nombreDisplay');
+  var sub = document.getElementById('mascotaSub');
+  display.classList.add('shuffling');
+  display.classList.remove('ganador');
+
+  var ganador = pool[Math.floor(Math.random() * pool.length)];
+
+  var vueltas = 0, maxVueltas = 22, delay = 60;
+  function tick(){
+    var r = pool[Math.floor(Math.random() * pool.length)];
+    display.textContent = r.nombre;
+    sub.textContent = r.nombre_mascota ? '🐾 ' + r.nombre_mascota : '';
+    vueltas++;
+    if(vueltas < maxVueltas){
+      delay = delay * 1.08;
+      setTimeout(tick, delay);
+    } else {
+      display.textContent = ganador.nombre;
+      sub.textContent = ganador.nombre_mascota ? '🐾 ' + ganador.nombre_mascota : '';
+      display.classList.remove('shuffling');
+      display.classList.add('ganador');
+      document.getElementById('premioActual').textContent = '¡Ganador de ' + premio + '!';
+
+      fetch('/api/galeria?action=marcarSorteoGanador', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ id: ganador.id, premio: premio })
+      }).then(function(){
+        ganador.es_ganador = true;
+        ganador.premio_sorteo = premio;
+        ganadores.push(ganador);
+        renderGanadores();
+        sorteando = false;
+        actualizarBotonSegunProgreso();
+        if(ganadores.length < PREMIOS.length) btn.disabled = false;
+      }).catch(function(){
+        sorteando = false;
+        btn.disabled = false;
+        alert('No se pudo guardar el resultado, pero puedes seguir — inténtalo de nuevo si algo se ve raro.');
+      });
+    }
+  }
+  tick();
+}
+
+function resetearSorteo(){
+  if(!confirm('¿Borrar TODOS los ganadores y empezar de cero?')) return;
+  fetch('/api/galeria?action=resetearSorteoCarrera', { method:'POST' })
+  .then(function(){ location.reload(); });
+}
+</script>
+</body>
+</html>
