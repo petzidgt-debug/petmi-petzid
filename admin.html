@@ -528,7 +528,7 @@ tbody tr:last-child td{border-bottom:none}
 
     <div id="screenReactivacion" class="screen">
       <h2 class="screen-title">📧 Efectividad de Reactivación</h2>
-      <p style="color:#888;font-size:13px;margin-bottom:16px">Por cada semana de la serie: cuántos correos se enviaron, y cuántos de esos usuarios volvieron a entrar después.</p>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Por cada campaña: cuántos correos se enviaron, y cuántos de esos usuarios volvieron a entrar después.</p>
       <div id="reactivacionResumen" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px"></div>
 
       <h2 class="screen-title" style="font-size:18px;margin-top:24px">🙌 Quiénes volvieron</h2>
@@ -542,7 +542,7 @@ tbody tr:last-child td{border-bottom:none}
       </div>
 
       <h2 class="screen-title" style="font-size:18px;margin-top:24px">😴 Nunca han vuelto</h2>
-      <p style="color:#888;font-size:13px;margin-bottom:16px">Registrados pero nunca volvieron a entrar desde que se dieron de alta. Incluye cuáles semanas de la serie de correos ya recibieron, y un link directo para escribirles por WhatsApp.</p>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Registrados pero nunca volvieron a entrar desde que se dieron de alta. Incluye cuáles campañas ya recibieron, y un link directo para escribirles por WhatsApp.</p>
       <div class="table-card">
         <div class="table-wrap">
           <table>
@@ -3127,15 +3127,16 @@ function loadNuncaHanVuelto(){
     });
     var emails = Object.keys(grupos);
 
-    // Cruzar contra reactivacion_envios para saber qué semanas ya recibió cada quien
-    fetch(SUPA_ADM + '/rest/v1/reactivacion_envios?email=in.(' + emails.map(function(e){return encodeURIComponent(e);}).join(',') + ')&select=email,semana', {headers: SUPA_ADM_H})
+    // Cruzar contra reactivacion_envios para saber qué campañas ya recibió cada quien
+    fetch(SUPA_ADM + '/rest/v1/reactivacion_envios?email=in.(' + emails.map(function(e){return encodeURIComponent(e);}).join(',') + ')&select=email,campana_id', {headers: SUPA_ADM_H})
     .then(function(r){return r.json();})
     .then(function(envios){
-      var semanasPorEmail = {};
+      var CAMPANA_NOMBRES = {reto_peludo:'Reto Peludo', salud:'Salud', perdido:'Perdido', puntos:'Puntos', tienda:'Tienda', alimentos:'Alimentos'};
+      var campanasPorEmail = {};
       (envios||[]).forEach(function(e){
         var k = (e.email||'').toLowerCase();
-        if(!semanasPorEmail[k]) semanasPorEmail[k] = [];
-        if(semanasPorEmail[k].indexOf(e.semana) === -1) semanasPorEmail[k].push(e.semana);
+        if(!campanasPorEmail[k]) campanasPorEmail[k] = [];
+        if(e.campana_id && campanasPorEmail[k].indexOf(e.campana_id) === -1) campanasPorEmail[k].push(e.campana_id);
       });
 
       var hoy = Date.now();
@@ -3146,9 +3147,9 @@ function loadNuncaHanVuelto(){
         var diasRegistrado = g.createdAt ? Math.floor((hoy - new Date(g.createdAt).getTime())/86400000) : null;
         var registradoTxt = diasRegistrado !== null ? (diasRegistrado===0?'Hoy':'Hace '+diasRegistrado+' día'+(diasRegistrado!==1?'s':'')) : '—';
 
-        var semanas = (semanasPorEmail[g.email]||[]).sort();
-        var semanasHtml = semanas.length
-          ? semanas.map(function(s){ return '<span style="background:#E0F7F7;color:#007a7a;border-radius:99px;padding:3px 9px;font-size:11px;margin:2px;display:inline-block">Sem '+s+'</span>'; }).join('')
+        var campanas = (campanasPorEmail[g.email]||[]).sort();
+        var semanasHtml = campanas.length
+          ? campanas.map(function(c){ return '<span style="background:#E0F7F7;color:#007a7a;border-radius:99px;padding:3px 9px;font-size:11px;margin:2px;display:inline-block">'+(CAMPANA_NOMBRES[c]||c)+'</span>'; }).join('')
           : '<span style="color:#c0392b;font-size:12px">Ninguno todavía</span>';
 
         var waHtml = '<span style="color:#bbb;font-size:12px">Sin WhatsApp</span>';
@@ -3181,11 +3182,11 @@ function loadNuncaHanVuelto(){
 
 function loadReactivacionEfectividad(){
   document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#aaa">Cargando...</div>';
-  fetch(SUPA_ADM + '/rest/v1/reactivacion_envios?select=email,semana,enviado_at&order=semana.asc', {headers: SUPA_ADM_H})
+  fetch(SUPA_ADM + '/rest/v1/reactivacion_envios?select=email,campana_id,enviado_at&campana_id=not.is.null&order=campana_id.asc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
   .then(function(envios){
     if(!Array.isArray(envios) || !envios.length){
-      document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#aaa">Aún no se ha enviado ninguna semana de la serie.</div>';
+      document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#aaa">Aún no se ha enviado ninguna campaña.</div>';
       return;
     }
     var emailsUnicos = [...new Set(envios.map(function(e){return e.email;}))];
@@ -3201,23 +3202,23 @@ function loadReactivacionEfectividad(){
         }
       });
 
-      var porSemana = {};
+      var porCampana = {};
       envios.forEach(function(e){
-        if(!porSemana[e.semana]) porSemana[e.semana] = [];
-        porSemana[e.semana].push(e);
+        if(!porCampana[e.campana_id]) porCampana[e.campana_id] = [];
+        porCampana[e.campana_id].push(e);
       });
 
-      var nombresSemana = {1:'Ruleta',2:'Beneficios',3:'Lugares',4:'Carnet/Puntos',5:'Trivia',6:'Juego'};
+      var CAMPANA_NOMBRES = {reto_peludo:'El Reto Peludo (juego)', salud:'Salud preventiva', perdido:'Perdido/Emergencia', puntos:'Puntos', tienda:'Tienda', alimentos:'Alimentos por marca'};
       var html = '';
-      Object.keys(porSemana).sort().forEach(function(semana){
-        var lista = porSemana[semana];
+      Object.keys(porCampana).sort().forEach(function(campanaId){
+        var lista = porCampana[campanaId];
         var volvieron = lista.filter(function(e){
           var ua = ultimaPorEmail[(e.email||'').toLowerCase()];
           return ua && new Date(ua) > new Date(e.enviado_at);
         }).length;
         var pct = lista.length ? Math.round((volvieron/lista.length)*100) : 0;
         html += '<div class="stat-card">'
-          + '<div style="font-size:11px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:6px">Semana '+semana+' — '+(nombresSemana[semana]||'')+'</div>'
+          + '<div style="font-size:11px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:6px">'+(CAMPANA_NOMBRES[campanaId]||campanaId)+'</div>'
           + '<div style="font-size:26px;font-weight:900;color:#1a1a2e">'+lista.length+'</div>'
           + '<div style="font-size:11px;color:#999;margin-bottom:8px">enviados</div>'
           + '<div style="font-size:13px;color:#00B4B4;font-weight:700">'+volvieron+' volvieron ('+pct+'%)</div>'
@@ -3231,10 +3232,10 @@ function loadReactivacionEfectividad(){
         var email = (e.email||'').toLowerCase();
         var ua = ultimaPorEmail[email];
         if (ua && new Date(ua) > new Date(e.enviado_at)) {
-          volvieronDetalle.push({ email: e.email, semana: e.semana, volvioEn: ua, enviadoAt: e.enviado_at });
+          volvieronDetalle.push({ email: e.email, campanaId: e.campana_id, volvioEn: ua, enviadoAt: e.enviado_at });
         }
       });
-      // Si alguien volvió más de una vez (varias semanas), dejar solo la primera
+      // Si alguien volvió más de una vez (varias campañas), dejar solo la primera
       var vistos = {};
       volvieronDetalle = volvieronDetalle.filter(function(v){
         var k = v.email.toLowerCase();
@@ -3272,12 +3273,12 @@ function loadReactivacionEfectividad(){
           var acciones = [...new Set(puntosPorEmail[k]||[])].map(function(a){ return accionLbl[a]||a; });
           var accionesHtml = acciones.length ? acciones.map(function(a){ return '<span style="background:#f0f0ee;border-radius:99px;padding:3px 9px;font-size:11px;margin:2px;display:inline-block">'+a+'</span>'; }).join('') : '<span style="color:#bbb;font-size:12px">Sin acciones registradas aún</span>';
           var premio = premioPorEmail[k] || '<span style="color:#bbb">No ha girado</span>';
-          return '<tr><td>'+v.email+'</td><td>Semana '+v.semana+'</td><td>'+fecha+'</td><td>'+premio+'</td><td>'+accionesHtml+'</td></tr>';
+          return '<tr><td>'+v.email+'</td><td>'+(CAMPANA_NOMBRES[v.campanaId]||v.campanaId)+'</td><td>'+fecha+'</td><td>'+premio+'</td><td>'+accionesHtml+'</td></tr>';
         }).join('');
       });
     });
   }).catch(function(){
-    document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#c0392b">Error al cargar — ¿corriste el SQL de reactivacion_envios?</div>';
+    document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#c0392b">Error al cargar — ¿corriste el SQL de campana_id?</div>';
   });
 }
 
