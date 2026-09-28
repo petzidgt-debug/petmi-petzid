@@ -3185,8 +3185,16 @@ function loadReactivacionEfectividad(){
   fetch(SUPA_ADM + '/rest/v1/reactivacion_envios?select=email,campana_id,enviado_at&campana_id=not.is.null&order=campana_id.asc', {headers: SUPA_ADM_H})
   .then(function(r){return r.json();})
   .then(function(envios){
-    if(!Array.isArray(envios) || !envios.length){
-      document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#aaa">Aún no se ha enviado ninguna campaña.</div>';
+    var bodyVolvieron = document.getElementById('reactivacionVolvieronBody');
+    if(!Array.isArray(envios)){
+      // Supabase devolvió un error (casi seguro: la columna campana_id no existe todavía)
+      document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#c0392b">No se pudo leer el seguimiento — falta correr agregar_campana_id.sql en Supabase.</div>';
+      bodyVolvieron.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#c0392b">Falta correr agregar_campana_id.sql en Supabase</td></tr>';
+      return;
+    }
+    if(!envios.length){
+      document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#aaa">Aún no se ha enviado ninguna campaña con el sistema nuevo.</div>';
+      bodyVolvieron.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#aaa">Todavía no hay envíos que revisar — aparecerán aquí cuando mandes la primera campaña.</td></tr>';
       return;
     }
     var emailsUnicos = [...new Set(envios.map(function(e){return e.email;}))];
@@ -3275,10 +3283,16 @@ function loadReactivacionEfectividad(){
           var premio = premioPorEmail[k] || '<span style="color:#bbb">No ha girado</span>';
           return '<tr><td>'+v.email+'</td><td>'+(CAMPANA_NOMBRES[v.campanaId]||v.campanaId)+'</td><td>'+fecha+'</td><td>'+premio+'</td><td>'+accionesHtml+'</td></tr>';
         }).join('');
+      }).catch(function(){
+        document.getElementById('reactivacionVolvieronBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#c0392b">Error al cargar el detalle de quiénes volvieron</td></tr>';
       });
+    }).catch(function(){
+      document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#c0392b">Error al cruzar con la actividad de las mascotas.</div>';
+      document.getElementById('reactivacionVolvieronBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#c0392b">Error al cargar</td></tr>';
     });
   }).catch(function(){
-    document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#c0392b">Error al cargar — ¿corriste el SQL de campana_id?</div>';
+    document.getElementById('reactivacionResumen').innerHTML = '<div style="color:#c0392b">Error al cargar el seguimiento de campañas.</div>';
+    document.getElementById('reactivacionVolvieronBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#c0392b">Error al cargar</td></tr>';
   });
 }
 
