@@ -85,9 +85,9 @@ td{padding:10px 14px;border-top:1px solid #f2f2f2;white-space:nowrap}
             <th class="congelada col1" style="cursor:pointer" onclick="ordenarPor('nombre')">Nombre ⇅</th>
             <th class="congelada col2" style="cursor:pointer" onclick="ordenarPor('telefono')">Teléfono ⇅</th>
             <th class="congelada col3" style="cursor:pointer" onclick="ordenarPor('nombre_mascota')">Mascota ⇅</th>
-            <th>Correo</th><th>PetzID</th><th>Descuento</th><th>Cupón</th><th>Premio</th><th>Bandana</th><th></th>
+            <th>Correo</th><th>PetzID</th><th>Descuento</th><th>Cupón</th><th>Premio</th><th>Bandana</th><th>WhatsApp</th><th></th>
           </tr></thead>
-          <tbody id="filasBody"><tr><td colspan="10" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          <tbody id="filasBody"><tr><td colspan="11" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -122,27 +122,40 @@ function cargar(){
     reservas = d.reservas || [];
     render(reservas);
   }).catch(function(){
-    document.getElementById('filasBody').innerHTML = '<tr><td colspan="10" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de carrera_reservas?</td></tr>';
+    document.getElementById('filasBody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:#c0392b">Error al cargar — ¿corriste el SQL de carrera_reservas?</td></tr>';
   });
+}
+
+function telefonoWA(tel){
+  var limpio = String(tel||'').replace(/[^0-9]/g,'');
+  if(!limpio) return '';
+  if(limpio.length===8) limpio = '502'+limpio; // sin lada -> Guatemala
+  return limpio;
 }
 
 function render(lista){
   document.getElementById('statTotal').textContent = reservas.length;
   document.getElementById('statPetzid').textContent = reservas.filter(function(r){return r.tiene_petzid;}).length;
   document.getElementById('statEntregadas').textContent = reservas.filter(function(r){return r.bandana_entregada;}).length;
-  document.getElementById('statGanadores').textContent = reservas.filter(function(r){return r.premio;}).length;
+  document.getElementById('statGanadores').textContent = reservas.filter(function(r){return r.premio_sorteo;}).length;
 
   if(!lista.length){
-    document.getElementById('filasBody').innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:#aaa">Sin resultados</td></tr>';
+    document.getElementById('filasBody').innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:#aaa">Sin resultados</td></tr>';
     return;
   }
   document.getElementById('filasBody').innerHTML = lista.map(function(r){
     var petzidHtml = r.tiene_petzid ? '<span class="badge-si">✓ Sí</span>' : '—';
-    var premioHtml = r.premio ? '<span class="badge-premio">🏆 '+r.premio+'</span>' : '—';
+    var premioHtml = r.premio_sorteo ? '<span class="badge-premio">🏆 '+r.premio_sorteo+'</span>' : '—';
+    var tel = telefonoWA(r.telefono);
+    var mensajeBase = r.premio_sorteo
+      ? '¡Hola ' + r.nombre + '! 🎉 Te escribimos de PetMi — ' + (r.nombre_mascota?r.nombre_mascota+' y tú':'ustedes') + ' resultaron ganadores en el sorteo de la Carrera Alas de Esperanza: ' + r.premio_sorteo + '. ¡Felicidades! Platiquemos para coordinar la entrega.'
+      : 'Hola ' + r.nombre + '! Te escribimos de PetMi sobre tu reserva para la Carrera Alas de Esperanza 🐾';
+    var waHtml = tel ? '<a href="https://wa.me/'+tel+'?text='+encodeURIComponent(mensajeBase)+'" target="_blank" style="background:#25D366;color:#fff;text-decoration:none;font-size:11px;font-weight:700;padding:5px 10px;border-radius:99px;white-space:nowrap">💬 WA</a>' : '<span style="color:#bbb;font-size:11px">Sin tel.</span>';
     return '<tr><td class="congelada col1">'+(r.nombre||'—')+'</td><td class="congelada col2">'+r.telefono+'</td><td class="congelada col3">'+(r.nombre_mascota||'—')+'</td>'
       + '<td>'+(r.email||'—')+'</td><td>'+petzidHtml+'</td><td>'+r.descuento_pct+'%</td><td style="font-family:monospace;font-size:11.5px">'+(r.codigo_cupon||'—')+'</td>'
       + '<td>'+premioHtml+'</td>'
       + '<td style="text-align:center"><input type="checkbox" '+(r.bandana_entregada?'checked':'')+' onchange="marcarEntregada(\''+r.id+'\',this.checked)" style="width:16px;height:16px;cursor:pointer"></td>'
+      + '<td>'+waHtml+'</td>'
       + '<td><button class="btn-mini" style="background:#c0392b" onclick="eliminarReserva(\''+r.id+'\')" title="Eliminar">🗑️</button></td></tr>';
   }).join('');
 }
