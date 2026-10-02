@@ -391,6 +391,16 @@ tbody tr:last-child td{border-bottom:none}
       </div>
 
       <div class="table-card">
+        <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">🏆 Mascotas más activas — por última vez que su cuenta entró a la app</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Mascota</th><th>Responsable</th><th>Última actividad</th></tr></thead>
+            <tbody id="estMasActivasBody"><tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-card">
         <div style="padding:14px 16px;font-weight:700;font-size:13px;border-bottom:1px solid #f0f0ee">Cuentas eliminadas (últimos 90 días) — <span id="estBajasTotal">0</span> en total</div>
         <div class="table-wrap">
           <table>
@@ -1301,6 +1311,16 @@ function loadEstadisticas(){
 
     var activas = rows.filter(function(m){return !m.angelito;});
     var angelitos = rows.filter(function(m){return m.angelito;});
+
+    // Mascotas más activas — ordenadas por última_actividad de su cuenta,
+    // más reciente primero. No distingue cuál mascota generó la actividad
+    // si una cuenta tiene varias (eso se guarda por correo, no por mascota).
+    var masActivas = activas.filter(function(m){return m.ultima_actividad;})
+      .sort(function(a,b){return new Date(b.ultima_actividad)-new Date(a.ultima_actividad);})
+      .slice(0,25);
+    document.getElementById('estMasActivasBody').innerHTML = masActivas.length ? masActivas.map(function(m,i){
+      return '<tr><td>'+(i+1)+'</td><td>'+(m.nombre||'—')+'</td><td>'+(m.dueno||'—')+'</td><td>'+_estFecha(m.ultima_actividad)+'</td></tr>';
+    }).join('') : '<tr><td colspan="4" style="text-align:center;padding:20px;color:#aaa">Sin datos de actividad aún</td></tr>';
     var nuevas7 = rows.filter(function(m){return m.created_at && m.created_at >= hace7;});
     var completos = activas.filter(function(m){
       return m.foto && m.foto.indexOf('http')>=0 && m.raza && m.raza!=='-' && m.zona && m.veterinario;
