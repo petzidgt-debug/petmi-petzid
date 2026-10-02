@@ -80,10 +80,13 @@ async function generarCanvasPetzID(d){
     ctx.fillText(truncarTexto((val||'-').toUpperCase(),maxW),tx,y+28);
   }
   // fl: el texto de la fecha cambia según si es nacimiento o llegada a casa.
+  // Algunas fechas vienen como timestamp completo (2021-10-09T06:00:00.000Z)
+  // en vez de solo la fecha — esto se queda con la parte YYYY-MM-DD.
+  var fechaLimpia = d.fecha ? String(d.fecha).split('T')[0] : d.fecha;
   var fl=(d.tipoFecha||'nacimiento')==='llegada'?'LLEGO A CASA':'NACIMIENTO';
   field('ESPECIE',d.especie,px,TEAL_H+14,false); field('SEXO',d.sexo,px,TEAL_H+14,true);
   ctx.fillStyle='#eee'; ctx.fillRect(px,TEAL_H+ROW,pw,1);
-  field('RAZA',d.raza,px,TEAL_H+ROW+24,false); field(fl,d.fecha,px,TEAL_H+ROW+24,true);
+  field('RAZA',d.raza,px,TEAL_H+ROW+24,false); field(fl,fechaLimpia,px,TEAL_H+ROW+24,true);
   ctx.fillStyle='#eee'; ctx.fillRect(px,TEAL_H+ROW*2,pw,1);
   ctx.textAlign='left'; ctx.fillStyle='#bbb'; ctx.font='600 11px Arial';
   ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+24);
