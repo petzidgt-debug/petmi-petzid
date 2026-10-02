@@ -47,7 +47,7 @@ async function generarCanvasPetzID(d){
   ctx.fillStyle='#00B4B4'; ctx.fillRect(FW,0,IW,TEAL_H);
   var px=FW+20, pw=IW-40;
   ctx.fillStyle='rgba(255,255,255,0.65)'; ctx.font='700 16px Arial'; ctx.textAlign='left';
-  ctx.fillText('N O M B R E',px,TEAL_H-116);
+  ctx.fillText('N O M B R E',px,TEAL_H-121);
   ctx.fillStyle='#fff'; ctx.font='900 47px Arial Black,Arial';
   ctx.fillText('"'+(d.nombre||'').toUpperCase()+'"',px,TEAL_H-66);
   if(d.apodo && d.apodo.trim() && d.apodo!=='-'){
@@ -63,7 +63,7 @@ async function generarCanvasPetzID(d){
   function field(lbl,val,x,y,right){
     ctx.textAlign=right?'right':'left'; var tx=right?(x+col):x;
     ctx.fillStyle='#bbb'; ctx.font='600 14px Arial'; ctx.fillText(lbl,tx,y);
-    ctx.fillStyle='#222'; ctx.font='700 22px Arial'; ctx.fillText((val||'-').toUpperCase(),tx,y+21);
+    ctx.fillStyle='#222'; ctx.font='700 22px Arial'; ctx.fillText((val||'-').toUpperCase(),tx,y+28);
   }
   var fl=(d.tipoFecha||'nacimiento')==='llegada'?'LLEGO A CASA':'NACIMIENTO';
   field('ESPECIE',d.especie,px,TEAL_H+14,false); field('SEXO',d.sexo,px,TEAL_H+14,true);
@@ -73,7 +73,7 @@ async function generarCanvasPetzID(d){
   ctx.textAlign='left'; ctx.fillStyle='#bbb'; ctx.font='600 14px Arial';
   ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+14);
   ctx.fillStyle='#222'; ctx.font='700 22px Arial';
-  ctx.fillText((d.dueno||'-').toUpperCase(),px,TEAL_H+ROW*2+35);
+  ctx.fillText((d.dueno||'-').toUpperCase(),px,TEAL_H+ROW*2+42);
 
   // ── Franja amarilla: ID a la izquierda, logo al centro, URL a la derecha ──
   ctx.fillStyle='#F5C842'; ctx.fillRect(0,H-YH,W,YH);
