@@ -327,11 +327,11 @@ async function descargarIDFamilia(uid){
   ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW*2,pw,1);
   ctx.textAlign='left';ctx.fillStyle='#bbb';ctx.font='600 9px Arial';ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+14);
   ctx.fillStyle='#222';ctx.font='700 17px Arial';ctx.fillText((m.dueno||'-').toUpperCase(),px,TEAL_H+ROW*2+35);
-  ctx.fillStyle='rgba(0,0,0,.45)';ctx.font='600 13px Arial';ctx.textAlign='center';ctx.fillText('app.revistapetmi.com',FW/2,H-YH-14);
   ctx.fillStyle='#F5C842';ctx.fillRect(0,H-YH,W,YH);
   var uid6=(m.uid||'').replace(/-/g,'').toUpperCase().slice(-6);
   ctx.fillStyle='#555';ctx.font='600 9px Arial';ctx.textAlign='left';ctx.fillText('ID',px,H-YH+22);
   ctx.fillStyle='#333';ctx.font='400 24px Arial';ctx.fillText(uid6,px,H-YH+50);
+  ctx.fillStyle='rgba(0,0,0,.5)';ctx.font='600 10px Arial';ctx.textAlign='left';ctx.fillText('app.revistapetmi.com',px,H-YH+66);
   try{await new Promise(function(res){
     var logo=new Image();logo.crossOrigin='anonymous';
     logo.onload=function(){var lh=42,lw=logo.width*(lh/logo.height);ctx.drawImage(logo,W-lw-16,H-YH+(YH-lh)/2,lw,lh);res();};
