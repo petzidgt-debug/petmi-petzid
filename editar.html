@@ -190,26 +190,26 @@ document.addEventListener('input', function(e) {
 });
 
 (function(){
-  if(!sessionEmail){ window.location.href='/galeria.html'; return; }
+  if(!sessionEmail){ window.location.href='/'; return; }
   var params = new URLSearchParams(window.location.search);
   var uid    = params.get('uid');
-  if(!uid){ window.location.href='/galeria.html'; return; }
+  if(!uid){ window.location.href='/'; return; }
   fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(!d.found){ window.location.href='/galeria.html'; return; }
+      if(!d.found){ window.location.href='/'; return; }
       var uidLower=uid.trim().toLowerCase();
       mascota = d.mascotas.find(function(m){ return m.uid.trim().toLowerCase()===uidLower; });
       if(!mascota){
         if(d.mascotas.length>0){ mascota=d.mascotas[0]; }
-        else { window.location.href='/galeria.html'; return; }
+        else { window.location.href='/'; return; }
       }
       renderForm();
       setTimeout(validarCamposPuntos, 400);
     })
     .catch(function(){
       document.getElementById('loadingWrap').innerHTML=
-        '<p style="color:#888;text-align:center">Error al cargar. <a href="/galeria.html" style="color:#00B4B4">Volver</a></p>';
+        '<p style="color:#888;text-align:center">Error al cargar. <a href="/" style="color:#00B4B4">Volver</a></p>';
     });
 })();
 
@@ -491,6 +491,7 @@ async function descargarID(){
   ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW*2,pw,1);
   ctx.textAlign='left';ctx.fillStyle='#bbb';ctx.font='600 9px Arial';ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+14);
   ctx.fillStyle='#222';ctx.font='700 17px Arial';ctx.fillText((mascota.dueno||'-').toUpperCase(),px,TEAL_H+ROW*2+35);
+  ctx.fillStyle='rgba(0,0,0,.45)';ctx.font='600 11px Arial';ctx.textAlign='center';ctx.fillText('app.revistapetmi.com',FW/2,H-YH-14);
   ctx.fillStyle='#F5C842';ctx.fillRect(0,H-YH,W,YH);
   var uid6=(mascota.uid||'').replace(/-/g,'').toUpperCase().slice(-6);
   ctx.fillStyle='#555';ctx.font='600 9px Arial';ctx.textAlign='left';ctx.fillText('ID',px,H-YH+22);
