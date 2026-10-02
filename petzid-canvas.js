@@ -48,8 +48,19 @@ async function generarCanvasPetzID(d){
   var px=FW+20, pw=IW-40;
   ctx.fillStyle='rgba(255,255,255,0.65)'; ctx.font='700 16px Arial'; ctx.textAlign='left';
   ctx.fillText('N O M B R E',px,TEAL_H-121);
-  ctx.fillStyle='#fff'; ctx.font='900 47px Arial Black,Arial';
-  ctx.fillText('"'+(d.nombre||'').toUpperCase()+'"',px,TEAL_H-66);
+  // El nombre reduce su tamaño de letra automáticamente si no cabe en el
+  // ancho disponible — así nunca se corta ni se sale de la tarjeta, sin
+  // importar qué tan largo sea.
+  var nombreTxt='"'+(d.nombre||'').toUpperCase()+'"';
+  var nombreMaxW=pw;
+  var nombreSize=47;
+  ctx.font='900 '+nombreSize+'px Arial Black,Arial';
+  while(ctx.measureText(nombreTxt).width>nombreMaxW && nombreSize>20){
+    nombreSize -= 2;
+    ctx.font='900 '+nombreSize+'px Arial Black,Arial';
+  }
+  ctx.fillStyle='#fff';
+  ctx.fillText(nombreTxt,px,TEAL_H-66);
   if(d.apodo && d.apodo.trim() && d.apodo!=='-'){
     var ap=d.apodo.toUpperCase(); ctx.font='700 17px Arial';
     var bw=ctx.measureText(ap).width+26;
