@@ -59,21 +59,24 @@ async function generarCanvasPetzID(d){
 
   // ── Campos blancos: ESPECIE/SEXO, RAZA/NACIMIENTO, RESPONSABLE ──
   ctx.fillStyle='#fff'; ctx.fillRect(FW,TEAL_H,IW,WHITE_H);
-  var ROW=Math.floor(WHITE_H/3), col=Math.floor(pw/2);
+  var ROW=Math.floor(WHITE_H/3);
   function field(lbl,val,x,y,right){
-    ctx.textAlign=right?'right':'left'; var tx=right?(x+col):x;
-    ctx.fillStyle='#bbb'; ctx.font='600 14px Arial'; ctx.fillText(lbl,tx,y);
+    // La columna derecha termina en el borde real del área (x+pw), no
+    // a la mitad — así queda claramente separada de la izquierda.
+    ctx.textAlign=right?'right':'left'; var tx=right?(x+pw):x;
+    ctx.fillStyle='#bbb'; ctx.font='600 11px Arial'; ctx.fillText(lbl,tx,y);
     ctx.fillStyle='#222'; ctx.font='700 22px Arial'; ctx.fillText((val||'-').toUpperCase(),tx,y+28);
   }
+  // fl: el texto de la fecha cambia según si es nacimiento o llegada a casa.
   var fl=(d.tipoFecha||'nacimiento')==='llegada'?'LLEGO A CASA':'NACIMIENTO';
   field('ESPECIE',d.especie,px,TEAL_H+14,false); field('SEXO',d.sexo,px,TEAL_H+14,true);
   ctx.fillStyle='#eee'; ctx.fillRect(px,TEAL_H+ROW,pw,1);
-  field('RAZA',d.raza,px,TEAL_H+ROW+14,false); field(fl,d.fecha,px,TEAL_H+ROW+14,true);
+  field('RAZA',d.raza,px,TEAL_H+ROW+24,false); field(fl,d.fecha,px,TEAL_H+ROW+24,true);
   ctx.fillStyle='#eee'; ctx.fillRect(px,TEAL_H+ROW*2,pw,1);
-  ctx.textAlign='left'; ctx.fillStyle='#bbb'; ctx.font='600 14px Arial';
-  ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+14);
+  ctx.textAlign='left'; ctx.fillStyle='#bbb'; ctx.font='600 11px Arial';
+  ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+24);
   ctx.fillStyle='#222'; ctx.font='700 22px Arial';
-  ctx.fillText((d.dueno||'-').toUpperCase(),px,TEAL_H+ROW*2+42);
+  ctx.fillText((d.dueno||'-').toUpperCase(),px,TEAL_H+ROW*2+52);
 
   // ── Franja amarilla: ID a la izquierda, logo al centro, URL a la derecha ──
   ctx.fillStyle='#F5C842'; ctx.fillRect(0,H-YH,W,YH);
