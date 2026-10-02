@@ -46,12 +46,12 @@ async function generarCanvasPetzID(d){
   // ── Encabezado teal: NOMBRE + apodo ──
   ctx.fillStyle='#00B4B4'; ctx.fillRect(FW,0,IW,TEAL_H);
   var px=FW+20, pw=IW-40;
-  ctx.fillStyle='rgba(255,255,255,0.65)'; ctx.font='700 11px Arial'; ctx.textAlign='left';
+  ctx.fillStyle='rgba(255,255,255,0.65)'; ctx.font='700 16px Arial'; ctx.textAlign='left';
   ctx.fillText('N O M B R E',px,TEAL_H-116);
-  ctx.fillStyle='#fff'; ctx.font='900 42px Arial Black,Arial';
+  ctx.fillStyle='#fff'; ctx.font='900 47px Arial Black,Arial';
   ctx.fillText('"'+(d.nombre||'').toUpperCase()+'"',px,TEAL_H-66);
   if(d.apodo && d.apodo.trim() && d.apodo!=='-'){
-    var ap=d.apodo.toUpperCase(); ctx.font='700 12px Arial';
+    var ap=d.apodo.toUpperCase(); ctx.font='700 17px Arial';
     var bw=ctx.measureText(ap).width+26;
     ctx.fillStyle='#F4A0B0'; ctx.beginPath(); ctx.roundRect(px,TEAL_H-46,bw,26,13); ctx.fill();
     ctx.fillStyle='#7a1a2e'; ctx.textAlign='center'; ctx.fillText(ap,px+bw/2,TEAL_H-29);
@@ -62,43 +62,40 @@ async function generarCanvasPetzID(d){
   var ROW=Math.floor(WHITE_H/3), col=Math.floor(pw/2);
   function field(lbl,val,x,y,right){
     ctx.textAlign=right?'right':'left'; var tx=right?(x+col):x;
-    ctx.fillStyle='#bbb'; ctx.font='600 9px Arial'; ctx.fillText(lbl,tx,y);
-    ctx.fillStyle='#222'; ctx.font='700 17px Arial'; ctx.fillText((val||'-').toUpperCase(),tx,y+21);
+    ctx.fillStyle='#bbb'; ctx.font='600 14px Arial'; ctx.fillText(lbl,tx,y);
+    ctx.fillStyle='#222'; ctx.font='700 22px Arial'; ctx.fillText((val||'-').toUpperCase(),tx,y+21);
   }
   var fl=(d.tipoFecha||'nacimiento')==='llegada'?'LLEGO A CASA':'NACIMIENTO';
   field('ESPECIE',d.especie,px,TEAL_H+14,false); field('SEXO',d.sexo,px,TEAL_H+14,true);
   ctx.fillStyle='#eee'; ctx.fillRect(px,TEAL_H+ROW,pw,1);
   field('RAZA',d.raza,px,TEAL_H+ROW+14,false); field(fl,d.fecha,px,TEAL_H+ROW+14,true);
   ctx.fillStyle='#eee'; ctx.fillRect(px,TEAL_H+ROW*2,pw,1);
-  ctx.textAlign='left'; ctx.fillStyle='#bbb'; ctx.font='600 9px Arial';
+  ctx.textAlign='left'; ctx.fillStyle='#bbb'; ctx.font='600 14px Arial';
   ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+14);
-  ctx.fillStyle='#222'; ctx.font='700 17px Arial';
+  ctx.fillStyle='#222'; ctx.font='700 22px Arial';
   ctx.fillText((d.dueno||'-').toUpperCase(),px,TEAL_H+ROW*2+35);
 
-  // ── Franja amarilla: ID a la izquierda, URL + logo centrados juntos ──
+  // ── Franja amarilla: ID a la izquierda, logo al centro, URL a la derecha ──
   ctx.fillStyle='#F5C842'; ctx.fillRect(0,H-YH,W,YH);
   var uid6=(d.uid||'').replace(/-/g,'').toUpperCase().slice(-6);
-  ctx.fillStyle='#555'; ctx.font='600 9px Arial'; ctx.textAlign='left';
-  ctx.fillText('ID',px,H-YH+22);
-  ctx.fillStyle='#333'; ctx.font='400 24px Arial';
-  ctx.fillText(uid6,px,H-YH+50);
+  var barLeft=20, barRight=W-20, barCy=H-YH/2;
+  ctx.fillStyle='#555'; ctx.font='600 14px Arial'; ctx.textAlign='left';
+  ctx.fillText('ID',barLeft,H-YH+27);
+  ctx.fillStyle='#333'; ctx.font='400 29px Arial';
+  ctx.fillText(uid6,barLeft,H-YH+55);
 
   try{
     await new Promise(function(res){
       var logo=new Image(); logo.crossOrigin='anonymous';
       logo.onload=function(){
         var lh=36, lw=logo.width*(lh/logo.height);
-        ctx.font='700 15px Arial';
-        var urlTxt='app.revistapetmi.com';
-        var urlW=ctx.measureText(urlTxt).width;
-        var gap=10;
-        var grupoW=urlW+gap+lw;
-        var grupoX=(W-grupoW)/2; // el GRUPO completo (url+logo) centrado en la franja
-        var cy=H-YH/2;
-        ctx.fillStyle='rgba(0,0,0,.6)'; ctx.textAlign='left'; ctx.textBaseline='middle';
-        ctx.fillText(urlTxt,grupoX,cy);
+        // Logo centrado en la franja completa
+        ctx.drawImage(logo,(W-lw)/2,barCy-lh/2,lw,lh);
+        // URL alineada a la derecha
+        ctx.font='700 20px Arial';
+        ctx.fillStyle='rgba(0,0,0,.6)'; ctx.textAlign='right'; ctx.textBaseline='middle';
+        ctx.fillText('app.revistapetmi.com',barRight,barCy);
         ctx.textBaseline='alphabetic';
-        ctx.drawImage(logo,grupoX+urlW+gap,cy-lh/2,lw,lh);
         res();
       };
       logo.onerror=res;
