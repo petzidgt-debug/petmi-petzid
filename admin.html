@@ -2088,34 +2088,70 @@ function viewFamilia(email){
 }
 
 // ── Ver ID ────────────────────────────────────────────────────
-function viewID(idx){
+// 1 oct: viewID/downloadID reescritos para usar EXACTAMENTE el mismo
+// dibujo por canvas que editar.html (antes usaba una plantilla HTML
+// vieja con html2canvas — campos distintos, foto chica). Ahora ambos
+// lados generan la misma tarjeta, con los mismos campos y proporción.
+var _idCanvasActual = null;
+
+async function viewID(idx){
   var r=filtered[idx];
-  var foto=String(r[27]||'').indexOf('http')>=0?'<img src="'+r[27]+'" style="width:140px;height:175px;object-fit:cover">':'<div style="width:140px;height:175px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#b2e0e0">🐾</div>';
-  var html='<div id="pngPreview" style="font-family:Arial,sans-serif;border-radius:12px;overflow:hidden">'
-    +'<div style="background:#00B4B4;display:flex;align-items:stretch"><div style="flex-shrink:0;overflow:hidden">'+foto+'</div>'
-    +'<div style="flex:1;padding:16px 20px 14px;display:flex;flex-direction:column;justify-content:flex-end"><div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.7);margin-bottom:4px">NOMBRE</div>'
-    +'<div style="font-size:24px;font-weight:900;color:#fff;font-family:Arial Black,Arial,sans-serif">"'+String(r[2]||'').toUpperCase()+'"</div>'
-    +'<div style="margin-top:8px;display:inline-block;background:#F4A0B0;color:#7a1a2e;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;align-self:flex-start">'+String(r[3]||'-').toUpperCase()+'</div></div></div>'
-    +'<div style="background:#fff;padding:14px 18px">'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:10px">'
-    +'<div><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Especie</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[4]||'-')+'</div></div>'
-    +'<div style="text-align:right"><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Sexo</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[5]||'-')+'</div></div></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0;margin-bottom:10px">'
-    +'<div><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Zona</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[9]||'-')+'</div></div>'
-    +'<div style="text-align:right"><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Veterinario</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[13]||'-')+'</div></div></div>'
-    +'<div><div style="font-size:8px;font-weight:700;color:#bbb;text-transform:uppercase;margin-bottom:3px">Responsable</div><div style="font-size:14px;font-weight:900;color:#222;text-transform:uppercase">'+String(r[10]||'-')+'</div></div></div>'
-    +'<div style="background:#F5C842;display:flex;align-items:center;justify-content:space-between;padding:8px 14px">'
-    +'<div style="width:30px;height:30px;background:#E05090;border-radius:6px 6px 6px 0;display:flex;align-items:center;justify-content:center;font-size:14px">🐾</div>'
-    +'<div style="font-size:18px;font-weight:900;font-family:Arial Black,Arial,sans-serif;color:#1a1a1a">petz<span style="color:#E05090">ID</span></div></div></div>';
-  document.getElementById('modalIDBody').innerHTML=html;
+  document.getElementById('modalIDBody').innerHTML = '<div style="padding:40px;text-align:center;color:#888">Generando...</div>';
   document.getElementById('modalID').classList.add('open');
+
+  var nombre=String(r[2]||''), apodo=String(r[3]||''), especie=String(r[4]||''), sexo=String(r[5]||'');
+  var raza=String(r[6]||''), tipoFecha=String(r[7]||'nacimiento'), fecha=r[8], dueno=String(r[10]||''), foto=String(r[27]||'');
+  var uid=String(r[1]||'');
+
+  var W=1050,H=600,FW=Math.round(W*0.43),IW=W-FW,YH=76,TH=H-YH;
+  var TEAL_H=Math.round(TH*0.50),WHITE_H=TH-TEAL_H;
+  var canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+  var ctx=canvas.getContext('2d');
+  ctx.fillStyle='#b2e0e0';ctx.fillRect(0,0,FW,H-YH);
+  if(foto && foto.indexOf('http')>=0){
+    try{await new Promise(function(res){
+      var tmp=new Image();tmp.crossOrigin='anonymous';
+      tmp.onload=function(){var scale=Math.max(FW/tmp.width,(H-YH)/tmp.height);var sw=tmp.width*scale,sh=tmp.height*scale;ctx.save();ctx.beginPath();ctx.rect(0,0,FW,H-YH);ctx.clip();ctx.drawImage(tmp,(FW-sw)/2,(H-YH-sh)/2,sw,sh);ctx.restore();res();};
+      tmp.onerror=res;tmp.src=foto;setTimeout(res,3000);
+    });}catch(e){}
+  }
+  ctx.fillStyle='#00B4B4';ctx.fillRect(FW,0,IW,TEAL_H);
+  var px=FW+20,pw=IW-40;
+  ctx.fillStyle='rgba(255,255,255,0.65)';ctx.font='700 11px Arial';ctx.textAlign='left';ctx.fillText('N O M B R E',px,TEAL_H-116);
+  ctx.fillStyle='#fff';ctx.font='900 42px Arial Black,Arial';ctx.fillText('"'+nombre.toUpperCase()+'"',px,TEAL_H-66);
+  if(apodo && apodo.trim() && apodo!=='-'){
+    var ap=apodo.toUpperCase();ctx.font='700 12px Arial';var bw=ctx.measureText(ap).width+26;
+    ctx.fillStyle='#F4A0B0';ctx.beginPath();ctx.roundRect(px,TEAL_H-46,bw,26,13);ctx.fill();
+    ctx.fillStyle='#7a1a2e';ctx.textAlign='center';ctx.fillText(ap,px+bw/2,TEAL_H-29);
+  }
+  ctx.fillStyle='#fff';ctx.fillRect(FW,TEAL_H,IW,WHITE_H);
+  var ROW=Math.floor(WHITE_H/3),col=Math.floor(pw/2);
+  function field(lbl,val,x,y,right){ctx.textAlign=right?'right':'left';var tx=right?(x+col):x;ctx.fillStyle='#bbb';ctx.font='600 9px Arial';ctx.fillText(lbl,tx,y);ctx.fillStyle='#222';ctx.font='700 17px Arial';ctx.fillText((val||'-').toUpperCase(),tx,y+21);}
+  var fl=tipoFecha==='llegada'?'LLEGO A CASA':'NACIMIENTO';
+  field('ESPECIE',especie,px,TEAL_H+14,false);field('SEXO',sexo,px,TEAL_H+14,true);
+  ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW,pw,1);
+  field('RAZA',raza,px,TEAL_H+ROW+14,false);field(fl,fecha,px,TEAL_H+ROW+14,true);
+  ctx.fillStyle='#eee';ctx.fillRect(px,TEAL_H+ROW*2,pw,1);
+  ctx.textAlign='left';ctx.fillStyle='#bbb';ctx.font='600 9px Arial';ctx.fillText('RESPONSABLE',px,TEAL_H+ROW*2+14);
+  ctx.fillStyle='#222';ctx.font='700 17px Arial';ctx.fillText((dueno||'-').toUpperCase(),px,TEAL_H+ROW*2+35);
+  ctx.fillStyle='#F5C842';ctx.fillRect(0,H-YH,W,YH);
+  var uid6=uid.replace(/-/g,'').toUpperCase().slice(-6);
+  ctx.fillStyle='#555';ctx.font='600 9px Arial';ctx.textAlign='left';ctx.fillText('ID',px,H-YH+22);
+  ctx.fillStyle='#333';ctx.font='400 24px Arial';ctx.fillText(uid6,px,H-YH+50);
+  try{await new Promise(function(res){
+    var logo=new Image();logo.crossOrigin='anonymous';
+    logo.onload=function(){var lh=42,lw=logo.width*(lh/logo.height);ctx.drawImage(logo,W-lw-16,H-YH+(YH-lh)/2,lw,lh);res();};
+    logo.onerror=res;logo.src='https://ilcreewilnkchvozicyp.supabase.co/storage/v1/object/sign/assets/logopetmi.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zYmZiMjhlZS05MmIwLTRkYjEtYWUyMi02ZTcxOGQzMzhlMTgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhc3NldHMvbG9nb3BldG1pLnBuZyIsImlhdCI6MTc3OTM5NTY4MiwiZXhwIjoyMDk0NzU1NjgyfQ.UFxj_NZ3QonOLDXVoUD_rC3nxRQg4C3aiJLjFrt5SO8';
+    setTimeout(res,3000);
+  });}catch(e){}
+
+  _idCanvasActual = canvas;
+  document.getElementById('modalIDBody').innerHTML = '<img src="'+canvas.toDataURL('image/png')+'" style="width:100%;height:auto;display:block;border-radius:12px">';
 }
+
 function downloadID(){
-  var el=document.getElementById('pngPreview');
-  if(!el){alert('No hay ID para descargar');return;}
-  html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#fff'}).then(function(canvas){
-    var a=document.createElement('a');a.download='PetzID.png';a.href=canvas.toDataURL('image/png');a.click();
-  });
+  if(!_idCanvasActual){alert('No hay ID para descargar');return;}
+  var a=document.createElement('a');a.download='PetzID.png';a.href=_idCanvasActual.toDataURL('image/png');a.click();
 }
 
 function calcularEdadTexto(fechaStr){
@@ -3131,7 +3167,7 @@ function loadNuncaHanVuelto(){
     fetch(SUPA_ADM + '/rest/v1/reactivacion_envios?email=in.(' + emails.map(function(e){return encodeURIComponent(e);}).join(',') + ')&select=email,campana_id', {headers: SUPA_ADM_H})
     .then(function(r){return r.json();})
     .then(function(envios){
-      var CAMPANA_NOMBRES = {reto_peludo:'Reto Peludo', salud:'Salud', perdido:'Perdido', puntos:'Puntos', tienda:'Tienda', alimentos:'Alimentos'};
+      var CAMPANA_NOMBRES = {reto_peludo:'Reto Peludo', salud:'Salud', perdido:'Perdido', puntos:'Puntos', tienda:'Tienda', alimentos:'Alimentos', carrera_giveaway:'Giveaway Carrera'};
       var campanasPorEmail = {};
       (envios||[]).forEach(function(e){
         var k = (e.email||'').toLowerCase();
@@ -3216,7 +3252,7 @@ function loadReactivacionEfectividad(){
         porCampana[e.campana_id].push(e);
       });
 
-      var CAMPANA_NOMBRES = {reto_peludo:'El Reto Peludo (juego)', salud:'Salud preventiva', perdido:'Perdido/Emergencia', puntos:'Puntos', tienda:'Tienda', alimentos:'Alimentos por marca'};
+      var CAMPANA_NOMBRES = {reto_peludo:'El Reto Peludo (juego)', salud:'Salud preventiva', perdido:'Perdido/Emergencia', puntos:'Puntos', tienda:'Tienda', alimentos:'Alimentos por marca', carrera_giveaway:'Giveaway Carrera'};
       var html = '';
       Object.keys(porCampana).sort().forEach(function(campanaId){
         var lista = porCampana[campanaId];
