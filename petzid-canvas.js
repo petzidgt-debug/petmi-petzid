@@ -59,13 +59,25 @@ async function generarCanvasPetzID(d){
 
   // ── Campos blancos: ESPECIE/SEXO, RAZA/NACIMIENTO, RESPONSABLE ──
   ctx.fillStyle='#fff'; ctx.fillRect(FW,TEAL_H,IW,WHITE_H);
-  var ROW=Math.floor(WHITE_H/3);
+  var ROW=Math.floor(WHITE_H/3), col=Math.floor(pw/2);
+  // Recorta el texto con "…" si no cabe en maxW, para que un valor largo
+  // (ej. una raza con nombre largo) nunca se meta en la otra columna.
+  function truncarTexto(texto,maxW){
+    if(ctx.measureText(texto).width<=maxW) return texto;
+    var t=texto;
+    while(t.length>1 && ctx.measureText(t+'…').width>maxW){ t=t.slice(0,-1); }
+    return t+'…';
+  }
   function field(lbl,val,x,y,right){
     // La columna derecha termina en el borde real del área (x+pw), no
-    // a la mitad — así queda claramente separada de la izquierda.
+    // a la mitad — así queda claramente separada de la izquierda. Cada
+    // columna tiene como máximo "col" de ancho disponible, con un
+    // pequeño margen entre ellas para que nunca se toquen.
     ctx.textAlign=right?'right':'left'; var tx=right?(x+pw):x;
-    ctx.fillStyle='#bbb'; ctx.font='600 11px Arial'; ctx.fillText(lbl,tx,y);
-    ctx.fillStyle='#222'; ctx.font='700 22px Arial'; ctx.fillText((val||'-').toUpperCase(),tx,y+28);
+    var maxW=col-14;
+    ctx.fillStyle='#bbb'; ctx.font='600 11px Arial'; ctx.fillText(truncarTexto(lbl,maxW),tx,y);
+    ctx.fillStyle='#222'; ctx.font='700 22px Arial';
+    ctx.fillText(truncarTexto((val||'-').toUpperCase(),maxW),tx,y+28);
   }
   // fl: el texto de la fecha cambia según si es nacimiento o llegada a casa.
   var fl=(d.tipoFecha||'nacimiento')==='llegada'?'LLEGO A CASA':'NACIMIENTO';
