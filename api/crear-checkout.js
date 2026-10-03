@@ -77,9 +77,13 @@ export default async function handler(req, res) {
       const cuponRows = await rCupon.json();
       const c = cuponRows && cuponRows[0];
       if (!c) return res.status(400).json({ ok: false, error: 'Ese cupón no existe.' });
-      if (c.usado) return res.status(400).json({ ok: false, error: 'Ese cupón ya fue usado.' });
+      // Los cupones "reusable" (ej. un código promocional general) no se
+      // marcan como usados — pueden aplicarse una y otra vez por
+      // distintas personas. Los demás (ej. el premio de la ruleta)
+      // siguen siendo de un solo uso, como antes.
+      if (!c.reusable && c.usado) return res.status(400).json({ ok: false, error: 'Ese cupón ya fue usado.' });
       if (c.tipo === 'porcentaje') porcentajeDescuento = Number(c.valor) || 0;
-      cuponAplicado = c.codigo;
+      cuponAplicado = c.reusable ? null : c.codigo; // null = no lo marques como usado más abajo
     }
 
     const itemsConDescuento = itemsFinal.map(i => ({
