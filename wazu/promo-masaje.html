@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Masaje + Ozonoterapia — WAZU × PetMi</title>
+
+<!-- Vista previa en WhatsApp: WhatsApp lee estas etiquetas (no ejecuta JS),
+     por eso cada promo tiene su propia página. La imagen debe estar en
+     /img/promos/masaje.jpg  (1200 x 630 px, JPG, idealmente menos de 300 KB).
+     Si cambias la imagen después, súbela con otro nombre o agrega ?v=2 aquí
+     abajo, porque WhatsApp guarda en memoria la vista previa anterior. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WAZU × PetMi">
+<meta property="og:title" content="🎉 ¡Ganaste Masaje + Ozonoterapia en WAZU!">
+<meta property="og:description" content="Gracias por apoyar la Carrera Alas de Esperanza 💛 Tu promo está lista.">
+<meta property="og:image" content="https://app.revistapetmi.com/img/promos/masaje.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://app.revistapetmi.com/wazu/promo-masaje.html">
+<meta name="twitter:card" content="summary_large_image">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:20px;max-width:480px;width:100%;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.1)}
+.head{background:linear-gradient(135deg,#00B4B4,#00838f);padding:24px 22px 26px;text-align:center;color:#fff}
+.logo{display:inline-block;background:#fff;border-radius:12px;padding:8px 18px;margin-bottom:14px}
+.logo img{height:34px;width:auto;display:block}
+.head .emoji{font-size:32px;margin-bottom:4px}
+.head h1{font-size:22px;font-weight:900;line-height:1.25}
+.head .gracias{font-size:13.5px;opacity:.92;margin-top:6px;line-height:1.45}
+.body{padding:22px;text-align:center}
+.lbl{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.promo{display:inline-block;background:#FFF8E1;border:2px dashed #F5C842;color:#1a1a2e;font-weight:900;font-size:19px;padding:12px 22px;border-radius:14px;margin-bottom:18px}
+.body img.promo-img{width:100%;height:auto;border-radius:14px;display:block;margin-bottom:18px}
+.nota{font-size:14px;color:#555;line-height:1.6}
+.app{background:#f0f7f7;padding:22px;text-align:center;border-top:1px solid #e3eeee}
+.app-tit{font-size:17px;font-weight:900;color:#1a1a2e;line-height:1.3}
+.app-sub{font-size:13.5px;color:#007a7a;font-weight:700;margin:4px 0 14px}
+.app .id-gif{display:block;max-width:240px;width:100%;height:auto;margin:0 auto 16px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.app ul{list-style:none;text-align:left;max-width:360px;margin:0 auto 18px}
+.app li{font-size:13.5px;color:#333;line-height:1.5;padding:6px 0 6px 30px;position:relative}
+.app li span{position:absolute;left:0;top:5px;font-size:16px}
+.cta{display:inline-block;background:#E05090;color:#fff;text-decoration:none;font-weight:900;font-size:15px;padding:14px 30px;border-radius:99px;box-shadow:0 4px 14px rgba(224,80,144,.35)}
+.cta.alt{background:#00B4B4;box-shadow:0 4px 14px rgba(0,180,180,.3)}
+.cta-sub{font-size:12px;color:#888;margin-top:10px}
+.foot{background:#F5C842;padding:11px;text-align:center;font-size:11.5px;color:#555}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="logo"><img src="/logopetmi.png" alt="PetMi" onerror="this.parentNode.style.display='none'"></div>
+    <div class="emoji">💆</div>
+    <h1>¡Felicidades<span id="nombre"></span>!</h1>
+    <div class="gracias">Gracias por apoyar la Carrera Alas de Esperanza 💛</div>
+  </div>
+
+  <div class="body">
+    <div class="lbl">Ganaste</div>
+    <div class="promo">Masaje + Ozonoterapia</div>
+    <img class="promo-img" src="/img/promos/masaje.jpg" alt="Promo Masaje + Ozonoterapia" onerror="this.style.display='none'">
+    <p class="nota">Respóndenos al mensaje de WhatsApp para canjearla. 💛</p>
+  </div>
+
+  <!-- Para quien todavía no está en PetMi -->
+  <div class="app" id="bloqueUnete">
+    <div class="app-tit">¿Todavía no tienes el ID de tu mascota?</div>
+    <div class="app-sub">¡Es gratis! Únete a la comunidad PetMi 🐾</div>
+    <img class="id-gif" src="https://app.revistapetmi.com/img/petzID01.gif" alt="Carnet PetzID" onerror="this.style.display='none'">
+    <ul>
+      <li><span>🪪</span>Su carnet digital <b>PetzID</b> con QR — si se pierde, quien lo encuentre puede contactarte</li>
+      <li><span>🩺</span>Recordatorios de vacunas y salud, para que no se te pase ninguno</li>
+      <li><span>🎁</span>Puntos, juegos y premios reales (ruleta, trivia y más)</li>
+      <li><span>📍</span>Lugares pet-friendly y beneficios cerca de ti</li>
+      <li><span>🐶</span>Una comunidad de mascotas y sus familias en Guatemala</li>
+    </ul>
+    <a class="cta" id="ctaCrear" href="/registro.html?utm_source=wazu_promo&utm_medium=landing&utm_campaign=promo_masaje" onclick="track('click_registro')">Crear el ID de mi mascota</a>
+    <div class="cta-sub">Solo toma un minuto.</div>
+  </div>
+
+  <!-- Para quien ya tiene sesión iniciada en PetMi -->
+  <div class="app" id="bloqueYaEres" style="display:none">
+    <div class="app-tit">¡Ya eres parte de PetMi! 🐾</div>
+    <div class="app-sub">Entra a tu cuenta para ver a tu familia, tus puntos y más.</div>
+    <a class="cta alt" href="/">Entrar a mi cuenta</a>
+  </div>
+
+  <div class="foot">WAZU × PetMi Guatemala</div>
+</div>
+
+<script>
+var q = new URLSearchParams(location.search);
+
+// El nombre viaja en el link (?n=Nombre) — solo para saludar a quien abre la página.
+var n = q.get('n');
+if(n){ document.getElementById('nombre').textContent = ' ' + n; }
+
+// Conteo: avisa cuando alguien abre la página ("vista") o toca "Crear el ID"
+// ("click_registro"). El id en el link (?r=...) dice QUIÉN abrió, para verlo
+// en el admin de Wazu. Una vista por pestaña (recargar no cuenta de nuevo).
+var promoId = q.get('r') || '';
+function track(evento){
+  try{
+    fetch('/api/galeria?action=registrarVisitaPromo', {
+      method:'POST', headers:{'Content-Type':'application/json'}, keepalive:true,
+      body: JSON.stringify({ promo_tipo:'masaje', promo_id: promoId, evento: evento })
+    });
+  }catch(e){}
+}
+try{
+  if(!sessionStorage.getItem('promo_vista_masaje')){
+    sessionStorage.setItem('promo_vista_masaje','1');
+    track('vista');
+  }
+}catch(e){ track('vista'); }
+
+// Si ya tiene cuenta de PetMi en este navegador, no le ofrecemos crear una.
+try{
+  if(localStorage.getItem('petzid_email')){
+    document.getElementById('bloqueUnete').style.display = 'none';
+    document.getElementById('bloqueYaEres').style.display = 'block';
+  }
+}catch(e){}
+</script>
+</body>
+</html>
