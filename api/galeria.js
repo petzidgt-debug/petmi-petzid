@@ -552,7 +552,7 @@ export default async function handler(req, res) {
           _enviarPush(uid_receptor, {
             title: '🐾 Nueva solicitud de amistad',
             body: nombreSolicitante + ' quiere ser tu amigo en PetMi',
-            url: '/galeria.html'
+            url: '/'
           }, 'notif_amigos').catch(() => {});
         } catch(e) { console.error('Push solicitud amistad:', e.message); }
       }
@@ -620,7 +620,7 @@ export default async function handler(req, res) {
             _enviarPush(fila.uid_solicitante, {
               title: '🎉 ¡Solicitud aceptada!',
               body: nombreReceptor + ' aceptó tu solicitud de amistad',
-              url: '/galeria.html'
+              url: '/'
             }, 'notif_amigos').catch(() => {});
           }
         } catch(e) { console.error('Push solicitud aceptada:', e.message); }
@@ -1773,6 +1773,31 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // ── marcarSorteoGanador (24 sep) — sorteo en vivo de la Carrera.
+    // Marca una reserva como ganadora de un premio específico, para
+    // que quede guardado (sobrevive un refresh de la página del sorteo).
+    if (action === 'marcarSorteoGanador' && req.method === 'POST') {
+      const { id, premio } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ es_ganador: true, premio_sorteo: premio || '' })
+      });
+      return res.status(200).json({ ok: true });
+    }
+
+    // ── resetearSorteoCarrera (24 sep) — quita todos los ganadores
+    // marcados, para volver a correr el sorteo desde cero. ──────────
+    if (action === 'resetearSorteoCarrera' && req.method === 'POST') {
+      await fetch(SUPABASE_URL + '/rest/v1/carrera_reservas?es_ganador=eq.true', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ es_ganador: false, premio_sorteo: null })
+      });
+      return res.status(200).json({ ok: true });
+    }
+
     // ── eliminarReservaCarrera (Admin) ────────────────────────────
     if (action === 'eliminarReservaCarrera' && req.method === 'POST') {
       const { id } = req.body || {};
@@ -1854,6 +1879,114 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
+    // ── Promos ganadas en Wazu (2 oct) — lista de personas que ganaron
+    // una promo (baño 50%, baño de cortesía, masaje+ozonoterapia, Q50 en
+    // accesorios) y a quienes el Admin les escribe por WhatsApp. ──────
+    if (action === 'getWazuPromos') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_promos_ganadas?select=*&order=promo_tipo.asc,nombre.asc&limit=2000', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const promos = await r.json();
+      if (!Array.isArray(promos)) return res.status(200).json({ ok: false, error: 'No se pudo leer wazu_promos_ganadas — ¿corriste el SQL?', promos: [] });
+
+      // Visitas a las páginas de promo. Si la tabla todavía no existe
+      // (no se ha corrido crear_wazu_promo_visitas.sql), se ignora sin romper nada.
+      let visitas = [];
+      try {
+        const rv = await fetch(SUPABASE_URL + '/rest/v1/wazu_promo_visitas?select=promo_id,evento,created_at&order=created_at.desc&limit=10000', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        const dv = await rv.json();
+        if (Array.isArray(dv)) visitas = dv;
+      } catch (e) { /* sin visitas todavía */ }
+
+      const porPromo = {};
+      let vistasTotal = 0, clicsTotal = 0;
+      visitas.forEach(function (v) {
+        if (v.evento === 'click_registro') clicsTotal++; else vistasTotal++;
+        if (!v.promo_id) return;
+        const o = porPromo[v.promo_id] || (porPromo[v.promo_id] = { vistas: 0, clics: 0, ultima: null });
+        if (v.evento === 'click_registro') o.clics++; else o.vistas++;
+        if (!o.ultima || v.created_at > o.ultima) o.ultima = v.created_at;
+      });
+      promos.forEach(function (p) {
+        const o = porPromo[p.id];
+        p.vistas = o ? o.vistas : 0;
+        p.clics_registro = o ? o.clics : 0;
+        p.ultima_visita = o ? o.ultima : null;
+      });
+      return res.status(200).json({ ok: true, promos, visitas_total: vistasTotal, clics_total: clicsTotal });
+    }
+
+    // ── registrarVisitaPromo (2 oct) — la página promo-*.html avisa cuando
+    // alguien la abre ("vista") o toca "Crear el ID de mi mascota"
+    // ("click_registro"). Es pública (la llama la página, no el Admin). ──
+    if (action === 'registrarVisitaPromo' && req.method === 'POST') {
+      const { promo_tipo, promo_id, evento } = req.body || {};
+      const TIPOS = ['bano50', 'cortesia', 'masaje', 'accesorios'];
+      if (TIPOS.indexOf(promo_tipo) < 0) return res.status(400).json({ ok: false, error: 'Promo inválida' });
+      const ev = evento === 'click_registro' ? 'click_registro' : 'vista';
+      const uuidOk = typeof promo_id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(promo_id);
+      const hdr = { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' };
+
+      // La misma persona recargando la página en 10 minutos cuenta una sola vez.
+      if (uuidOk && ev === 'vista') {
+        const desde = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+        const rd = await fetch(SUPABASE_URL + '/rest/v1/wazu_promo_visitas?select=id&promo_id=eq.' + promo_id + '&evento=eq.vista&created_at=gte.' + encodeURIComponent(desde) + '&limit=1', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        const dd = await rd.json().catch(function () { return []; });
+        if (Array.isArray(dd) && dd.length) return res.status(200).json({ ok: true, repetida: true });
+      }
+
+      const fila = { promo_tipo: promo_tipo, evento: ev, promo_id: uuidOk ? promo_id : null };
+      let ri = await fetch(SUPABASE_URL + '/rest/v1/wazu_promo_visitas', { method: 'POST', headers: hdr, body: JSON.stringify(fila) });
+      if (!ri.ok && uuidOk) {
+        // El id del link ya no existe (ej. se borró a la persona): se cuenta como visita anónima.
+        fila.promo_id = null;
+        ri = await fetch(SUPABASE_URL + '/rest/v1/wazu_promo_visitas', { method: 'POST', headers: hdr, body: JSON.stringify(fila) });
+      }
+      return res.status(200).json({ ok: ri.ok });
+    }
+
+    if (action === 'marcarWazuPromoContactado' && req.method === 'POST') {
+      const { id, contactado } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_promos_ganadas?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ contactado: !!contactado, contactado_at: contactado ? new Date().toISOString() : null })
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    if (action === 'eliminarWazuPromo' && req.method === 'POST') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_promos_ganadas?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // Corregir el teléfono de alguien (ej. un número que venía mal en el cuaderno).
+    if (action === 'actualizarWazuPromoTelefono' && req.method === 'POST') {
+      const { id, telefono } = req.body || {};
+      if (!id || !telefono) return res.status(400).json({ ok: false, error: 'Falta id o teléfono' });
+      const d = String(telefono).replace(/\D/g, '');
+      let wa = null;
+      if (d.length === 8) wa = '502' + d;
+      else if (d.length === 11 && d.indexOf('502') === 0) wa = d;
+      if (!wa) return res.status(200).json({ ok: false, error: 'Teléfono inválido — debe tener 8 dígitos (Guatemala).' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_promos_ganadas?id=eq.' + encodeURIComponent(id), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ telefono: String(telefono).trim(), telefono_wa: wa })
+      });
+      return res.status(200).json({ ok: r.ok, telefono_wa: wa });
+    }
+
     // ── enviarMensajeDirectoAdmin (18 sep) — el Admin le manda un
     // mensaje puntual a UNA mascota específica, directo a su buzón
     // de Mensajes (misma tabla que usa el resto de la app). ────────
@@ -1874,6 +2007,65 @@ export default async function handler(req, res) {
     }
 
     // ── getRuletaWazuGiros (Admin) ──────────────────────────────
+    // ── getProximoCuidado (21 sep) — calcula cuál es el recordatorio
+    // de salud más próximo para UNA mascota (para mostrarlo en la
+    // tarjeta de "Mis mascotas" del nuevo home). Misma lógica de
+    // reglas/registros que ya usa RecordatoriosSalud.gs para los
+    // correos — aquí solo se expone como consulta, sin mandar nada.
+    if (action === 'getProximoCuidado') {
+      try {
+        const uid = req.query.uid || '';
+        if (!uid) return res.status(200).json({ ok: false, error: 'Falta uid' });
+
+        const [rMasc, rReglas, rRegistros] = await Promise.all([
+          fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=uid,especie,tipo_pelo,fecha&limit=1', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }),
+          fetch(SUPABASE_URL + '/rest/v1/reglas_salud?activo=eq.true&select=*', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } }),
+          fetch(SUPABASE_URL + '/rest/v1/registros_salud?uid_mascota=eq.' + encodeURIComponent(uid) + '&select=nombre_especifico,fecha_aplicacion&order=fecha_aplicacion.desc', { headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY } })
+        ]);
+        const mascotaRows = await rMasc.json();
+        const reglas = await rReglas.json();
+        const registros = await rRegistros.json();
+        const m = mascotaRows && mascotaRows[0];
+        if (!m) return res.status(200).json({ ok: false, error: 'Mascota no encontrada' });
+
+        const ultimoPorRegla = {};
+        (registros || []).forEach(r => { if (!ultimoPorRegla[r.nombre_especifico]) ultimoPorRegla[r.nombre_especifico] = r.fecha_aplicacion; });
+
+        const edad = (() => {
+          if (!m.fecha) return null;
+          const f = new Date(m.fecha);
+          if (isNaN(f)) return null;
+          const h = new Date();
+          return (h.getFullYear() - f.getFullYear()) * 12 + (h.getMonth() - f.getMonth());
+        })();
+
+        let proximo = null;
+        (reglas || []).forEach(regla => {
+          const especieOk = regla.especie === 'Todos' || regla.especie === m.especie;
+          const peloOk = !regla.tipo_pelo || regla.tipo_pelo === m.tipo_pelo;
+          const edadMinOk = regla.edad_min_meses == null || edad == null || edad >= regla.edad_min_meses;
+          const edadMaxOk = regla.edad_max_meses == null || edad == null || edad <= regla.edad_max_meses;
+          if (!(especieOk && peloOk && edadMinOk && edadMaxOk)) return;
+
+          const ultimaFecha = ultimoPorRegla[regla.id] || ultimoPorRegla[regla.nombre];
+          if (!ultimaFecha) return;
+
+          const vence = new Date(ultimaFecha);
+          vence.setDate(vence.getDate() + Math.round((regla.frecuencia_meses || 0) * 30));
+
+          if (!proximo || vence < proximo.fechaObj) {
+            proximo = { tipo: regla.nombre, fechaObj: vence, fecha: vence.toISOString().split('T')[0], vencido: vence < new Date() };
+          }
+        });
+
+        if (!proximo) return res.status(200).json({ ok: true, tiene: false });
+        return res.status(200).json({ ok: true, tiene: true, tipo: proximo.tipo, fecha: proximo.fecha, vencido: proximo.vencido });
+      } catch (eProx) {
+        console.error('getProximoCuidado error:', eProx.message);
+        return res.status(200).json({ ok: false, error: 'Error consultando recordatorios' });
+      }
+    }
+
     if (action === 'getRuletaWazuGiros') {
       const r = await fetch(SUPABASE_URL + '/rest/v1/ruleta_wazu_giros?select=*&order=created_at.desc', {
         headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
@@ -2387,7 +2579,7 @@ export default async function handler(req, res) {
         .filter(x => x.score > 0)
         .sort((a, b) => b.score - a.score)
         .slice(0, 8)
-        .map(x => ({ tipo: 'salud', nombre: x.r.nombre, descripcion: x.r.descripcion || x.r.tip || '', especie: x.r.especie, link: '/calendario-vacunas.html' }));
+        .map(x => ({ tipo: 'salud', nombre: x.r.nombre, descripcion: x.r.descripcion || x.r.tip || '', especie: x.r.especie, link: '/salud.html' }));
 
       const lugaresMatches = (Array.isArray(lugares) ? lugares : [])
         .map(l => ({ l, score: puntaje([l.nombre, l.tipo, l.zona, l.direccion].join(' ')) }))
@@ -2422,7 +2614,11 @@ export default async function handler(req, res) {
         body: JSON.stringify({ query: qOriginal, email: (req.query.email || '').toLowerCase() || null, resultados: totalResultados })
       }).catch(() => {});
 
-      return res.status(200).json({ salud: saludMatches, lugares: lugaresMatches, blog: blogMatches });
+      // Fragmento destacado (sin costo de API) — el artículo de blog
+      // con más coincidencias, resaltado como respuesta rápida.
+      const destacado = blogMatches.length ? blogMatches[0] : null;
+
+      return res.status(200).json({ salud: saludMatches, lugares: lugaresMatches, blog: blogMatches, destacado });
     }
 
     if (action === 'getBlogPosts') {
@@ -2452,27 +2648,6 @@ export default async function handler(req, res) {
       } catch (e) {
         return res.status(200).json({ posts: [], error: e.message });
       }
-    }
-
-    // ── registrarPedido (log cada vez que alguien pide por WhatsApp) ──
-    if (action === 'registrarPedido' && req.method === 'POST') {
-      const { email, mascotaNombre, item, tipo } = req.body;
-      if (!item) return res.status(200).json({ ok: false });
-      fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda_log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ email: (email||'').toLowerCase() || null, mascota_nombre: mascotaNombre || null, item, tipo: tipo || 'alimento' })
-      }).catch(() => {});
-      return res.status(200).json({ ok: true });
-    }
-
-    // ── getPedidosTiendaAdmin (admin) ────────────────────────────
-    if (action === 'getPedidosTiendaAdmin') {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda_log?select=*&order=created_at.desc&limit=200', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const data = await r.json();
-      return res.status(200).json({ pedidos: Array.isArray(data) ? data : [] });
     }
 
     // ── getAlimentosCatalogo (público — para buscar la foto de un alimento) ──
