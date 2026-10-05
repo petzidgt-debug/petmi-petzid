@@ -341,6 +341,27 @@ function limpiarImagenesProducto(lista, siempre) {
   return (out.length || siempre) ? { imagenes: out } : {};
 }
 
+// Guarda un cambio en UNA fila y confirma que de verdad se guardó. Supabase
+// responde "ok" (2xx) aunque no encuentre la fila, así que pedimos de vuelta
+// la fila actualizada y comprobamos que sea exactamente una. Si falla (por
+// ejemplo, una columna que no existe), devolvemos el motivo real en vez de
+// decir "ok" y que el cambio se pierda sin avisar.
+async function actualizarUnaFila(tabla, id, campos) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/' + tabla + '?id=eq.' + encodeURIComponent(id), {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
+    body: JSON.stringify(campos)
+  });
+  const txt = await r.text().catch(() => '');
+  if (!r.ok) {
+    console.error('actualizarUnaFila(' + tabla + ') failed:', r.status, txt);
+    return { ok: false, error: txt || ('HTTP ' + r.status) };
+  }
+  let filas = null; try { filas = JSON.parse(txt); } catch (e) {}
+  if (!Array.isArray(filas) || filas.length !== 1) return { ok: false, error: 'No se encontró el registro (¿ya fue eliminado?).' };
+  return { ok: true, fila: filas[0] };
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -1884,12 +1905,8 @@ export default async function handler(req, res) {
     if (action === 'marcarClienteContactado' && req.method === 'POST') {
       const { id, contactado } = req.body || {};
       if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
-      await fetch(SUPABASE_URL + '/rest/v1/wazu_clientes?id=eq.' + id, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ contactado: !!contactado })
-      });
-      return res.status(200).json({ ok: true });
+      const g = await actualizarUnaFila('wazu_clientes', id, { contactado: !!contactado });
+      return res.status(200).json(g.ok ? { ok: true } : { ok: false, error: g.error });
     }
 
     // ── Promos ganadas en Wazu (2 oct) — lista de personas que ganaron
@@ -1965,12 +1982,8 @@ export default async function handler(req, res) {
     if (action === 'marcarWazuPromoContactado' && req.method === 'POST') {
       const { id, contactado } = req.body || {};
       if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_promos_ganadas?id=eq.' + encodeURIComponent(id), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ contactado: !!contactado, contactado_at: contactado ? new Date().toISOString() : null })
-      });
-      return res.status(200).json({ ok: r.ok });
+      const g = await actualizarUnaFila('wazu_promos_ganadas', id, { contactado: !!contactado, contactado_at: contactado ? new Date().toISOString() : null });
+      return res.status(200).json(g.ok ? { ok: true, contactado_at: g.fila.contactado_at } : { ok: false, error: g.error });
     }
 
     // ── crearWazuPromo (2 oct) — agrega a mano a una persona que ganó una promo. ──
