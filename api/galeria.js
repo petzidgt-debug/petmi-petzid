@@ -2910,7 +2910,14 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify(campos)
       });
-      return res.status(200).json({ ok: r.ok });
+      if (!r.ok) {
+        // Antes solo devolvía ok:false y el Admin mostraba "desconocido". Ahora
+        // muestra el motivo real (ej. si falta la columna "imagenes" en la tabla).
+        const errTxt = await r.text().catch(() => '');
+        console.error('actualizarProductoTienda failed:', r.status, errTxt);
+        return res.status(200).json({ ok: false, error: errTxt || ('HTTP ' + r.status) });
+      }
+      return res.status(200).json({ ok: true });
     }
 
     // ── eliminarProductoTienda (admin) ─────────────────────────────
