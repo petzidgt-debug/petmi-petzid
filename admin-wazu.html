@@ -239,6 +239,26 @@ conectarScrollArriba('scrollTopGiros', 'scrollTopGirosInner', 'tableWrapGiros');
 var PASSWORD = 'petmi2024';
 var clientes = [], giros = [];
 
+// ── Guardado del "contactado" ───────────────────────────────────
+// Los cambios se mandan con keepalive (el navegador los termina de enviar
+// aunque refresques o cierres la pestaña justo después), y si todavía hay
+// alguno en camino, el navegador pregunta antes de dejarte salir.
+var guardadosPendientes = 0;
+window.addEventListener('beforeunload', function(e){
+  if(guardadosPendientes > 0){ e.preventDefault(); e.returnValue = ''; }
+});
+function guardarContactado(accion, id, contactado){
+  guardadosPendientes++;
+  return fetch('/api/galeria?action=' + accion, {
+    method:'POST', headers:{'Content-Type':'application/json'}, keepalive:true,
+    body: JSON.stringify({ id: id, contactado: !!contactado })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    guardadosPendientes--;
+    if(!d || !d.ok) throw new Error((d && d.error) || 'No se pudo guardar');
+    return d;
+  }, function(e){ guardadosPendientes--; throw e; });
+}
+
 function doLogin(){
   var pass = document.getElementById('loginPass');
   if(pass.value === PASSWORD){
@@ -347,10 +367,14 @@ function ordenarPor(campo){
 
 function marcarClienteContactado(id, contactado){
   var c = wazuBuscarCliente(id);
+  var antes = c ? c.contactado : !contactado;
   if(c) c.contactado = contactado;
-  fetch('/api/galeria?action=marcarClienteContactado', {
-    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, contactado: contactado })
-  }).catch(function(){ alert('No se pudo guardar. Intenta de nuevo.'); });
+  guardarContactado('marcarClienteContactado', id, contactado).catch(function(e){
+    // No se guardó: la casilla vuelve a como estaba de verdad, y se avisa.
+    if(c) c.contactado = antes;
+    filtrarClientes();
+    alert('No se guardó el cambio, la casilla volvió a su estado anterior.\n\nMotivo: ' + (e && e.message ? e.message : 'sin conexión'));
+  });
 }
 
 function eliminarCliente(id){
@@ -543,16 +567,16 @@ function renderPromos(){
 function marcarPromoContactado(id, valor){
   var p = promoPorId(id);
   if(!p) return;
+  var antes = { c: p.contactado, at: p.contactado_at };
   p.contactado = !!valor;
   p.contactado_at = valor ? new Date().toISOString() : null;
   renderPromos();
-  fetch('/api/galeria?action=marcarWazuPromoContactado', {
-    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, contactado: !!valor })
-  }).then(function(r){ return r.json(); }).then(function(d){
-    if(!d.ok) throw new Error('no ok');
-  }).catch(function(){
-    p.contactado = !valor; p.contactado_at = null; renderPromos();
-    alert('No se pudo guardar. Intenta de nuevo.');
+  guardarContactado('marcarWazuPromoContactado', id, valor).then(function(d){
+    if(d.contactado_at) p.contactado_at = d.contactado_at;
+  }).catch(function(e){
+    // No se guardó: vuelve a como estaba de verdad, y se avisa.
+    p.contactado = antes.c; p.contactado_at = antes.at; renderPromos();
+    alert('No se guardó el cambio, la casilla volvió a su estado anterior.\n\nMotivo: ' + (e && e.message ? e.message : 'sin conexión'));
   });
 }
 
