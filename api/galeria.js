@@ -328,6 +328,19 @@ async function _enviarMensajeOficialAUids(uids, mensaje) {
   }).catch(() => {})));
 }
 
+// Limpia la lista de fotos adicionales de un producto: solo URLs http(s),
+// sin repetidas, máximo 10. Al crear, si viene vacía no se manda nada (así
+// no falla si la columna "imagenes" todavía no existe); al actualizar
+// (siempre=true) se manda aunque esté vacía para poder borrarlas todas.
+function limpiarImagenesProducto(lista, siempre) {
+  const limpia = [];
+  (Array.isArray(lista) ? lista : []).forEach(function (u) {
+    if (typeof u === 'string' && /^https?:\/\//i.test(u.trim()) && limpia.indexOf(u.trim()) < 0) limpia.push(u.trim());
+  });
+  const out = limpia.slice(0, 10);
+  return (out.length || siempre) ? { imagenes: out } : {};
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -2871,12 +2884,12 @@ export default async function handler(req, res) {
 
     // ── crearProductoTienda (admin) ─────────────────────────────
     if (action === 'crearProductoTienda' && req.method === 'POST') {
-      const { nombre, descripcion, precio, imagen, categoria, especie, orden, envio_incluido, costo_envio, condicion } = req.body;
+      const { nombre, descripcion, precio, imagen, imagenes, categoria, especie, orden, envio_incluido, costo_envio, condicion } = req.body;
       if (!nombre || !categoria) return res.status(200).json({ ok: false, error: 'Faltan campos' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, especie: especie || 'Todos', orden: orden || 0, activo: true, envio_incluido: envio_incluido || false, costo_envio: costo_envio || null, condicion: condicion || 'Nuevo' })
+        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, especie: especie || 'Todos', orden: orden || 0, activo: true, envio_incluido: envio_incluido || false, costo_envio: costo_envio || null, condicion: condicion || 'Nuevo', ...limpiarImagenesProducto(imagenes) })
       });
       if (!r.ok) {
         const errTxt = await r.text().catch(() => '');
@@ -2890,6 +2903,8 @@ export default async function handler(req, res) {
     if (action === 'actualizarProductoTienda' && req.method === 'POST') {
       const { id, ...campos } = req.body;
       if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
+      // Fotos adicionales: solo URLs http(s), máximo 10. Una lista vacía las borra todas.
+      if ('imagenes' in campos) campos.imagenes = limpiarImagenesProducto(campos.imagenes, true).imagenes;
       const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(id), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
