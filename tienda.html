@@ -62,15 +62,41 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 .prod-card{cursor:pointer}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center}
 .modal-overlay.open{display:flex}
-.modal-prod{background:#fff;border-radius:20px 20px 0 0;max-width:480px;width:100%;max-height:88vh;overflow-y:auto;animation:slideUp .25s ease}
+.modal-prod{background:#fff;border-radius:20px 20px 0 0;max-width:480px;width:100%;max-height:92vh;display:flex;flex-direction:column;position:relative;overflow:hidden;animation:slideUp .25s ease}
 @keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
-.modal-prod-close{position:absolute;top:14px;right:14px;background:rgba(0,0,0,.5);color:#fff;border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;z-index:2}
+.modal-prod-close{position:absolute;top:14px;right:14px;background:rgba(0,0,0,.55);color:#fff;border:none;width:38px;height:38px;border-radius:50%;font-size:17px;cursor:pointer;z-index:5}
 .modal-prod-foto{width:100%;aspect-ratio:1;object-fit:cover;background:#e8ddd0;display:block}
 .modal-prod-foto-ph{width:100%;aspect-ratio:1;background:#e8ddd0;display:flex;align-items:center;justify-content:center;font-size:56px}
 .modal-prod-body{padding:20px}
 .modal-prod-nombre{font-size:19px;font-weight:900;color:#1a1a2e;margin-bottom:6px}
 .modal-prod-precio{font-size:20px;font-weight:900;color:#00B4B4;margin-bottom:10px}
 .modal-prod-desc{font-size:14px;color:#555;line-height:1.6;margin-bottom:16px;white-space:pre-wrap}
+
+/* ── Fotos del producto: galería + modal en pantalla completa en móvil ── */
+.prod-fotos-badge{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:99px}
+#modalProdOverlay{z-index:400}
+.modal-prod-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.galeria{position:relative;background:#f4efe9}
+.galeria-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.galeria-track::-webkit-scrollbar{display:none}
+.galeria-slide{flex:0 0 100%;scroll-snap-align:center;scroll-snap-stop:always;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+.galeria-slide img{width:100%;height:100%;object-fit:contain;display:block;user-select:none;-webkit-user-drag:none}
+.galeria-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:6px;pointer-events:none}
+.galeria-dot{width:7px;height:7px;border-radius:99px;background:rgba(0,0,0,.28);transition:width .2s,background .2s}
+.galeria-dot.on{width:18px;background:#1a1a2e}
+.galeria-count{position:absolute;top:14px;right:62px;background:rgba(0,0,0,.55);color:#fff;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:99px;z-index:3}
+.galeria-nav{display:none;position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.22);font-size:22px;line-height:1;cursor:pointer;z-index:3;align-items:center;justify-content:center;color:#1a1a2e}
+.galeria-nav.prev{left:10px}
+.galeria-nav.next{right:10px}
+@media (hover:hover){.galeria-nav{display:flex}}
+.modal-prod-bar{display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #eee;background:#fff;flex-shrink:0}
+.modal-prod-bar .prod-btn,.modal-prod-bar .agregar-carrito-btn{flex:1;width:auto;margin:0;padding:14px 8px;font-size:13.5px;display:block}
+@media (max-width:640px){
+  #modalProdOverlay{align-items:stretch}
+  #modalProdOverlay .modal-prod{max-width:none;max-height:none;height:100%;border-radius:0;animation:none}
+  #modalProdOverlay .galeria-slide{aspect-ratio:auto;height:min(62vh,100vw)}
+  .modal-prod-nombre{font-size:20px}
+}
 </style>
 </head>
 <body>
@@ -82,7 +108,36 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 
 <div id="yaComeWrap"></div>
 <div class="filtros" id="filtrosWrap"></div>
+
+<div style="max-width:900px;margin:0 auto;padding:0 20px 8px">
+  <div style="font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">🥣 ¿Ya consumes alguna de estas marcas?</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:8px">
+    <div onclick="abrirPedidoMarca('NutriSource')" style="cursor:pointer;background:#fff;border:1.5px solid #eee;border-radius:14px;padding:16px 12px;text-align:center">
+      <div style="font-size:28px;margin-bottom:6px">🐕</div>
+      <div style="font-size:13px;font-weight:900;color:#1a1a2e">NutriSource</div>
+      <div style="font-size:10.5px;color:#888;margin-top:2px">Pide cualquier producto</div>
+    </div>
+    <div onclick="abrirPedidoMarca('Kani')" style="cursor:pointer;background:#fff;border:1.5px solid #eee;border-radius:14px;padding:16px 12px;text-align:center">
+      <div style="font-size:28px;margin-bottom:6px">🐈</div>
+      <div style="font-size:13px;font-weight:900;color:#1a1a2e">Kani</div>
+      <div style="font-size:10.5px;color:#888;margin-top:2px">Pide cualquier producto</div>
+    </div>
+  </div>
+</div>
+
 <div class="grid" id="grid"><div class="vacio">Cargando...</div></div>
+
+<div class="modal-overlay" id="modalMarcaOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:250;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:24px 20px;max-width:360px;width:100%">
+    <div style="font-size:15px;font-weight:900;color:#1a1a2e;margin-bottom:4px" id="modalMarcaTitulo"></div>
+    <div style="font-size:12.5px;color:#888;margin-bottom:14px">Escribe el producto, sabor y tamaño exactos que necesitas — te contactamos para confirmar precio y disponibilidad.</div>
+    <textarea id="modalMarcaTexto" placeholder="Ej. Pure Vita Salmón, bolsa de 15 lb" style="width:100%;min-height:80px;padding:12px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:Arial,sans-serif;resize:vertical"></textarea>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button onclick="cerrarModalMarca()" style="flex:1;padding:12px;border-radius:99px;border:1.5px solid #ddd;background:#fff;color:#555;font-weight:700;font-size:13px;cursor:pointer">Cancelar</button>
+      <button onclick="enviarPedidoMarca()" style="flex:1;padding:12px;border-radius:99px;border:none;background:#25D366;color:#fff;font-weight:700;font-size:13px;cursor:pointer">💬 Enviar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 var WHATSAPP_NUMERO = '50237673927';
@@ -301,6 +356,27 @@ function registrarPedido(item, mascotaNombre, tipo){
     body:JSON.stringify({uid_mascota: mascotaPersonal?mascotaPersonal.uid:'', nombre_mascota:mascotaNombre||'', email:sessionEmail, producto:item, origen:tipo||'tienda'})}).catch(function(){});
 }
 
+var marcaActual = '';
+function abrirPedidoMarca(marca){
+  marcaActual = marca;
+  document.getElementById('modalMarcaTitulo').textContent = '🥣 Pedido de ' + marca;
+  document.getElementById('modalMarcaTexto').value = '';
+  document.getElementById('modalMarcaOverlay').style.display = 'flex';
+}
+function cerrarModalMarca(){
+  document.getElementById('modalMarcaOverlay').style.display = 'none';
+}
+function enviarPedidoMarca(){
+  var texto = document.getElementById('modalMarcaTexto').value.trim();
+  if(!texto){ alert('Escribe qué producto necesitas.'); return; }
+  var nombreMasc = mascotaPersonal ? mascotaPersonal.nombre : '';
+  var itemCompleto = marcaActual + ': ' + texto;
+  registrarPedido(itemCompleto, nombreMasc, 'alimento_marca');
+  var mensaje = encodeURIComponent('Hola! Quiero pedir de ' + marcaActual + ': ' + texto + (nombreMasc ? ' (para ' + nombreMasc + ')' : ''));
+  window.open('https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje, '_blank');
+  cerrarModalMarca();
+}
+
 function cargarProductos(){
   fetch('/api/galeria?action=getProductosTienda')
   .then(function(r){return r.json();})
@@ -340,9 +416,11 @@ function renderGrid(){
     return;
   }
   document.getElementById('grid').innerHTML = lista.map(function(p){
-    var foto = p.imagen && p.imagen.indexOf('http')>=0
-      ? '<img class="prod-foto" src="'+p.imagen+'">'
+    var fotosP = fotosProducto(p);
+    var foto = fotosP.length
+      ? '<img class="prod-foto" src="'+fotosP[0]+'" loading="lazy" alt="">'
       : '<div class="prod-foto-ph">🐾</div>';
+    var fotosBadge = fotosP.length > 1 ? '<div class="prod-fotos-badge">📷 '+fotosP.length+'</div>' : '';
     var usadoBadge = p.condicion === 'Usado'
       ? '<div style="position:absolute;top:8px;left:8px;background:#1a1a2e;color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px">Usado</div>'
       : '<div style="position:absolute;top:8px;left:8px;background:#2e7d32;color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px">Nuevo</div>';
@@ -356,10 +434,10 @@ function renderGrid(){
     else if(agotado) stockTxt = '<div class="sin-stock">Agotado</div>';
     var mensaje = encodeURIComponent('Hola! Quiero pedir: ' + p.nombre);
     var carritoBtn = p.precio && !agotado
-      ? '<button class="agregar-carrito-btn" onclick=\'agregarAlCarrito('+JSON.stringify(p)+',event)\'><img src="/img/cart.png" alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px">Agregar al carrito</button>'
+      ? '<button class="agregar-carrito-btn" onclick="agregarAlCarrito(productoPorId(\''+p.id+'\'),event)\"><img src="/img/cart.png" alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px">Agregar al carrito</button>'
       : '';
-    return '<div class="prod-card" onclick=\'abrirModalProducto('+JSON.stringify(p)+')\'>'
-      + '<div style="position:relative">'+foto+usadoBadge+'</div>'
+    return '<div class="prod-card" onclick="abrirModalProductoId(\''+p.id+'\')">'
+      + '<div style="position:relative">'+foto+usadoBadge+fotosBadge+'</div>'
       + '<div class="prod-info">'
       + '<div class="prod-nombre">'+p.nombre+'</div>'
       + (p.descripcion ? '<div class="prod-desc">'+p.descripcion+'</div>' : '')
@@ -371,44 +449,129 @@ function renderGrid(){
   }).join('');
 }
 
+// ── Fotos: la principal (imagen) + las adicionales (imagenes) ──────────
+function fotosProducto(p){
+  var out = [];
+  function add(u){ if(typeof u === 'string' && u.indexOf('http') === 0 && out.indexOf(u) < 0) out.push(u); }
+  add(p.imagen);
+  var extra = p.imagenes;
+  if(typeof extra === 'string'){ try{ extra = JSON.parse(extra); }catch(e){ extra = []; } }
+  if(Array.isArray(extra)) extra.forEach(add);
+  return out;
+}
+function productoPorId(id){
+  return productos.find(function(x){ return String(x.id) === String(id); });
+}
+function escAttr(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+// ── Modal de producto: pantalla completa en móvil, con galería y botones de compra ──
+var modalProdAbierto = false;
+
+function abrirModalProductoId(id){
+  var p = productoPorId(id);
+  if(p) abrirModalProducto(p);
+}
+
 function abrirModalProducto(p){
-  var foto = p.imagen && p.imagen.indexOf('http')>=0
-    ? '<img class="modal-prod-foto" src="'+p.imagen+'">'
-    : '<div class="modal-prod-foto-ph">🐾</div>';
+  var fotos = fotosProducto(p);
+  var n = fotos.length;
+  var slides = n
+    ? fotos.map(function(u){ return '<div class="galeria-slide"><img src="'+u+'" alt="'+escAttr(p.nombre)+'" draggable="false"></div>'; }).join('')
+    : '<div class="galeria-slide"><div class="modal-prod-foto-ph" style="width:100%;height:100%;aspect-ratio:auto">🐾</div></div>';
+  var controles = n > 1
+    ? '<button class="galeria-nav prev" onclick="galeriaIr(-1)" aria-label="Foto anterior">‹</button>'
+      + '<button class="galeria-nav next" onclick="galeriaIr(1)" aria-label="Foto siguiente">›</button>'
+      + '<div class="galeria-count" id="galeriaCount">1/'+n+'</div>'
+      + '<div class="galeria-dots">'+fotos.map(function(_,i){ return '<span class="galeria-dot'+(i===0?' on':'')+'"></span>'; }).join('')+'</div>'
+    : '';
   var usadoBadge = p.condicion === 'Usado'
-    ? '<div style="position:absolute;top:14px;left:14px;background:#1a1a2e;color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:99px">Usado</div>'
-    : '<div style="position:absolute;top:14px;left:14px;background:#2e7d32;color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:99px">Nuevo</div>';
+    ? '<div style="position:absolute;top:14px;left:14px;background:#1a1a2e;color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:99px;z-index:3">Usado</div>'
+    : '<div style="position:absolute;top:14px;left:14px;background:#2e7d32;color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:99px;z-index:3">Nuevo</div>';
   var precioTxt = p.precio ? ('Q'+Number(p.precio).toFixed(2)) : 'Consultar precio';
   var envioTxt = p.envio_incluido
     ? '<div style="font-size:12px;color:#00838f;font-weight:700;margin-bottom:14px">🚚 Envío incluido</div>'
     : (p.costo_envio ? '<div style="font-size:12px;color:#888;margin-bottom:14px">🚚 Envío: '+p.costo_envio+'</div>' : '<div style="margin-bottom:14px"></div>');
-  var mensaje = encodeURIComponent('Hola! Quiero pedir: ' + p.nombre);
-  var stockTxtModal = '';
-  var agotadoModal = p.stock != null && p.stock <= 0;
-  if(p.stock != null && p.stock > 0 && p.stock <= 3) stockTxtModal = '<div class="stock-bajo" style="margin-bottom:10px">¡Solo quedan '+p.stock+'!</div>';
-  else if(agotadoModal) stockTxtModal = '<div class="sin-stock" style="margin-bottom:10px">Agotado</div>';
-  var carritoBtnModal = p.precio && !agotadoModal
-    ? '<button class="agregar-carrito-btn" style="padding:13px;margin-top:10px" onclick=\'agregarAlCarrito('+JSON.stringify(p)+');cerrarModalProducto();abrirCarrito()\'><img src="/img/cart.png" alt="" style="width:16px;height:16px;vertical-align:-3px;margin-right:5px">Agregar al carrito</button>'
+  var agotado = p.stock != null && p.stock <= 0;
+  var stockTxt = '';
+  if(p.stock != null && p.stock > 0 && p.stock <= 3) stockTxt = '<div class="stock-bajo" style="margin-bottom:10px">¡Solo quedan '+p.stock+'!</div>';
+  else if(agotado) stockTxt = '<div class="sin-stock" style="margin-bottom:10px">Agotado</div>';
+
+  var waHref = 'https://wa.me/'+WHATSAPP_NUMERO+'?text='+encodeURIComponent('Hola! Quiero pedir: ' + p.nombre);
+  var btnWA = '<a class="prod-btn" href="'+waHref+'" target="_blank" rel="noopener" onclick="registrarPedidoProducto(\''+p.id+'\')">💬 WhatsApp</a>';
+  var btnCarrito = p.precio && !agotado
+    ? '<button class="agregar-carrito-btn" onclick="agregarDesdeModal(\''+p.id+'\')"><img src="/img/cart.png" alt="" style="width:16px;height:16px;vertical-align:-3px;margin-right:5px">Agregar al carrito</button>'
     : '';
+
   document.getElementById('modalProdContent').innerHTML =
-    '<div style="position:relative">'
-    + '<button class="modal-prod-close" onclick="cerrarModalProducto()">✕</button>'
-    + foto + usadoBadge
+    '<button class="modal-prod-close" onclick="cerrarModalProducto()" aria-label="Cerrar">✕</button>'
+    + '<div class="modal-prod-scroll">'
+    +   '<div class="galeria">'+usadoBadge
+    +     '<div class="galeria-track" id="galeriaTrack" onscroll="galeriaScroll()">'+slides+'</div>'+controles
+    +   '</div>'
+    +   '<div class="modal-prod-body">'
+    +     '<div class="modal-prod-nombre">'+p.nombre+'</div>'
+    +     '<div class="modal-prod-precio">'+precioTxt+'</div>'
+    +     envioTxt + stockTxt
+    +     (p.descripcion ? '<div class="modal-prod-desc">'+p.descripcion+'</div>' : '')
+    +   '</div>'
     + '</div>'
-    + '<div class="modal-prod-body">'
-    + '<div class="modal-prod-nombre">'+p.nombre+'</div>'
-    + '<div class="modal-prod-precio">'+precioTxt+'</div>'
-    + envioTxt + stockTxtModal
-    + (p.descripcion ? '<div class="modal-prod-desc">'+p.descripcion+'</div>' : '')
-    + '<a class="prod-btn" style="display:block;padding:13px" href="https://wa.me/'+WHATSAPP_NUMERO+'?text='+mensaje+'" target="_blank" onclick="registrarPedido(\''+p.nombre.replace(/'/g,"\\'")+'\',\''+(mascotaPersonal?mascotaPersonal.nombre:'').replace(/'/g,"\\'")+'\',\'producto\')">💬 WhatsApp</a>'
-    + carritoBtnModal
-    + '</div>';
+    + '<div class="modal-prod-bar">'+btnWA+btnCarrito+'</div>';
+
   document.getElementById('modalProdOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if(!modalProdAbierto){
+    modalProdAbierto = true;
+    // El botón "atrás" del celular cierra el modal en vez de salirse de la tienda.
+    try{ history.pushState({tiendaModal:true}, ''); }catch(e){}
+  }
 }
 
-function cerrarModalProducto(){
-  document.getElementById('modalProdOverlay').classList.remove('open');
+function cerrarModalProducto(desdePopstate){
+  var ov = document.getElementById('modalProdOverlay');
+  var estabaAbierto = modalProdAbierto;
+  ov.classList.remove('open');
+  document.body.style.overflow = '';
+  modalProdAbierto = false;
+  if(estabaAbierto && desdePopstate !== true && history.state && history.state.tiendaModal){
+    try{ history.back(); }catch(e){}
+  }
 }
+
+function galeriaScroll(){
+  var t = document.getElementById('galeriaTrack');
+  if(!t || !t.clientWidth) return;
+  var i = Math.round(t.scrollLeft / t.clientWidth);
+  var dots = document.querySelectorAll('.galeria-dot');
+  dots.forEach(function(d,k){ d.classList.toggle('on', k === i); });
+  var cnt = document.getElementById('galeriaCount');
+  if(cnt) cnt.textContent = (i+1) + '/' + dots.length;
+}
+function galeriaIr(delta){
+  var t = document.getElementById('galeriaTrack');
+  if(t) t.scrollBy({ left: delta * t.clientWidth, behavior: 'smooth' });
+}
+
+function agregarDesdeModal(id){
+  var p = productoPorId(id);
+  if(!p) return;
+  agregarAlCarrito(p);
+  cerrarModalProducto();
+  abrirCarrito();
+}
+function registrarPedidoProducto(id){
+  var p = productoPorId(id);
+  if(p) registrarPedido(p.nombre, mascotaPersonal ? mascotaPersonal.nombre : '', 'producto');
+}
+
+window.addEventListener('popstate', function(){ if(modalProdAbierto) cerrarModalProducto(true); });
+document.addEventListener('keydown', function(e){
+  if(!modalProdAbierto) return;
+  if(e.key === 'Escape') cerrarModalProducto();
+  else if(e.key === 'ArrowLeft') galeriaIr(-1);
+  else if(e.key === 'ArrowRight') galeriaIr(1);
+});
 </script>
 <div class="modal-overlay" id="modalProdOverlay" onclick="if(event.target===this)cerrarModalProducto()">
   <div class="modal-prod" id="modalProdContent"></div>

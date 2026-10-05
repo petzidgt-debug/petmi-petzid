@@ -1004,8 +1004,16 @@ tbody tr:last-child td{border-bottom:none}
       <option value="Nuevo">Nuevo</option>
       <option value="Usado">Usado</option>
     </select>
-    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">URL de la foto</label>
-    <input type="text" id="prodImagen" placeholder="https://..." style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Foto principal (URL)</label>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="prodImagen" placeholder="https://..." oninput="renderPrevioFotosProducto()" style="flex:1;min-width:0;padding:9px;border:1px solid #ddd;border-radius:8px">
+      <button type="button" onclick="subirFotoProducto('principal')" style="padding:0 12px;border:none;border-radius:8px;background:#e0f0ff;color:#0055aa;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">📷 Subir</button>
+    </div>
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:12px 0 4px">Fotos adicionales <span style="font-weight:400">(una URL por línea — se ven al tocar el producto)</span></label>
+    <textarea id="prodImagenes" rows="3" placeholder="https://...&#10;https://..." oninput="renderPrevioFotosProducto()" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:12.5px;font-family:Arial,sans-serif;resize:vertical"></textarea>
+    <button type="button" onclick="subirFotoProducto('extra')" style="margin-top:6px;padding:8px 14px;border:none;border-radius:8px;background:#e0f0ff;color:#0055aa;font-size:12px;font-weight:700;cursor:pointer">📷 Subir fotos adicionales (puedes elegir varias)</button>
+    <div id="prodFotoEstado" style="font-size:12px;color:#888;margin-top:6px;min-height:14px"></div>
+    <div id="prodFotosPrevia" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#333;margin:14px 0 4px;cursor:pointer">
       <input type="checkbox" id="prodEnvioIncluido" onchange="document.getElementById('prodCostoEnvioWrap').style.display=this.checked?'none':'block'" style="width:16px;height:16px">
       🚚 Envío incluido
@@ -3459,8 +3467,11 @@ function loadTiendaProductos(){
       document.getElementById('tiendaProductosBody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Sin productos — crea el primero</td></tr>';
       return;
     }
+    _tiendaProductosAdmin = productos;
     document.getElementById('tiendaProductosBody').innerHTML = productos.map(function(p){
-      var foto = p.imagen ? '<img src="'+p.imagen+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover">' : '—';
+      var nExtra = Array.isArray(p.imagenes) ? p.imagenes.length : 0;
+      var foto = (p.imagen ? '<img src="'+p.imagen+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover">' : '—')
+        + (nExtra ? '<div style="font-size:10px;color:#888;margin-top:2px">📷 +'+nExtra+'</div>' : '');
       var precio = p.precio ? ('Q'+Number(p.precio).toFixed(2)) : 'Consultar';
       return '<tr>'
         + '<td>'+foto+'</td>'
@@ -3468,7 +3479,7 @@ function loadTiendaProductos(){
         + '<td>'+p.categoria+'</td>'
         + '<td>'+precio+'</td>'
         + '<td><input type="checkbox" '+(p.activo?'checked':'')+' onchange="toggleProducto('+p.id+',this.checked)"></td>'
-        + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick=\'editarProducto('+JSON.stringify(p)+')\'>Editar</button> '
+        + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick="editarProductoId('+p.id+')">Editar</button> '
         + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px;color:#c0392b" onclick="eliminarProducto('+p.id+')">Borrar</button></td>'
         + '</tr>';
     }).join('');
@@ -3543,10 +3554,20 @@ function abrirModalProducto(){
   document.getElementById('prodEspecie').value = 'Todos';
   document.getElementById('prodCondicion').value = 'Nuevo';
   document.getElementById('prodImagen').value = '';
+  document.getElementById('prodImagenes').value = '';
+  _prodTeniaExtras = false;
+  document.getElementById('prodFotoEstado').textContent = '';
+  renderPrevioFotosProducto();
   document.getElementById('prodEnvioIncluido').checked = false;
   document.getElementById('prodCostoEnvio').value = '';
   document.getElementById('prodCostoEnvioWrap').style.display = 'block';
   document.getElementById('modalProducto').classList.add('open');
+}
+
+var _tiendaProductosAdmin = [];
+function editarProductoId(id){
+  var p = _tiendaProductosAdmin.find(function(x){ return String(x.id) === String(id); });
+  if(p) editarProducto(p);
 }
 
 function editarProducto(p){
@@ -3559,10 +3580,110 @@ function editarProducto(p){
   document.getElementById('prodEspecie').value = p.especie || 'Todos';
   document.getElementById('prodCondicion').value = p.condicion || 'Nuevo';
   document.getElementById('prodImagen').value = p.imagen || '';
+  var extras = p.imagenes;
+  if(typeof extras === 'string'){ try{ extras = JSON.parse(extras); }catch(e){ extras = []; } }
+  extras = Array.isArray(extras) ? extras : [];
+  document.getElementById('prodImagenes').value = extras.join('\n');
+  _prodTeniaExtras = extras.length > 0;
+  document.getElementById('prodFotoEstado').textContent = '';
+  renderPrevioFotosProducto();
   document.getElementById('prodEnvioIncluido').checked = !!p.envio_incluido;
   document.getElementById('prodCostoEnvio').value = p.costo_envio || '';
   document.getElementById('prodCostoEnvioWrap').style.display = p.envio_incluido ? 'none' : 'block';
   document.getElementById('modalProducto').classList.add('open');
+}
+
+// ── Fotos del producto (principal + adicionales) ────────────────
+var _prodTeniaExtras = false;
+
+function prodFotosExtra(){
+  return document.getElementById('prodImagenes').value.split('\n')
+    .map(function(s){ return s.trim(); })
+    .filter(function(s){ return /^https?:\/\//i.test(s); });
+}
+
+function renderPrevioFotosProducto(){
+  var box = document.getElementById('prodFotosPrevia');
+  if(!box) return;
+  function mini(url, esPrincipal, idx){
+    var u = String(url).replace(/"/g, '%22');
+    return '<div style="position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;background:#eee;border:'+(esPrincipal?'2px solid #00B4B4':'1px solid #ddd')+'">'
+      + '<img src="'+u+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity=.2">'
+      + (esPrincipal
+          ? '<span style="position:absolute;bottom:0;left:0;right:0;background:#00B4B4;color:#fff;font-size:9px;font-weight:700;text-align:center">Principal</span>'
+          : '<button type="button" onclick="quitarFotoExtraProducto('+idx+')" title="Quitar" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;font-size:11px;cursor:pointer;line-height:1;padding:0">✕</button>')
+      + '</div>';
+  }
+  var principal = document.getElementById('prodImagen').value.trim();
+  var html = /^https?:\/\//i.test(principal) ? mini(principal, true) : '';
+  prodFotosExtra().forEach(function(u, i){ html += mini(u, false, i); });
+  box.innerHTML = html;
+}
+
+function quitarFotoExtraProducto(i){
+  var lista = prodFotosExtra();
+  lista.splice(i, 1);
+  document.getElementById('prodImagenes').value = lista.join('\n');
+  renderPrevioFotosProducto();
+}
+
+// Reduce la foto (máx. 1200 px de lado, JPEG) antes de subirla, para que
+// una foto de cámara de varios MB no supere el límite de tamaño del servidor.
+function comprimirFotoProducto(file){
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onerror = function(){ reject(new Error('No se pudo leer la foto')); };
+    reader.onload = function(e){
+      var img = new Image();
+      img.onerror = function(){ reject(new Error('Formato de imagen no válido')); };
+      img.onload = function(){
+        var MAX = 1200, w = img.width, h = img.height;
+        if(w >= h && w > MAX){ h = Math.round(h * MAX / w); w = MAX; }
+        else if(h > w && h > MAX){ w = Math.round(w * MAX / h); h = MAX; }
+        var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        var ctx = cv.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);   // fondo blanco por si el PNG es transparente
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(cv.toDataURL('image/jpeg', 0.85).split(',')[1]);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function subirFotoProducto(destino){
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = (destino === 'extra');
+  inp.onchange = async function(){
+    var archivos = Array.prototype.slice.call(inp.files || []);
+    if(!archivos.length) return;
+    var estado = document.getElementById('prodFotoEstado');
+    for(var i = 0; i < archivos.length; i++){
+      estado.textContent = 'Subiendo foto ' + (i + 1) + ' de ' + archivos.length + '...';
+      try{
+        var b64 = await comprimirFotoProducto(archivos[i]);
+        var r = await fetch('/api/subir-foto', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ photoBase64: b64, mimeType: 'image/jpeg', fileName: 'producto_' + Date.now() + '_' + i + '.jpg' })
+        });
+        var d = await r.json();
+        if(!d.ok || !d.url) throw new Error(d.error || 'No se pudo subir');
+        if(destino === 'principal'){
+          document.getElementById('prodImagen').value = d.url;
+        } else {
+          var ta = document.getElementById('prodImagenes');
+          ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + d.url;
+        }
+        renderPrevioFotosProducto();
+      }catch(e){
+        estado.textContent = '⚠️ ' + (e.message || 'Error al subir la foto') + (i > 0 ? ' (las anteriores sí se subieron)' : '');
+        return;
+      }
+    }
+    estado.textContent = '✅ Listo — recuerda tocar Guardar.';
+  };
+  inp.click();
 }
 
 function guardarProducto(){
@@ -3580,6 +3701,11 @@ function guardarProducto(){
     costo_envio: envioIncluido ? null : (document.getElementById('prodCostoEnvio').value.trim() || null)
   };
   if(!payload.nombre || !payload.categoria){ alert('Nombre y categoría son obligatorios.'); return; }
+  // Las fotos adicionales solo se mandan si hay alguna, o si el producto
+  // tenía y ahora se quitaron todas (así no se toca la columna "imagenes"
+  // en productos que no la usan).
+  var fotosExtra = prodFotosExtra();
+  if(fotosExtra.length || _prodTeniaExtras) payload.imagenes = fotosExtra;
   var action = id ? 'actualizarProductoTienda' : 'crearProductoTienda';
   if(id) payload.id = parseInt(id);
   fetch('/api/galeria?action='+action, {
