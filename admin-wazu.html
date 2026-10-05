@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin — Ruleta Wazu 2026</title>
+<title>Admin — Ruleta Wazu</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh}
@@ -54,6 +54,19 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
 .stat-card{background:#fff;border-radius:12px;border:0.5px solid #eee;padding:14px 18px;flex:1}
 .stat-num{font-size:22px;font-weight:900;color:#1a1a2e}
 .stat-lbl{font-size:11px;color:#888;text-transform:uppercase}
+
+/* Promos ganadas */
+.filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.filtros .search-box{margin-bottom:0}
+.filtros select{padding:10px 12px;border:1.5px solid #ddd;border-radius:10px;font-size:13px;background:#fff}
+.tpl-box{width:100%;border:1.5px solid #ddd;border-radius:10px;padding:10px 12px;font-size:13px;font-family:Arial,sans-serif;resize:vertical;line-height:1.5}
+.badge-promo{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700}
+.bp-bano50{background:#e0f7f7;color:#007a7a}
+.bp-cortesia{background:#fff4d6;color:#8a6200}
+.bp-masaje{background:#eeeaff;color:#5a3ec8}
+.bp-accesorios{background:#fbeaf0;color:#c0392b}
+.btn-siguiente{background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;padding:11px 20px;border-radius:99px;font-size:13px;font-weight:800;cursor:pointer}
+tr.promo-actual td{background:#fff8e1}
 </style>
 </head>
 <body>
@@ -73,6 +86,7 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
   <div class="tabs">
     <button class="tab-btn active" id="tabClientesBtn" onclick="mostrarTab('clientes')">Clientes (<span id="totalClientes">0</span>)</button>
     <button class="tab-btn" id="tabGirosBtn" onclick="mostrarTab('giros')">Giros (<span id="totalGiros">0</span>)</button>
+    <button class="tab-btn" id="tabPromosBtn" onclick="mostrarTab('promos')">Promos ganadas (<span id="totalPromos">0</span>)</button>
   </div>
 
   <div class="content">
@@ -94,6 +108,51 @@ td.truncar{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:no
               <th>Producto</th><th>Giró</th><th>Contactado</th><th></th>
             </tr></thead>
             <tbody id="clientesBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="panelPromos" style="display:none">
+      <div class="stat-row">
+        <div class="stat-card"><div class="stat-num" id="statPromosTotal">–</div><div class="stat-lbl">Total ganadores</div></div>
+        <div class="stat-card"><div class="stat-num" id="statPromosContactados">–</div><div class="stat-lbl">Contactados</div></div>
+        <div class="stat-card"><div class="stat-num" id="statPromosPendientes">–</div><div class="stat-lbl">Pendientes</div></div>
+        <div class="stat-card"><div class="stat-num" id="statPromosAbrieron">–</div><div class="stat-lbl">Abrieron su promo</div></div>
+        <div class="stat-card"><div class="stat-num" id="statPromosClics">–</div><div class="stat-lbl">Clics en "Crear ID"</div></div>
+      </div>
+
+      <div class="table-card" style="padding:16px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:8px">Mensaje para los ganadores (editable — se guarda en este navegador)</div>
+        <textarea class="tpl-box" id="promoMensajeTpl" rows="6"></textarea>
+        <div style="font-size:11.5px;color:#999;margin-top:6px;line-height:1.5">Usa <b>{nombre}</b> (primer nombre), <b>{promo}</b> y <b>{link}</b>. El {link} abre una página con la imagen de su promo — WhatsApp la muestra como vista previa dentro del chat.
+          <a href="#" onclick="restaurarPlantillaPromo();return false" style="color:#7B61FF;font-weight:700;margin-left:6px">Restaurar mensaje original</a></div>
+      </div>
+
+      <div class="filtros">
+        <select id="filtroPromoTipo" onchange="renderPromos()">
+          <option value="">Todas las promos</option>
+          <option value="bano50">50% OFF en baño</option>
+          <option value="cortesia">Baño de cortesía</option>
+          <option value="masaje">Masaje + Ozonoterapia</option>
+          <option value="accesorios">Q50 en accesorios</option>
+        </select>
+        <select id="filtroPromoEstado" onchange="renderPromos()">
+          <option value="">Todos</option>
+          <option value="pendientes">Pendientes</option>
+          <option value="contactados">Contactados</option>
+          <option value="abrieron">Ya abrieron su promo</option>
+          <option value="sin_abrir">Aún no abren su promo</option>
+        </select>
+        <input type="text" class="search-box" id="buscarPromo" placeholder="Buscar por nombre o teléfono..." oninput="renderPromos()">
+        <button class="btn-siguiente" id="btnSiguientePromo" onclick="contactarSiguientePromo()">💬 Empezar a contactar pendientes</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Teléfono</th><th>Promo</th><th>Correo / Notas</th><th>Contactado</th><th>Vio promo</th><th></th></tr></thead>
+            <tbody id="promosBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -156,15 +215,16 @@ if(localStorage.getItem('wazu_admin') === '1'){
 }
 
 function mostrarTab(nombre){
-  document.getElementById('panelClientes').style.display = nombre === 'clientes' ? 'block' : 'none';
-  document.getElementById('panelGiros').style.display = nombre === 'giros' ? 'block' : 'none';
-  document.getElementById('tabClientesBtn').classList.toggle('active', nombre === 'clientes');
-  document.getElementById('tabGirosBtn').classList.toggle('active', nombre === 'giros');
+  ['Clientes','Giros','Promos'].forEach(function(n){
+    document.getElementById('panel' + n).style.display = nombre === n.toLowerCase() ? 'block' : 'none';
+    document.getElementById('tab' + n + 'Btn').classList.toggle('active', nombre === n.toLowerCase());
+  });
 }
 
 function cargarTodo(){
   cargarClientes();
   cargarGiros();
+  cargarPromos();
 }
 
 function cargarClientes(){
@@ -210,10 +270,10 @@ function wazuBuscarCliente(id){
   return clientes.find(function(c){ return String(c.id) === String(id); });
 }
 function wazuLinkPersonalizado(c){
-  return 'https://app.revistapetmi.com/ruleta-wazu.html?tel=' + encodeURIComponent(c.telefono) + '&mascota=' + encodeURIComponent(c.mascota||'');
+  return 'https://app.revistapetmi.com/ruleta-wazu.html?tel=' + encodeURIComponent(c.telefono) + '&mascota=' + encodeURIComponent(c.mascota||'') + '&fecha=' + encodeURIComponent(c.ultima_compra||'') + '&producto=' + encodeURIComponent(c.producto||'');
 }
 function wazuMensaje(c){
-  return '¡En septiembre todos ganan en WAZU! \nGira la ruleta y gana algo especial para ' + (c.mascota||c.nombre_cliente) + ' \n\n' + wazuLinkPersonalizado(c);
+  return '¡En septiembre todos ganan en WAZU! 🎉\nGira la ruleta y gana algo especial para ' + (c.mascota||c.nombre_cliente) + ' 🐾\n\n' + wazuLinkPersonalizado(c);
 }
 function wazuLinkWA(c){
   return 'https://wa.me/' + c.telefono.replace(/\D/g,'') + '?text=' + encodeURIComponent(wazuMensaje(c));
@@ -305,6 +365,209 @@ function marcarContactado(id){
     method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
   }).then(function(){ cargarGiros(); }).catch(function(){});
 }
+
+// ══════════════════════════════════════════════════════════════
+// Promos ganadas (2 oct) — personas que ganaron una promo en Wazu.
+// ══════════════════════════════════════════════════════════════
+var promos = [];
+var promoActualId = null;
+var promosClicsTotal = 0;   // a quién se le abrió WhatsApp con "siguiente pendiente"
+var PROMO_PAGINAS = {
+  bano50: 'wazu/promo-bano50.html',
+  cortesia: 'wazu/promo-cortesia.html',
+  masaje: 'wazu/promo-masaje.html',
+  accesorios: 'wazu/promo-accesorios.html'
+};
+var PROMO_TPL_DEFAULT = '¡Hola {nombre}! Gracias por apoyar la Carrera Alas de Esperanza 🐾💛\n\nTe escribimos de WAZU y PetMi para entregarte tu promo: {promo} 🎉\n\nAquí está 👇\n{link}\n\nRespóndenos por este medio para canjearla.';
+
+function escHtml(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function iniciarPlantillaPromo(){
+  var el = document.getElementById('promoMensajeTpl');
+  el.value = localStorage.getItem('wazu_promo_tpl_v2') || PROMO_TPL_DEFAULT;
+  el.addEventListener('input', function(){
+    localStorage.setItem('wazu_promo_tpl_v2', el.value);
+    renderPromos();
+  });
+}
+function restaurarPlantillaPromo(){
+  if(!confirm('¿Volver al mensaje original? Se pierde el texto que escribiste.')) return;
+  localStorage.removeItem('wazu_promo_tpl_v2');
+  document.getElementById('promoMensajeTpl').value = PROMO_TPL_DEFAULT;
+  renderPromos();
+}
+function plantillaPromo(){
+  var v = document.getElementById('promoMensajeTpl').value;
+  return v.trim() ? v : PROMO_TPL_DEFAULT;
+}
+
+function primerNombrePromo(nombre){
+  var t = String(nombre || '').trim().split(/\s+/)[0] || '';
+  return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+}
+function promoPorId(id){
+  return promos.find(function(p){ return String(p.id) === String(id); });
+}
+function linkPromo(p){
+  return 'https://app.revistapetmi.com/' + (PROMO_PAGINAS[p.promo_tipo] || '') + '?n=' + encodeURIComponent(primerNombrePromo(p.nombre)) + '&r=' + encodeURIComponent(p.id);
+}
+function mensajePromo(p){
+  return plantillaPromo()
+    .split('{nombre}').join(primerNombrePromo(p.nombre))
+    .split('{promo}').join(p.promo || '')
+    .split('{link}').join(linkPromo(p));
+}
+function waLinkPromo(p){
+  return p.telefono_wa ? 'https://wa.me/' + p.telefono_wa + '?text=' + encodeURIComponent(mensajePromo(p)) : '';
+}
+
+function promosFiltradas(){
+  var tipo = document.getElementById('filtroPromoTipo').value;
+  var estado = document.getElementById('filtroPromoEstado').value;
+  var q = document.getElementById('buscarPromo').value.trim().toLowerCase();
+  return promos.filter(function(p){
+    if(tipo && p.promo_tipo !== tipo) return false;
+    if(estado === 'pendientes' && p.contactado) return false;
+    if(estado === 'contactados' && !p.contactado) return false;
+    if(estado === 'abrieron' && !p.vistas) return false;
+    if(estado === 'sin_abrir' && p.vistas) return false;
+    if(q && (p.nombre||'').toLowerCase().indexOf(q) < 0 && (p.telefono||'').indexOf(q) < 0 && (p.telefono_wa||'').indexOf(q) < 0) return false;
+    return true;
+  });
+}
+
+function cargarPromos(){
+  fetch('/api/galeria?action=getWazuPromos')
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(!d.ok){
+      document.getElementById('promosBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c0392b;padding:20px">'+escHtml(d.error||'Error al cargar')+'</td></tr>';
+      return;
+    }
+    promos = d.promos || [];
+    promosClicsTotal = d.clics_total || 0;
+    document.getElementById('totalPromos').textContent = promos.length;
+    renderPromos();
+  }).catch(function(){
+    document.getElementById('promosBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#c0392b;padding:20px">Error al cargar — ¿corriste crear_wazu_promos_ganadas.sql?</td></tr>';
+  });
+}
+
+function renderPromos(){
+  var contactados = promos.filter(function(p){ return p.contactado; }).length;
+  document.getElementById('statPromosTotal').textContent = promos.length;
+  document.getElementById('statPromosContactados').textContent = contactados;
+  document.getElementById('statPromosPendientes').textContent = promos.length - contactados;
+  document.getElementById('statPromosAbrieron').textContent = promos.filter(function(p){ return p.vistas > 0; }).length + ' / ' + promos.length;
+  document.getElementById('statPromosClics').textContent = promosClicsTotal;
+
+  var actual = promoActualId ? promoPorId(promoActualId) : null;
+  document.getElementById('btnSiguientePromo').textContent = actual
+    ? '✓ Ya envié a ' + primerNombrePromo(actual.nombre) + ' · siguiente →'
+    : '💬 Empezar a contactar pendientes';
+
+  var lista = promosFiltradas();
+  if(!lista.length){
+    document.getElementById('promosBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Sin resultados</td></tr>';
+    return;
+  }
+  document.getElementById('promosBody').innerHTML = lista.map(function(p){
+    var notas = [p.email, p.notas].filter(Boolean).join(' · ');
+    var cuando = p.contactado_at ? 'Contactado ' + new Date(p.contactado_at).toLocaleDateString('es-GT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    var ultima = p.ultima_visita ? new Date(p.ultima_visita).toLocaleDateString('es-GT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    var vioHtml = p.vistas
+      ? '<span style="color:#2ecc71;font-weight:700" title="Última vez: '+escHtml(ultima)+'">✓ '+p.vistas+(p.vistas>1?' veces':' vez')+'</span>'
+        + (p.clics_registro ? ' <span title="Tocó Crear el ID de mi mascota" style="background:#eeeaff;color:#5a3ec8;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700">🐾 clic ID</span>' : '')
+      : '<span style="color:#bbb">—</span>';
+    var wa = p.telefono_wa
+      ? '<a class="btn-mini" style="background:#25D366;text-decoration:none;display:inline-block" href="'+escHtml(waLinkPromo(p))+'" target="_blank" title="Enviar por WhatsApp">💬</a> '
+      : '<button class="btn-mini" style="background:#E05090" onclick="corregirTelPromo(\''+p.id+'\')" title="Este teléfono no es válido — clic para corregirlo">⚠️ Corregir tel.</button> ';
+    return '<tr'+(p.id === promoActualId ? ' class="promo-actual"' : '')+'>'
+      + '<td><b>'+escHtml(p.nombre)+'</b></td>'
+      + '<td>'+escHtml(p.telefono||'—')+'</td>'
+      + '<td><span class="badge-promo bp-'+escHtml(p.promo_tipo)+'">'+escHtml(p.promo)+'</span></td>'
+      + '<td class="truncar" title="'+escHtml(notas)+'">'+(notas ? escHtml(notas) : '—')+'</td>'
+      + '<td style="text-align:center"><input type="checkbox" '+(p.contactado?'checked':'')+' title="'+escHtml(cuando)+'" onchange="marcarPromoContactado(\''+p.id+'\',this.checked)" style="width:16px;height:16px;cursor:pointer"></td>'
+      + '<td>'+vioHtml+'</td>'
+      + '<td style="white-space:nowrap">'+wa
+      + '<button class="btn-mini btn-mini-alt" onclick="copiarMensajePromo(this,\''+p.id+'\')" title="Copiar mensaje">📋</button> '
+      + '<button class="btn-mini" style="background:#c0392b" onclick="eliminarPromo(\''+p.id+'\')" title="Eliminar">🗑️</button></td></tr>';
+  }).join('');
+}
+
+function marcarPromoContactado(id, valor){
+  var p = promoPorId(id);
+  if(!p) return;
+  p.contactado = !!valor;
+  p.contactado_at = valor ? new Date().toISOString() : null;
+  renderPromos();
+  fetch('/api/galeria?action=marcarWazuPromoContactado', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, contactado: !!valor })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if(!d.ok) throw new Error('no ok');
+  }).catch(function(){
+    p.contactado = !valor; p.contactado_at = null; renderPromos();
+    alert('No se pudo guardar. Intenta de nuevo.');
+  });
+}
+
+// Flujo para recorrer la lista: el botón abre el WhatsApp del siguiente
+// pendiente (de lo que se esté viendo con los filtros). La siguiente vez
+// que lo presionas, da por enviado al anterior, lo marca como contactado
+// y abre al que sigue.
+function contactarSiguientePromo(){
+  if(promoActualId){
+    var prev = promoPorId(promoActualId);
+    if(prev && !prev.contactado) marcarPromoContactado(prev.id, true);
+  }
+  var pendientes = promosFiltradas().filter(function(p){ return !p.contactado && p.telefono_wa; });
+  if(!pendientes.length){
+    promoActualId = null;
+    renderPromos();
+    alert('¡Listo! No quedan pendientes con teléfono válido en esta vista. 🎉');
+    return;
+  }
+  var sig = pendientes[0];
+  promoActualId = sig.id;
+  window.open(waLinkPromo(sig), '_blank');
+  renderPromos();
+}
+
+function copiarMensajePromo(btn, id){
+  var p = promoPorId(id);
+  if(p) copiarTexto(btn, mensajePromo(p));
+}
+
+function corregirTelPromo(id){
+  var p = promoPorId(id);
+  if(!p) return;
+  var nuevo = prompt('Teléfono correcto de ' + p.nombre + ' (8 dígitos):', p.telefono || '');
+  if(!nuevo) return;
+  fetch('/api/galeria?action=actualizarWazuPromoTelefono', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id, telefono: nuevo })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if(!d.ok){ alert(d.error || 'No se pudo guardar.'); return; }
+    p.telefono = nuevo.trim(); p.telefono_wa = d.telefono_wa;
+    renderPromos();
+  }).catch(function(){ alert('No se pudo guardar. Intenta de nuevo.'); });
+}
+
+function eliminarPromo(id){
+  var p = promoPorId(id);
+  if(!confirm('¿Quitar a "' + (p ? p.nombre : id) + '" de la lista de promos? Esto no se puede deshacer.')) return;
+  fetch('/api/galeria?action=eliminarWazuPromo', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id: id })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if(!d.ok) throw new Error('no ok');
+    promos = promos.filter(function(x){ return String(x.id) !== String(id); });
+    document.getElementById('totalPromos').textContent = promos.length;
+    renderPromos();
+  }).catch(function(){ alert('No se pudo eliminar. Intenta de nuevo.'); });
+}
+
+iniciarPlantillaPromo();
 </script>
 </body>
 </html>
