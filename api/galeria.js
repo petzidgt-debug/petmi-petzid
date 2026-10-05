@@ -1973,6 +1973,40 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: r.ok });
     }
 
+    // ── crearWazuPromo (2 oct) — agrega a mano a una persona que ganó una promo. ──
+    if (action === 'crearWazuPromo' && req.method === 'POST') {
+      const { nombre, telefono, promo_tipo, email, notas } = req.body || {};
+      const PROMOS_WAZU = { bano50: '50% OFF en baño', cortesia: 'Baño de cortesía', masaje: 'Masaje + Ozonoterapia', accesorios: 'Q50 en accesorios' };
+      const nom = String(nombre || '').trim().slice(0, 120);
+      if (!nom) return res.status(200).json({ ok: false, error: 'Escribe el nombre.' });
+      if (!PROMOS_WAZU[promo_tipo]) return res.status(200).json({ ok: false, error: 'Elige la promo.' });
+      const dig = String(telefono || '').replace(/\D/g, '');
+      let wa = null;
+      if (dig.length === 8) wa = '502' + dig;
+      else if (dig.length === 11 && dig.indexOf('502') === 0) wa = dig;
+      if (!wa) return res.status(200).json({ ok: false, error: 'El teléfono debe tener 8 dígitos (Guatemala).' });
+      const fila = {
+        nombre: nom, promo_tipo: promo_tipo, promo: PROMOS_WAZU[promo_tipo],
+        telefono: String(telefono).trim().slice(0, 40), telefono_wa: wa,
+        email: String(email || '').trim().slice(0, 200) || null,
+        notas: String(notas || '').trim().slice(0, 500) || null
+      };
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_promos_ganadas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
+        body: JSON.stringify(fila)
+      });
+      const txt = await r.text().catch(() => '');
+      // Ya existe esa misma persona con esa misma promo (índice único nombre + promo).
+      if (r.status === 409 || txt.indexOf('23505') >= 0) return res.status(200).json({ ok: false, error: 'Ya existe "' + nom + '" con esa misma promo.' });
+      let out = null; try { out = JSON.parse(txt); } catch (e) {}
+      if (!r.ok || !Array.isArray(out) || !out[0]) {
+        console.error('crearWazuPromo failed:', r.status, txt);
+        return res.status(200).json({ ok: false, error: 'No se pudo guardar. ' + (txt || ('HTTP ' + r.status)) });
+      }
+      return res.status(200).json({ ok: true, promo: out[0] });
+    }
+
     if (action === 'eliminarWazuPromo' && req.method === 'POST') {
       const { id } = req.body || {};
       if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
