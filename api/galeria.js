@@ -211,6 +211,140 @@ async function _enviarOTPPorWix(email, code, dueno, etiquetaLog) {
   }
 }
 
+// ── Seguimiento de clics en correos (2 oct) ───────────────────────────
+const _HOSTS_CORREO = ['app.revistapetmi.com', 'www.revistapetmi.com', 'revistapetmi.com'];
+const _UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Solo se redirige a páginas de PetMi (evita que alguien use este link para llevar a otro sitio).
+function _destinoCorreoPermitido(url) {
+  try {
+    const u = new URL(String(url));
+    return u.protocol === 'https:' && _HOSTS_CORREO.indexOf(u.hostname.toLowerCase()) >= 0;
+  } catch (e) { return false; }
+}
+
+// Clics automáticos (antivirus, vistas previas, robots): se guardan aparte y no cuentan.
+function _esBotCorreo(ua) {
+  const s = String(ua || '').trim().toLowerCase();
+  if (!s) return true;
+  return /bot|crawl|spider|preview|prefetch|scanner|headless|python|curl|wget|proxy|mimecast|proofpoint|barracuda|symantec|trendmicro|safelinks|facebookexternalhit|slurp/.test(s);
+}
+
+function _agregarUtmCorreo(url, campana, boton) {
+  if (url.indexOf('utm_source=') >= 0) return url;
+  const partes = url.split('#');
+  const sep = partes[0].indexOf('?') >= 0 ? '&' : '?';
+  return partes[0] + sep + 'utm_source=email&utm_medium=petmi&utm_campaign=' + encodeURIComponent(campana)
+    + '&utm_content=' + encodeURIComponent(boton) + (partes.length > 1 ? '#' + partes.slice(1).join('#') : '');
+}
+
+// Link con seguimiento: app.revistapetmi.com/r/<id del envío>?c=campaña&b=botón&to=destino
+function _linkRastreado(envioId, campana, boton, destino) {
+  return 'https://app.revistapetmi.com/r/' + envioId + '?c=' + encodeURIComponent(campana)
+    + '&b=' + encodeURIComponent(boton) + '&to=' + encodeURIComponent(_agregarUtmCorreo(destino, campana, boton));
+}
+
+// Anota un envío en email_envios. Nunca detiene ni rompe el envío si falla.
+async function _registrarEnvioCorreo(fila) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/email_envios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+      body: JSON.stringify(fila)
+    });
+    if (!r.ok) console.error('email_envios falló:', r.status, await r.text().catch(() => ''));
+  } catch (e) { console.error('email_envios error:', e.message); }
+}
+
+// Lee TODAS las filas de una consulta (Supabase entrega máximo 1000 por vez).
+async function _leerTodoSupabase(tabla, query, max) {
+  const filas = [];
+  for (let offset = 0; offset < max; offset += 1000) {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + tabla + '?' + query + '&limit=1000&offset=' + offset, {
+      headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+    });
+    const lote = await r.json().catch(() => null);
+    if (!Array.isArray(lote)) return null;
+    filas.push.apply(filas, lote);
+    if (lote.length < 1000) break;
+  }
+  return filas;
+}
+
+function _escHtmlCorreo(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Correo "a tu mascota le falta su foto" (mismo diseño que los demás correos de PetMi).
+function _htmlRecordatorioFoto(nombre, dueno, uid, envioId) {
+  const n = _escHtmlCorreo(nombre), d = _escHtmlCorreo(dueno);
+  const destino = 'https://app.revistapetmi.com/editar.html?uid=' + encodeURIComponent(uid);
+  // Con seguimiento si hay id de envío (el & va como &amp; porque está dentro de un atributo HTML)
+  const link = envioId ? _linkRastreado(envioId, 'recordatorio_foto', 'editar', destino).replace(/&/g, '&amp;') : destino;
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
+    + '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">'
+    + '<div style="background:#00B4B4;padding:28px;text-align:center;border-radius:12px 12px 0 0">'
+    + '<div style="display:inline-block;background:#fff;border-radius:12px;padding:8px 18px"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi" style="height:36px;width:auto;display:block"></div>'
+    + '</div>'
+    + '<div style="background:#fff;padding:28px;border:1px solid #eee">'
+    + '<h2 style="color:#1a1a2e;margin-top:0;text-align:center">A ' + n + ' le falta su mejor foto &#128062;</h2>'
+    + '<p style="color:#555;line-height:1.7;font-size:14px;text-align:center">Hola ' + d + '! Notamos que el perfil de ' + n + ' todav&iacute;a no tiene foto &mdash; con una se ve much&iacute;simo mejor su carnet, y una foto clara ayuda mucho si alguna vez se pierde.</p>'
+    + '<div style="text-align:center;margin:20px 0"><a href="' + link + '" style="background:#00B4B4;color:#fff;padding:14px 32px;border-radius:24px;text-decoration:none;font-weight:900;font-size:15px">Agregar su foto &rarr;</a></div>'
+    + '<p style="text-align:center;color:#999;font-size:12px">Solo toma un minuto.</p>'
+    + '<p style="color:#aaa;font-size:12px;margin-top:24px">Con amor, el equipo de PetMi</p>'
+    + '</div>'
+    + '<div style="background:#F5C842;padding:12px;text-align:center;border-radius:0 0 12px 12px"><p style="margin:0;font-size:12px;color:#555">PetMi Guatemala</p></div>'
+    + '</div></body></html>';
+}
+
+// Envía un correo HTML por la API de Wix (igual que el de los códigos de verificación).
+async function _enviarHtmlPorWix(email, asunto, html, etiquetaLog) {
+  if (!WIX_API_KEY) return { ok: false, error: 'WIX_API_KEY no configurada' };
+  try {
+    const r = await fetch('https://www.wixapis.com/email-transmissions/v1/email-transmissions/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': WIX_API_KEY, 'wix-site-id': WIX_SITE_ID },
+      body: JSON.stringify({
+        emailTransmission: {
+          emailSubject: asunto, emailHtmlContent: html,
+          senderName: WIX_SENDER_NAME, senderEmailAddress: WIX_SENDER_EMAIL,
+          toRecipients: [{ emailAddress: email }], type: 'TRANSACTIONAL'
+        },
+        idempotencyKey: crypto.randomUUID()
+      })
+    });
+    const bodyTxt = await r.text();
+    console.log((etiquetaLog || 'correo') + ' -> Wix status:', r.status, '| respuesta:', bodyTxt);
+    if (!r.ok) {
+      let parsed; try { parsed = JSON.parse(bodyTxt); } catch (e) { parsed = null; }
+      return { ok: false, error: 'Wix ' + r.status + ': ' + ((parsed && parsed.message) || bodyTxt || 'sin detalle').slice(0, 200) };
+    }
+    let wixId = null; try { const j = JSON.parse(bodyTxt); wixId = (j && j.emailTransmission && j.emailTransmission.id) || null; } catch (e) {}
+    return { ok: true, wixId: wixId };
+  } catch (eWix) {
+    console.error((etiquetaLog || 'correo') + ' -> Wix error:', eWix.message);
+    return { ok: false, error: 'Wix: error de conexión' };
+  }
+}
+
+// Llama a Apps Script (doPost) con tiempo límite. Devuelve { ok, error, data }.
+async function _llamarAppsScript(payload, ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(function () { ctrl.abort(); }, ms || 8000);
+  try {
+    const r = await fetch(APPS_SCRIPT_OTP_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload), redirect: 'follow', signal: ctrl.signal
+    });
+    const txt = await r.text();
+    let data = null; try { data = JSON.parse(txt); } catch (e) {}
+    if (data && data.ok) return { ok: true, data };
+    return { ok: false, error: (data && data.error) || 'respuesta no válida de Apps Script', data };
+  } catch (e) {
+    return { ok: false, error: e.name === 'AbortError' ? 'Apps Script no respondió a tiempo' : ('Apps Script: ' + e.message) };
+  } finally { clearTimeout(t); }
+}
+
 async function _enviarCodigoOTPPorCorreo(email, code, dueno, etiquetaLog) {
   const porWix = await _enviarOTPPorWix(email, code, dueno, etiquetaLog);
   if (porWix.ok) return porWix;
@@ -2045,6 +2179,137 @@ export default async function handler(req, res) {
         body: JSON.stringify({ telefono: String(telefono).trim(), telefono_wa: wa })
       });
       return res.status(200).json({ ok: r.ok, telefono_wa: wa });
+    }
+
+    // ── r (2 oct) — link de seguimiento de los correos. Anota el clic y redirige
+    // al destino original. Nunca bloquea a la persona: si no se pudo anotar,
+    // igual la manda a donde iba. HEAD (revisión de antivirus) no cuenta. ──
+    if (action === 'r') {
+      const pedido = String(req.query.to || '');
+      const destino = _destinoCorreoPermitido(pedido) ? pedido : 'https://app.revistapetmi.com/';
+      res.setHeader('Cache-Control', 'no-store');
+      if (req.method === 'GET') {
+        const ua = String((req.headers && req.headers['user-agent']) || '');
+        const e = String(req.query.e || '');
+        const fila = {
+          envio_id: _UUID_RE.test(e) ? e : null,
+          campana_id: String(req.query.c || '').substring(0, 60) || null,
+          boton: String(req.query.b || '').substring(0, 60) || null,
+          destino: destino.substring(0, 500),
+          es_bot: _esBotCorreo(ua),
+          user_agent: ua.substring(0, 200)
+        };
+        const ctrl = new AbortController();
+        const t = setTimeout(function () { ctrl.abort(); }, 1500);
+        try {
+          await fetch(SUPABASE_URL + '/rest/v1/email_clics', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+            body: JSON.stringify(fila), signal: ctrl.signal
+          });
+        } catch (eClic) { console.error('registro de clic falló:', eClic.message); }
+        finally { clearTimeout(t); }
+      }
+      res.setHeader('Location', destino);
+      return res.status(302).end();
+    }
+
+    // ── getReporteCorreos — resumen por campaña: enviados, clics únicos, CTR ──
+    if (action === 'getReporteCorreos') {
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      const [rc, rb] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/email_reporte_campanas?select=*&order=ultimo_envio.desc', { headers: H }),
+        fetch(SUPABASE_URL + '/rest/v1/email_reporte_botones?select=*', { headers: H })
+      ]);
+      const campanas = await rc.json().catch(() => null);
+      const botones = await rb.json().catch(() => null);
+      if (!Array.isArray(campanas)) return res.status(200).json({ ok: false, error: 'No se pudo leer el reporte — ¿corriste crear_email_tracking.sql?', campanas: [] });
+      const lista = Array.isArray(botones) ? botones : [];
+      campanas.forEach(function (c) {
+        c.botones = lista.filter(function (b) { return b.campana_id === c.campana_id; })
+          .sort(function (a, b) { return b.clics_unicos - a.clics_unicos; });
+      });
+      return res.status(200).json({ ok: true, campanas: campanas });
+    }
+
+    // ── getDetalleCorreos — de una campaña: quién hizo clic (y en qué), quién no, quién falló ──
+    if (action === 'getDetalleCorreos') {
+      const campana = String(req.query.campana_id || '').trim();
+      if (!campana) return res.status(400).json({ ok: false, error: 'Falta campana_id' });
+      const filtro = 'campana_id=eq.' + encodeURIComponent(campana);
+      const envios = await _leerTodoSupabase('email_envios', filtro + '&select=id,email,estado,error,canal,created_at&order=created_at.asc', 5000);
+      const clics = await _leerTodoSupabase('email_clics', filtro + '&es_bot=eq.false&select=envio_id,boton,created_at&order=created_at.asc', 20000);
+      if (!envios || !clics) return res.status(200).json({ ok: false, error: 'No se pudo leer el detalle — ¿corriste crear_email_tracking.sql?' });
+      const porEnvio = {};
+      clics.forEach(function (k) { (porEnvio[k.envio_id] = porEnvio[k.envio_id] || []).push(k); });
+      const clicaron = [], sinClic = [], fallidos = [];
+      envios.forEach(function (e) {
+        if (e.estado !== 'enviado') { fallidos.push({ email: e.email, error: e.error || '' }); return; }
+        const ks = porEnvio[e.id];
+        if (!ks) { sinClic.push(e.email); return; }
+        const botones = [];
+        ks.forEach(function (k) { if (k.boton && botones.indexOf(k.boton) < 0) botones.push(k.boton); });
+        clicaron.push({ email: e.email, clics: ks.length, botones: botones, primer_clic: ks[0].created_at, canal: e.canal });
+      });
+      clicaron.sort(function (a, b) { return a.primer_clic < b.primer_clic ? 1 : -1; });
+      return res.status(200).json({ ok: true, campana_id: campana, enviados: clicaron.length + sinClic.length, clicaron: clicaron, sin_clic: sinClic, fallidos: fallidos, truncado: envios.length >= 5000 });
+    }
+
+    // ── eliminarMascotaAdmin (2 oct) — el Admin elimina una mascota. Se borra
+    // directo de la base de datos (fuente de verdad) y, como mejor esfuerzo,
+    // se quita también su fila del Sheet vía Apps Script. ─────────────────
+    if (action === 'eliminarMascotaAdmin' && req.method === 'POST') {
+      const uid = String((req.body || {}).uid || '').trim();
+      if (!uid) return res.status(400).json({ ok: false, error: 'Falta uid' });
+      const rDel = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' }
+      });
+      const txtDel = await rDel.text().catch(() => '');
+      if (!rDel.ok) {
+        console.error('eliminarMascotaAdmin failed:', rDel.status, txtDel);
+        return res.status(200).json({ ok: false, error: txtDel || ('HTTP ' + rDel.status) });
+      }
+      let borradas = null; try { borradas = JSON.parse(txtDel); } catch (e) {}
+      if (!Array.isArray(borradas) || borradas.length === 0) {
+        return res.status(200).json({ ok: false, error: 'No se encontró la mascota (¿ya fue eliminada?).' });
+      }
+      const gas = await _llamarAppsScript({ action: 'deleteMascota', uid: uid }, 8000);
+      return res.status(200).json({ ok: true, hoja: gas.ok, hojaError: gas.ok ? undefined : gas.error });
+    }
+
+    // ── enviarRecordatorioFoto (2 oct) — correo para que el dueño agregue la
+    // foto de su mascota. Primero por Wix directo; si falla, por Apps Script. ──
+    if (action === 'enviarRecordatorioFoto' && req.method === 'POST') {
+      const uid = String((req.body || {}).uid || '').trim();
+      if (!uid) return res.status(400).json({ ok: false, error: 'Falta uid' });
+      const rM = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=nombre,dueno,email,foto&limit=1', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const filasM = await rM.json().catch(() => null);
+      const m = Array.isArray(filasM) && filasM[0];
+      if (!m) return res.status(200).json({ ok: false, error: 'No se encontró la mascota.' });
+      const email = String(m.email || '').trim();
+      if (!email) return res.status(200).json({ ok: false, error: 'Esta mascota no tiene correo guardado.' });
+      if (m.foto && String(m.foto).indexOf('http') === 0) return res.status(200).json({ ok: false, error: 'Esta mascota ya tiene foto — no hace falta recordárselo.' });
+      const nombre = m.nombre || 'tu mascota', dueno = m.dueno || 'Amigo PetMi';
+
+      const envioId = crypto.randomUUID();   // va dentro del link del correo
+      const base = { id: envioId, campana_id: 'recordatorio_foto', tipo: 'recordatorio', email: email, uid: uid };
+      const porWix = await _enviarHtmlPorWix(email, '🐾 A ' + nombre + ' le falta su foto en PetMi', _htmlRecordatorioFoto(nombre, dueno, uid, envioId), 'recordatorioFoto');
+      if (porWix.ok) {
+        await _registrarEnvioCorreo({ ...base, estado: 'enviado', canal: 'wix', wix_id: porWix.wixId });
+        return res.status(200).json({ ok: true, email: email, via: 'wix' });
+      }
+
+      const gas = await _llamarAppsScript({ action: 'recordatorioFoto', uid: uid }, 8000);
+      if (gas.ok) {
+        // El correo de respaldo (Apps Script) lleva el link normal: se registra el envío, pero sus clics no se pueden medir.
+        await _registrarEnvioCorreo({ ...base, estado: 'enviado', canal: 'apps-script' });
+        return res.status(200).json({ ok: true, email: email, via: 'apps-script' });
+      }
+      await _registrarEnvioCorreo({ ...base, estado: 'error', error: (porWix.error + ' · ' + gas.error).substring(0, 200) });
+      return res.status(200).json({ ok: false, error: 'No se pudo enviar. ' + porWix.error + ' · ' + gas.error });
     }
 
     // ── enviarMensajeDirectoAdmin (18 sep) — el Admin le manda un
