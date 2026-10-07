@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/r/:e",
+      "destination": "/api/galeria?action=r&e=:e"
+    },
+    {
       "source": "/share",
       "destination": "/api/share"
     },
