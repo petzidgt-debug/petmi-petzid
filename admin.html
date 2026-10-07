@@ -146,6 +146,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="nav-item" onclick="showScreen('saludreglas',this)"><span class="nav-icon">🩺</span>Reglas de Salud</div>
       <div class="nav-item" onclick="showScreen('ruletapremios',this)"><span class="nav-icon">🎡</span>Ruleta de Premios</div>
       <div class="nav-item" onclick="showScreen('reactivacion',this)"><span class="nav-icon">📧</span>Reactivación</div>
+      <div class="nav-item" onclick="showScreen('correos',this)"><span class="nav-icon">📊</span>Correos (clics)</div>
       <div class="nav-item" onclick="showScreen('concurso',this)"><span class="nav-icon">🇬🇹</span>Concurso</div>
       <div class="nav-item" onclick="showScreen('tienda',this)"><span class="nav-icon">🛍️</span>Tienda</div>
       <div class="nav-item" onclick="showScreen('cumpleanos',this)"><span class="nav-icon">🎂</span>Cumpleaños</div>
@@ -564,6 +565,20 @@ tbody tr:last-child td{border-bottom:none}
       </div>
     </div>
 
+    <div id="screenCorreos" class="screen">
+      <h2 class="screen-title">📊 Correos: envíos y clics</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Por campaña: cuántos correos salieron, cuántas <b>personas distintas</b> hicieron clic y el <b>CTR</b> (clics únicos ÷ enviados). Solo cuenta desde que se activó el seguimiento. Los clics automáticos de filtros de seguridad se separan y no cuentan.</p>
+      <div id="correosResumen" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px"></div>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campaña</th><th>Enviados</th><th>Clics únicos</th><th>CTR</th><th>Clics totales</th><th>Último envío</th><th></th></tr></thead>
+            <tbody id="correosBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="screenConcurso" class="screen">
       <h2 class="screen-title">🇬🇹 Concurso — Mascota Más Patriota</h2>
       <p style="color:#888;font-size:13px;margin-bottom:16px">Todas las fotos enviadas al concurso, ordenadas por votos. Puedes ocultar una entrada (deja de verse en la galería pública, sin borrar el dato) o eliminarla por completo.</p>
@@ -835,6 +850,16 @@ tbody tr:last-child td{border-bottom:none}
 </div>
 
 <!-- MODAL VER ID -->
+<div class="modal-overlay" id="modalCorreoDetalle">
+  <div class="modal" style="max-width:760px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px">
+      <h3 id="correoDetalleTitulo" style="margin:0;font-size:17px"></h3>
+      <button class="btn-sm" style="background:#eee;color:#555" onclick="closeModal('modalCorreoDetalle')">✕</button>
+    </div>
+    <div id="correoDetalleBody" style="font-size:13px">Cargando...</div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalID">
   <div class="modal" style="max-width:540px">
     <div class="modal-title"><span>PetzID</span><button class="modal-close" onclick="closeModal('modalID')">✕</button></div>
@@ -1941,6 +1966,7 @@ function showScreen(name,el){
   if(name==='saludreglas') { loadReglasSalud(); loadCondicionesAdmin(); }
   if(name==='ruletapremios') { loadRuletaPremios(); loadRuletaGiros(); }
   if(name==='reactivacion') { loadReactivacionEfectividad(); loadNuncaHanVuelto(); }
+  if(name==='correos') loadCorreos();
   if(name==='concurso') loadConcurso();
   if(name==='tienda') loadTiendaProductos();
   if(name==='cumpleanos') loadCumpleanosPromo();
@@ -2295,24 +2321,27 @@ function eliminarMascota(idx){
   if(!uid){alert('UID no encontrado');return;}
   if(!confirm('¿Eliminar a '+nombre+'? Esta acción no se puede deshacer.')) return;
 
-  fetch('/api/submit',{
+  fetch('/api/galeria?action=eliminarMascotaAdmin',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'deleteMascota',uid:uid})
+    body:JSON.stringify({uid:uid})
   }).then(function(r){return r.json();})
   .then(function(d){
     if(d.ok){
       allData=allData.filter(function(r){return String(r[1]).trim()!==uid;});
       filtered=filtered.filter(function(r){return String(r[1]).trim()!==uid;});
       renderTable();
-      alert('✅ Mascota eliminada');
+      alert('✅ Mascota eliminada' + (d.hoja === false
+        ? '\n\n⚠️ Se borró de la base de datos, pero no se pudo quitar su fila del Sheet ('+(d.hojaError||'Apps Script no respondió')+'). Bórrala a mano del Sheet, o podría reaparecer si corres "Sincronizar Sheet a Supabase".'
+        : ''));
     } else {
-      alert('Error al eliminar');
+      alert('No se pudo eliminar: ' + (d.error || 'error desconocido'));
     }
-  }).catch(function(){alert('Error de conexión');});
+  }).catch(function(){alert('Error de conexión — no se eliminó.');});
 }
 
 // ── Contactar usuario directo (18 sep) ──────────────────────────
+var _recordandoFoto = false;
 function recordarFoto(idx){
   var r=filtered[idx];
   if(!r) return;
@@ -2323,14 +2352,17 @@ function recordarFoto(idx){
   if(!email){ alert('Esta mascota no tiene correo guardado.'); return; }
   if(!confirm('¿Mandar correo recordando agregar la foto de '+nombreMasc+'?')) return;
 
-  fetch('/api/submit',{
+  if(_recordandoFoto) return;   // evita mandar dos correos por un doble clic
+  _recordandoFoto = true;
+  fetch('/api/galeria?action=enviarRecordatorioFoto',{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'recordatorioFoto', uid:uid})
+    body:JSON.stringify({uid:uid})
   }).then(function(r){return r.json();})
   .then(function(d){
-    if(d.ok) alert('✅ Correo enviado.');
-    else alert('Error: '+(d.error||'No se pudo enviar.'));
-  }).catch(function(){ alert('Error de conexión.'); });
+    _recordandoFoto = false;
+    if(d.ok) alert('✅ Correo enviado a ' + (d.email || email) + '.');
+    else alert('No se pudo enviar el correo: ' + (d.error || 'error desconocido'));
+  }).catch(function(){ _recordandoFoto = false; alert('Error de conexión — no se envió.'); });
 }
 
 function contactarWhatsApp(idx){
@@ -3684,6 +3716,101 @@ function subirFotoProducto(destino){
     estado.textContent = '✅ Listo — recuerda tocar Guardar.';
   };
   inp.click();
+}
+
+// ── Correos: envíos y clics ──────────────────────────────────────
+var CORREOS_NOMBRES = {reto_peludo:'El Reto Peludo (juego)', salud:'Salud preventiva', perdido:'Perdido/Emergencia', puntos:'Puntos', tienda:'Tienda', alimentos:'Alimentos por marca', carrera_giveaway:'Giveaway Carrera', recordatorio_foto:'Recordatorio de foto'};
+var _correosCampanas = [];
+var _correoDetalleActual = null;
+
+function _escC(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _fechaC(v){ return v ? new Date(v).toLocaleString('es-GT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—'; }
+function _ctrC(c){ return c.enviados > 0 ? (c.clics_unicos / c.enviados * 100).toFixed(1) + '%' : '—'; }
+
+function loadCorreos(){
+  var body = document.getElementById('correosBody');
+  fetch('/api/galeria?action=getReporteCorreos').then(function(r){ return r.json(); }).then(function(d){
+    if(!d.ok){
+      body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#c0392b">'+_escC(d.error || 'No se pudo cargar')+'</td></tr>';
+      document.getElementById('correosResumen').innerHTML = '';
+      return;
+    }
+    _correosCampanas = d.campanas || [];
+    var env = 0, uni = 0, tot = 0;
+    _correosCampanas.forEach(function(c){ env += c.enviados; uni += c.clics_unicos; tot += c.clics_total; });
+    function card(icono, num, lbl){ return '<div class="stat-card"><div class="stat-icon">'+icono+'</div><div class="stat-num">'+num+'</div><div class="stat-lbl">'+lbl+'</div></div>'; }
+    document.getElementById('correosResumen').innerHTML =
+      card('✉️', env, 'Correos enviados') + card('🖱️', uni, 'Personas que hicieron clic') + card('📈', _ctrC({enviados:env, clics_unicos:uni}), 'CTR general') + card('🔁', tot, 'Clics totales');
+    if(!_correosCampanas.length){
+      body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Todavía no hay envíos con seguimiento. Aparecerán aquí después de tu próxima campaña.</td></tr>';
+      return;
+    }
+    body.innerHTML = _correosCampanas.map(function(c){
+      var nombre = CORREOS_NOMBRES[c.campana_id] || c.campana_id;
+      return '<tr><td><b>'+_escC(nombre)+'</b></td>'
+        + '<td>'+c.enviados+(c.errores ? ' <span style="color:#c0392b;font-size:11px" title="No se pudieron enviar">('+c.errores+' fallaron)</span>' : '')+'</td>'
+        + '<td>'+c.clics_unicos+'</td>'
+        + '<td><b>'+_ctrC(c)+'</b></td>'
+        + '<td>'+c.clics_total+(c.clics_automaticos ? ' <span style="color:#999;font-size:11px" title="Clics automáticos de filtros de seguridad: no cuentan">(+'+c.clics_automaticos+' autom.)</span>' : '')+'</td>'
+        + '<td>'+_fechaC(c.ultimo_envio)+'</td>'
+        + '<td><button class="btn-sm" style="background:#00B4B4;color:#fff" onclick="abrirCorreoDetalle(\''+_escC(c.campana_id)+'\')">Ver detalle</button></td></tr>';
+    }).join('');
+  }).catch(function(){
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#c0392b">Error de conexión</td></tr>';
+  });
+}
+
+function abrirCorreoDetalle(campanaId){
+  var camp = _correosCampanas.find(function(c){ return c.campana_id === campanaId; }) || { campana_id: campanaId, botones: [] };
+  document.getElementById('correoDetalleTitulo').textContent = CORREOS_NOMBRES[campanaId] || campanaId;
+  document.getElementById('correoDetalleBody').innerHTML = '<div style="padding:30px;text-align:center;color:#aaa">Cargando detalle...</div>';
+  document.getElementById('modalCorreoDetalle').classList.add('open');
+  fetch('/api/galeria?action=getDetalleCorreos&campana_id=' + encodeURIComponent(campanaId)).then(function(r){ return r.json(); }).then(function(d){
+    var cont = document.getElementById('correoDetalleBody');
+    if(!d.ok){ cont.innerHTML = '<div style="color:#c0392b;padding:20px">'+_escC(d.error || 'No se pudo cargar')+'</div>'; return; }
+    _correoDetalleActual = d;
+    var nClic = d.clicaron.length, nSin = d.sin_clic.length;
+    function kpi(num, lbl){ return '<div style="flex:1;min-width:100px;background:#f8f8f6;border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:900;color:#222">'+num+'</div><div style="font-size:11px;color:#888">'+lbl+'</div></div>'; }
+    var h = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">'
+      + kpi(d.enviados, 'Enviados') + kpi(nClic, 'Hicieron clic') + kpi(d.enviados ? (nClic / d.enviados * 100).toFixed(1) + '%' : '—', 'CTR') + kpi(nSin, 'Sin clic') + kpi(d.fallidos.length, 'No les llegó') + '</div>';
+    if(d.truncado) h += '<div style="background:#fff4d6;color:#8a6200;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px">⚠️ Esta campaña tiene más de 5,000 envíos; se muestran solo los primeros 5,000.</div>';
+    if(camp.botones && camp.botones.length){
+      h += '<div style="font-weight:700;margin:6px 0">Por botón</div><div class="table-card" style="box-shadow:none;border:1px solid #eee;margin-bottom:16px"><table style="min-width:0"><thead><tr><th>Botón</th><th>Personas</th><th>Clics</th></tr></thead><tbody>'
+        + camp.botones.map(function(b){ return '<tr><td>'+_escC(b.boton)+'</td><td>'+b.clics_unicos+'</td><td>'+b.clics_total+'</td></tr>'; }).join('') + '</tbody></table></div>';
+    }
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
+      + '<button class="btn-save" style="padding:8px 14px;font-size:12px" onclick="copiarCorreosDetalle(\'sin_clic\')"'+(nSin?'':' disabled')+'>📋 Copiar correos de quienes NO hicieron clic ('+nSin+')</button>'
+      + '<button class="btn-sm" style="background:#e0f0ff;color:#0055aa;padding:8px 14px;font-size:12px" onclick="copiarCorreosDetalle(\'clicaron\')"'+(nClic?'':' disabled')+'>📋 Copiar correos de quienes SÍ ('+nClic+')</button></div>';
+    h += '<div style="font-weight:700;margin:10px 0 6px">Quiénes hicieron clic</div>';
+    if(!nClic){
+      h += '<div style="color:#aaa;padding:10px 0">Nadie ha hecho clic todavía.</div>';
+    } else {
+      var filas = d.clicaron.slice(0, 300);
+      h += '<div class="table-card" style="box-shadow:none;border:1px solid #eee;max-height:280px;overflow-y:auto"><table style="min-width:0"><thead><tr><th>Correo</th><th>Botones</th><th>Clics</th><th>Primer clic</th></tr></thead><tbody>'
+        + filas.map(function(k){ return '<tr><td>'+_escC(k.email)+'</td><td>'+_escC(k.botones.join(', '))+'</td><td>'+k.clics+'</td><td>'+_fechaC(k.primer_clic)+'</td></tr>'; }).join('') + '</tbody></table></div>'
+        + (d.clicaron.length > 300 ? '<div style="color:#888;font-size:12px;margin-top:6px">…y '+(d.clicaron.length - 300)+' más (usa "Copiar correos" para tener la lista completa).</div>' : '');
+    }
+    if(d.fallidos.length){
+      h += '<div style="font-weight:700;margin:16px 0 6px;color:#c0392b">No les llegó ('+d.fallidos.length+')</div><div style="font-size:12px;color:#666;max-height:120px;overflow-y:auto;border:1px solid #f3d6d2;border-radius:8px;padding:8px 10px">'
+        + d.fallidos.slice(0, 100).map(function(f){ return _escC(f.email) + (f.error ? ' — <span style="color:#999">'+_escC(f.error)+'</span>' : ''); }).join('<br>') + '</div>';
+    }
+    if(campanaId === 'recordatorio_foto') h += '<div style="color:#999;font-size:11.5px;margin-top:14px">Nota: si el recordatorio salió por el respaldo (Apps Script), ese correo lleva el link normal y su clic no se puede medir.</div>';
+    cont.innerHTML = h;
+  }).catch(function(){
+    document.getElementById('correoDetalleBody').innerHTML = '<div style="color:#c0392b;padding:20px">Error de conexión</div>';
+  });
+}
+
+function copiarCorreosDetalle(cual){
+  var d = _correoDetalleActual;
+  if(!d) return;
+  var lista = cual === 'clicaron' ? d.clicaron.map(function(k){ return k.email; }) : d.sin_clic;
+  if(!lista.length) return;
+  var texto = lista.join('\n');
+  function listo(){ alert('✅ ' + lista.length + ' correos copiados. Pégalos donde los necesites.'); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texto).then(listo, function(){ prompt('Copia estos correos (Ctrl+C):', texto); });
+  } else { prompt('Copia estos correos (Ctrl+C):', texto); }
 }
 
 function guardarProducto(){
