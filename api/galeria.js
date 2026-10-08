@@ -271,6 +271,148 @@ async function _leerTodoSupabase(tabla, query, max) {
   return filas;
 }
 
+// ── Catálogo para Meta y páginas de producto (2 oct) ───────────────────
+const _TIENDA_BASE = 'https://app.revistapetmi.com';
+const _WHATSAPP_TIENDA = '50237673927';   // el mismo de tienda.html
+const _COLUMNAS_FEED_META = ['id', 'title', 'description', 'availability', 'condition', 'price', 'link', 'image_link', 'brand',
+  'additional_image_link', 'google_product_category', 'product_type', 'custom_label_0', 'custom_label_1'];
+
+function _textoPlano(s) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); }
+
+function _urlFoto(u) {
+  const s = String(u || '').trim();
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.charAt(0) === '/') return _TIENDA_BASE + s;
+  return null;
+}
+
+// Foto principal + fotos adicionales, sin repetir y con URL completa.
+function _fotosProductoServidor(p) {
+  const fotos = [];
+  function add(u) { const f = _urlFoto(u); if (f && fotos.indexOf(f) < 0) fotos.push(f); }
+  add(p.imagen);
+  let extra = p.imagenes;
+  if (typeof extra === 'string') { try { extra = JSON.parse(extra); } catch (e) { extra = []; } }
+  if (Array.isArray(extra)) extra.forEach(add);
+  return fotos.slice(0, 11);
+}
+
+function _agotadoProducto(p) { return p.stock != null && Number(p.stock) <= 0; }
+
+async function _productosActivosTienda() {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?activo=eq.true&select=*&order=categoria.asc,orden.asc', {
+    headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+  });
+  const data = await r.json().catch(() => null);
+  return Array.isArray(data) ? data : null;
+}
+
+// Una fila del catálogo de Meta, o el motivo por el que el producto no se puede incluir.
+function _filaFeedMeta(p) {
+  const nombre = _textoPlano(p.nombre);
+  if (!nombre) return { motivo: 'Sin nombre' };
+  const precio = Number(p.precio);
+  if (!(precio > 0)) return { motivo: 'Sin precio (Meta lo exige)' };
+  const fotos = _fotosProductoServidor(p);
+  if (!fotos.length) return { motivo: 'Sin foto (Meta lo exige)' };
+  let desc = _textoPlano(p.descripcion);
+  // Meta pide que la descripción sea distinta del título.
+  if (!desc || desc.toLowerCase() === nombre.toLowerCase()) desc = nombre + ' — disponible en la tienda de PetMi Guatemala.';
+  return { fila: {
+    id: String(p.id),
+    title: nombre.substring(0, 150),
+    description: desc.substring(0, 5000),
+    availability: _agotadoProducto(p) ? 'out of stock' : 'in stock',
+    condition: String(p.condicion || '').toLowerCase() === 'usado' ? 'used' : 'new',
+    price: precio.toFixed(2) + ' GTQ',
+    link: _TIENDA_BASE + '/producto/' + encodeURIComponent(String(p.id)),
+    image_link: fotos[0],
+    brand: _textoPlano(p.marca).substring(0, 100) || 'PetMi',
+    additional_image_link: fotos.slice(1, 11).join(','),
+    google_product_category: 'Animals & Pet Supplies > Pet Supplies',
+    product_type: _textoPlano(p.categoria) || 'Tienda',
+    custom_label_0: _textoPlano(p.especie),
+    custom_label_1: p.envio_incluido ? 'envio_incluido' : ''
+  } };
+}
+
+function _csvCelda(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+
+// Página pública de un producto: lo que ven Meta, Instagram y WhatsApp al compartir el link,
+// y las personas que abren el link. Todo el texto se escapa.
+function _htmlProductoPublico(p) {
+  const e = _escHtmlCorreo;
+  const nombre = _textoPlano(p.nombre);
+  const fotos = _fotosProductoServidor(p);
+  const precio = Number(p.precio) > 0 ? Number(p.precio) : null;
+  const agotado = _agotadoProducto(p);
+  const usado = String(p.condicion || '').toLowerCase() === 'usado';
+  const marca = _textoPlano(p.marca) || 'PetMi';
+  const descripcion = String(p.descripcion || '').trim();
+  const url = _TIENDA_BASE + '/producto/' + encodeURIComponent(String(p.id));
+  const resumen = (_textoPlano(descripcion) || (nombre + ' — disponible en la tienda de PetMi Guatemala.')).substring(0, 200);
+  const tiendaUrl = '/tienda.html?p=' + encodeURIComponent(String(p.id)) + '&utm_source=producto_web&utm_medium=link';
+  const waUrl = 'https://wa.me/' + _WHATSAPP_TIENDA + '?text=' + encodeURIComponent('Hola! Quiero pedir: ' + nombre);
+
+  const ld = { '@context': 'https://schema.org', '@type': 'Product', name: nombre, description: resumen, sku: String(p.id),
+    image: fotos, brand: { '@type': 'Brand', name: marca }, category: _textoPlano(p.categoria) || undefined,
+    itemCondition: usado ? 'https://schema.org/UsedCondition' : 'https://schema.org/NewCondition' };
+  if (precio) ld.offers = { '@type': 'Offer', url: url, priceCurrency: 'GTQ', price: precio.toFixed(2),
+    availability: agotado ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+    itemCondition: ld.itemCondition };
+  const ldJson = JSON.stringify(ld).replace(/</g, '\\u003c');
+
+  const og = [
+    ['og:type', 'product'], ['og:site_name', 'Tienda PetMi'], ['og:title', nombre + (precio ? ' — Q' + precio.toFixed(2) : '')],
+    ['og:description', resumen], ['og:url', url]
+  ];
+  if (fotos[0]) { og.push(['og:image', fotos[0]]); og.push(['og:image:alt', nombre]); }
+  if (precio) { og.push(['product:price:amount', precio.toFixed(2)]); og.push(['product:price:currency', 'GTQ']); }
+  og.push(['product:availability', agotado ? 'out of stock' : 'in stock']);
+  og.push(['product:condition', usado ? 'used' : 'new']);
+  og.push(['product:brand', marca]);
+
+  const slides = fotos.length
+    ? fotos.map(function (f, i) { return '<div class="slide"><img src="' + e(f) + '" alt="' + e(nombre) + '"' + (i ? ' loading="lazy"' : '') + '></div>'; }).join('')
+    : '<div class="slide"><div class="ph">&#128062;</div></div>';
+  const envio = p.envio_incluido ? '<span class="tag tag-envio">&#128666; Env&iacute;o incluido</span>' : '';
+  const cond = '<span class="tag ' + (usado ? 'tag-usado' : 'tag-nuevo') + '">' + (usado ? 'Usado' : 'Nuevo') + '</span>';
+  const stock = agotado ? '<div class="agotado">Agotado por ahora</div>'
+    : (p.stock != null && Number(p.stock) > 0 && Number(p.stock) <= 3 ? '<div class="pocos">&iexcl;Solo quedan ' + Number(p.stock) + '!</div>' : '');
+
+  return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<title>' + e(nombre) + ' — Tienda PetMi</title><meta name="description" content="' + e(resumen) + '">'
+    + '<link rel="canonical" href="' + e(url) + '"><link rel="icon" href="/favico.jpg" type="image/jpeg">'
+    + og.map(function (t) { return '<meta property="' + t[0] + '" content="' + e(t[1]) + '">'; }).join('')
+    + '<meta name="twitter:card" content="summary_large_image">'
+    + '<script type="application/ld+json">' + ldJson + '</script>'
+    + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#f8f7f4;color:#1a1a2e}'
+    + '.wrap{max-width:480px;margin:0 auto;background:#fff;min-height:100vh}.bar{padding:12px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:8px}'
+    + '.bar a{color:#00838f;font-weight:800;font-size:14px;text-decoration:none}.gal{position:relative;background:#f4efe9}'
+    + '.track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.track::-webkit-scrollbar{display:none}'
+    + '.slide{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:1;display:flex;align-items:center;justify-content:center}'
+    + '.slide img{width:100%;height:100%;object-fit:contain}.ph{font-size:80px}.cnt{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.55);color:#fff;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px}'
+    + '.body{padding:18px 18px 28px}.tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.tag{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px}'
+    + '.tag-nuevo{background:#e3f4e5;color:#2e7d32}.tag-usado{background:#1a1a2e;color:#fff}.tag-envio{background:#e0f7f7;color:#00838f}'
+    + 'h1{font-size:21px;line-height:1.25;margin-bottom:6px}.precio{font-size:24px;font-weight:900;color:#00B4B4;margin-bottom:10px}'
+    + '.agotado{color:#c0392b;font-weight:800;margin-bottom:10px}.pocos{color:#d35400;font-weight:800;margin-bottom:10px;font-size:13px}'
+    + '.desc{font-size:14px;color:#555;line-height:1.65;white-space:pre-wrap;margin:12px 0 20px}'
+    + '.cta{display:block;text-align:center;background:#1a1a2e;color:#fff;text-decoration:none;font-weight:900;font-size:15px;padding:15px;border-radius:99px;margin-bottom:10px}'
+    + '.wa{display:block;text-align:center;background:#25D366;color:#fff;text-decoration:none;font-weight:900;font-size:15px;padding:15px;border-radius:99px}'
+    + '.foot{text-align:center;font-size:11.5px;color:#999;padding:14px}</style></head><body><div class="wrap">'
+    + '<div class="bar"><a href="/tienda.html">&larr; Tienda PetMi</a></div>'
+    + '<div class="gal"><div class="track" id="track">' + slides + '</div>' + (fotos.length > 1 ? '<div class="cnt" id="cnt">1/' + fotos.length + '</div>' : '') + '</div>'
+    + '<div class="body"><div class="tags">' + cond + envio + '</div><h1>' + e(nombre) + '</h1>'
+    + '<div class="precio">' + (precio ? 'Q' + precio.toFixed(2) : 'Consultar precio') + '</div>' + stock
+    + (descripcion ? '<div class="desc">' + e(descripcion) + '</div>' : '<div style="height:14px"></div>')
+    + (agotado ? '' : '<a class="cta" href="' + e(tiendaUrl) + '">&#128722; Comprar en la tienda</a>')
+    + '<a class="wa" id="wa" href="' + e(waUrl) + '" target="_blank" rel="noopener">&#128172; ' + (agotado ? 'Consultar disponibilidad' : 'Pedir por WhatsApp') + '</a></div>'
+    + '<div class="foot">PetMi Guatemala &middot; app.revistapetmi.com</div></div>'
+    + '<script>(function(){var t=document.getElementById("track"),c=document.getElementById("cnt");if(t&&c){t.addEventListener("scroll",function(){var i=Math.round(t.scrollLeft/t.clientWidth);c.textContent=(i+1)+"/"+t.children.length;});}'
+    + 'var wa=document.getElementById("wa");if(wa){wa.addEventListener("click",function(){try{fetch("/api/galeria?action=registrarPedido",{method:"POST",headers:{"Content-Type":"application/json"},keepalive:true,body:JSON.stringify({producto:' + JSON.stringify(nombre).replace(/</g, '\\u003c') + ',origen:"producto_web"})});}catch(e){}});}})();</script>'
+    + '</body></html>';
+}
+
 function _escHtmlCorreo(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -2253,6 +2395,54 @@ export default async function handler(req, res) {
       });
       clicaron.sort(function (a, b) { return a.primer_clic < b.primer_clic ? 1 : -1; });
       return res.status(200).json({ ok: true, campana_id: campana, enviados: clicaron.length + sinClic.length, clicaron: clicaron, sin_clic: sinClic, fallidos: fallidos, truncado: envios.length >= 5000 });
+    }
+
+    // ── feedMeta (2 oct) — archivo (CSV) del catálogo que Meta lee solo cada día ──
+    if (action === 'feedMeta') {
+      const prods = await _productosActivosTienda();
+      if (!prods) return res.status(503).send('No se pudo leer el catálogo. Meta reintentará solo.');
+      const filas = [];
+      prods.forEach(function (p) { const r = _filaFeedMeta(p); if (r.fila) filas.push(r.fila); });
+      const csv = [_COLUMNAS_FEED_META.map(_csvCelda).join(',')]
+        .concat(filas.map(function (f) { return _COLUMNAS_FEED_META.map(function (k) { return _csvCelda(f[k]); }).join(','); })).join('\n') + '\n';
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+      return res.status(200).send(csv);
+    }
+
+    // ── feedMetaResumen (Admin) — cuántos productos están listos para Meta y por qué otros no ──
+    if (action === 'feedMetaResumen') {
+      const prods = await _productosActivosTienda();
+      if (!prods) return res.status(200).json({ ok: false, error: 'No se pudo leer la tienda.' });
+      let incluidos = 0, agotados = 0; const excluidos = [];
+      prods.forEach(function (p) {
+        const r = _filaFeedMeta(p);
+        if (r.fila) { incluidos++; if (r.fila.availability === 'out of stock') agotados++; }
+        else excluidos.push({ id: p.id, nombre: _textoPlano(p.nombre) || '(sin nombre)', motivo: r.motivo });
+      });
+      return res.status(200).json({ ok: true, feed_url: _TIENDA_BASE + '/feed/meta.csv', total: prods.length, incluidos: incluidos, agotados: agotados, excluidos: excluidos });
+    }
+
+    // ── producto (2 oct) — página pública de un producto: /producto/<id> ──
+    if (action === 'producto') {
+      const id = String(req.query.id || '').trim();
+      let prod = null;
+      if (/^[A-Za-z0-9_-]{1,40}$/.test(id)) {
+        const rp = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(id) + '&activo=eq.true&select=*&limit=1', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        const filas = await rp.json().catch(() => null);
+        prod = Array.isArray(filas) && filas[0] ? filas[0] : null;
+      }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      if (!prod) {
+        res.setHeader('Cache-Control', 'no-store');
+        return res.status(404).send('<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Producto no disponible — Tienda PetMi</title></head>'
+          + '<body style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px;background:#f8f7f4"><div style="font-size:56px">&#128062;</div><h1 style="font-size:20px;margin:12px 0">Este producto ya no est&aacute; disponible</h1>'
+          + '<a href="/tienda.html" style="display:inline-block;margin-top:14px;background:#1a1a2e;color:#fff;text-decoration:none;font-weight:800;padding:13px 26px;border-radius:99px">Ver la tienda</a></body></html>');
+      }
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+      return res.status(200).send(_htmlProductoPublico(prod));
     }
 
     // ── eliminarMascotaAdmin (2 oct) — el Admin elimina una mascota. Se borra
