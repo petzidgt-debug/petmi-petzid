@@ -382,6 +382,7 @@ function cargarProductos(){
   .then(function(r){return r.json();})
   .then(function(d){
     productos = d.productos || [];
+    productosTodos = productos.slice();   // lista completa: un link directo a un producto debe abrirlo aunque no coincida con las mascotas del visitante
     var especiesRelevantes = mascotaPersonal ? [mascotaPersonal.especie] : especiesFamilia;
     if(especiesRelevantes.length){
       var filtrados = productos.filter(function(p){ return !p.especie || p.especie === 'Todos' || especiesRelevantes.indexOf(p.especie) >= 0; });
@@ -389,6 +390,7 @@ function cargarProductos(){
     }
     renderFiltros();
     renderGrid();
+    abrirProductoDesdeLink();
   }).catch(function(){
     document.getElementById('grid').innerHTML = '<div class="vacio">No se pudo cargar la tienda. Intenta de nuevo.</div>';
   });
@@ -459,8 +461,18 @@ function fotosProducto(p){
   if(Array.isArray(extra)) extra.forEach(add);
   return out;
 }
+var productosTodos = [];
 function productoPorId(id){
-  return productos.find(function(x){ return String(x.id) === String(id); });
+  var buscar = function(x){ return String(x.id) === String(id); };
+  return productosTodos.find(buscar) || productos.find(buscar);
+}
+
+// Links como /tienda.html?p=12 (desde Instagram, WhatsApp o la página del producto) abren ese producto directo.
+function abrirProductoDesdeLink(){
+  var id = new URLSearchParams(location.search).get('p');
+  if(!id) return;
+  var p = productoPorId(id);
+  if(p) abrirModalProducto(p);
 }
 function escAttr(s){
   return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');

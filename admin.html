@@ -617,6 +617,24 @@ tbody tr:last-child td{border-bottom:none}
     <div id="screenTienda" class="screen">
       <h2 class="screen-title">🛍️ Tienda</h2>
       <p style="color:#888;font-size:13px;margin-bottom:16px">Productos del catálogo — los pedidos llegan por WhatsApp, no hay carrito ni pagos en línea.</p>
+      <div class="table-card" style="padding:16px;margin-bottom:16px" id="metaCatalogoCard">
+        <div style="font-weight:800;margin-bottom:4px">📣 Catálogo para Meta (Instagram y Facebook)</div>
+        <div style="font-size:12.5px;color:#888;margin-bottom:10px;line-height:1.5">Meta lee este link cada día: lo que cambies aquí (precio, stock, fotos) se actualiza solo en el catálogo. Los productos desactivados no se incluyen.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input id="metaFeedUrl" readonly value="https://app.revistapetmi.com/feed/meta.csv" style="flex:1;min-width:220px;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:12.5px;background:#f8f8f6">
+          <button class="btn-save" onclick="copiarMetaFeed()" style="padding:9px 16px;font-size:12px">📋 Copiar link</button>
+        </div>
+        <div id="metaCatalogoEstado" style="margin-top:10px;font-size:13px;color:#666">Revisando productos...</div>
+        <details style="margin-top:10px;font-size:12.5px;color:#555">
+          <summary style="cursor:pointer;font-weight:700;color:#00838f">Cómo conectarlo en Meta</summary>
+          <ol style="margin:8px 0 0 18px;line-height:1.7">
+            <li>Entra a <b>Commerce Manager</b> (business.facebook.com/commerce) y crea un catálogo de tipo <b>comercio electrónico</b> (productos).</li>
+            <li>En el catálogo: <b>Data sources → Data feed → Scheduled feed</b>. Pega el link de arriba, frecuencia <b>diaria</b>, moneda <b>GTQ</b>.</li>
+            <li>Revisa la pestaña de <b>Diagnostics / Issues</b> del catálogo: ahí Meta te dice si algún producto tiene problemas.</li>
+          </ol>
+          <div style="margin-top:8px;color:#999">Consejo: fotos cuadradas de al menos 1024×1024 px se ven mejor en los anuncios.</div>
+        </details>
+      </div>
       <button class="btn-primary" onclick="abrirModalProducto()" style="margin-bottom:16px">+ Nuevo producto</button>
       <div class="table-card">
         <div class="table-wrap">
@@ -1968,7 +1986,7 @@ function showScreen(name,el){
   if(name==='reactivacion') { loadReactivacionEfectividad(); loadNuncaHanVuelto(); }
   if(name==='correos') loadCorreos();
   if(name==='concurso') loadConcurso();
-  if(name==='tienda') loadTiendaProductos();
+  if(name==='tienda'){ loadTiendaProductos(); loadMetaCatalogo(); }
   if(name==='cumpleanos') loadCumpleanosPromo();
   if(name==='busquedas') loadBusquedas();
   if(name==='pedidos') loadPedidos();
@@ -3512,6 +3530,7 @@ function loadTiendaProductos(){
         + '<td>'+precio+'</td>'
         + '<td><input type="checkbox" '+(p.activo?'checked':'')+' onchange="toggleProducto('+p.id+',this.checked)"></td>'
         + '<td><button class="btn-cancel" style="padding:4px 10px;font-size:11px" onclick="editarProductoId('+p.id+')">Editar</button> '
+        + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px" title="Copiar el link de este producto (para Instagram, WhatsApp...)" onclick="copiarLinkProducto('+p.id+')">🔗 Link</button> '
         + '<button class="btn-cancel" style="padding:4px 10px;font-size:11px;color:#c0392b" onclick="eliminarProducto('+p.id+')">Borrar</button></td>'
         + '</tr>';
     }).join('');
@@ -3594,6 +3613,37 @@ function abrirModalProducto(){
   document.getElementById('prodCostoEnvio').value = '';
   document.getElementById('prodCostoEnvioWrap').style.display = 'block';
   document.getElementById('modalProducto').classList.add('open');
+}
+
+// ── Catálogo para Meta y links de producto ───────────────────────
+function loadMetaCatalogo(){
+  var est = document.getElementById('metaCatalogoEstado');
+  fetch('/api/galeria?action=feedMetaResumen').then(function(r){ return r.json(); }).then(function(d){
+    if(!d.ok){ est.innerHTML = '<span style="color:#c0392b">'+_escC(d.error || 'No se pudo revisar')+'</span>'; return; }
+    document.getElementById('metaFeedUrl').value = d.feed_url;
+    var h = '<b style="color:#2e7d32">✅ '+d.incluidos+' productos listos para Meta</b>'
+      + (d.agotados ? ' · '+d.agotados+' agotados (Meta los marca como agotados)' : '')
+      + (d.excluidos.length ? ' · <b style="color:#c0392b">'+d.excluidos.length+' sin incluir</b>' : '');
+    if(d.excluidos.length){
+      h += '<div style="margin-top:6px;font-size:12px;color:#8a6200;background:#fff4d6;border-radius:8px;padding:8px 10px;line-height:1.6"><b>Arréglalos para que entren al catálogo:</b><br>'
+        + d.excluidos.slice(0, 15).map(function(x){ return _escC(x.nombre)+' — '+_escC(x.motivo); }).join('<br>')
+        + (d.excluidos.length > 15 ? '<br>…y '+(d.excluidos.length - 15)+' más' : '') + '</div>';
+    }
+    est.innerHTML = h;
+  }).catch(function(){ est.innerHTML = '<span style="color:#c0392b">Error de conexión</span>'; });
+}
+
+function _copiarTextoAdmin(texto, aviso){
+  function ok(){ alert(aviso); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texto).then(ok, function(){ prompt('Copia con Ctrl+C:', texto); });
+  } else { prompt('Copia con Ctrl+C:', texto); }
+}
+function copiarMetaFeed(){
+  _copiarTextoAdmin(document.getElementById('metaFeedUrl').value, '✅ Link del catálogo copiado. Pégalo en Commerce Manager.');
+}
+function copiarLinkProducto(id){
+  _copiarTextoAdmin('https://app.revistapetmi.com/producto/' + id, '✅ Link del producto copiado. Pégalo en tu bio, una Story o WhatsApp.');
 }
 
 var _tiendaProductosAdmin = [];

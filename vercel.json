@@ -5,6 +5,14 @@
       "destination": "/api/galeria?action=r&e=:e"
     },
     {
+      "source": "/producto/:id",
+      "destination": "/api/galeria?action=producto&id=:id"
+    },
+    {
+      "source": "/feed/meta.csv",
+      "destination": "/api/galeria?action=feedMeta"
+    },
+    {
       "source": "/share",
       "destination": "/api/share"
     },
