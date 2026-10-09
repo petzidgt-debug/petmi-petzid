@@ -413,6 +413,9 @@ function _htmlProductoPublico(p) {
     + '</body></html>';
 }
 
+const _ENTREGA_ESTADOS = ['por_confirmar', 'confirmado', 'en_camino', 'entregado', 'problema'];
+const _EVENTOS_PAGO_OK = ['bank_transfer_intent.succeeded', 'payment_intent.succeeded', 'balance_intent.succeeded'];
+
 function _escHtmlCorreo(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -608,6 +611,14 @@ async function _enviarMensajeOficialAUids(uids, mensaje) {
 // sin repetidas, máximo 10. Al crear, si viene vacía no se manda nada (así
 // no falla si la columna "imagenes" todavía no existe); al actualizar
 // (siempre=true) se manda aunque esté vacía para poder borrarlas todas.
+// Stock de un producto: vacío/null = sin límite; si no, un número entero de 0 en adelante.
+function validarStockProducto(v) {
+  if (v === null || v === undefined || v === '') return { ok: true, valor: null };
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 0 || n > 100000) return { ok: false };
+  return { ok: true, valor: n };
+}
+
 function limpiarImagenesProducto(lista, siempre) {
   const limpia = [];
   (Array.isArray(lista) ? lista : []).forEach(function (u) {
@@ -622,8 +633,8 @@ function limpiarImagenesProducto(lista, siempre) {
 // la fila actualizada y comprobamos que sea exactamente una. Si falla (por
 // ejemplo, una columna que no existe), devolvemos el motivo real en vez de
 // decir "ok" y que el cambio se pierda sin avisar.
-async function actualizarUnaFila(tabla, id, campos) {
-  const r = await fetch(SUPABASE_URL + '/rest/v1/' + tabla + '?id=eq.' + encodeURIComponent(id), {
+async function actualizarUnaFila(tabla, id, campos, filtroExtra) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/' + tabla + '?id=eq.' + encodeURIComponent(id) + (filtroExtra || ''), {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
     body: JSON.stringify(campos)
@@ -2445,6 +2456,133 @@ export default async function handler(req, res) {
       return res.status(200).send(_htmlProductoPublico(prod));
     }
 
+    // ═══ Pedidos en línea de la tienda (pago con Recurrente + entrega con mensajero propio) ═══
+    // getPedidosOnline — todos los pedidos con sus datos de entrega, y qué avisos mandó Recurrente.
+    if (action === 'getPedidosOnline') {
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      const [rp, rw, rs] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda?select=*&order=created_at.desc&limit=300', { headers: H }),
+        fetch(SUPABASE_URL + '/rest/v1/webhook_logs?select=event_type,created_at,firma_valida,payload_completo&event_type=in.(payment_intent.succeeded,bank_transfer_intent.succeeded,balance_intent.succeeded,bank_transfer_intent.pending)&order=created_at.desc&limit=400', { headers: H }),
+        fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda?select=entrega_estado&limit=1', { headers: H })
+      ]);
+      const pedidos = await rp.json().catch(() => null);
+      if (!Array.isArray(pedidos)) return res.status(200).json({ ok: false, error: 'No se pudo leer pedidos_tienda.', pedidos: [] });
+      const eventos = await rw.json().catch(() => null);
+      const porPedido = {};
+      (Array.isArray(eventos) ? eventos : []).forEach(function (ev) {
+        const pid = ev.payload_completo && ev.payload_completo.metadata && ev.payload_completo.metadata.pedido_id;
+        if (!pid) return;
+        const o = porPedido[pid] || (porPedido[pid] = { avisos: [], aviso_pago: false, aviso_firma_invalida: false });
+        if (o.avisos.indexOf(ev.event_type) < 0) o.avisos.push(ev.event_type);
+        if (_EVENTOS_PAGO_OK.indexOf(ev.event_type) >= 0) { if (ev.firma_valida) o.aviso_pago = true; else o.aviso_firma_invalida = true; }
+      });
+      const lista = pedidos.map(function (p) {
+        const av = porPedido[p.id] || { avisos: [], aviso_pago: false, aviso_firma_invalida: false };
+        return {
+          id: p.id, email: p.email, nombre: p.nombre || '', telefono: p.telefono || '', direccion: p.direccion || '', notas_cliente: p.notas_cliente || '',
+          items: p.items || [], total_q: Math.round(Number(p.total_centavos || 0)) / 100, estado: p.estado, checkout_id: p.checkout_id || '',
+          entrega_estado: p.entrega_estado || 'por_confirmar', entrega_fecha: p.entrega_fecha || null, entrega_franja: p.entrega_franja || '',
+          mensajero: p.mensajero || '', notas_internas: p.notas_internas || '',
+          created_at: p.created_at, pagado_at: p.pagado_at || null, confirmado_at: p.confirmado_at || null, en_camino_at: p.en_camino_at || null, entregado_at: p.entregado_at || null,
+          avisos: av.avisos, aviso_pago: av.aviso_pago, aviso_firma_invalida: av.aviso_firma_invalida
+        };
+      });
+      const resumen = { por_confirmar: 0, confirmado: 0, en_camino: 0, entregado: 0, problema: 0, pendientes_pago: 0, pagos_por_revisar: 0 };
+      lista.forEach(function (p) {
+        if (p.estado === 'pagado') { if (resumen[p.entrega_estado] !== undefined) resumen[p.entrega_estado]++; }
+        else {
+          if (p.estado === 'pendiente') resumen.pendientes_pago++;
+          if (p.aviso_pago || p.aviso_firma_invalida) resumen.pagos_por_revisar++;
+        }
+      });
+      return res.status(200).json({ ok: true, pedidos: lista, resumen: resumen, falta_sql: !rs.ok });
+    }
+
+    // actualizarEntregaPedido — estado de entrega, día/horario acordado, mensajero, notas y datos de contacto.
+    if (action === 'actualizarEntregaPedido' && req.method === 'POST') {
+      const b = req.body || {};
+      const id = String(b.id || '').trim();
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const campos = {};
+      if ('entrega_estado' in b) {
+        if (_ENTREGA_ESTADOS.indexOf(b.entrega_estado) < 0) return res.status(200).json({ ok: false, error: 'Estado de entrega inválido.' });
+        campos.entrega_estado = b.entrega_estado;
+        const ahora = new Date().toISOString();
+        if (b.entrega_estado === 'confirmado') campos.confirmado_at = ahora;
+        if (b.entrega_estado === 'en_camino') campos.en_camino_at = ahora;
+        campos.entregado_at = b.entrega_estado === 'entregado' ? ahora : null;
+      }
+      if ('entrega_fecha' in b) {
+        const fch = String(b.entrega_fecha || '').trim();
+        if (fch && (!/^\d{4}-\d{2}-\d{2}$/.test(fch) || isNaN(new Date(fch + 'T00:00:00Z').getTime()))) return res.status(200).json({ ok: false, error: 'Fecha de entrega inválida.' });
+        campos.entrega_fecha = fch || null;
+      }
+      if ('entrega_franja' in b) campos.entrega_franja = String(b.entrega_franja || '').trim().slice(0, 60) || null;
+      if ('mensajero' in b) campos.mensajero = String(b.mensajero || '').trim().slice(0, 80) || null;
+      if ('notas_internas' in b) campos.notas_internas = String(b.notas_internas || '').trim().slice(0, 1000) || null;
+      if ('nombre' in b) campos.nombre = String(b.nombre || '').replace(/\s+/g, ' ').trim().slice(0, 80) || null;
+      if ('direccion' in b) campos.direccion = String(b.direccion || '').replace(/\s+/g, ' ').trim().slice(0, 300) || null;
+      if ('telefono' in b) {
+        const dig = String(b.telefono || '').replace(/\D/g, '');
+        const tel = dig.length === 8 ? '502' + dig : (dig.length === 11 && dig.indexOf('502') === 0 ? dig : null);
+        if (String(b.telefono || '').trim() && !tel) return res.status(200).json({ ok: false, error: 'El WhatsApp debe tener 8 dígitos.' });
+        campos.telefono = tel;
+      }
+      if (!Object.keys(campos).length) return res.status(200).json({ ok: false, error: 'No hay nada que actualizar.' });
+      const g = await actualizarUnaFila('pedidos_tienda', id, campos, '&estado=eq.pagado');
+      if (!g.ok) return res.status(200).json({ ok: false, error: /^No se encontró/.test(g.error) ? 'No se encontró el pedido, o todavía no está pagado.' : g.error });
+      return res.status(200).json({ ok: true, pedido: g.fila });
+    }
+
+    // marcarPedidoPagadoManual — para un pago que Recurrente cobró pero cuyo aviso nunca llegó (ver consulta 3 de revisar_pedidos_tienda.sql).
+    // Hace lo mismo que el webhook: resta el stock y marca el pedido pagado. No manda correos.
+    if (action === 'marcarPedidoPagadoManual' && req.method === 'POST') {
+      const id = String((req.body || {}).id || '').trim();
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      const rg = await fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda?id=eq.' + encodeURIComponent(id) + '&select=*', { headers: H });
+      const filas = await rg.json().catch(() => null);
+      const pedido = Array.isArray(filas) && filas[0];
+      if (!pedido) return res.status(200).json({ ok: false, error: 'No se encontró el pedido.' });
+      if (pedido.estado === 'pagado') return res.status(200).json({ ok: true, ya_estaba_pagado: true });
+      let stockOk = true;
+      for (const item of (pedido.items || [])) {
+        try {
+          const rs = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(item.producto_id) + '&select=stock', { headers: H });
+          const pr = await rs.json();
+          const stockActual = pr && pr[0] ? pr[0].stock : null;
+          if (stockActual != null) {
+            await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(item.producto_id), {
+              method: 'PATCH', headers: { 'Content-Type': 'application/json', ...H, 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ stock: Math.max(0, stockActual - item.cantidad) })
+            });
+          }
+        } catch (e) { stockOk = false; }
+      }
+      const g = await actualizarUnaFila('pedidos_tienda', id, { estado: 'pagado', pagado_at: new Date().toISOString() }, '&estado=in.(pendiente,cancelado)');
+      if (!g.ok) return res.status(200).json({ ok: false, error: g.error });
+      return res.status(200).json({ ok: true, stock_ok: stockOk });
+    }
+
+    // cancelarPedidoPendiente — un carrito abandonado: se cancela y, si usó un cupón de un solo uso, se le devuelve.
+    if (action === 'cancelarPedidoPendiente' && req.method === 'POST') {
+      const id = String((req.body || {}).id || '').trim();
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const g = await actualizarUnaFila('pedidos_tienda', id, { estado: 'cancelado' }, '&estado=eq.pendiente');
+      if (!g.ok) return res.status(200).json({ ok: false, error: /^No se encontró/.test(g.error) ? 'Solo se pueden cancelar pedidos pendientes.' : g.error });
+      let cuponDevuelto = null;
+      try {
+        const rc = await fetch(SUPABASE_URL + '/rest/v1/cupones_tienda?usado_en_pedido=eq.' + encodeURIComponent(id) + '&usado=eq.true', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
+          body: JSON.stringify({ usado: false, usado_en_pedido: null })
+        });
+        const cf = await rc.json().catch(() => null);
+        if (Array.isArray(cf) && cf[0]) cuponDevuelto = cf[0].codigo;
+      } catch (e) { /* si no se pudo devolver el cupón, el pedido igual quedó cancelado */ }
+      return res.status(200).json({ ok: true, cupon_devuelto: cuponDevuelto });
+    }
+
     // ── eliminarMascotaAdmin (2 oct) — el Admin elimina una mascota. Se borra
     // directo de la base de datos (fuente de verdad) y, como mejor esfuerzo,
     // se quita también su fila del Sheet vía Apps Script. ─────────────────
@@ -3386,12 +3524,14 @@ export default async function handler(req, res) {
 
     // ── crearProductoTienda (admin) ─────────────────────────────
     if (action === 'crearProductoTienda' && req.method === 'POST') {
-      const { nombre, descripcion, precio, imagen, imagenes, categoria, especie, orden, envio_incluido, costo_envio, condicion } = req.body;
+      const { nombre, descripcion, precio, imagen, imagenes, categoria, especie, orden, envio_incluido, costo_envio, condicion, stock } = req.body;
       if (!nombre || !categoria) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const stockCrear = validarStockProducto(stock);
+      if (!stockCrear.ok) return res.status(200).json({ ok: false, error: 'El stock debe ser un número entero de 0 en adelante.' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, especie: especie || 'Todos', orden: orden || 0, activo: true, envio_incluido: envio_incluido || false, costo_envio: costo_envio || null, condicion: condicion || 'Nuevo', ...limpiarImagenesProducto(imagenes) })
+        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, especie: especie || 'Todos', orden: orden || 0, activo: true, envio_incluido: envio_incluido || false, costo_envio: costo_envio || null, condicion: condicion || 'Nuevo', stock: stockCrear.valor, ...limpiarImagenesProducto(imagenes) })
       });
       if (!r.ok) {
         const errTxt = await r.text().catch(() => '');
@@ -3407,6 +3547,11 @@ export default async function handler(req, res) {
       if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
       // Fotos adicionales: solo URLs http(s), máximo 10. Una lista vacía las borra todas.
       if ('imagenes' in campos) campos.imagenes = limpiarImagenesProducto(campos.imagenes, true).imagenes;
+      if ('stock' in campos) {
+        const st = validarStockProducto(campos.stock);
+        if (!st.ok) return res.status(200).json({ ok: false, error: 'El stock debe ser un número entero de 0 en adelante.' });
+        campos.stock = st.valor;
+      }
       const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(id), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
