@@ -110,6 +110,25 @@ tbody tr:last-child td{border-bottom:none}
   .stats-grid{grid-template-columns:1fr 1fr}
   .charts-grid{grid-template-columns:1fr}
 }
+/* Pedidos en línea y entregas */
+.ped-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.ped-tab{border:1.5px solid #ddd;background:#fff;color:#666;font-weight:700;font-size:13px;padding:9px 16px;border-radius:99px;cursor:pointer}
+.ped-tab.active{background:#1a1a2e;border-color:#1a1a2e;color:#fff}
+.ped-badge{display:inline-block;background:#E05090;color:#fff;font-size:11px;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:4px}
+.ped-sub{font-size:11px;color:#999;margin-top:2px}
+.ped-pill{display:inline-block;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.ped-pill-warn{background:#fff4d6;color:#8a6200}.ped-pill-ok{background:#e0f7f7;color:#007a7a}.ped-pill-go{background:#e0efff;color:#0055aa}
+.ped-pill-done{background:#e3f4e5;color:#2e7d32}.ped-pill-bad{background:#fdecea;color:#c0392b}.ped-pill-mute{background:#eee;color:#777}
+.ped-alerta{display:block;font-size:11px;font-weight:700;color:#c0392b;margin-top:4px}
+tr.ped-urgente td{background:#fff4f2}
+.ped-filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.ped-filtros select,.ped-filtros input{padding:9px 12px;border:1.5px solid #ddd;border-radius:10px;font-size:13px;background:#fff}
+.stat-card.clic{cursor:pointer}.stat-card.clic:hover{box-shadow:0 4px 14px rgba(0,0,0,.1)}
+.pe-lbl{display:block;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin:12px 0 4px}
+.pe-in{width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:Arial,sans-serif;background:#fff}
+.pe-wa{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.pe-wa button{border:none;border-radius:99px;padding:7px 12px;font-size:11.5px;font-weight:700;cursor:pointer;background:#e0f0ff;color:#0055aa}
+.pe-linea{font-size:12px;color:#777;line-height:1.7}
 </style>
 </head>
 <body>
@@ -616,7 +635,7 @@ tbody tr:last-child td{border-bottom:none}
 
     <div id="screenTienda" class="screen">
       <h2 class="screen-title">🛍️ Tienda</h2>
-      <p style="color:#888;font-size:13px;margin-bottom:16px">Productos del catálogo — los pedidos llegan por WhatsApp, no hay carrito ni pagos en línea.</p>
+      <p style="color:#888;font-size:13px;margin-bottom:16px">Productos del catálogo. Los clientes pueden pagar en línea o pedir por WhatsApp; los pedidos están en 📦 Pedidos.</p>
       <div class="table-card" style="padding:16px;margin-bottom:16px" id="metaCatalogoCard">
         <div style="font-weight:800;margin-bottom:4px">📣 Catálogo para Meta (Instagram y Facebook)</div>
         <div style="font-size:12.5px;color:#888;margin-bottom:10px;line-height:1.5">Meta lee este link cada día: lo que cambies aquí (precio, stock, fotos) se actualiza solo en el catálogo. Los productos desactivados no se incluyen.</div>
@@ -673,13 +692,50 @@ tbody tr:last-child td{border-bottom:none}
 
     <div id="screenPedidos" class="screen">
       <h2 class="screen-title">📦 Pedidos de la Tienda</h2>
-      <p style="color:#888;font-size:13px;margin-bottom:16px">Cada vez que alguien toca "Pedir por WhatsApp" (en la tienda o desde "come"), queda registrado aquí.</p>
-      <div class="table-card">
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Fecha</th><th>Mascota</th><th>Correo</th><th>Producto</th><th>Origen</th><th>Estado</th></tr></thead>
-            <tbody id="pedidosBody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
-          </table>
+      <div class="ped-tabs">
+        <button class="ped-tab active" id="pedTabOnline" onclick="pedidosTab('online')">🛒 Pedidos en línea <span class="ped-badge" id="pedTabBadge" style="display:none"></span></button>
+        <button class="ped-tab" id="pedTabWa" onclick="pedidosTab('wa')">💬 Clics de WhatsApp</button>
+      </div>
+
+      <div id="pedPanelOnline">
+        <p style="color:#888;font-size:13px;margin-bottom:14px;line-height:1.5">Compras pagadas con tarjeta o transferencia. Cuando alguien paga, aquí confirmas con el cliente el día y el horario, y sigues la entrega hasta que se entrega.</p>
+        <div id="pedSqlAviso" style="display:none;background:#fdecea;color:#c0392b;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;font-weight:700">⚠️ Falta correr <code>agregar_entrega_pedidos.sql</code> en Supabase. Sin eso no se pueden guardar los datos de entrega.</div>
+        <div id="pedResumen" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px"></div>
+        <div class="ped-filtros">
+          <select id="pedFiltro" onchange="renderPedidosOnline()">
+            <option value="activos">Por entregar (todos los pagados pendientes)</option>
+            <option value="por_confirmar">⏳ Por confirmar</option>
+            <option value="confirmado">✅ Confirmados</option>
+            <option value="en_camino">🛵 En camino</option>
+            <option value="problema">⚠️ Con problema</option>
+            <option value="entregado">📦 Entregados</option>
+            <option value="revisar">🔎 Pagos por revisar</option>
+            <option value="pendiente">💳 Sin pagar</option>
+            <option value="cancelado">✖ Cancelados</option>
+            <option value="todos">Todos</option>
+          </select>
+          <input type="text" id="pedBuscar" placeholder="Buscar por nombre, correo, teléfono o dirección..." oninput="renderPedidosOnline()" style="flex:1;min-width:200px">
+          <button class="btn-sm" style="background:#eee;color:#555;padding:9px 14px" onclick="loadPedidosOnline()">↻ Actualizar</button>
+        </div>
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Pago</th><th>Cliente</th><th>WhatsApp</th><th>Dirección</th><th>Productos</th><th>Total</th><th>Entrega</th><th></th></tr></thead>
+              <tbody id="pedOnlineBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="pedPanelWa" style="display:none">
+        <p style="color:#888;font-size:13px;margin-bottom:16px">Cada vez que alguien toca "Pedir por WhatsApp" (en la tienda o desde "come"), queda registrado aquí. Es solo un registro de que tocaron el botón; el pedido se concreta por el chat.</p>
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Fecha</th><th>Mascota</th><th>Correo</th><th>Producto</th><th>Origen</th><th>Estado</th></tr></thead>
+              <tbody id="pedidosBody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -868,6 +924,16 @@ tbody tr:last-child td{border-bottom:none}
 </div>
 
 <!-- MODAL VER ID -->
+<div class="modal-overlay" id="modalPedidoEntrega">
+  <div class="modal" style="max-width:640px;max-height:92vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px">
+      <h3 id="pedEntregaTitulo" style="margin:0;font-size:17px"></h3>
+      <button class="btn-sm" style="background:#eee;color:#555" onclick="closeModal('modalPedidoEntrega')">✕</button>
+    </div>
+    <div id="pedEntregaBody" style="font-size:13px"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalCorreoDetalle">
   <div class="modal" style="max-width:760px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px">
@@ -1034,6 +1100,9 @@ tbody tr:last-child td{border-bottom:none}
     <textarea id="prodDescripcion" rows="2" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-family:Arial"></textarea>
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Precio en Q (opcional — si lo dejas vacío dice "Consultar precio")</label>
     <input type="number" step="0.01" id="prodPrecio" placeholder="ej. 185.00" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Stock disponible (opcional — vacío = sin límite)</label>
+    <input type="number" min="0" step="1" id="prodStock" placeholder="ej. 5" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
+    <div style="font-size:11px;color:#999;margin-top:3px;line-height:1.5">Baja solo cuando alguien paga en línea. Con un número, la tienda avisa "¡Solo quedan 3!", no deja comprar más de lo que hay y en 0 dice "Agotado".</div>
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Categoría</label>
     <input type="text" id="prodCategoria" placeholder="ej. Alimento, Juguetes, Accesorios" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px">
     <label style="font-size:12px;font-weight:700;color:#888;display:block;margin:10px 0 4px">Especie</label>
@@ -1989,7 +2058,7 @@ function showScreen(name,el){
   if(name==='tienda'){ loadTiendaProductos(); loadMetaCatalogo(); }
   if(name==='cumpleanos') loadCumpleanosPromo();
   if(name==='busquedas') loadBusquedas();
-  if(name==='pedidos') loadPedidos();
+  if(name==='pedidos') pedidosTab('online');
   if(name==='alimentos') loadAlimentos();
   if(name==='_unused'){
     var ifr=document.getElementById('iframeAfiliados');
@@ -3523,6 +3592,10 @@ function loadTiendaProductos(){
       var foto = (p.imagen ? '<img src="'+p.imagen+'" style="width:36px;height:36px;border-radius:8px;object-fit:cover">' : '—')
         + (nExtra ? '<div style="font-size:10px;color:#888;margin-top:2px">📷 +'+nExtra+'</div>' : '');
       var precio = p.precio ? ('Q'+Number(p.precio).toFixed(2)) : 'Consultar';
+      if(p.stock != null){
+        precio += Number(p.stock) <= 0 ? '<div class="ped-sub" style="color:#c0392b;font-weight:700">Agotado</div>'
+          : '<div class="ped-sub"' + (Number(p.stock) <= 3 ? ' style="color:#d35400;font-weight:700"' : '') + '>📦 Stock: ' + Number(p.stock) + '</div>';
+      }
       return '<tr>'
         + '<td>'+foto+'</td>'
         + '<td>'+p.nombre+'</td>'
@@ -3601,6 +3674,8 @@ function abrirModalProducto(){
   document.getElementById('prodNombre').value = '';
   document.getElementById('prodDescripcion').value = '';
   document.getElementById('prodPrecio').value = '';
+  document.getElementById('prodStock').value = '';
+  _prodStockOriginal = '';
   document.getElementById('prodCategoria').value = '';
   document.getElementById('prodEspecie').value = 'Todos';
   document.getElementById('prodCondicion').value = 'Nuevo';
@@ -3658,6 +3733,8 @@ function editarProducto(p){
   document.getElementById('prodNombre').value = p.nombre;
   document.getElementById('prodDescripcion').value = p.descripcion || '';
   document.getElementById('prodPrecio').value = p.precio || '';
+  _prodStockOriginal = p.stock == null ? '' : String(p.stock);
+  document.getElementById('prodStock').value = _prodStockOriginal;
   document.getElementById('prodCategoria').value = p.categoria;
   document.getElementById('prodEspecie').value = p.especie || 'Todos';
   document.getElementById('prodCondicion').value = p.condicion || 'Nuevo';
@@ -3677,6 +3754,7 @@ function editarProducto(p){
 
 // ── Fotos del producto (principal + adicionales) ────────────────
 var _prodTeniaExtras = false;
+var _prodStockOriginal = '';   // el stock con que se abrió la ventana (para saber si lo cambiaste)
 
 function prodFotosExtra(){
   return document.getElementById('prodImagenes').value.split('\n')
@@ -3863,6 +3941,279 @@ function copiarCorreosDetalle(cual){
   } else { prompt('Copia estos correos (Ctrl+C):', texto); }
 }
 
+// ── Pedidos en línea y entregas (mensajero propio) ───────────────
+var _pedidosOnline = [];
+var _pedidosResumen = null;
+var _pedAbierto = null;   // el pedido que se está gestionando en la ventana
+
+var ENTREGA_INFO = {
+  por_confirmar: { txt: '⏳ Por confirmar', cls: 'ped-pill-warn' },
+  confirmado:    { txt: '✅ Confirmado',    cls: 'ped-pill-ok' },
+  en_camino:     { txt: '🛵 En camino',     cls: 'ped-pill-go' },
+  entregado:     { txt: '📦 Entregado',     cls: 'ped-pill-done' },
+  problema:      { txt: '⚠️ Problema',      cls: 'ped-pill-bad' }
+};
+
+function pedidosTab(tab){
+  var online = tab !== 'wa';
+  document.getElementById('pedPanelOnline').style.display = online ? 'block' : 'none';
+  document.getElementById('pedPanelWa').style.display = online ? 'none' : 'block';
+  document.getElementById('pedTabOnline').classList.toggle('active', online);
+  document.getElementById('pedTabWa').classList.toggle('active', !online);
+  if(online) loadPedidosOnline(); else loadPedidos();
+}
+
+function _haceTxt(iso){
+  if(!iso) return '';
+  var min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if(min < 1) return 'hace un momento';
+  if(min < 60) return 'hace ' + min + ' min';
+  var h = Math.floor(min / 60);
+  if(h < 24) return 'hace ' + h + ' h';
+  var d = Math.floor(h / 24);
+  return 'hace ' + d + (d === 1 ? ' día' : ' días');
+}
+function _fechaEntregaTxt(f){
+  if(!f) return '';
+  var p = String(f).split('-');
+  var d = new Date(+p[0], +p[1] - 1, +p[2]);
+  // El formato regional trae una coma ("domingo, 11 de octubre"): se quita para que el mensaje suene natural.
+  return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-GT', { weekday: 'long', day: 'numeric', month: 'long' }).replace(/^([^,\s]+),/, '$1');
+}
+function _productosTxt(p){ return (p.items || []).map(function(i){ return i.cantidad + 'x ' + i.nombre; }).join(', '); }
+function _primerNombre(n){ return String(n || '').trim().split(/\s+/)[0] || ''; }
+function _telLindo(t){ var d = String(t || '').replace(/\D/g, ''); return d.length === 11 && d.indexOf('502') === 0 ? d.slice(3, 7) + '-' + d.slice(7) : String(t || ''); }
+function _pedidoPorId(id){ return _pedidosOnline.find(function(p){ return String(p.id) === String(id); }); }
+
+// Mensajes de WhatsApp ya escritos (se pueden editar antes de enviar)
+function pedMensajeWA(tipo, p, ex){
+  ex = ex || {};
+  var primer = _primerNombre(ex.nombre != null ? ex.nombre : p.nombre);
+  var hola = '¡Hola' + (primer ? ' ' + primer : '') + '! ';
+  var dir = ex.direccion != null ? ex.direccion : p.direccion;
+  var fecha = _fechaEntregaTxt(ex.fecha != null ? ex.fecha : p.entrega_fecha);
+  var franja = ex.franja != null ? ex.franja : p.entrega_franja;
+  var mensajero = ex.mensajero != null ? ex.mensajero : p.mensajero;
+  if(tipo === 'confirmar'){
+    return hola + '🐾 Soy de PetMi. Recibimos tu pago de Q' + Number(p.total_q).toFixed(2) + ' por: ' + _productosTxt(p) + '.\n\n'
+      + 'Para coordinar tu entrega a domicilio, ¿me confirmas esta dirección? 📍 ' + (dir || '') + '\n\n'
+      + (fecha ? 'Podemos llevártelo el ' + fecha + (franja ? ' (' + franja + ')' : '') + '. ¿Te funciona?' : '¿Qué día y horario te queda mejor?');
+  }
+  if(tipo === 'encamino') return hola + '🛵 Tu pedido de PetMi ya va en camino' + (mensajero ? ' con ' + mensajero : '') + (franja ? ' (' + franja + ')' : '') + '. Te avisamos cuando llegue. 🐾';
+  if(tipo === 'entregado') return hola + '📦 Tu pedido de PetMi ya fue entregado. ¡Gracias por tu compra! Si algo no está bien, escríbenos por aquí. 🐾';
+  if(tipo === 'problema') return hola + '🐾 Soy de PetMi. Intentamos coordinar la entrega de tu pedido pero no pudimos contactarte. ¿Me confirmas cuándo te queda mejor?';
+  return '';
+}
+function _waUrl(tel, texto){
+  var d = String(tel || '').replace(/\D/g, '');
+  return d ? 'https://wa.me/' + d + (texto ? '?text=' + encodeURIComponent(texto) : '') : '';
+}
+function _tipoMensajePorEstado(estado){
+  return { por_confirmar: 'confirmar', confirmado: 'confirmar', en_camino: 'encamino', entregado: 'entregado', problema: 'problema' }[estado] || '';
+}
+
+function loadPedidosOnline(){
+  var body = document.getElementById('pedOnlineBody');
+  fetch('/api/galeria?action=getPedidosOnline').then(function(r){ return r.json(); }).then(function(d){
+    if(!d.ok){
+      body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#c0392b">'+_escC(d.error || 'No se pudo cargar')+'</td></tr>';
+      document.getElementById('pedResumen').innerHTML = '';
+      return;
+    }
+    _pedidosOnline = d.pedidos || [];
+    _pedidosResumen = d.resumen || {};
+    document.getElementById('pedSqlAviso').style.display = d.falta_sql ? 'block' : 'none';
+    var r = _pedidosResumen;
+    function card(filtro, icono, num, lbl, alerta){
+      return '<div class="stat-card clic" onclick="pedidoFiltrar(\''+filtro+'\')"'+(alerta && num ? ' style="border:2px solid #E05090"' : '')+'><div class="stat-icon">'+icono+'</div><div class="stat-num">'+num+'</div><div class="stat-lbl">'+lbl+'</div></div>';
+    }
+    document.getElementById('pedResumen').innerHTML =
+      card('por_confirmar', '⏳', r.por_confirmar || 0, 'Por confirmar', true) + card('confirmado', '✅', r.confirmado || 0, 'Confirmados') +
+      card('en_camino', '🛵', r.en_camino || 0, 'En camino') + card('entregado', '📦', r.entregado || 0, 'Entregados') +
+      card('revisar', '🔎', r.pagos_por_revisar || 0, 'Pagos por revisar', true);
+    var urgentes = (r.por_confirmar || 0) + (r.pagos_por_revisar || 0);
+    var badge = document.getElementById('pedTabBadge');
+    badge.textContent = urgentes; badge.style.display = urgentes ? 'inline-block' : 'none';
+    renderPedidosOnline();
+  }).catch(function(){
+    body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#c0392b">Error de conexión</td></tr>';
+  });
+}
+
+function pedidoFiltrar(valor){
+  document.getElementById('pedFiltro').value = valor;
+  renderPedidosOnline();
+}
+
+function _pedidoCoincideFiltro(p, f){
+  var pagado = p.estado === 'pagado';
+  if(f === 'todos') return true;
+  if(f === 'activos') return pagado && p.entrega_estado !== 'entregado';
+  if(f === 'revisar') return !pagado && (p.aviso_pago || p.aviso_firma_invalida);
+  if(f === 'pendiente' || f === 'cancelado') return p.estado === f;
+  return pagado && p.entrega_estado === f;   // por_confirmar | confirmado | en_camino | problema | entregado
+}
+
+function renderPedidosOnline(){
+  var f = document.getElementById('pedFiltro').value;
+  var q = document.getElementById('pedBuscar').value.trim().toLowerCase();
+  var lista = _pedidosOnline.filter(function(p){
+    if(!_pedidoCoincideFiltro(p, f)) return false;
+    if(!q) return true;
+    return [p.nombre, p.email, p.telefono, p.direccion, _productosTxt(p)].join(' ').toLowerCase().indexOf(q) >= 0;
+  });
+  // Lo más urgente primero: los pagados por confirmar (el más viejo arriba); el resto, lo más reciente primero.
+  lista.sort(function(a, b){
+    var ua = a.estado === 'pagado' && a.entrega_estado === 'por_confirmar', ub = b.estado === 'pagado' && b.entrega_estado === 'por_confirmar';
+    if(ua !== ub) return ua ? -1 : 1;
+    if(ua && ub) return new Date(a.pagado_at) - new Date(b.pagado_at);
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+  var body = document.getElementById('pedOnlineBody');
+  if(!lista.length){
+    body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#aaa">' + (_pedidosOnline.length ? 'Ningún pedido con este filtro.' : 'Todavía no hay pedidos en línea.') + '</td></tr>';
+    return;
+  }
+  body.innerHTML = lista.map(filaPedidoOnline).join('');
+}
+
+function filaPedidoOnline(p){
+  var pagado = p.estado === 'pagado';
+  var info = ENTREGA_INFO[p.entrega_estado] || ENTREGA_INFO.por_confirmar;
+  var urgente = pagado && p.entrega_estado === 'por_confirmar' && p.pagado_at && (Date.now() - new Date(p.pagado_at).getTime()) > 12 * 3600 * 1000;
+  var texto = _tipoMensajePorEstado(p.entrega_estado);
+  var wa = p.telefono ? _waUrl(p.telefono, pagado ? pedMensajeWA(texto, p) : '') : '';
+  var celdaPago = pagado
+    ? _fechaC(p.pagado_at) + '<div class="ped-sub">' + _haceTxt(p.pagado_at) + '</div>'
+    : _fechaC(p.created_at) + '<div class="ped-sub">creado ' + _haceTxt(p.created_at) + '</div>';
+  var estadoHtml, accion;
+  if(pagado){
+    estadoHtml = '<span class="ped-pill ' + info.cls + '">' + info.txt + '</span>';
+    var det = [];
+    if(p.entrega_fecha) det.push(_escC(_fechaEntregaTxt(p.entrega_fecha)) + (p.entrega_franja ? ' · ' + _escC(p.entrega_franja) : ''));
+    if(p.mensajero) det.push('🛵 ' + _escC(p.mensajero));
+    if(det.length) estadoHtml += '<div class="ped-sub">' + det.join('<br>') + '</div>';
+    accion = '<button class="btn-sm" style="background:#1a1a2e;color:#fff" onclick="abrirPedidoEntrega(\'' + _escC(p.id) + '\')">Gestionar</button>';
+  } else {
+    estadoHtml = p.estado === 'cancelado' ? '<span class="ped-pill ped-pill-mute">✖ Cancelado</span>' : '<span class="ped-pill ped-pill-mute">💳 Sin pagar</span>';
+    if(p.aviso_pago) estadoHtml += '<span class="ped-alerta">⚠️ Recurrente avisó un pago de este pedido</span>';
+    else if(p.aviso_firma_invalida) estadoHtml += '<span class="ped-alerta">🔒 Llegó un aviso de pago con firma inválida</span>';
+    else if(p.avisos && p.avisos.length) estadoHtml += '<div class="ped-sub">' + _escC(p.avisos.join(', ')) + '</div>';
+    accion = '<button class="btn-sm" style="background:#2e7d32;color:#fff" onclick="marcarPedidoPagado(\'' + _escC(p.id) + '\')">Marcar pagado</button>'
+      + (p.estado === 'pendiente' ? ' <button class="btn-sm" style="background:#eee;color:#c0392b" onclick="cancelarPedidoPendiente(\'' + _escC(p.id) + '\')">Cancelar</button>' : '');
+  }
+  return '<tr' + (urgente ? ' class="ped-urgente"' : '') + '>'
+    + '<td>' + celdaPago + '</td>'
+    + '<td><b>' + _escC(p.nombre || '(sin nombre)') + '</b><div class="ped-sub">' + _escC(p.email) + '</div></td>'
+    + '<td>' + (wa ? '<a class="btn-sm" style="background:#25D366;color:#fff;text-decoration:none" target="_blank" rel="noopener" href="' + _escC(wa) + '">💬</a> <span class="ped-sub">' + _escC(_telLindo(p.telefono)) + '</span>' : '<span class="ped-sub">—</span>') + '</td>'
+    + '<td style="max-width:230px">' + _escC(p.direccion || '—') + (p.notas_cliente ? '<div class="ped-sub">📝 ' + _escC(p.notas_cliente) + '</div>' : '') + '</td>'
+    + '<td>' + _escC(_productosTxt(p)) + '</td>'
+    + '<td><b>Q' + Number(p.total_q).toFixed(2) + '</b></td>'
+    + '<td>' + estadoHtml + '</td>'
+    + '<td style="white-space:nowrap">' + accion + '</td></tr>';
+}
+
+// ── Ventana para gestionar una entrega ──
+function abrirPedidoEntrega(id){
+  var p = _pedidoPorId(id);
+  if(!p) return;
+  _pedAbierto = p;
+  document.getElementById('pedEntregaTitulo').textContent = 'Pedido de ' + (p.nombre || p.email);
+  var mensajeros = [];
+  _pedidosOnline.forEach(function(x){ if(x.mensajero && mensajeros.indexOf(x.mensajero) < 0) mensajeros.push(x.mensajero); });
+  var opts = Object.keys(ENTREGA_INFO).map(function(k){ return '<option value="'+k+'"'+(p.entrega_estado === k ? ' selected' : '')+'>'+ENTREGA_INFO[k].txt+'</option>'; }).join('');
+  var linea = function(lbl, iso){ return iso ? '<div>'+lbl+': <b>'+_fechaC(iso)+'</b></div>' : ''; };
+  document.getElementById('pedEntregaBody').innerHTML =
+    '<div class="pe-linea">' + _escC(_productosTxt(p)) + ' · <b>Q' + Number(p.total_q).toFixed(2) + '</b> · pagado ' + _haceTxt(p.pagado_at) + '</div>'
+    + (p.notas_cliente ? '<div style="background:#fff8e1;border-radius:8px;padding:8px 10px;margin-top:8px">📝 El cliente escribió: ' + _escC(p.notas_cliente) + '</div>' : '')
+    + '<label class="pe-lbl">Estado de la entrega</label><select id="peEstado" class="pe-in">' + opts + '</select>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:160px"><label class="pe-lbl">Día acordado</label><input type="date" id="peFecha" class="pe-in" value="' + _escC(p.entrega_fecha || '') + '"></div>'
+    + '<div style="flex:1;min-width:160px"><label class="pe-lbl">Horario</label><input type="text" id="peFranja" class="pe-in" list="peFranjas" placeholder="Ej. tarde" value="' + _escC(p.entrega_franja || '') + '">'
+    + '<datalist id="peFranjas"><option value="Mañana (8 a 12)"><option value="Tarde (12 a 5)"><option value="Noche (5 a 8)"></datalist></div></div>'
+    + '<label class="pe-lbl">Mensajero</label><input type="text" id="peMensajero" class="pe-in" list="peMensajeros" placeholder="¿Quién lo lleva?" value="' + _escC(p.mensajero || '') + '">'
+    + '<datalist id="peMensajeros">' + mensajeros.map(function(m){ return '<option value="' + _escC(m) + '">'; }).join('') + '</datalist>'
+    + '<label class="pe-lbl">Datos de entrega (puedes corregirlos si el cliente te da otros)</label>'
+    + '<input type="text" id="peNombre" class="pe-in" placeholder="Nombre" value="' + _escC(p.nombre || '') + '" style="margin-bottom:6px">'
+    + '<input type="tel" id="peTelefono" class="pe-in" placeholder="WhatsApp (8 dígitos)" value="' + _escC(p.telefono ? _telLindo(p.telefono) : '') + '" style="margin-bottom:6px">'
+    + '<textarea id="peDireccion" class="pe-in" rows="2" placeholder="Dirección">' + _escC(p.direccion || '') + '</textarea>'
+    + '<label class="pe-lbl">Notas internas (el cliente no las ve)</label><textarea id="peNotas" class="pe-in" rows="2" placeholder="Ej. no contesta, dejar con el guardia...">' + _escC(p.notas_internas || '') + '</textarea>'
+    + '<label class="pe-lbl">Mensaje de WhatsApp</label>'
+    + '<div class="pe-wa"><button onclick="peUsarMensaje(\'confirmar\')">Confirmar datos</button><button onclick="peUsarMensaje(\'encamino\')">Va en camino</button><button onclick="peUsarMensaje(\'entregado\')">Entregado</button><button onclick="peUsarMensaje(\'problema\')">No pudimos contactarte</button></div>'
+    + '<textarea id="peMensaje" class="pe-in" rows="4" placeholder="Elige un mensaje arriba (puedes editarlo) y ábrelo en WhatsApp"></textarea>'
+    + '<div style="margin-top:6px"><button class="btn-sm" style="background:#25D366;color:#fff;padding:9px 16px" onclick="peAbrirWhatsApp()">💬 Abrir en WhatsApp</button></div>'
+    + '<div class="pe-linea" style="margin-top:14px;border-top:1px solid #eee;padding-top:10px">' + linea('Pagado', p.pagado_at) + linea('Confirmado', p.confirmado_at) + linea('En camino', p.en_camino_at) + linea('Entregado', p.entregado_at) + '</div>'
+    + '<div style="display:flex;gap:10px;margin-top:14px"><button class="btn-cancel" onclick="closeModal(\'modalPedidoEntrega\')">Cancelar</button><button class="btn-save" id="peGuardar" onclick="guardarPedidoEntrega()">Guardar</button></div>';
+  document.getElementById('modalPedidoEntrega').classList.add('open');
+}
+
+function _peValores(){
+  return {
+    nombre: document.getElementById('peNombre').value, direccion: document.getElementById('peDireccion').value,
+    fecha: document.getElementById('peFecha').value, franja: document.getElementById('peFranja').value, mensajero: document.getElementById('peMensajero').value
+  };
+}
+function peUsarMensaje(tipo){
+  if(!_pedAbierto) return;
+  document.getElementById('peMensaje').value = pedMensajeWA(tipo, _pedAbierto, _peValores());
+}
+function peAbrirWhatsApp(){
+  if(!_pedAbierto) return;
+  // Usa el número escrito en la ventana si tiene 8 dígitos; si no, el que tenía el pedido.
+  var dig = document.getElementById('peTelefono').value.replace(/\D/g, '').replace(/^502(?=\d{8}$)/, '');
+  var tel = dig.length === 8 ? '502' + dig : _pedAbierto.telefono;
+  var url = _waUrl(tel, document.getElementById('peMensaje').value.trim());
+  if(!url){ alert('Este pedido no tiene un número de WhatsApp válido.'); return; }
+  window.open(url, '_blank');
+}
+
+function guardarPedidoEntrega(){
+  var p = _pedAbierto;
+  if(!p) return;
+  var estado = document.getElementById('peEstado').value;
+  var fecha = document.getElementById('peFecha').value;
+  if((estado === 'confirmado' || estado === 'en_camino') && !fecha && !confirm('No pusiste el día de entrega. ¿Guardar así?')) return;
+  var btn = document.getElementById('peGuardar');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  fetch('/api/galeria?action=actualizarEntregaPedido', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: p.id, entrega_estado: estado, entrega_fecha: fecha,
+      entrega_franja: document.getElementById('peFranja').value, mensajero: document.getElementById('peMensajero').value,
+      notas_internas: document.getElementById('peNotas').value, nombre: document.getElementById('peNombre').value,
+      telefono: document.getElementById('peTelefono').value, direccion: document.getElementById('peDireccion').value
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    btn.disabled = false; btn.textContent = 'Guardar';
+    if(!d.ok){ alert('No se guardó: ' + (d.error || 'error desconocido')); return; }
+    closeModal('modalPedidoEntrega');
+    loadPedidosOnline();
+  }).catch(function(){ btn.disabled = false; btn.textContent = 'Guardar'; alert('Error de conexión — no se guardó.'); });
+}
+
+function marcarPedidoPagado(id){
+  var p = _pedidoPorId(id);
+  if(!p) return;
+  if(!confirm('¿Confirmas que el pago de ' + (p.nombre || p.email) + ' (Q' + Number(p.total_q).toFixed(2) + ') YA entró en Recurrente?\n\nSe marcará como pagado y se restará el stock. Revísalo primero en el panel de Recurrente.')) return;
+  fetch('/api/galeria?action=marcarPedidoPagadoManual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
+    .then(function(r){ return r.json(); }).then(function(d){
+      if(!d.ok){ alert('No se pudo marcar: ' + (d.error || 'error desconocido')); return; }
+      if(d.stock_ok === false) alert('Quedó pagado, pero no se pudo restar el stock de algún producto. Revísalo en Tienda.');
+      loadPedidosOnline();
+    }).catch(function(){ alert('Error de conexión.'); });
+}
+
+function cancelarPedidoPendiente(id){
+  var p = _pedidoPorId(id);
+  if(!p) return;
+  if(!confirm('¿Cancelar este pedido sin pagar de ' + (p.nombre || p.email) + '? (Si usó un cupón, se le devuelve.)')) return;
+  fetch('/api/galeria?action=cancelarPedidoPendiente', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) })
+    .then(function(r){ return r.json(); }).then(function(d){
+      if(!d.ok){ alert('No se pudo cancelar: ' + (d.error || 'error desconocido')); return; }
+      if(d.cupon_devuelto) alert('Cancelado. Se devolvió el cupón ' + d.cupon_devuelto + '.');
+      loadPedidosOnline();
+    }).catch(function(){ alert('Error de conexión.'); });
+}
+
 function guardarProducto(){
   var id = document.getElementById('prodId').value;
   var envioIncluido = document.getElementById('prodEnvioIncluido').checked;
@@ -3878,6 +4229,14 @@ function guardarProducto(){
     costo_envio: envioIncluido ? null : (document.getElementById('prodCostoEnvio').value.trim() || null)
   };
   if(!payload.nombre || !payload.categoria){ alert('Nombre y categoría son obligatorios.'); return; }
+  // Stock: vacío = sin límite. Al EDITAR solo se manda si lo cambiaste, para no pisar el stock que
+  // bajó por una venta mientras tenías esta ventana abierta.
+  var stockEl = document.getElementById('prodStock');
+  var stockTxt = stockEl.value.trim();
+  // Si escribieron algo que el navegador no entiende como número (ej. "1e"), el campo reporta vacío: no se
+  // puede tomar eso como "sin límite".
+  if((stockEl.validity && stockEl.validity.badInput) || (stockTxt !== '' && !/^\d+$/.test(stockTxt))){ alert('El stock debe ser un número entero de 0 en adelante (o déjalo vacío para "sin límite").'); return; }
+  if(!id || stockTxt !== _prodStockOriginal) payload.stock = stockTxt === '' ? null : parseInt(stockTxt, 10);
   // Las fotos adicionales solo se mandan si hay alguna, o si el producto
   // tenía y ahora se quitaron todas (así no se toca la columna "imagenes"
   // en productos que no la usan).
