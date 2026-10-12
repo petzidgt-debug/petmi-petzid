@@ -129,6 +129,17 @@ tr.ped-urgente td{background:#fff4f2}
 .pe-wa{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
 .pe-wa button{border:none;border-radius:99px;padding:7px 12px;font-size:11.5px;font-weight:700;cursor:pointer;background:#e0f0ff;color:#0055aa}
 .pe-linea{font-size:12px;color:#777;line-height:1.7}
+/* Emails MK */
+.mk-ed{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:860px){.mk-ed{grid-template-columns:1fr}}
+.mk-lbl{display:block;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.4px;margin:12px 0 4px}
+.mk-in{width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:Arial,sans-serif;background:#fff}
+.mk-hint{font-size:11px;color:#999;margin-top:3px;line-height:1.5}
+.mk-prev{width:100%;height:560px;border:1px solid #e5e5e5;border-radius:12px;background:#f4f4f2}
+.mk-aud{background:#f8f8f6;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:12.5px;line-height:1.8;color:#555}
+.mk-aud b{color:#1a1a2e}
+.mk-barra{height:14px;background:#eee;border-radius:99px;overflow:hidden;margin:14px 0 6px}
+.mk-barra i{display:block;height:100%;width:0;background:linear-gradient(90deg,#00B4B4,#25D366);transition:width .3s}
 </style>
 </head>
 <body>
@@ -165,6 +176,7 @@ tr.ped-urgente td{background:#fff4f2}
       <div class="nav-item" onclick="showScreen('saludreglas',this)"><span class="nav-icon">🩺</span>Reglas de Salud</div>
       <div class="nav-item" onclick="showScreen('ruletapremios',this)"><span class="nav-icon">🎡</span>Ruleta de Premios</div>
       <div class="nav-item" onclick="showScreen('reactivacion',this)"><span class="nav-icon">📧</span>Reactivación</div>
+      <div class="nav-item" onclick="showScreen('emailsmk',this)"><span class="nav-icon">✉️</span>Emails MK</div>
       <div class="nav-item" onclick="showScreen('correos',this)"><span class="nav-icon">📊</span>Correos (clics)</div>
       <div class="nav-item" onclick="showScreen('concurso',this)"><span class="nav-icon">🇬🇹</span>Concurso</div>
       <div class="nav-item" onclick="showScreen('tienda',this)"><span class="nav-icon">🛍️</span>Tienda</div>
@@ -584,6 +596,21 @@ tr.ped-urgente td{background:#fff4f2}
       </div>
     </div>
 
+    <div id="screenEmailsMK" class="screen">
+      <h2 class="screen-title">✉️ Emails MK de la semana</h2>
+      <p style="color:#888;font-size:13px;margin-bottom:14px;line-height:1.6">Arma el correo de la semana, elige a quién le llega y envíalo desde aquí. Cada persona lo recibe <b>una sola vez</b>, y se respeta a quien se dio de baja o apagó "recibir ofertas". Los clics se ven en <b>📊 Correos (clics)</b>.</p>
+      <div id="mkAviso" style="display:none;background:#fdecea;color:#c0392b;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;font-weight:700;line-height:1.6"></div>
+      <button class="btn-primary" onclick="mkNuevo()" style="margin-bottom:14px">➕ Nuevo email de la semana</button>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Semana</th><th>Correo</th><th>Audiencia</th><th>Estado</th><th>Enviados</th><th>Clics</th><th></th></tr></thead>
+            <tbody id="mkBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="screenCorreos" class="screen">
       <h2 class="screen-title">📊 Correos: envíos y clics</h2>
       <p style="color:#888;font-size:13px;margin-bottom:16px">Por campaña: cuántos correos salieron, cuántas <b>personas distintas</b> hicieron clic y el <b>CTR</b> (clics únicos ÷ enviados). Solo cuenta desde que se activó el seguimiento. Los clics automáticos de filtros de seguridad se separan y no cuentan.</p>
@@ -931,6 +958,69 @@ tr.ped-urgente td{background:#fff4f2}
       <button class="btn-sm" style="background:#eee;color:#555" onclick="closeModal('modalPedidoEntrega')">✕</button>
     </div>
     <div id="pedEntregaBody" style="font-size:13px"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalMKEditor">
+  <div class="modal" style="max-width:1040px;max-height:94vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px">
+      <h3 id="mkEdTitulo" style="margin:0;font-size:17px">Nuevo email</h3>
+      <button class="btn-sm" style="background:#eee;color:#555" onclick="closeModal('modalMKEditor')">✕</button>
+    </div>
+    <div id="mkEdAviso" style="display:none;background:#fff4d6;color:#8a6200;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:12px"></div>
+    <div class="mk-ed">
+      <div>
+        <label class="mk-lbl">Nombre interno (solo lo ves tú)</label>
+        <input id="mkNombre" class="mk-in" placeholder="Ej. Semana 41 — Cumpleañeros de octubre" oninput="mkVista()">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div style="flex:1;min-width:150px"><label class="mk-lbl">Semana del (lunes)</label><input type="date" id="mkSemana" class="mk-in"></div>
+        </div>
+        <label class="mk-lbl">Asunto</label>
+        <input id="mkAsunto" class="mk-in" placeholder="Ej. {mascota} tiene novedades en PetMi 🐾" oninput="mkVista()">
+        <label class="mk-lbl">Título dentro del correo (opcional)</label>
+        <input id="mkTitulo" class="mk-in" placeholder="Ej. ¡Feliz mes de cumpleaños, {mascota}!" oninput="mkVista()">
+        <label class="mk-lbl">Texto del correo</label>
+        <textarea id="mkCuerpo" class="mk-in" rows="9" placeholder="Hola {nombre},&#10;&#10;Esta semana tenemos novedades para {mascota}..." oninput="mkVista()"></textarea>
+        <div class="mk-hint">Escribe <b>{nombre}</b> y <b>{mascota}</b> para personalizar. <b>**así**</b> pone negrita. Una línea en blanco separa párrafos.</div>
+        <label class="mk-lbl">Imagen (opcional)</label>
+        <div style="display:flex;gap:8px"><input id="mkImagen" class="mk-in" placeholder="https://..." oninput="mkVista()" style="flex:1;min-width:0"><button class="btn-sm" style="background:#e0f0ff;color:#0055aa;white-space:nowrap" onclick="mkSubirImagen()">📷 Subir</button></div>
+        <div class="mk-hint" id="mkImagenEstado"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div style="flex:1;min-width:140px"><label class="mk-lbl">Texto del botón</label><input id="mkBotonTexto" class="mk-in" placeholder="Ej. Ver la tienda" oninput="mkVista()"></div>
+          <div style="flex:2;min-width:200px"><label class="mk-lbl">A dónde lleva el botón</label><input id="mkBotonUrl" class="mk-in" list="mkDestinos" placeholder="https://app.revistapetmi.com/..." oninput="mkVista()"></div>
+        </div>
+        <datalist id="mkDestinos"><option value="https://app.revistapetmi.com/tienda.html"><option value="https://app.revistapetmi.com/juego.html"><option value="https://app.revistapetmi.com/ruleta.html"><option value="https://app.revistapetmi.com/salud.html"><option value="https://app.revistapetmi.com/registro.html"><option value="https://app.revistapetmi.com/"></datalist>
+        <div class="mk-hint">Solo puede llevar a páginas de PetMi. Los clics del botón se cuentan solos.</div>
+        <label class="mk-lbl">¿A quién le llega?</label>
+        <select id="mkAudiencia" class="mk-in" onchange="mkCambioAudiencia()"></select>
+        <div id="mkParamWrap" style="display:none;margin-top:6px"><select id="mkParam" class="mk-in" onchange="mkContarAudiencia()"></select></div>
+        <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:12.5px;color:#555;line-height:1.5"><input type="checkbox" id="mkOfertas" checked onchange="mkContarAudiencia()" style="margin-top:3px"><span>Solo a quienes aceptan recibir ofertas y novedades <span style="color:#999">(lo dejan marcado al registrarse; quien lo apagó no recibe)</span></span></label>
+        <div class="mk-aud" id="mkAudResumen">Elige una audiencia para ver cuántas personas son.</div>
+      </div>
+      <div>
+        <label class="mk-lbl" style="margin-top:0">Así se verá (con nombres de ejemplo)</label>
+        <div id="mkAsuntoVista" style="font-size:12.5px;color:#555;margin-bottom:6px"></div>
+        <iframe id="mkPrev" class="mk-prev" title="Vista previa del correo"></iframe>
+        <label class="mk-lbl">Enviarme una prueba</label>
+        <div style="display:flex;gap:8px"><input id="mkPruebaEmail" class="mk-in" type="email" placeholder="tu@correo.com" style="flex:1;min-width:0"><button class="btn-sm" style="background:#1a1a2e;color:#fff;white-space:nowrap" id="mkPruebaBtn" onclick="mkEnviarPrueba()">Enviar prueba</button></div>
+        <div class="mk-hint">La prueba lleva "[PRUEBA]" en el asunto y no se cuenta como envío.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn-cancel" onclick="closeModal('modalMKEditor')">Cerrar</button>
+      <button class="btn-save" id="mkGuardarBtn" onclick="mkGuardar(false)">Guardar</button>
+      <button class="btn-save" style="background:#25D366" onclick="mkGuardar(true)">Guardar y enviar…</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalMKEnviar">
+  <div class="modal" style="max-width:520px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px">
+      <h3 id="mkEnTitulo" style="margin:0;font-size:17px">Enviar email</h3>
+      <button class="btn-sm" style="background:#eee;color:#555" id="mkEnCerrar" onclick="mkCerrarEnvio()">✕</button>
+    </div>
+    <div id="mkEnBody" style="font-size:13px"></div>
   </div>
 </div>
 
@@ -2054,6 +2144,7 @@ function showScreen(name,el){
   if(name==='ruletapremios') { loadRuletaPremios(); loadRuletaGiros(); }
   if(name==='reactivacion') { loadReactivacionEfectividad(); loadNuncaHanVuelto(); }
   if(name==='correos') loadCorreos();
+  if(name==='emailsmk') mkCargar();
   if(name==='concurso') loadConcurso();
   if(name==='tienda'){ loadTiendaProductos(); loadMetaCatalogo(); }
   if(name==='cumpleanos') loadCumpleanosPromo();
@@ -3874,7 +3965,7 @@ function loadCorreos(){
       return;
     }
     body.innerHTML = _correosCampanas.map(function(c){
-      var nombre = CORREOS_NOMBRES[c.campana_id] || c.campana_id;
+      var nombre = CORREOS_NOMBRES[c.campana_id] || c.nombre_campana || c.campana_id;
       return '<tr><td><b>'+_escC(nombre)+'</b></td>'
         + '<td>'+c.enviados+(c.errores ? ' <span style="color:#c0392b;font-size:11px" title="No se pudieron enviar">('+c.errores+' fallaron)</span>' : '')+'</td>'
         + '<td>'+c.clics_unicos+'</td>'
@@ -3890,7 +3981,7 @@ function loadCorreos(){
 
 function abrirCorreoDetalle(campanaId){
   var camp = _correosCampanas.find(function(c){ return c.campana_id === campanaId; }) || { campana_id: campanaId, botones: [] };
-  document.getElementById('correoDetalleTitulo').textContent = CORREOS_NOMBRES[campanaId] || campanaId;
+  document.getElementById('correoDetalleTitulo').textContent = CORREOS_NOMBRES[campanaId] || camp.nombre_campana || campanaId;
   document.getElementById('correoDetalleBody').innerHTML = '<div style="padding:30px;text-align:center;color:#aaa">Cargando detalle...</div>';
   document.getElementById('modalCorreoDetalle').classList.add('open');
   fetch('/api/galeria?action=getDetalleCorreos&campana_id=' + encodeURIComponent(campanaId)).then(function(r){ return r.json(); }).then(function(d){
@@ -4212,6 +4303,315 @@ function cancelarPedidoPendiente(id){
       if(d.cupon_devuelto) alert('Cancelado. Se devolvió el cupón ' + d.cupon_devuelto + '.');
       loadPedidosOnline();
     }).catch(function(){ alert('Error de conexión.'); });
+}
+
+// ── Emails MK de la semana ───────────────────────────────────────
+var _mkCampanas = [];
+var _mkResumen = null;          // conteos por audiencia (para las etiquetas del selector)
+var _mkActual = null;           // el correo abierto en el editor (null = uno nuevo)
+var _mkDetener = false;
+var _mkEnviando = false;
+var _mkTimerVista = null;
+
+var MK_AUDIENCIAS = [
+  ['todos', '👥 Todos'], ['nunca_volvieron', '🚪 No han regresado nunca'], ['inactivos_30', '😴 Inactivos hace más de 30 días'],
+  ['perros', '🐶 Perros'], ['gatos', '🐱 Gatos'], ['zona', '📍 Una zona…'], ['cumple', '🎂 Cumpleaños de un mes…'],
+  ['adoptados', '🏠 Adoptados'], ['premium', '⭐ Premium'], ['sin_foto', '📷 Mascotas sin foto']
+];
+var MK_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+// Llama al servidor con la clave de administración. Si no la tiene guardada (o es incorrecta), la pide.
+async function mkFetch(action, body){
+  async function llamar(){
+    var opts = { method: body ? 'POST' : 'GET', headers: { 'x-admin-key': localStorage.getItem('petmi_admin_key') || '' } };
+    if(body){ opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    var r = await fetch('/api/galeria?action=' + action, opts);
+    return r.json();
+  }
+  var d;
+  try{ d = await llamar(); }catch(e){ return { ok: false, error: 'Error de conexión.' }; }
+  if(d && d.error === 'no_autorizado'){
+    var k = prompt('Escribe la clave de administración de correos (la que pusiste en Vercel como ADMIN_API_KEY):');
+    if(!k) return { ok: false, error: 'Falta la clave de administración.' };
+    localStorage.setItem('petmi_admin_key', k.trim());
+    try{ d = await llamar(); }catch(e){ return { ok: false, error: 'Error de conexión.' }; }
+    if(d && d.error === 'no_autorizado'){ localStorage.removeItem('petmi_admin_key'); return { ok: false, error: 'La clave no es correcta.' }; }
+  }
+  if(d && d.error === 'falta_clave_servidor') return { ok: false, error: d.mensaje || 'Falta configurar ADMIN_API_KEY en Vercel.' };
+  if(d && d.error === 'FALTA_SQL') return { ok: false, error: 'Falta correr crear_email_manager.sql (y antes crear_email_tracking.sql) en Supabase.' };
+  return d;
+}
+
+function _mkAviso(txt){
+  var el = document.getElementById('mkAviso');
+  el.textContent = txt || ''; el.style.display = txt ? 'block' : 'none';
+}
+function _mkLunes(fecha){
+  var d = fecha ? new Date(fecha + 'T00:00:00') : new Date();
+  var dia = d.getDay();   // 0 = domingo
+  d.setDate(d.getDate() - (dia === 0 ? 6 : dia - 1));
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function _mkSemanaTxt(f){
+  if(!f) return '—';
+  var p = String(f).split('-'), d = new Date(+p[0], +p[1] - 1, +p[2]);
+  return 'Semana del ' + d.toLocaleDateString('es-GT', { day: 'numeric', month: 'short' });
+}
+function _mkAudienciaTxt(c){
+  var base = (MK_AUDIENCIAS.find(function(a){ return a[0] === c.audiencia; }) || [0, c.audiencia])[1].replace('…', '');
+  if(c.audiencia === 'zona' && c.audiencia_param) return '📍 ' + _escC(c.audiencia_param);
+  if(c.audiencia === 'cumple' && c.audiencia_param) return '🎂 Cumpleaños de ' + MK_MESES[(parseInt(c.audiencia_param, 10) || 1) - 1].toLowerCase();
+  return _escC(base);
+}
+
+async function mkCargar(){
+  var body = document.getElementById('mkBody');
+  var d = await mkFetch('getCampanasMK');
+  if(!d.ok){
+    _mkAviso(d.error || 'No se pudo cargar.');
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">—</td></tr>';
+    return;
+  }
+  _mkAviso('');
+  _mkCampanas = d.campanas || [];
+  if(!_mkCampanas.length){
+    body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">Todavía no hay correos. Toca "➕ Nuevo email de la semana".</td></tr>';
+    return;
+  }
+  var estados = { borrador: ['📝 Borrador', 'ped-pill-mute'], enviando: ['⏳ Enviando', 'ped-pill-warn'], enviada: ['✅ Enviada', 'ped-pill-done'] };
+  body.innerHTML = _mkCampanas.map(function(c){
+    var est = estados[c.estado] || estados.borrador;
+    var ctr = c.enviados > 0 ? (c.clics_unicos / c.enviados * 100).toFixed(1) + '%' : '';
+    return '<tr><td>' + _escC(_mkSemanaTxt(c.semana)) + '</td>'
+      + '<td><b>' + _escC(c.nombre) + '</b><div class="ped-sub">' + _escC(c.asunto) + '</div></td>'
+      + '<td>' + _mkAudienciaTxt(c) + '</td>'
+      + '<td><span class="ped-pill ' + est[1] + '">' + est[0] + '</span></td>'
+      + '<td>' + c.enviados + (c.errores ? '<div class="ped-sub" style="color:#c0392b">' + c.errores + ' fallaron</div>' : '') + '</td>'
+      + '<td>' + (c.enviados ? c.clics_unicos + '<div class="ped-sub">CTR ' + ctr + '</div>' : '—') + '</td>'
+      + '<td style="white-space:nowrap"><button class="btn-sm" style="background:#1a1a2e;color:#fff" onclick="mkEditar(\'' + _escC(c.id) + '\')">Editar</button> '
+      + '<button class="btn-sm" style="background:#25D366;color:#fff" onclick="mkAbrirEnvio(\'' + _escC(c.id) + '\')">Enviar…</button> '
+      + '<button class="btn-sm" style="background:#eee;color:#555" onclick="mkDuplicar(\'' + _escC(c.id) + '\')">Duplicar</button>'
+      + (c.estado === 'borrador' ? ' <button class="btn-sm" style="background:#eee;color:#c0392b" onclick="mkBorrar(\'' + _escC(c.id) + '\')">🗑</button>' : '') + '</td></tr>';
+  }).join('');
+}
+
+// ── Editor ──
+async function _mkPrepararEditor(){
+  if(!_mkResumen){
+    var r = await mkFetch('getResumenAudienciasMK');
+    if(r.ok) _mkResumen = r; else _mkAviso(r.error || '');
+  }
+  var seg = (_mkResumen && _mkResumen.segmentos) || {};
+  document.getElementById('mkAudiencia').innerHTML = MK_AUDIENCIAS.map(function(a){
+    var n = seg[a[0]];
+    return '<option value="' + a[0] + '">' + a[1] + (n != null ? ' (' + n + ')' : '') + '</option>';
+  }).join('');
+}
+function _mkLlenarParam(aud, valor){
+  var wrap = document.getElementById('mkParamWrap'), sel = document.getElementById('mkParam');
+  if(aud === 'zona'){
+    var zonas = (_mkResumen && _mkResumen.zonas) || [];
+    sel.innerHTML = '<option value="">Elige la zona…</option>' + zonas.map(function(z){ return '<option value="' + _escC(z.zona) + '">' + _escC(z.zona) + ' (' + z.n + ')</option>'; }).join('');
+    if(valor && !zonas.some(function(z){ return z.zona === valor; })) sel.innerHTML += '<option value="' + _escC(valor) + '">' + _escC(valor) + '</option>';
+    sel.value = valor || ''; wrap.style.display = 'block';
+  } else if(aud === 'cumple'){
+    var porMes = (_mkResumen && _mkResumen.cumple_por_mes) || [];
+    sel.innerHTML = '<option value="">Elige el mes…</option>' + MK_MESES.map(function(m, i){ return '<option value="' + (i + 1) + '">' + m + (porMes[i] != null ? ' (' + porMes[i] + ')' : '') + '</option>'; }).join('');
+    sel.value = valor || String(new Date().getMonth() + 1); wrap.style.display = 'block';
+  } else { wrap.style.display = 'none'; sel.innerHTML = ''; }
+}
+function mkCambioAudiencia(){
+  _mkLlenarParam(document.getElementById('mkAudiencia').value, '');
+  mkContarAudiencia();
+}
+
+async function _mkAbrirEditor(c){
+  _mkActual = c || null;
+  await _mkPrepararEditor();
+  document.getElementById('mkEdTitulo').textContent = c ? 'Editar email' : 'Nuevo email de la semana';
+  var avisoEl = document.getElementById('mkEdAviso');
+  if(c && c.estado !== 'borrador'){ avisoEl.textContent = 'Este correo ya se empezó a enviar. Si lo cambias, quienes lo reciban después verán la versión nueva.'; avisoEl.style.display = 'block'; }
+  else avisoEl.style.display = 'none';
+  var v = c || { nombre: '', semana: _mkLunes(), asunto: '', titulo: '', cuerpo: '', imagen_url: '', boton_texto: '', boton_url: '', audiencia: 'todos', audiencia_param: '', respetar_ofertas: true };
+  document.getElementById('mkNombre').value = v.nombre || '';
+  document.getElementById('mkSemana').value = v.semana || '';
+  document.getElementById('mkAsunto').value = v.asunto || '';
+  document.getElementById('mkTitulo').value = v.titulo || '';
+  document.getElementById('mkCuerpo').value = v.cuerpo || '';
+  document.getElementById('mkImagen').value = v.imagen_url || '';
+  document.getElementById('mkBotonTexto').value = v.boton_texto || '';
+  document.getElementById('mkBotonUrl').value = v.boton_url || '';
+  document.getElementById('mkImagenEstado').textContent = '';
+  document.getElementById('mkAudiencia').value = v.audiencia || 'todos';
+  _mkLlenarParam(v.audiencia || 'todos', v.audiencia_param || '');
+  document.getElementById('mkOfertas').checked = v.respetar_ofertas !== false;
+  document.getElementById('mkPruebaEmail').value = localStorage.getItem('petmi_mk_prueba') || '';
+  document.getElementById('modalMKEditor').classList.add('open');
+  mkVista(); mkContarAudiencia();
+}
+function mkNuevo(){ _mkAbrirEditor(null); }
+function mkEditar(id){ var c = _mkCampanas.find(function(x){ return String(x.id) === String(id); }); if(c) _mkAbrirEditor(c); }
+
+function _mkLeerEditor(){
+  var aud = document.getElementById('mkAudiencia').value;
+  return {
+    id: _mkActual ? _mkActual.id : undefined,
+    nombre: document.getElementById('mkNombre').value.trim(), semana: document.getElementById('mkSemana').value,
+    asunto: document.getElementById('mkAsunto').value.trim(), titulo: document.getElementById('mkTitulo').value.trim(),
+    cuerpo: document.getElementById('mkCuerpo').value, imagen_url: document.getElementById('mkImagen').value.trim(),
+    boton_texto: document.getElementById('mkBotonTexto').value.trim(), boton_url: document.getElementById('mkBotonUrl').value.trim(),
+    audiencia: aud, audiencia_param: (aud === 'zona' || aud === 'cumple') ? document.getElementById('mkParam').value : '',
+    respetar_ofertas: document.getElementById('mkOfertas').checked
+  };
+}
+
+// Vista previa en vivo (espera un momento después de que dejas de escribir)
+function mkVista(){
+  clearTimeout(_mkTimerVista);
+  _mkTimerVista = setTimeout(async function(){
+    var c = _mkLeerEditor();
+    var d = await mkFetch('previewEmailMK', c);
+    if(!d.ok) return;
+    document.getElementById('mkPrev').srcdoc = d.html;
+    document.getElementById('mkAsuntoVista').innerHTML = '<b>Asunto:</b> ' + _escC(d.asunto || '(sin asunto)');
+  }, 450);
+}
+
+var _mkTimerAud = null;
+function mkContarAudiencia(){
+  clearTimeout(_mkTimerAud);
+  _mkTimerAud = setTimeout(async function(){
+    var c = _mkLeerEditor(), el = document.getElementById('mkAudResumen');
+    if((c.audiencia === 'zona' || c.audiencia === 'cumple') && !c.audiencia_param){ el.textContent = 'Elige ' + (c.audiencia === 'zona' ? 'la zona' : 'el mes') + ' para ver cuántas personas son.'; return; }
+    el.textContent = 'Contando...';
+    var d = await mkFetch('previewAudienciaMK', { audiencia: c.audiencia, audiencia_param: c.audiencia_param, respetar_ofertas: c.respetar_ofertas, slug: _mkActual ? _mkActual.slug : '' });
+    el.innerHTML = d.ok ? _mkAudHtml(d) : '<span style="color:#c0392b">' + _escC(d.error || 'No se pudo contar') + '</span>';
+  }, 350);
+}
+function _mkAudHtml(d){
+  var h = '👥 En la audiencia: <b>' + d.total + '</b>'
+    + (d.bajas ? '<br>🚫 Se dieron de baja: ' + d.bajas : '')
+    + (d.sin_ofertas ? '<br>🔕 Apagaron "recibir ofertas": ' + d.sin_ofertas : '')
+    + (d.ya_recibieron ? '<br>✅ Ya recibieron este correo: ' + d.ya_recibieron : '')
+    + (d.fallidos ? '<br>⚠️ No se les pudo enviar (se dejaron de intentar): ' + d.fallidos : '')
+    + '<br>📬 <b>Por enviar: ' + d.pendientes + '</b>';
+  if(d.muestra && d.muestra.length) h += '<div style="color:#999;font-size:11.5px;margin-top:4px">Por ejemplo: ' + d.muestra.map(function(m){ return _escC(m.nombre || m.email) + (m.mascotas ? ' (' + _escC(m.mascotas) + ')' : ''); }).join(' · ') + '</div>';
+  return h;
+}
+
+async function mkGuardar(luegoEnviar){
+  var c = _mkLeerEditor();
+  var btn = document.getElementById('mkGuardarBtn'); btn.disabled = true; btn.textContent = 'Guardando...';
+  var d = await mkFetch('guardarCampanaMK', c);
+  btn.disabled = false; btn.textContent = 'Guardar';
+  if(!d.ok){ alert('No se guardó: ' + (d.error || 'error desconocido')); return; }
+  _mkActual = d.campana;
+  await mkCargar();
+  if(luegoEnviar){ closeModal('modalMKEditor'); mkAbrirEnvio(d.campana.id); }
+  else { document.getElementById('mkEdTitulo').textContent = 'Editar email'; alert('✅ Guardado.'); }
+}
+
+async function mkEnviarPrueba(){
+  var c = _mkLeerEditor(), email = document.getElementById('mkPruebaEmail').value.trim();
+  if(!email){ alert('Escribe el correo al que quieres mandar la prueba.'); return; }
+  localStorage.setItem('petmi_mk_prueba', email);
+  var btn = document.getElementById('mkPruebaBtn'); btn.disabled = true; btn.textContent = 'Enviando...';
+  var d = await mkFetch('enviarPruebaMK', Object.assign({}, c, { email: email }));
+  btn.disabled = false; btn.textContent = 'Enviar prueba';
+  alert(d.ok ? '✅ Prueba enviada a ' + email + '. Revisa tu bandeja (y el spam).' : 'No se envió la prueba: ' + (d.error || 'error desconocido'));
+}
+
+async function mkSubirImagen(){
+  var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = async function(){
+    var f = inp.files && inp.files[0]; if(!f) return;
+    var est = document.getElementById('mkImagenEstado'); est.textContent = 'Subiendo...';
+    try{
+      var b64 = await comprimirFotoProducto(f);
+      var r = await fetch('/api/subir-foto', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ photoBase64: b64, mimeType: 'image/jpeg', fileName: 'mk_' + Date.now() + '.jpg' }) });
+      var d = await r.json();
+      if(!d.ok || !d.url) throw new Error(d.error || 'No se pudo subir');
+      document.getElementById('mkImagen').value = d.url; est.textContent = '✅ Imagen lista.'; mkVista();
+    }catch(e){ est.textContent = '⚠️ ' + (e.message || 'Error al subir'); }
+  };
+  inp.click();
+}
+
+async function mkDuplicar(id){
+  var c = _mkCampanas.find(function(x){ return String(x.id) === String(id); });
+  if(!c) return;
+  var copia = { nombre: c.nombre + ' (copia)', semana: _mkLunes(new Date(new Date(c.semana || _mkLunes() + 'T00:00:00').getTime() + 7 * 86400000).toISOString().slice(0, 10)),
+    asunto: c.asunto, titulo: c.titulo, cuerpo: c.cuerpo, imagen_url: c.imagen_url, boton_texto: c.boton_texto, boton_url: c.boton_url,
+    audiencia: c.audiencia, audiencia_param: c.audiencia_param, respetar_ofertas: c.respetar_ofertas };
+  var d = await mkFetch('guardarCampanaMK', copia);
+  if(!d.ok){ alert('No se pudo duplicar: ' + (d.error || '')); return; }
+  await mkCargar();
+}
+async function mkBorrar(id){
+  var c = _mkCampanas.find(function(x){ return String(x.id) === String(id); });
+  if(!c || !confirm('¿Borrar el borrador "' + c.nombre + '"? No se puede deshacer.')) return;
+  var d = await mkFetch('eliminarCampanaMK', { id: id });
+  if(!d.ok){ alert(d.error || 'No se pudo borrar.'); return; }
+  mkCargar();
+}
+
+// ── Envío ──
+async function mkAbrirEnvio(id, estadoFinalHtml){
+  var c = _mkCampanas.find(function(x){ return String(x.id) === String(id); });
+  if(!c) return;
+  _mkActual = c; _mkDetener = false;
+  document.getElementById('mkEnTitulo').textContent = 'Enviar: ' + c.nombre;
+  var body = document.getElementById('mkEnBody');
+  body.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa">Contando a quién le llega...</div>';
+  document.getElementById('modalMKEnviar').classList.add('open');
+  var d = await mkFetch('previewAudienciaMK', { audiencia: c.audiencia, audiencia_param: c.audiencia_param, respetar_ofertas: c.respetar_ofertas, slug: c.slug });
+  if(!d.ok){ body.innerHTML = '<div style="color:#c0392b;padding:14px">' + _escC(d.error || 'No se pudo contar') + '</div>'; return; }
+  body.innerHTML = '<div style="margin-bottom:8px"><b>Asunto:</b> ' + _escC(c.asunto) + '</div>'
+    + '<div style="margin-bottom:8px"><b>Audiencia:</b> ' + _mkAudienciaTxt(c) + '</div>'
+    + '<div class="mk-aud" id="mkEnResumen">' + _mkAudHtml(d) + '</div>'
+    + '<div class="mk-barra" id="mkBarraWrap" style="display:none"><i id="mkBarra"></i></div><div id="mkEnEstado" style="font-size:12.5px;color:#666;min-height:18px"></div>'
+    + '<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">'
+    + '<button class="btn-save" id="mkEnviarBtn" style="background:#25D366"' + (d.pendientes ? '' : ' disabled') + ' onclick="mkEnviarTodo(' + d.pendientes + ')">📬 Enviar a ' + d.pendientes + (d.pendientes === 1 ? ' persona' : ' personas') + '</button>'
+    + '<button class="btn-cancel" id="mkDetenerBtn" style="display:none" onclick="_mkDetener=true">Detener</button></div>'
+    + '<div style="margin-top:16px;border-top:1px solid #eee;padding-top:10px;font-size:12px;color:#888;line-height:1.6">Quien ya lo recibió no lo vuelve a recibir, aunque envíes dos veces.<br>'
+    + '<a href="#" style="color:#c0392b;font-weight:700" onclick="mkReiniciar();return false">Reiniciar envíos de este correo</a> (borra el registro de a quién se le mandó y sus clics, para poder enviarlo de nuevo a todos).</div>';
+  if(estadoFinalHtml) document.getElementById('mkEnEstado').innerHTML = estadoFinalHtml;
+}
+
+async function mkEnviarTodo(inicial){
+  var c = _mkActual; if(!c || _mkEnviando) return;
+  if(!confirm('Vas a enviar "' + c.asunto + '" a ' + inicial + (inicial === 1 ? ' persona' : ' personas') + '.\n\n¿Todo listo? Te recomiendo haberte mandado una prueba antes.')) return;
+  _mkEnviando = true; _mkDetener = false;
+  var btn = document.getElementById('mkEnviarBtn'), stop = document.getElementById('mkDetenerBtn'), est = document.getElementById('mkEnEstado');
+  btn.disabled = true; stop.style.display = 'inline-block'; document.getElementById('mkBarraWrap').style.display = 'block';
+  document.getElementById('mkEnCerrar').disabled = true;
+  var enviados = 0, errores = 0, seguidosVacios = 0, motivo = '';
+  while(!_mkDetener){
+    var d = await mkFetch('enviarLoteMK', { id: c.id, limite: 10 });
+    if(!d.ok){ motivo = d.error || 'Error desconocido.'; break; }
+    enviados += d.enviados; errores += d.errores;
+    var hechos = Math.min(inicial, inicial - d.restantes);
+    document.getElementById('mkBarra').style.width = (inicial ? Math.round(hechos / inicial * 100) : 100) + '%';
+    est.textContent = 'Enviados: ' + enviados + (errores ? ' · con error: ' + errores : '') + ' · faltan ' + d.restantes;
+    if(d.sin_registro){ motivo = 'Se enviaron correos pero NO se pudo registrar que salieron. Detuve el envío para no repetirlos: revisa la tabla email_envios antes de continuar.'; break; }
+    if(d.restantes <= 0) break;
+    if(d.enviados === 0){ seguidosVacios++; if(seguidosVacios >= 2){ motivo = 'Fallaron varios envíos seguidos' + (d.detalle_errores && d.detalle_errores[0] ? ': ' + d.detalle_errores[0].error : '') + '. Detuve el envío.'; break; } } else seguidosVacios = 0;
+  }
+  _mkEnviando = false; document.getElementById('mkEnCerrar').disabled = false; stop.style.display = 'none';
+  est.innerHTML = '<b>' + (motivo ? '⚠️ ' + _escC(motivo) : (_mkDetener ? '⏸ Detenido.' : '✅ Listo.')) + '</b> Enviados: ' + enviados + (errores ? ' · con error: ' + errores : '') + '.';
+  var finalHtml = est.innerHTML;
+  await mkCargar();
+  await mkAbrirEnvio(c.id, finalHtml);   // refresca los números ("por enviar" ahora) y deja el resultado a la vista
+}
+function mkCerrarEnvio(){ if(_mkEnviando) return; closeModal('modalMKEnviar'); }
+
+async function mkReiniciar(){
+  var c = _mkActual; if(!c) return;
+  if(!confirm('¿Reiniciar los envíos de "' + c.nombre + '"?\n\nSe borra el registro de a quién se le mandó y sus clics. Después podrás enviarlo otra vez a todos. Los correos que ya salieron no se pueden recuperar.')) return;
+  var d = await mkFetch('reiniciarEnviosMK', { id: c.id });
+  if(!d.ok){ alert(d.error || 'No se pudo reiniciar.'); return; }
+  alert('Listo: se borraron ' + d.envios_borrados + ' registros de envío.');
+  await mkCargar(); mkAbrirEnvio(c.id);
 }
 
 function guardarProducto(){

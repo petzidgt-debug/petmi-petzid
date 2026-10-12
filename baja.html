@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Darme de baja — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:20px;max-width:440px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.1);overflow:hidden;text-align:center}
+.head{background:#00B4B4;padding:22px}
+.head span{display:inline-block;background:#fff;border-radius:12px;padding:8px 18px}
+.head img{height:34px;width:auto;display:block}
+.body{padding:28px 24px 30px}
+h1{font-size:19px;color:#1a1a2e;line-height:1.35;margin-bottom:10px}
+p{font-size:14px;color:#666;line-height:1.6;margin-bottom:18px}
+button{background:#E05090;color:#fff;border:none;border-radius:99px;font-weight:900;font-size:15px;padding:14px 30px;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+a{color:#00838f;font-weight:700;font-size:13px;text-decoration:none}
+.msg{margin-top:16px;font-size:14px;line-height:1.6}
+.ok{color:#2e7d32;font-weight:700}.err{color:#c0392b;font-weight:700}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head"><span><img src="/logopetmi.png" alt="PetMi" onerror="this.parentNode.style.display='none'"></span></div>
+  <div class="body" id="cuerpo">
+    <h1>¿Quieres dejar de recibir los correos de novedades de PetMi?</h1>
+    <p>Dejaremos de enviarte novedades y ofertas. Seguirás recibiendo los avisos importantes de tu cuenta, como la confirmación de un pedido.</p>
+    <button id="btn" onclick="darseDeBaja()">Sí, darme de baja</button>
+    <div class="msg" id="msg"></div>
+    <p style="margin:18px 0 0"><a href="/">No, volver a PetMi</a></p>
+  </div>
+</div>
+<script>
+// Hay que tocar el botón: así los antivirus que "abren" los links de los correos no dan de baja a nadie por error.
+var enlace = new URLSearchParams(location.search).get('e') || '';
+function darseDeBaja(){
+  var btn = document.getElementById('btn'), msg = document.getElementById('msg');
+  if(!enlace){ msg.className = 'msg err'; msg.textContent = 'Este enlace no es válido. Abre el enlace que viene al final de uno de nuestros correos.'; return; }
+  btn.disabled = true; btn.textContent = 'Un momento...';
+  fetch('/api/galeria?action=bajaCorreo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ e: enlace }) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok){
+        document.getElementById('cuerpo').innerHTML = '<div style="font-size:46px;margin-bottom:8px">🐾</div><h1>Listo, ya no te enviaremos correos de novedades</h1><p>Gracias por haber sido parte de PetMi. Si fue un error o cambias de opinión, escríbenos y te volvemos a anotar.</p><a href="/">Ir a PetMi</a>';
+      } else {
+        btn.disabled = false; btn.textContent = 'Sí, darme de baja';
+        msg.className = 'msg err'; msg.textContent = d.error || 'No se pudo procesar. Intenta de nuevo.';
+      }
+    })
+    .catch(function(){ btn.disabled = false; btn.textContent = 'Sí, darme de baja'; msg.className = 'msg err'; msg.textContent = 'Error de conexión. Intenta de nuevo.'; });
+}
+</script>
+</body>
+</html>
