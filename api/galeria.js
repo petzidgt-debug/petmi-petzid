@@ -416,6 +416,213 @@ function _htmlProductoPublico(p) {
 const _ENTREGA_ESTADOS = ['por_confirmar', 'confirmado', 'en_camino', 'entregado', 'problema'];
 const _EVENTOS_PAGO_OK = ['bank_transfer_intent.succeeded', 'payment_intent.succeeded', 'balance_intent.succeeded'];
 
+// ═══ Administrador de correos MK (uno por semana) ═══════════════════════
+const _AUDIENCIAS_MK = ['todos', 'nunca_volvieron', 'inactivos_30', 'perros', 'gatos', 'zona', 'cumple', 'adoptados', 'premium', 'sin_foto'];
+
+// Estas acciones pueden escribirle a TODA la base de usuarios, así que exigen una clave (la variable
+// ADMIN_API_KEY de Vercel) que el Admin manda en el encabezado x-admin-key. Sin esa clave no hacen nada.
+function _adminAutorizado(req, res) {
+  const clave = process.env.ADMIN_API_KEY || '';
+  if (!clave) {
+    res.status(200).json({ ok: false, error: 'falta_clave_servidor', mensaje: 'Falta configurar la variable ADMIN_API_KEY en Vercel.' });
+    return false;
+  }
+  const dada = Buffer.from(String((req.headers && req.headers['x-admin-key']) || ''));
+  const real = Buffer.from(clave);
+  if (dada.length !== real.length || !require('crypto').timingSafeEqual(dada, real)) {
+    res.status(200).json({ ok: false, error: 'no_autorizado' });
+    return false;
+  }
+  return true;
+}
+
+function _normTextoMK(s) {
+  return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+function _nombrePropioMK(s) {
+  const t = String(s || '').trim().split(/\s+/)[0] || '';
+  return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : '';
+}
+function _unirNombresMK(arr) {
+  const u = []; arr.forEach(function (n) { if (n && u.indexOf(n) < 0) u.push(n); });
+  if (u.length <= 1) return u[0] || '';
+  return u.slice(0, -1).join(', ') + ' y ' + u[u.length - 1];
+}
+
+// Reemplaza {nombre} (primer nombre del dueño) y {mascota} (las mascotas de esa audiencia).
+function _tokensMK(texto, dest, html) {
+  const nombre = _nombrePropioMK(dest.dueno) || 'Amigo PetMi';
+  const mascota = _unirNombresMK((dest.pets || []).map(function (p) { return p.nombre; })) || 'tu mascota';
+  const esc = html ? _escHtmlCorreo : function (x) { return x; };
+  return esc(String(texto || '')).replace(/\{nombre\}/gi, esc(nombre)).replace(/\{mascota\}/gi, esc(mascota));
+}
+
+function _cuerpoAHtmlMK(cuerpo, dest) {
+  return String(cuerpo || '').replace(/\r/g, '').split(/\n{2,}/).map(function (par) {
+    par = par.trim();
+    if (!par) return '';
+    const h = _tokensMK(par, dest, true).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+    return '<p style="color:#444;line-height:1.7;font-size:15px;margin:0 0 14px">' + h + '</p>';
+  }).join('');
+}
+
+// El correo completo. ctx.envioId = correo real (links con seguimiento y baja personal);
+// ctx.vista = solo para ver en pantalla; sin ninguno de los dos = correo de prueba.
+function _htmlCampanaMK(c, dest, ctx) {
+  ctx = ctx || {};
+  const e = _escHtmlCorreo;
+  const slug = c.slug || 'mk';
+  let boton = '';
+  if (c.boton_texto && c.boton_url && _destinoCorreoPermitido(c.boton_url)) {
+    const href = ctx.envioId ? _linkRastreado(ctx.envioId, slug, 'boton', c.boton_url) : _agregarUtmCorreo(c.boton_url, slug, 'boton');
+    boton = '<div style="text-align:center;margin:22px 0 6px"><a href="' + e(href) + '" style="background:#00B4B4;color:#fff;padding:14px 32px;border-radius:24px;text-decoration:none;font-weight:900;font-size:15px;display:inline-block">' + e(c.boton_texto) + '</a></div>';
+  }
+  const imagen = c.imagen_url && /^https?:\/\//i.test(c.imagen_url)
+    ? '<img src="' + e(c.imagen_url) + '" alt="" style="width:100%;height:auto;border-radius:12px;display:block;margin:0 0 18px">' : '';
+  const titulo = c.titulo ? '<h2 style="color:#1a1a2e;margin:0 0 14px;text-align:center;font-size:21px;line-height:1.3">' + _tokensMK(c.titulo, dest, true) + '</h2>' : '';
+  const baja = ctx.envioId ? 'https://app.revistapetmi.com/baja.html?e=' + ctx.envioId : (ctx.vista ? '#' : 'https://app.revistapetmi.com/baja.html');
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:12px;background:#f4f4f2">'
+    + '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">'
+    + '<div style="background:#00B4B4;padding:24px;text-align:center;border-radius:12px 12px 0 0"><div style="display:inline-block;background:#fff;border-radius:12px;padding:8px 18px"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi" style="height:36px;width:auto;display:block"></div></div>'
+    + '<div style="background:#fff;padding:26px 24px;border:1px solid #eee">' + imagen + titulo + _cuerpoAHtmlMK(c.cuerpo, dest) + boton + '</div>'
+    + '<div style="background:#F5C842;padding:14px;text-align:center;border-radius:0 0 12px 12px"><p style="margin:0 0 6px;font-size:12px;color:#555">PetMi Guatemala · app.revistapetmi.com</p>'
+    + '<p style="margin:0;font-size:11px;color:#7a6200">¿Ya no quieres recibir estos correos? <a href="' + e(baja) + '" style="color:#7a6200">Date de baja aquí</a></p></div>'
+    + '</div></body></html>';
+}
+
+function _validarCampanaMK(b) {
+  const t = function (v, max) { return String(v == null ? '' : v).trim().slice(0, max); };
+  const d = {
+    nombre: t(b.nombre, 100), asunto: t(b.asunto, 150), titulo: t(b.titulo, 120) || null,
+    cuerpo: String(b.cuerpo || '').replace(/\r/g, '').trim().slice(0, 5000),
+    imagen_url: t(b.imagen_url, 500) || null, boton_texto: t(b.boton_texto, 40) || null, boton_url: t(b.boton_url, 500) || null,
+    audiencia: t(b.audiencia || 'todos', 30), audiencia_param: t(b.audiencia_param, 60) || null,
+    respetar_ofertas: b.respetar_ofertas !== false, semana: t(b.semana, 10) || null
+  };
+  if (d.nombre.length < 3) return { error: 'Ponle un nombre interno al correo (mínimo 3 letras).' };
+  if (d.asunto.length < 3) return { error: 'Escribe el asunto del correo.' };
+  if (d.cuerpo.length < 10) return { error: 'Escribe el texto del correo (mínimo 10 letras).' };
+  if (_AUDIENCIAS_MK.indexOf(d.audiencia) < 0) return { error: 'Audiencia inválida.' };
+  if (d.audiencia === 'zona' && !d.audiencia_param) return { error: 'Elige la zona.' };
+  if (d.audiencia === 'cumple') {
+    const m = parseInt(d.audiencia_param, 10);
+    if (!(m >= 1 && m <= 12)) return { error: 'Elige el mes del cumpleaños.' };
+    d.audiencia_param = String(m);
+  }
+  if (d.audiencia !== 'zona' && d.audiencia !== 'cumple') d.audiencia_param = null;
+  if (d.imagen_url && !/^https?:\/\//i.test(d.imagen_url)) return { error: 'La imagen debe ser un enlace que empiece con http.' };
+  if (!!d.boton_texto !== !!d.boton_url) return { error: 'El botón necesita texto Y enlace (o deja los dos vacíos).' };
+  if (d.boton_url && !_destinoCorreoPermitido(d.boton_url)) return { error: 'El botón solo puede llevar a páginas de PetMi (app.revistapetmi.com o revistapetmi.com).' };
+  if (d.semana && (!/^\d{4}-\d{2}-\d{2}$/.test(d.semana) || isNaN(new Date(d.semana + 'T00:00:00Z').getTime()))) return { error: 'Fecha de semana inválida.' };
+  return { datos: d };
+}
+
+// Todas las familias (un correo = una familia) con sus mascotas. Sin angelitos ni correos inválidos.
+async function _familiasMK() {
+  const filas = await _leerTodoSupabase('mascotas', 'uid=neq.PETMI-OFICIAL&select=uid,nombre,dueno,email,especie,zona,fecha,tipo_fecha,foto,angelito,adoptado,premium,ultima_actividad,created_at,ofertas&order=created_at.asc', 20000);
+  if (!filas) return null;
+  const fam = {};
+  filas.forEach(function (m) {
+    if (m.angelito) return;
+    const email = String(m.email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    const f = fam[email] || (fam[email] = { email: email, dueno: '', pets: [], sin_ofertas: false });
+    if (!f.dueno && m.dueno) f.dueno = String(m.dueno).trim();
+    if (m.ofertas === false) f.sin_ofertas = true;   // dijo que NO a recibir ofertas (si el dato no existe, no se cuenta)
+    f.pets.push(m);
+  });
+  return Object.keys(fam).map(function (k) { return fam[k]; });
+}
+
+// De una familia, las mascotas que cumplen la audiencia elegida (vacío = la familia no entra).
+function _petsDeAudienciaMK(f, aud, param) {
+  const hoy = Date.now();
+  if (aud === 'todos') return f.pets;
+  if (aud === 'nunca_volvieron') return f.pets.every(function (p) { return !p.ultima_actividad; }) ? f.pets : [];
+  if (aud === 'inactivos_30') {
+    const ult = Math.max.apply(null, f.pets.map(function (p) { return p.ultima_actividad ? new Date(p.ultima_actividad).getTime() : 0; }));
+    return (!ult || hoy - ult > 30 * 86400000) ? f.pets : [];
+  }
+  if (aud === 'perros') return f.pets.filter(function (p) { return /^perr/.test(_normTextoMK(p.especie)); });
+  if (aud === 'gatos') return f.pets.filter(function (p) { return /^gat/.test(_normTextoMK(p.especie)); });
+  if (aud === 'zona') { const z = _normTextoMK(param); return z ? f.pets.filter(function (p) { return _normTextoMK(p.zona) === z; }) : []; }
+  if (aud === 'cumple') {
+    const mes = parseInt(param, 10);
+    return f.pets.filter(function (p) { const m = String(p.fecha || '').match(/^\d{4}-(\d{2})-\d{2}/); return m && parseInt(m[1], 10) === mes; });
+  }
+  if (aud === 'adoptados') return f.pets.filter(function (p) { return p.adoptado === true; });
+  if (aud === 'premium') return f.pets.filter(function (p) { return p.premium === true; });
+  if (aud === 'sin_foto') return f.pets.filter(function (p) { return !String(p.foto || '').trim(); });
+  return [];
+}
+
+async function _bajasMK() {
+  const filas = await _leerTodoSupabase('email_bajas', 'select=email', 50000);
+  return filas ? new Set(filas.map(function (r) { return String(r.email || '').toLowerCase(); })) : null;
+}
+async function _enviosCampanaMK(slug) {
+  const filas = await _leerTodoSupabase('email_envios', 'campana_id=eq.' + encodeURIComponent(slug) + '&select=email,estado&order=created_at.asc', 50000);
+  if (!filas) return null;
+  const enviados = new Set(), fallos = new Map();
+  filas.forEach(function (r) {
+    const em = String(r.email || '').toLowerCase();
+    if (r.estado === 'enviado') enviados.add(em); else fallos.set(em, (fallos.get(em) || 0) + 1);
+  });
+  return { enviados: enviados, fallos: fallos };
+}
+
+// Cuántas personas son y cuántas quedan por enviar, con el desglose de a quién se quita y por qué.
+async function _calcularAudienciaMK(camp) {
+  const familias = await _familiasMK();
+  if (!familias) return { error: 'No se pudo leer la lista de mascotas.' };
+  const bajas = await _bajasMK();
+  if (!bajas) return { error: 'FALTA_SQL' };
+  const envios = camp.slug ? await _enviosCampanaMK(camp.slug) : { enviados: new Set(), fallos: new Map() };
+  if (!envios) return { error: 'FALTA_SQL' };
+  let resto = [];
+  familias.forEach(function (f) {
+    const pets = _petsDeAudienciaMK(f, camp.audiencia, camp.audiencia_param);
+    if (pets.length) resto.push({ email: f.email, dueno: f.dueno, pets: pets, uid: pets[0].uid, sin_ofertas: f.sin_ofertas });
+  });
+  const out = { total: resto.length, bajas: 0, sin_ofertas: 0, ya_recibieron: 0, fallidos: 0 };
+  resto = resto.filter(function (r) { if (bajas.has(r.email)) { out.bajas++; return false; } return true; });
+  if (camp.respetar_ofertas !== false) resto = resto.filter(function (r) { if (r.sin_ofertas) { out.sin_ofertas++; return false; } return true; });
+  resto = resto.filter(function (r) { if (envios.enviados.has(r.email)) { out.ya_recibieron++; return false; } return true; });
+  // Un correo que falló se reintenta una vez; si vuelve a fallar se deja de intentar (evita ciclos infinitos).
+  resto = resto.filter(function (r) { if ((envios.fallos.get(r.email) || 0) >= 2) { out.fallidos++; return false; } return true; });
+  out.pendientes = resto.length;
+  out.destinatarios = resto;
+  out.fallos = envios.fallos;
+  return out;
+}
+
+async function _conPoolMK(items, n, fn) {
+  const res = new Array(items.length); let i = 0;
+  async function worker() { while (i < items.length) { const k = i++; res[k] = await fn(items[k], k); } }
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, worker));
+  return res;
+}
+
+// Anota un envío y avisa si NO se pudo guardar (para no mandar el mismo correo dos veces por no saber que ya salió).
+async function _registrarEnvioMK(fila) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/email_envios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+      body: JSON.stringify(fila)
+    });
+    return r.ok;
+  } catch (e) { return false; }
+}
+
+async function _campanaMKPorId(id) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk?id=eq.' + encodeURIComponent(id) + '&select=*&limit=1', {
+    headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+  });
+  const filas = await r.json().catch(function () { return null; });
+  return Array.isArray(filas) && filas[0] ? filas[0] : null;
+}
+
 function _escHtmlCorreo(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -652,7 +859,7 @@ async function actualizarUnaFila(tabla, id, campos, filtroExtra) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const action = req.query.action || '';
@@ -2378,7 +2585,12 @@ export default async function handler(req, res) {
       const botones = await rb.json().catch(() => null);
       if (!Array.isArray(campanas)) return res.status(200).json({ ok: false, error: 'No se pudo leer el reporte — ¿corriste crear_email_tracking.sql?', campanas: [] });
       const lista = Array.isArray(botones) ? botones : [];
+      // Nombres que le pusiste a los correos MK (para mostrarlos en vez del código interno)
+      const rn = await fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk?select=slug,nombre', { headers: H }).catch(function () { return null; });
+      const nombresMK = rn ? await rn.json().catch(function () { return null; }) : null;
+      const nombrePorSlug = {}; (Array.isArray(nombresMK) ? nombresMK : []).forEach(function (n) { nombrePorSlug[n.slug] = n.nombre; });
       campanas.forEach(function (c) {
+        c.nombre_campana = nombrePorSlug[c.campana_id] || null;
         c.botones = lista.filter(function (b) { return b.campana_id === c.campana_id; })
           .sort(function (a, b) { return b.clics_unicos - a.clics_unicos; });
       });
@@ -2581,6 +2793,183 @@ export default async function handler(req, res) {
         if (Array.isArray(cf) && cf[0]) cuponDevuelto = cf[0].codigo;
       } catch (e) { /* si no se pudo devolver el cupón, el pedido igual quedó cancelado */ }
       return res.status(200).json({ ok: true, cupon_devuelto: cuponDevuelto });
+    }
+
+    // ═══ Administrador de correos MK ═══
+    // (todas piden la clave de administración, menos bajaCorreo que es el enlace público del correo)
+    if (action === 'getCampanasMK') {
+      if (!_adminAutorizado(req, res)) return;
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      const [rc, rr] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk?select=*&order=semana.desc.nullslast,creada_at.desc&limit=100', { headers: H }),
+        fetch(SUPABASE_URL + '/rest/v1/email_reporte_campanas?select=campana_id,enviados,errores,clics_unicos,clics_total,ultimo_envio', { headers: H })
+      ]);
+      const camps = await rc.json().catch(function () { return null; });
+      if (!Array.isArray(camps)) return res.status(200).json({ ok: false, error: 'FALTA_SQL' });
+      const rep = await rr.json().catch(function () { return null; });
+      const porSlug = {}; (Array.isArray(rep) ? rep : []).forEach(function (x) { porSlug[x.campana_id] = x; });
+      camps.forEach(function (c) {
+        const s = porSlug[c.slug] || {};
+        c.enviados = s.enviados || 0; c.errores = s.errores || 0; c.clics_unicos = s.clics_unicos || 0; c.clics_total = s.clics_total || 0;
+      });
+      return res.status(200).json({ ok: true, campanas: camps });
+    }
+
+    if (action === 'getResumenAudienciasMK') {
+      if (!_adminAutorizado(req, res)) return;
+      const familias = await _familiasMK();
+      if (!familias) return res.status(200).json({ ok: false, error: 'No se pudo leer la lista de mascotas.' });
+      const bajas = await _bajasMK();
+      if (!bajas) return res.status(200).json({ ok: false, error: 'FALTA_SQL' });
+      const segmentos = {};
+      _AUDIENCIAS_MK.forEach(function (a) {
+        if (a === 'zona' || a === 'cumple') return;
+        segmentos[a] = familias.filter(function (f) { return _petsDeAudienciaMK(f, a).length > 0; }).length;
+      });
+      const zonas = {}, meses = new Array(12).fill(0);
+      familias.forEach(function (f) {
+        const zs = {}, ms = {};
+        f.pets.forEach(function (p) {
+          const z = _normTextoMK(p.zona);
+          if (z) { zs[z] = String(p.zona).trim(); }
+          const m = String(p.fecha || '').match(/^\d{4}-(\d{2})-\d{2}/);
+          if (m) ms[parseInt(m[1], 10)] = true;
+        });
+        Object.keys(zs).forEach(function (k) { zonas[k] = zonas[k] || { zona: zs[k], n: 0 }; zonas[k].n++; });
+        Object.keys(ms).forEach(function (k) { if (k >= 1 && k <= 12) meses[k - 1]++; });
+      });
+      return res.status(200).json({
+        ok: true, total_correos: familias.length, segmentos: segmentos,
+        zonas: Object.keys(zonas).map(function (k) { return zonas[k]; }).sort(function (a, b) { return b.n - a.n || a.zona.localeCompare(b.zona); }),
+        cumple_por_mes: meses, sin_ofertas: familias.filter(function (f) { return f.sin_ofertas; }).length, bajas: bajas.size
+      });
+    }
+
+    if (action === 'previewAudienciaMK' && req.method === 'POST') {
+      if (!_adminAutorizado(req, res)) return;
+      const b = req.body || {};
+      const camp = { slug: b.slug ? String(b.slug) : '', audiencia: String(b.audiencia || 'todos'), audiencia_param: b.audiencia_param, respetar_ofertas: b.respetar_ofertas !== false };
+      if (_AUDIENCIAS_MK.indexOf(camp.audiencia) < 0) return res.status(200).json({ ok: false, error: 'Audiencia inválida.' });
+      const a = await _calcularAudienciaMK(camp);
+      if (a.error) return res.status(200).json({ ok: false, error: a.error });
+      return res.status(200).json({
+        ok: true, total: a.total, bajas: a.bajas, sin_ofertas: a.sin_ofertas, ya_recibieron: a.ya_recibieron, fallidos: a.fallidos, pendientes: a.pendientes,
+        muestra: a.destinatarios.slice(0, 5).map(function (d) { return { email: d.email, nombre: d.dueno, mascotas: d.pets.map(function (p) { return p.nombre; }).join(', ') }; })
+      });
+    }
+
+    if (action === 'previewEmailMK' && req.method === 'POST') {
+      if (!_adminAutorizado(req, res)) return;
+      const b = req.body || {};
+      const c = { slug: 'vista', asunto: String(b.asunto || '').slice(0, 150), titulo: String(b.titulo || '').slice(0, 120), cuerpo: String(b.cuerpo || '').slice(0, 5000),
+        imagen_url: String(b.imagen_url || '').slice(0, 500), boton_texto: String(b.boton_texto || '').slice(0, 40), boton_url: String(b.boton_url || '').slice(0, 500) };
+      const ejemplo = { dueno: 'Ana López', pets: [{ nombre: 'Rocky' }, { nombre: 'Luna' }] };
+      return res.status(200).json({ ok: true, asunto: _tokensMK(c.asunto, ejemplo, false), html: _htmlCampanaMK(c, ejemplo, { vista: true }) });
+    }
+
+    if (action === 'guardarCampanaMK' && req.method === 'POST') {
+      if (!_adminAutorizado(req, res)) return;
+      const b = req.body || {};
+      const v = _validarCampanaMK(b);
+      if (v.error) return res.status(200).json({ ok: false, error: v.error });
+      const H = { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      if (b.id) {
+        const g = await actualizarUnaFila('email_campanas_mk', String(b.id), { ...v.datos, actualizada_at: new Date().toISOString() });
+        return res.status(200).json(g.ok ? { ok: true, campana: g.fila } : { ok: false, error: g.error });
+      }
+      const base = (v.datos.semana || new Date().toISOString().slice(0, 10)).replace(/-/g, '');
+      const slug = 'mk_' + base + '_' + crypto.randomUUID().slice(0, 4);
+      const r = await fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk', { method: 'POST', headers: { ...H, 'Prefer': 'return=representation' }, body: JSON.stringify({ ...v.datos, slug: slug }) });
+      const txt = await r.text().catch(function () { return ''; });
+      let filas = null; try { filas = JSON.parse(txt); } catch (e) {}
+      if (!r.ok || !Array.isArray(filas) || !filas[0]) return res.status(200).json({ ok: false, error: /does not exist|schema cache/i.test(txt) ? 'FALTA_SQL' : ('No se pudo guardar. ' + txt) });
+      return res.status(200).json({ ok: true, campana: filas[0] });
+    }
+
+    if (action === 'eliminarCampanaMK' && req.method === 'POST') {
+      if (!_adminAutorizado(req, res)) return;
+      const id = String((req.body || {}).id || '').trim();
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk?id=eq.' + encodeURIComponent(id) + '&estado=eq.borrador', {
+        method: 'DELETE', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' }
+      });
+      const filas = await r.json().catch(function () { return null; });
+      if (!r.ok || !Array.isArray(filas) || !filas.length) return res.status(200).json({ ok: false, error: 'Solo se pueden borrar borradores. Si ya se envió, primero usa "Reiniciar envíos".' });
+      return res.status(200).json({ ok: true });
+    }
+
+    if (action === 'enviarPruebaMK' && req.method === 'POST') {
+      if (!_adminAutorizado(req, res)) return;
+      const b = req.body || {};
+      const para = String(b.email || '').trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(para)) return res.status(200).json({ ok: false, error: 'Escribe un correo válido para la prueba.' });
+      const v = _validarCampanaMK({ nombre: 'prueba', audiencia: 'todos', ...b });
+      if (v.error) return res.status(200).json({ ok: false, error: v.error });
+      const ejemplo = { dueno: 'Ana López', pets: [{ nombre: 'Rocky' }, { nombre: 'Luna' }] };
+      const c = { ...v.datos, slug: 'prueba' };
+      const r = await _enviarHtmlPorWix(para, '[PRUEBA] ' + _tokensMK(c.asunto, ejemplo, false), _htmlCampanaMK(c, ejemplo, {}), 'pruebaMK');
+      return res.status(200).json(r.ok ? { ok: true } : { ok: false, error: r.error });
+    }
+
+    if (action === 'enviarLoteMK' && req.method === 'POST') {
+      if (!_adminAutorizado(req, res)) return;
+      const id = String((req.body || {}).id || '').trim();
+      const limite = Math.max(1, Math.min(15, parseInt((req.body || {}).limite, 10) || 10));
+      const camp = id ? await _campanaMKPorId(id) : null;
+      if (!camp) return res.status(200).json({ ok: false, error: 'No se encontró el correo.' });
+      if (!camp.asunto || !camp.cuerpo) return res.status(200).json({ ok: false, error: 'El correo no tiene asunto o texto.' });
+      const a = await _calcularAudienciaMK(camp);
+      if (a.error) return res.status(200).json({ ok: false, error: a.error });
+      const lote = a.destinatarios.slice(0, limite);
+      if (lote.length && camp.estado !== 'enviando') await actualizarUnaFila('email_campanas_mk', camp.id, { estado: 'enviando' });
+      let enviados = 0, errores = 0, quedanPendientes = 0, sinRegistro = 0; const detalle = [];
+      await _conPoolMK(lote, 5, async function (d) {
+        const envioId = crypto.randomUUID();
+        const r = await _enviarHtmlPorWix(d.email, _tokensMK(camp.asunto, d, false), _htmlCampanaMK(camp, d, { envioId: envioId }), 'mk');
+        const fila = { id: envioId, campana_id: camp.slug, tipo: 'campana', email: d.email, uid: d.uid || null, estado: r.ok ? 'enviado' : 'error', canal: 'wix', wix_id: r.ok ? (r.wixId || null) : null, error: r.ok ? null : String(r.error || '').slice(0, 200) };
+        const guardado = await _registrarEnvioMK(fila);
+        if (!guardado) sinRegistro++;
+        if (r.ok) enviados++;
+        else {
+          errores++;
+          if (detalle.length < 3) detalle.push({ email: d.email, error: r.error });
+          if ((a.fallos.get(d.email) || 0) + 1 < 2) quedanPendientes++;   // todavía le queda un reintento
+        }
+      });
+      const restantes = a.pendientes - lote.length + quedanPendientes;
+      if (restantes <= 0 && lote.length) await actualizarUnaFila('email_campanas_mk', camp.id, { estado: 'enviada', ultimo_envio_at: new Date().toISOString() });
+      return res.status(200).json({ ok: true, enviados: enviados, errores: errores, restantes: Math.max(0, restantes), detalle_errores: detalle, sin_registro: sinRegistro });
+    }
+
+    if (action === 'reiniciarEnviosMK' && req.method === 'POST') {
+      if (!_adminAutorizado(req, res)) return;
+      const id = String((req.body || {}).id || '').trim();
+      const camp = id ? await _campanaMKPorId(id) : null;
+      if (!camp) return res.status(200).json({ ok: false, error: 'No se encontró el correo.' });
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' };
+      const slugQ = 'campana_id=eq.' + encodeURIComponent(camp.slug);
+      const rc = await fetch(SUPABASE_URL + '/rest/v1/email_clics?' + slugQ, { method: 'DELETE', headers: H });
+      const re = await fetch(SUPABASE_URL + '/rest/v1/email_envios?' + slugQ, { method: 'DELETE', headers: H });
+      const borrados = await re.json().catch(function () { return null; });
+      if (!re.ok) return res.status(200).json({ ok: false, error: 'No se pudo reiniciar.' });
+      await actualizarUnaFila('email_campanas_mk', camp.id, { estado: 'borrador', ultimo_envio_at: null });
+      return res.status(200).json({ ok: true, envios_borrados: Array.isArray(borrados) ? borrados.length : 0 });
+    }
+
+    // ── bajaCorreo — el enlace público "Date de baja" al pie de cada correo ──
+    if (action === 'bajaCorreo' && req.method === 'POST') {
+      const e = String((req.body || {}).e || '').trim();
+      if (!_UUID_RE.test(e)) return res.status(200).json({ ok: false, error: 'Este enlace no es válido.' });
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      const rv = await fetch(SUPABASE_URL + '/rest/v1/email_envios?id=eq.' + encodeURIComponent(e) + '&select=email&limit=1', { headers: H });
+      const filas = await rv.json().catch(function () { return null; });
+      const email = Array.isArray(filas) && filas[0] ? String(filas[0].email || '').toLowerCase() : '';
+      if (!email) return res.status(200).json({ ok: false, error: 'Este enlace ya no es válido.' });
+      const ri = await fetch(SUPABASE_URL + '/rest/v1/email_bajas?on_conflict=email', {
+        method: 'POST', headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+        body: JSON.stringify({ email: email, origen: 'enlace_correo' })
+      });
+      return res.status(200).json({ ok: ri.ok, error: ri.ok ? undefined : 'No se pudo procesar. Intenta de nuevo.' });
     }
 
     // ── eliminarMascotaAdmin (2 oct) — el Admin elimina una mascota. Se borra
