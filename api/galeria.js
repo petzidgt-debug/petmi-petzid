@@ -2795,6 +2795,22 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, cupon_devuelto: cuponDevuelto });
     }
 
+    // ── diagnosticoVercel — TEMPORAL. Dice en qué ambiente corre el sitio y si ADMIN_API_KEY está definida.
+    // Nunca muestra valores de variables, solo si existen. Borrar cuando ya funcione. ──
+    if (action === 'diagnosticoVercel') {
+      const clave = process.env.ADMIN_API_KEY;
+      return res.status(200).json({
+        ok: true,
+        ambiente: process.env.VERCEL_ENV || '(no es Vercel)',
+        despliegue: process.env.VERCEL_URL || '',
+        commit: String(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7),
+        ADMIN_API_KEY: clave === undefined ? 'NO definida' : (clave === '' ? 'definida pero VACÍA' : 'definida'),
+        // los nombres van entre comillas para que se vea si alguno trae un espacio o una letra de más
+        variables_con_admin_en_el_nombre: Object.keys(process.env).filter(function (n) { return /admin/i.test(n); }).map(function (n) { return JSON.stringify(n); }),
+        mensaje: 'Temporal: se borra cuando ya funcione.'
+      });
+    }
+
     // ═══ Administrador de correos MK ═══
     // (todas piden la clave de administración, menos bajaCorreo que es el enlace público del correo)
     if (action === 'getCampanasMK') {
