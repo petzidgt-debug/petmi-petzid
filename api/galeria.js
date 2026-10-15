@@ -417,7 +417,7 @@ const _ENTREGA_ESTADOS = ['por_confirmar', 'confirmado', 'en_camino', 'entregado
 const _EVENTOS_PAGO_OK = ['bank_transfer_intent.succeeded', 'payment_intent.succeeded', 'balance_intent.succeeded'];
 
 // ═══ Administrador de correos MK (uno por semana) ═══════════════════════
-const _AUDIENCIAS_MK = ['todos', 'nunca_volvieron', 'inactivos_30', 'perros', 'gatos', 'zona', 'cumple', 'adoptados', 'premium', 'sin_foto'];
+const _AUDIENCIAS_MK = ['todos', 'nunca_volvieron', 'inactivos_30', 'perros', 'gatos', 'zona', 'raza', 'cumple', 'adoptados', 'premium', 'sin_foto'];
 
 // Estas acciones pueden escribirle a TODA la base de usuarios, así que exigen una clave que el Admin manda
 // en el encabezado x-admin-key. Cómo se comprueba:
@@ -521,12 +521,13 @@ function _validarCampanaMK(b) {
   if (d.cuerpo.length < 10) return { error: 'Escribe el texto del correo (mínimo 10 letras).' };
   if (_AUDIENCIAS_MK.indexOf(d.audiencia) < 0) return { error: 'Audiencia inválida.' };
   if (d.audiencia === 'zona' && !d.audiencia_param) return { error: 'Elige la zona.' };
+  if (d.audiencia === 'raza' && _normTextoMK(d.audiencia_param).length < 2) return { error: 'Escribe la raza (mínimo 2 letras).' };
   if (d.audiencia === 'cumple') {
     const m = parseInt(d.audiencia_param, 10);
     if (!(m >= 1 && m <= 12)) return { error: 'Elige el mes del cumpleaños.' };
     d.audiencia_param = String(m);
   }
-  if (d.audiencia !== 'zona' && d.audiencia !== 'cumple') d.audiencia_param = null;
+  if (d.audiencia !== 'zona' && d.audiencia !== 'cumple' && d.audiencia !== 'raza') d.audiencia_param = null;
   if (d.imagen_url && !/^https?:\/\//i.test(d.imagen_url)) return { error: 'La imagen debe ser un enlace que empiece con http.' };
   if (!!d.boton_texto !== !!d.boton_url) return { error: 'El botón necesita texto Y enlace (o deja los dos vacíos).' };
   if (d.boton_url && !_destinoCorreoPermitido(d.boton_url)) return { error: 'El botón solo puede llevar a páginas de PetMi (app.revistapetmi.com o revistapetmi.com).' };
@@ -536,7 +537,7 @@ function _validarCampanaMK(b) {
 
 // Todas las familias (un correo = una familia) con sus mascotas. Sin angelitos ni correos inválidos.
 async function _familiasMK() {
-  const filas = await _leerTodoSupabase('mascotas', 'uid=neq.PETMI-OFICIAL&select=uid,nombre,dueno,email,especie,zona,fecha,tipo_fecha,foto,angelito,adoptado,premium,ultima_actividad,created_at,ofertas&order=created_at.asc', 20000);
+  const filas = await _leerTodoSupabase('mascotas', 'uid=neq.PETMI-OFICIAL&select=uid,nombre,dueno,email,especie,raza,zona,fecha,tipo_fecha,foto,angelito,adoptado,premium,ultima_actividad,created_at,ofertas&order=created_at.asc', 20000);
   if (!filas) return null;
   const fam = {};
   filas.forEach(function (m) {
@@ -563,6 +564,12 @@ function _petsDeAudienciaMK(f, aud, param) {
   if (aud === 'perros') return f.pets.filter(function (p) { return /^perr/.test(_normTextoMK(p.especie)); });
   if (aud === 'gatos') return f.pets.filter(function (p) { return /^gat/.test(_normTextoMK(p.especie)); });
   if (aud === 'zona') { const z = _normTextoMK(param); return z ? f.pets.filter(function (p) { return _normTextoMK(p.zona) === z; }) : []; }
+  // La raza la escribe cada persona ("Labrador", "labrador retriever"...): se busca por PARTE del nombre,
+  // sin importar mayúsculas ni tildes. Un término vacío no coincide con nadie (nunca "todas las razas").
+  if (aud === 'raza') {
+    const r = _normTextoMK(param);
+    return r ? f.pets.filter(function (p) { return _normTextoMK(p.raza).indexOf(r) >= 0; }) : [];
+  }
   if (aud === 'cumple') {
     const mes = parseInt(param, 10);
     return f.pets.filter(function (p) { const m = String(p.fecha || '').match(/^\d{4}-(\d{2})-\d{2}/); return m && parseInt(m[1], 10) === mes; });
@@ -2842,24 +2849,28 @@ export default async function handler(req, res) {
       if (!bajas) return res.status(200).json({ ok: false, error: 'FALTA_SQL' });
       const segmentos = {};
       _AUDIENCIAS_MK.forEach(function (a) {
-        if (a === 'zona' || a === 'cumple') return;
+        if (a === 'zona' || a === 'cumple' || a === 'raza') return;
         segmentos[a] = familias.filter(function (f) { return _petsDeAudienciaMK(f, a).length > 0; }).length;
       });
-      const zonas = {}, meses = new Array(12).fill(0);
+      const zonas = {}, razas = {}, meses = new Array(12).fill(0);
       familias.forEach(function (f) {
-        const zs = {}, ms = {};
+        const zs = {}, ms = {}, rs = {};
         f.pets.forEach(function (p) {
           const z = _normTextoMK(p.zona);
           if (z) { zs[z] = String(p.zona).trim(); }
+          const rz = _normTextoMK(p.raza);
+          if (rz) { rs[rz] = String(p.raza).trim(); }
           const m = String(p.fecha || '').match(/^\d{4}-(\d{2})-\d{2}/);
           if (m) ms[parseInt(m[1], 10)] = true;
         });
         Object.keys(zs).forEach(function (k) { zonas[k] = zonas[k] || { zona: zs[k], n: 0 }; zonas[k].n++; });
+        Object.keys(rs).forEach(function (k) { razas[k] = razas[k] || { raza: rs[k], n: 0 }; razas[k].n++; });
         Object.keys(ms).forEach(function (k) { if (k >= 1 && k <= 12) meses[k - 1]++; });
       });
       return res.status(200).json({
         ok: true, total_correos: familias.length, segmentos: segmentos,
         zonas: Object.keys(zonas).map(function (k) { return zonas[k]; }).sort(function (a, b) { return b.n - a.n || a.zona.localeCompare(b.zona); }),
+        razas: Object.keys(razas).map(function (k) { return razas[k]; }).sort(function (a, b) { return b.n - a.n || a.raza.localeCompare(b.raza); }).slice(0, 300),
         cumple_por_mes: meses, sin_ofertas: familias.filter(function (f) { return f.sin_ofertas; }).length, bajas: bajas.size
       });
     }
