@@ -143,7 +143,12 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
         <div class="mk-hint">Solo puede llevar a páginas de PetMi. Los clics del botón se cuentan solos.</div>
         <label class="mk-lbl">¿A quién le llega?</label>
         <select id="mkAudiencia" class="mk-in" onchange="mkCambioAudiencia()"></select>
-        <div id="mkParamWrap" style="display:none;margin-top:6px"><select id="mkParam" class="mk-in" onchange="mkContarAudiencia()"></select></div>
+        <div id="mkParamWrap" style="display:none;margin-top:6px">
+          <select id="mkParam" class="mk-in" onchange="mkContarAudiencia()"></select>
+          <input id="mkParamRaza" class="mk-in" list="mkRazas" placeholder="Escribe o elige la raza (ej. labrador)" oninput="mkContarAudiencia()" style="display:none" autocomplete="off">
+          <datalist id="mkRazas"></datalist>
+          <div class="mk-hint" id="mkRazaHint" style="display:none">Sirve con <b>parte del nombre</b>, sin importar mayúsculas ni tildes: "labrador" incluye "Labrador Retriever". Cada persona escribe la raza como quiere, así que <b>revisa el número</b> antes de enviar.</div>
+        </div>
         <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:12.5px;color:#555;line-height:1.5"><input type="checkbox" id="mkOfertas" checked onchange="mkContarAudiencia()" style="margin-top:3px"><span>Solo a quienes aceptan recibir ofertas y novedades <span style="color:#999">(lo dejan marcado al registrarse; quien lo apagó no recibe)</span></span></label>
         <div class="mk-aud" id="mkAudResumen">Elige una audiencia para ver cuántas personas son.</div>
       </div>
@@ -396,7 +401,7 @@ var _mkTimerVista = null;
 
 var MK_AUDIENCIAS = [
   ['todos', '👥 Todos'], ['nunca_volvieron', '🚪 No han regresado nunca'], ['inactivos_30', '😴 Inactivos hace más de 30 días'],
-  ['perros', '🐶 Perros'], ['gatos', '🐱 Gatos'], ['zona', '📍 Una zona…'], ['cumple', '🎂 Cumpleaños de un mes…'],
+  ['perros', '🐶 Perros'], ['gatos', '🐱 Gatos'], ['zona', '📍 Una zona…'], ['raza', '🐕 Una raza…'], ['cumple', '🎂 Cumpleaños de un mes…'],
   ['adoptados', '🏠 Adoptados'], ['premium', '⭐ Premium'], ['sin_foto', '📷 Mascotas sin foto']
 ];
 var MK_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -419,6 +424,7 @@ function _mkSemanaTxt(f){
 function _mkAudienciaTxt(c){
   var base = (MK_AUDIENCIAS.find(function(a){ return a[0] === c.audiencia; }) || [0, c.audiencia])[1].replace('…', '');
   if(c.audiencia === 'zona' && c.audiencia_param) return '📍 ' + _escC(c.audiencia_param);
+  if(c.audiencia === 'raza' && c.audiencia_param) return '🐕 Raza: ' + _escC(c.audiencia_param);
   if(c.audiencia === 'cumple' && c.audiencia_param) return '🎂 Cumpleaños de ' + MK_MESES[(parseInt(c.audiencia_param, 10) || 1) - 1].toLowerCase();
   return _escC(base);
 }
@@ -467,7 +473,14 @@ async function _mkPrepararEditor(){
 }
 function _mkLlenarParam(aud, valor){
   var wrap = document.getElementById('mkParamWrap'), sel = document.getElementById('mkParam');
-  if(aud === 'zona'){
+  var inpRaza = document.getElementById('mkParamRaza'), hintRaza = document.getElementById('mkRazaHint');
+  inpRaza.style.display = 'none'; hintRaza.style.display = 'none'; sel.style.display = '';
+  if(aud === 'raza'){
+    var razas = (_mkResumen && _mkResumen.razas) || [];
+    document.getElementById('mkRazas').innerHTML = razas.map(function(r){ return '<option value="' + _escC(r.raza) + '" label="' + _escC(r.raza) + ' (' + r.n + ')"></option>'; }).join('');
+    sel.style.display = 'none'; sel.innerHTML = '';
+    inpRaza.style.display = 'block'; hintRaza.style.display = 'block'; inpRaza.value = valor || ''; wrap.style.display = 'block';
+  } else if(aud === 'zona'){
     var zonas = (_mkResumen && _mkResumen.zonas) || [];
     sel.innerHTML = '<option value="">Elige la zona…</option>' + zonas.map(function(z){ return '<option value="' + _escC(z.zona) + '">' + _escC(z.zona) + ' (' + z.n + ')</option>'; }).join('');
     if(valor && !zonas.some(function(z){ return z.zona === valor; })) sel.innerHTML += '<option value="' + _escC(valor) + '">' + _escC(valor) + '</option>';
@@ -518,7 +531,7 @@ function _mkLeerEditor(){
     asunto: document.getElementById('mkAsunto').value.trim(), titulo: document.getElementById('mkTitulo').value.trim(),
     cuerpo: document.getElementById('mkCuerpo').value, imagen_url: document.getElementById('mkImagen').value.trim(),
     boton_texto: document.getElementById('mkBotonTexto').value.trim(), boton_url: document.getElementById('mkBotonUrl').value.trim(),
-    audiencia: aud, audiencia_param: (aud === 'zona' || aud === 'cumple') ? document.getElementById('mkParam').value : '',
+    audiencia: aud, audiencia_param: aud === 'raza' ? document.getElementById('mkParamRaza').value.trim() : ((aud === 'zona' || aud === 'cumple') ? document.getElementById('mkParam').value : ''),
     respetar_ofertas: document.getElementById('mkOfertas').checked
   };
 }
@@ -540,6 +553,7 @@ function mkContarAudiencia(){
   clearTimeout(_mkTimerAud);
   _mkTimerAud = setTimeout(async function(){
     var c = _mkLeerEditor(), el = document.getElementById('mkAudResumen');
+    if(c.audiencia === 'raza' && c.audiencia_param.length < 2){ el.textContent = 'Escribe la raza (mínimo 2 letras) para ver cuántas personas son.'; return; }
     if((c.audiencia === 'zona' || c.audiencia === 'cumple') && !c.audiencia_param){ el.textContent = 'Elige ' + (c.audiencia === 'zona' ? 'la zona' : 'el mes') + ' para ver cuántas personas son.'; return; }
     el.textContent = 'Contando...';
     var d = await mkFetch('previewAudienciaMK', { audiencia: c.audiencia, audiencia_param: c.audiencia_param, respetar_ofertas: c.respetar_ofertas, slug: _mkActual ? _mkActual.slug : '' });
