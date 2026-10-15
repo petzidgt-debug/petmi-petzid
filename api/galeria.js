@@ -419,21 +419,38 @@ const _EVENTOS_PAGO_OK = ['bank_transfer_intent.succeeded', 'payment_intent.succ
 // ═══ Administrador de correos MK (uno por semana) ═══════════════════════
 const _AUDIENCIAS_MK = ['todos', 'nunca_volvieron', 'inactivos_30', 'perros', 'gatos', 'zona', 'cumple', 'adoptados', 'premium', 'sin_foto'];
 
-// Estas acciones pueden escribirle a TODA la base de usuarios, así que exigen una clave (la variable
-// ADMIN_API_KEY de Vercel) que el Admin manda en el encabezado x-admin-key. Sin esa clave no hacen nada.
-function _adminAutorizado(req, res) {
-  const clave = process.env.ADMIN_API_KEY || '';
-  if (!clave) {
-    res.status(200).json({ ok: false, error: 'falta_clave_servidor', mensaje: 'Falta configurar la variable ADMIN_API_KEY en Vercel.' });
-    return false;
-  }
-  const dada = Buffer.from(String((req.headers && req.headers['x-admin-key']) || ''));
-  const real = Buffer.from(clave);
-  if (dada.length !== real.length || !require('crypto').timingSafeEqual(dada, real)) {
+// Estas acciones pueden escribirle a TODA la base de usuarios, así que exigen una clave que el Admin manda
+// en el encabezado x-admin-key. Cómo se comprueba:
+//   1) Si Vercel tiene la variable ADMIN_API_KEY, manda ella.
+//   2) Si no, la comprueba la base de datos contra una HUELLA bcrypt (configurar_clave_admin.sql): la clave
+//      nunca se guarda, y 10 fallos desde una misma dirección bloquean 15 minutos.
+// Ante cualquier duda o error, NO deja pasar.
+async function _adminAutorizado(req, res) {
+  const dada = String((req.headers && req.headers['x-admin-key']) || '');
+  const deVercel = process.env.ADMIN_API_KEY || '';
+  if (deVercel) {
+    const a = Buffer.from(dada), b = Buffer.from(deVercel);
+    if (a.length === b.length && require('crypto').timingSafeEqual(a, b)) return true;
     res.status(200).json({ ok: false, error: 'no_autorizado' });
     return false;
   }
-  return true;
+  const falta = function (mensaje) { res.status(200).json({ ok: false, error: 'falta_clave_servidor', mensaje: mensaje }); return false; };
+  const h = (req && req.headers) || {};
+  const ip = String(h['x-real-ip'] || String(h['x-forwarded-for'] || '').split(',')[0] || '').trim() || 'desconocida';
+  let estado = null;
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_verificar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY },
+      body: JSON.stringify({ p_clave: dada.slice(0, 200), p_ip: ip })
+    });
+    if (r.ok) estado = await r.json();
+  } catch (e) { estado = null; }
+  if (estado === 'ok') return true;
+  if (estado === 'incorrecta') { res.status(200).json({ ok: false, error: 'no_autorizado' }); return false; }
+  if (estado === 'bloqueado') { res.status(200).json({ ok: false, error: 'bloqueado', mensaje: 'Demasiados intentos con una clave incorrecta. Espera 15 minutos e inténtalo de nuevo.' }); return false; }
+  if (estado === 'sin_clave') return falta('Falta crear la clave de administración: corre configurar_clave_admin.sql en Supabase.');
+  return falta('No se pudo verificar la clave. Revisa que corriste configurar_clave_admin.sql en Supabase.');
 }
 
 function _normTextoMK(s) {
@@ -2576,6 +2593,7 @@ export default async function handler(req, res) {
 
     // ── getReporteCorreos — resumen por campaña: enviados, clics únicos, CTR ──
     if (action === 'getReporteCorreos') {
+      if (!(await _adminAutorizado(req, res))) return;   // devuelve correos de personas: solo con la clave
       const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
       const [rc, rb] = await Promise.all([
         fetch(SUPABASE_URL + '/rest/v1/email_reporte_campanas?select=*&order=ultimo_envio.desc', { headers: H }),
@@ -2599,6 +2617,7 @@ export default async function handler(req, res) {
 
     // ── getDetalleCorreos — de una campaña: quién hizo clic (y en qué), quién no, quién falló ──
     if (action === 'getDetalleCorreos') {
+      if (!(await _adminAutorizado(req, res))) return;   // devuelve correos de personas: solo con la clave
       const campana = String(req.query.campana_id || '').trim();
       if (!campana) return res.status(400).json({ ok: false, error: 'Falta campana_id' });
       const filtro = 'campana_id=eq.' + encodeURIComponent(campana);
@@ -2795,26 +2814,10 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, cupon_devuelto: cuponDevuelto });
     }
 
-    // ── diagnosticoVercel — TEMPORAL. Dice en qué ambiente corre el sitio y si ADMIN_API_KEY está definida.
-    // Nunca muestra valores de variables, solo si existen. Borrar cuando ya funcione. ──
-    if (action === 'diagnosticoVercel') {
-      const clave = process.env.ADMIN_API_KEY;
-      return res.status(200).json({
-        ok: true,
-        ambiente: process.env.VERCEL_ENV || '(no es Vercel)',
-        despliegue: process.env.VERCEL_URL || '',
-        commit: String(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7),
-        ADMIN_API_KEY: clave === undefined ? 'NO definida' : (clave === '' ? 'definida pero VACÍA' : 'definida'),
-        // los nombres van entre comillas para que se vea si alguno trae un espacio o una letra de más
-        variables_con_admin_en_el_nombre: Object.keys(process.env).filter(function (n) { return /admin/i.test(n); }).map(function (n) { return JSON.stringify(n); }),
-        mensaje: 'Temporal: se borra cuando ya funcione.'
-      });
-    }
-
     // ═══ Administrador de correos MK ═══
     // (todas piden la clave de administración, menos bajaCorreo que es el enlace público del correo)
     if (action === 'getCampanasMK') {
-      if (!_adminAutorizado(req, res)) return;
+      if (!(await _adminAutorizado(req, res))) return;
       const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
       const [rc, rr] = await Promise.all([
         fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk?select=*&order=semana.desc.nullslast,creada_at.desc&limit=100', { headers: H }),
@@ -2832,7 +2835,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'getResumenAudienciasMK') {
-      if (!_adminAutorizado(req, res)) return;
+      if (!(await _adminAutorizado(req, res))) return;
       const familias = await _familiasMK();
       if (!familias) return res.status(200).json({ ok: false, error: 'No se pudo leer la lista de mascotas.' });
       const bajas = await _bajasMK();
@@ -2862,7 +2865,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'previewAudienciaMK' && req.method === 'POST') {
-      if (!_adminAutorizado(req, res)) return;
+      if (!(await _adminAutorizado(req, res))) return;
       const b = req.body || {};
       const camp = { slug: b.slug ? String(b.slug) : '', audiencia: String(b.audiencia || 'todos'), audiencia_param: b.audiencia_param, respetar_ofertas: b.respetar_ofertas !== false };
       if (_AUDIENCIAS_MK.indexOf(camp.audiencia) < 0) return res.status(200).json({ ok: false, error: 'Audiencia inválida.' });
@@ -2875,7 +2878,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'previewEmailMK' && req.method === 'POST') {
-      if (!_adminAutorizado(req, res)) return;
+      if (!(await _adminAutorizado(req, res))) return;
       const b = req.body || {};
       const c = { slug: 'vista', asunto: String(b.asunto || '').slice(0, 150), titulo: String(b.titulo || '').slice(0, 120), cuerpo: String(b.cuerpo || '').slice(0, 5000),
         imagen_url: String(b.imagen_url || '').slice(0, 500), boton_texto: String(b.boton_texto || '').slice(0, 40), boton_url: String(b.boton_url || '').slice(0, 500) };
@@ -2884,7 +2887,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'guardarCampanaMK' && req.method === 'POST') {
-      if (!_adminAutorizado(req, res)) return;
+      if (!(await _adminAutorizado(req, res))) return;
       const b = req.body || {};
       const v = _validarCampanaMK(b);
       if (v.error) return res.status(200).json({ ok: false, error: v.error });
@@ -2903,7 +2906,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'eliminarCampanaMK' && req.method === 'POST') {
-      if (!_adminAutorizado(req, res)) return;
+      if (!(await _adminAutorizado(req, res))) return;
       const id = String((req.body || {}).id || '').trim();
       if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk?id=eq.' + encodeURIComponent(id) + '&estado=eq.borrador', {
@@ -2915,7 +2918,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'enviarPruebaMK' && req.method === 'POST') {
-      if (!_adminAutorizado(req, res)) return;
+      if (!(await _adminAutorizado(req, res))) return;
       const b = req.body || {};
       const para = String(b.email || '').trim().toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(para)) return res.status(200).json({ ok: false, error: 'Escribe un correo válido para la prueba.' });
@@ -2928,7 +2931,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'enviarLoteMK' && req.method === 'POST') {
-      if (!_adminAutorizado(req, res)) return;
+      if (!(await _adminAutorizado(req, res))) return;
       const id = String((req.body || {}).id || '').trim();
       const limite = Math.max(1, Math.min(15, parseInt((req.body || {}).limite, 10) || 10));
       const camp = id ? await _campanaMKPorId(id) : null;
@@ -2958,7 +2961,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'reiniciarEnviosMK' && req.method === 'POST') {
-      if (!_adminAutorizado(req, res)) return;
+      if (!(await _adminAutorizado(req, res))) return;
       const id = String((req.body || {}).id || '').trim();
       const camp = id ? await _campanaMKPorId(id) : null;
       if (!camp) return res.status(200).json({ ok: false, error: 'No se encontró el correo.' });
