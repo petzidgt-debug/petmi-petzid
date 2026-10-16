@@ -453,6 +453,52 @@ async function _adminAutorizado(req, res) {
   return falta('No se pudo verificar la clave. Revisa que corriste configurar_clave_admin.sql en Supabase.');
 }
 
+// Mensajes que PetMi mandó por el chat interno, agrupados por texto, con cuántas PERSONAS (no mascotas) lo leyeron.
+// Una persona con varias mascotas cuenta una vez, y lo leyó si abrió la conversación en cualquiera de ellas.
+async function _gruposChatOficialMK() {
+  const lecturas = await Promise.all([
+    _leerTodoSupabase('conversaciones', 'uid_emisor=eq.PETMI-OFICIAL&select=uid_receptor,mensaje,leido,created_at&order=created_at.desc', 30000),
+    _leerTodoSupabase('mascotas', 'uid=neq.PETMI-OFICIAL&select=uid,nombre,dueno,email,whatsapp', 30000)
+  ]);
+  const msgs = lecturas[0], masc = lecturas[1];
+  if (!msgs || !masc) return null;
+  const porUid = {};
+  masc.forEach(function (m) { porUid[String(m.uid || '').toUpperCase()] = m; });
+  const grupos = {};
+  msgs.forEach(function (r) {
+    const texto = String(r.mensaje || '').trim();
+    if (!texto) return;
+    const g = grupos[texto] || (grupos[texto] = { texto: texto, copias: 0, primero: r.created_at, ultimo: r.created_at, personas: {}, sinCuenta: {} });
+    g.copias++;
+    if (r.created_at && (!g.primero || r.created_at < g.primero)) g.primero = r.created_at;
+    if (r.created_at && (!g.ultimo || r.created_at > g.ultimo)) g.ultimo = r.created_at;
+    const uid = String(r.uid_receptor || '').toUpperCase();
+    const m = porUid[uid];
+    const leyo = r.leido === true;
+    if (m) {
+      const email = String(m.email || '').trim().toLowerCase();
+      const k = email || ('uid:' + uid);
+      const p = g.personas[k] || (g.personas[k] = { email: email, dueno: m.dueno || '', whatsapp: m.whatsapp || '', mascotas: [], leyo: false });
+      if (m.nombre && p.mascotas.indexOf(m.nombre) < 0) p.mascotas.push(m.nombre);
+      if (leyo) p.leyo = true;
+    } else {
+      g.sinCuenta[uid] = g.sinCuenta[uid] || leyo;   // la mascota ya no existe (se borró la cuenta)
+    }
+  });
+  return Object.keys(grupos).map(function (t) {
+    const g = grupos[t];
+    const ps = Object.keys(g.personas).map(function (k) { return g.personas[k]; });
+    const sc = Object.keys(g.sinCuenta);
+    g.id = require('crypto').createHash('sha1').update(t).digest('hex').slice(0, 12);
+    g.destinatarios = ps.length + sc.length;
+    g.leyeron = ps.filter(function (p) { return p.leyo; }).length + sc.filter(function (u) { return g.sinCuenta[u]; }).length;
+    g.lista = ps;
+    g.sinCuentaTotal = sc.length;
+    g.sinCuentaLeyeron = sc.filter(function (u) { return g.sinCuenta[u]; }).length;
+    return g;
+  }).sort(function (a, b) { return String(b.ultimo).localeCompare(String(a.ultimo)); });
+}
+
 function _normTextoMK(s) {
   return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
@@ -2819,6 +2865,38 @@ export default async function handler(req, res) {
         if (Array.isArray(cf) && cf[0]) cuponDevuelto = cf[0].codigo;
       } catch (e) { /* si no se pudo devolver el cupón, el pedido igual quedó cancelado */ }
       return res.status(200).json({ ok: true, cupon_devuelto: cuponDevuelto });
+    }
+
+    // ── Quién lee los mensajes del chat interno (solo con la clave: devuelve datos de personas) ──
+    if (action === 'getReporteChatOficial') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const grupos = await _gruposChatOficialMK();
+      if (!grupos) return res.status(200).json({ ok: false, error: 'No se pudieron leer los mensajes.' });
+      return res.status(200).json({
+        ok: true,
+        mensajes: grupos.slice(0, 60).map(function (g) {
+          return { id: g.id, mensaje: g.texto.slice(0, 220), destinatarios: g.destinatarios, leyeron: g.leyeron,
+            pct: g.destinatarios ? Math.round(g.leyeron / g.destinatarios * 100) : 0, copias: g.copias, primer_envio: g.primero, ultimo_envio: g.ultimo };
+        })
+      });
+    }
+
+    if (action === 'getDetalleChatOficial') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const k = String(req.query.k || '').trim();
+      if (!/^[0-9a-f]{12}$/.test(k)) return res.status(400).json({ ok: false, error: 'Falta el mensaje' });
+      const grupos = await _gruposChatOficialMK();
+      if (!grupos) return res.status(200).json({ ok: false, error: 'No se pudieron leer los mensajes.' });
+      const g = grupos.find(function (x) { return x.id === k; });
+      if (!g) return res.status(200).json({ ok: false, error: 'No se encontró ese mensaje.' });
+      const fila = function (p) { return { email: p.email, dueno: p.dueno, mascotas: p.mascotas, whatsapp: p.whatsapp }; };
+      const leyeron = g.lista.filter(function (p) { return p.leyo; });
+      const sinLeer = g.lista.filter(function (p) { return !p.leyo; });
+      return res.status(200).json({
+        ok: true, mensaje: g.texto, destinatarios: g.destinatarios, leyeron_total: g.leyeron, copias: g.copias, primer_envio: g.primero, ultimo_envio: g.ultimo,
+        leyeron: leyeron.slice(0, 2000).map(fila), sin_leer: sinLeer.slice(0, 2000).map(fila),
+        sin_cuenta: { total: g.sinCuentaTotal, leyeron: g.sinCuentaLeyeron }, truncado: leyeron.length > 2000 || sinLeer.length > 2000
+      });
     }
 
     // ═══ Administrador de correos MK ═══
