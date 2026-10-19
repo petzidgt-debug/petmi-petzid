@@ -2,6 +2,12 @@ const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
 
+// ── Interruptor de la reserva de bandanas de la Carrera ──────────────────
+// Está en false porque la carrera ya pasó: la acción pública crearReservaCarrera se niega a crear reservas y,
+// sobre todo, a GENERAR CUPONES de tienda (15 % o 25 %). Para reabrirla en otra carrera: ponlo en true,
+// restaura carrera-reserva.html desde el historial de GitHub y quita las redirecciones de vercel.json.
+const CARRERA_RESERVAS_ABIERTAS = false;
+
 // ── Web Push (notificaciones) ───────────────────────────────
 const webpush = require('web-push');
 const dns = require('dns').promises;
@@ -211,6 +217,586 @@ async function _enviarOTPPorWix(email, code, dueno, etiquetaLog) {
   }
 }
 
+// ── Seguimiento de clics en correos (2 oct) ───────────────────────────
+const _HOSTS_CORREO = ['app.revistapetmi.com', 'www.revistapetmi.com', 'revistapetmi.com'];
+const _UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Solo se redirige a páginas de PetMi (evita que alguien use este link para llevar a otro sitio).
+function _destinoCorreoPermitido(url) {
+  try {
+    const u = new URL(String(url));
+    return u.protocol === 'https:' && _HOSTS_CORREO.indexOf(u.hostname.toLowerCase()) >= 0;
+  } catch (e) { return false; }
+}
+
+// Clics automáticos (antivirus, vistas previas, robots): se guardan aparte y no cuentan.
+function _esBotCorreo(ua) {
+  const s = String(ua || '').trim().toLowerCase();
+  if (!s) return true;
+  return /bot|crawl|spider|preview|prefetch|scanner|headless|python|curl|wget|proxy|mimecast|proofpoint|barracuda|symantec|trendmicro|safelinks|facebookexternalhit|slurp/.test(s);
+}
+
+function _agregarUtmCorreo(url, campana, boton) {
+  if (url.indexOf('utm_source=') >= 0) return url;
+  const partes = url.split('#');
+  const sep = partes[0].indexOf('?') >= 0 ? '&' : '?';
+  return partes[0] + sep + 'utm_source=email&utm_medium=petmi&utm_campaign=' + encodeURIComponent(campana)
+    + '&utm_content=' + encodeURIComponent(boton) + (partes.length > 1 ? '#' + partes.slice(1).join('#') : '');
+}
+
+// Link con seguimiento: app.revistapetmi.com/r/<id del envío>?c=campaña&b=botón&to=destino
+function _linkRastreado(envioId, campana, boton, destino) {
+  return 'https://app.revistapetmi.com/r/' + envioId + '?c=' + encodeURIComponent(campana)
+    + '&b=' + encodeURIComponent(boton) + '&to=' + encodeURIComponent(_agregarUtmCorreo(destino, campana, boton));
+}
+
+// Anota un envío en email_envios. Nunca detiene ni rompe el envío si falla.
+async function _registrarEnvioCorreo(fila) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/email_envios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+      body: JSON.stringify(fila)
+    });
+    if (!r.ok) console.error('email_envios falló:', r.status, await r.text().catch(() => ''));
+  } catch (e) { console.error('email_envios error:', e.message); }
+}
+
+// Lee TODAS las filas de una consulta (Supabase entrega máximo 1000 por vez).
+async function _leerTodoSupabase(tabla, query, max) {
+  const filas = [];
+  for (let offset = 0; offset < max; offset += 1000) {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + tabla + '?' + query + '&limit=1000&offset=' + offset, {
+      headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+    });
+    const lote = await r.json().catch(() => null);
+    if (!Array.isArray(lote)) return null;
+    filas.push.apply(filas, lote);
+    if (lote.length < 1000) break;
+  }
+  return filas;
+}
+
+// ── Catálogo para Meta y páginas de producto (2 oct) ───────────────────
+const _TIENDA_BASE = 'https://app.revistapetmi.com';
+const _WHATSAPP_TIENDA = '50237673927';   // el mismo de tienda.html
+const _COLUMNAS_FEED_META = ['id', 'title', 'description', 'availability', 'condition', 'price', 'link', 'image_link', 'brand',
+  'additional_image_link', 'google_product_category', 'product_type', 'custom_label_0', 'custom_label_1'];
+
+function _textoPlano(s) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); }
+
+function _urlFoto(u) {
+  const s = String(u || '').trim();
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.charAt(0) === '/') return _TIENDA_BASE + s;
+  return null;
+}
+
+// Foto principal + fotos adicionales, sin repetir y con URL completa.
+function _fotosProductoServidor(p) {
+  const fotos = [];
+  function add(u) { const f = _urlFoto(u); if (f && fotos.indexOf(f) < 0) fotos.push(f); }
+  add(p.imagen);
+  let extra = p.imagenes;
+  if (typeof extra === 'string') { try { extra = JSON.parse(extra); } catch (e) { extra = []; } }
+  if (Array.isArray(extra)) extra.forEach(add);
+  return fotos.slice(0, 11);
+}
+
+function _agotadoProducto(p) { return p.stock != null && Number(p.stock) <= 0; }
+
+async function _productosActivosTienda() {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?activo=eq.true&select=*&order=categoria.asc,orden.asc', {
+    headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+  });
+  const data = await r.json().catch(() => null);
+  return Array.isArray(data) ? data : null;
+}
+
+// Una fila del catálogo de Meta, o el motivo por el que el producto no se puede incluir.
+function _filaFeedMeta(p) {
+  const nombre = _textoPlano(p.nombre);
+  if (!nombre) return { motivo: 'Sin nombre' };
+  const precio = Number(p.precio);
+  if (!(precio > 0)) return { motivo: 'Sin precio (Meta lo exige)' };
+  const fotos = _fotosProductoServidor(p);
+  if (!fotos.length) return { motivo: 'Sin foto (Meta lo exige)' };
+  let desc = _textoPlano(p.descripcion);
+  // Meta pide que la descripción sea distinta del título.
+  if (!desc || desc.toLowerCase() === nombre.toLowerCase()) desc = nombre + ' — disponible en la tienda de PetMi Guatemala.';
+  return { fila: {
+    id: String(p.id),
+    title: nombre.substring(0, 150),
+    description: desc.substring(0, 5000),
+    availability: _agotadoProducto(p) ? 'out of stock' : 'in stock',
+    condition: String(p.condicion || '').toLowerCase() === 'usado' ? 'used' : 'new',
+    price: precio.toFixed(2) + ' GTQ',
+    link: _TIENDA_BASE + '/producto/' + encodeURIComponent(String(p.id)),
+    image_link: fotos[0],
+    brand: _textoPlano(p.marca).substring(0, 100) || 'PetMi',
+    additional_image_link: fotos.slice(1, 11).join(','),
+    google_product_category: 'Animals & Pet Supplies > Pet Supplies',
+    product_type: _textoPlano(p.categoria) || 'Tienda',
+    custom_label_0: _textoPlano(p.especie),
+    custom_label_1: p.envio_incluido ? 'envio_incluido' : ''
+  } };
+}
+
+function _csvCelda(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+
+// Página pública de un producto: lo que ven Meta, Instagram y WhatsApp al compartir el link,
+// y las personas que abren el link. Todo el texto se escapa.
+function _htmlProductoPublico(p) {
+  const e = _escHtmlCorreo;
+  const nombre = _textoPlano(p.nombre);
+  const fotos = _fotosProductoServidor(p);
+  const precio = Number(p.precio) > 0 ? Number(p.precio) : null;
+  const agotado = _agotadoProducto(p);
+  const usado = String(p.condicion || '').toLowerCase() === 'usado';
+  const marca = _textoPlano(p.marca) || 'PetMi';
+  const descripcion = String(p.descripcion || '').trim();
+  const url = _TIENDA_BASE + '/producto/' + encodeURIComponent(String(p.id));
+  const resumen = (_textoPlano(descripcion) || (nombre + ' — disponible en la tienda de PetMi Guatemala.')).substring(0, 200);
+  const tiendaUrl = '/tienda.html?p=' + encodeURIComponent(String(p.id)) + '&utm_source=producto_web&utm_medium=link';
+  const waUrl = 'https://wa.me/' + _WHATSAPP_TIENDA + '?text=' + encodeURIComponent('Hola! Quiero pedir: ' + nombre);
+
+  const ld = { '@context': 'https://schema.org', '@type': 'Product', name: nombre, description: resumen, sku: String(p.id),
+    image: fotos, brand: { '@type': 'Brand', name: marca }, category: _textoPlano(p.categoria) || undefined,
+    itemCondition: usado ? 'https://schema.org/UsedCondition' : 'https://schema.org/NewCondition' };
+  if (precio) ld.offers = { '@type': 'Offer', url: url, priceCurrency: 'GTQ', price: precio.toFixed(2),
+    availability: agotado ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+    itemCondition: ld.itemCondition };
+  const ldJson = JSON.stringify(ld).replace(/</g, '\\u003c');
+
+  const og = [
+    ['og:type', 'product'], ['og:site_name', 'Tienda PetMi'], ['og:title', nombre + (precio ? ' — Q' + precio.toFixed(2) : '')],
+    ['og:description', resumen], ['og:url', url]
+  ];
+  if (fotos[0]) { og.push(['og:image', fotos[0]]); og.push(['og:image:alt', nombre]); }
+  if (precio) { og.push(['product:price:amount', precio.toFixed(2)]); og.push(['product:price:currency', 'GTQ']); }
+  og.push(['product:availability', agotado ? 'out of stock' : 'in stock']);
+  og.push(['product:condition', usado ? 'used' : 'new']);
+  og.push(['product:brand', marca]);
+
+  const slides = fotos.length
+    ? fotos.map(function (f, i) { return '<div class="slide"><img src="' + e(f) + '" alt="' + e(nombre) + '"' + (i ? ' loading="lazy"' : '') + '></div>'; }).join('')
+    : '<div class="slide"><div class="ph">&#128062;</div></div>';
+  const envio = p.envio_incluido ? '<span class="tag tag-envio">&#128666; Env&iacute;o incluido</span>' : '';
+  const cond = '<span class="tag ' + (usado ? 'tag-usado' : 'tag-nuevo') + '">' + (usado ? 'Usado' : 'Nuevo') + '</span>';
+  const stock = agotado ? '<div class="agotado">Agotado por ahora</div>'
+    : (p.stock != null && Number(p.stock) > 0 && Number(p.stock) <= 3 ? '<div class="pocos">&iexcl;Solo quedan ' + Number(p.stock) + '!</div>' : '');
+
+  return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<title>' + e(nombre) + ' — Tienda PetMi</title><meta name="description" content="' + e(resumen) + '">'
+    + '<link rel="canonical" href="' + e(url) + '"><link rel="icon" href="/favico.jpg" type="image/jpeg">'
+    + og.map(function (t) { return '<meta property="' + t[0] + '" content="' + e(t[1]) + '">'; }).join('')
+    + '<meta name="twitter:card" content="summary_large_image">'
+    + '<script type="application/ld+json">' + ldJson + '</script>'
+    + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#f8f7f4;color:#1a1a2e}'
+    + '.wrap{max-width:480px;margin:0 auto;background:#fff;min-height:100vh}.bar{padding:12px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:8px}'
+    + '.bar a{color:#00838f;font-weight:800;font-size:14px;text-decoration:none}.gal{position:relative;background:#f4efe9}'
+    + '.track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.track::-webkit-scrollbar{display:none}'
+    + '.slide{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:1;display:flex;align-items:center;justify-content:center}'
+    + '.slide img{width:100%;height:100%;object-fit:contain}.ph{font-size:80px}.cnt{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.55);color:#fff;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px}'
+    + '.body{padding:18px 18px 28px}.tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.tag{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px}'
+    + '.tag-nuevo{background:#e3f4e5;color:#2e7d32}.tag-usado{background:#1a1a2e;color:#fff}.tag-envio{background:#e0f7f7;color:#00838f}'
+    + 'h1{font-size:21px;line-height:1.25;margin-bottom:6px}.precio{font-size:24px;font-weight:900;color:#00B4B4;margin-bottom:10px}'
+    + '.agotado{color:#c0392b;font-weight:800;margin-bottom:10px}.pocos{color:#d35400;font-weight:800;margin-bottom:10px;font-size:13px}'
+    + '.desc{font-size:14px;color:#555;line-height:1.65;white-space:pre-wrap;margin:12px 0 20px}'
+    + '.cta{display:block;text-align:center;background:#1a1a2e;color:#fff;text-decoration:none;font-weight:900;font-size:15px;padding:15px;border-radius:99px;margin-bottom:10px}'
+    + '.wa{display:block;text-align:center;background:#25D366;color:#fff;text-decoration:none;font-weight:900;font-size:15px;padding:15px;border-radius:99px}'
+    + '.foot{text-align:center;font-size:11.5px;color:#999;padding:14px}</style></head><body><div class="wrap">'
+    + '<div class="bar"><a href="/tienda.html">&larr; Tienda PetMi</a></div>'
+    + '<div class="gal"><div class="track" id="track">' + slides + '</div>' + (fotos.length > 1 ? '<div class="cnt" id="cnt">1/' + fotos.length + '</div>' : '') + '</div>'
+    + '<div class="body"><div class="tags">' + cond + envio + '</div><h1>' + e(nombre) + '</h1>'
+    + '<div class="precio">' + (precio ? 'Q' + precio.toFixed(2) : 'Consultar precio') + '</div>' + stock
+    + (descripcion ? '<div class="desc">' + e(descripcion) + '</div>' : '<div style="height:14px"></div>')
+    + (agotado ? '' : '<a class="cta" href="' + e(tiendaUrl) + '">&#128722; Comprar en la tienda</a>')
+    + '<a class="wa" id="wa" href="' + e(waUrl) + '" target="_blank" rel="noopener">&#128172; ' + (agotado ? 'Consultar disponibilidad' : 'Pedir por WhatsApp') + '</a></div>'
+    + '<div class="foot">PetMi Guatemala &middot; app.revistapetmi.com</div></div>'
+    + '<script>(function(){var t=document.getElementById("track"),c=document.getElementById("cnt");if(t&&c){t.addEventListener("scroll",function(){var i=Math.round(t.scrollLeft/t.clientWidth);c.textContent=(i+1)+"/"+t.children.length;});}'
+    + 'var wa=document.getElementById("wa");if(wa){wa.addEventListener("click",function(){try{fetch("/api/galeria?action=registrarPedido",{method:"POST",headers:{"Content-Type":"application/json"},keepalive:true,body:JSON.stringify({producto:' + JSON.stringify(nombre).replace(/</g, '\\u003c') + ',origen:"producto_web"})});}catch(e){}});}})();</script>'
+    + '</body></html>';
+}
+
+const _ENTREGA_ESTADOS = ['por_confirmar', 'confirmado', 'en_camino', 'entregado', 'problema'];
+const _EVENTOS_PAGO_OK = ['bank_transfer_intent.succeeded', 'payment_intent.succeeded', 'balance_intent.succeeded'];
+
+// ═══ Administrador de correos MK (uno por semana) ═══════════════════════
+const _AUDIENCIAS_MK = ['todos', 'nunca_volvieron', 'inactivos_30', 'perros', 'gatos', 'zona', 'raza', 'cumple', 'adoptados', 'premium', 'sin_foto'];
+
+// Estas acciones pueden escribirle a TODA la base de usuarios, así que exigen una clave que el Admin manda
+// en el encabezado x-admin-key. Cómo se comprueba:
+//   1) Si Vercel tiene la variable ADMIN_API_KEY, manda ella.
+//   2) Si no, la comprueba la base de datos contra una HUELLA bcrypt (configurar_clave_admin.sql): la clave
+//      nunca se guarda, y 10 fallos desde una misma dirección bloquean 15 minutos.
+// Ante cualquier duda o error, NO deja pasar.
+async function _adminAutorizado(req, res) {
+  const dada = String((req.headers && req.headers['x-admin-key']) || '');
+  const deVercel = process.env.ADMIN_API_KEY || '';
+  if (deVercel) {
+    const a = Buffer.from(dada), b = Buffer.from(deVercel);
+    if (a.length === b.length && require('crypto').timingSafeEqual(a, b)) return true;
+    res.status(200).json({ ok: false, error: 'no_autorizado' });
+    return false;
+  }
+  const falta = function (mensaje) { res.status(200).json({ ok: false, error: 'falta_clave_servidor', mensaje: mensaje }); return false; };
+  const h = (req && req.headers) || {};
+  const ip = String(h['x-real-ip'] || String(h['x-forwarded-for'] || '').split(',')[0] || '').trim() || 'desconocida';
+  let estado = null;
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/admin_verificar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY },
+      body: JSON.stringify({ p_clave: dada.slice(0, 200), p_ip: ip })
+    });
+    if (r.ok) estado = await r.json();
+  } catch (e) { estado = null; }
+  if (estado === 'ok') return true;
+  if (estado === 'incorrecta') { res.status(200).json({ ok: false, error: 'no_autorizado' }); return false; }
+  if (estado === 'bloqueado') { res.status(200).json({ ok: false, error: 'bloqueado', mensaje: 'Demasiados intentos con una clave incorrecta. Espera 15 minutos e inténtalo de nuevo.' }); return false; }
+  if (estado === 'sin_clave') return falta('Falta crear la clave de administración: corre configurar_clave_admin.sql en Supabase.');
+  return falta('No se pudo verificar la clave. Revisa que corriste configurar_clave_admin.sql en Supabase.');
+}
+
+// Mensajes que PetMi mandó por el chat interno, agrupados por texto, con cuántas PERSONAS (no mascotas) lo leyeron.
+// Una persona con varias mascotas cuenta una vez, y lo leyó si abrió la conversación en cualquiera de ellas.
+async function _gruposChatOficialMK() {
+  const lecturas = await Promise.all([
+    _leerTodoSupabase('conversaciones', 'uid_emisor=eq.PETMI-OFICIAL&select=uid_receptor,mensaje,leido,created_at&order=created_at.desc', 30000),
+    _leerTodoSupabase('mascotas', 'uid=neq.PETMI-OFICIAL&select=uid,nombre,dueno,email,whatsapp', 30000)
+  ]);
+  const msgs = lecturas[0], masc = lecturas[1];
+  if (!msgs || !masc) return null;
+  const porUid = {};
+  masc.forEach(function (m) { porUid[String(m.uid || '').toUpperCase()] = m; });
+  const grupos = {};
+  msgs.forEach(function (r) {
+    const texto = String(r.mensaje || '').trim();
+    if (!texto) return;
+    const g = grupos[texto] || (grupos[texto] = { texto: texto, copias: 0, primero: r.created_at, ultimo: r.created_at, personas: {}, sinCuenta: {} });
+    g.copias++;
+    if (r.created_at && (!g.primero || r.created_at < g.primero)) g.primero = r.created_at;
+    if (r.created_at && (!g.ultimo || r.created_at > g.ultimo)) g.ultimo = r.created_at;
+    const uid = String(r.uid_receptor || '').toUpperCase();
+    const m = porUid[uid];
+    const leyo = r.leido === true;
+    if (m) {
+      const email = String(m.email || '').trim().toLowerCase();
+      const k = email || ('uid:' + uid);
+      const p = g.personas[k] || (g.personas[k] = { email: email, dueno: m.dueno || '', whatsapp: m.whatsapp || '', mascotas: [], leyo: false });
+      if (m.nombre && p.mascotas.indexOf(m.nombre) < 0) p.mascotas.push(m.nombre);
+      if (leyo) p.leyo = true;
+    } else {
+      g.sinCuenta[uid] = g.sinCuenta[uid] || leyo;   // la mascota ya no existe (se borró la cuenta)
+    }
+  });
+  return Object.keys(grupos).map(function (t) {
+    const g = grupos[t];
+    const ps = Object.keys(g.personas).map(function (k) { return g.personas[k]; });
+    const sc = Object.keys(g.sinCuenta);
+    g.id = require('crypto').createHash('sha1').update(t).digest('hex').slice(0, 12);
+    g.destinatarios = ps.length + sc.length;
+    g.leyeron = ps.filter(function (p) { return p.leyo; }).length + sc.filter(function (u) { return g.sinCuenta[u]; }).length;
+    g.lista = ps;
+    g.sinCuentaTotal = sc.length;
+    g.sinCuentaLeyeron = sc.filter(function (u) { return g.sinCuenta[u]; }).length;
+    return g;
+  }).sort(function (a, b) { return String(b.ultimo).localeCompare(String(a.ultimo)); });
+}
+
+function _normTextoMK(s) {
+  return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+function _nombrePropioMK(s) {
+  const t = String(s || '').trim().split(/\s+/)[0] || '';
+  return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : '';
+}
+function _unirNombresMK(arr) {
+  const u = []; arr.forEach(function (n) { if (n && u.indexOf(n) < 0) u.push(n); });
+  if (u.length <= 1) return u[0] || '';
+  return u.slice(0, -1).join(', ') + ' y ' + u[u.length - 1];
+}
+
+// Reemplaza {nombre} (primer nombre del dueño) y {mascota} (las mascotas de esa audiencia).
+function _tokensMK(texto, dest, html) {
+  const nombre = _nombrePropioMK(dest.dueno) || 'Amigo PetMi';
+  const mascota = _unirNombresMK((dest.pets || []).map(function (p) { return p.nombre; })) || 'tu mascota';
+  const esc = html ? _escHtmlCorreo : function (x) { return x; };
+  return esc(String(texto || '')).replace(/\{nombre\}/gi, esc(nombre)).replace(/\{mascota\}/gi, esc(mascota));
+}
+
+function _cuerpoAHtmlMK(cuerpo, dest) {
+  return String(cuerpo || '').replace(/\r/g, '').split(/\n{2,}/).map(function (par) {
+    par = par.trim();
+    if (!par) return '';
+    const h = _tokensMK(par, dest, true).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+    return '<p style="color:#444;line-height:1.7;font-size:15px;margin:0 0 14px">' + h + '</p>';
+  }).join('');
+}
+
+// El correo completo. ctx.envioId = correo real (links con seguimiento y baja personal);
+// ctx.vista = solo para ver en pantalla; sin ninguno de los dos = correo de prueba.
+function _htmlCampanaMK(c, dest, ctx) {
+  ctx = ctx || {};
+  const e = _escHtmlCorreo;
+  const slug = c.slug || 'mk';
+  let boton = '';
+  if (c.boton_texto && c.boton_url && _destinoCorreoPermitido(c.boton_url)) {
+    const href = ctx.envioId ? _linkRastreado(ctx.envioId, slug, 'boton', c.boton_url) : _agregarUtmCorreo(c.boton_url, slug, 'boton');
+    boton = '<div style="text-align:center;margin:22px 0 6px"><a href="' + e(href) + '" style="background:#00B4B4;color:#fff;padding:14px 32px;border-radius:24px;text-decoration:none;font-weight:900;font-size:15px;display:inline-block">' + e(c.boton_texto) + '</a></div>';
+  }
+  const imagen = c.imagen_url && /^https?:\/\//i.test(c.imagen_url)
+    ? '<img src="' + e(c.imagen_url) + '" alt="" style="width:100%;height:auto;border-radius:12px;display:block;margin:0 0 18px">' : '';
+  const titulo = c.titulo ? '<h2 style="color:#1a1a2e;margin:0 0 14px;text-align:center;font-size:21px;line-height:1.3">' + _tokensMK(c.titulo, dest, true) + '</h2>' : '';
+  const baja = ctx.envioId ? 'https://app.revistapetmi.com/baja.html?e=' + ctx.envioId : (ctx.vista ? '#' : 'https://app.revistapetmi.com/baja.html');
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:12px;background:#f4f4f2">'
+    + '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">'
+    + '<div style="background:#00B4B4;padding:24px;text-align:center;border-radius:12px 12px 0 0"><div style="display:inline-block;background:#fff;border-radius:12px;padding:8px 18px"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi" style="height:36px;width:auto;display:block"></div></div>'
+    + '<div style="background:#fff;padding:26px 24px;border:1px solid #eee">' + imagen + titulo + _cuerpoAHtmlMK(c.cuerpo, dest) + boton + '</div>'
+    + '<div style="background:#F5C842;padding:14px;text-align:center;border-radius:0 0 12px 12px"><p style="margin:0 0 6px;font-size:12px;color:#555">PetMi Guatemala · app.revistapetmi.com</p>'
+    + '<p style="margin:0;font-size:11px;color:#7a6200">¿Ya no quieres recibir estos correos? <a href="' + e(baja) + '" style="color:#7a6200">Date de baja aquí</a></p></div>'
+    + '</div></body></html>';
+}
+
+function _validarCampanaMK(b) {
+  const t = function (v, max) { return String(v == null ? '' : v).trim().slice(0, max); };
+  const d = {
+    nombre: t(b.nombre, 100), asunto: t(b.asunto, 150), titulo: t(b.titulo, 120) || null,
+    cuerpo: String(b.cuerpo || '').replace(/\r/g, '').trim().slice(0, 5000),
+    imagen_url: t(b.imagen_url, 500) || null, boton_texto: t(b.boton_texto, 40) || null, boton_url: t(b.boton_url, 500) || null,
+    audiencia: t(b.audiencia || 'todos', 30), audiencia_param: t(b.audiencia_param, 60) || null,
+    respetar_ofertas: b.respetar_ofertas !== false, semana: t(b.semana, 10) || null
+  };
+  if (d.nombre.length < 3) return { error: 'Ponle un nombre interno al correo (mínimo 3 letras).' };
+  if (d.asunto.length < 3) return { error: 'Escribe el asunto del correo.' };
+  if (d.cuerpo.length < 10) return { error: 'Escribe el texto del correo (mínimo 10 letras).' };
+  if (_AUDIENCIAS_MK.indexOf(d.audiencia) < 0) return { error: 'Audiencia inválida.' };
+  if (d.audiencia === 'zona' && !d.audiencia_param) return { error: 'Elige la zona.' };
+  if (d.audiencia === 'raza' && _normTextoMK(d.audiencia_param).length < 2) return { error: 'Escribe la raza (mínimo 2 letras).' };
+  if (d.audiencia === 'cumple') {
+    const m = parseInt(d.audiencia_param, 10);
+    if (!(m >= 1 && m <= 12)) return { error: 'Elige el mes del cumpleaños.' };
+    d.audiencia_param = String(m);
+  }
+  if (d.audiencia !== 'zona' && d.audiencia !== 'cumple' && d.audiencia !== 'raza') d.audiencia_param = null;
+  if (d.imagen_url && !/^https?:\/\//i.test(d.imagen_url)) return { error: 'La imagen debe ser un enlace que empiece con http.' };
+  if (!!d.boton_texto !== !!d.boton_url) return { error: 'El botón necesita texto Y enlace (o deja los dos vacíos).' };
+  if (d.boton_url && !_destinoCorreoPermitido(d.boton_url)) return { error: 'El botón solo puede llevar a páginas de PetMi (app.revistapetmi.com o revistapetmi.com).' };
+  if (d.semana && (!/^\d{4}-\d{2}-\d{2}$/.test(d.semana) || isNaN(new Date(d.semana + 'T00:00:00Z').getTime()))) return { error: 'Fecha de semana inválida.' };
+  return { datos: d };
+}
+
+// Todas las familias (un correo = una familia) con sus mascotas. Sin angelitos ni correos inválidos.
+async function _familiasMK() {
+  const filas = await _leerTodoSupabase('mascotas', 'uid=neq.PETMI-OFICIAL&select=uid,nombre,dueno,email,especie,raza,zona,fecha,tipo_fecha,foto,angelito,adoptado,premium,ultima_actividad,created_at,ofertas&order=created_at.asc', 20000);
+  if (!filas) return null;
+  const fam = {};
+  filas.forEach(function (m) {
+    if (m.angelito) return;
+    const email = String(m.email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    const f = fam[email] || (fam[email] = { email: email, dueno: '', pets: [], sin_ofertas: false });
+    if (!f.dueno && m.dueno) f.dueno = String(m.dueno).trim();
+    if (m.ofertas === false) f.sin_ofertas = true;   // dijo que NO a recibir ofertas (si el dato no existe, no se cuenta)
+    f.pets.push(m);
+  });
+  return Object.keys(fam).map(function (k) { return fam[k]; });
+}
+
+// De una familia, las mascotas que cumplen la audiencia elegida (vacío = la familia no entra).
+function _petsDeAudienciaMK(f, aud, param) {
+  const hoy = Date.now();
+  if (aud === 'todos') return f.pets;
+  if (aud === 'nunca_volvieron') return f.pets.every(function (p) { return !p.ultima_actividad; }) ? f.pets : [];
+  if (aud === 'inactivos_30') {
+    const ult = Math.max.apply(null, f.pets.map(function (p) { return p.ultima_actividad ? new Date(p.ultima_actividad).getTime() : 0; }));
+    return (!ult || hoy - ult > 30 * 86400000) ? f.pets : [];
+  }
+  if (aud === 'perros') return f.pets.filter(function (p) { return /^perr/.test(_normTextoMK(p.especie)); });
+  if (aud === 'gatos') return f.pets.filter(function (p) { return /^gat/.test(_normTextoMK(p.especie)); });
+  if (aud === 'zona') { const z = _normTextoMK(param); return z ? f.pets.filter(function (p) { return _normTextoMK(p.zona) === z; }) : []; }
+  // La raza la escribe cada persona ("Labrador", "labrador retriever"...): se busca por PARTE del nombre,
+  // sin importar mayúsculas ni tildes. Un término vacío no coincide con nadie (nunca "todas las razas").
+  if (aud === 'raza') {
+    const r = _normTextoMK(param);
+    return r ? f.pets.filter(function (p) { return _normTextoMK(p.raza).indexOf(r) >= 0; }) : [];
+  }
+  if (aud === 'cumple') {
+    const mes = parseInt(param, 10);
+    return f.pets.filter(function (p) { const m = String(p.fecha || '').match(/^\d{4}-(\d{2})-\d{2}/); return m && parseInt(m[1], 10) === mes; });
+  }
+  if (aud === 'adoptados') return f.pets.filter(function (p) { return p.adoptado === true; });
+  if (aud === 'premium') return f.pets.filter(function (p) { return p.premium === true; });
+  if (aud === 'sin_foto') return f.pets.filter(function (p) { return !String(p.foto || '').trim(); });
+  return [];
+}
+
+async function _bajasMK() {
+  const filas = await _leerTodoSupabase('email_bajas', 'select=email', 50000);
+  return filas ? new Set(filas.map(function (r) { return String(r.email || '').toLowerCase(); })) : null;
+}
+async function _enviosCampanaMK(slug) {
+  const filas = await _leerTodoSupabase('email_envios', 'campana_id=eq.' + encodeURIComponent(slug) + '&select=email,estado&order=created_at.asc', 50000);
+  if (!filas) return null;
+  const enviados = new Set(), fallos = new Map();
+  filas.forEach(function (r) {
+    const em = String(r.email || '').toLowerCase();
+    if (r.estado === 'enviado') enviados.add(em); else fallos.set(em, (fallos.get(em) || 0) + 1);
+  });
+  return { enviados: enviados, fallos: fallos };
+}
+
+// Cuántas personas son y cuántas quedan por enviar, con el desglose de a quién se quita y por qué.
+async function _calcularAudienciaMK(camp) {
+  const familias = await _familiasMK();
+  if (!familias) return { error: 'No se pudo leer la lista de mascotas.' };
+  const bajas = await _bajasMK();
+  if (!bajas) return { error: 'FALTA_SQL' };
+  const envios = camp.slug ? await _enviosCampanaMK(camp.slug) : { enviados: new Set(), fallos: new Map() };
+  if (!envios) return { error: 'FALTA_SQL' };
+  let resto = [];
+  familias.forEach(function (f) {
+    const pets = _petsDeAudienciaMK(f, camp.audiencia, camp.audiencia_param);
+    if (pets.length) resto.push({ email: f.email, dueno: f.dueno, pets: pets, uid: pets[0].uid, sin_ofertas: f.sin_ofertas });
+  });
+  const out = { total: resto.length, bajas: 0, sin_ofertas: 0, ya_recibieron: 0, fallidos: 0 };
+  resto = resto.filter(function (r) { if (bajas.has(r.email)) { out.bajas++; return false; } return true; });
+  if (camp.respetar_ofertas !== false) resto = resto.filter(function (r) { if (r.sin_ofertas) { out.sin_ofertas++; return false; } return true; });
+  resto = resto.filter(function (r) { if (envios.enviados.has(r.email)) { out.ya_recibieron++; return false; } return true; });
+  // Un correo que falló se reintenta una vez; si vuelve a fallar se deja de intentar (evita ciclos infinitos).
+  resto = resto.filter(function (r) { if ((envios.fallos.get(r.email) || 0) >= 2) { out.fallidos++; return false; } return true; });
+  out.pendientes = resto.length;
+  out.destinatarios = resto;
+  out.fallos = envios.fallos;
+  return out;
+}
+
+async function _conPoolMK(items, n, fn) {
+  const res = new Array(items.length); let i = 0;
+  async function worker() { while (i < items.length) { const k = i++; res[k] = await fn(items[k], k); } }
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, worker));
+  return res;
+}
+
+// Anota un envío y avisa si NO se pudo guardar (para no mandar el mismo correo dos veces por no saber que ya salió).
+async function _registrarEnvioMK(fila) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/email_envios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+      body: JSON.stringify(fila)
+    });
+    return r.ok;
+  } catch (e) { return false; }
+}
+
+async function _campanaMKPorId(id) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk?id=eq.' + encodeURIComponent(id) + '&select=*&limit=1', {
+    headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+  });
+  const filas = await r.json().catch(function () { return null; });
+  return Array.isArray(filas) && filas[0] ? filas[0] : null;
+}
+
+function _escHtmlCorreo(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── Enlace firmado del correo "le falta su foto" ─────────────────────────
+// Antes el botón llevaba a editar.html?uid=..., y esa página manda al inicio a quien no tenga la sesión abierta
+// en ese navegador (pasa con el navegador interno de Gmail, o abriendo el correo en otro teléfono): nunca llegaba
+// a poder subir la foto. Ahora el enlace trae un código firmado que prueba que el correo llegó a su dueño.
+// Vale 7 días y solo sirve para ESA mascota con ESE correo; si cambia el correo, deja de servir.
+function _secretoEnlaceFoto() {
+  return require('crypto').createHash('sha256').update('petmi-enlace-foto-v1|' + (WIX_API_KEY || '') + '|' + SUPABASE_SERVICE_KEY).digest();
+}
+function _firmaEnlaceFoto(uid, email, exp) {
+  return require('crypto').createHmac('sha256', _secretoEnlaceFoto()).update('foto|' + String(uid).toLowerCase() + '|' + String(email).trim().toLowerCase() + '|' + exp).digest('base64url');
+}
+function _crearEnlaceFoto(uid, email, dias) {
+  const exp = Math.floor(Date.now() / 1000) + (dias || 7) * 86400;
+  return exp.toString(36) + '.' + _firmaEnlaceFoto(uid, email, exp);
+}
+function _validarEnlaceFoto(uid, email, t) {
+  const partes = String(t || '').split('.');
+  if (partes.length !== 2 || !/^[0-9a-z]{1,10}$/.test(partes[0])) return false;
+  const exp = parseInt(partes[0], 36);
+  if (!exp || exp < Math.floor(Date.now() / 1000)) return false;
+  const esperada = Buffer.from(_firmaEnlaceFoto(uid, email, exp)), dada = Buffer.from(partes[1]);
+  return esperada.length === dada.length && require('crypto').timingSafeEqual(esperada, dada);
+}
+
+// Correo "a tu mascota le falta su foto" (mismo diseño que los demás correos de PetMi).
+function _htmlRecordatorioFoto(nombre, dueno, uid, envioId, email) {
+  const n = _escHtmlCorreo(nombre), d = _escHtmlCorreo(dueno);
+  const destino = 'https://app.revistapetmi.com/editar.html?uid=' + encodeURIComponent(uid) + (email ? '&t=' + _crearEnlaceFoto(uid, email) : '');
+  // Con seguimiento si hay id de envío (el & va como &amp; porque está dentro de un atributo HTML)
+  const link = envioId ? _linkRastreado(envioId, 'recordatorio_foto', 'editar', destino).replace(/&/g, '&amp;') : destino;
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
+    + '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">'
+    + '<div style="background:#00B4B4;padding:28px;text-align:center;border-radius:12px 12px 0 0">'
+    + '<div style="display:inline-block;background:#fff;border-radius:12px;padding:8px 18px"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi" style="height:36px;width:auto;display:block"></div>'
+    + '</div>'
+    + '<div style="background:#fff;padding:28px;border:1px solid #eee">'
+    + '<h2 style="color:#1a1a2e;margin-top:0;text-align:center">A ' + n + ' le falta su mejor foto &#128062;</h2>'
+    + '<p style="color:#555;line-height:1.7;font-size:14px;text-align:center">Hola ' + d + '! Notamos que el perfil de ' + n + ' todav&iacute;a no tiene foto &mdash; con una se ve much&iacute;simo mejor su carnet, y una foto clara ayuda mucho si alguna vez se pierde.</p>'
+    + '<div style="text-align:center;margin:20px 0"><a href="' + link + '" style="background:#00B4B4;color:#fff;padding:14px 32px;border-radius:24px;text-decoration:none;font-weight:900;font-size:15px">Agregar su foto &rarr;</a></div>'
+    + '<p style="text-align:center;color:#999;font-size:12px">Solo toma un minuto.</p>'
+    + '<p style="color:#aaa;font-size:12px;margin-top:24px">Con amor, el equipo de PetMi</p>'
+    + '</div>'
+    + '<div style="background:#F5C842;padding:12px;text-align:center;border-radius:0 0 12px 12px"><p style="margin:0;font-size:12px;color:#555">PetMi Guatemala</p></div>'
+    + '</div></body></html>';
+}
+
+// Envía un correo HTML por la API de Wix (igual que el de los códigos de verificación).
+async function _enviarHtmlPorWix(email, asunto, html, etiquetaLog) {
+  if (!WIX_API_KEY) return { ok: false, error: 'WIX_API_KEY no configurada' };
+  try {
+    const r = await fetch('https://www.wixapis.com/email-transmissions/v1/email-transmissions/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': WIX_API_KEY, 'wix-site-id': WIX_SITE_ID },
+      body: JSON.stringify({
+        emailTransmission: {
+          emailSubject: asunto, emailHtmlContent: html,
+          senderName: WIX_SENDER_NAME, senderEmailAddress: WIX_SENDER_EMAIL,
+          toRecipients: [{ emailAddress: email }], type: 'TRANSACTIONAL'
+        },
+        idempotencyKey: crypto.randomUUID()
+      })
+    });
+    const bodyTxt = await r.text();
+    console.log((etiquetaLog || 'correo') + ' -> Wix status:', r.status, '| respuesta:', bodyTxt);
+    if (!r.ok) {
+      let parsed; try { parsed = JSON.parse(bodyTxt); } catch (e) { parsed = null; }
+      return { ok: false, error: 'Wix ' + r.status + ': ' + ((parsed && parsed.message) || bodyTxt || 'sin detalle').slice(0, 200) };
+    }
+    let wixId = null; try { const j = JSON.parse(bodyTxt); wixId = (j && j.emailTransmission && j.emailTransmission.id) || null; } catch (e) {}
+    return { ok: true, wixId: wixId };
+  } catch (eWix) {
+    console.error((etiquetaLog || 'correo') + ' -> Wix error:', eWix.message);
+    return { ok: false, error: 'Wix: error de conexión' };
+  }
+}
+
+// Llama a Apps Script (doPost) con tiempo límite. Devuelve { ok, error, data }.
+async function _llamarAppsScript(payload, ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(function () { ctrl.abort(); }, ms || 8000);
+  try {
+    const r = await fetch(APPS_SCRIPT_OTP_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload), redirect: 'follow', signal: ctrl.signal
+    });
+    const txt = await r.text();
+    let data = null; try { data = JSON.parse(txt); } catch (e) {}
+    if (data && data.ok) return { ok: true, data };
+    return { ok: false, error: (data && data.error) || 'respuesta no válida de Apps Script', data };
+  } catch (e) {
+    return { ok: false, error: e.name === 'AbortError' ? 'Apps Script no respondió a tiempo' : ('Apps Script: ' + e.message) };
+  } finally { clearTimeout(t); }
+}
+
 async function _enviarCodigoOTPPorCorreo(email, code, dueno, etiquetaLog) {
   const porWix = await _enviarOTPPorWix(email, code, dueno, etiquetaLog);
   if (porWix.ok) return porWix;
@@ -328,10 +914,52 @@ async function _enviarMensajeOficialAUids(uids, mensaje) {
   }).catch(() => {})));
 }
 
+// Limpia la lista de fotos adicionales de un producto: solo URLs http(s),
+// sin repetidas, máximo 10. Al crear, si viene vacía no se manda nada (así
+// no falla si la columna "imagenes" todavía no existe); al actualizar
+// (siempre=true) se manda aunque esté vacía para poder borrarlas todas.
+// Stock de un producto: vacío/null = sin límite; si no, un número entero de 0 en adelante.
+function validarStockProducto(v) {
+  if (v === null || v === undefined || v === '') return { ok: true, valor: null };
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 0 || n > 100000) return { ok: false };
+  return { ok: true, valor: n };
+}
+
+function limpiarImagenesProducto(lista, siempre) {
+  const limpia = [];
+  (Array.isArray(lista) ? lista : []).forEach(function (u) {
+    if (typeof u === 'string' && /^https?:\/\//i.test(u.trim()) && limpia.indexOf(u.trim()) < 0) limpia.push(u.trim());
+  });
+  const out = limpia.slice(0, 10);
+  return (out.length || siempre) ? { imagenes: out } : {};
+}
+
+// Guarda un cambio en UNA fila y confirma que de verdad se guardó. Supabase
+// responde "ok" (2xx) aunque no encuentre la fila, así que pedimos de vuelta
+// la fila actualizada y comprobamos que sea exactamente una. Si falla (por
+// ejemplo, una columna que no existe), devolvemos el motivo real en vez de
+// decir "ok" y que el cambio se pierda sin avisar.
+async function actualizarUnaFila(tabla, id, campos, filtroExtra) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/' + tabla + '?id=eq.' + encodeURIComponent(id) + (filtroExtra || ''), {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
+    body: JSON.stringify(campos)
+  });
+  const txt = await r.text().catch(() => '');
+  if (!r.ok) {
+    console.error('actualizarUnaFila(' + tabla + ') failed:', r.status, txt);
+    return { ok: false, error: txt || ('HTTP ' + r.status) };
+  }
+  let filas = null; try { filas = JSON.parse(txt); } catch (e) {}
+  if (!Array.isArray(filas) || filas.length !== 1) return { ok: false, error: 'No se encontró el registro (¿ya fue eliminado?).' };
+  return { ok: true, fila: filas[0] };
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-key');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const action = req.query.action || '';
@@ -1693,6 +2321,9 @@ export default async function handler(req, res) {
     // por correo con los datos de recolección (vía Apps Script, solo
     // para el envío del correo — los datos NO viven ahí).
     if (action === 'crearReservaCarrera' && req.method === 'POST') {
+      if (!CARRERA_RESERVAS_ABIERTAS) {
+        return res.status(200).json({ ok: false, cerrada: true, error: 'La reserva de la Carrera ya cerró. Crea el PetzID de tu mascota en app.revistapetmi.com/registro.html' });
+      }
       const { nombre, mascota, telefono, email, tienePetzid, uidPetzid } = req.body || {};
       const telLimpio = String(telefono || '').replace(/\D/g, '');
       const nombreLimpio = String(nombre || '').trim();
@@ -1871,12 +2502,733 @@ export default async function handler(req, res) {
     if (action === 'marcarClienteContactado' && req.method === 'POST') {
       const { id, contactado } = req.body || {};
       if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
-      await fetch(SUPABASE_URL + '/rest/v1/wazu_clientes?id=eq.' + id, {
+      const g = await actualizarUnaFila('wazu_clientes', id, { contactado: !!contactado });
+      return res.status(200).json(g.ok ? { ok: true } : { ok: false, error: g.error });
+    }
+
+    // ── Promos ganadas en Wazu (2 oct) — lista de personas que ganaron
+    // una promo (baño 50%, baño de cortesía, masaje+ozonoterapia, Q50 en
+    // accesorios) y a quienes el Admin les escribe por WhatsApp. ──────
+    if (action === 'getWazuPromos') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_promos_ganadas?select=*&order=promo_tipo.asc,nombre.asc&limit=2000', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const promos = await r.json();
+      if (!Array.isArray(promos)) return res.status(200).json({ ok: false, error: 'No se pudo leer wazu_promos_ganadas — ¿corriste el SQL?', promos: [] });
+
+      // Visitas a las páginas de promo. Si la tabla todavía no existe
+      // (no se ha corrido crear_wazu_promo_visitas.sql), se ignora sin romper nada.
+      let visitas = [];
+      try {
+        const rv = await fetch(SUPABASE_URL + '/rest/v1/wazu_promo_visitas?select=promo_id,evento,created_at&order=created_at.desc&limit=10000', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        const dv = await rv.json();
+        if (Array.isArray(dv)) visitas = dv;
+      } catch (e) { /* sin visitas todavía */ }
+
+      const porPromo = {};
+      let vistasTotal = 0, clicsTotal = 0;
+      visitas.forEach(function (v) {
+        if (v.evento === 'click_registro') clicsTotal++; else vistasTotal++;
+        if (!v.promo_id) return;
+        const o = porPromo[v.promo_id] || (porPromo[v.promo_id] = { vistas: 0, clics: 0, ultima: null });
+        if (v.evento === 'click_registro') o.clics++; else o.vistas++;
+        if (!o.ultima || v.created_at > o.ultima) o.ultima = v.created_at;
+      });
+      promos.forEach(function (p) {
+        const o = porPromo[p.id];
+        p.vistas = o ? o.vistas : 0;
+        p.clics_registro = o ? o.clics : 0;
+        p.ultima_visita = o ? o.ultima : null;
+      });
+      return res.status(200).json({ ok: true, promos, visitas_total: vistasTotal, clics_total: clicsTotal });
+    }
+
+    // ── registrarVisitaPromo (2 oct) — la página promo-*.html avisa cuando
+    // alguien la abre ("vista") o toca "Crear el ID de mi mascota"
+    // ("click_registro"). Es pública (la llama la página, no el Admin). ──
+    if (action === 'registrarVisitaPromo' && req.method === 'POST') {
+      const { promo_tipo, promo_id, evento } = req.body || {};
+      const TIPOS = ['bano50', 'cortesia', 'masaje', 'accesorios'];
+      if (TIPOS.indexOf(promo_tipo) < 0) return res.status(400).json({ ok: false, error: 'Promo inválida' });
+      const ev = evento === 'click_registro' ? 'click_registro' : 'vista';
+      const uuidOk = typeof promo_id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(promo_id);
+      const hdr = { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' };
+
+      // La misma persona recargando la página en 10 minutos cuenta una sola vez.
+      if (uuidOk && ev === 'vista') {
+        const desde = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+        const rd = await fetch(SUPABASE_URL + '/rest/v1/wazu_promo_visitas?select=id&promo_id=eq.' + promo_id + '&evento=eq.vista&created_at=gte.' + encodeURIComponent(desde) + '&limit=1', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        const dd = await rd.json().catch(function () { return []; });
+        if (Array.isArray(dd) && dd.length) return res.status(200).json({ ok: true, repetida: true });
+      }
+
+      const fila = { promo_tipo: promo_tipo, evento: ev, promo_id: uuidOk ? promo_id : null };
+      let ri = await fetch(SUPABASE_URL + '/rest/v1/wazu_promo_visitas', { method: 'POST', headers: hdr, body: JSON.stringify(fila) });
+      if (!ri.ok && uuidOk) {
+        // El id del link ya no existe (ej. se borró a la persona): se cuenta como visita anónima.
+        fila.promo_id = null;
+        ri = await fetch(SUPABASE_URL + '/rest/v1/wazu_promo_visitas', { method: 'POST', headers: hdr, body: JSON.stringify(fila) });
+      }
+      return res.status(200).json({ ok: ri.ok });
+    }
+
+    if (action === 'marcarWazuPromoContactado' && req.method === 'POST') {
+      const { id, contactado } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const g = await actualizarUnaFila('wazu_promos_ganadas', id, { contactado: !!contactado, contactado_at: contactado ? new Date().toISOString() : null });
+      return res.status(200).json(g.ok ? { ok: true, contactado_at: g.fila.contactado_at } : { ok: false, error: g.error });
+    }
+
+    // ── crearWazuPromo (2 oct) — agrega a mano a una persona que ganó una promo. ──
+    if (action === 'crearWazuPromo' && req.method === 'POST') {
+      const { nombre, telefono, promo_tipo, email, notas } = req.body || {};
+      const PROMOS_WAZU = { bano50: '50% OFF en baño', cortesia: 'Baño de cortesía', masaje: 'Masaje + Ozonoterapia', accesorios: 'Q50 en accesorios' };
+      const nom = String(nombre || '').trim().slice(0, 120);
+      if (!nom) return res.status(200).json({ ok: false, error: 'Escribe el nombre.' });
+      if (!PROMOS_WAZU[promo_tipo]) return res.status(200).json({ ok: false, error: 'Elige la promo.' });
+      const dig = String(telefono || '').replace(/\D/g, '');
+      let wa = null;
+      if (dig.length === 8) wa = '502' + dig;
+      else if (dig.length === 11 && dig.indexOf('502') === 0) wa = dig;
+      if (!wa) return res.status(200).json({ ok: false, error: 'El teléfono debe tener 8 dígitos (Guatemala).' });
+      const fila = {
+        nombre: nom, promo_tipo: promo_tipo, promo: PROMOS_WAZU[promo_tipo],
+        telefono: String(telefono).trim().slice(0, 40), telefono_wa: wa,
+        email: String(email || '').trim().slice(0, 200) || null,
+        notas: String(notas || '').trim().slice(0, 500) || null
+      };
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_promos_ganadas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
+        body: JSON.stringify(fila)
+      });
+      const txt = await r.text().catch(() => '');
+      // Ya existe esa misma persona con esa misma promo (índice único nombre + promo).
+      if (r.status === 409 || txt.indexOf('23505') >= 0) return res.status(200).json({ ok: false, error: 'Ya existe "' + nom + '" con esa misma promo.' });
+      let out = null; try { out = JSON.parse(txt); } catch (e) {}
+      if (!r.ok || !Array.isArray(out) || !out[0]) {
+        console.error('crearWazuPromo failed:', r.status, txt);
+        return res.status(200).json({ ok: false, error: 'No se pudo guardar. ' + (txt || ('HTTP ' + r.status)) });
+      }
+      return res.status(200).json({ ok: true, promo: out[0] });
+    }
+
+    if (action === 'eliminarWazuPromo' && req.method === 'POST') {
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_promos_ganadas?id=eq.' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }
+      });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    // Corregir el teléfono de alguien (ej. un número que venía mal en el cuaderno).
+    if (action === 'actualizarWazuPromoTelefono' && req.method === 'POST') {
+      const { id, telefono } = req.body || {};
+      if (!id || !telefono) return res.status(400).json({ ok: false, error: 'Falta id o teléfono' });
+      const d = String(telefono).replace(/\D/g, '');
+      let wa = null;
+      if (d.length === 8) wa = '502' + d;
+      else if (d.length === 11 && d.indexOf('502') === 0) wa = d;
+      if (!wa) return res.status(200).json({ ok: false, error: 'Teléfono inválido — debe tener 8 dígitos (Guatemala).' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/wazu_promos_ganadas?id=eq.' + encodeURIComponent(id), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ contactado: !!contactado })
+        body: JSON.stringify({ telefono: String(telefono).trim(), telefono_wa: wa })
       });
+      return res.status(200).json({ ok: r.ok, telefono_wa: wa });
+    }
+
+    // ── r (2 oct) — link de seguimiento de los correos. Anota el clic y redirige
+    // al destino original. Nunca bloquea a la persona: si no se pudo anotar,
+    // igual la manda a donde iba. HEAD (revisión de antivirus) no cuenta. ──
+    if (action === 'r') {
+      const pedido = String(req.query.to || '');
+      const destino = _destinoCorreoPermitido(pedido) ? pedido : 'https://app.revistapetmi.com/';
+      res.setHeader('Cache-Control', 'no-store');
+      if (req.method === 'GET') {
+        const ua = String((req.headers && req.headers['user-agent']) || '');
+        const e = String(req.query.e || '');
+        const fila = {
+          envio_id: _UUID_RE.test(e) ? e : null,
+          campana_id: String(req.query.c || '').substring(0, 60) || null,
+          boton: String(req.query.b || '').substring(0, 60) || null,
+          destino: destino.substring(0, 500),
+          es_bot: _esBotCorreo(ua),
+          user_agent: ua.substring(0, 200)
+        };
+        const ctrl = new AbortController();
+        const t = setTimeout(function () { ctrl.abort(); }, 1500);
+        try {
+          await fetch(SUPABASE_URL + '/rest/v1/email_clics', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+            body: JSON.stringify(fila), signal: ctrl.signal
+          });
+        } catch (eClic) { console.error('registro de clic falló:', eClic.message); }
+        finally { clearTimeout(t); }
+      }
+      res.setHeader('Location', destino);
+      return res.status(302).end();
+    }
+
+    // ── getReporteCorreos — resumen por campaña: enviados, clics únicos, CTR ──
+    if (action === 'getReporteCorreos') {
+      if (!(await _adminAutorizado(req, res))) return;   // devuelve correos de personas: solo con la clave
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      const [rc, rb] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/email_reporte_campanas?select=*&order=ultimo_envio.desc', { headers: H }),
+        fetch(SUPABASE_URL + '/rest/v1/email_reporte_botones?select=*', { headers: H })
+      ]);
+      const campanas = await rc.json().catch(() => null);
+      const botones = await rb.json().catch(() => null);
+      if (!Array.isArray(campanas)) return res.status(200).json({ ok: false, error: 'No se pudo leer el reporte — ¿corriste crear_email_tracking.sql?', campanas: [] });
+      const lista = Array.isArray(botones) ? botones : [];
+      // Nombres que le pusiste a los correos MK (para mostrarlos en vez del código interno)
+      const rn = await fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk?select=slug,nombre', { headers: H }).catch(function () { return null; });
+      const nombresMK = rn ? await rn.json().catch(function () { return null; }) : null;
+      const nombrePorSlug = {}; (Array.isArray(nombresMK) ? nombresMK : []).forEach(function (n) { nombrePorSlug[n.slug] = n.nombre; });
+      campanas.forEach(function (c) {
+        c.nombre_campana = nombrePorSlug[c.campana_id] || null;
+        c.botones = lista.filter(function (b) { return b.campana_id === c.campana_id; })
+          .sort(function (a, b) { return b.clics_unicos - a.clics_unicos; });
+      });
+      return res.status(200).json({ ok: true, campanas: campanas });
+    }
+
+    // ── getDetalleCorreos — de una campaña: quién hizo clic (y en qué), quién no, quién falló ──
+    if (action === 'getDetalleCorreos') {
+      if (!(await _adminAutorizado(req, res))) return;   // devuelve correos de personas: solo con la clave
+      const campana = String(req.query.campana_id || '').trim();
+      if (!campana) return res.status(400).json({ ok: false, error: 'Falta campana_id' });
+      const filtro = 'campana_id=eq.' + encodeURIComponent(campana);
+      const envios = await _leerTodoSupabase('email_envios', filtro + '&select=id,email,estado,error,canal,created_at&order=created_at.asc', 5000);
+      const clics = await _leerTodoSupabase('email_clics', filtro + '&es_bot=eq.false&select=envio_id,boton,created_at&order=created_at.asc', 20000);
+      if (!envios || !clics) return res.status(200).json({ ok: false, error: 'No se pudo leer el detalle — ¿corriste crear_email_tracking.sql?' });
+      const porEnvio = {};
+      clics.forEach(function (k) { (porEnvio[k.envio_id] = porEnvio[k.envio_id] || []).push(k); });
+      const clicaron = [], sinClic = [], fallidos = [];
+      envios.forEach(function (e) {
+        if (e.estado !== 'enviado') { fallidos.push({ email: e.email, error: e.error || '' }); return; }
+        const ks = porEnvio[e.id];
+        if (!ks) { sinClic.push(e.email); return; }
+        const botones = [];
+        ks.forEach(function (k) { if (k.boton && botones.indexOf(k.boton) < 0) botones.push(k.boton); });
+        clicaron.push({ email: e.email, clics: ks.length, botones: botones, primer_clic: ks[0].created_at, canal: e.canal });
+      });
+      clicaron.sort(function (a, b) { return a.primer_clic < b.primer_clic ? 1 : -1; });
+      return res.status(200).json({ ok: true, campana_id: campana, enviados: clicaron.length + sinClic.length, clicaron: clicaron, sin_clic: sinClic, fallidos: fallidos, truncado: envios.length >= 5000 });
+    }
+
+    // ── feedMeta (2 oct) — archivo (CSV) del catálogo que Meta lee solo cada día ──
+    if (action === 'feedMeta') {
+      const prods = await _productosActivosTienda();
+      if (!prods) return res.status(503).send('No se pudo leer el catálogo. Meta reintentará solo.');
+      const filas = [];
+      prods.forEach(function (p) { const r = _filaFeedMeta(p); if (r.fila) filas.push(r.fila); });
+      const csv = [_COLUMNAS_FEED_META.map(_csvCelda).join(',')]
+        .concat(filas.map(function (f) { return _COLUMNAS_FEED_META.map(function (k) { return _csvCelda(f[k]); }).join(','); })).join('\n') + '\n';
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+      return res.status(200).send(csv);
+    }
+
+    // ── feedMetaResumen (Admin) — cuántos productos están listos para Meta y por qué otros no ──
+    if (action === 'feedMetaResumen') {
+      const prods = await _productosActivosTienda();
+      if (!prods) return res.status(200).json({ ok: false, error: 'No se pudo leer la tienda.' });
+      let incluidos = 0, agotados = 0; const excluidos = [];
+      prods.forEach(function (p) {
+        const r = _filaFeedMeta(p);
+        if (r.fila) { incluidos++; if (r.fila.availability === 'out of stock') agotados++; }
+        else excluidos.push({ id: p.id, nombre: _textoPlano(p.nombre) || '(sin nombre)', motivo: r.motivo });
+      });
+      return res.status(200).json({ ok: true, feed_url: _TIENDA_BASE + '/feed/meta.csv', total: prods.length, incluidos: incluidos, agotados: agotados, excluidos: excluidos });
+    }
+
+    // ── producto (2 oct) — página pública de un producto: /producto/<id> ──
+    if (action === 'producto') {
+      const id = String(req.query.id || '').trim();
+      let prod = null;
+      if (/^[A-Za-z0-9_-]{1,40}$/.test(id)) {
+        const rp = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(id) + '&activo=eq.true&select=*&limit=1', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        const filas = await rp.json().catch(() => null);
+        prod = Array.isArray(filas) && filas[0] ? filas[0] : null;
+      }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      if (!prod) {
+        res.setHeader('Cache-Control', 'no-store');
+        return res.status(404).send('<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Producto no disponible — Tienda PetMi</title></head>'
+          + '<body style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px;background:#f8f7f4"><div style="font-size:56px">&#128062;</div><h1 style="font-size:20px;margin:12px 0">Este producto ya no est&aacute; disponible</h1>'
+          + '<a href="/tienda.html" style="display:inline-block;margin-top:14px;background:#1a1a2e;color:#fff;text-decoration:none;font-weight:800;padding:13px 26px;border-radius:99px">Ver la tienda</a></body></html>');
+      }
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+      return res.status(200).send(_htmlProductoPublico(prod));
+    }
+
+    // ═══ Pedidos en línea de la tienda (pago con Recurrente + entrega con mensajero propio) ═══
+    // getPedidosOnline — todos los pedidos con sus datos de entrega, y qué avisos mandó Recurrente.
+    if (action === 'getPedidosOnline') {
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      const [rp, rw, rs] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda?select=*&order=created_at.desc&limit=300', { headers: H }),
+        fetch(SUPABASE_URL + '/rest/v1/webhook_logs?select=event_type,created_at,firma_valida,payload_completo&event_type=in.(payment_intent.succeeded,bank_transfer_intent.succeeded,balance_intent.succeeded,bank_transfer_intent.pending)&order=created_at.desc&limit=400', { headers: H }),
+        fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda?select=entrega_estado&limit=1', { headers: H })
+      ]);
+      const pedidos = await rp.json().catch(() => null);
+      if (!Array.isArray(pedidos)) return res.status(200).json({ ok: false, error: 'No se pudo leer pedidos_tienda.', pedidos: [] });
+      const eventos = await rw.json().catch(() => null);
+      const porPedido = {};
+      (Array.isArray(eventos) ? eventos : []).forEach(function (ev) {
+        const pid = ev.payload_completo && ev.payload_completo.metadata && ev.payload_completo.metadata.pedido_id;
+        if (!pid) return;
+        const o = porPedido[pid] || (porPedido[pid] = { avisos: [], aviso_pago: false, aviso_firma_invalida: false });
+        if (o.avisos.indexOf(ev.event_type) < 0) o.avisos.push(ev.event_type);
+        if (_EVENTOS_PAGO_OK.indexOf(ev.event_type) >= 0) { if (ev.firma_valida) o.aviso_pago = true; else o.aviso_firma_invalida = true; }
+      });
+      const lista = pedidos.map(function (p) {
+        const av = porPedido[p.id] || { avisos: [], aviso_pago: false, aviso_firma_invalida: false };
+        return {
+          id: p.id, email: p.email, nombre: p.nombre || '', telefono: p.telefono || '', direccion: p.direccion || '', notas_cliente: p.notas_cliente || '',
+          items: p.items || [], total_q: Math.round(Number(p.total_centavos || 0)) / 100, estado: p.estado, checkout_id: p.checkout_id || '',
+          entrega_estado: p.entrega_estado || 'por_confirmar', entrega_fecha: p.entrega_fecha || null, entrega_franja: p.entrega_franja || '',
+          mensajero: p.mensajero || '', notas_internas: p.notas_internas || '',
+          created_at: p.created_at, pagado_at: p.pagado_at || null, confirmado_at: p.confirmado_at || null, en_camino_at: p.en_camino_at || null, entregado_at: p.entregado_at || null,
+          avisos: av.avisos, aviso_pago: av.aviso_pago, aviso_firma_invalida: av.aviso_firma_invalida
+        };
+      });
+      const resumen = { por_confirmar: 0, confirmado: 0, en_camino: 0, entregado: 0, problema: 0, pendientes_pago: 0, pagos_por_revisar: 0 };
+      lista.forEach(function (p) {
+        if (p.estado === 'pagado') { if (resumen[p.entrega_estado] !== undefined) resumen[p.entrega_estado]++; }
+        else {
+          if (p.estado === 'pendiente') resumen.pendientes_pago++;
+          if (p.aviso_pago || p.aviso_firma_invalida) resumen.pagos_por_revisar++;
+        }
+      });
+      return res.status(200).json({ ok: true, pedidos: lista, resumen: resumen, falta_sql: !rs.ok });
+    }
+
+    // actualizarEntregaPedido — estado de entrega, día/horario acordado, mensajero, notas y datos de contacto.
+    if (action === 'actualizarEntregaPedido' && req.method === 'POST') {
+      const b = req.body || {};
+      const id = String(b.id || '').trim();
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const campos = {};
+      if ('entrega_estado' in b) {
+        if (_ENTREGA_ESTADOS.indexOf(b.entrega_estado) < 0) return res.status(200).json({ ok: false, error: 'Estado de entrega inválido.' });
+        campos.entrega_estado = b.entrega_estado;
+        const ahora = new Date().toISOString();
+        if (b.entrega_estado === 'confirmado') campos.confirmado_at = ahora;
+        if (b.entrega_estado === 'en_camino') campos.en_camino_at = ahora;
+        campos.entregado_at = b.entrega_estado === 'entregado' ? ahora : null;
+      }
+      if ('entrega_fecha' in b) {
+        const fch = String(b.entrega_fecha || '').trim();
+        if (fch && (!/^\d{4}-\d{2}-\d{2}$/.test(fch) || isNaN(new Date(fch + 'T00:00:00Z').getTime()))) return res.status(200).json({ ok: false, error: 'Fecha de entrega inválida.' });
+        campos.entrega_fecha = fch || null;
+      }
+      if ('entrega_franja' in b) campos.entrega_franja = String(b.entrega_franja || '').trim().slice(0, 60) || null;
+      if ('mensajero' in b) campos.mensajero = String(b.mensajero || '').trim().slice(0, 80) || null;
+      if ('notas_internas' in b) campos.notas_internas = String(b.notas_internas || '').trim().slice(0, 1000) || null;
+      if ('nombre' in b) campos.nombre = String(b.nombre || '').replace(/\s+/g, ' ').trim().slice(0, 80) || null;
+      if ('direccion' in b) campos.direccion = String(b.direccion || '').replace(/\s+/g, ' ').trim().slice(0, 300) || null;
+      if ('telefono' in b) {
+        const dig = String(b.telefono || '').replace(/\D/g, '');
+        const tel = dig.length === 8 ? '502' + dig : (dig.length === 11 && dig.indexOf('502') === 0 ? dig : null);
+        if (String(b.telefono || '').trim() && !tel) return res.status(200).json({ ok: false, error: 'El WhatsApp debe tener 8 dígitos.' });
+        campos.telefono = tel;
+      }
+      if (!Object.keys(campos).length) return res.status(200).json({ ok: false, error: 'No hay nada que actualizar.' });
+      const g = await actualizarUnaFila('pedidos_tienda', id, campos, '&estado=eq.pagado');
+      if (!g.ok) return res.status(200).json({ ok: false, error: /^No se encontró/.test(g.error) ? 'No se encontró el pedido, o todavía no está pagado.' : g.error });
+      return res.status(200).json({ ok: true, pedido: g.fila });
+    }
+
+    // marcarPedidoPagadoManual — para un pago que Recurrente cobró pero cuyo aviso nunca llegó (ver consulta 3 de revisar_pedidos_tienda.sql).
+    // Hace lo mismo que el webhook: resta el stock y marca el pedido pagado. No manda correos.
+    if (action === 'marcarPedidoPagadoManual' && req.method === 'POST') {
+      const id = String((req.body || {}).id || '').trim();
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      const rg = await fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda?id=eq.' + encodeURIComponent(id) + '&select=*', { headers: H });
+      const filas = await rg.json().catch(() => null);
+      const pedido = Array.isArray(filas) && filas[0];
+      if (!pedido) return res.status(200).json({ ok: false, error: 'No se encontró el pedido.' });
+      if (pedido.estado === 'pagado') return res.status(200).json({ ok: true, ya_estaba_pagado: true });
+      let stockOk = true;
+      for (const item of (pedido.items || [])) {
+        try {
+          const rs = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(item.producto_id) + '&select=stock', { headers: H });
+          const pr = await rs.json();
+          const stockActual = pr && pr[0] ? pr[0].stock : null;
+          if (stockActual != null) {
+            await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(item.producto_id), {
+              method: 'PATCH', headers: { 'Content-Type': 'application/json', ...H, 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ stock: Math.max(0, stockActual - item.cantidad) })
+            });
+          }
+        } catch (e) { stockOk = false; }
+      }
+      const g = await actualizarUnaFila('pedidos_tienda', id, { estado: 'pagado', pagado_at: new Date().toISOString() }, '&estado=in.(pendiente,cancelado)');
+      if (!g.ok) return res.status(200).json({ ok: false, error: g.error });
+      return res.status(200).json({ ok: true, stock_ok: stockOk });
+    }
+
+    // cancelarPedidoPendiente — un carrito abandonado: se cancela y, si usó un cupón de un solo uso, se le devuelve.
+    if (action === 'cancelarPedidoPendiente' && req.method === 'POST') {
+      const id = String((req.body || {}).id || '').trim();
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const g = await actualizarUnaFila('pedidos_tienda', id, { estado: 'cancelado' }, '&estado=eq.pendiente');
+      if (!g.ok) return res.status(200).json({ ok: false, error: /^No se encontró/.test(g.error) ? 'Solo se pueden cancelar pedidos pendientes.' : g.error });
+      let cuponDevuelto = null;
+      try {
+        const rc = await fetch(SUPABASE_URL + '/rest/v1/cupones_tienda?usado_en_pedido=eq.' + encodeURIComponent(id) + '&usado=eq.true', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
+          body: JSON.stringify({ usado: false, usado_en_pedido: null })
+        });
+        const cf = await rc.json().catch(() => null);
+        if (Array.isArray(cf) && cf[0]) cuponDevuelto = cf[0].codigo;
+      } catch (e) { /* si no se pudo devolver el cupón, el pedido igual quedó cancelado */ }
+      return res.status(200).json({ ok: true, cupon_devuelto: cuponDevuelto });
+    }
+
+    // ── Quién lee los mensajes del chat interno (solo con la clave: devuelve datos de personas) ──
+    if (action === 'getReporteChatOficial') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const grupos = await _gruposChatOficialMK();
+      if (!grupos) return res.status(200).json({ ok: false, error: 'No se pudieron leer los mensajes.' });
+      return res.status(200).json({
+        ok: true,
+        mensajes: grupos.slice(0, 60).map(function (g) {
+          return { id: g.id, mensaje: g.texto.slice(0, 220), destinatarios: g.destinatarios, leyeron: g.leyeron,
+            pct: g.destinatarios ? Math.round(g.leyeron / g.destinatarios * 100) : 0, copias: g.copias, primer_envio: g.primero, ultimo_envio: g.ultimo };
+        })
+      });
+    }
+
+    if (action === 'getDetalleChatOficial') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const k = String(req.query.k || '').trim();
+      if (!/^[0-9a-f]{12}$/.test(k)) return res.status(400).json({ ok: false, error: 'Falta el mensaje' });
+      const grupos = await _gruposChatOficialMK();
+      if (!grupos) return res.status(200).json({ ok: false, error: 'No se pudieron leer los mensajes.' });
+      const g = grupos.find(function (x) { return x.id === k; });
+      if (!g) return res.status(200).json({ ok: false, error: 'No se encontró ese mensaje.' });
+      const fila = function (p) { return { email: p.email, dueno: p.dueno, mascotas: p.mascotas, whatsapp: p.whatsapp }; };
+      const leyeron = g.lista.filter(function (p) { return p.leyo; });
+      const sinLeer = g.lista.filter(function (p) { return !p.leyo; });
+      return res.status(200).json({
+        ok: true, mensaje: g.texto, destinatarios: g.destinatarios, leyeron_total: g.leyeron, copias: g.copias, primer_envio: g.primero, ultimo_envio: g.ultimo,
+        leyeron: leyeron.slice(0, 2000).map(fila), sin_leer: sinLeer.slice(0, 2000).map(fila),
+        sin_cuenta: { total: g.sinCuentaTotal, leyeron: g.sinCuentaLeyeron }, truncado: leyeron.length > 2000 || sinLeer.length > 2000
+      });
+    }
+
+    // ═══ Administrador de correos MK ═══
+    // (todas piden la clave de administración, menos bajaCorreo que es el enlace público del correo)
+    if (action === 'getCampanasMK') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      const [rc, rr] = await Promise.all([
+        fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk?select=*&order=semana.desc.nullslast,creada_at.desc&limit=100', { headers: H }),
+        fetch(SUPABASE_URL + '/rest/v1/email_reporte_campanas?select=campana_id,enviados,errores,clics_unicos,clics_total,ultimo_envio', { headers: H })
+      ]);
+      const camps = await rc.json().catch(function () { return null; });
+      if (!Array.isArray(camps)) return res.status(200).json({ ok: false, error: 'FALTA_SQL' });
+      const rep = await rr.json().catch(function () { return null; });
+      const porSlug = {}; (Array.isArray(rep) ? rep : []).forEach(function (x) { porSlug[x.campana_id] = x; });
+      camps.forEach(function (c) {
+        const s = porSlug[c.slug] || {};
+        c.enviados = s.enviados || 0; c.errores = s.errores || 0; c.clics_unicos = s.clics_unicos || 0; c.clics_total = s.clics_total || 0;
+      });
+      return res.status(200).json({ ok: true, campanas: camps });
+    }
+
+    if (action === 'getResumenAudienciasMK') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const familias = await _familiasMK();
+      if (!familias) return res.status(200).json({ ok: false, error: 'No se pudo leer la lista de mascotas.' });
+      const bajas = await _bajasMK();
+      if (!bajas) return res.status(200).json({ ok: false, error: 'FALTA_SQL' });
+      const segmentos = {};
+      _AUDIENCIAS_MK.forEach(function (a) {
+        if (a === 'zona' || a === 'cumple' || a === 'raza') return;
+        segmentos[a] = familias.filter(function (f) { return _petsDeAudienciaMK(f, a).length > 0; }).length;
+      });
+      const zonas = {}, razas = {}, meses = new Array(12).fill(0);
+      familias.forEach(function (f) {
+        const zs = {}, ms = {}, rs = {};
+        f.pets.forEach(function (p) {
+          const z = _normTextoMK(p.zona);
+          if (z) { zs[z] = String(p.zona).trim(); }
+          const rz = _normTextoMK(p.raza);
+          if (rz) { rs[rz] = String(p.raza).trim(); }
+          const m = String(p.fecha || '').match(/^\d{4}-(\d{2})-\d{2}/);
+          if (m) ms[parseInt(m[1], 10)] = true;
+        });
+        Object.keys(zs).forEach(function (k) { zonas[k] = zonas[k] || { zona: zs[k], n: 0 }; zonas[k].n++; });
+        Object.keys(rs).forEach(function (k) { razas[k] = razas[k] || { raza: rs[k], n: 0 }; razas[k].n++; });
+        Object.keys(ms).forEach(function (k) { if (k >= 1 && k <= 12) meses[k - 1]++; });
+      });
+      return res.status(200).json({
+        ok: true, total_correos: familias.length, segmentos: segmentos,
+        zonas: Object.keys(zonas).map(function (k) { return zonas[k]; }).sort(function (a, b) { return b.n - a.n || a.zona.localeCompare(b.zona); }),
+        razas: Object.keys(razas).map(function (k) { return razas[k]; }).sort(function (a, b) { return b.n - a.n || a.raza.localeCompare(b.raza); }).slice(0, 300),
+        cumple_por_mes: meses, sin_ofertas: familias.filter(function (f) { return f.sin_ofertas; }).length, bajas: bajas.size
+      });
+    }
+
+    if (action === 'previewAudienciaMK' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const b = req.body || {};
+      const camp = { slug: b.slug ? String(b.slug) : '', audiencia: String(b.audiencia || 'todos'), audiencia_param: b.audiencia_param, respetar_ofertas: b.respetar_ofertas !== false };
+      if (_AUDIENCIAS_MK.indexOf(camp.audiencia) < 0) return res.status(200).json({ ok: false, error: 'Audiencia inválida.' });
+      const a = await _calcularAudienciaMK(camp);
+      if (a.error) return res.status(200).json({ ok: false, error: a.error });
+      return res.status(200).json({
+        ok: true, total: a.total, bajas: a.bajas, sin_ofertas: a.sin_ofertas, ya_recibieron: a.ya_recibieron, fallidos: a.fallidos, pendientes: a.pendientes,
+        muestra: a.destinatarios.slice(0, 5).map(function (d) { return { email: d.email, nombre: d.dueno, mascotas: d.pets.map(function (p) { return p.nombre; }).join(', ') }; })
+      });
+    }
+
+    if (action === 'previewEmailMK' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const b = req.body || {};
+      const c = { slug: 'vista', asunto: String(b.asunto || '').slice(0, 150), titulo: String(b.titulo || '').slice(0, 120), cuerpo: String(b.cuerpo || '').slice(0, 5000),
+        imagen_url: String(b.imagen_url || '').slice(0, 500), boton_texto: String(b.boton_texto || '').slice(0, 40), boton_url: String(b.boton_url || '').slice(0, 500) };
+      const ejemplo = { dueno: 'Ana López', pets: [{ nombre: 'Rocky' }, { nombre: 'Luna' }] };
+      return res.status(200).json({ ok: true, asunto: _tokensMK(c.asunto, ejemplo, false), html: _htmlCampanaMK(c, ejemplo, { vista: true }) });
+    }
+
+    if (action === 'guardarCampanaMK' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const b = req.body || {};
+      const v = _validarCampanaMK(b);
+      if (v.error) return res.status(200).json({ ok: false, error: v.error });
+      const H = { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      if (b.id) {
+        const g = await actualizarUnaFila('email_campanas_mk', String(b.id), { ...v.datos, actualizada_at: new Date().toISOString() });
+        return res.status(200).json(g.ok ? { ok: true, campana: g.fila } : { ok: false, error: g.error });
+      }
+      const base = (v.datos.semana || new Date().toISOString().slice(0, 10)).replace(/-/g, '');
+      const slug = 'mk_' + base + '_' + crypto.randomUUID().slice(0, 4);
+      const r = await fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk', { method: 'POST', headers: { ...H, 'Prefer': 'return=representation' }, body: JSON.stringify({ ...v.datos, slug: slug }) });
+      const txt = await r.text().catch(function () { return ''; });
+      let filas = null; try { filas = JSON.parse(txt); } catch (e) {}
+      if (!r.ok || !Array.isArray(filas) || !filas[0]) return res.status(200).json({ ok: false, error: /does not exist|schema cache/i.test(txt) ? 'FALTA_SQL' : ('No se pudo guardar. ' + txt) });
+      return res.status(200).json({ ok: true, campana: filas[0] });
+    }
+
+    if (action === 'eliminarCampanaMK' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const id = String((req.body || {}).id || '').trim();
+      if (!id) return res.status(400).json({ ok: false, error: 'Falta id' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/email_campanas_mk?id=eq.' + encodeURIComponent(id) + '&estado=eq.borrador', {
+        method: 'DELETE', headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' }
+      });
+      const filas = await r.json().catch(function () { return null; });
+      if (!r.ok || !Array.isArray(filas) || !filas.length) return res.status(200).json({ ok: false, error: 'Solo se pueden borrar borradores. Si ya se envió, primero usa "Reiniciar envíos".' });
       return res.status(200).json({ ok: true });
+    }
+
+    if (action === 'enviarPruebaMK' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const b = req.body || {};
+      const para = String(b.email || '').trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(para)) return res.status(200).json({ ok: false, error: 'Escribe un correo válido para la prueba.' });
+      const v = _validarCampanaMK({ nombre: 'prueba', audiencia: 'todos', ...b });
+      if (v.error) return res.status(200).json({ ok: false, error: v.error });
+      const ejemplo = { dueno: 'Ana López', pets: [{ nombre: 'Rocky' }, { nombre: 'Luna' }] };
+      const c = { ...v.datos, slug: 'prueba' };
+      const r = await _enviarHtmlPorWix(para, '[PRUEBA] ' + _tokensMK(c.asunto, ejemplo, false), _htmlCampanaMK(c, ejemplo, {}), 'pruebaMK');
+      return res.status(200).json(r.ok ? { ok: true } : { ok: false, error: r.error });
+    }
+
+    if (action === 'enviarLoteMK' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const id = String((req.body || {}).id || '').trim();
+      const limite = Math.max(1, Math.min(15, parseInt((req.body || {}).limite, 10) || 10));
+      const camp = id ? await _campanaMKPorId(id) : null;
+      if (!camp) return res.status(200).json({ ok: false, error: 'No se encontró el correo.' });
+      if (!camp.asunto || !camp.cuerpo) return res.status(200).json({ ok: false, error: 'El correo no tiene asunto o texto.' });
+      const a = await _calcularAudienciaMK(camp);
+      if (a.error) return res.status(200).json({ ok: false, error: a.error });
+      const lote = a.destinatarios.slice(0, limite);
+      if (lote.length && camp.estado !== 'enviando') await actualizarUnaFila('email_campanas_mk', camp.id, { estado: 'enviando' });
+      let enviados = 0, errores = 0, quedanPendientes = 0, sinRegistro = 0; const detalle = [];
+      await _conPoolMK(lote, 5, async function (d) {
+        const envioId = crypto.randomUUID();
+        const r = await _enviarHtmlPorWix(d.email, _tokensMK(camp.asunto, d, false), _htmlCampanaMK(camp, d, { envioId: envioId }), 'mk');
+        const fila = { id: envioId, campana_id: camp.slug, tipo: 'campana', email: d.email, uid: d.uid || null, estado: r.ok ? 'enviado' : 'error', canal: 'wix', wix_id: r.ok ? (r.wixId || null) : null, error: r.ok ? null : String(r.error || '').slice(0, 200) };
+        const guardado = await _registrarEnvioMK(fila);
+        if (!guardado) sinRegistro++;
+        if (r.ok) enviados++;
+        else {
+          errores++;
+          if (detalle.length < 3) detalle.push({ email: d.email, error: r.error });
+          if ((a.fallos.get(d.email) || 0) + 1 < 2) quedanPendientes++;   // todavía le queda un reintento
+        }
+      });
+      const restantes = a.pendientes - lote.length + quedanPendientes;
+      if (restantes <= 0 && lote.length) await actualizarUnaFila('email_campanas_mk', camp.id, { estado: 'enviada', ultimo_envio_at: new Date().toISOString() });
+      return res.status(200).json({ ok: true, enviados: enviados, errores: errores, restantes: Math.max(0, restantes), detalle_errores: detalle, sin_registro: sinRegistro });
+    }
+
+    if (action === 'reiniciarEnviosMK' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const id = String((req.body || {}).id || '').trim();
+      const camp = id ? await _campanaMKPorId(id) : null;
+      if (!camp) return res.status(200).json({ ok: false, error: 'No se encontró el correo.' });
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' };
+      const slugQ = 'campana_id=eq.' + encodeURIComponent(camp.slug);
+      const rc = await fetch(SUPABASE_URL + '/rest/v1/email_clics?' + slugQ, { method: 'DELETE', headers: H });
+      const re = await fetch(SUPABASE_URL + '/rest/v1/email_envios?' + slugQ, { method: 'DELETE', headers: H });
+      const borrados = await re.json().catch(function () { return null; });
+      if (!re.ok) return res.status(200).json({ ok: false, error: 'No se pudo reiniciar.' });
+      await actualizarUnaFila('email_campanas_mk', camp.id, { estado: 'borrador', ultimo_envio_at: null });
+      return res.status(200).json({ ok: true, envios_borrados: Array.isArray(borrados) ? borrados.length : 0 });
+    }
+
+    // ── bajaCorreo — el enlace público "Date de baja" al pie de cada correo ──
+    if (action === 'bajaCorreo' && req.method === 'POST') {
+      const e = String((req.body || {}).e || '').trim();
+      if (!_UUID_RE.test(e)) return res.status(200).json({ ok: false, error: 'Este enlace no es válido.' });
+      const H = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      const rv = await fetch(SUPABASE_URL + '/rest/v1/email_envios?id=eq.' + encodeURIComponent(e) + '&select=email&limit=1', { headers: H });
+      const filas = await rv.json().catch(function () { return null; });
+      const email = Array.isArray(filas) && filas[0] ? String(filas[0].email || '').toLowerCase() : '';
+      if (!email) return res.status(200).json({ ok: false, error: 'Este enlace ya no es válido.' });
+      const ri = await fetch(SUPABASE_URL + '/rest/v1/email_bajas?on_conflict=email', {
+        method: 'POST', headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+        body: JSON.stringify({ email: email, origen: 'enlace_correo' })
+      });
+      return res.status(200).json({ ok: ri.ok, error: ri.ok ? undefined : 'No se pudo procesar. Intenta de nuevo.' });
+    }
+
+    // ── eliminarMascotaAdmin (2 oct) — el Admin elimina una mascota. Se borra
+    // directo de la base de datos (fuente de verdad) y, como mejor esfuerzo,
+    // se quita también su fila del Sheet vía Apps Script. ─────────────────
+    if (action === 'eliminarMascotaAdmin' && req.method === 'POST') {
+      const uid = String((req.body || {}).uid || '').trim();
+      if (!uid) return res.status(400).json({ ok: false, error: 'Falta uid' });
+      const rDel = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid), {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' }
+      });
+      const txtDel = await rDel.text().catch(() => '');
+      if (!rDel.ok) {
+        console.error('eliminarMascotaAdmin failed:', rDel.status, txtDel);
+        return res.status(200).json({ ok: false, error: txtDel || ('HTTP ' + rDel.status) });
+      }
+      let borradas = null; try { borradas = JSON.parse(txtDel); } catch (e) {}
+      if (!Array.isArray(borradas) || borradas.length === 0) {
+        return res.status(200).json({ ok: false, error: 'No se encontró la mascota (¿ya fue eliminada?).' });
+      }
+      const gas = await _llamarAppsScript({ action: 'deleteMascota', uid: uid }, 8000);
+      return res.status(200).json({ ok: true, hoja: gas.ok, hojaError: gas.ok ? undefined : gas.error });
+    }
+
+    // ── verificarEnlaceFoto — canjea el enlace firmado del correo por el correo del dueño (para abrir su sesión) ──
+    if (action === 'verificarEnlaceFoto' && req.method === 'POST') {
+      const uid = String((req.body || {}).uid || '').trim();
+      const t = String((req.body || {}).t || '').trim();
+      const invalido = function () { return res.status(200).json({ ok: false, error: 'Este enlace ya no es válido. Entra con tu correo.' }); };
+      if (!uid || !t || t.length > 120) return invalido();
+      const rM = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=email,dueno&limit=1', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const filas = await rM.json().catch(() => null);
+      const m = Array.isArray(filas) && filas[0];
+      if (!m || !m.email || !_validarEnlaceFoto(uid, m.email, t)) return invalido();
+      return res.status(200).json({ ok: true, email: String(m.email).trim().toLowerCase(), dueno: m.dueno || '' });
+    }
+
+    // ── diagnosticoWix — comprueba, sin cambiar nada, si el servidor puede subir fotos y mandar correos por Wix,
+    // y si Apps Script tiene la versión nueva. Nunca devuelve llaves ni valores de variables. Pide la clave de administración. ──
+    if (action === 'diagnosticoWix' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const para = String((req.body || {}).email || '').trim().toLowerCase();
+      if (para && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(para)) return res.status(200).json({ ok: false, error: 'Escribe un correo válido para la prueba.' });
+      const out = { clave_definida: !!WIX_API_KEY };
+      // 1) Subir fotos (registro): pedir una dirección de subida no crea ningún archivo
+      if (!WIX_API_KEY) out.medios = { ok: false, detalle: 'No hay llave de Wix en el servidor (WIX_API_KEY).' };
+      else {
+        try {
+          const r = await fetch('https://www.wixapis.com/site-media/v1/files/generate-upload-url', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': WIX_API_KEY, 'wix-site-id': WIX_SITE_ID },
+            body: JSON.stringify({ mimeType: 'image/jpeg', fileName: 'diagnostico.jpg' })
+          });
+          const txt = await r.text().catch(() => '');
+          out.medios = r.ok ? { ok: true, estado: r.status, detalle: 'Puede subir fotos.' } : { ok: false, estado: r.status, detalle: txt.slice(0, 160) || ('Wix respondió ' + r.status + ' sin mensaje') };
+        } catch (e) { out.medios = { ok: false, detalle: 'No se pudo conectar con Wix: ' + e.message }; }
+      }
+      // 2) Mandar correos: solo si se escribe un destinatario (manda un correo de prueba real)
+      if (!para) out.correo = { omitido: true, detalle: 'No escribiste un correo para la prueba.' };
+      else {
+        const r = await _enviarHtmlPorWix(para, '🔧 Prueba de PetMi: Wix puede enviar correos', '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px"><h2>Prueba de PetMi</h2><p>Si lees esto, el servidor de PetMi sí puede mandar correos por Wix. 🐾</p></div>', 'diagnosticoWix');
+        out.correo = r.ok ? { ok: true, detalle: 'Correo de prueba enviado a ' + para + '.' } : { ok: false, detalle: String(r.error || '').slice(0, 200) };
+      }
+      // 3) Apps Script: pedir el recordatorio de una mascota que no existe no manda nada, pero dice si la acción existe
+      const gas = await _llamarAppsScript({ action: 'recordatorioFoto', uid: '__diagnostico__' }, 9000);
+      const err = String(gas.error || '');
+      if (/no reconocida/i.test(err)) out.apps_script = { ok: false, reconoce_recordatorio: false, detalle: 'La versión desplegada de Apps Script no conoce la acción "recordatorioFoto": falta Implementar → Nueva versión.' };
+      else if (/no respondió|Apps Script:|respuesta no válida/i.test(err)) out.apps_script = { ok: false, reconoce_recordatorio: null, detalle: err };
+      else out.apps_script = { ok: true, reconoce_recordatorio: true, detalle: 'Apps Script está al día (reconoce el recordatorio de foto).' };
+      return res.status(200).json({ ok: true, ...out });
+    }
+
+    // ── enviarRecordatorioFoto (2 oct) — correo para que el dueño agregue la
+    // foto de su mascota. Primero por Wix directo; si falla, por Apps Script. ──
+    if (action === 'enviarRecordatorioFoto' && req.method === 'POST') {
+      const uid = String((req.body || {}).uid || '').trim();
+      if (!uid) return res.status(400).json({ ok: false, error: 'Falta uid' });
+      const rM = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=nombre,dueno,email,foto&limit=1', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const filasM = await rM.json().catch(() => null);
+      const m = Array.isArray(filasM) && filasM[0];
+      if (!m) return res.status(200).json({ ok: false, error: 'No se encontró la mascota.' });
+      const email = String(m.email || '').trim();
+      if (!email) return res.status(200).json({ ok: false, error: 'Esta mascota no tiene correo guardado.' });
+      if (m.foto && String(m.foto).indexOf('http') === 0) return res.status(200).json({ ok: false, error: 'Esta mascota ya tiene foto — no hace falta recordárselo.' });
+      const nombre = m.nombre || 'tu mascota', dueno = m.dueno || 'Amigo PetMi';
+
+      // Máximo un recordatorio por mascota cada 24 horas (esta acción es pública: así no sirve para llenar de correos a un dueño)
+      try {
+        const rPrev = await fetch(SUPABASE_URL + '/rest/v1/email_envios?campana_id=eq.recordatorio_foto&uid=eq.' + encodeURIComponent(uid) + '&estado=eq.enviado&select=created_at&order=created_at.desc&limit=1', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        const prev = await rPrev.json().catch(() => null);
+        if (Array.isArray(prev) && prev[0] && prev[0].created_at) {
+          const horas = (Date.now() - new Date(prev[0].created_at).getTime()) / 3600000;
+          if (horas < 24) return res.status(200).json({ ok: false, limite: true, error: 'Ya se le mandó un recordatorio hace ' + (horas < 1 ? 'menos de 1 hora' : Math.floor(horas) + ' h') + '. Espera 24 horas para volver a mandarle.' });
+        }
+      } catch (e) { /* si no se puede revisar el historial, no se bloquea el envío */ }
+
+      const envioId = crypto.randomUUID();   // va dentro del link del correo
+      const base = { id: envioId, campana_id: 'recordatorio_foto', tipo: 'recordatorio', email: email, uid: uid };
+      const porWix = await _enviarHtmlPorWix(email, '🐾 A ' + nombre + ' le falta su foto en PetMi', _htmlRecordatorioFoto(nombre, dueno, uid, envioId, email), 'recordatorioFoto');
+      if (porWix.ok) {
+        await _registrarEnvioCorreo({ ...base, estado: 'enviado', canal: 'wix', wix_id: porWix.wixId });
+        return res.status(200).json({ ok: true, email: email, via: 'wix' });
+      }
+
+      const gas = await _llamarAppsScript({ action: 'recordatorioFoto', uid: uid, t: _crearEnlaceFoto(uid, email) }, 8000);
+      if (gas.ok) {
+        // El correo de respaldo (Apps Script) lleva el link normal: se registra el envío, pero sus clics no se pueden medir.
+        await _registrarEnvioCorreo({ ...base, estado: 'enviado', canal: 'apps-script' });
+        return res.status(200).json({ ok: true, email: email, via: 'apps-script' });
+      }
+      await _registrarEnvioCorreo({ ...base, estado: 'error', error: (porWix.error + ' · ' + gas.error).substring(0, 200) });
+      return res.status(200).json({ ok: false, error: 'No se pudo enviar. ' + porWix.error + ' · ' + gas.error });
     }
 
     // ── enviarMensajeDirectoAdmin (18 sep) — el Admin le manda un
@@ -2763,12 +4115,14 @@ export default async function handler(req, res) {
 
     // ── crearProductoTienda (admin) ─────────────────────────────
     if (action === 'crearProductoTienda' && req.method === 'POST') {
-      const { nombre, descripcion, precio, imagen, categoria, especie, orden, envio_incluido, costo_envio, condicion } = req.body;
+      const { nombre, descripcion, precio, imagen, imagenes, categoria, especie, orden, envio_incluido, costo_envio, condicion, stock } = req.body;
       if (!nombre || !categoria) return res.status(200).json({ ok: false, error: 'Faltan campos' });
+      const stockCrear = validarStockProducto(stock);
+      if (!stockCrear.ok) return res.status(200).json({ ok: false, error: 'El stock debe ser un número entero de 0 en adelante.' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, especie: especie || 'Todos', orden: orden || 0, activo: true, envio_incluido: envio_incluido || false, costo_envio: costo_envio || null, condicion: condicion || 'Nuevo' })
+        body: JSON.stringify({ nombre, descripcion: descripcion || '', precio: precio || null, imagen: imagen || null, categoria, especie: especie || 'Todos', orden: orden || 0, activo: true, envio_incluido: envio_incluido || false, costo_envio: costo_envio || null, condicion: condicion || 'Nuevo', stock: stockCrear.valor, ...limpiarImagenesProducto(imagenes) })
       });
       if (!r.ok) {
         const errTxt = await r.text().catch(() => '');
@@ -2782,12 +4136,26 @@ export default async function handler(req, res) {
     if (action === 'actualizarProductoTienda' && req.method === 'POST') {
       const { id, ...campos } = req.body;
       if (!id) return res.status(200).json({ ok: false, error: 'id requerido' });
+      // Fotos adicionales: solo URLs http(s), máximo 10. Una lista vacía las borra todas.
+      if ('imagenes' in campos) campos.imagenes = limpiarImagenesProducto(campos.imagenes, true).imagenes;
+      if ('stock' in campos) {
+        const st = validarStockProducto(campos.stock);
+        if (!st.ok) return res.status(200).json({ ok: false, error: 'El stock debe ser un número entero de 0 en adelante.' });
+        campos.stock = st.valor;
+      }
       const r = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=eq.' + encodeURIComponent(id), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
         body: JSON.stringify(campos)
       });
-      return res.status(200).json({ ok: r.ok });
+      if (!r.ok) {
+        // Antes solo devolvía ok:false y el Admin mostraba "desconocido". Ahora
+        // muestra el motivo real (ej. si falta la columna "imagenes" en la tabla).
+        const errTxt = await r.text().catch(() => '');
+        console.error('actualizarProductoTienda failed:', r.status, errTxt);
+        return res.status(200).json({ ok: false, error: errTxt || ('HTTP ' + r.status) });
+      }
+      return res.status(200).json({ ok: true });
     }
 
     // ── eliminarProductoTienda (admin) ─────────────────────────────
