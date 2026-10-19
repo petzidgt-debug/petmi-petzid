@@ -2,6 +2,12 @@ const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
 const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
 
+// ── Interruptor de la reserva de bandanas de la Carrera ──────────────────
+// Está en false porque la carrera ya pasó: la acción pública crearReservaCarrera se niega a crear reservas y,
+// sobre todo, a GENERAR CUPONES de tienda (15 % o 25 %). Para reabrirla en otra carrera: ponlo en true,
+// restaura carrera-reserva.html desde el historial de GitHub y quita las redirecciones de vercel.json.
+const CARRERA_RESERVAS_ABIERTAS = false;
+
 // ── Web Push (notificaciones) ───────────────────────────────
 const webpush = require('web-push');
 const dns = require('dns').promises;
@@ -697,10 +703,34 @@ function _escHtmlCorreo(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// ── Enlace firmado del correo "le falta su foto" ─────────────────────────
+// Antes el botón llevaba a editar.html?uid=..., y esa página manda al inicio a quien no tenga la sesión abierta
+// en ese navegador (pasa con el navegador interno de Gmail, o abriendo el correo en otro teléfono): nunca llegaba
+// a poder subir la foto. Ahora el enlace trae un código firmado que prueba que el correo llegó a su dueño.
+// Vale 7 días y solo sirve para ESA mascota con ESE correo; si cambia el correo, deja de servir.
+function _secretoEnlaceFoto() {
+  return require('crypto').createHash('sha256').update('petmi-enlace-foto-v1|' + (WIX_API_KEY || '') + '|' + SUPABASE_SERVICE_KEY).digest();
+}
+function _firmaEnlaceFoto(uid, email, exp) {
+  return require('crypto').createHmac('sha256', _secretoEnlaceFoto()).update('foto|' + String(uid).toLowerCase() + '|' + String(email).trim().toLowerCase() + '|' + exp).digest('base64url');
+}
+function _crearEnlaceFoto(uid, email, dias) {
+  const exp = Math.floor(Date.now() / 1000) + (dias || 7) * 86400;
+  return exp.toString(36) + '.' + _firmaEnlaceFoto(uid, email, exp);
+}
+function _validarEnlaceFoto(uid, email, t) {
+  const partes = String(t || '').split('.');
+  if (partes.length !== 2 || !/^[0-9a-z]{1,10}$/.test(partes[0])) return false;
+  const exp = parseInt(partes[0], 36);
+  if (!exp || exp < Math.floor(Date.now() / 1000)) return false;
+  const esperada = Buffer.from(_firmaEnlaceFoto(uid, email, exp)), dada = Buffer.from(partes[1]);
+  return esperada.length === dada.length && require('crypto').timingSafeEqual(esperada, dada);
+}
+
 // Correo "a tu mascota le falta su foto" (mismo diseño que los demás correos de PetMi).
-function _htmlRecordatorioFoto(nombre, dueno, uid, envioId) {
+function _htmlRecordatorioFoto(nombre, dueno, uid, envioId, email) {
   const n = _escHtmlCorreo(nombre), d = _escHtmlCorreo(dueno);
-  const destino = 'https://app.revistapetmi.com/editar.html?uid=' + encodeURIComponent(uid);
+  const destino = 'https://app.revistapetmi.com/editar.html?uid=' + encodeURIComponent(uid) + (email ? '&t=' + _crearEnlaceFoto(uid, email) : '');
   // Con seguimiento si hay id de envío (el & va como &amp; porque está dentro de un atributo HTML)
   const link = envioId ? _linkRastreado(envioId, 'recordatorio_foto', 'editar', destino).replace(/&/g, '&amp;') : destino;
   return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
@@ -2291,6 +2321,9 @@ export default async function handler(req, res) {
     // por correo con los datos de recolección (vía Apps Script, solo
     // para el envío del correo — los datos NO viven ahí).
     if (action === 'crearReservaCarrera' && req.method === 'POST') {
+      if (!CARRERA_RESERVAS_ABIERTAS) {
+        return res.status(200).json({ ok: false, cerrada: true, error: 'La reserva de la Carrera ya cerró. Crea el PetzID de tu mascota en app.revistapetmi.com/registro.html' });
+      }
       const { nombre, mascota, telefono, email, tienePetzid, uidPetzid } = req.body || {};
       const telLimpio = String(telefono || '').replace(/\D/g, '');
       const nombreLimpio = String(nombre || '').trim();
@@ -3103,6 +3136,21 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, hoja: gas.ok, hojaError: gas.ok ? undefined : gas.error });
     }
 
+    // ── verificarEnlaceFoto — canjea el enlace firmado del correo por el correo del dueño (para abrir su sesión) ──
+    if (action === 'verificarEnlaceFoto' && req.method === 'POST') {
+      const uid = String((req.body || {}).uid || '').trim();
+      const t = String((req.body || {}).t || '').trim();
+      const invalido = function () { return res.status(200).json({ ok: false, error: 'Este enlace ya no es válido. Entra con tu correo.' }); };
+      if (!uid || !t || t.length > 120) return invalido();
+      const rM = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=email,dueno&limit=1', {
+        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+      });
+      const filas = await rM.json().catch(() => null);
+      const m = Array.isArray(filas) && filas[0];
+      if (!m || !m.email || !_validarEnlaceFoto(uid, m.email, t)) return invalido();
+      return res.status(200).json({ ok: true, email: String(m.email).trim().toLowerCase(), dueno: m.dueno || '' });
+    }
+
     // ── enviarRecordatorioFoto (2 oct) — correo para que el dueño agregue la
     // foto de su mascota. Primero por Wix directo; si falla, por Apps Script. ──
     if (action === 'enviarRecordatorioFoto' && req.method === 'POST') {
@@ -3119,9 +3167,21 @@ export default async function handler(req, res) {
       if (m.foto && String(m.foto).indexOf('http') === 0) return res.status(200).json({ ok: false, error: 'Esta mascota ya tiene foto — no hace falta recordárselo.' });
       const nombre = m.nombre || 'tu mascota', dueno = m.dueno || 'Amigo PetMi';
 
+      // Máximo un recordatorio por mascota cada 24 horas (esta acción es pública: así no sirve para llenar de correos a un dueño)
+      try {
+        const rPrev = await fetch(SUPABASE_URL + '/rest/v1/email_envios?campana_id=eq.recordatorio_foto&uid=eq.' + encodeURIComponent(uid) + '&estado=eq.enviado&select=created_at&order=created_at.desc&limit=1', {
+          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+        });
+        const prev = await rPrev.json().catch(() => null);
+        if (Array.isArray(prev) && prev[0] && prev[0].created_at) {
+          const horas = (Date.now() - new Date(prev[0].created_at).getTime()) / 3600000;
+          if (horas < 24) return res.status(200).json({ ok: false, error: 'Ya se le mandó un recordatorio hace ' + (horas < 1 ? 'menos de 1 hora' : Math.floor(horas) + ' h') + '. Espera 24 horas para volver a mandarle.' });
+        }
+      } catch (e) { /* si no se puede revisar el historial, no se bloquea el envío */ }
+
       const envioId = crypto.randomUUID();   // va dentro del link del correo
       const base = { id: envioId, campana_id: 'recordatorio_foto', tipo: 'recordatorio', email: email, uid: uid };
-      const porWix = await _enviarHtmlPorWix(email, '🐾 A ' + nombre + ' le falta su foto en PetMi', _htmlRecordatorioFoto(nombre, dueno, uid, envioId), 'recordatorioFoto');
+      const porWix = await _enviarHtmlPorWix(email, '🐾 A ' + nombre + ' le falta su foto en PetMi', _htmlRecordatorioFoto(nombre, dueno, uid, envioId, email), 'recordatorioFoto');
       if (porWix.ok) {
         await _registrarEnvioCorreo({ ...base, estado: 'enviado', canal: 'wix', wix_id: porWix.wixId });
         return res.status(200).json({ ok: true, email: email, via: 'wix' });
