@@ -33,6 +33,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}
 th{background:#fafaf8;text-align:left;padding:10px 12px;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #eee}
 td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
 .ped-sub{font-size:11px;color:#999;margin-top:2px}
+.aviso-info{background:#fff8e1;color:#7a5b00;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;line-height:1.6}
 .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
 .tab{border:1.5px solid #ddd;background:#fff;color:#666;font-weight:700;font-size:13px;padding:9px 16px;border-radius:99px;cursor:pointer}
 .tab.active{background:#1a1a2e;border-color:#1a1a2e;color:#fff}
@@ -81,6 +82,8 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
     <div class="tabs">
       <button class="tab active" id="tabSemana" onclick="verTab('semana')">✉️ Correos de la semana</button>
       <button class="tab" id="tabClics" onclick="verTab('clics')">📊 Clics por correo</button>
+      <button class="tab" id="tabChat" onclick="verTab('chat')">💬 Chat interno</button>
+      <button class="tab" id="tabSistema" onclick="verTab('sistema')">🔧 Sistema</button>
     </div>
     <div id="panelSemana">
     <p style="color:#777;font-size:13px;margin-bottom:14px;line-height:1.6">Arma el correo de la semana, elige a quién le llega y envíalo desde aquí. Cada persona lo recibe <b>una sola vez</b>, y se respeta a quien se dio de baja o apagó "recibir ofertas". Los clics se ven en <b>📊 Correos (clics)</b> del Admin.</p>
@@ -104,6 +107,28 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
           <table>
             <thead><tr><th>Campaña</th><th>Enviados</th><th>Clics únicos</th><th>CTR</th><th>Clics totales</th><th>Último envío</th><th></th></tr></thead>
             <tbody id="correosBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="panelSistema" style="display:none">
+      <p style="color:#888;font-size:13px;margin-bottom:12px;line-height:1.6">Comprueba si el servidor puede <b>subir fotos</b> (para el registro) y <b>mandar correos</b> por Wix, y si <b>Apps Script</b> tiene la versión nueva. Si escribes un correo, se manda un <b>correo de prueba real</b> a esa dirección.</p>
+      <div class="card" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="email" id="sisEmail" class="mk-in" placeholder="Tu correo para la prueba (opcional)" style="flex:1;min-width:220px;max-width:360px">
+        <button class="btn-primary" id="sisBtn" onclick="probarSistema()">▶ Probar ahora</button>
+      </div>
+      <div class="card" id="sisResultado"><div style="color:#aaa;padding:6px 0">Toca "Probar ahora" para ver el resultado.</div></div>
+    </div>
+
+    <div id="panelChat" style="display:none">
+      <p style="color:#888;font-size:13px;margin-bottom:12px;line-height:1.6">Mensajes que PetMi manda por el <b>chat interno</b> de la app (la sección Mensajes). Cuenta como <b>leído</b> cuando la persona abre su conversación con PetMi; si tiene varias mascotas, basta con que la abra una vez. Se cuentan <b>personas</b>, no mascotas. No sabemos a qué hora lo leyó.</p>
+      <div class="aviso-info">ℹ️ Los mensajes que mandas con el botón de <b>mensaje directo</b> del Admin <b>no avisan con notificación</b>: la persona solo los ve si abre Mensajes. Por eso pueden pasar días sin que los lean.</div>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Mensaje</th><th>Enviado a</th><th>Lo leyeron</th><th>% leído</th><th>Último envío</th><th></th></tr></thead>
+            <tbody id="chatBody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -179,6 +204,16 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
   </div>
 </div>
 
+
+<div class="modal-overlay" id="modalChatDetalle">
+  <div class="modal" style="max-width:780px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px">
+      <h3 id="chatDetalleTitulo" style="margin:0;font-size:17px">Quién leyó este mensaje</h3>
+      <button class="btn-sm" style="background:#eee;color:#555" onclick="closeModal('modalChatDetalle')">✕</button>
+    </div>
+    <div id="chatDetalleBody" style="font-size:13px">Cargando...</div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="modalCorreoDetalle">
   <div class="modal" style="max-width:760px">
@@ -299,11 +334,11 @@ function _fechaC(v){ return v ? new Date(v).toLocaleString('es-GT',{day:'2-digit
 function _ctrC(c){ return c.enviados > 0 ? (c.clics_unicos / c.enviados * 100).toFixed(1) + '%' : '—'; }
 
 function verTab(t){
-  document.getElementById('panelSemana').style.display = t === 'semana' ? 'block' : 'none';
-  document.getElementById('panelClics').style.display = t === 'clics' ? 'block' : 'none';
-  document.getElementById('tabSemana').classList.toggle('active', t === 'semana');
-  document.getElementById('tabClics').classList.toggle('active', t === 'clics');
-  if(t === 'clics') loadCorreos(); else mkCargar();
+  ['semana', 'clics', 'chat', 'sistema'].forEach(function(n){
+    document.getElementById('panel' + n.charAt(0).toUpperCase() + n.slice(1)).style.display = t === n ? 'block' : 'none';
+    document.getElementById('tab' + n.charAt(0).toUpperCase() + n.slice(1)).classList.toggle('active', t === n);
+  });
+  if(t === 'clics') loadCorreos(); else if(t === 'chat') loadChat(); else if(t === 'sistema'){ var e = document.getElementById('sisEmail'); if(e && !e.value) e.value = localStorage.getItem('petmi_mk_prueba') || ''; } else mkCargar();
 }
 
 async function loadCorreos(){
@@ -384,6 +419,96 @@ function copiarCorreosDetalle(cual){
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(texto).then(listo, function(){ prompt('Copia estos correos (Ctrl+C):', texto); });
   } else { prompt('Copia estos correos (Ctrl+C):', texto); }
+}
+
+// ═══ Pestaña "Chat interno": quién lee los mensajes que manda PetMi ═══
+var _chatDetalleActual = null;
+async function loadChat(){
+  var body = document.getElementById('chatBody');
+  body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando...</td></tr>';
+  var d = await mkFetch('getReporteChatOficial');
+  if(!d.ok){ body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#c0392b">' + _escC(d.error || 'No se pudo cargar') + '</td></tr>'; return; }
+  if(!d.mensajes.length){ body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#aaa">Todavía no se ha mandado ningún mensaje oficial por el chat.</td></tr>'; return; }
+  body.innerHTML = d.mensajes.map(function(m){
+    var color = m.pct >= 60 ? '#2e7d32' : (m.pct >= 25 ? '#d35400' : '#c0392b');
+    return '<tr><td style="max-width:420px;line-height:1.5">' + _escC(m.mensaje) + (m.mensaje.length >= 220 ? '…' : '') + '</td>'
+      + '<td>' + m.destinatarios + '</td><td>' + m.leyeron + '</td>'
+      + '<td style="min-width:90px"><b style="color:' + color + '">' + m.pct + '%</b><div style="height:6px;background:#eee;border-radius:99px;margin-top:4px"><i style="display:block;height:100%;width:' + m.pct + '%;background:' + color + ';border-radius:99px"></i></div></td>'
+      + '<td>' + _fechaC(m.ultimo_envio) + '</td>'
+      + '<td><button class="btn-sm" style="background:#00B4B4;color:#fff" onclick="abrirChatDetalle(\'' + _escC(m.id) + '\')">Ver quiénes</button></td></tr>';
+  }).join('');
+}
+
+async function abrirChatDetalle(id){
+  document.getElementById('chatDetalleBody').innerHTML = '<div style="padding:30px;text-align:center;color:#aaa">Cargando detalle...</div>';
+  document.getElementById('modalChatDetalle').classList.add('open');
+  var d = await mkFetch('getDetalleChatOficial&k=' + encodeURIComponent(id));
+  var cont = document.getElementById('chatDetalleBody');
+  if(!d.ok){ cont.innerHTML = '<div style="color:#c0392b;padding:20px">' + _escC(d.error || 'No se pudo cargar') + '</div>'; return; }
+  _chatDetalleActual = d;
+  var nSin = d.sin_leer.length, nLey = d.leyeron.length;
+  function kpi(num, lbl){ return '<div style="flex:1;min-width:100px;background:#f8f8f6;border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:900;color:#222">' + num + '</div><div style="font-size:11px;color:#888;text-transform:uppercase">' + lbl + '</div></div>'; }
+  function personas(lista, conWa){
+    return lista.slice(0, 300).map(function(p){
+      var dig = String(p.whatsapp || '').replace(/\D/g, '');
+      var wa = conWa && dig ? ' <a href="https://wa.me/' + dig + '" target="_blank" rel="noopener" class="btn-sm" style="background:#25D366;color:#fff;text-decoration:none">💬</a>' : '';
+      return '<tr><td>' + _escC(p.dueno || '—') + '</td><td>' + _escC((p.mascotas || []).join(', ') || '—') + '</td><td>' + _escC(p.email || '—') + '</td>' + (conWa ? '<td>' + (wa || '<span style="color:#bbb">—</span>') + '</td>' : '') + '</tr>';
+    }).join('');
+  }
+  var h = '<div style="background:#f8f8f6;border-radius:10px;padding:12px 14px;margin-bottom:14px;line-height:1.6;white-space:pre-wrap">' + _escC(d.mensaje) + '</div>'
+    + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">'
+    + kpi(d.destinatarios, 'Enviado a') + kpi(d.leyeron_total, 'Lo leyeron') + kpi(d.destinatarios ? Math.round(d.leyeron_total / d.destinatarios * 100) + '%' : '—', '% leído') + kpi(nSin, 'Sin leer') + '</div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
+    + '<button class="btn-save" style="padding:8px 14px;font-size:12px" onclick="copiarChat(\'sin_leer\')"' + (nSin ? '' : ' disabled') + '>📋 Copiar correos de quienes NO lo han leído (' + nSin + ')</button>'
+    + '<button class="btn-sm" style="background:#e0f0ff;color:#0055aa;padding:8px 14px;font-size:12px" onclick="copiarChat(\'leyeron\')"' + (nLey ? '' : ' disabled') + '>📋 Copiar correos de quienes SÍ lo leyeron (' + nLey + ')</button></div>';
+  if(d.truncado) h += '<div style="background:#fff4d6;color:#8a6200;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px">⚠️ Hay más de 2,000 personas en una lista; se muestran las primeras 2,000.</div>';
+  h += '<div style="font-weight:700;margin:10px 0 6px">Aún sin leer</div>';
+  h += nSin ? '<div class="table-card" style="box-shadow:none;border:1px solid #eee;max-height:300px;overflow-y:auto"><table style="min-width:0"><thead><tr><th>Dueño</th><th>Mascotas</th><th>Correo</th><th>WhatsApp</th></tr></thead><tbody>' + personas(d.sin_leer, true) + '</tbody></table></div>'
+      + (nSin > 300 ? '<div style="color:#888;font-size:12px;margin-top:6px">…y ' + (nSin - 300) + ' más (usa "Copiar correos" para la lista completa).</div>' : '')
+    : '<div style="color:#2e7d32;padding:8px 0">🎉 Todos lo han leído.</div>';
+  h += '<div style="font-weight:700;margin:16px 0 6px">Ya lo leyeron</div>';
+  h += nLey ? '<div class="table-card" style="box-shadow:none;border:1px solid #eee;max-height:220px;overflow-y:auto"><table style="min-width:0"><thead><tr><th>Dueño</th><th>Mascotas</th><th>Correo</th></tr></thead><tbody>' + personas(d.leyeron, false) + '</tbody></table></div>'
+    : '<div style="color:#aaa;padding:8px 0">Nadie lo ha leído todavía.</div>';
+  if(d.sin_cuenta && d.sin_cuenta.total) h += '<div style="color:#999;font-size:11.5px;margin-top:14px">Además se mandó a ' + d.sin_cuenta.total + ' cuenta(s) que ya no existen' + (d.sin_cuenta.leyeron ? ' (' + d.sin_cuenta.leyeron + ' lo había leído)' : '') + '; no aparecen en las listas.</div>';
+  cont.innerHTML = h;
+}
+
+function copiarChat(cual){
+  var d = _chatDetalleActual; if(!d) return;
+  var lista = (cual === 'leyeron' ? d.leyeron : d.sin_leer).map(function(p){ return p.email; }).filter(Boolean);
+  if(!lista.length) return;
+  var texto = lista.join('\n');
+  function listo(){ alert('✅ ' + lista.length + ' correos copiados. Pégalos donde los necesites.'); }
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(texto).then(listo, function(){ prompt('Copia estos correos (Ctrl+C):', texto); }); }
+  else { prompt('Copia estos correos (Ctrl+C):', texto); }
+}
+
+// ═══ Pestaña "Sistema": ¿puede el servidor subir fotos y mandar correos? ¿Apps Script está al día? ═══
+async function probarSistema(){
+  var btn = document.getElementById('sisBtn'), out = document.getElementById('sisResultado');
+  var email = document.getElementById('sisEmail').value.trim();
+  if(email) localStorage.setItem('petmi_mk_prueba', email);
+  btn.disabled = true; btn.textContent = 'Probando...'; out.innerHTML = '<div style="padding:16px;color:#aaa">Probando Wix y Apps Script (puede tardar unos segundos)...</div>';
+  var d = await mkFetch('diagnosticoWix', { email: email });
+  btn.disabled = false; btn.textContent = '▶ Probar ahora';
+  if(!d.ok){ out.innerHTML = '<div style="background:#fdecea;color:#c0392b;border-radius:10px;padding:12px 14px;font-weight:700">' + _escC(d.error || 'No se pudo hacer la prueba') + '</div>'; return; }
+  function fila(titulo, estado, detalle, ayuda){
+    var icono = estado === true ? '✅' : (estado === false ? '❌' : 'ℹ️');
+    return '<div style="display:flex;gap:12px;padding:14px 0;border-bottom:1px solid #f0f0ee"><div style="font-size:20px">' + icono + '</div><div style="flex:1;min-width:0">'
+      + '<div style="font-weight:800;color:#1a1a2e">' + titulo + '</div>'
+      + '<div style="font-size:12.5px;color:#666;margin-top:3px;word-break:break-word">' + _escC(detalle || '') + '</div>'
+      + (estado === false && ayuda ? '<div style="background:#fff8e1;color:#7a5b00;border-radius:8px;padding:9px 12px;margin-top:8px;font-size:12.5px;line-height:1.6">' + ayuda + '</div>' : '') + '</div></div>';
+  }
+  var permiso403 = function(x){ return x && /403|401|permission|permiso/i.test((x.estado || '') + ' ' + (x.detalle || '')); };
+  var ayudaMedios = !d.clave_definida ? 'Al servidor le falta la variable <b>WIX_API_KEY</b> en Vercel.'
+    : (permiso403(d.medios) ? 'La llave de Wix del servidor <b>no tiene permiso de Medios</b>. Mientras siga así, <b>nadie puede registrar una mascota</b> (la foto es obligatoria y no se puede subir). En Wix, abre esa llave de API y activa los permisos de <b>Media</b> (busca "media" en la lista de permisos). Si cambias los permisos de la misma llave no hace falta tocar Vercel; si creas una llave nueva, pégala en Vercel como <b>WIX_API_KEY</b> y haz Redeploy.' : 'Revisa el detalle de arriba.');
+  var ayudaCorreo = permiso403(d.correo) ? 'La llave de Wix del servidor <b>no tiene permiso para enviar correos</b>. Afecta: los envíos de esta página (Emails MK), el aviso de pedido nuevo y los recordatorios que salen por Wix (estos últimos caen al respaldo de Apps Script). En Wix, abre esa llave de API y activa el permiso de <b>envío de correos</b> (busca "email" en la lista de permisos). Es la misma llave que usa el registro para subir fotos: conviene que tenga los dos permisos.' : 'Revisa el detalle de arriba.';
+  var ayudaGas = d.apps_script && d.apps_script.reconoce_recordatorio === false ? 'En Apps Script: pega el <b>Code.gs</b> nuevo, luego <b>Implementar → Administrar implementaciones → ✏️ → Versión: "Nueva versión" → Implementar</b>. Revisa también que solo haya <b>una</b> función <code>doPost</code> en todos los archivos del proyecto.' : 'Revisa que la dirección de Apps Script siga activa.';
+  var correo = d.correo && d.correo.omitido ? fila('✉️ Mandar correos por Wix', null, 'No escribiste un correo para la prueba. Escríbelo arriba y vuelve a probar: se manda un correo de prueba real.', '') : fila('✉️ Mandar correos por Wix', d.correo.ok, d.correo.detalle, ayudaCorreo);
+  var todo = d.medios.ok && d.correo && d.correo.ok && d.apps_script.ok;
+  out.innerHTML = (todo ? '<div style="background:#e3f4e5;color:#2e7d32;border-radius:10px;padding:12px 14px;margin-bottom:6px;font-weight:800">✅ Todo en orden: sube fotos, manda correos y Apps Script está al día.</div>' : '')
+    + fila('📷 Subir fotos (registro de mascotas)', d.medios.ok, d.medios.detalle, ayudaMedios) + correo
+    + fila('⚙️ Apps Script (respaldo de correos)', d.apps_script.ok, d.apps_script.detalle, ayudaGas);
 }
 
 window.addEventListener('DOMContentLoaded', function(){
