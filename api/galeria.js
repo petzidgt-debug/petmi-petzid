@@ -3151,6 +3151,40 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, email: String(m.email).trim().toLowerCase(), dueno: m.dueno || '' });
     }
 
+    // ── diagnosticoWix — comprueba, sin cambiar nada, si el servidor puede subir fotos y mandar correos por Wix,
+    // y si Apps Script tiene la versión nueva. Nunca devuelve llaves ni valores de variables. Pide la clave de administración. ──
+    if (action === 'diagnosticoWix' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const para = String((req.body || {}).email || '').trim().toLowerCase();
+      if (para && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(para)) return res.status(200).json({ ok: false, error: 'Escribe un correo válido para la prueba.' });
+      const out = { clave_definida: !!WIX_API_KEY };
+      // 1) Subir fotos (registro): pedir una dirección de subida no crea ningún archivo
+      if (!WIX_API_KEY) out.medios = { ok: false, detalle: 'No hay llave de Wix en el servidor (WIX_API_KEY).' };
+      else {
+        try {
+          const r = await fetch('https://www.wixapis.com/site-media/v1/files/generate-upload-url', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': WIX_API_KEY, 'wix-site-id': WIX_SITE_ID },
+            body: JSON.stringify({ mimeType: 'image/jpeg', fileName: 'diagnostico.jpg' })
+          });
+          const txt = await r.text().catch(() => '');
+          out.medios = r.ok ? { ok: true, estado: r.status, detalle: 'Puede subir fotos.' } : { ok: false, estado: r.status, detalle: txt.slice(0, 160) || ('Wix respondió ' + r.status + ' sin mensaje') };
+        } catch (e) { out.medios = { ok: false, detalle: 'No se pudo conectar con Wix: ' + e.message }; }
+      }
+      // 2) Mandar correos: solo si se escribe un destinatario (manda un correo de prueba real)
+      if (!para) out.correo = { omitido: true, detalle: 'No escribiste un correo para la prueba.' };
+      else {
+        const r = await _enviarHtmlPorWix(para, '🔧 Prueba de PetMi: Wix puede enviar correos', '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px"><h2>Prueba de PetMi</h2><p>Si lees esto, el servidor de PetMi sí puede mandar correos por Wix. 🐾</p></div>', 'diagnosticoWix');
+        out.correo = r.ok ? { ok: true, detalle: 'Correo de prueba enviado a ' + para + '.' } : { ok: false, detalle: String(r.error || '').slice(0, 200) };
+      }
+      // 3) Apps Script: pedir el recordatorio de una mascota que no existe no manda nada, pero dice si la acción existe
+      const gas = await _llamarAppsScript({ action: 'recordatorioFoto', uid: '__diagnostico__' }, 9000);
+      const err = String(gas.error || '');
+      if (/no reconocida/i.test(err)) out.apps_script = { ok: false, reconoce_recordatorio: false, detalle: 'La versión desplegada de Apps Script no conoce la acción "recordatorioFoto": falta Implementar → Nueva versión.' };
+      else if (/no respondió|Apps Script:|respuesta no válida/i.test(err)) out.apps_script = { ok: false, reconoce_recordatorio: null, detalle: err };
+      else out.apps_script = { ok: true, reconoce_recordatorio: true, detalle: 'Apps Script está al día (reconoce el recordatorio de foto).' };
+      return res.status(200).json({ ok: true, ...out });
+    }
+
     // ── enviarRecordatorioFoto (2 oct) — correo para que el dueño agregue la
     // foto de su mascota. Primero por Wix directo; si falla, por Apps Script. ──
     if (action === 'enviarRecordatorioFoto' && req.method === 'POST') {
@@ -3175,7 +3209,7 @@ export default async function handler(req, res) {
         const prev = await rPrev.json().catch(() => null);
         if (Array.isArray(prev) && prev[0] && prev[0].created_at) {
           const horas = (Date.now() - new Date(prev[0].created_at).getTime()) / 3600000;
-          if (horas < 24) return res.status(200).json({ ok: false, error: 'Ya se le mandó un recordatorio hace ' + (horas < 1 ? 'menos de 1 hora' : Math.floor(horas) + ' h') + '. Espera 24 horas para volver a mandarle.' });
+          if (horas < 24) return res.status(200).json({ ok: false, limite: true, error: 'Ya se le mandó un recordatorio hace ' + (horas < 1 ? 'menos de 1 hora' : Math.floor(horas) + ' h') + '. Espera 24 horas para volver a mandarle.' });
         }
       } catch (e) { /* si no se puede revisar el historial, no se bloquea el envío */ }
 
@@ -3187,7 +3221,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true, email: email, via: 'wix' });
       }
 
-      const gas = await _llamarAppsScript({ action: 'recordatorioFoto', uid: uid }, 8000);
+      const gas = await _llamarAppsScript({ action: 'recordatorioFoto', uid: uid, t: _crearEnlaceFoto(uid, email) }, 8000);
       if (gas.ok) {
         // El correo de respaldo (Apps Script) lleva el link normal: se registra el envío, pero sus clics no se pueden medir.
         await _registrarEnvioCorreo({ ...base, estado: 'enviado', canal: 'apps-script' });
