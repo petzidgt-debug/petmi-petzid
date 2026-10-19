@@ -105,6 +105,21 @@
       "source": "/galeria.html",
       "destination": "/",
       "permanent": false
+    },
+    {
+      "source": "/carrera-reserva",
+      "destination": "/registro.html",
+      "permanent": false
+    },
+    {
+      "source": "/carrera-reserva.html",
+      "destination": "/registro.html",
+      "permanent": false
+    },
+    {
+      "source": "/carrera-reserva-preview.html",
+      "destination": "/registro.html",
+      "permanent": false
     }
   ]
 }
