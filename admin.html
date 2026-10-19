@@ -2149,7 +2149,7 @@ function renderTable(){
     +'<button class="btn-sm" style="font-size:10px" onclick="togglePremium('+idx+')">'+(String(r[31]||'')===String(true)||r[31]===true?'Quitar':'Dar')+'</button>'
     +'</span>'
     +'</td>'
-    +'<td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button>'+(!r[27]?'<button class="btn-sm" style="background:#fff0e0;color:#b35900" onclick="recordarFoto('+idx+')">📸 Recordar foto</button>':'')+'<button class="btn-sm" style="background:#e5f9e5;color:#1a8a1a" onclick="contactarWhatsApp('+idx+')">💬 WA</button><button class="btn-sm" style="background:#fff4d6;color:#8a6200" onclick="contactarMensajeDirecto('+idx+')">✉️ Mensaje</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
+    +'<td><button class="btn-sm btn-view" onclick="viewID('+idx+')">ID</button><button class="btn-sm btn-edit" onclick="openEdit('+idx+')">Editar</button><button class="btn-sm btn-send" onclick="reenviarID('+idx+')">Reenviar</button><button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="abrirSubirFoto('+idx+')">📷 Foto</button>'+(String(r[27]||'').indexOf('http')<0?'<button class="btn-sm" style="background:#fff0e0;color:#b35900" onclick="recordarFoto('+idx+')">📸 Recordar foto</button>':'')+'<button class="btn-sm" style="background:#e5f9e5;color:#1a8a1a" onclick="contactarWhatsApp('+idx+')">💬 WA</button><button class="btn-sm" style="background:#fff4d6;color:#8a6200" onclick="contactarMensajeDirecto('+idx+')">✉️ Mensaje</button><button class="btn-sm" style="background:#fbeaf0;color:#c0392b" onclick="eliminarMascota('+idx+')">🗑️</button></td></tr>';
   }).join('');
   document.getElementById('tableBody').innerHTML=html||'<tr><td colspan="10" style="text-align:center;padding:40px;color:#888">Sin resultados</td></tr>';
 }
@@ -2377,6 +2377,7 @@ function eliminarMascota(idx){
 // ── Contactar usuario directo (18 sep) ──────────────────────────
 var _recordandoFoto = false;
 function recordarFoto(idx){
+  if(_recordandoFoto) return;   // evita mandar dos correos por un doble clic (ni siquiera vuelve a preguntar)
   var r=filtered[idx];
   if(!r) return;
   var nombreMasc=String(r[2]||'tu mascota');
@@ -2386,7 +2387,6 @@ function recordarFoto(idx){
   if(!email){ alert('Esta mascota no tiene correo guardado.'); return; }
   if(!confirm('¿Mandar correo recordando agregar la foto de '+nombreMasc+'?')) return;
 
-  if(_recordandoFoto) return;   // evita mandar dos correos por un doble clic
   _recordandoFoto = true;
   fetch('/api/galeria?action=enviarRecordatorioFoto',{
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -2394,8 +2394,15 @@ function recordarFoto(idx){
   }).then(function(r){return r.json();})
   .then(function(d){
     _recordandoFoto = false;
-    if(d.ok) alert('✅ Correo enviado a ' + (d.email || email) + '.');
-    else alert('No se pudo enviar el correo: ' + (d.error || 'error desconocido'));
+    if(d.ok) alert('✅ Correo enviado a ' + (d.email || email) + '.' + (d.via === 'apps-script' ? '\n\n(Salió por el respaldo de Apps Script: ese correo no mide clics y su botón no entra directo al editor.)' : ''));
+    else if(d.limite) alert('ℹ️ ' + d.error);
+    else {
+      var err = String(d.error || '');
+      var pistas = [];
+      if(/Wix 40[13]/.test(err)) pistas.push('La llave de Wix del servidor no tiene permiso para mandar correos.');
+      if(/no reconocida/i.test(err)) pistas.push('Apps Script no tiene la versión nueva (Implementar → Nueva versión).');
+      alert('No se pudo enviar el correo: ' + (err || 'error desconocido') + (pistas.length ? '\n\n💡 ' + pistas.join('\n💡 ') + '\nDetalles en ✉️ Emails y campañas → 🔧 Sistema.' : ''));
+    }
   }).catch(function(){ _recordandoFoto = false; alert('Error de conexión — no se envió.'); });
 }
 
