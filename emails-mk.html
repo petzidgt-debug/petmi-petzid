@@ -68,6 +68,7 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
     <div class="paso" id="paso1"><span class="ic">⏳</span><div><b>Servidor</b><div class="tx"></div></div></div>
     <div class="paso" id="paso2"><span class="ic">⏳</span><div><b>Clave de administración</b><div class="tx"></div></div></div>
     <div class="paso" id="paso3"><span class="ic">⏳</span><div><b>Tablas de correos (Supabase)</b><div class="tx"></div></div></div>
+    <div id="versionPagina" style="font-size:11px;color:#bbb;margin-top:6px">Versión de esta página: 19-oct-2026 · diagnóstico del servidor v2</div>
   </div>
 
   <div class="card login" id="login" style="display:none">
@@ -260,18 +261,32 @@ async function _mkLlamar(action, body){
   if(body){ opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
   var r;
   try{ r = await fetch('/api/galeria?action=' + action, opts); }catch(e){ return { _red: true }; }
-  var d;
-  try{ d = await r.json(); }catch(e){ return { _viejo: true }; }
-  // Un servidor SIN las funciones de correos contesta {"status":"PetMi Supabase API activa"} a todo lo desconocido.
-  if(!d || (d.ok === undefined && !d.error)) return { _viejo: true };
+  var d = null, txt = '';
+  if(typeof r.text === 'function'){ try{ txt = await r.text(); }catch(e){} try{ d = JSON.parse(txt); }catch(e){} }
+  else { try{ d = await r.json(); }catch(e){} }
+  var http = r.status || 0;
+  // Si no es JSON, la función de Vercel falló o no existe (llega una página de error): NO es lo mismo que una versión anterior.
+  if(!d || typeof d !== 'object') return { _roto: true, http: http, texto: String(txt || '').replace(/\s+/g, ' ').slice(0, 140) };
+  // Un servidor con una versión ANTERIOR de galeria.js contesta {"status":"PetMi Supabase API activa"} a todo lo desconocido.
+  if(d.ok === undefined && !d.error) return { _viejo: true, http: http, texto: String(txt || JSON.stringify(d)).replace(/\s+/g, ' ').slice(0, 140) };
   return d;
+}
+
+// Explica qué pasa con el servidor y qué revisar (html = true para mostrarlo dentro de la página).
+function _msgServidor(d, html){
+  var b = html ? function(x){ return '<b>' + x + '</b>'; } : function(x){ return x; };
+  if(d._viejo) return 'El servidor respondió, pero con una versión ANTERIOR de ' + b('galeria.js') + ' (no conoce las funciones nuevas)' + (d.texto ? '. Lo que recibió esta página: ' + (html ? _escC(d.texto) : d.texto) : '') + '. Revisa que ' + b('galeria.js') + ' esté dentro de la carpeta ' + b('api/') + ' del proyecto (no suelto en la raíz) y que en Vercel el último despliegue de ' + b('Production') + ' diga Ready. Prueba rápida: abre /api/galeria?action=getCampanasMK en el navegador; si responde "no_autorizado", el servidor ya está al día.';
+  if(d.http === 404) return 'No se encontró /api/galeria (HTTP 404): ' + b('galeria.js') + ' debe estar dentro de la carpeta ' + b('api/') + ' del proyecto.';
+  if(d.http === 401) return 'Vercel respondió que hace falta iniciar sesión (HTTP 401). Puede ser la protección de despliegues: entra por app.revistapetmi.com, no por una dirección de vista previa.';
+  var t = d.texto ? ' "' + (html ? _escC(d.texto) : d.texto) + '"' : '';
+  return 'El servidor respondió con un error (HTTP ' + (d.http || '?') + ')' + (t ? ':' + t : '') + '. Lo más probable es que el último despliegue de Vercel haya fallado o que ' + b('galeria.js') + ' tenga un error. Revisa en Vercel: ' + b('Deployments') + ' (que el último diga Ready) y ' + b('Logs') + ' (busca /api/galeria).';
 }
 
 // Para todo lo que hace la página después de entrar: traduce los errores a mensajes claros.
 async function mkFetch(action, body){
   var d = await _mkLlamar(action, body);
   if(d._red) return { ok: false, error: 'No se pudo conectar con el servidor. Revisa tu internet.' };
-  if(d._viejo) return { ok: false, error: 'El servidor todavía no tiene la versión nueva de galeria.js.' };
+  if(d._viejo || d._roto) return { ok: false, error: _msgServidor(d, false) };
   if(d.error === 'no_autorizado'){ localStorage.removeItem(CLAVE_KEY); mostrarLogin('Tu clave ya no es válida. Escríbela otra vez.'); return { ok: false, error: 'Falta la clave de administración.' }; }
   if(d.error === 'bloqueado') return { ok: false, error: d.mensaje || 'Demasiados intentos. Espera 15 minutos.' };
   if(d.error === 'falta_clave_servidor') return { ok: false, error: d.mensaje || 'Falta crear la clave de administración (configurar_clave_admin.sql).' };
@@ -306,7 +321,7 @@ async function iniciar(){
   _paso(1, 'espera', 'Comprobando...'); _paso(2, 'espera', ''); _paso(3, 'espera', '');
   var d = await _mkLlamar('getCampanasMK');
   if(d._red){ _paso(1, 'mal', 'No se pudo conectar con el servidor. Revisa tu internet y recarga la página.'); return; }
-  if(d._viejo){ _paso(1, 'mal', 'El servidor todavía no tiene la versión nueva de <b>galeria.js</b>. Súbela a GitHub, espera a que Vercel termine (que diga Ready) y recarga esta página.'); return; }
+  if(d._viejo || d._roto){ _paso(1, 'mal', _msgServidor(d, true)); return; }
   _paso(1, 'ok', 'El servidor tiene la versión nueva.');
   if(d.error === 'falta_clave_servidor'){ _paso(2, 'mal', _escC(d.mensaje || 'Falta crear la clave de administración.')); return; }
   if(d.error === 'bloqueado'){ _paso(2, 'mal', _escC(d.mensaje || 'Demasiados intentos. Espera 15 minutos.')); return; }
