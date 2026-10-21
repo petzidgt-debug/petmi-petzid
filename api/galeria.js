@@ -3167,7 +3167,10 @@ export default async function handler(req, res) {
             body: JSON.stringify({ mimeType: 'image/jpeg', fileName: 'diagnostico.jpg' })
           });
           const txt = await r.text().catch(() => '');
-          out.medios = r.ok ? { ok: true, estado: r.status, detalle: 'Puede subir fotos.' } : { ok: false, estado: r.status, detalle: txt.slice(0, 160) || ('Wix respondió ' + r.status + ' sin mensaje') };
+          // Si Wix contesta con una página web (HTML) en vez de un mensaje, se explica en lugar de mostrar el código de la página.
+          const esHtml = /^\s*<(!doctype|html)/i.test(txt);
+          out.medios = r.ok ? { ok: true, estado: r.status, detalle: 'Puede subir fotos.' }
+            : { ok: false, estado: r.status, detalle: esHtml ? ('Wix respondió con una página web (HTTP ' + r.status + ') en vez de un mensaje de error. Suele pasar cuando la llave no tiene acceso a este sitio o no tiene permisos de Medios.') : (txt.slice(0, 160) || ('Wix respondió ' + r.status + ' sin mensaje')) };
         } catch (e) { out.medios = { ok: false, detalle: 'No se pudo conectar con Wix: ' + e.message }; }
       }
       // 2) Mandar correos: solo si se escribe un destinatario (manda un correo de prueba real)
