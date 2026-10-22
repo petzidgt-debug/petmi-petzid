@@ -8,6 +8,9 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 // restaura carrera-reserva.html desde el historial de GitHub y quita las redirecciones de vercel.json.
 const CARRERA_RESERVAS_ABIERTAS = false;
 
+// Marca de versión: se ve abriendo /api/galeria en el navegador. Sirve para comprobar en 5 segundos si un despliegue nuevo ya está en línea.
+const GALERIA_VERSION = '2026-10-19-e';
+
 // ── Web Push (notificaciones) ───────────────────────────────
 const webpush = require('web-push');
 const dns = require('dns').promises;
@@ -3161,7 +3164,11 @@ export default async function handler(req, res) {
       const out = { clave_definida: !!WIX_API_KEY };
       // Datos SEGUROS de la llave guardada (nunca la llave): sirven para ver si se copió incompleta o con basura
       const cruda = String(process.env.WIX_API_KEY || '');
-      out.clave_info = { longitud: WIX_API_KEY.length, empieza_con_IST: /^IST\./.test(WIX_API_KEY), traia_comillas_o_espacios: cruda !== WIX_API_KEY, partes: WIX_API_KEY ? WIX_API_KEY.split('.').length : 0 };
+      out.clave_info = { longitud: WIX_API_KEY.length, empieza_con_IST: /^IST\./.test(WIX_API_KEY), traia_comillas_o_espacios: cruda !== WIX_API_KEY, partes: WIX_API_KEY ? WIX_API_KEY.split('.').length : 0,
+        // Solo si el valor es CORTO (una llave real de Wix tiene cientos de caracteres): primeras 2 letras y la última, para reconocer un valor de relleno
+        pista: (WIX_API_KEY.length > 0 && WIX_API_KEY.length < 40) ? (WIX_API_KEY.slice(0, 2) + '…' + WIX_API_KEY.slice(-1)) : '' };
+      // Desde dónde está respondiendo ESTE servidor: sirve para comprobar que es el despliegue de Production y el último
+      out.servidor = { ambiente: process.env.VERCEL_ENV || '(no es Vercel)', commit: String(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7), despliegue: String(process.env.VERCEL_URL || '').slice(0, 90) };
       // Las tres comprobaciones corren A LA VEZ (antes una tras otra: si Apps Script tardaba, la prueba entera se alargaba).
       // 1) Subir fotos (registro): pedir una dirección de subida no crea ningún archivo
       const probarMedios = async function () {
@@ -4934,7 +4941,7 @@ export default async function handler(req, res) {
       }
     }
 
-        return res.status(200).json({ status: 'PetMi Supabase API activa' });
+        return res.status(200).json({ status: 'PetMi Supabase API activa', version: GALERIA_VERSION, commit: String(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7), ambiente: process.env.VERCEL_ENV || '' });
 
   } catch(err) {
     return res.status(500).json({ ok: false, error: err.message });
