@@ -190,27 +190,51 @@ document.addEventListener('input', function(e) {
 });
 
 (function(){
-  if(!sessionEmail){ window.location.href='/'; return; }
   var params = new URLSearchParams(window.location.search);
   var uid    = params.get('uid');
-  if(!uid){ window.location.href='/'; return; }
-  fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(!d.found){ window.location.href='/'; return; }
-      var uidLower=uid.trim().toLowerCase();
-      mascota = d.mascotas.find(function(m){ return m.uid.trim().toLowerCase()===uidLower; });
-      if(!mascota){
-        if(d.mascotas.length>0){ mascota=d.mascotas[0]; }
-        else { window.location.href='/'; return; }
-      }
-      renderForm();
-      setTimeout(validarCamposPuntos, 400);
-    })
-    .catch(function(){
-      document.getElementById('loadingWrap').innerHTML=
-        '<p style="color:#888;text-align:center">Error al cargar. <a href="/" style="color:#00B4B4">Volver</a></p>';
-    });
+  var tFoto  = params.get('t');   // código firmado del correo "le falta su foto"
+
+  function cargarMascota(){
+    if(!uid){ window.location.href='/'; return; }
+    fetch('/api/galeria?action=checkEmail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'checkEmail',email:sessionEmail})})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d.found){ window.location.href='/'; return; }
+        var uidLower=uid.trim().toLowerCase();
+        mascota = d.mascotas.find(function(m){ return m.uid.trim().toLowerCase()===uidLower; });
+        if(!mascota){
+          if(d.mascotas.length>0){ mascota=d.mascotas[0]; }
+          else { window.location.href='/'; return; }
+        }
+        renderForm();
+        setTimeout(validarCamposPuntos, 400);
+      })
+      .catch(function(){
+        document.getElementById('loadingWrap').innerHTML=
+          '<p style="color:#888;text-align:center">Error al cargar. <a href="/" style="color:#00B4B4">Volver</a></p>';
+      });
+  }
+
+  if(sessionEmail){ cargarMascota(); return; }
+
+  // Sin sesión en este navegador. Si viene del correo "le falta su foto", el enlace trae un código firmado que
+  // prueba que el correo llegó a su dueño: se canjea por la sesión y se sigue (antes lo mandaba al inicio y
+  // nunca podía subir la foto, p. ej. desde el navegador interno de Gmail).
+  if(uid && tFoto){
+    fetch('/api/galeria?action=verificarEnlaceFoto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:uid,t:tFoto})})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d || !d.ok || !d.email){ window.location.href='/'; return; }
+        sessionEmail = d.email;
+        localStorage.setItem('petzid_email', d.email);
+        if(d.dueno) localStorage.setItem('petzid_dueno', d.dueno);
+        try{ history.replaceState(null,'',window.location.pathname+'?uid='+encodeURIComponent(uid)); }catch(e){}   // el código no se queda en la barra
+        cargarMascota();
+      })
+      .catch(function(){ window.location.href='/'; });
+    return;
+  }
+  window.location.href='/';
 })();
 
 function renderForm(){

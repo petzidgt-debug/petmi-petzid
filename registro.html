@@ -847,6 +847,29 @@ async function uploadToCloudinary(base64,mime){
 // quedan en Cloudinary tal cual, sin tocarlas. (23 sep: restaurada —
 // esta función había desaparecido del archivo en algún punto y el
 // registro seguía mandando fotos a Cloudinary sin que nadie lo notara.)
+// Pausas entre intentos de subir la foto (milisegundos). Se puede cambiar desde fuera para probar rápido.
+var FOTO_ESPERAS=[0,1200,2500];
+// La foto es obligatoria. Pero si Wix falla incluso reintentando (llave vencida, caída del servicio...), NO se deja a nadie sin poder
+// registrarse: se le pregunta si quiere reintentar o crear el PetzID sin foto y agregarla después. Ponlo en false para NO permitirlo nunca.
+var PERMITIR_SIN_FOTO_SI_FALLA=true;
+
+// Sube la foto con reintentos. Antes un solo fallo (Wix, la red del celular) dejaba la mascota guardada SIN foto
+// y nadie se enteraba. Devuelve la URL, o null si de verdad no se pudo.
+async function uploadFotoConReintentos(base64,mime){
+  for(var i=0;i<FOTO_ESPERAS.length;i++){
+    if(FOTO_ESPERAS[i]) await new Promise(function(r){setTimeout(r,FOTO_ESPERAS[i]);});
+    showLoading('Subiendo foto de tu mascota', i===0 ? 'Casi listo...' : 'Reintentando ('+(i+1)+' de '+FOTO_ESPERAS.length+')...');
+    var url=await uploadToWix(base64,mime);
+    if(url) return url;
+  }
+  return null;
+}
+function mostrarErrorFoto(msg){
+  var e=document.getElementById('errorMsg');
+  e.textContent=msg;e.style.display='block';
+  try{e.scrollIntoView({block:'center'});}catch(x){}
+}
+
 async function uploadToWix(base64,mime){
   try{
     var res=await fetch('/api/subir-foto',{
@@ -897,6 +920,13 @@ async function submitPetzID(){
     alert('Por favor ingresa el nombre de tu mascota antes de continuar.');
     cur=1;showStep(1);updateProgress();
     document.getElementById('inNombre').focus();
+    return;
+  }
+
+  // Otra barrera: un PetzID NUEVO no se crea sin foto (al editar, la foto actual se conserva).
+  if(!modoEdicion && !photoBase64){
+    alert('Agrega una foto de tu mascota para crear su PetzID.');
+    cur=1;showStep(1);updateProgress();
     return;
   }
 
@@ -996,11 +1026,24 @@ async function submitPetzID(){
     photoMime:   photoMime||'image/jpeg'
   };
 
-  // Subir foto a Cloudinary
+  // Subir la foto. Si no se logra, NO se guarda nada: es mejor pedir que lo intente otra vez
+  // que crear un PetzID sin foto sin que nadie lo note.
+  var mascotaSinFoto=false;
   if(photoBase64){
-    showLoading('Subiendo foto de tu mascota','Casi listo...');
-    var fotoUrl=await uploadToWix(photoBase64,photoMime||'image/jpeg');
-    if(fotoUrl)payload.foto=fotoUrl;
+    var fotoUrl=await uploadFotoConReintentos(photoBase64,photoMime||'image/jpeg');
+    if(fotoUrl){
+      payload.foto=fotoUrl;
+    } else {
+      hideLoading();
+      // Solo al crear una mascota nueva; al editar, la foto actual se conserva y no tiene sentido ofrecer "sin foto".
+      var seguirSinFoto = PERMITIR_SIN_FOTO_SI_FALLA && !modoEdicion && confirm('No pudimos subir la foto de tu mascota (puede ser tu conexión o un problema nuestro).\n\n• Aceptar: crear su PetzID SIN foto. Podrás agregarla después desde tu perfil.\n• Cancelar: intentarlo de nuevo.');
+      if(!seguirSinFoto){
+        _isSubmitting=false;btn.disabled=false;btn.textContent='Siguiente';
+        mostrarErrorFoto('No pudimos subir la foto de tu mascota. Revisa tu conexión y toca "Siguiente" para intentarlo de nuevo. No se perdió nada de lo que escribiste.');
+        return;
+      }
+      mascotaSinFoto=true;
+    }
   }
 
   var apiUrl='/api/submit';
@@ -1031,6 +1074,10 @@ async function submitPetzID(){
     localStorage.setItem('petmi_ultimo_nombre', payload.nombre||'');
   }
   document.getElementById('doneNombre').textContent=payload.nombre||'tu mascota';
+  // Quedó sin foto: se le manda de inmediato el correo con el enlace para agregarla (si falla, no afecta el registro).
+  if(mascotaSinFoto && !modoEdicion){
+    try{ fetch('/api/galeria?action=enviarRecordatorioFoto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:uid}),keepalive:true}).catch(function(){}); }catch(e){}
+  }
   hideLoading();
   _isSubmitting = false;
   localStorage.removeItem('petmi_ultimo_uid');

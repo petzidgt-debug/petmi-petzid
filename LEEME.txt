@@ -1,0 +1,12 @@
+SUBIR A GITHUB (en este orden)
+
+1) Descomprime este archivo. Verás una carpeta  api  y varios archivos sueltos.
+2) En GitHub, entra a la RAÍZ del repositorio (donde está index.html) -> Add file -> Upload files.
+3) Arrastra DENTRO de esa ventana: la carpeta  api  completa y los archivos sueltos.
+   (GitHub respeta las carpetas: api/galeria.js queda en api/galeria.js.)
+4) Commit changes. Espera a que Vercel diga Ready.
+
+IMPORTANTE
+- La carpeta api  NO trae admin.js. No toques api/admin.js (debe quedar con su contenido original).
+- Apps Script (Code.gs) y los .sql NO van a GitHub.
+- Para comprobar: abre https://app.revistapetmi.com/api/galeria  -> debe mostrar "version":"2026-10-19-e"
