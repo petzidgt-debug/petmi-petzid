@@ -157,7 +157,8 @@ async function _obtenerOElegirGanadoresSorteo() {
 //    esa variable, se salta directo a Gmail.
 // 2. Gmail/Apps Script — respaldo si Wix no está configurado, o si
 //    la llamada a Wix falla por cualquier razón.
-const WIX_API_KEY = process.env.WIX_API_KEY || '';
+// Se limpia por si en Vercel se pegó con comillas, espacios o "Bearer" (Wix la rechaza con 403 si no es la llave sola).
+const WIX_API_KEY = String(process.env.WIX_API_KEY || '').trim().replace(/^["'`]+|["'`]+$/g, '').replace(/^Bearer\s+/i, '').trim();
 const WIX_SITE_ID = '25b3d584-29fb-4861-b757-d9640d37c01f';
 const WIX_SENDER_NAME = 'PETmi';
 const WIX_SENDER_EMAIL = 'revistapetmi@gmail.com'; // remitente ya verificado en Wix
@@ -3158,9 +3159,13 @@ export default async function handler(req, res) {
       const para = String((req.body || {}).email || '').trim().toLowerCase();
       if (para && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(para)) return res.status(200).json({ ok: false, error: 'Escribe un correo válido para la prueba.' });
       const out = { clave_definida: !!WIX_API_KEY };
+      // Datos SEGUROS de la llave guardada (nunca la llave): sirven para ver si se copió incompleta o con basura
+      const cruda = String(process.env.WIX_API_KEY || '');
+      out.clave_info = { longitud: WIX_API_KEY.length, empieza_con_IST: /^IST\./.test(WIX_API_KEY), traia_comillas_o_espacios: cruda !== WIX_API_KEY, partes: WIX_API_KEY ? WIX_API_KEY.split('.').length : 0 };
+      // Las tres comprobaciones corren A LA VEZ (antes una tras otra: si Apps Script tardaba, la prueba entera se alargaba).
       // 1) Subir fotos (registro): pedir una dirección de subida no crea ningún archivo
-      if (!WIX_API_KEY) out.medios = { ok: false, detalle: 'No hay llave de Wix en el servidor (WIX_API_KEY).' };
-      else {
+      const probarMedios = async function () {
+        if (!WIX_API_KEY) return { ok: false, detalle: 'No hay llave de Wix en el servidor (WIX_API_KEY).' };
         try {
           const r = await fetch('https://www.wixapis.com/site-media/v1/files/generate-upload-url', {
             method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': WIX_API_KEY, 'wix-site-id': WIX_SITE_ID },
@@ -3169,22 +3174,27 @@ export default async function handler(req, res) {
           const txt = await r.text().catch(() => '');
           // Si Wix contesta con una página web (HTML) en vez de un mensaje, se explica en lugar de mostrar el código de la página.
           const esHtml = /^\s*<(!doctype|html)/i.test(txt);
-          out.medios = r.ok ? { ok: true, estado: r.status, detalle: 'Puede subir fotos.' }
+          return r.ok ? { ok: true, estado: r.status, detalle: 'Puede subir fotos.' }
             : { ok: false, estado: r.status, detalle: esHtml ? ('Wix respondió con una página web (HTTP ' + r.status + ') en vez de un mensaje de error. Suele pasar cuando la llave no tiene acceso a este sitio o no tiene permisos de Medios.') : (txt.slice(0, 160) || ('Wix respondió ' + r.status + ' sin mensaje')) };
-        } catch (e) { out.medios = { ok: false, detalle: 'No se pudo conectar con Wix: ' + e.message }; }
-      }
+        } catch (e) { return { ok: false, detalle: 'No se pudo conectar con Wix: ' + e.message }; }
+      };
       // 2) Mandar correos: solo si se escribe un destinatario (manda un correo de prueba real)
-      if (!para) out.correo = { omitido: true, detalle: 'No escribiste un correo para la prueba.' };
-      else {
+      const probarCorreo = async function () {
+        if (!para) return { omitido: true, detalle: 'No escribiste un correo para la prueba.' };
         const r = await _enviarHtmlPorWix(para, '🔧 Prueba de PetMi: Wix puede enviar correos', '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px"><h2>Prueba de PetMi</h2><p>Si lees esto, el servidor de PetMi sí puede mandar correos por Wix. 🐾</p></div>', 'diagnosticoWix');
-        out.correo = r.ok ? { ok: true, detalle: 'Correo de prueba enviado a ' + para + '.' } : { ok: false, detalle: String(r.error || '').slice(0, 200) };
-      }
+        return r.ok ? { ok: true, detalle: 'Correo de prueba enviado a ' + para + '.' } : { ok: false, detalle: String(r.error || '').slice(0, 200) };
+      };
       // 3) Apps Script: pedir el recordatorio de una mascota que no existe no manda nada, pero dice si la acción existe
-      const gas = await _llamarAppsScript({ action: 'recordatorioFoto', uid: '__diagnostico__' }, 9000);
-      const err = String(gas.error || '');
-      if (/no reconocida/i.test(err)) out.apps_script = { ok: false, reconoce_recordatorio: false, detalle: 'La versión desplegada de Apps Script no conoce la acción "recordatorioFoto": falta Implementar → Nueva versión.' };
-      else if (/no respondió|Apps Script:|respuesta no válida/i.test(err)) out.apps_script = { ok: false, reconoce_recordatorio: null, detalle: err };
-      else out.apps_script = { ok: true, reconoce_recordatorio: true, detalle: 'Apps Script está al día (reconoce el recordatorio de foto).' };
+      const probarAppsScript = async function () {
+        const gas = await _llamarAppsScript({ action: 'recordatorioFoto', uid: '__diagnostico__' }, 9000);
+        const err = String(gas.error || '');
+        if (/no reconocida/i.test(err)) return { ok: false, reconoce_recordatorio: false, detalle: 'La versión desplegada de Apps Script no conoce la acción "recordatorioFoto": falta Implementar → Nueva versión.' };
+        if (/no respondió/i.test(err)) return { ok: false, reconoce_recordatorio: null, tardo: true, detalle: 'Apps Script tardó más de 9 segundos en contestar. Es normal la primera vez después de publicar una versión nueva (arranque en frío): vuelve a tocar "Probar ahora".' };
+        if (/Apps Script:|respuesta no válida/i.test(err)) return { ok: false, reconoce_recordatorio: null, detalle: err };
+        return { ok: true, reconoce_recordatorio: true, detalle: 'Apps Script está al día (reconoce el recordatorio de foto).' };
+      };
+      const [medios, correo, appsScript] = await Promise.all([probarMedios(), probarCorreo(), probarAppsScript()]);
+      out.medios = medios; out.correo = correo; out.apps_script = appsScript;
       return res.status(200).json({ ok: true, ...out });
     }
 

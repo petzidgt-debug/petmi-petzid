@@ -3,7 +3,8 @@
 // pública (wixstatic.com) — reemplaza la subida directa a Cloudinary
 // para fotos nuevas, ya que Cloudinary llegó a su límite de espacio.
 
-const WIX_API_KEY = process.env.WIX_API_KEY || '';
+// Se limpia por si en Vercel se pegó con comillas, espacios o "Bearer" (Wix la rechaza con 403 si no es la llave sola).
+const WIX_API_KEY = String(process.env.WIX_API_KEY || '').trim().replace(/^["'`]+|["'`]+$/g, '').replace(/^Bearer\s+/i, '').trim();
 const WIX_SITE_ID = '25b3d584-29fb-4861-b757-d9640d37c01f';
 
 export default async function handler(req, res) {

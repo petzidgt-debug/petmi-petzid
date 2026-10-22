@@ -20,9 +20,112 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzuBevjWzfX021aM7n29nB2feFAk3s3gbSW4MmstS0VPaaK24UcYitHcaEDtZzUDcWh/exec';
 const SVIX_SECRET = 'whsec_XECG6MKLlkD7eTynodhQ098IW68sF9oF';
 
+// ── Correos de pedidos de la tienda (directo por Wix, igual que los códigos de verificación) ──
+// Se limpia por si en Vercel se pegó con comillas, espacios o "Bearer" (Wix la rechaza con 403 si no es la llave sola).
+const WIX_API_KEY = String(process.env.WIX_API_KEY || '').trim().replace(/^["'`]+|["'`]+$/g, '').replace(/^Bearer\s+/i, '').trim();
+const WIX_SITE_ID = '25b3d584-29fb-4861-b757-d9640d37c01f';
+const WIX_SENDER_NAME = 'PETmi';
+const WIX_SENDER_EMAIL = 'revistapetmi@gmail.com'; // remitente ya verificado en Wix
+// A quién le llega el aviso de "pedido nuevo pagado". Cámbialo en Vercel con la variable EMAIL_AVISOS_PEDIDOS.
+const EMAIL_AVISOS_PEDIDOS = process.env.EMAIL_AVISOS_PEDIDOS || 'revistapetmi@gmail.com';
+
 const PRODUCTOS = {
   PREMIUM: 'pay_bjshuwfn', // confirmado el 26 ago 2026 via webhook_logs (pago real de cesar.combox@gmail.com)
 };
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+async function enviarCorreoWix(email, asunto, html) {
+  if (!WIX_API_KEY) return { ok: false, error: 'WIX_API_KEY no configurada' };
+  if (!email) return { ok: false, error: 'sin destinatario' };
+  try {
+    const r = await fetch('https://www.wixapis.com/email-transmissions/v1/email-transmissions/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': WIX_API_KEY, 'wix-site-id': WIX_SITE_ID },
+      body: JSON.stringify({
+        emailTransmission: {
+          emailSubject: asunto, emailHtmlContent: html,
+          senderName: WIX_SENDER_NAME, senderEmailAddress: WIX_SENDER_EMAIL,
+          toRecipients: [{ emailAddress: email }], type: 'TRANSACTIONAL'
+        },
+        idempotencyKey: crypto.randomUUID()
+      })
+    });
+    if (!r.ok) return { ok: false, error: 'Wix ' + r.status + ': ' + String(await r.text().catch(() => '')).slice(0, 120) };
+    return { ok: true };
+  } catch (e) { return { ok: false, error: 'Wix: ' + e.message }; }
+}
+
+function layoutCorreo(cuerpo) {
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">'
+    + '<div style="background:#00B4B4;padding:28px;text-align:center;border-radius:12px 12px 0 0"><div style="display:inline-block;background:#fff;border-radius:12px;padding:8px 18px"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi" style="height:36px;width:auto;display:block"></div></div>'
+    + '<div style="background:#fff;padding:28px;border:1px solid #eee">' + cuerpo + '</div>'
+    + '<div style="background:#F5C842;padding:12px;text-align:center;border-radius:0 0 12px 12px"><p style="margin:0;font-size:12px;color:#555">PetMi Guatemala</p></div></div></body></html>';
+}
+
+function telefonoLindo(t) {
+  const d = String(t || '').replace(/\D/g, '');
+  return d.length === 11 && d.indexOf('502') === 0 ? d.slice(3, 7) + '-' + d.slice(7) : String(t || '');
+}
+function itemsComoTexto(pedido) {
+  return (pedido.items || []).map(i => i.cantidad + 'x ' + i.nombre).join(', ');
+}
+
+// Correo al cliente: confirma el pago y avisa que lo llevará nuestro mensajero.
+function htmlPedidoCliente(pedido, total) {
+  const conEntrega = pedido.direccion && pedido.telefono;
+  const entrega = conEntrega
+    ? '<p style="color:#555;line-height:1.7;font-size:13px;text-align:center">Lo llevará nuestro mensajero a:<br><b style="color:#1a1a2e">' + escHtml(pedido.direccion) + '</b><br><br>'
+      + 'Te escribiremos por WhatsApp al <b style="color:#1a1a2e">' + escHtml(telefonoLindo(pedido.telefono)) + '</b> para confirmar el día y el horario.</p>'
+    : '<p style="color:#555;line-height:1.7;font-size:13px;text-align:center">Nos pondremos en contacto por WhatsApp para coordinar la entrega.</p>';
+  return layoutCorreo('<h2 style="color:#1a1a2e;margin-top:0;text-align:center">¡Gracias por tu compra! &#128062;</h2>'
+    + '<p style="color:#555;line-height:1.7;font-size:14px;text-align:center">Tu pago se confirmó y tu pedido ya está en proceso:</p>'
+    + '<div style="background:#f8f8f8;border-radius:12px;padding:16px 18px;margin:16px 0;text-align:center"><div style="font-size:14px;color:#333;font-weight:700">' + escHtml(itemsComoTexto(pedido)) + '</div>'
+    + '<div style="font-size:20px;color:#00B4B4;font-weight:900;margin-top:8px">Q' + total + '</div></div>' + entrega);
+}
+
+// Correo a ti: pedido nuevo pagado, con todo lo necesario para coordinar y un botón de WhatsApp ya escrito.
+function htmlPedidoDueno(pedido, total) {
+  const primer = String(pedido.nombre || '').trim().split(' ')[0] || '';
+  const mensaje = '¡Hola' + (primer ? ' ' + primer : '') + '! 🐾 Soy de PetMi. Recibimos tu pago de Q' + total + ' por: ' + itemsComoTexto(pedido)
+    + '.\n\nPara coordinar tu entrega, ¿me confirmas esta dirección? 📍 ' + (pedido.direccion || '') + '\n\n¿Qué día y horario te queda mejor?';
+  const wa = pedido.telefono ? 'https://wa.me/' + String(pedido.telefono).replace(/\D/g, '') + '?text=' + encodeURIComponent(mensaje) : '';
+  const fila = (k, v) => '<tr><td style="padding:6px 10px;color:#888;font-size:12px;white-space:nowrap;vertical-align:top">' + k + '</td><td style="padding:6px 10px;color:#1a1a2e;font-size:14px;font-weight:700">' + v + '</td></tr>';
+  return layoutCorreo('<h2 style="color:#1a1a2e;margin-top:0;text-align:center">&#128722; Pedido nuevo pagado</h2>'
+    + '<table style="width:100%;border-collapse:collapse;background:#f8f8f8;border-radius:12px;margin:14px 0">'
+    + fila('Productos', escHtml(itemsComoTexto(pedido))) + fila('Total', 'Q' + total)
+    + fila('Cliente', escHtml(pedido.nombre || '(sin nombre)')) + fila('Correo', escHtml(pedido.email))
+    + fila('WhatsApp', pedido.telefono ? escHtml(telefonoLindo(pedido.telefono)) : '(no dejó)')
+    + fila('Dirección', escHtml(pedido.direccion || '(no dejó)'))
+    + (pedido.notas_cliente ? fila('Notas', escHtml(pedido.notas_cliente)) : '') + '</table>'
+    + (wa ? '<div style="text-align:center;margin:18px 0"><a href="' + wa.replace(/&/g, '&amp;') + '" style="background:#25D366;color:#fff;padding:13px 26px;border-radius:24px;text-decoration:none;font-weight:900;font-size:14px">&#128172; Confirmar entrega por WhatsApp</a></div>' : '')
+    + '<p style="text-align:center;font-size:12px;color:#999">Gestiona el pedido (confirmar, en camino, entregado) en el <a href="https://app.revistapetmi.com/admin.html" style="color:#00838f">Admin &rarr; Pedidos</a>.</p>');
+}
+
+async function enviarAvisosPedidoPagado(pedido) {
+  const out = { correo_cliente: 'no_enviado', correo_dueno: 'no_enviado' };
+  const total = (pedido.total_centavos / 100).toFixed(2);
+  try {
+    const r = await enviarCorreoWix(pedido.email, 'Confirmación de tu pedido en PetMi', htmlPedidoCliente(pedido, total));
+    if (r.ok) out.correo_cliente = 'wix';
+    else {
+      // Respaldo: el correo de siempre por Apps Script
+      try {
+        await fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'notificarPedidoTiendaPagado', email: pedido.email, items: itemsComoTexto(pedido), total: total }) });
+        out.correo_cliente = 'apps_script (Wix falló: ' + r.error + ')';
+      } catch (e2) { out.correo_cliente = 'error: ' + r.error; }
+    }
+  } catch (e) { out.correo_cliente = 'error: ' + e.message; }
+  try {
+    const asunto = '🛒 Pedido nuevo pagado — Q' + total + (pedido.nombre ? ' · ' + pedido.nombre : '');
+    const r2 = await enviarCorreoWix(EMAIL_AVISOS_PEDIDOS, asunto, htmlPedidoDueno(pedido, total));
+    out.correo_dueno = r2.ok ? 'ok' : 'error: ' + r2.error;
+  } catch (e) { out.correo_dueno = 'error: ' + e.message; }
+  return out;
+}
 
 async function guardarLog(datos) {
   try {
@@ -126,16 +229,13 @@ async function procesarPagoTienda(pedidoId) {
     body: JSON.stringify({ estado: 'pagado', pagado_at: new Date().toISOString() })
   });
 
-  // Avisa al dueño de la tienda (mensaje simple por ahora vía GAS/Gmail-Wix)
-  try {
-    const itemsTexto = (pedido.items || []).map(i => i.cantidad + 'x ' + i.nombre).join(', ');
-    await fetch(GAS_URL, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'notificarPedidoTiendaPagado', email: pedido.email, items: itemsTexto, total: (pedido.total_centavos/100).toFixed(2) })
-    }).catch(function(){});
-  } catch(e) { console.error('Aviso pedido tienda:', e.message); }
+  // Avisos: correo al cliente (con sus datos de entrega) y correo a ti. Nunca detienen el proceso.
+  let avisos = {};
+  if (rPatch.ok) {
+    try { avisos = await enviarAvisosPedidoPagado(pedido); } catch (e) { avisos = { aviso_error: e.message }; }
+  }
 
-  return { ok: rPatch.ok, motivo: rPatch.ok ? 'pedido_pagado' : ('supabase_status_' + rPatch.status) };
+  return { ok: rPatch.ok, motivo: rPatch.ok ? 'pedido_pagado' : ('supabase_status_' + rPatch.status), ...avisos };
 }
 
 export default async function handler(req, res) {
