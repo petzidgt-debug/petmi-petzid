@@ -3188,10 +3188,13 @@ export default async function handler(req, res) {
       const probarAppsScript = async function () {
         const gas = await _llamarAppsScript({ action: 'recordatorioFoto', uid: '__diagnostico__' }, 9000);
         const err = String(gas.error || '');
-        if (/no reconocida/i.test(err)) return { ok: false, reconoce_recordatorio: false, detalle: 'La versión desplegada de Apps Script no conoce la acción "recordatorioFoto": falta Implementar → Nueva versión.' };
-        if (/no respondió/i.test(err)) return { ok: false, reconoce_recordatorio: null, tardo: true, detalle: 'Apps Script tardó más de 9 segundos en contestar. Es normal la primera vez después de publicar una versión nueva (arranque en frío): vuelve a tocar "Probar ahora".' };
-        if (/Apps Script:|respuesta no válida/i.test(err)) return { ok: false, reconoce_recordatorio: null, detalle: err };
-        return { ok: true, reconoce_recordatorio: true, detalle: 'Apps Script está al día (reconoce el recordatorio de foto).' };
+        // Con qué implementación habla el servidor (solo los últimos 8 caracteres de su ID): en Apps Script cada implementación
+        // se actualiza POR SEPARADO, y si se publica en otra, la que llama el servidor se queda con la versión vieja.
+        const termina = String(APPS_SCRIPT_OTP_URL).replace(/\/exec.*$/, '').slice(-8);
+        if (/no reconocida/i.test(err)) return { ok: false, reconoce_recordatorio: false, termina_en: termina, detalle: 'La versión desplegada de Apps Script no conoce la acción "recordatorioFoto": falta Implementar → Nueva versión.' };
+        if (/no respondió/i.test(err)) return { ok: false, reconoce_recordatorio: null, tardo: true, termina_en: termina, detalle: 'Apps Script tardó más de 9 segundos en contestar. Es normal la primera vez después de publicar una versión nueva (arranque en frío): vuelve a tocar "Probar ahora".' };
+        if (/Apps Script:|respuesta no válida/i.test(err)) return { ok: false, reconoce_recordatorio: null, termina_en: termina, detalle: err };
+        return { ok: true, reconoce_recordatorio: true, termina_en: termina, detalle: 'Apps Script está al día (reconoce el recordatorio de foto).' };
       };
       const [medios, correo, appsScript] = await Promise.all([probarMedios(), probarCorreo(), probarAppsScript()]);
       out.medios = medios; out.correo = correo; out.apps_script = appsScript;
