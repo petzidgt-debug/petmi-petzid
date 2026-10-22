@@ -18,11 +18,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, items, cupon } = req.body || {};
+    const { email, items, cupon, contacto } = req.body || {};
 
     if (!email || !email.includes('@')) {
       return res.status(400).json({ ok: false, error: 'Correo inválido' });
     }
+
+    // ── 0. Datos para la entrega a domicilio (mensajero propio): el pedido
+    // no sirve si después no se sabe a quién ni a dónde llevarlo. ────────
+    const ct = contacto || {};
+    const nombreEntrega = String(ct.nombre || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+    const digitos = String(ct.telefono || '').replace(/\D/g, '');
+    const telefonoEntrega = digitos.length === 8 ? '502' + digitos : (digitos.length === 11 && digitos.indexOf('502') === 0 ? digitos : null);
+    const direccionEntrega = String(ct.direccion || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+    const notasEntrega = String(ct.notas || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+    if (nombreEntrega.length < 2) return res.status(400).json({ ok: false, error: 'Escribe tu nombre para coordinar la entrega.' });
+    if (!telefonoEntrega) return res.status(400).json({ ok: false, error: 'Escribe tu número de WhatsApp (8 dígitos) para coordinar la entrega.' });
+    if (direccionEntrega.length < 10) return res.status(400).json({ ok: false, error: 'Escribe tu dirección de entrega: zona, calle, número y una referencia.' });
     if (!Array.isArray(items) || !items.length) {
       return res.status(400).json({ ok: false, error: 'El carrito está vacío' });
     }
@@ -34,8 +46,8 @@ export default async function handler(req, res) {
     // ── 1. Traer los productos reales de Supabase (nunca confiar en
     // el precio/nombre que manda el navegador — se recalcula todo
     // aquí con los datos verdaderos de la base de datos) ──────────
-    const ids = items.map(i => i.producto_id).filter(Boolean);
-    if (!ids.length) return res.status(400).json({ ok: false, error: 'Carrito inválido' });
+    const ids = items.map(i => String(i.producto_id == null ? '' : i.producto_id)).filter(Boolean);
+    if (!ids.length || ids.some(id => !/^[A-Za-z0-9_-]{1,40}$/.test(id))) return res.status(400).json({ ok: false, error: 'Carrito inválido' });
 
     const rProd = await fetch(
       SUPABASE_URL + '/rest/v1/tienda_productos?id=in.(' + ids.join(',') + ')&select=id,nombre,precio,stock,activo',
@@ -97,13 +109,26 @@ export default async function handler(req, res) {
     }
 
     // ── 3. Crear el pedido en Supabase (estado "pendiente") ────────
-    const rPedido = await fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda', {
+    const insertarPedido = (datos) => fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=representation' },
-      body: JSON.stringify({ email: email.toLowerCase(), items: itemsConDescuento, total_centavos: totalCentavos, estado: 'pendiente' })
+      body: JSON.stringify(datos)
     });
+    const pedidoBase = { email: email.toLowerCase(), items: itemsConDescuento, total_centavos: totalCentavos, estado: 'pendiente' };
+    let rPedido = await insertarPedido({ ...pedidoBase, nombre: nombreEntrega, telefono: telefonoEntrega, direccion: direccionEntrega, notas_cliente: notasEntrega || null });
     if (!rPedido.ok) {
-      console.error('Error creando pedido:', await rPedido.text());
+      const errTxt = await rPedido.text().catch(() => '');
+      if (/column|PGRST204|schema cache/i.test(errTxt)) {
+        // Falta correr agregar_entrega_pedidos.sql: el pago NO se bloquea, pero el pedido se guarda sin los datos de entrega.
+        console.error('pedidos_tienda sin columnas de entrega (¿corriste agregar_entrega_pedidos.sql?):', errTxt);
+        rPedido = await insertarPedido(pedidoBase);
+      } else {
+        console.error('Error creando pedido:', errTxt);
+        return res.status(500).json({ ok: false, error: 'No se pudo crear el pedido. Intenta de nuevo.' });
+      }
+    }
+    if (!rPedido.ok) {
+      console.error('Error creando pedido:', await rPedido.text().catch(() => ''));
       return res.status(500).json({ ok: false, error: 'No se pudo crear el pedido. Intenta de nuevo.' });
     }
     const pedidoCreado = (await rPedido.json())[0];
