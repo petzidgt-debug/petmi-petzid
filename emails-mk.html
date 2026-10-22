@@ -528,7 +528,16 @@ async function probarSistema(){
     infoLlave = '<div style="font-size:12.5px;color:#555;line-height:1.7;margin-bottom:6px">🔑 Llave guardada en Vercel: <b>' + ci.longitud + ' caracteres</b>'
       + (ci.empieza_con_IST ? ' · empieza con "IST." ✅' : ' · <span style="color:#c0392b">⚠️ no empieza con "IST." (las llaves de Wix suelen empezar así; puede estar incompleta o ser otra cosa)</span>')
       + (ci.longitud < 200 ? ' · <span style="color:#c0392b">⚠️ es corta (suelen ser mucho más largas): probablemente se copió incompleta</span>' : '')
-      + (ci.traia_comillas_o_espacios ? ' · ⚠️ traía comillas o espacios de más (el servidor ya los quita)' : '') + '</div>';
+      + (ci.traia_comillas_o_espacios ? ' · ⚠️ traía comillas o espacios de más (el servidor ya los quita)' : '')
+      + (ci.pista ? ' · el valor guardado se ve así: <b>"' + _escC(ci.pista) + '"</b>' : '') + '</div>';
+  }
+  var sv = d.servidor;
+  if(sv){
+    infoLlave += '<div style="font-size:12.5px;color:#555;line-height:1.7;margin-bottom:6px">🖥️ Este servidor: <b>' + _escC(sv.ambiente) + '</b>' + (sv.commit ? ' · commit <b>' + _escC(sv.commit) + '</b>' : '') + (sv.despliegue ? ' · despliegue <b>' + _escC(sv.despliegue) + '</b>' : '') + '</div>';
+  }
+  // El servidor sigue leyendo un valor muy corto: la llave NUEVA todavía no le llega (no se guardó, se guardó en otro ambiente, o falta Redeploy)
+  if(d.clave_definida && ci && ci.longitud > 0 && ci.longitud < 200){
+    infoLlave += '<div style="background:#fff8e1;color:#7a5b00;border-radius:10px;padding:12px 14px;margin:8px 0 6px;font-size:13px;line-height:1.7"><b>Este servidor sigue leyendo un valor de solo ' + ci.longitud + ' caracteres.</b> Si ya pegaste la llave nueva, todavía no le llega. Revisa:<ol style="margin:6px 0 0 18px"><li>En Vercel → Settings → <b>Environment Variables</b>: la entrada <b>WIX_API_KEY</b> que editaste debe tener marcado <b>Production</b> (no solo Preview o Development) y no debe haber otra repetida.</li><li>Después de <b>Save</b>: <b>Deployments</b> → los tres puntos del primero → <b>Redeploy</b>, y espera a que diga <b>Ready</b>.</li><li>Compara arriba el <b>commit</b> y el <b>despliegue</b> con el último de la lista de Deployments: deben ser ese. Si el despliegue de Production es otro, haz clic en "Promote to Production" en el último.</li></ol></div>';
   }
   // Fotos y correos fallan igual con 403: son permisos distintos, así que lo más probable es que la llave ENTERA no sirva
   var igual403 = d.medios && !d.medios.ok && d.correo && d.correo.ok === false && permiso403(d.medios) && permiso403(d.correo);
