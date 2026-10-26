@@ -7,6 +7,8 @@ SUBIR A GITHUB (en este orden)
 4) Commit changes. Espera a que Vercel diga Ready.
 
 IMPORTANTE
+- api/crear-checkout.js y tienda.html VAN JUNTOS: el servidor exige nombre, WhatsApp y dirección,
+  y la tienda es la que trae esos campos. Si subes uno sin el otro, nadie puede pagar.
 - La carpeta api  NO trae admin.js. No toques api/admin.js (debe quedar con su contenido original).
 - Apps Script (Code.gs) y los .sql NO van a GitHub.
 - Para comprobar: abre https://app.revistapetmi.com/api/galeria  -> debe mostrar "version":"2026-10-19-f"

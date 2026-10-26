@@ -381,6 +381,18 @@ async function uploadToWix(base64,mime){
     return null;
   }catch(e){console.log('Wix upload error:',e);return null;}
 }
+// Pausas entre intentos de subir la foto (ms). Se puede cambiar desde fuera para probar rápido.
+var EDIT_FOTO_ESPERAS=[0,1200,2500];
+// Antes un solo fallo al subir la foto (Wix, la red del celular) se ignoraba: se guardaba lo demás, se mostraba "Cambios guardados"
+// y la foto se perdía sin avisar. Ahora se reintenta, y si no se logra NO se guarda nada y se avisa.
+async function uploadFotoConReintentos(base64,mime){
+  for(var i=0;i<EDIT_FOTO_ESPERAS.length;i++){
+    if(EDIT_FOTO_ESPERAS[i]) await new Promise(function(r){setTimeout(r,EDIT_FOTO_ESPERAS[i]);});
+    var url=await uploadToWix(base64,mime);
+    if(url) return url;
+  }
+  return null;
+}
 async function guardar(){
   var btn=document.getElementById('btnGuardar');
   var err=document.getElementById('errorBox');
@@ -392,7 +404,13 @@ async function guardar(){
   var fotoUrl=null;
   if(nuevaFotoBase64){
     btn.textContent='Subiendo foto...';
-    try{fotoUrl=await uploadToWix(nuevaFotoBase64,nuevaFotoMime);}catch(e){}
+    fotoUrl=await uploadFotoConReintentos(nuevaFotoBase64,nuevaFotoMime);
+    if(!fotoUrl){
+      document.getElementById('modalGuardando').style.display='none';
+      mostrarError('No pudimos subir la foto. Revisa tu conexión y toca "Guardar cambios" para intentarlo de nuevo. No se guardó ningún cambio y no perdiste lo que escribiste.');
+      btn.disabled=false;btn.textContent='💾 Guardar cambios';
+      return;
+    }
   }
   var wa=document.getElementById('eWA').value.trim();
   wa=wa.replace(/^\+502/,'').replace(/^502/,'').trim();
@@ -441,6 +459,7 @@ async function guardar(){
     fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'markAngel',uid:mascota.uid,esAngel:esAngelito,fechaAngelito:fechaAngel})}).catch(function(){});
     mascota.nombre=nombre;
+    if(fotoUrl){ mascota.foto=fotoUrl; nuevaFotoBase64=null; nuevaFotoMime=null; }   // ya está subida: un segundo guardado no la vuelve a subir
     document.getElementById('modalGuardando').style.display='none';
     mostrarToast('✅ Cambios guardados');
     btn.disabled=false;btn.textContent='💾 Guardar cambios';

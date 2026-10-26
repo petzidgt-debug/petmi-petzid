@@ -48,7 +48,12 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
 .carrito-qty-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid #ddd;background:#fff;font-size:14px;font-weight:700;cursor:pointer;color:#555;display:flex;align-items:center;justify-content:center}
 .carrito-qty-num{font-size:13px;font-weight:700;min-width:16px;text-align:center}
 .carrito-item-quitar{font-size:11px;color:#c0392b;background:none;border:none;cursor:pointer;margin-left:auto;font-weight:700}
-.carrito-footer{padding:16px 20px;border-top:1px solid #eee}
+.carrito-footer{padding:16px 20px;border-top:1px solid #eee;max-height:68vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.carrito-entrega{margin-bottom:12px}
+.carrito-entrega-tit{font-size:12.5px;font-weight:800;color:#1a1a2e;margin-bottom:8px}
+.carrito-entrega input,.carrito-entrega textarea{width:100%;padding:11px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:13.5px;margin-bottom:8px;font-family:Arial,sans-serif;display:block}
+.carrito-entrega textarea{resize:vertical;min-height:58px}
+.carrito-entrega-nota{font-size:11.5px;color:#888;line-height:1.5}
 .carrito-subtotal{display:flex;justify-content:space-between;font-size:15px;font-weight:900;color:#1a1a2e;margin-bottom:12px}
 .carrito-pagar-btn{display:block;width:100%;background:#00B4B4;color:#fff;border:none;padding:14px;border-radius:99px;font-size:14.5px;font-weight:900;cursor:pointer}
 .carrito-pagar-btn:disabled{background:#ccc;cursor:not-allowed}
@@ -236,6 +241,7 @@ function renderCarrito(){
   var emailGuardado = sessionEmail || localStorage.getItem('petzid_carrito_email') || '';
   document.getElementById('carritoEmailWrap').style.display = emailGuardado ? 'none' : 'block';
   document.getElementById('carritoErrorMsg').style.display = 'none';
+  prefillContactoEntrega();
 }
 
 var cuponActual = '';
@@ -247,6 +253,30 @@ function aplicarCupon(){
   msg.style.display = 'block';
   msg.style.color = '#00838f';
   msg.textContent = 'Cupón "'+val+'" listo — se valida al momento de pagar.';
+}
+
+// ── Datos de entrega (el pedido lo lleva nuestro mensajero) ──
+function leerContactoEntrega(){
+  var nombre = document.getElementById('carritoNombre').value.replace(/\s+/g,' ').trim();
+  var dig = document.getElementById('carritoTelefono').value.replace(/\D/g,'');
+  var tel = dig.length === 8 ? dig : (dig.length === 11 && dig.indexOf('502') === 0 ? dig.slice(3) : '');
+  var dir = document.getElementById('carritoDireccion').value.replace(/\s+/g,' ').trim();
+  var notas = document.getElementById('carritoNotas').value.replace(/\s+/g,' ').trim();
+  if(nombre.length < 2) return { error: 'Escribe tu nombre para coordinar la entrega.', campo: 'carritoNombre' };
+  if(!tel) return { error: 'Escribe tu número de WhatsApp (8 dígitos) para coordinar la entrega.', campo: 'carritoTelefono' };
+  if(dir.length < 10) return { error: 'Escribe tu dirección de entrega: zona, calle, número y una referencia.', campo: 'carritoDireccion' };
+  return { datos: { nombre: nombre, telefono: tel, direccion: dir, notas: notas } };
+}
+function guardarContactoEntrega(d){ try{ localStorage.setItem('petzid_carrito_contacto', JSON.stringify(d)); }catch(e){} }
+function prefillContactoEntrega(){
+  try{
+    var d = JSON.parse(localStorage.getItem('petzid_carrito_contacto') || 'null');
+    if(!d) return;
+    [['carritoNombre','nombre'],['carritoTelefono','telefono'],['carritoDireccion','direccion'],['carritoNotas','notas']].forEach(function(par){
+      var el = document.getElementById(par[0]);
+      if(el && !el.value) el.value = d[par[1]] || '';
+    });
+  }catch(e){}
 }
 
 function irAPagar(){
@@ -262,6 +292,16 @@ function irAPagar(){
   }
   if(!sessionEmail) localStorage.setItem('petzid_carrito_email', email);
 
+  var contacto = leerContactoEntrega();
+  if(contacto.error){
+    errorMsg.textContent = contacto.error;
+    errorMsg.style.display = 'block';
+    var campo = document.getElementById(contacto.campo);
+    if(campo){ campo.focus(); if(campo.scrollIntoView) campo.scrollIntoView({block:'center'}); }
+    return;
+  }
+  guardarContactoEntrega(contacto.datos);
+
   btn.disabled = true;
   btn.textContent = 'Generando link de pago...';
 
@@ -269,7 +309,7 @@ function irAPagar(){
 
   fetch('/api/crear-checkout', {
     method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ email: email, items: itemsPayload, cupon: cuponActual || undefined })
+    body: JSON.stringify({ email: email, items: itemsPayload, cupon: cuponActual || undefined, contacto: contacto.datos })
   }).then(function(r){ return r.json(); })
   .then(function(d){
     if(d.ok && d.checkout_url){
@@ -294,7 +334,7 @@ function irAPagar(){
   if(params.get('pago') === 'exito'){
     carrito = [];
     guardarCarrito();
-    setTimeout(function(){ alert('¡Gracias por tu compra! Te llegará un correo con la confirmación.'); }, 300);
+    setTimeout(function(){ alert('¡Gracias por tu compra! Te llegará un correo con la confirmación, y te escribiremos por WhatsApp para coordinar la entrega.'); }, 300);
   }
 })();
 
@@ -604,6 +644,14 @@ document.addEventListener('keydown', function(e){
       <div class="carrito-error" id="carritoErrorMsg"></div>
       <div class="carrito-email-wrap" id="carritoEmailWrap">
         <input type="email" id="carritoEmailInput" placeholder="Tu correo (para la confirmación)">
+      </div>
+      <div class="carrito-entrega" id="carritoEntregaWrap">
+        <div class="carrito-entrega-tit">🛵 Datos para tu entrega a domicilio</div>
+        <input type="text" id="carritoNombre" placeholder="Tu nombre completo" autocomplete="name">
+        <input type="tel" id="carritoTelefono" placeholder="Tu WhatsApp (8 dígitos)" autocomplete="tel" inputmode="tel">
+        <textarea id="carritoDireccion" rows="2" placeholder="Dirección: zona, calle, número y una referencia" autocomplete="street-address"></textarea>
+        <input type="text" id="carritoNotas" placeholder="Notas para la entrega (opcional)">
+        <div class="carrito-entrega-nota">Después de pagar, te escribimos por WhatsApp para confirmar el día y el horario de entrega.</div>
       </div>
       <div class="carrito-email-wrap" style="display:flex;gap:8px">
         <input type="text" id="carritoCuponInput" placeholder="¿Tienes un cupón?" style="text-transform:uppercase">
