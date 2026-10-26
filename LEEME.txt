@@ -9,4 +9,4 @@ SUBIR A GITHUB (en este orden)
 IMPORTANTE
 - La carpeta api  NO trae admin.js. No toques api/admin.js (debe quedar con su contenido original).
 - Apps Script (Code.gs) y los .sql NO van a GitHub.
-- Para comprobar: abre https://app.revistapetmi.com/api/galeria  -> debe mostrar "version":"2026-10-19-e"
+- Para comprobar: abre https://app.revistapetmi.com/api/galeria  -> debe mostrar "version":"2026-10-19-f"

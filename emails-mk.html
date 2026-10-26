@@ -119,6 +119,11 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
         <input type="email" id="sisEmail" class="mk-in" placeholder="Tu correo para la prueba (opcional)" style="flex:1;min-width:220px;max-width:360px">
         <button class="btn-primary" id="sisBtn" onclick="probarSistema()">▶ Probar ahora</button>
       </div>
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:4px">🔑 Probar otra llave de Wix <span style="font-weight:400;color:#888">(opcional)</span></div>
+        <div style="font-size:12.5px;color:#777;line-height:1.6;margin-bottom:8px">Pega aquí una llave (por ejemplo la que guarda Apps Script, o una nueva de Wix) para ver si sirve <b>antes de cambiarla en Vercel</b>. <b>No se guarda en ningún lado</b>: solo se usa para esta prueba y el campo se borra al terminar.</div>
+        <input type="password" id="sisLlave" class="mk-in" placeholder="Pega la llave aquí (se borra al probar)" autocomplete="off" style="max-width:520px">
+      </div>
       <div class="card" id="sisResultado"><div style="color:#aaa;padding:6px 0">Toca "Probar ahora" para ver el resultado.</div></div>
     </div>
 
@@ -504,7 +509,11 @@ async function probarSistema(){
   var email = document.getElementById('sisEmail').value.trim();
   if(email) localStorage.setItem('petmi_mk_prueba', email);
   btn.disabled = true; btn.textContent = 'Probando...'; out.innerHTML = '<div style="padding:16px;color:#aaa">Probando Wix y Apps Script (puede tardar unos segundos)...</div>';
-  var d = await mkFetch('diagnosticoWix', { email: email });
+  var cuerpoPrueba = { email: email };
+  var llavePegada = document.getElementById('sisLlave').value.trim();
+  if(llavePegada) cuerpoPrueba.llave = llavePegada;
+  var d = await mkFetch('diagnosticoWix', cuerpoPrueba);
+  document.getElementById('sisLlave').value = '';   // la llave no se queda en la página
   btn.disabled = false; btn.textContent = '▶ Probar ahora';
   if(!d.ok){ out.innerHTML = '<div style="background:#fdecea;color:#c0392b;border-radius:10px;padding:12px 14px;font-weight:700">' + _escC(d.error || 'No se pudo hacer la prueba') + '</div>'; return; }
   function fila(titulo, estado, detalle, ayuda){
@@ -516,8 +525,8 @@ async function probarSistema(){
   }
   var permiso403 = function(x){ return x && /403|401|permission|permiso/i.test((x.estado || '') + ' ' + (x.detalle || '')); };
   var ayudaMedios = !d.clave_definida ? 'Al servidor le falta la variable <b>WIX_API_KEY</b> en Vercel.'
-    : (permiso403(d.medios) ? 'La llave de Wix del servidor <b>no tiene permiso de Medios</b>. Mientras siga así, <b>nadie puede registrar una mascota</b> (la foto es obligatoria y no se puede subir). En Wix, abre esa llave de API y activa los permisos de <b>Media</b> (busca "media" en la lista de permisos). Si cambias los permisos de la misma llave no hace falta tocar Vercel; si creas una llave nueva, pégala en Vercel como <b>WIX_API_KEY</b> y haz Redeploy.' : 'Revisa el detalle de arriba.');
-  var ayudaCorreo = permiso403(d.correo) ? 'La llave de Wix del servidor <b>no tiene permiso para enviar correos</b>. Afecta: los envíos de esta página (Emails MK), el aviso de pedido nuevo y los recordatorios que salen por Wix (estos últimos caen al respaldo de Apps Script). En Wix, abre esa llave de API y activa el permiso de <b>envío de correos</b> (busca "email" en la lista de permisos). Es la misma llave que usa el registro para subir fotos: conviene que tenga los dos permisos.' : 'Revisa el detalle de arriba.';
+    : (permiso403(d.medios) ? 'La llave de Wix del servidor <b>no puede subir fotos</b>: el permiso que necesita se llama <b>Manage Media Manager</b>. Mientras siga así, las fotos del registro no se pueden subir (quien se registra solo podrá continuar sin foto). Si cambias los permisos de la misma llave no hace falta tocar Vercel; si creas una llave nueva, pégala en Vercel como <b>WIX_API_KEY</b> y haz Redeploy.' : 'Revisa el detalle de arriba.');
+  var ayudaCorreo = permiso403(d.correo) ? 'La llave de Wix del servidor <b>no puede enviar correos</b>: el permiso que necesita se llama <b>Manage Email Marketing</b>. Afecta: los envíos de esta página (Emails MK), el aviso de pedido nuevo y los recordatorios que salen por Wix (estos últimos caen al respaldo de Apps Script). Ojo: los correos mandados por esta vía <b>cuentan contra la cuota de Email Marketing</b> de tu sitio. Es la misma llave que usa el registro para subir fotos: conviene que tenga los dos permisos.' : 'Revisa el detalle de arriba.';
   var terminaGas = d.apps_script && d.apps_script.termina_en ? d.apps_script.termina_en : '';
   var ayudaGas = d.apps_script && d.apps_script.reconoce_recordatorio === false ? 'En Apps Script, cada <b>implementación</b> se actualiza por separado. <b>El servidor llama a la que termina en "…' + _escC(terminaGas) + '"</b>: ábrela en <b>Implementar → Administrar implementaciones</b>, compara su ID y en <b>✏️ → Versión → "Nueva versión" → Implementar</b>. Si publicaste en otra implementación (otro ID), esa no es la que usa el servidor. Pega antes el <b>Code.gs</b> nuevo en el archivo que tiene <code>doPost</code>, y revisa que solo haya <b>una</b> función <code>doPost</code> en todo el proyecto. No uses "Nueva implementación": crea un ID distinto.' : (d.apps_script && d.apps_script.tardo ? '' : 'Revisa que la dirección de Apps Script siga activa.');
   var correo = d.correo && d.correo.omitido ? fila('✉️ Mandar correos por Wix', null, 'No escribiste un correo para la prueba. Escríbelo arriba y vuelve a probar: se manda un correo de prueba real.', '') : fila('✉️ Mandar correos por Wix', d.correo.ok, d.correo.detalle, ayudaCorreo);
@@ -525,7 +534,7 @@ async function probarSistema(){
   // Datos seguros de la llave guardada en Vercel (nunca la llave): sirven para ver si se copió incompleta o con basura
   var ci = d.clave_info, infoLlave = '';
   if(d.clave_definida && ci){
-    infoLlave = '<div style="font-size:12.5px;color:#555;line-height:1.7;margin-bottom:6px">🔑 Llave guardada en Vercel: <b>' + ci.longitud + ' caracteres</b>'
+    infoLlave = '<div style="font-size:12.5px;color:#555;line-height:1.7;margin-bottom:6px">🔑 ' + (d.llave_de_prueba ? 'Llave que pegaste para probar (NO se guardó)' : 'Llave guardada en Vercel') + ': <b>' + ci.longitud + ' caracteres</b>'
       + (ci.empieza_con_IST ? ' · empieza con "IST." ✅' : ' · <span style="color:#c0392b">⚠️ no empieza con "IST." (las llaves de Wix suelen empezar así; puede estar incompleta o ser otra cosa)</span>')
       + (ci.longitud < 200 ? ' · <span style="color:#c0392b">⚠️ es corta (suelen ser mucho más largas): probablemente se copió incompleta</span>' : '')
       + (ci.traia_comillas_o_espacios ? ' · ⚠️ traía comillas o espacios de más (el servidor ya los quita)' : '')
@@ -536,13 +545,23 @@ async function probarSistema(){
     infoLlave += '<div style="font-size:12.5px;color:#555;line-height:1.7;margin-bottom:6px">🖥️ Este servidor: <b>' + _escC(sv.ambiente) + '</b>' + (sv.commit ? ' · commit <b>' + _escC(sv.commit) + '</b>' : '') + (sv.despliegue ? ' · despliegue <b>' + _escC(sv.despliegue) + '</b>' : '') + '</div>';
   }
   // El servidor sigue leyendo un valor muy corto: la llave NUEVA todavía no le llega (no se guardó, se guardó en otro ambiente, o falta Redeploy)
-  if(d.clave_definida && ci && ci.longitud > 0 && ci.longitud < 200){
+  if(!d.llave_de_prueba && d.clave_definida && ci && ci.longitud > 0 && ci.longitud < 200){
     infoLlave += '<div style="background:#fff8e1;color:#7a5b00;border-radius:10px;padding:12px 14px;margin:8px 0 6px;font-size:13px;line-height:1.7"><b>Este servidor sigue leyendo un valor de solo ' + ci.longitud + ' caracteres.</b> Si ya pegaste la llave nueva, todavía no le llega. Revisa:<ol style="margin:6px 0 0 18px"><li>En Vercel → Settings → <b>Environment Variables</b>: la entrada <b>WIX_API_KEY</b> que editaste debe tener marcado <b>Production</b> (no solo Preview o Development) y no debe haber otra repetida.</li><li>Después de <b>Save</b>: <b>Deployments</b> → los tres puntos del primero → <b>Redeploy</b>, y espera a que diga <b>Ready</b>.</li><li>Compara arriba el <b>commit</b> y el <b>despliegue</b> con el último de la lista de Deployments: deben ser ese. Si el despliegue de Production es otro, haz clic en "Promote to Production" en el último.</li></ol></div>';
   }
   // Fotos y correos fallan igual con 403: son permisos distintos, así que lo más probable es que la llave ENTERA no sirva
-  var igual403 = d.medios && !d.medios.ok && d.correo && d.correo.ok === false && permiso403(d.medios) && permiso403(d.correo);
-  var bannerLlave = igual403 ? '<div style="background:#fdecea;color:#7f1d1d;border-radius:10px;padding:12px 14px;margin:8px 0 6px;font-size:13px;line-height:1.7"><b>Fotos y correos fallan igual (403).</b> Como usan permisos distintos, lo más probable es que <b>la llave entera no sea válida para este sitio</b> (copiada incompleta, de otra cuenta, o limitada a otro sitio), y no que le falte un solo permiso. Lo más seguro es <b>crear una llave nueva</b>:<ol style="margin:6px 0 0 18px"><li>En Wix: configuración de la cuenta → <b>Claves de API</b> → generar una nueva.</li><li>Permisos: busca <b>"media"</b> y <b>"email"</b> y marca los dos. En los sitios con acceso, que incluya el sitio de PetMi (o todos).</li><li>Cópiala completa con el botón de copiar (Wix la muestra <b>una sola vez</b>).</li><li>En Vercel: pégala en <b>WIX_API_KEY</b> (la llave sola, sin comillas ni espacios), guarda y haz <b>Redeploy</b>.</li><li>Vuelve aquí y toca "Probar ahora".</li></ol></div>' : '';
-  out.innerHTML = infoLlave + bannerLlave + (todo ? '<div style="background:#e3f4e5;color:#2e7d32;border-radius:10px;padding:12px 14px;margin-bottom:6px;font-weight:800">✅ Todo en orden: sube fotos, manda correos y Apps Script está al día.</div>' : '')
+  var igual403 = !d.llave_de_prueba && d.medios && !d.medios.ok && d.correo && d.correo.ok === false && permiso403(d.medios) && permiso403(d.correo);
+  var bannerLlave = igual403 ? '<div style="background:#fdecea;color:#7f1d1d;border-radius:10px;padding:12px 14px;margin:8px 0 6px;font-size:13px;line-height:1.7"><b>Fotos y correos fallan igual (403).</b> Como usan permisos distintos, lo más probable es que <b>la llave entera no sea válida para este sitio</b> (copiada incompleta, de otra cuenta, o limitada a otro sitio), y no que le falte un solo permiso. Lo más seguro es <b>crear una llave nueva</b>:<ol style="margin:6px 0 0 18px"><li>Entra al <b>API Keys Manager</b> de Wix (<b>manage.wix.com/account/api-keys</b>) con la <b>misma cuenta que es dueña del sitio "Revista Petmi"</b>. Wix pide verificación en <b>2 pasos</b> (un código por SMS).</li><li>Genera una llave nueva con los permisos <b>Manage Media Manager</b> (subir fotos) y <b>Manage Email Marketing</b> (enviar correos). En los sitios con acceso, que incluya <b>Revista Petmi</b> (o todos).</li><li>Cópiala completa con el botón de copiar (Wix la muestra <b>una sola vez</b>).</li><li>En Vercel: pégala en <b>WIX_API_KEY</b> (la llave sola, sin comillas ni espacios), guarda y haz <b>Redeploy</b>.</li><li>Vuelve aquí y toca "Probar ahora".</li></ol></div>' : '';
+  // Resultado de probar una llave candidata: dice si sirve y qué hacer con ella
+  var bannerPrueba = '';
+  if(d.llave_de_prueba){
+    var correoOk = d.correo && d.correo.ok === true, correoOmitido = d.correo && d.correo.omitido, medOk = d.medios && d.medios.ok === true;
+    if(medOk && correoOk) bannerPrueba = '<div style="background:#e3f4e5;color:#2e7d32;border-radius:10px;padding:12px 14px;margin:8px 0 6px;font-weight:800;line-height:1.6">✅ Esta llave sirve para <b>subir fotos y mandar correos</b>. Pégala en Vercel como <b>WIX_API_KEY</b> (sola, sin comillas ni espacios), guarda, haz <b>Redeploy</b> y vuelve a tocar "Probar ahora" SIN pegar nada: la línea de la llave debe mostrar este mismo largo.</div>';
+    else if(medOk && correoOmitido) bannerPrueba = '<div style="background:#e3f4e5;color:#2e7d32;border-radius:10px;padding:12px 14px;margin:8px 0 6px;line-height:1.6">✅ Esta llave <b>sí puede subir fotos</b> (lo más urgente: sin eso nadie se registra). Escribe tu correo arriba y vuelve a probar para comprobar también los correos.</div>';
+    else if(medOk) bannerPrueba = '<div style="background:#fff8e1;color:#7a5b00;border-radius:10px;padding:12px 14px;margin:8px 0 6px;line-height:1.6">⚠️ Esta llave <b>sube fotos pero no manda correos</b>. Sirve para arreglar el registro; para los correos falta darle el permiso de <b>email</b> en Wix.</div>';
+    else if(correoOk) bannerPrueba = '<div style="background:#fff8e1;color:#7a5b00;border-radius:10px;padding:12px 14px;margin:8px 0 6px;line-height:1.6">⚠️ Esta llave <b>manda correos pero no sube fotos</b>. Para el registro falta darle el permiso de <b>media</b> en Wix.</div>';
+    else bannerPrueba = '<div style="background:#fdecea;color:#7f1d1d;border-radius:10px;padding:12px 14px;margin:8px 0 6px;line-height:1.6">❌ <b>Esta llave no sirve</b> para este sitio (ni fotos ni correos). Prueba otra, o crea una nueva en Wix con los permisos de <b>media</b> y <b>email</b>.</div>';
+  }
+  out.innerHTML = infoLlave + bannerPrueba + bannerLlave + (todo && !d.llave_de_prueba ? '<div style="background:#e3f4e5;color:#2e7d32;border-radius:10px;padding:12px 14px;margin-bottom:6px;font-weight:800">✅ Todo en orden: sube fotos, manda correos y Apps Script está al día.</div>' : '')
     + fila('📷 Subir fotos (registro de mascotas)', d.medios.ok, d.medios.detalle, ayudaMedios) + correo
     + fila('⚙️ Apps Script (respaldo de correos)', d.apps_script.ok, (d.apps_script.detalle || '') + (terminaGas ? ' · El servidor llama a la implementación que termina en "…' + terminaGas + '".' : ''), ayudaGas);
 }
