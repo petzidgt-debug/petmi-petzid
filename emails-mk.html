@@ -68,7 +68,7 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
     <div class="paso" id="paso1"><span class="ic">⏳</span><div><b>Servidor</b><div class="tx"></div></div></div>
     <div class="paso" id="paso2"><span class="ic">⏳</span><div><b>Clave de administración</b><div class="tx"></div></div></div>
     <div class="paso" id="paso3"><span class="ic">⏳</span><div><b>Tablas de correos (Supabase)</b><div class="tx"></div></div></div>
-    <div id="versionPagina" style="font-size:11px;color:#bbb;margin-top:6px">Versión de esta página: 19-oct-2026 · diagnóstico del servidor v2</div>
+    <div id="versionPagina" style="font-size:11px;color:#bbb;margin-top:6px">Versión de esta página: 26-oct-2026 · carritos abandonados</div>
   </div>
 
   <div class="card login" id="login" style="display:none">
@@ -84,6 +84,7 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
       <button class="tab active" id="tabSemana" onclick="verTab('semana')">✉️ Correos de la semana</button>
       <button class="tab" id="tabClics" onclick="verTab('clics')">📊 Clics por correo</button>
       <button class="tab" id="tabChat" onclick="verTab('chat')">💬 Chat interno</button>
+      <button class="tab" id="tabCarritos" onclick="verTab('carritos')">🛒 Carritos</button>
       <button class="tab" id="tabFotos" onclick="verTab('fotos')">📸 Fotos</button>
       <button class="tab" id="tabSistema" onclick="verTab('sistema')">🔧 Sistema</button>
     </div>
@@ -112,6 +113,23 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
           </table>
         </div>
       </div>
+    </div>
+
+    <div id="panelCarritos" style="display:none">
+      <p style="color:#888;font-size:13px;margin-bottom:12px;line-height:1.6">Personas que <b>agregaron algo al carrito de la tienda y no terminaron la compra</b>. Un carrito cuenta como abandonado cuando lleva un rato sin tocarse. <b>"Llegó a pagar"</b> quiere decir que ya puso sus datos y llegó al cobro, pero el pago no se completó (ya tenemos su contacto completo). Quien termina comprando desaparece de esta lista solo.</p>
+      <div class="card" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+        <label style="font-size:13px;color:#555">Abandonado si lleva más de
+          <select id="carritosHoras" class="mk-in" style="display:inline-block;width:auto;margin:0 4px" onchange="loadCarritos()">
+            <option value="1">1 hora</option><option value="3">3 horas</option><option value="24">1 día</option><option value="72">3 días</option><option value="0">0 (todos, para probar)</option>
+          </select> sin tocarse</label>
+        <label style="font-size:13px;color:#555;cursor:pointer"><input type="checkbox" id="carritosSoloContacto" checked onchange="pintarCarritos()"> Solo los que dejaron contacto</label>
+        <button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="loadCarritos()">🔄 Actualizar</button>
+      </div>
+      <div class="card" id="carritosResumen">Cargando…</div>
+      <div class="table-card"><div class="table-wrap"><table>
+        <thead><tr><th>Última actividad</th><th>Cliente</th><th>Productos</th><th>Total</th><th>Etapa</th><th>Contactado</th><th></th></tr></thead>
+        <tbody id="carritosBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando…</td></tr></tbody>
+      </table></div></div>
     </div>
 
     <div id="panelFotos" style="display:none">
@@ -359,6 +377,7 @@ async function iniciar(){
   document.getElementById('app').style.display = 'block';
   _mkCampanas = d.campanas || [];
   mkPintarLista();
+  if(location.hash === '#carritos') verTab('carritos');   // enlace directo desde el Admin
 }
 
 // ═══ Pestaña "Clics por correo" (antes vivía en el Admin) ═══
@@ -369,11 +388,11 @@ function _fechaC(v){ return v ? new Date(v).toLocaleString('es-GT',{day:'2-digit
 function _ctrC(c){ return c.enviados > 0 ? (c.clics_unicos / c.enviados * 100).toFixed(1) + '%' : '—'; }
 
 function verTab(t){
-  ['semana', 'clics', 'chat', 'fotos', 'sistema'].forEach(function(n){
+  ['semana', 'clics', 'chat', 'carritos', 'fotos', 'sistema'].forEach(function(n){
     document.getElementById('panel' + n.charAt(0).toUpperCase() + n.slice(1)).style.display = t === n ? 'block' : 'none';
     document.getElementById('tab' + n.charAt(0).toUpperCase() + n.slice(1)).classList.toggle('active', t === n);
   });
-  if(t === 'clics') loadCorreos(); else if(t === 'chat') loadChat(); else if(t === 'fotos') loadFotos(); else if(t === 'sistema'){ var e = document.getElementById('sisEmail'); if(e && !e.value) e.value = localStorage.getItem('petmi_mk_prueba') || ''; } else mkCargar();
+  if(t === 'clics') loadCorreos(); else if(t === 'chat') loadChat(); else if(t === 'carritos') loadCarritos(); else if(t === 'fotos') loadFotos(); else if(t === 'sistema'){ var e = document.getElementById('sisEmail'); if(e && !e.value) e.value = localStorage.getItem('petmi_mk_prueba') || ''; } else mkCargar();
 }
 
 async function loadCorreos(){
@@ -644,6 +663,73 @@ async function mkEnviarFotos(){
   prog.innerHTML = html;
   await loadFotos();
   if(prog.innerHTML.indexOf('Cargando') >= 0) prog.innerHTML = html;
+}
+
+// ═══ Pestaña "Carritos": personas que dejaron la compra a medias ═══
+var _carritos = [];
+function _hacePoco(iso){
+  if(!iso) return '—';
+  var min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if(min < 60) return 'hace ' + min + ' min';
+  if(min < 1440) return 'hace ' + Math.round(min / 60) + ' h';
+  return 'hace ' + Math.round(min / 1440) + ' d';
+}
+function _q(centavos){ return 'Q' + (centavos / 100).toFixed(2); }
+function _resumenProductos(items, max){
+  var l = (items || []).map(function(i){ return i.cantidad + '× ' + i.nombre; });
+  return max && l.length > max ? l.slice(0, max).join(', ') + ' y ' + (l.length - max) + ' más' : l.join(', ');
+}
+async function loadCarritos(){
+  var res = document.getElementById('carritosResumen'), body = document.getElementById('carritosBody');
+  res.textContent = 'Cargando…';
+  var d = await mkFetch('getCarritosAbandonados&horas=' + encodeURIComponent(document.getElementById('carritosHoras').value));
+  if(!d.ok){ _carritos = []; res.innerHTML = '<span style="color:#c0392b">' + _escC(d.error || 'No se pudo cargar') + '</span>'; body.innerHTML = ''; return; }
+  _carritos = d.carritos || []; var r = d.resumen;
+  res.innerHTML = '<div style="font-size:15px;margin-bottom:6px"><b>' + r.abandonados + '</b> ' + (r.abandonados === 1 ? 'carrito abandonado' : 'carritos abandonados') + ' · <b style="color:#d35400">' + _q(r.valor_centavos) + '</b> en juego</div>'
+    + '<div style="font-size:12.5px;color:#777;line-height:1.7"><b>' + r.con_contacto + '</b> dejaron contacto (les puedes escribir) · <b>' + r.sin_contacto + '</b> sin contacto · <b>' + r.en_pago + '</b> llegaron a pagar · <b>' + r.solo_agrego + '</b> solo agregaron'
+    + (r.recuperados ? ' · <span style="color:#2e7d32"><b>' + r.recuperados + '</b> ya compraron después (no cuentan)</span>' : '') + '</div>';
+  pintarCarritos();
+}
+function pintarCarritos(){
+  var body = document.getElementById('carritosBody'), solo = document.getElementById('carritosSoloContacto').checked;
+  var lista = _carritos.filter(function(c){ return !solo || c.email || c.telefono; });
+  if(!lista.length){ body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#aaa">' + (_carritos.length ? 'Ninguno dejó contacto. Quita el filtro de arriba para verlos todos.' : '🎉 No hay carritos abandonados.') + '</td></tr>'; return; }
+  body.innerHTML = lista.map(function(c){
+    var cliente = (c.nombre ? '<b>' + _escC(c.nombre) + '</b><br>' : '') + (c.email ? '<span style="font-size:12px">' + _escC(c.email) + '</span><br>' : '') + (c.telefono ? '<span style="font-size:12px;color:#666">' + _escC(c.telefono.replace(/^502/, '+502 ')) + '</span>' : '') || '<span style="color:#bbb">Sin contacto</span>';
+    var etapa = c.etapa === 'en_pago' ? '<span style="background:#fff0e0;color:#b35900;border-radius:99px;padding:3px 10px;font-size:11.5px;font-weight:700;white-space:nowrap">💳 Llegó a pagar</span>' : '<span style="background:#eee;color:#555;border-radius:99px;padding:3px 10px;font-size:11.5px;font-weight:700;white-space:nowrap">🛒 Solo agregó</span>';
+    var acciones = (c.telefono ? '<a class="btn-sm" style="background:#25D366;color:#fff;text-decoration:none;margin-right:4px" target="_blank" rel="noopener" href="' + _escC(waCarrito(c)) + '">💬</a>' : '')
+      + (c.email ? '<button class="btn-sm" style="background:#e0f0ff;color:#0055aa;margin-right:4px" title="Copiar correo" onclick="copiarCorreoCarrito(\'' + _escC(c.id) + '\')">✉️</button>' : '')
+      + '<button class="btn-sm" style="background:#eee;color:#555;margin-right:4px" title="' + (c.contactado_at ? 'Quitar la marca' : 'Marcar como contactado') + '" onclick="marcarCarrito(\'' + _escC(c.id) + '\',' + (c.contactado_at ? 'false' : 'true') + ')">' + (c.contactado_at ? '↩' : '✓') + '</button>'
+      + '<button class="btn-sm" style="background:#fdecea;color:#c0392b" title="Borrar" onclick="borrarCarrito(\'' + _escC(c.id) + '\')">🗑</button>';
+    return '<tr><td style="white-space:nowrap"><b>' + _hacePoco(c.actualizado_at) + '</b><br><span style="font-size:11.5px;color:#999">' + _fechaC(c.actualizado_at) + '</span></td><td>' + cliente + '</td>'
+      + '<td style="max-width:260px;line-height:1.5;font-size:12.5px">' + _escC(_resumenProductos(c.items, 3)) + '</td><td><b>' + _q(c.total_centavos) + '</b></td><td>' + etapa + '</td>'
+      + '<td>' + (c.contactado_at ? '<span style="color:#2e7d32;font-size:12px">✓ ' + _fechaC(c.contactado_at) + '</span>' : '<span style="color:#bbb">—</span>') + '</td><td style="white-space:nowrap">' + acciones + '</td></tr>';
+  }).join('');
+}
+function waCarrito(c){
+  var primero = String(c.nombre || '').trim().split(/\s+/)[0];
+  var msg = 'Hola' + (primero ? ' ' + primero : '') + ' 🐾, te escribimos de PetMi. Vimos que dejaste en tu carrito: ' + _resumenProductos(c.items, 3) + '. ¿Te ayudamos a terminar tu pedido? Hacemos la entrega a domicilio. Puedes retomarlo aquí: https://app.revistapetmi.com/tienda.html';
+  return 'https://wa.me/' + String(c.telefono).replace(/\D/g, '') + '?text=' + encodeURIComponent(msg);
+}
+function copiarCorreoCarrito(id){
+  var c = _carritos.find(function(x){ return x.id === id; }); if(!c || !c.email) return;
+  function listo(){ alert('✅ Correo copiado: ' + c.email); }
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(c.email).then(listo, function(){ prompt('Copia este correo (Ctrl+C):', c.email); }); }
+  else { prompt('Copia este correo (Ctrl+C):', c.email); }
+}
+async function marcarCarrito(id, contactado){
+  var d = await mkFetch('marcarCarritoContactado', { carrito_id: id, contactado: contactado });
+  if(!d.ok){ alert('No se pudo marcar: ' + (d.error || 'error')); return; }
+  var c = _carritos.find(function(x){ return x.id === id; }); if(c) c.contactado_at = contactado ? new Date().toISOString() : null;
+  pintarCarritos();
+}
+async function borrarCarrito(id){
+  var c = _carritos.find(function(x){ return x.id === id; });
+  if(!confirm('¿Borrar este carrito' + (c && (c.nombre || c.email) ? ' de ' + (c.nombre || c.email) : '') + '? No se puede deshacer.')) return;
+  var d = await mkFetch('eliminarCarrito', { carrito_id: id });
+  if(!d.ok){ alert('No se pudo borrar: ' + (d.error || 'error')); return; }
+  _carritos = _carritos.filter(function(x){ return x.id !== id; });
+  loadCarritos();
 }
 
 window.addEventListener('DOMContentLoaded', function(){

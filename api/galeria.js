@@ -9,7 +9,7 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 const CARRERA_RESERVAS_ABIERTAS = false;
 
 // Marca de versión: se ve abriendo /api/galeria en el navegador. Sirve para comprobar en 5 segundos si un despliegue nuevo ya está en línea.
-const GALERIA_VERSION = '2026-10-19-f';
+const GALERIA_VERSION = '2026-10-26-a';
 
 // ── Web Push (notificaciones) ───────────────────────────────
 const webpush = require('web-push');
@@ -592,6 +592,13 @@ async function _estadoSinFotoMK() {
   lista.sort(function (a, b) { return (a.estado === 'listo' ? 0 : 1) - (b.estado === 'listo' ? 0 : 1) || String(b.entro).localeCompare(String(a.entro)); });
   return { lista: lista, conteo: conteo };
 }
+
+// ── Carritos abandonados de la tienda ──────────────────────────────────
+const _CARRITO_ID_RE = /^[A-Za-z0-9_-]{16,64}$/;
+const _PEDIDO_PAGADO_ESTADOS = ['pagado', 'confirmado', 'en_camino', 'entregado'];
+function _telefonoGT(v) { const d = String(v || '').replace(/\D/g, ''); return d.length === 8 ? '502' + d : (d.length === 11 && d.indexOf('502') === 0 ? d : ''); }
+function _firmaItemsCarrito(items) { return (Array.isArray(items) ? items : []).map(function (i) { return String(i.producto_id) + 'x' + String(i.cantidad); }).sort().join(','); }
+function _headersSB(extra) { return Object.assign({ 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }, extra || {}); }
 
 function _normTextoMK(s) {
   return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -3298,6 +3305,101 @@ export default async function handler(req, res) {
       const [medios, correo, appsScript] = await Promise.all([probarMedios(), probarCorreo(), probarAppsScript()]);
       out.medios = medios; out.correo = correo; out.apps_script = appsScript;
       return res.status(200).json({ ok: true, ...out });
+    }
+
+    // ══ Carritos abandonados ══════════════════════════════════════════
+    // guardarCarrito — PÚBLICA: la tienda copia aquí el carrito del visitante. Nunca se confía en el precio ni el nombre que manda el
+    // navegador: se toman de tienda_productos. El contacto (correo, nombre, WhatsApp) solo se guarda si es válido.
+    if (action === 'guardarCarrito' && req.method === 'POST') {
+      const b = req.body || {};
+      const carritoId = String(b.carrito_id || '').trim();
+      if (!_CARRITO_ID_RE.test(carritoId)) return res.status(400).json({ ok: false, error: 'carrito_id inválido' });
+      if (JSON.stringify(b).length > 20000) return res.status(400).json({ ok: false, error: 'Solicitud demasiado grande' });
+      const visitante = _CARRITO_ID_RE.test(String(b.visitante_id || '')) ? String(b.visitante_id) : null;
+      const pedidos = [];
+      (Array.isArray(b.items) ? b.items.slice(0, 30) : []).forEach(function (i) {
+        const id = String(i && i.producto_id != null ? i.producto_id : '');
+        const cant = Math.min(99, Math.max(1, parseInt(i && i.cantidad, 10) || 1));
+        if (/^[A-Za-z0-9_-]{1,40}$/.test(id) && !pedidos.some(function (p) { return p.id === id; })) pedidos.push({ id: id, cant: cant });
+      });
+      const email = String(b.email || '').trim().toLowerCase().slice(0, 120);
+      const nombre = String(b.nombre || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+      const tel = _telefonoGT(b.telefono);
+
+      const rEx = await fetch(SUPABASE_URL + '/rest/v1/carritos_tienda?carrito_id=eq.' + encodeURIComponent(carritoId) + '&select=estado,items&limit=1', { headers: _headersSB() });
+      if (!rEx.ok) return res.status(200).json({ ok: false, error: 'sin_tabla' });   // aún no se corrió crear_carritos_tienda.sql
+      const ex = ((await rEx.json().catch(() => [])) || [])[0];
+      if (ex && ex.estado === 'comprado') return res.status(200).json({ ok: true, ignorado: 'comprado' });
+
+      let items = [], total = 0;
+      if (pedidos.length) {
+        const rP = await fetch(SUPABASE_URL + '/rest/v1/tienda_productos?id=in.(' + pedidos.map(function (p) { return p.id; }).join(',') + ')&select=id,nombre,precio,activo', { headers: _headersSB() });
+        const prods = await rP.json().catch(() => []);
+        const porId = {}; (Array.isArray(prods) ? prods : []).forEach(function (p) { porId[p.id] = p; });
+        pedidos.forEach(function (p) {
+          const real = porId[p.id];
+          if (!real || !real.activo || real.precio == null) return;
+          items.push({ producto_id: real.id, nombre: String(real.nombre || '').slice(0, 120), precio: Number(real.precio), cantidad: p.cant });
+          total += Math.round(Number(real.precio) * 100) * p.cant;
+        });
+      }
+      if (!items.length && !ex) return res.status(200).json({ ok: true, guardado: false });   // carrito vacío que nunca se guardó: nada que anotar
+      // Si ya estaba "en_pago" y el carrito no cambió, se queda en_pago (un envío tardío del navegador no debe degradarlo).
+      let estado = items.length ? 'activo' : 'vacio';
+      if (ex && ex.estado === 'en_pago' && items.length && _firmaItemsCarrito(ex.items) === _firmaItemsCarrito(items)) estado = 'en_pago';
+      const fila = { carrito_id: carritoId, items: items, total_centavos: total, estado: estado, actualizado_at: new Date().toISOString() };
+      if (visitante) fila.visitante_id = visitante;
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fila.email = email;
+      if (nombre.length >= 2) fila.nombre = nombre;
+      if (tel) fila.telefono = tel;
+      const rUp = await fetch(SUPABASE_URL + '/rest/v1/carritos_tienda?on_conflict=carrito_id', { method: 'POST', headers: _headersSB({ 'Prefer': 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify(fila) });
+      return res.status(200).json({ ok: rUp.ok, guardado: rUp.ok, estado: estado });
+    }
+
+    // getCarritosAbandonados — con clave. Abandonado = agregó cosas o llegó a pagar, y no ha tocado el carrito en las últimas N horas.
+    if (action === 'getCarritosAbandonados') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const horas = Math.max(0, Math.min(720, parseFloat(req.query.horas)));
+      const h = isNaN(horas) ? 1 : horas;
+      const corte = new Date(Date.now() - h * 3600e3).toISOString();
+      const rC = await fetch(SUPABASE_URL + '/rest/v1/carritos_tienda?estado=in.(activo,en_pago)&actualizado_at=lt.' + encodeURIComponent(corte) + '&select=*&order=actualizado_at.desc&limit=500', { headers: _headersSB() });
+      if (!rC.ok) return res.status(200).json({ ok: false, error: 'No se pudo leer la tabla carritos_tienda. ¿Ya corriste crear_carritos_tienda.sql en Supabase?' });
+      const carritos = await rC.json().catch(() => []);
+      // Quien ya compró no cuenta como abandonado: pedido pagado de ese carrito, o una compra posterior con el mismo correo.
+      const desde = new Date(Date.now() - 90 * 86400e3).toISOString();
+      const rPag = await fetch(SUPABASE_URL + '/rest/v1/pedidos_tienda?estado=in.(' + _PEDIDO_PAGADO_ESTADOS.join(',') + ')&created_at=gt.' + encodeURIComponent(desde) + '&select=id,email,created_at&limit=2000', { headers: _headersSB() });
+      const pagados = rPag.ok ? ((await rPag.json().catch(() => [])) || []) : [];
+      const idsPagados = new Set(pagados.map(function (p) { return String(p.id); }));
+      const ultimaCompraPorEmail = {};
+      pagados.forEach(function (p) { const e = String(p.email || '').toLowerCase(); if (e && (!ultimaCompraPorEmail[e] || p.created_at > ultimaCompraPorEmail[e])) ultimaCompraPorEmail[e] = p.created_at; });
+      let recuperados = 0; const lista = [];
+      (Array.isArray(carritos) ? carritos : []).forEach(function (c) {
+        const compro = (c.pedido_id && idsPagados.has(String(c.pedido_id))) || (c.email && ultimaCompraPorEmail[String(c.email).toLowerCase()] && ultimaCompraPorEmail[String(c.email).toLowerCase()] > c.creado_at);
+        if (compro) { recuperados++; return; }
+        lista.push({ id: c.carrito_id, etapa: c.estado === 'en_pago' ? 'en_pago' : 'agrego', email: c.email || '', nombre: c.nombre || '', telefono: c.telefono || '',
+          items: Array.isArray(c.items) ? c.items : [], total_centavos: c.total_centavos || 0, creado_at: c.creado_at, actualizado_at: c.actualizado_at, contactado_at: c.contactado_at || null });
+      });
+      const conContacto = lista.filter(function (c) { return c.email || c.telefono; }).length;
+      return res.status(200).json({ ok: true, horas: h, resumen: { abandonados: lista.length, con_contacto: conContacto, sin_contacto: lista.length - conContacto,
+        en_pago: lista.filter(function (c) { return c.etapa === 'en_pago'; }).length, solo_agrego: lista.filter(function (c) { return c.etapa === 'agrego'; }).length,
+        valor_centavos: lista.reduce(function (s, c) { return s + c.total_centavos; }, 0), recuperados: recuperados }, carritos: lista.slice(0, 300) });
+    }
+
+    if (action === 'marcarCarritoContactado' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const id = String((req.body || {}).carrito_id || '').trim();
+      if (!_CARRITO_ID_RE.test(id)) return res.status(400).json({ ok: false, error: 'carrito_id inválido' });
+      const contactado = (req.body || {}).contactado !== false;
+      const r = await fetch(SUPABASE_URL + '/rest/v1/carritos_tienda?carrito_id=eq.' + encodeURIComponent(id), { method: 'PATCH', headers: _headersSB({ 'Prefer': 'return=minimal' }), body: JSON.stringify({ contactado_at: contactado ? new Date().toISOString() : null }) });
+      return res.status(200).json({ ok: r.ok });
+    }
+
+    if (action === 'eliminarCarrito' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const id = String((req.body || {}).carrito_id || '').trim();
+      if (!_CARRITO_ID_RE.test(id)) return res.status(400).json({ ok: false, error: 'carrito_id inválido' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/carritos_tienda?carrito_id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: _headersSB({ 'Prefer': 'return=minimal' }) });
+      return res.status(200).json({ ok: r.ok });
     }
 
     // ── enviarRecordatorioFoto (2 oct) — correo para que el dueño agregue la

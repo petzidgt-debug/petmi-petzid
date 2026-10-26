@@ -229,6 +229,17 @@ async function procesarPagoTienda(pedidoId) {
     body: JSON.stringify({ estado: 'pagado', pagado_at: new Date().toISOString() })
   });
 
+  // Carritos abandonados: este carrito ya no está abandonado, compró. (Si la tabla no existe todavía, no pasa nada.)
+  if (rPatch.ok) {
+    try {
+      await fetch(SUPABASE_URL + '/rest/v1/carritos_tienda?pedido_id=eq.' + encodeURIComponent(pedidoId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ estado: 'comprado', actualizado_at: new Date().toISOString() })
+      });
+    } catch (e) { console.error('No se pudo marcar el carrito como comprado:', e.message); }
+  }
+
   // Avisos: correo al cliente (con sus datos de entrega) y correo a ti. Nunca detienen el proceso.
   let avisos = {};
   if (rPatch.ok) {

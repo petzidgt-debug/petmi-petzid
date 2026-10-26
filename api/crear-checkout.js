@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, items, cupon, contacto } = req.body || {};
+    const { email, items, cupon, contacto, carrito_id } = req.body || {};
 
     if (!email || !email.includes('@')) {
       return res.status(400).json({ ok: false, error: 'Correo inválido' });
@@ -181,6 +181,19 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ checkout_id: checkoutData.id || null, checkout_url: checkoutData.checkout_url })
     }).catch(() => {});
+
+    // Carritos abandonados: este carrito ya llegó a la etapa de pago y tenemos su contacto completo. Se marca "en_pago"; si paga, el
+    // webhook lo pasa a "comprado". Nunca debe detener ni estropear el cobro (la tabla puede no existir todavía).
+    const carritoId = String(carrito_id || '').trim();
+    if (/^[A-Za-z0-9_-]{16,64}$/.test(carritoId)) {
+      try {
+        await fetch(SUPABASE_URL + '/rest/v1/carritos_tienda?on_conflict=carrito_id', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify({ carrito_id: carritoId, estado: 'en_pago', pedido_id: pedidoCreado.id, email: email.toLowerCase(), nombre: nombreEntrega, telefono: telefonoEntrega, items: itemsFinal, total_centavos: totalCentavos, actualizado_at: new Date().toISOString() })
+        });
+      } catch (e) { console.error('No se pudo anotar el carrito en_pago:', e.message); }
+    }
 
     return res.status(200).json({ ok: true, checkout_url: checkoutData.checkout_url, pedido_id: pedidoCreado.id });
 

@@ -161,6 +161,54 @@ var carrito = JSON.parse(localStorage.getItem(CARRITO_KEY) || '[]');
 function guardarCarrito(){
   localStorage.setItem(CARRITO_KEY, JSON.stringify(carrito));
   actualizarBadgeCarrito();
+  sincronizarCarrito();
+}
+
+// ── Carritos abandonados: se copia el carrito al servidor para poder ayudar a quien lo deja a medias ──
+// Solo se manda id y cantidad de cada producto (el nombre y el precio los pone el servidor) y el contacto que la persona ya escribió.
+var SYNC_ESPERA_MS = 1500;   // se espera un momento para no mandar una petición por cada clic (se puede cambiar para probar)
+var _syncTimer = null, _ultimoSync = '';
+function _idAleatorio(){
+  var s = '';
+  try{ if(window.crypto && crypto.randomUUID) s = crypto.randomUUID(); }catch(e){}
+  if(!s) s = Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  s = s.replace(/[^A-Za-z0-9_-]/g,'').slice(0,40);
+  while(s.length < 16) s += Math.floor(Math.random()*36).toString(36);
+  return s;
+}
+function _idGuardado(clave){
+  var v = ''; try{ v = localStorage.getItem(clave) || ''; }catch(e){}
+  if(!/^[A-Za-z0-9_-]{16,64}$/.test(v)){ v = _idAleatorio(); try{ localStorage.setItem(clave, v); }catch(e){} }
+  return v;
+}
+function idVisitante(){ return _idGuardado('petmi_visitante'); }
+function idCarrito(){ return _idGuardado('petmi_carrito_id'); }
+function carritoNuevoId(){ try{ localStorage.removeItem('petmi_carrito_id'); localStorage.removeItem('petmi_carrito_sync'); }catch(e){} _ultimoSync = ''; }
+function contactoParaGuardar(){
+  var v = function(id){ var el = document.getElementById(id); return el ? String(el.value || '') : ''; };
+  var guardado = ''; try{ guardado = localStorage.getItem('petzid_carrito_email') || ''; }catch(e){}
+  var email = String(sessionEmail || guardado || v('carritoEmailInput') || '').trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) email = '';
+  var nombre = v('carritoNombre').replace(/\s+/g,' ').trim(); if(nombre.length < 2) nombre = '';
+  var dig = v('carritoTelefono').replace(/\D/g,'');
+  var tel = dig.length === 8 ? dig : (dig.length === 11 && dig.indexOf('502') === 0 ? dig.slice(3) : '');
+  return { email: email, nombre: nombre, telefono: tel };
+}
+function sincronizarCarrito(urgente){
+  clearTimeout(_syncTimer);
+  var hacer = function(){ try{
+    var items = carrito.map(function(i){ return { producto_id: i.producto_id, cantidad: i.cantidad }; });
+    var id = idCarrito();
+    var yaGuardado = false; try{ yaGuardado = localStorage.getItem('petmi_carrito_sync') === id; }catch(e){}
+    if(!items.length && !yaGuardado) return;   // nunca se guardó nada y sigue vacío: no hay nada que anotar
+    var ct = contactoParaGuardar();
+    var cuerpo = JSON.stringify({ carrito_id: id, visitante_id: idVisitante(), items: items, email: ct.email, nombre: ct.nombre, telefono: ct.telefono });
+    if(cuerpo === _ultimoSync) return;         // nada cambió desde el último envío
+    _ultimoSync = cuerpo;
+    if(items.length){ try{ localStorage.setItem('petmi_carrito_sync', id); }catch(e){} }
+    try{ fetch('/api/galeria?action=guardarCarrito', { method:'POST', headers:{'Content-Type':'application/json'}, body: cuerpo, keepalive: true }).catch(function(){}); }catch(e){}
+  }catch(e){} };   // copiar el carrito NUNCA debe estorbar la compra: cualquier falla aquí se ignora
+  if(urgente) hacer(); else _syncTimer = setTimeout(hacer, SYNC_ESPERA_MS);
 }
 
 function actualizarBadgeCarrito(){
@@ -309,7 +357,7 @@ function irAPagar(){
 
   fetch('/api/crear-checkout', {
     method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ email: email, items: itemsPayload, cupon: cuponActual || undefined, contacto: contacto.datos })
+    body: JSON.stringify({ email: email, items: itemsPayload, cupon: cuponActual || undefined, contacto: contacto.datos, carrito_id: idCarrito() })
   }).then(function(r){ return r.json(); })
   .then(function(d){
     if(d.ok && d.checkout_url){
@@ -333,12 +381,24 @@ function irAPagar(){
   var params = new URLSearchParams(window.location.search);
   if(params.get('pago') === 'exito'){
     carrito = [];
+    carritoNuevoId();   // el siguiente carrito de esta persona será uno nuevo (el anterior ya se compró)
     guardarCarrito();
     setTimeout(function(){ alert('¡Gracias por tu compra! Te llegará un correo con la confirmación, y te escribiremos por WhatsApp para coordinar la entrega.'); }, 300);
   }
 })();
 
 document.addEventListener('DOMContentLoaded', actualizarBadgeCarrito);
+document.addEventListener('DOMContentLoaded', function(){
+  // el contacto se copia en cuanto la persona lo escribe (aunque no llegue a pagar)
+  ['carritoEmailInput','carritoNombre','carritoTelefono'].forEach(function(id){
+    var el = document.getElementById(id); if(!el) return;
+    el.addEventListener('change', function(){ sincronizarCarrito(); });
+    el.addEventListener('blur', function(){ sincronizarCarrito(); });
+  });
+  // y si se va de la página (cierra la pestaña, cambia de app), se manda de inmediato lo último
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') sincronizarCarrito(true); });
+  window.addEventListener('pagehide', function(){ sincronizarCarrito(true); });
+});
 
 function iniciar(){
   actualizarBadgeCarrito();
@@ -651,7 +711,7 @@ document.addEventListener('keydown', function(e){
         <input type="tel" id="carritoTelefono" placeholder="Tu WhatsApp (8 dígitos)" autocomplete="tel" inputmode="tel">
         <textarea id="carritoDireccion" rows="2" placeholder="Dirección: zona, calle, número y una referencia" autocomplete="street-address"></textarea>
         <input type="text" id="carritoNotas" placeholder="Notas para la entrega (opcional)">
-        <div class="carrito-entrega-nota">Después de pagar, te escribimos por WhatsApp para confirmar el día y el horario de entrega.</div>
+        <div class="carrito-entrega-nota">Después de pagar, te escribimos por WhatsApp para confirmar el día y el horario de entrega. Si no terminas tu compra, guardamos tu carrito y tus datos de contacto para poder ayudarte a retomarla.</div>
       </div>
       <div class="carrito-email-wrap" style="display:flex;gap:8px">
         <input type="text" id="carritoCuponInput" placeholder="¿Tienes un cupón?" style="text-transform:uppercase">
