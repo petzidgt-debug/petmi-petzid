@@ -509,6 +509,90 @@ async function _gruposChatOficialMK() {
   }).sort(function (a, b) { return String(b.ultimo).localeCompare(String(a.ultimo)); });
 }
 
+// ── Recordatorio de foto: lógica reutilizable (individual y en lote) ──
+const _TOPE_RECORDATORIOS_FOTO = 3;           // máximo de recordatorios por mascota en toda su vida
+const _HORAS_ENTRE_RECORDATORIOS_FOTO = 24;   // y como mucho uno cada 24 horas
+const _HORAS_MUY_NUEVA = 2;                   // no se escribe a quien se registró hace menos de 2 horas (puede estar subiendo la foto)
+const _LOTE_RECORDATORIOS_FOTO_DEFECTO = 4, _LOTE_RECORDATORIOS_FOTO_MAX = 6;
+
+async function _enviarRecordatorioFotoUid(uid) {
+  const rM = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=nombre,dueno,email,foto&limit=1', {
+    headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+  });
+  const filasM = await rM.json().catch(() => null);
+  const m = Array.isArray(filasM) && filasM[0];
+  if (!m) return { ok: false, error: 'No se encontró la mascota.' };
+  const email = String(m.email || '').trim();
+  if (!email) return { ok: false, error: 'Esta mascota no tiene correo guardado.' };
+  if (m.foto && String(m.foto).indexOf('http') === 0) return { ok: false, error: 'Esta mascota ya tiene foto — no hace falta recordárselo.' };
+  const nombre = m.nombre || 'tu mascota', dueno = m.dueno || 'Amigo PetMi';
+
+  // Máximo un recordatorio por mascota cada 24 horas (la acción individual es pública: así no sirve para llenar de correos a un dueño)
+  try {
+    const rPrev = await fetch(SUPABASE_URL + '/rest/v1/email_envios?campana_id=eq.recordatorio_foto&uid=eq.' + encodeURIComponent(uid) + '&estado=eq.enviado&select=created_at&order=created_at.desc&limit=1', {
+      headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
+    });
+    const prev = await rPrev.json().catch(() => null);
+    if (Array.isArray(prev) && prev[0] && prev[0].created_at) {
+      const horas = (Date.now() - new Date(prev[0].created_at).getTime()) / 3600000;
+      if (horas < _HORAS_ENTRE_RECORDATORIOS_FOTO) return { ok: false, limite: true, error: 'Ya se le mandó un recordatorio hace ' + (horas < 1 ? 'menos de 1 hora' : Math.floor(horas) + ' h') + '. Espera 24 horas para volver a mandarle.' };
+    }
+  } catch (e) { /* si no se puede revisar el historial, no se bloquea el envío */ }
+
+  const envioId = crypto.randomUUID();   // va dentro del link del correo
+  const base = { id: envioId, campana_id: 'recordatorio_foto', tipo: 'recordatorio', email: email, uid: uid };
+  const porWix = await _enviarHtmlPorWix(email, '🐾 A ' + nombre + ' le falta su foto en PetMi', _htmlRecordatorioFoto(nombre, dueno, uid, envioId, email), 'recordatorioFoto');
+  if (porWix.ok) {
+    await _registrarEnvioCorreo({ ...base, estado: 'enviado', canal: 'wix', wix_id: porWix.wixId });
+    return { ok: true, email: email, via: 'wix' };
+  }
+  const gas = await _llamarAppsScript({ action: 'recordatorioFoto', uid: uid, t: _crearEnlaceFoto(uid, email) }, 8000);
+  if (gas.ok) {
+    // El correo de respaldo (Apps Script) lleva el link normal: se registra el envío, pero sus clics no se pueden medir.
+    await _registrarEnvioCorreo({ ...base, estado: 'enviado', canal: 'apps-script' });
+    return { ok: true, email: email, via: 'apps-script' };
+  }
+  await _registrarEnvioCorreo({ ...base, estado: 'error', error: (porWix.error + ' · ' + gas.error).substring(0, 200) });
+  return { ok: false, error: 'No se pudo enviar. ' + porWix.error + ' · ' + gas.error };
+}
+
+// Mascotas sin foto y por qué se les puede (o no) mandar el recordatorio en lote.
+async function _estadoSinFotoMK() {
+  const lecturas = await Promise.all([
+    _leerTodoSupabase('mascotas', 'uid=neq.PETMI-OFICIAL&select=uid,nombre,dueno,email,foto,angelito,created_at&order=created_at.desc', 30000),
+    _leerTodoSupabase('email_envios', 'campana_id=eq.recordatorio_foto&estado=eq.enviado&select=uid,created_at', 30000),
+    _leerTodoSupabase('email_bajas', 'select=email', 30000)
+  ]);
+  const masc = lecturas[0]; if (!masc) return null;
+  const envios = lecturas[1] || [], bajas = lecturas[2] || [];
+  const ahora = Date.now();
+  const porUid = {};
+  envios.forEach(function (e) { const k = String(e.uid || '').toLowerCase(); (porUid[k] = porUid[k] || []).push(new Date(e.created_at).getTime()); });
+  const bajasSet = new Set(bajas.map(function (b) { return String(b.email || '').trim().toLowerCase(); }));
+  const conteo = { listo: 0, sin_correo: 0, baja: 0, tope: 0, reciente: 0, muy_nueva: 0 };
+  const lista = [];
+  masc.forEach(function (m) {
+    const sinFoto = !/^https?:\/\//i.test(String(m.foto || '').trim());
+    const angel = m.angelito === true || String(m.angelito).toLowerCase() === 'true';
+    if (!sinFoto || angel) return;
+    const email = String(m.email || '').trim();
+    const env = (porUid[String(m.uid || '').toLowerCase()] || []).sort(function (a, b) { return b - a; });
+    const horasUlt = env.length ? (ahora - env[0]) / 3600000 : null;
+    const horasVida = m.created_at ? (ahora - new Date(m.created_at).getTime()) / 3600000 : 9999;
+    let estado = 'listo';
+    if (!email) estado = 'sin_correo';
+    else if (bajasSet.has(email.toLowerCase())) estado = 'baja';
+    else if (env.length >= _TOPE_RECORDATORIOS_FOTO) estado = 'tope';
+    else if (horasUlt !== null && horasUlt < _HORAS_ENTRE_RECORDATORIOS_FOTO) estado = 'reciente';
+    else if (horasVida < _HORAS_MUY_NUEVA) estado = 'muy_nueva';
+    conteo[estado]++;
+    lista.push({ uid: m.uid, nombre: m.nombre || '', dueno: m.dueno || '', email: email, entro: m.created_at, enviados: env.length, ultimo: env.length ? new Date(env[0]).toISOString() : null, estado: estado });
+  });
+  // primero las que se pueden mandar, luego el resto (cada grupo, de más reciente a más antigua)
+  lista.sort(function (a, b) { return (a.estado === 'listo' ? 0 : 1) - (b.estado === 'listo' ? 0 : 1) || String(b.entro).localeCompare(String(a.entro)); });
+  return { lista: lista, conteo: conteo };
+}
+
 function _normTextoMK(s) {
   return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
@@ -3221,45 +3305,34 @@ export default async function handler(req, res) {
     if (action === 'enviarRecordatorioFoto' && req.method === 'POST') {
       const uid = String((req.body || {}).uid || '').trim();
       if (!uid) return res.status(400).json({ ok: false, error: 'Falta uid' });
-      const rM = await fetch(SUPABASE_URL + '/rest/v1/mascotas?uid=eq.' + encodeURIComponent(uid) + '&select=nombre,dueno,email,foto&limit=1', {
-        headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-      });
-      const filasM = await rM.json().catch(() => null);
-      const m = Array.isArray(filasM) && filasM[0];
-      if (!m) return res.status(200).json({ ok: false, error: 'No se encontró la mascota.' });
-      const email = String(m.email || '').trim();
-      if (!email) return res.status(200).json({ ok: false, error: 'Esta mascota no tiene correo guardado.' });
-      if (m.foto && String(m.foto).indexOf('http') === 0) return res.status(200).json({ ok: false, error: 'Esta mascota ya tiene foto — no hace falta recordárselo.' });
-      const nombre = m.nombre || 'tu mascota', dueno = m.dueno || 'Amigo PetMi';
+      return res.status(200).json(await _enviarRecordatorioFotoUid(uid));
+    }
 
-      // Máximo un recordatorio por mascota cada 24 horas (esta acción es pública: así no sirve para llenar de correos a un dueño)
-      try {
-        const rPrev = await fetch(SUPABASE_URL + '/rest/v1/email_envios?campana_id=eq.recordatorio_foto&uid=eq.' + encodeURIComponent(uid) + '&estado=eq.enviado&select=created_at&order=created_at.desc&limit=1', {
-          headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }
-        });
-        const prev = await rPrev.json().catch(() => null);
-        if (Array.isArray(prev) && prev[0] && prev[0].created_at) {
-          const horas = (Date.now() - new Date(prev[0].created_at).getTime()) / 3600000;
-          if (horas < 24) return res.status(200).json({ ok: false, limite: true, error: 'Ya se le mandó un recordatorio hace ' + (horas < 1 ? 'menos de 1 hora' : Math.floor(horas) + ' h') + '. Espera 24 horas para volver a mandarle.' });
-        }
-      } catch (e) { /* si no se puede revisar el historial, no se bloquea el envío */ }
+    // ── Recordatorios de foto EN LOTE (piden la clave de administración) ──
+    if (action === 'getResumenSinFoto') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const est = await _estadoSinFotoMK();
+      if (!est) return res.status(200).json({ ok: false, error: 'No se pudieron leer las mascotas.' });
+      return res.status(200).json({ ok: true, total: est.lista.length, listos: est.conteo.listo, por_estado: est.conteo, lista: est.lista.slice(0, 300) });
+    }
 
-      const envioId = crypto.randomUUID();   // va dentro del link del correo
-      const base = { id: envioId, campana_id: 'recordatorio_foto', tipo: 'recordatorio', email: email, uid: uid };
-      const porWix = await _enviarHtmlPorWix(email, '🐾 A ' + nombre + ' le falta su foto en PetMi', _htmlRecordatorioFoto(nombre, dueno, uid, envioId, email), 'recordatorioFoto');
-      if (porWix.ok) {
-        await _registrarEnvioCorreo({ ...base, estado: 'enviado', canal: 'wix', wix_id: porWix.wixId });
-        return res.status(200).json({ ok: true, email: email, via: 'wix' });
+    if (action === 'enviarLoteRecordatoriosFoto' && req.method === 'POST') {
+      if (!(await _adminAutorizado(req, res))) return;
+      const b = req.body || {};
+      const limite = Math.max(1, Math.min(_LOTE_RECORDATORIOS_FOTO_MAX, parseInt(b.limite, 10) || _LOTE_RECORDATORIOS_FOTO_DEFECTO));
+      const excluir = new Set((Array.isArray(b.excluir) ? b.excluir : []).slice(0, 500).map(function (u) { return String(u).toLowerCase(); }));
+      const est = await _estadoSinFotoMK();
+      if (!est) return res.status(200).json({ ok: false, error: 'No se pudieron leer las mascotas.' });
+      const candidatas = est.lista.filter(function (m) { return m.estado === 'listo' && !excluir.has(String(m.uid).toLowerCase()); });
+      const lote = candidatas.slice(0, limite);
+      const detalle = []; let enviados = 0, errores = 0, saltados = 0; const fallidos = [];
+      for (const m of lote) {
+        const r = await _enviarRecordatorioFotoUid(m.uid);
+        if (r.ok) { enviados++; detalle.push({ nombre: m.nombre, email: m.email, ok: true, via: r.via }); }
+        else if (r.limite) { saltados++; detalle.push({ nombre: m.nombre, email: m.email, ok: false, saltada: true, error: r.error }); }
+        else { errores++; fallidos.push(m.uid); detalle.push({ nombre: m.nombre, email: m.email, ok: false, error: String(r.error || '').slice(0, 160) }); }
       }
-
-      const gas = await _llamarAppsScript({ action: 'recordatorioFoto', uid: uid, t: _crearEnlaceFoto(uid, email) }, 8000);
-      if (gas.ok) {
-        // El correo de respaldo (Apps Script) lleva el link normal: se registra el envío, pero sus clics no se pueden medir.
-        await _registrarEnvioCorreo({ ...base, estado: 'enviado', canal: 'apps-script' });
-        return res.status(200).json({ ok: true, email: email, via: 'apps-script' });
-      }
-      await _registrarEnvioCorreo({ ...base, estado: 'error', error: (porWix.error + ' · ' + gas.error).substring(0, 200) });
-      return res.status(200).json({ ok: false, error: 'No se pudo enviar. ' + porWix.error + ' · ' + gas.error });
+      return res.status(200).json({ ok: true, enviados: enviados, errores: errores, saltados: saltados, fallidos: fallidos, detalle: detalle, restantes: Math.max(0, candidatas.length - lote.length) });
     }
 
     // ── enviarMensajeDirectoAdmin (18 sep) — el Admin le manda un
