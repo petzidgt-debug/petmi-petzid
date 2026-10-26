@@ -9,7 +9,7 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 const CARRERA_RESERVAS_ABIERTAS = false;
 
 // Marca de versión: se ve abriendo /api/galeria en el navegador. Sirve para comprobar en 5 segundos si un despliegue nuevo ya está en línea.
-const GALERIA_VERSION = '2026-10-19-e';
+const GALERIA_VERSION = '2026-10-19-f';
 
 // ── Web Push (notificaciones) ───────────────────────────────
 const webpush = require('web-push');
@@ -754,12 +754,16 @@ function _htmlRecordatorioFoto(nombre, dueno, uid, envioId, email) {
 }
 
 // Envía un correo HTML por la API de Wix (igual que el de los códigos de verificación).
-async function _enviarHtmlPorWix(email, asunto, html, etiquetaLog) {
-  if (!WIX_API_KEY) return { ok: false, error: 'WIX_API_KEY no configurada' };
+function _limpiarLlaveWix(v) { return String(v || '').trim().replace(/^["'`]+|["'`]+$/g, '').replace(/^Bearer\s+/i, '').trim(); }
+
+// llaveOpcional: solo la usa la prueba de Sistema para probar una llave candidata SIN guardarla; normalmente se usa la de Vercel.
+async function _enviarHtmlPorWix(email, asunto, html, etiquetaLog, llaveOpcional) {
+  const llaveUsar = llaveOpcional || WIX_API_KEY;
+  if (!llaveUsar) return { ok: false, error: 'WIX_API_KEY no configurada' };
   try {
     const r = await fetch('https://www.wixapis.com/email-transmissions/v1/email-transmissions/send', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': WIX_API_KEY, 'wix-site-id': WIX_SITE_ID },
+      headers: { 'Content-Type': 'application/json', 'Authorization': llaveUsar, 'wix-site-id': WIX_SITE_ID },
       body: JSON.stringify({
         emailTransmission: {
           emailSubject: asunto, emailHtmlContent: html,
@@ -3161,21 +3165,25 @@ export default async function handler(req, res) {
       if (!(await _adminAutorizado(req, res))) return;
       const para = String((req.body || {}).email || '').trim().toLowerCase();
       if (para && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(para)) return res.status(200).json({ ok: false, error: 'Escribe un correo válido para la prueba.' });
-      const out = { clave_definida: !!WIX_API_KEY };
-      // Datos SEGUROS de la llave guardada (nunca la llave): sirven para ver si se copió incompleta o con basura
-      const cruda = String(process.env.WIX_API_KEY || '');
-      out.clave_info = { longitud: WIX_API_KEY.length, empieza_con_IST: /^IST\./.test(WIX_API_KEY), traia_comillas_o_espacios: cruda !== WIX_API_KEY, partes: WIX_API_KEY ? WIX_API_KEY.split('.').length : 0,
+      // Si se pega una llave en "llave", se prueba ESA (sin guardarla ni mostrarla); si no, la que está en Vercel.
+      const crudaPrueba = String((req.body || {}).llave || '').slice(0, 4000);
+      const llavePrueba = _limpiarLlaveWix(crudaPrueba);
+      const llaveUsada = llavePrueba || WIX_API_KEY;
+      const out = { clave_definida: !!llaveUsada, llave_de_prueba: !!llavePrueba };
+      // Datos SEGUROS de la llave (nunca la llave): sirven para ver si se copió incompleta o con basura
+      const cruda = llavePrueba ? crudaPrueba : String(process.env.WIX_API_KEY || '');
+      out.clave_info = { longitud: llaveUsada.length, empieza_con_IST: /^IST\./.test(llaveUsada), traia_comillas_o_espacios: cruda !== llaveUsada, partes: llaveUsada ? llaveUsada.split('.').length : 0,
         // Solo si el valor es CORTO (una llave real de Wix tiene cientos de caracteres): primeras 2 letras y la última, para reconocer un valor de relleno
-        pista: (WIX_API_KEY.length > 0 && WIX_API_KEY.length < 40) ? (WIX_API_KEY.slice(0, 2) + '…' + WIX_API_KEY.slice(-1)) : '' };
+        pista: (llaveUsada.length > 0 && llaveUsada.length < 40) ? (llaveUsada.slice(0, 2) + '…' + llaveUsada.slice(-1)) : '' };
       // Desde dónde está respondiendo ESTE servidor: sirve para comprobar que es el despliegue de Production y el último
       out.servidor = { ambiente: process.env.VERCEL_ENV || '(no es Vercel)', commit: String(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7), despliegue: String(process.env.VERCEL_URL || '').slice(0, 90) };
       // Las tres comprobaciones corren A LA VEZ (antes una tras otra: si Apps Script tardaba, la prueba entera se alargaba).
       // 1) Subir fotos (registro): pedir una dirección de subida no crea ningún archivo
       const probarMedios = async function () {
-        if (!WIX_API_KEY) return { ok: false, detalle: 'No hay llave de Wix en el servidor (WIX_API_KEY).' };
+        if (!llaveUsada) return { ok: false, detalle: 'No hay llave de Wix en el servidor (WIX_API_KEY).' };
         try {
           const r = await fetch('https://www.wixapis.com/site-media/v1/files/generate-upload-url', {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': WIX_API_KEY, 'wix-site-id': WIX_SITE_ID },
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': llaveUsada, 'wix-site-id': WIX_SITE_ID },
             body: JSON.stringify({ mimeType: 'image/jpeg', fileName: 'diagnostico.jpg' })
           });
           const txt = await r.text().catch(() => '');
@@ -3188,7 +3196,7 @@ export default async function handler(req, res) {
       // 2) Mandar correos: solo si se escribe un destinatario (manda un correo de prueba real)
       const probarCorreo = async function () {
         if (!para) return { omitido: true, detalle: 'No escribiste un correo para la prueba.' };
-        const r = await _enviarHtmlPorWix(para, '🔧 Prueba de PetMi: Wix puede enviar correos', '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px"><h2>Prueba de PetMi</h2><p>Si lees esto, el servidor de PetMi sí puede mandar correos por Wix. 🐾</p></div>', 'diagnosticoWix');
+        const r = await _enviarHtmlPorWix(para, '🔧 Prueba de PetMi: Wix puede enviar correos', '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px"><h2>Prueba de PetMi</h2><p>Si lees esto, el servidor de PetMi sí puede mandar correos por Wix. 🐾</p></div>', 'diagnosticoWix', llaveUsada);
         return r.ok ? { ok: true, detalle: 'Correo de prueba enviado a ' + para + '.' } : { ok: false, detalle: String(r.error || '').slice(0, 200) };
       };
       // 3) Apps Script: pedir el recordatorio de una mascota que no existe no manda nada, pero dice si la acción existe
