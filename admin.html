@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<script src="/admin-auth.js"></script>
 <meta charset="UTF-8">
 <link rel="icon" href="/favico.jpg" type="image/jpeg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1216,7 +1217,7 @@ tr.ped-urgente td{background:#fff4f2}
 function doLogin(){
   var pass=document.getElementById('loginPass');
   if(!pass)return;
-  if(pass.value==='petmi2024'){
+  if(false){
     localStorage.setItem('petmi_admin','1');
     var lw=document.getElementById('loginWrap');
     var aw=document.getElementById('appWrap');
@@ -1233,7 +1234,7 @@ function doLogin(){
 // ── Configuración ─────────────────────────────────────────────
 // Las llamadas a Supabase van siempre a través de /api/galeria (servidor)
 // NUNCA incluir service_role key en el cliente
-var PASSWORD    = 'petmi2024';
+var PASSWORD    = null;
 var CLOUD_NAME  = 'dh5wgqgmk';
 var UPLOAD_PRESET = 'petzid';
 
@@ -1268,7 +1269,7 @@ function doLogout(){
 // ── Navegación ────────────────────────────────────────────────
 // ── Puntos Admin ──────────────────────────────────────────
 var SUPA_ADM = 'https://ilcreewilnkchvozicyp.supabase.co';
-var SUPA_ADM_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+var SUPA_ADM_KEY = 'SIN_LLAVE_EN_EL_NAVEGADOR';
 var SUPA_ADM_H = {'apikey': SUPA_ADM_KEY, 'Authorization': 'Bearer ' + SUPA_ADM_KEY};
 
 // ── Cuentas excluidas de TODAS las métricas/estadísticas ────────
@@ -2724,7 +2725,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 
 // ── Avisos pendientes ─────────────────────────────────────────
 var SUPA_ADMIN='https://ilcreewilnkchvozicyp.supabase.co';
-var SUPA_ADMIN_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+var SUPA_ADMIN_KEY='SIN_LLAVE_EN_EL_NAVEGADOR';
 
 function cargarAvisosTipo(tipo){
   window._ultimoTipoAvisoCargado = tipo;
@@ -3030,7 +3031,7 @@ function aprobarGrupo(id,nombre){
   if(!confirm('¿Aprobar el grupo "'+nombre+'"?'))return;
   fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
     method:'PATCH',
-    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Content-Type':'application/json','Prefer':'return=minimal'},
+    headers:{'apikey':'SIN_LLAVE_EN_EL_NAVEGADOR','Authorization':'Bearer SIN_LLAVE_EN_EL_NAVEGADOR','Content-Type':'application/json','Prefer':'return=minimal'},
     body:JSON.stringify({activo:true})
   }).then(function(){mostrarToastAdmin('Grupo "'+nombre+'" aprobado ✓');cargarAdminGrupos();})
   .catch(function(){mostrarToastAdmin('Error al aprobar');});
@@ -3040,7 +3041,7 @@ function rechazarGrupo(id,nombre){
   if(!confirm('¿Rechazar y eliminar la solicitud de "'+nombre+'"?'))return;
   fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
     method:'DELETE',
-    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8'}
+    headers:{'apikey':'SIN_LLAVE_EN_EL_NAVEGADOR','Authorization':'Bearer SIN_LLAVE_EN_EL_NAVEGADOR'}
   }).then(function(){mostrarToastAdmin('Solicitud rechazada');cargarAdminGrupos();})
   .catch(function(){mostrarToastAdmin('Error al rechazar');});
 }
@@ -3049,7 +3050,7 @@ function desactivarGrupo(id,nombre){
   if(!confirm('¿Desactivar el grupo "'+nombre+'"? Dejará de aparecer en la galería.'))return;
   fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
     method:'PATCH',
-    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Content-Type':'application/json','Prefer':'return=minimal'},
+    headers:{'apikey':'SIN_LLAVE_EN_EL_NAVEGADOR','Authorization':'Bearer SIN_LLAVE_EN_EL_NAVEGADOR','Content-Type':'application/json','Prefer':'return=minimal'},
     body:JSON.stringify({activo:false})
   }).then(function(){mostrarToastAdmin('Grupo desactivado');cargarAdminGrupos();})
   .catch(function(){mostrarToastAdmin('Error al desactivar');});
@@ -3066,7 +3067,7 @@ function editarGrupoAdmin(id){
   if(!Object.keys(data).length)return;
   fetch('https://ilcreewilnkchvozicyp.supabase.co/rest/v1/grupos?id=eq.'+id,{
     method:'PATCH',
-    headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.kL3U_9iE5gBnZjr3bDJHGm5l35hgVIQ_-nPAF6yZXk8','Content-Type':'application/json','Prefer':'return=minimal'},
+    headers:{'apikey':'SIN_LLAVE_EN_EL_NAVEGADOR','Authorization':'Bearer SIN_LLAVE_EN_EL_NAVEGADOR','Content-Type':'application/json','Prefer':'return=minimal'},
     body:JSON.stringify(data)
   }).then(function(){mostrarToastAdmin('Grupo actualizado ✓');cargarAdminGrupos();})
   .catch(function(){mostrarToastAdmin('Error al actualizar');});

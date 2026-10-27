@@ -1,5 +1,5 @@
 // PetMi Service Worker v1
-var CACHE_NAME = 'petmi-v1';
+var CACHE_NAME = 'petmi-v2';   // v2: borra las copias guardadas de premium.html y otras páginas que llevaban una llave
 var STATIC_ASSETS = [
   '/',
   '/galeria.html',

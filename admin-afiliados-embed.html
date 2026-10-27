@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<script src="/admin-auth.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="icon" href="/favico.jpg" type="image/jpeg">
@@ -213,7 +214,7 @@ tr:hover td{background:#fafafa}
 <script>
 var SUPA_URL='https://ilcreewilnkchvozicyp.supabase.co';
 var SUPA_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-var SUPA_SVC='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+var SUPA_SVC='SIN_LLAVE_EN_EL_NAVEGADOR';
 var HA={'apikey':SUPA_ANON,'Authorization':'Bearer '+SUPA_ANON};
 var HS={'apikey':SUPA_SVC,'Authorization':'Bearer '+SUPA_SVC,'Content-Type':'application/json','Prefer':'return=minimal'};
 
@@ -225,7 +226,7 @@ var PLAN_PUBS  = { basico: 1, silver: 3, gold: 1, digital_plus: 3, digital_plusp
 var PLAN_PRECIOS = { basico: 'Q150/mes', silver: 'Q350/mes', gold: 'Q600/mes', digital_plus: 'Q1,400/mes', digital_plusplus: 'Q2,500/mes' };
 
 function doLogin(){
-  if(document.getElementById('loginPass').value==='petmi2024'){
+  if(document.getElementById('loginPass').value===null){
     document.getElementById('loginWrap').style.display='none';
     document.getElementById('appWrap').style.display='block';
     cargarTodo();

@@ -1,0 +1,14 @@
+BORRAR DE GITHUB (después de subir los archivos de esta carpeta)
+
+Cómo: abre el archivo en GitHub -> el menú de los tres puntos (arriba a la derecha) -> Delete file -> Commit changes.
+
+IMPORTANTES (tienen contraseñas o llaves, y están públicos):
+  1) old-admin.html          versión vieja del Admin, con una contraseña escrita en el código
+  2) webhook/premium         copia vieja y pública del webhook de pagos, con su secreto adentro
+  3) share.js                (el de la RAÍZ; la real es api/share.js, NO la borres)
+
+RECOMENDADOS (copias viejas que no se usan; si alguien las pega de vuelta en Apps Script deshace los arreglos):
+  4) Code.gs                 copia del 15-jun, con una llave de la base de datos
+  5) EmailCumpleaneros.gs    copia del 21-jul
+  6) auditoria_emails.gs     (hay una copia en el paquete: apps-script/03_utilidades_de_una_vez/)
+  7) LEEME.txt               es el de un paquete anterior; quedó público

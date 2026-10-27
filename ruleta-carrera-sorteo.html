@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<script src="/admin-auth.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="/favico.jpg" type="image/jpeg">
@@ -82,7 +83,7 @@ var sorteando = false;
 
 function login(){
   var v = document.getElementById('pass').value;
-  if(v === 'petmi2024'){
+  if(v === null){
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
     cargarReservas();

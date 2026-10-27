@@ -1,6 +1,8 @@
 const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+// La llave de servicio se lee primero de la variable de Vercel SUPABASE_SERVICE_KEY. El valor escrito aquí es un respaldo TEMPORAL
+// (Paso 1): se quita en el Paso 2, cuando la variable ya esté puesta y comprobada en Sistema.
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
 
 // ── Interruptor de la reserva de bandanas de la Carrera ──────────────────
 // Está en false porque la carrera ya pasó: la acción pública crearReservaCarrera se niega a crear reservas y,
@@ -9,17 +11,19 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 const CARRERA_RESERVAS_ABIERTAS = false;
 
 // Marca de versión: se ve abriendo /api/galeria en el navegador. Sirve para comprobar en 5 segundos si un despliegue nuevo ya está en línea.
-const GALERIA_VERSION = '2026-10-26-a';
+const GALERIA_VERSION = '2026-10-27-a';
 
 // ── Web Push (notificaciones) ───────────────────────────────
 const webpush = require('web-push');
 const dns = require('dns').promises;
 const crypto = require('crypto');
-webpush.setVapidDetails(
-  'mailto:info@revistapetmi.com',
-  'BETkQ-teJGtPmnLMFc0OC6HqFvhFoMZySxoywrKincHOJIoixLxuDUSD5RelsWYQiq32p2wuRgn9StrCOcYhD8U',
-  'QR9-huYL22s0wrUpc6Ou_kCAW86LfCOYqXZJY5bzx40'
-);
+// Llaves de las notificaciones push: primero las variables VAPID_PUBLIC_KEY y VAPID_PRIVATE_KEY de Vercel; los valores escritos aquí son un
+// respaldo TEMPORAL (se quitan en el Paso 2). Si una variable estuviera mal escrita, se usa el respaldo en vez de tumbar todo el servidor.
+(function () {
+  const correo = 'mailto:info@revistapetmi.com', pubRespaldo = 'BETkQ-teJGtPmnLMFc0OC6HqFvhFoMZySxoywrKincHOJIoixLxuDUSD5RelsWYQiq32p2wuRgn9StrCOcYhD8U', privRespaldo = 'QR9-huYL22s0wrUpc6Ou_kCAW86LfCOYqXZJY5bzx40';
+  try { webpush.setVapidDetails(correo, process.env.VAPID_PUBLIC_KEY || pubRespaldo, process.env.VAPID_PRIVATE_KEY || privRespaldo); }
+  catch (e) { console.error('VAPID: las variables no son válidas, se usa el respaldo:', e.message); webpush.setVapidDetails(correo, pubRespaldo, privRespaldo); }
+})();
 
 // Manda un push a todas las suscripciones guardadas de un uid.
 // Si se pasa "categoria" (ej. 'notif_amigos'), primero revisa si esa
@@ -435,16 +439,107 @@ const _AUDIENCIAS_MK = ['todos', 'nunca_volvieron', 'inactivos_30', 'perros', 'g
 //   2) Si no, la comprueba la base de datos contra una HUELLA bcrypt (configurar_clave_admin.sql): la clave
 //      nunca se guarda, y 10 fallos desde una misma dirección bloquean 15 minutos.
 // Ante cualquier duda o error, NO deja pasar.
+// Acciones que SOLO usan las páginas de administración (se comprobó, una por una, que ninguna página pública ni Apps Script las llama).
+// Sin la clave de administración (cabecera x-admin-key) no pasan. NO incluye enviarPushExterno, que sí llama Apps Script (Paso 2).
+const _ACCIONES_SOLO_ADMIN = new Set([
+  'getEventosAdmin',
+  'eliminarEvento',
+  'getLugaresAdmin',
+  'eliminarLugar',
+  'getConcursoEntradasAdmin',
+  'eliminarConcursoEntrada',
+  'marcarBandanaEntregada',
+  'marcarSorteoGanador',
+  'resetearSorteoCarrera',
+  'eliminarReservaCarrera',
+  'eliminarWazuCliente',
+  'marcarClienteContactado',
+  'marcarWazuPromoContactado',
+  'eliminarWazuPromo',
+  'actualizarWazuPromoTelefono',
+  'actualizarEntregaPedido',
+  'marcarPedidoPagadoManual',
+  'cancelarPedidoPendiente',
+  'eliminarMascotaAdmin',
+  'enviarMensajeDirectoAdmin',
+  'marcarWazuContactado',
+  'sortearGanadorConcurso',
+  'verSorteoGanadores',
+  'guardarSinonimoRaza',
+  'getAlimentosUsadosAdmin',
+  'guardarAlimentoCatalogo',
+  'actualizarPedido',
+  'guardarSinonimoAlimento',
+  'getPromoCumpleProductosAdmin',
+  'getProductosTiendaAdmin',
+  'crearProductoTienda',
+  'actualizarProductoTienda',
+  'eliminarProductoTienda',
+  'getReglasSaludAdmin',
+  'crearReglaSalud',
+  'actualizarReglaSalud',
+  'eliminarReglaSalud',
+  'getCondicionesAdmin',
+  'crearCondicion',
+  'actualizarCondicion',
+  'eliminarCondicion',
+  'getRuletaPremiosAdmin',
+  'crearRuletaPremio',
+  'actualizarRuletaPremio',
+  'eliminarRuletaPremio',
+  'wc_marcarResultado',
+  'getInscripcionesCarreraAdmin',
+  'getLeadsConcursoAdmin',
+  'deletePromo',
+  'eliminarSinonimoRaza',
+  'eliminarSinonimoAlimento',
+  'elegirAmigoSemana',
+  'getAvisosPendientes',
+  'getAvisosAprobados',
+  'editarAviso',
+  'rechazarAviso',
+  'syncMascotas',
+  'getEventosPendientes',
+  'toggleEvento',
+  'toggleLugar',
+  'toggleConcursoEntrada',
+  'getCarreraReservas',
+  'getWazuClientes',
+  'getWazuPromos',
+  'crearWazuPromo',
+  'feedMetaResumen',
+  'getPedidosOnline',
+  'getRuletaWazuGiros',
+  'activarPremium',
+  'desactivarPremium',
+  'pausarPublicacion',
+  'getSinonimosRaza',
+  'getPedidosTienda',
+  'togglePromoCumpleProducto',
+  'getRuletaGiros',
+  'createPromo',
+  'updatePromo',
+  'activarPremiumGratis',
+  'getAfiliados',
+  'getUsuariosNuncaVolvieron',
+  'getConversaciones',
+  'adminPing',
+  'sb'
+]);
+
 async function _adminAutorizado(req, res) {
+  // Al rechazar se pone ADEMÁS la cabecera X-Admin-Auth: denied: así las páginas detectan "clave faltante o incorrecta" sin tener que
+  // leer el cuerpo de cada respuesta (algunas son enormes).
+  const rechazar = function (cuerpo) { try { res.setHeader('X-Admin-Auth', 'denied'); } catch (e) {} res.status(200).json(cuerpo); return false; };
   const dada = String((req.headers && req.headers['x-admin-key']) || '');
   const deVercel = process.env.ADMIN_API_KEY || '';
   if (deVercel) {
     const a = Buffer.from(dada), b = Buffer.from(deVercel);
     if (a.length === b.length && require('crypto').timingSafeEqual(a, b)) return true;
-    res.status(200).json({ ok: false, error: 'no_autorizado' });
-    return false;
+    return rechazar({ ok: false, error: 'no_autorizado' });
   }
-  const falta = function (mensaje) { res.status(200).json({ ok: false, error: 'falta_clave_servidor', mensaje: mensaje }); return false; };
+  const falta = function (mensaje) { return rechazar({ ok: false, error: 'falta_clave_servidor', mensaje: mensaje }); };
+  if (!SUPABASE_SERVICE_KEY) return falta('Falta la variable SUPABASE_SERVICE_KEY en Vercel (Settings → Environment Variables), y después un Redeploy.');
   const h = (req && req.headers) || {};
   const ip = String(h['x-real-ip'] || String(h['x-forwarded-for'] || '').split(',')[0] || '').trim() || 'desconocida';
   let estado = null;
@@ -457,8 +552,8 @@ async function _adminAutorizado(req, res) {
     if (r.ok) estado = await r.json();
   } catch (e) { estado = null; }
   if (estado === 'ok') return true;
-  if (estado === 'incorrecta') { res.status(200).json({ ok: false, error: 'no_autorizado' }); return false; }
-  if (estado === 'bloqueado') { res.status(200).json({ ok: false, error: 'bloqueado', mensaje: 'Demasiados intentos con una clave incorrecta. Espera 15 minutos e inténtalo de nuevo.' }); return false; }
+  if (estado === 'incorrecta') return rechazar({ ok: false, error: 'no_autorizado' });
+  if (estado === 'bloqueado') return rechazar({ ok: false, error: 'bloqueado', mensaje: 'Demasiados intentos con una clave incorrecta. Espera 15 minutos e inténtalo de nuevo.' });
   if (estado === 'sin_clave') return falta('Falta crear la clave de administración: corre configurar_clave_admin.sql en Supabase.');
   return falta('No se pudo verificar la clave. Revisa que corriste configurar_clave_admin.sql en Supabase.');
 }
@@ -1064,6 +1159,9 @@ export default async function handler(req, res) {
   const action = req.query.action || '';
 
   try {
+    // ── Guardia: las acciones de administración exigen la clave ──
+    if (_ACCIONES_SOLO_ADMIN.has(action)) { if (!(await _adminAutorizado(req, res))) return; }
+
     // ── getBasic — galería principal ─────────────────────────
     if (action === 'getBasic') {
       const response = await fetch(
@@ -3268,6 +3366,8 @@ export default async function handler(req, res) {
         pista: (llaveUsada.length > 0 && llaveUsada.length < 40) ? (llaveUsada.slice(0, 2) + '…' + llaveUsada.slice(-1)) : '' };
       // Desde dónde está respondiendo ESTE servidor: sirve para comprobar que es el despliegue de Production y el último
       out.servidor = { ambiente: process.env.VERCEL_ENV || '(no es Vercel)', commit: String(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7), despliegue: String(process.env.VERCEL_URL || '').slice(0, 90) };
+      // ¿Los secretos ya viven en variables de Vercel? (Paso 2: solo cuando todos digan sí se pueden quitar del código)
+      out.secretos = { supabase: !!process.env.SUPABASE_SERVICE_KEY, svix: !!process.env.RECURRENTE_WEBHOOK_SECRET, vapid: !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY), admin_apps_script: !!process.env.APPS_SCRIPT_SECRET };
       // Las tres comprobaciones corren A LA VEZ (antes una tras otra: si Apps Script tardaba, la prueba entera se alargaba).
       // 1) Subir fotos (registro): pedir una dirección de subida no crea ningún archivo
       const probarMedios = async function () {
@@ -3400,6 +3500,33 @@ export default async function handler(req, res) {
       if (!_CARRITO_ID_RE.test(id)) return res.status(400).json({ ok: false, error: 'carrito_id inválido' });
       const r = await fetch(SUPABASE_URL + '/rest/v1/carritos_tienda?carrito_id=eq.' + encodeURIComponent(id), { method: 'DELETE', headers: _headersSB({ 'Prefer': 'return=minimal' }) });
       return res.status(200).json({ ok: r.ok });
+    }
+
+    // ── adminPing — las páginas de administración la usan para comprobar la clave (la guardia ya la verificó) ──
+    if (action === 'adminPing') return res.status(200).json({ ok: true });
+
+    // ── sb — reenvía una llamada a la base de datos (/rest/v1/...) CON la llave de servicio que vive solo aquí, en el servidor.
+    // Es lo que permite que las páginas de administración YA NO lleven la llave dentro. Pide la clave de administración (guardia). ──
+    if (action === 'sb') {
+      const ruta = String(req.query.p || '');
+      if (!/^\/rest\/v1\/[A-Za-z0-9_\-\/.]+(\?[^\r\n]*)?$/.test(ruta) || ruta.indexOf('..') >= 0) return res.status(400).json({ ok: false, error: 'ruta_no_permitida' });
+      // Ninguna página necesita leer la clave de administración (ni sus intentos): se bloquea por si acaso.
+      if (/^\/rest\/v1\/(admin_config|admin_intentos|rpc\/admin_verificar)(\/|\?|$)/.test(ruta)) return res.status(403).json({ ok: false, error: 'ruta_no_permitida' });
+      if (!SUPABASE_SERVICE_KEY) return res.status(500).json({ ok: false, error: 'falta_llave_servidor', mensaje: 'Falta la variable SUPABASE_SERVICE_KEY en Vercel.' });
+      const metodo = String(req.method || 'GET').toUpperCase();
+      if (['GET', 'HEAD', 'POST', 'PATCH', 'DELETE'].indexOf(metodo) < 0) return res.status(405).json({ ok: false, error: 'metodo_no_permitido' });
+      const h = req.headers || {};
+      const cab = { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY };
+      if (h['content-type']) cab['Content-Type'] = 'application/json';
+      ['prefer', 'range', 'range-unit', 'accept-profile', 'content-profile'].forEach(function (k) { if (h[k]) cab[k] = String(h[k]).slice(0, 200); });
+      let cuerpo;
+      if (metodo !== 'GET' && metodo !== 'HEAD' && req.body != null && req.body !== '') cuerpo = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      const r = await fetch(SUPABASE_URL + ruta, { method: metodo, headers: cab, body: cuerpo });
+      const txt = await r.text();
+      const hr = r.headers && typeof r.headers.get === 'function' ? r.headers : { get: function () { return null; } };
+      res.setHeader('Content-Type', hr.get('content-type') || 'application/json');
+      if (hr.get('content-range')) res.setHeader('Content-Range', hr.get('content-range'));
+      return res.status(r.status).send(txt);
     }
 
     // ── enviarRecordatorioFoto (2 oct) — correo para que el dueño agregue la

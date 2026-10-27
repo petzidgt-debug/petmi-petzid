@@ -16,9 +16,11 @@
 export const config = { api: { bodyParser: false } };
 
 const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+// Primero la variable de Vercel SUPABASE_SERVICE_KEY; el valor escrito es un respaldo TEMPORAL que se quita en el Paso 2.
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzuBevjWzfX021aM7n29nB2feFAk3s3gbSW4MmstS0VPaaK24UcYitHcaEDtZzUDcWh/exec';
-const SVIX_SECRET = 'whsec_XECG6MKLlkD7eTynodhQ098IW68sF9oF';
+// Primero la variable de Vercel RECURRENTE_WEBHOOK_SECRET; el valor escrito es un respaldo TEMPORAL que se quita en el Paso 2.
+const SVIX_SECRET = process.env.RECURRENTE_WEBHOOK_SECRET || 'whsec_XECG6MKLlkD7eTynodhQ098IW68sF9oF';
 
 // ── Correos de pedidos de la tienda (directo por Wix, igual que los códigos de verificación) ──
 // Se limpia por si en Vercel se pegó con comillas, espacios o "Bearer" (Wix la rechaza con 403 si no es la llave sola).
