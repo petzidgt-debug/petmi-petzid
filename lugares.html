@@ -13,10 +13,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .hero{background:linear-gradient(135deg,#E05090,#c0392b);padding:32px 20px;text-align:center}
 .hero h1{font-size:24px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:4px}
 .hero p{font-size:13.5px;color:rgba(255,255,255,.8)}
-.hero-stats{display:flex;justify-content:center;gap:28px;margin-top:18px}
-.hstat{text-align:center}
-.hstat-num{font-size:24px;font-weight:900;color:#fff}
-.hstat-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.75)}
 .search-section{background:#fff;padding:12px 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:80}
 .search-row{display:flex;gap:8px;margin-bottom:8px}
 .search-wrap{position:relative;flex:1}
@@ -103,11 +99,6 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 <div class="hero">
   <h1>📍 Lugares Pet-Friendly</h1>
   <p>Restaurantes, parques, veterinarias y más que aman a las mascotas</p>
-  <div class="hero-stats">
-    <div class="hstat"><div class="hstat-num" id="statTotal">-</div><div class="hstat-lbl">Lugares</div></div>
-    <div class="hstat"><div class="hstat-num" id="statZonas">-</div><div class="hstat-lbl">Zonas</div></div>
-    <div class="hstat"><div class="hstat-num" id="statAliados">-</div><div class="hstat-lbl">Aliados</div></div>
-  </div>
 </div>
 
 <div class="search-section">
@@ -230,11 +221,8 @@ function cargarLugares(){
     .then(function(r){return r.json();})
     .then(function(d){
       lugaresData=d.lugares||[];
-      // Stats
-      document.getElementById('statTotal').textContent=lugaresData.length;
+      // Zonas que existen (para el selector). Los números de Lugares/Zonas/Aliados del título se quitaron.
       var zonas={};lugaresData.forEach(function(l){if(l.zona)zonas[l.zona]=1;});
-      document.getElementById('statZonas').textContent=Object.keys(zonas).length;
-      document.getElementById('statAliados').textContent=lugaresData.filter(function(l){return l.nivel&&l.nivel!=='organico';}).length;
       // Poblar zonas
       var zonaSel=document.getElementById('zonaSelect');
       Object.keys(zonas).sort(function(a,b){var na=parseInt(a),nb=parseInt(b);return isNaN(na)||isNaN(nb)?a.localeCompare(b):na-nb;}).forEach(function(z){
