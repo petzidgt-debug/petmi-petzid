@@ -79,6 +79,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .foto-modal img{max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain}
 .foto-modal-close{position:fixed;top:16px;right:16px;background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;line-height:1}
 </style>
+<script src="/organizador.js"></script>
 </head>
 <body>
 <div class="hero">
@@ -102,6 +103,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
     <div class="modal-handle"></div>
     <div class="modal-titulo">Sugerir un evento</div>
     <div style="font-size:13px;color:#aaa;margin-bottom:16px">Tu sugerencia será revisada por el jefe antes de publicarse</div>
+    <div id="orgCintaEvento" style="display:none;background:#e0f7f7;color:#007a7a;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;margin-bottom:12px"></div>
     <div id="msgSugerir" class="msg-sg"></div>
     <label class="form-label">Título *</label>
     <input type="text" class="form-input" id="evTitulo" placeholder="Nombre del evento">
@@ -392,7 +394,14 @@ function enviarInvitacion(uid,nombre,email){
   });
 }
 
-function abrirSugerir(){ document.getElementById('modalSugerir').classList.add('open'); }
+function abrirSugerir(){
+  // Para sugerir un evento hace falta saber a quién contactar: un dueño de mascota con sesión, o un organizador registrado.
+  var org=window.PetmiOrg&&PetmiOrg.get();
+  if(!sessionEmail&&!org){ if(window.PetmiOrg) PetmiOrg.invitar('tus eventos'); else mostrarToast('Inicia sesión para sugerir un evento'); return; }
+  var c=document.getElementById('orgCintaEvento');
+  if(c){ if(!sessionEmail&&org){ c.textContent='Publicas como: '+PetmiOrg.nombreParaMostrar(org)+' · '+org.email; c.style.display='block'; } else { c.style.display='none'; } }
+  document.getElementById('modalSugerir').classList.add('open');
+}
 
 function cerrarSugerir(){
   document.getElementById('modalSugerir').classList.remove('open');
@@ -407,6 +416,7 @@ function cerrarSugerir(){
 }
 
 async function enviarSugerencia(){
+  var org=window.PetmiOrg&&PetmiOrg.get();
   var titulo=document.getElementById('evTitulo').value.trim();
   var fecha=document.getElementById('evFecha').value;
   if(!titulo||!fecha){mostrarToast('Título y fecha son obligatorios');return;}
@@ -431,9 +441,14 @@ async function enviarSugerencia(){
   btn.textContent='Guardando...';
   fetch('/api/galeria?action=enviarEvento',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({titulo:titulo,tipo:document.getElementById('evTipo').value,fecha:fecha,hora:document.getElementById('evHora').value||null,lugar:document.getElementById('evLugar').value.trim(),direccion:document.getElementById('evDireccion').value.trim(),descripcion:document.getElementById('evDesc').value.trim(),link:document.getElementById('evLink').value.trim(),email:sessionEmail||'',imagen:imagenUrl})
+    body:JSON.stringify({titulo:titulo,tipo:document.getElementById('evTipo').value,fecha:fecha,hora:document.getElementById('evHora').value||null,lugar:document.getElementById('evLugar').value.trim(),direccion:document.getElementById('evDireccion').value.trim(),descripcion:document.getElementById('evDesc').value.trim(),link:document.getElementById('evLink').value.trim(),email:sessionEmail||(org?org.email:''),organizador_token:(!sessionEmail&&org)?org.token:undefined,imagen:imagenUrl})
   }).then(function(r){return r.json();})
   .then(function(d){
+    if(d&&(d.error==='registro_requerido'||d.error==='organizador_no_valido')&&window.PetmiOrg){
+      if(d.error==='organizador_no_valido')PetmiOrg.cerrarSesion();
+      btn.disabled=false;btn.textContent='Enviar sugerencia';cerrarSugerir();
+      PetmiOrg.invitar('tus eventos',{vencida:d.error==='organizador_no_valido'});return;
+    }
     if(d.ok){
       btn.textContent='Enviado!';
       cerrarSugerir();

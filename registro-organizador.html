@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="/favico.jpg" type="image/jpeg">
+<title>Registro para negocios y organizadores — PetMi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh;color:#1a1a2e}
+.hero{background:linear-gradient(135deg,#00B4B4,#E05090);padding:30px 20px 34px;text-align:center}
+.hero-ic{font-size:40px;line-height:1;margin-bottom:8px}
+.hero h1{font-size:23px;font-weight:900;color:#fff;font-family:'Arial Black',Arial,sans-serif;margin-bottom:6px}
+.hero p{font-size:13.5px;color:rgba(255,255,255,.92);line-height:1.5;max-width:420px;margin:0 auto}
+.wrap{max-width:480px;margin:-18px auto 0;padding:0 14px 40px}
+.pasos{display:flex;justify-content:center;gap:8px;margin:0 0 12px}
+.punto{width:9px;height:9px;border-radius:50%;background:#d6d6d2}
+.punto.on{background:#00B4B4;width:26px;border-radius:99px}
+.card{background:#fff;border-radius:22px;padding:22px 20px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+.card h2{font-size:17px;font-weight:900;margin-bottom:4px}
+.sub{font-size:12.5px;color:#888;line-height:1.5;margin-bottom:16px}
+label{display:block;font-size:12px;font-weight:700;color:#555;margin:12px 0 5px}
+label small{font-weight:400;color:#aaa}
+input[type=text],input[type=email],input[type=tel]{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:15px;outline:none;background:#fff;font-family:inherit}
+input:focus{border-color:#00B4B4}
+.fila-acepto{display:flex;gap:10px;align-items:flex-start;margin:16px 0 4px;font-size:12px;color:#666;line-height:1.5}
+.fila-acepto input{margin-top:2px;width:18px;height:18px;accent-color:#00B4B4;flex-shrink:0}
+.btn{width:100%;padding:14px;border:0;border-radius:99px;background:linear-gradient(135deg,#00B4B4,#E05090);color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-top:16px;font-family:inherit}
+.btn:disabled{opacity:.55;cursor:default}
+.btn-sec{background:#fff;color:#007a7a;border:1.5px solid #00B4B4;margin-top:10px}
+.link{display:block;text-align:center;font-size:12.5px;font-weight:700;color:#007a7a;margin-top:14px;cursor:pointer;background:none;border:0;width:100%;font-family:inherit}
+.link.gris{color:#999;font-weight:400}
+.msg{display:none;padding:10px 12px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:12px;line-height:1.45}
+.msg.err{display:block;background:#fbeaf0;color:#c0392b}
+.msg.ok{display:block;background:#e0f7f7;color:#007a7a}
+.nota{font-size:11.5px;color:#999;line-height:1.5;margin-top:12px;text-align:center}
+.codigo{font-size:30px;letter-spacing:10px;text-align:center;font-weight:900;padding:14px 8px}
+.exito{text-align:center}
+.exito .grande{font-size:46px;line-height:1;margin-bottom:8px}
+.accion{display:flex;align-items:center;gap:12px;text-align:left;padding:14px;border:1.5px solid #e8e8e4;border-radius:16px;margin-top:10px;text-decoration:none;color:#1a1a2e}
+.accion b{display:block;font-size:14px}
+.accion span.t{font-size:12px;color:#888}
+.accion .ic{font-size:26px}
+.revision{background:#fff8e1;border-radius:12px;padding:10px 12px;font-size:12px;color:#856404;line-height:1.5;margin-top:14px;text-align:left}
+.oculto{display:none}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="hero-ic">🏪</div>
+  <h1>Negocios y organizadores</h1>
+  <p>Publica eventos, lugares y servicios en PetMi. <b>No necesitas tener una mascota registrada.</b></p>
+</div>
+
+<div class="wrap">
+  <div class="pasos"><div class="punto on" id="p1"></div><div class="punto" id="p2"></div><div class="punto" id="p3"></div></div>
+
+  <!-- PASO 1: datos -->
+  <div class="card" id="paso1">
+    <h2 id="tit1">Tus datos de contacto</h2>
+    <div class="sub" id="sub1">Los usamos para comunicarnos contigo sobre lo que publiques. No se muestran en la página.</div>
+    <div class="msg" id="msg1"></div>
+
+    <label for="reEmail">Correo electrónico *</label>
+    <input type="email" id="reEmail" placeholder="tucorreo@ejemplo.com" autocomplete="email" inputmode="email">
+
+    <div id="camposRegistro">
+      <label for="reNombre">Nombre de contacto *</label>
+      <input type="text" id="reNombre" placeholder="¿Con quién hablamos?" autocomplete="name" maxlength="80">
+
+      <label for="reTel">Teléfono / WhatsApp *</label>
+      <input type="tel" id="reTel" placeholder="5555 1234" autocomplete="tel" inputmode="tel" maxlength="20">
+
+      <label for="reOrg">Nombre del negocio u organización <small>(opcional)</small></label>
+      <input type="text" id="reOrg" placeholder="Ej: Veterinaria Huellitas" maxlength="80">
+
+      <div class="fila-acepto"><input type="checkbox" id="reAcepto"><label for="reAcepto" style="margin:0;font-weight:400;color:#666">Acepto que PetMi guarde estos datos y los use para contactarme sobre lo que publique.</label></div>
+    </div>
+
+    <button class="btn" id="btnEnviar" type="button">Enviar código a mi correo</button>
+    <button class="link" id="btnModo" type="button">¿Ya te registraste? Entra solo con tu correo</button>
+  </div>
+
+  <!-- PASO 2: código -->
+  <div class="card oculto" id="paso2">
+    <h2>Revisa tu correo</h2>
+    <div class="sub"><span id="txtIntroCodigo">Te mandamos</span> un código de 6 dígitos a <b id="correoMostrado"></b>. Vale 10 minutos.</div>
+    <div class="msg" id="msg2"></div>
+    <label for="reCodigo">Código</label>
+    <input type="text" id="reCodigo" class="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······">
+    <button class="btn" id="btnVerificar" type="button">Verificar</button>
+    <button class="link" id="btnReenviar" type="button">Reenviar código</button>
+    <button class="link gris" id="btnCambiar" type="button">Usar otro correo</button>
+    <div class="nota">¿No llega? Mira en spam o correo no deseado.</div>
+  </div>
+
+  <!-- PASO 3: listo -->
+  <div class="card exito oculto" id="paso3">
+    <div class="grande">🎉</div>
+    <h2 id="saludo">¡Listo!</h2>
+    <div class="sub" id="subListo" style="margin-bottom:6px">Ya puedes publicar en PetMi sin necesidad de una mascota.</div>
+    <a class="btn" id="btnContinuar" href="/" style="display:none;text-decoration:none;text-align:center">Continuar</a>
+    <div id="acciones">
+      <a class="accion" href="/avisos.html?tipo=evento"><span class="ic">🎪</span><span><b>Publicar un evento</b><span class="t">Ferias, adopciones, jornadas, cursos…</span></span></a>
+      <a class="accion" href="/lugares.html"><span class="ic">📍</span><span><b>Sugerir un lugar o servicio</b><span class="t">Veterinarias, tiendas, hoteles, parques…</span></span></a>
+    </div>
+    <div class="revision">🕑 El equipo de PetMi revisa cada publicación antes de que aparezca.</div>
+    <button class="link gris" id="btnSalir" type="button">Cerrar sesión de organizador</button>
+  </div>
+</div>
+
+<script src="/organizador.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var estado = { email: '', entrar: false, espera: 0, reloj: null };
+
+  // Solo se acepta volver a una página de este mismo sitio (nunca a otro dominio).
+  function destino() {
+    var v = new URLSearchParams(location.search).get('volver') || '';
+    return (/^\/[A-Za-z0-9_\-\/.?=&%#]*$/.test(v) && v.indexOf('//') !== 0) ? v : '';
+  }
+  function digitos(s) { return String(s || '').replace(/\D/g, ''); }
+  function tel8(s) { var d = digitos(s); if (d.length === 11 && d.indexOf('502') === 0) d = d.slice(3); return d.length === 8 ? d : ''; }
+  function correoValido(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+  function mostrar(paso) {
+    ['paso1', 'paso2', 'paso3'].forEach(function (id, i) { $(id).classList.toggle('oculto', i + 1 !== paso); $('p' + (i + 1)).classList.toggle('on', i + 1 === paso); });
+    window.scrollTo(0, 0);
+  }
+  function msg(id, texto, tipo) { var e = $(id); e.textContent = texto || ''; e.className = 'msg' + (texto ? ' ' + (tipo || 'err') : ''); }
+  function api(accion, cuerpo) {
+    return fetch('/api/galeria?action=' + accion, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) })
+      .then(function (r) { return r.json(); });
+  }
+  var ERRORES = {
+    correo_invalido: 'Escribe un correo válido.', nombre: 'Escribe tu nombre de contacto.', telefono: 'Escribe un teléfono de 8 dígitos.', acepta: 'Marca la casilla para continuar.',
+    espera: 'Espera un momento antes de pedir otro código.', no_se_pudo_enviar: 'No pudimos enviar el correo. Intenta de nuevo en unos minutos.',
+    codigo_incorrecto: 'Código incorrecto. Revísalo e intenta de nuevo.', expirado: 'El código venció. Pide uno nuevo.', demasiados_intentos: 'Demasiados intentos. Pide un código nuevo.'
+  };
+  function textoError(d) { return (d && ERRORES[d.error]) || 'Algo salió mal. Intenta de nuevo.'; }
+
+  function modo(entrar) {
+    estado.entrar = entrar;
+    $('camposRegistro').classList.toggle('oculto', entrar);
+    $('tit1').textContent = entrar ? 'Entrar con tu correo' : 'Tus datos de contacto';
+    $('sub1').textContent = entrar ? 'Te mandamos un código para confirmar que eres tú.' : 'Los usamos para comunicarnos contigo sobre lo que publiques. No se muestran en la página.';
+    $('btnModo').textContent = entrar ? 'Quiero registrarme por primera vez' : '¿Ya te registraste? Entra solo con tu correo';
+    msg('msg1', '');
+  }
+  function reloj(seg) {
+    estado.espera = seg; clearInterval(estado.reloj);
+    function pintar() { var b = $('btnReenviar'); b.disabled = estado.espera > 0; b.textContent = estado.espera > 0 ? 'Reenviar código (' + estado.espera + ' s)' : 'Reenviar código'; }
+    pintar();
+    estado.reloj = setInterval(function () { estado.espera--; pintar(); if (estado.espera <= 0) clearInterval(estado.reloj); }, 1000);
+  }
+
+  function enviar() {
+    var email = $('reEmail').value.trim().toLowerCase();
+    if (!correoValido(email)) { msg('msg1', ERRORES.correo_invalido); return; }
+    var cuerpo, accion;
+    if (estado.entrar) { accion = 'organizadorLogin'; cuerpo = { email: email }; }
+    else {
+      var nombre = $('reNombre').value.replace(/\s+/g, ' ').trim(), tel = tel8($('reTel').value);
+      if (nombre.length < 2) { msg('msg1', ERRORES.nombre); return; }
+      if (!tel) { msg('msg1', ERRORES.telefono); return; }
+      if (!$('reAcepto').checked) { msg('msg1', ERRORES.acepta); return; }
+      accion = 'organizadorRegistrar'; cuerpo = { email: email, nombre: nombre, telefono: tel, organizacion: $('reOrg').value.replace(/\s+/g, ' ').trim(), acepta: true };
+    }
+    var b = $('btnEnviar'); b.disabled = true; b.textContent = 'Enviando…'; msg('msg1', '');
+    api(accion, cuerpo).then(function (d) {
+      b.disabled = false; b.textContent = 'Enviar código a mi correo';
+      if (!d || !d.ok) { msg('msg1', textoError(d)); return; }
+      estado.email = email; $('correoMostrado').textContent = email; $('txtIntroCodigo').textContent = estado.entrar ? 'Si ese correo está registrado, te mandamos' : 'Te mandamos'; $('reCodigo').value = ''; msg('msg2', '');
+      mostrar(2); reloj(60); setTimeout(function () { $('reCodigo').focus(); }, 80);
+    }).catch(function () { b.disabled = false; b.textContent = 'Enviar código a mi correo'; msg('msg1', 'Sin conexión. Intenta de nuevo.'); });
+  }
+
+  function verificar() {
+    var code = digitos($('reCodigo').value);
+    if (code.length !== 6) { msg('msg2', 'El código tiene 6 dígitos.'); return; }
+    var b = $('btnVerificar'); b.disabled = true; b.textContent = 'Verificando…'; msg('msg2', '');
+    api('organizadorVerificar', { email: estado.email, code: code }).then(function (d) {
+      b.disabled = false; b.textContent = 'Verificar';
+      if (!d || !d.ok || !d.organizador) { msg('msg2', textoError(d)); return; }
+      PetmiOrg.guardar({ uid: d.organizador.uid, email: d.organizador.email, nombre: d.organizador.nombre, telefono: d.organizador.telefono, organizacion: d.organizador.organizacion || '', token: d.token, exp: d.exp });
+      terminado();
+    }).catch(function () { b.disabled = false; b.textContent = 'Verificar'; msg('msg2', 'Sin conexión. Intenta de nuevo.'); });
+  }
+
+  function terminado() {
+    var o = PetmiOrg.get(); if (!o) return;
+    $('saludo').textContent = '¡Listo, ' + String(o.nombre).split(' ')[0] + '!';
+    $('subListo').textContent = (o.organizacion ? o.organizacion + ': ya' : 'Ya') + ' puedes publicar en PetMi sin necesidad de una mascota.';
+    var v = destino();
+    $('btnContinuar').style.display = v ? 'block' : 'none'; if (v) $('btnContinuar').setAttribute('href', v);
+    $('acciones').style.display = v ? 'none' : 'block';
+    mostrar(3);
+  }
+
+  $('btnEnviar').addEventListener('click', enviar);
+  $('btnModo').addEventListener('click', function () { modo(!estado.entrar); });
+  $('btnVerificar').addEventListener('click', verificar);
+  $('reCodigo').addEventListener('keydown', function (e) { if (e.key === 'Enter') verificar(); });
+  $('reEmail').addEventListener('keydown', function (e) { if (e.key === 'Enter' && estado.entrar) enviar(); });
+  $('btnReenviar').addEventListener('click', function () { if (estado.espera > 0) return; mostrar(1); enviar(); });
+  $('btnCambiar').addEventListener('click', function () { clearInterval(estado.reloj); mostrar(1); });
+  $('btnSalir').addEventListener('click', function () { PetmiOrg.cerrarSesion(); location.reload(); });
+
+  if (new URLSearchParams(location.search).get('entrar') === '1') modo(true);
+  if (PetmiOrg.get()) terminado();
+})();
+</script>
+</body>
+</html>

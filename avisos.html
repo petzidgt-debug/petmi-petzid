@@ -87,6 +87,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 .btn-cancelar-contacto{width:100%;padding:12px;background:#f0f0ee;color:#666;border:none;border-radius:99px;font-size:14px;cursor:pointer;margin-top:8px}
 .toast.show{opacity:1}
 </style>
+<script src="/organizador.js"></script>
 </head>
 <body>
 
@@ -114,6 +115,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-titulo">Publicar aviso</div>
+    <div id="orgCintaAviso" style="display:none;background:#e0f7f7;color:#007a7a;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:700;margin-bottom:12px"></div>
     <div class="tipo-grid">
       <div class="tipo-option selected" onclick="selTipo('perdido',this)">🚨<br>Perdido</div>
       <div class="tipo-option" onclick="selTipo('busco',this)">🔍<br>Busco</div>
@@ -223,6 +225,35 @@ var sessionEmail = localStorage.getItem('petzid_email')||'';
 var miMascota    = null;
 var esAfiliado   = false;
 var afiliadoPlan = null;
+
+// ── Organizador (negocio, veterinaria, quien organiza eventos): publica SIN mascota ──
+// Si no hay sesión de dueño de mascota pero sí de organizador, el formulario usa una "mascota" ficticia que solo lleva su nombre.
+// Los datos de contacto (teléfono) NO viajan aquí: el servidor los toma del registro del organizador.
+var organizador = (window.PetmiOrg && PetmiOrg.get()) || null;
+if(!sessionEmail && organizador){
+  miMascota = { uid: organizador.uid, nombre: PetmiOrg.nombreParaMostrar(organizador), foto: '', especie: '', sexo: '', raza: '', whatsapp: '' };
+}
+function _ocultarCampo(id,ocultar){
+  var el=document.getElementById(id); if(!el) return;
+  el.style.display=ocultar?'none':'';
+  var lb=el.previousElementSibling; if(lb&&lb.tagName==='LABEL') lb.style.display=ocultar?'none':'';
+}
+function _errorPublicar(d){
+  var e=d&&d.error;
+  if(e==='organizador_no_valido'){
+    if(window.PetmiOrg){ PetmiOrg.cerrarSesion(); cerrarPublicar(); PetmiOrg.invitar('tus eventos y avisos',{vencida:true}); }
+    else mostrarToast('Tu sesión venció. Vuelve a entrar.');
+    return;
+  }
+  if(e==='tipo_no_permitido'){ mostrarToast('Como organizador solo puedes publicar eventos.'); return; }
+  mostrarToast('No se pudo publicar. Intenta de nuevo.');
+}
+function _modoOrganizador(){
+  document.querySelectorAll('.tipo-option').forEach(function(o){ if(o.id!=='tipoEventoBtn') o.style.display='none'; });
+  var ev=document.getElementById('tipoEventoBtn'); if(ev) selTipo('evento',ev);
+  var c=document.getElementById('orgCintaAviso');
+  if(c){ c.textContent='Publicas como: '+PetmiOrg.nombreParaMostrar(organizador)+' · '+organizador.email; c.style.display='block'; }
+}
 var ventasLimite = 3;  // base Premium
 var ventasUsadas = 0;
 var ventasExtraVence = null;
@@ -303,6 +334,13 @@ cargar();
     document.getElementById('modalPublicar').classList.add('open');
   }
   setTimeout(function(){intentarAbrir(0);},900);
+})();
+
+// ── Detectar ?tipo=evento (desde el registro de organizadores) ──
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  if(params.get('tipo')!=='evento') return;
+  setTimeout(function(){ abrirPublicar(); },900);
 })();
 
 function _preLlenar(m){
@@ -661,7 +699,7 @@ function abrirPublicar(){
     document.getElementById('modalReglas').style.display='flex';
     return;
   }
-  if(!sessionEmail){mostrarToast('Inicia sesión para publicar');return;}
+  if(!sessionEmail&&!organizador){ if(window.PetmiOrg) PetmiOrg.invitar('tus eventos y avisos'); else mostrarToast('Inicia sesión para publicar'); return; }
   // Si miMascota aún no cargó, esperar
   if(!miMascota){
     mostrarToast('Cargando tu perfil...');
@@ -672,7 +710,7 @@ function abrirPublicar(){
           miMascota=d.mascotas[0];
           abrirFormulario();
         } else {
-          mostrarToast('No encontramos tu mascota. ¿Ya registraste tu PetzID?');
+          if(window.PetmiOrg) PetmiOrg.invitar('tus eventos y avisos',{sinMascota:true}); else mostrarToast('No encontramos tu mascota. ¿Ya registraste tu PetzID?');
         }
       });
     return;
@@ -681,6 +719,7 @@ function abrirPublicar(){
 }
 
 function abrirFormulario(){
+  if(organizador&&!sessionEmail) _modoOrganizador();
   // Pre-llenar campos de perdido si hay datos en el perfil
   if(miMascota){
     var n=document.getElementById('pubNombreMascota');
@@ -797,8 +836,9 @@ function selTipo(tipo,el){
   var ce=document.getElementById('camposEvento');
   if(ce) ce.style.display=(tipo==='evento')?'block':'none';
   // Ocultar fecha general si es evento (tiene su propia fecha con fecha obligatoria)
-  var fechaWrap=document.getElementById('pubFecha');
-  if(fechaWrap){ fechaWrap.style.display=(tipo==='evento')?'none':''; }
+  // Para un evento, la fecha y el lugar son los propios del evento (más abajo): se esconden los generales Y sus etiquetas.
+  // (Antes solo se escondía la casilla de fecha: quedaba su etiqueta suelta y un campo "Ubicación" duplicado que el código ignoraba.)
+  _ocultarCampo('pubFecha',tipo==='evento'); _ocultarCampo('pubUbicacion',tipo==='evento');
   // Placeholder dinamico segun tipo
   var PLACEHOLDERS={
     perdido:'Ej: Se perdio Cami en Zona 10',
@@ -811,7 +851,7 @@ function selTipo(tipo,el){
 }
 
 function publicar(){
-  if(!sessionEmail||!miMascota){mostrarToast('Inicia sesión primero');return;}
+  if((!sessionEmail&&!organizador)||!miMascota){mostrarToast('Inicia sesión primero');return;}
   var titulo=document.getElementById('pubTitulo').value.trim();
   if(!titulo){mostrarToast('El título es obligatorio');return;}
 
@@ -901,7 +941,8 @@ function publicar(){
     uid_creador:miMascota.uid,
     nombre_creador:extraData.nombre_creador||miMascota.nombre,
     foto_creador:miMascota.foto||'',
-    email_creador:sessionEmail,
+    email_creador:(sessionEmail||(organizador?organizador.email:'')),
+    organizador_token:(!sessionEmail&&organizador)?organizador.token:undefined,
     es_afiliado:esAfiliado,
     afiliado_email:esAfiliado?sessionEmail:null,
     tipo:tipoSel,
@@ -957,7 +998,7 @@ function publicar(){
         cargar();
       },3000);
       cargar();
-    }
+    } else { _errorPublicar(d); }
     }).catch(function(){btn.disabled=false;btn.textContent='Publicar aviso';mostrarToast('Error al publicar');});
   }
   doPublicar();

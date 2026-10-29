@@ -68,7 +68,7 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
     <div class="paso" id="paso1"><span class="ic">⏳</span><div><b>Servidor</b><div class="tx"></div></div></div>
     <div class="paso" id="paso2"><span class="ic">⏳</span><div><b>Clave de administración</b><div class="tx"></div></div></div>
     <div class="paso" id="paso3"><span class="ic">⏳</span><div><b>Tablas de correos (Supabase)</b><div class="tx"></div></div></div>
-    <div id="versionPagina" style="font-size:11px;color:#bbb;margin-top:6px">Versión de esta página: 27-oct-2026 · seguridad del Admin</div>
+    <div id="versionPagina" style="font-size:11px;color:#bbb;margin-top:6px">Versión de esta página: 28-oct-2026 · organizadores</div>
   </div>
 
   <div class="card login" id="login" style="display:none">
@@ -85,6 +85,7 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
       <button class="tab" id="tabClics" onclick="verTab('clics')">📊 Clics por correo</button>
       <button class="tab" id="tabChat" onclick="verTab('chat')">💬 Chat interno</button>
       <button class="tab" id="tabCarritos" onclick="verTab('carritos')">🛒 Carritos</button>
+      <button class="tab" id="tabOrganizadores" onclick="verTab('organizadores')">🏪 Organizadores</button>
       <button class="tab" id="tabFotos" onclick="verTab('fotos')">📸 Fotos</button>
       <button class="tab" id="tabSistema" onclick="verTab('sistema')">🔧 Sistema</button>
     </div>
@@ -129,6 +130,20 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
       <div class="table-card"><div class="table-wrap"><table>
         <thead><tr><th>Última actividad</th><th>Cliente</th><th>Productos</th><th>Total</th><th>Etapa</th><th>Contactado</th><th></th></tr></thead>
         <tbody id="carritosBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:#aaa">Cargando…</td></tr></tbody>
+      </table></div></div>
+    </div>
+
+    <div id="panelOrganizadores" style="display:none">
+      <p style="color:#888;font-size:13px;margin-bottom:12px;line-height:1.6">Negocios, veterinarias y personas que organizan eventos y se registraron <b>sin mascota</b> para publicar en PetMi. Cada uno confirmó su correo con un código. Su teléfono y correo son <b>privados</b>: solo los ve el equipo. Si alguien abusa, <b>bloquéalo</b>: deja de poder publicar al instante.</p>
+      <div class="card" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+        <input id="orgBuscar" class="mk-in" style="flex:1;min-width:180px;margin:0" placeholder="Buscar por nombre, negocio o correo" oninput="pintarOrganizadores()">
+        <label style="font-size:13px;color:#555;cursor:pointer"><input type="checkbox" id="orgOcultarBloq" onchange="pintarOrganizadores()"> Ocultar bloqueados</label>
+        <button class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="loadOrganizadores()">🔄 Actualizar</button>
+      </div>
+      <div class="card" id="orgResumen">Cargando…</div>
+      <div class="table-card"><div class="table-wrap"><table>
+        <thead><tr><th>Registro</th><th>Organizador</th><th>Contacto</th><th>Ha enviado</th><th>Estado</th><th></th></tr></thead>
+        <tbody id="orgBody"><tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa">Cargando…</td></tr></tbody>
       </table></div></div>
     </div>
 
@@ -378,6 +393,7 @@ async function iniciar(){
   _mkCampanas = d.campanas || [];
   mkPintarLista();
   if(location.hash === '#carritos') verTab('carritos');   // enlace directo desde el Admin
+  else if(location.hash === '#organizadores') verTab('organizadores');
 }
 
 // ═══ Pestaña "Clics por correo" (antes vivía en el Admin) ═══
@@ -388,11 +404,11 @@ function _fechaC(v){ return v ? new Date(v).toLocaleString('es-GT',{day:'2-digit
 function _ctrC(c){ return c.enviados > 0 ? (c.clics_unicos / c.enviados * 100).toFixed(1) + '%' : '—'; }
 
 function verTab(t){
-  ['semana', 'clics', 'chat', 'carritos', 'fotos', 'sistema'].forEach(function(n){
+  ['semana', 'clics', 'chat', 'carritos', 'organizadores', 'fotos', 'sistema'].forEach(function(n){
     document.getElementById('panel' + n.charAt(0).toUpperCase() + n.slice(1)).style.display = t === n ? 'block' : 'none';
     document.getElementById('tab' + n.charAt(0).toUpperCase() + n.slice(1)).classList.toggle('active', t === n);
   });
-  if(t === 'clics') loadCorreos(); else if(t === 'chat') loadChat(); else if(t === 'carritos') loadCarritos(); else if(t === 'fotos') loadFotos(); else if(t === 'sistema'){ var e = document.getElementById('sisEmail'); if(e && !e.value) e.value = localStorage.getItem('petmi_mk_prueba') || ''; } else mkCargar();
+  if(t === 'clics') loadCorreos(); else if(t === 'chat') loadChat(); else if(t === 'carritos') loadCarritos(); else if(t === 'organizadores') loadOrganizadores(); else if(t === 'fotos') loadFotos(); else if(t === 'sistema'){ var e = document.getElementById('sisEmail'); if(e && !e.value) e.value = localStorage.getItem('petmi_mk_prueba') || ''; } else mkCargar();
 }
 
 async function loadCorreos(){
@@ -587,6 +603,10 @@ async function probarSistema(){
       + lineaSec(sec.supabase, 'Llave de la base de datos', 'SUPABASE_SERVICE_KEY') + lineaSec(sec.svix, 'Secreto de los pagos (webhook)', 'RECURRENTE_WEBHOOK_SECRET') + lineaSec(sec.vapid, 'Llaves de las notificaciones push', 'VAPID_PUBLIC_KEY y VAPID_PRIVATE_KEY')
       + '<div style="font-size:12.5px;margin-top:4px;color:' + (listos ? '#2e7d32' : '#7a5b00') + ';font-weight:700">' + (listos ? '✅ Las tres están puestas: ya puedes aplicar el Paso 2 (quitar los secretos del código).' : '⏳ Cuando las tres estén ✅, ya puedes aplicar el Paso 2. Mientras tanto el código usa sus valores de respaldo y nada falla.') + '</div></div>';
   }
+  // Organizadores: ¿ya se corrió crear_organizadores.sql?
+  if(d.organizadores_tabla === false){
+    infoLlave += '<div style="margin:10px 0 6px;font-size:12.5px;color:#7a5b00;background:#fff8e1;border-radius:10px;padding:9px 12px;line-height:1.5">🏪 Falta la tabla de organizadores en Supabase: corre <code>crear_organizadores.sql</code>. Hasta entonces nadie puede registrarse como organizador.</div>';
+  }
   // El servidor sigue leyendo un valor muy corto: la llave NUEVA todavía no le llega (no se guardó, se guardó en otro ambiente, o falta Redeploy)
   if(!d.llave_de_prueba && d.clave_definida && ci && ci.longitud > 0 && ci.longitud < 200){
     infoLlave += '<div style="background:#fff8e1;color:#7a5b00;border-radius:10px;padding:12px 14px;margin:8px 0 6px;font-size:13px;line-height:1.7"><b>Este servidor sigue leyendo un valor de solo ' + ci.longitud + ' caracteres.</b> Si ya pegaste la llave nueva, todavía no le llega. Revisa:<ol style="margin:6px 0 0 18px"><li>En Vercel → Settings → <b>Environment Variables</b>: la entrada <b>WIX_API_KEY</b> que editaste debe tener marcado <b>Production</b> (no solo Preview o Development) y no debe haber otra repetida.</li><li>Después de <b>Save</b>: <b>Deployments</b> → los tres puntos del primero → <b>Redeploy</b>, y espera a que diga <b>Ready</b>.</li><li>Compara arriba el <b>commit</b> y el <b>despliegue</b> con el último de la lista de Deployments: deben ser ese. Si el despliegue de Production es otro, haz clic en "Promote to Production" en el último.</li></ol></div>';
@@ -739,6 +759,57 @@ async function borrarCarrito(id){
   if(!d.ok){ alert('No se pudo borrar: ' + (d.error || 'error')); return; }
   _carritos = _carritos.filter(function(x){ return x.id !== id; });
   loadCarritos();
+}
+
+// ═══ Pestaña "Organizadores": negocios y quien organiza eventos, registrados sin mascota ═══
+var _organizadores = [];
+async function loadOrganizadores(){
+  var res = document.getElementById('orgResumen');
+  res.textContent = 'Cargando…';
+  var d = await mkFetch('getOrganizadoresAdmin');
+  if(!d.ok){ _organizadores = []; res.innerHTML = '<span style="color:#c0392b">' + _escC(d.error || 'No se pudo cargar') + '</span>'; document.getElementById('orgBody').innerHTML = ''; return; }
+  _organizadores = d.organizadores || []; var r = d.resumen;
+  res.innerHTML = '<div style="font-size:15px;margin-bottom:6px"><b>' + r.total + '</b> ' + (r.total === 1 ? 'organizador registrado' : 'organizadores registrados') + '</div>'
+    + '<div style="font-size:12.5px;color:#777;line-height:1.7"><b>' + r.verificados + '</b> con el correo verificado · <b>' + r.bloqueados + '</b> bloqueados</div>';
+  pintarOrganizadores();
+}
+function pintarOrganizadores(){
+  var body = document.getElementById('orgBody'), q = (document.getElementById('orgBuscar').value || '').trim().toLowerCase(), ocultar = document.getElementById('orgOcultarBloq').checked;
+  var lista = _organizadores.filter(function(o){
+    if(ocultar && o.bloqueado) return false;
+    return !q || [o.nombre, o.organizacion, o.email].join(' ').toLowerCase().indexOf(q) >= 0;
+  });
+  if(!lista.length){ body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#aaa">' + (_organizadores.length ? 'Ninguno coincide con la búsqueda.' : 'Todavía no se registra ningún organizador.') + '</td></tr>'; return; }
+  body.innerHTML = lista.map(function(o){
+    var estado = o.bloqueado ? '<span style="background:#fdecea;color:#c0392b;border-radius:99px;padding:3px 10px;font-size:11.5px;font-weight:700">🚫 Bloqueado</span>'
+      : (o.verificado_at ? '<span style="background:#e0f7f7;color:#007a7a;border-radius:99px;padding:3px 10px;font-size:11.5px;font-weight:700">✓ Verificado</span>' : '<span style="background:#eee;color:#777;border-radius:99px;padding:3px 10px;font-size:11.5px;font-weight:700">Sin verificar</span>');
+    var tel = String(o.telefono || '').replace(/\D/g, '');
+    var acciones = (tel.length === 8 ? '<a class="btn-sm" style="background:#25D366;color:#fff;text-decoration:none;margin-right:4px" target="_blank" rel="noopener" href="' + _escC(waOrg(o)) + '">💬</a>' : '')
+      + '<button class="btn-sm" style="background:#e0f0ff;color:#0055aa;margin-right:4px" title="Copiar correo" onclick="copiarCorreoOrg(\'' + _escC(o.uid) + '\')">✉️</button>'
+      + '<button class="btn-sm" style="background:' + (o.bloqueado ? '#e0f7f7;color:#007a7a' : '#fdecea;color:#c0392b') + '" title="' + (o.bloqueado ? 'Desbloquear' : 'Bloquear: deja de poder publicar') + '" onclick="bloquearOrg(\'' + _escC(o.uid) + '\',' + (o.bloqueado ? 'false' : 'true') + ')">' + (o.bloqueado ? '✅' : '🚫') + '</button>';
+    return '<tr><td style="white-space:nowrap"><b>' + _hacePoco(o.creado_at) + '</b><br><span style="font-size:11.5px;color:#999">' + _fechaC(o.creado_at) + '</span></td>'
+      + '<td><b>' + _escC(o.organizacion || o.nombre || '—') + '</b>' + (o.organizacion && o.nombre ? '<br><span style="font-size:12px;color:#666">' + _escC(o.nombre) + '</span>' : '') + '</td>'
+      + '<td style="font-size:12px">' + (o.email ? _escC(o.email) + '<br>' : '') + (tel ? '<span style="color:#666">+502 ' + _escC(tel) + '</span>' : '<span style="color:#bbb">—</span>') + '</td>'
+      + '<td style="font-size:12.5px;white-space:nowrap">🎪 ' + (o.eventos || 0) + ' · 📍 ' + (o.lugares || 0) + '</td><td>' + estado + '</td><td style="white-space:nowrap">' + acciones + '</td></tr>';
+  }).join('');
+}
+function waOrg(o){
+  var primero = String(o.nombre || '').trim().split(/\s+/)[0];
+  var msg = 'Hola' + (primero ? ' ' + primero : '') + ' 🐾, te escribimos de PetMi sobre lo que enviaste' + (o.organizacion ? ' de ' + o.organizacion : '') + '. ¿Podemos coordinar contigo?';
+  return 'https://wa.me/502' + String(o.telefono).replace(/\D/g, '') + '?text=' + encodeURIComponent(msg);
+}
+function copiarCorreoOrg(uid){
+  var o = _organizadores.find(function(x){ return x.uid === uid; }); if(!o || !o.email) return;
+  function listo(){ alert('✅ Correo copiado: ' + o.email); }
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(o.email).then(listo, function(){ prompt('Copia este correo (Ctrl+C):', o.email); }); }
+  else { prompt('Copia este correo (Ctrl+C):', o.email); }
+}
+async function bloquearOrg(uid, bloquear){
+  var o = _organizadores.find(function(x){ return x.uid === uid; });
+  if(bloquear && !confirm('¿Bloquear a ' + (o ? (o.organizacion || o.nombre || o.email) : 'este organizador') + '? Deja de poder publicar al instante. Puedes desbloquearlo cuando quieras.')) return;
+  var d = await mkFetch('bloquearOrganizador', { uid: uid, bloqueado: bloquear });
+  if(!d.ok){ alert('No se pudo cambiar: ' + (d.error || 'error')); return; }
+  loadOrganizadores();
 }
 
 window.addEventListener('DOMContentLoaded', function(){
