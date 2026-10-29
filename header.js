@@ -135,7 +135,6 @@
 
     // ── Desktop nav ──────────────────────────────────────────
     var navHTML =
-      '<a href="/" class="h-link' + (esPaginaGaleria ? ' active' : '') + '" style="display:inline-flex;align-items:center;gap:5px"><img src="/ID.png" alt="" style="width:16px;height:16px;object-fit:contain">Inicio</a>' +
       '<a href="https://app.revistapetmi.com/avisos.html?tipo=todos" class="h-link' + (currentPath.indexOf('avisos') >= 0 ? ' active' : '') + '">📢 Avisos <span id="hAvisosCount" class="h-avisos-badge"></span></a>' +
       '<a href="/mensajes.html" class="h-link' + (currentPath.indexOf('mensajes') >= 0 ? ' active' : '') + '">💬 Mensajes <span id="petmiMsgBadge" class="h-avisos-badge"></span></a>' +
 
@@ -174,8 +173,7 @@
       : (esPaginaGaleria ? '<a href="/QueEsPetmi.html" class="h-link" style="opacity:.6;font-size:12px;white-space:nowrap">¿Qué es PetMi?</a>' :
         currentPath.indexOf('tienda') >= 0
           ? '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>'
-          : '<a href="/registro.html" class="h-btn-reg">Registrar mascota</a>' +
-            '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>');
+          : '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>');
     // ── Bottom nav mobile ─────────────────────────────────────
     var bottomNavHTML =
       (sessionEmail
