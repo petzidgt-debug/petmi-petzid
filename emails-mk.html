@@ -68,7 +68,7 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
     <div class="paso" id="paso1"><span class="ic">⏳</span><div><b>Servidor</b><div class="tx"></div></div></div>
     <div class="paso" id="paso2"><span class="ic">⏳</span><div><b>Clave de administración</b><div class="tx"></div></div></div>
     <div class="paso" id="paso3"><span class="ic">⏳</span><div><b>Tablas de correos (Supabase)</b><div class="tx"></div></div></div>
-    <div id="versionPagina" style="font-size:11px;color:#bbb;margin-top:6px">Versión de esta página: 28-oct-2026 · organizadores</div>
+    <div id="versionPagina" style="font-size:11px;color:#bbb;margin-top:6px">Versión de esta página: 29-oct-2026 · recordatorios por dueño</div>
   </div>
 
   <div class="card login" id="login" style="display:none">
@@ -639,9 +639,9 @@ var _FOTOS_ESTADOS = {
 var _FOTOS_MOTIVOS = { reciente: 'ya recibieron uno hoy', tope: 'ya recibieron 3 (el máximo)', muy_nueva: 'se registraron hace menos de 2 horas', baja: 'se dieron de baja', sin_correo: 'no tienen correo' };
 
 function _botonFotos(){
-  var b = document.getElementById('fotosBtn'), n = _fotosResumen ? _fotosResumen.listos : 0;
+  var b = document.getElementById('fotosBtn'), n = _fotosResumen ? _fotosResumen.listos : 0, k = _fotosResumen ? (_fotosResumen.correos_listos || n) : 0;
   b.disabled = _fotosCorriendo || !n;
-  b.textContent = n ? '📸 Mandar recordatorio a ' + n + (n === 1 ? ' mascota' : ' mascotas') : '📸 No hay a quién mandarle ahora';
+  b.textContent = n ? '📸 Mandar ' + k + (k === 1 ? ' correo' : ' correos') + ' (' + n + (n === 1 ? ' mascota' : ' mascotas') + ')' : '📸 No hay a quién mandarle ahora';
   document.getElementById('fotosStop').style.display = _fotosCorriendo ? 'inline-block' : 'none';
 }
 
@@ -652,7 +652,7 @@ async function loadFotos(){
   if(!d.ok){ _fotosResumen = null; res.innerHTML = '<span style="color:#c0392b">' + _escC(d.error || 'No se pudo cargar') + '</span>'; body.innerHTML = ''; _botonFotos(); return; }
   _fotosResumen = d;
   var otros = ['reciente', 'tope', 'muy_nueva', 'baja', 'sin_correo'].filter(function(k){ return d.por_estado[k] > 0; }).map(function(k){ return '<b>' + d.por_estado[k] + '</b> ' + _FOTOS_MOTIVOS[k]; });
-  res.innerHTML = '<div style="font-size:15px;margin-bottom:6px"><b>' + d.total + '</b> ' + (d.total === 1 ? 'mascota sin foto' : 'mascotas sin foto') + ' · <b style="color:#2e7d32">' + d.listos + '</b> ' + (d.listos === 1 ? 'lista para mandar ahora' : 'listas para mandar ahora') + '</div>'
+  res.innerHTML = '<div style="font-size:15px;margin-bottom:6px"><b>' + d.total + '</b> ' + (d.total === 1 ? 'mascota sin foto' : 'mascotas sin foto') + ' · <b style="color:#2e7d32">' + d.listos + '</b> ' + (d.listos === 1 ? 'lista para mandar ahora' : 'listas para mandar ahora') + (d.listos && d.correos_listos ? ' · <b>' + d.correos_listos + '</b> ' + (d.correos_listos === 1 ? 'correo' : 'correos') + ' (uno por dueño)' : '') + '</div>'
     + (otros.length ? '<div style="font-size:12.5px;color:#777;line-height:1.7">No se les manda ahora a: ' + otros.join(' · ') + '.</div>' : '');
   if(!d.lista.length){ body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#2e7d32">🎉 Todas las mascotas tienen foto.</td></tr>'; _botonFotos(); return; }
   body.innerHTML = d.lista.map(function(m){
@@ -668,26 +668,26 @@ function mkDetenerFotos(){ _fotosParar = true; document.getElementById('fotosPro
 
 async function mkEnviarFotos(){
   if(_fotosCorriendo || !_fotosResumen || !_fotosResumen.listos) return;
-  var n = _fotosResumen.listos;
-  if(!confirm('¿Mandar el recordatorio de foto a ' + n + (n === 1 ? ' mascota' : ' mascotas') + '?\n\nSe manda un correo por mascota, con el botón para subir su foto. Solo a quienes se les puede escribir hoy (máximo 1 al día y 3 en total).')) return;
+  var n = _fotosResumen.listos, k = _fotosResumen.correos_listos || n;
+  if(!confirm('¿Mandar el recordatorio de foto a ' + n + (n === 1 ? ' mascota' : ' mascotas') + '?\n\nSe manda UN correo por dueño: ' + k + (k === 1 ? ' correo' : ' correos') + '. Si un dueño tiene varias mascotas sin foto, recibe un solo correo con un botón para cada una. Solo a quienes se les puede escribir hoy (máximo 1 al día y 3 en total).')) return;
   _fotosCorriendo = true; _fotosParar = false; _botonFotos();
   var prog = document.getElementById('fotosProgreso');
-  var enviados = 0, errores = 0, saltados = 0, fallidos = [], detalleErr = [], vueltas = 0, falloServidor = '';
+  var enviados = 0, mascotasEnv = 0, errores = 0, saltados = 0, fallidos = [], detalleErr = [], vueltas = 0, falloServidor = '';
   while(!_fotosParar && vueltas < 300){
     vueltas++;
     var d = await mkFetch('enviarLoteRecordatoriosFoto', { limite: 4, excluir: fallidos });
     if(!d.ok){ falloServidor = d.error || 'No se pudo enviar'; break; }
-    enviados += d.enviados; errores += d.errores; saltados += d.saltados;
+    enviados += d.enviados; mascotasEnv += (d.mascotas || 0); errores += d.errores; saltados += d.saltados;
     fallidos = fallidos.concat(d.fallidos || []);
     (d.detalle || []).forEach(function(x){ if(!x.ok && !x.saltada) detalleErr.push(x); });
-    prog.textContent = 'Enviando… ' + enviados + ' enviados' + (errores ? ' · ' + errores + ' con error' : '') + ' · faltan ' + d.restantes;
+    prog.textContent = 'Enviando… ' + enviados + (enviados === 1 ? ' correo enviado' : ' correos enviados') + (errores ? ' · ' + errores + ' con error' : '') + ' · faltan ' + d.restantes;
     if(d.restantes <= 0 || (d.enviados + d.errores + d.saltados) === 0) break;
   }
   var detenido = _fotosParar;
   _fotosCorriendo = false;
   var html = (falloServidor ? '<span style="color:#c0392b"><b>Se detuvo:</b> ' + _escC(falloServidor) + '</span> · ' : '')
     + (detenido ? '⏹ <b>Detenido.</b> ' : (!falloServidor ? '✅ <b>Listo.</b> ' : ''))
-    + '<b>' + enviados + '</b> enviados' + (errores ? ' · <span style="color:#c0392b"><b>' + errores + '</b> con error</span>' : '') + (saltados ? ' · ' + saltados + ' saltados' : '');
+    + '<b>' + enviados + '</b> ' + (enviados === 1 ? 'enviado' : 'enviados') + (mascotasEnv ? ' (' + mascotasEnv + (mascotasEnv === 1 ? ' mascota' : ' mascotas') + ')' : '') + (errores ? ' · <span style="color:#c0392b"><b>' + errores + '</b> con error</span>' : '') + (saltados ? ' · ' + saltados + ' saltados' : '');
   if(detalleErr.length) html += '<div style="margin-top:6px;font-size:12px;color:#7f1d1d;line-height:1.6">' + detalleErr.slice(0, 10).map(function(x){ return _escC(x.nombre || '—') + ' (' + _escC(x.email || '—') + '): ' + _escC(x.error || ''); }).join('<br>') + (detalleErr.length > 10 ? '<br>…y ' + (detalleErr.length - 10) + ' más' : '') + '</div>';
   prog.innerHTML = html;
   await loadFotos();
