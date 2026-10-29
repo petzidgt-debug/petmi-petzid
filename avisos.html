@@ -343,6 +343,14 @@ cargar();
   setTimeout(function(){ abrirPublicar(); },900);
 })();
 
+// ── ?filtro=evento (desde el menú "Más" → "Eventos"): abre la lista ya filtrada a los eventos ──
+// Los eventos de hoy viven aquí (tipo "evento" dentro de los avisos); la página eventos.html lista una tabla antigua que ya no es la activa.
+(function(){
+  if(new URLSearchParams(window.location.search).get('filtro')!=='evento') return;
+  var btn=[].slice.call(document.querySelectorAll('.filtro-btn')).filter(function(b){return /Eventos/.test(b.textContent);})[0];
+  if(btn) setFiltro('evento',btn);
+})();
+
 function _preLlenar(m){
   if(!m)return;
   var campos={pubNombreMascota:m.nombre,pubEspecie:m.especie,pubSexo:m.sexo,pubRaza:m.raza,pubTelefono:m.whatsapp};
