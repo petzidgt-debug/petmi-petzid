@@ -52,8 +52,8 @@
       // Desktop nav
       '.h-nav{display:flex;align-items:center;gap:2px}',
       '@media(max-width:768px){.h-nav{display:none}}',
-      // "¿Qué es PetMi?" solo se muestra si hay lugar (ocupa ~120 px): en pantallas de menos de 1100 px el menú de arriba se saldría.
-      '@media(max-width:1099px){.h-nav a.h-qes{display:none!important}}',
+      // "¿Qué es PetMi?" solo se muestra si hay lugar (ocupa ~120 px): cabe desde ~830 px; en pantallas de menos de 860 px el menú de arriba se saldría.
+      '@media(max-width:859px){.h-nav a.h-qes{display:none!important}}',
       '@media(min-width:769px){.h-search{display:none}}',
       '.h-link{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;font-size:13px;font-weight:600;color:#555;text-decoration:none;border:none;background:none;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif;transition:background .15s}',
       '.h-link:hover,.h-link.active{background:#e0f7f7;color:#00B4B4}',
