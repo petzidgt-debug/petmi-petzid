@@ -11,7 +11,7 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUz
 const CARRERA_RESERVAS_ABIERTAS = false;
 
 // Marca de versión: se ve abriendo /api/galeria en el navegador. Sirve para comprobar en 5 segundos si un despliegue nuevo ya está en línea.
-const GALERIA_VERSION = '2026-10-27-a';
+const GALERIA_VERSION = '2026-10-28-a';
 
 // ── Web Push (notificaciones) ───────────────────────────────
 const webpush = require('web-push');
@@ -524,7 +524,9 @@ const _ACCIONES_SOLO_ADMIN = new Set([
   'getUsuariosNuncaVolvieron',
   'getConversaciones',
   'adminPing',
-  'sb'
+  'sb',
+  'getOrganizadoresAdmin',
+  'bloquearOrganizador'
 ]);
 
 async function _adminAutorizado(req, res) {
@@ -694,6 +696,73 @@ const _PEDIDO_PAGADO_ESTADOS = ['pagado', 'confirmado', 'en_camino', 'entregado'
 function _telefonoGT(v) { const d = String(v || '').replace(/\D/g, ''); return d.length === 8 ? '502' + d : (d.length === 11 && d.indexOf('502') === 0 ? d : ''); }
 function _firmaItemsCarrito(items) { return (Array.isArray(items) ? items : []).map(function (i) { return String(i.producto_id) + 'x' + String(i.cantidad); }).sort().join(','); }
 function _headersSB(extra) { return Object.assign({ 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY }, extra || {}); }
+
+// ── Organizadores: negocios, veterinarias y quien organiza eventos. Publican SIN tener una mascota registrada ──
+// Se identifican con su correo (verificado con un código) y una sesión firmada por el servidor. Sus datos de contacto
+// (nombre y teléfono) son privados: solo salen en las acciones de administración.
+const _ORG_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function _telGT8(v) { const d = String(v || '').replace(/\D/g, ''); const x = (d.length === 11 && d.indexOf('502') === 0) ? d.slice(3) : d; return x.length === 8 ? x : ''; }
+function _textoLimpio(v, max) { return String(v || '').replace(/\s+/g, ' ').trim().slice(0, max); }
+function _secretoOrganizador() { return require('crypto').createHash('sha256').update('petmi-organizador-v1|' + SUPABASE_SERVICE_KEY).digest(); }
+function _firmaOrg(cuerpo) { return require('crypto').createHmac('sha256', _secretoOrganizador()).update('org|' + cuerpo).digest('base64url'); }
+function _crearTokenOrganizador(uid, email, dias) {
+  const exp = Math.floor(Date.now() / 1000) + (dias || 30) * 86400;
+  const cuerpo = Buffer.from(JSON.stringify({ u: uid, e: email, x: exp })).toString('base64url');
+  return { token: cuerpo + '.' + _firmaOrg(cuerpo), exp: exp };
+}
+function _leerTokenOrganizador(token) {
+  try {
+    const partes = String(token || '').split('.'); if (partes.length !== 2 || !partes[0] || !partes[1]) return null;
+    const a = Buffer.from(partes[1]), b = Buffer.from(_firmaOrg(partes[0]));
+    if (a.length !== b.length || !require('crypto').timingSafeEqual(a, b)) return null;
+    const p = JSON.parse(Buffer.from(partes[0], 'base64url').toString('utf8'));
+    if (!p || !p.u || !p.e || !p.x || p.x < Math.floor(Date.now() / 1000)) return null;
+    return p;
+  } catch (e) { return null; }
+}
+// La firma sola no basta: el organizador debe seguir existiendo, estar verificado y no estar bloqueado.
+async function _organizadorDeToken(token) {
+  const p = _leerTokenOrganizador(token); if (!p) return null;
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/organizadores?uid=eq.' + encodeURIComponent(p.u) + '&select=uid,email,nombre,telefono,organizacion,verificado_at,bloqueado&limit=1', { headers: _headersSB() });
+    if (!r.ok) return null;
+    const o = ((await r.json().catch(() => [])) || [])[0];
+    if (!o || !o.verificado_at || o.bloqueado || String(o.email).toLowerCase() !== String(p.e).toLowerCase()) return null;
+    return o;
+  } catch (e) { return null; }
+}
+// ¿Quién envía un lugar o un evento? Un organizador con sesión válida, o el dueño de una mascota (su correo está en la base). Si no, no se acepta.
+async function _quienEnvia(b) {
+  if (b.organizador_token) { const o = await _organizadorDeToken(b.organizador_token); return o ? { ok: true, email: o.email, uid: o.uid } : { ok: false, error: 'organizador_no_valido' }; }
+  const mail = String(b.email || '').trim().toLowerCase().slice(0, 120);
+  if (!_ORG_EMAIL_RE.test(mail)) return { ok: false, error: 'registro_requerido' };
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/mascotas?email=ilike.' + encodeURIComponent(mail.replace(/[\\%_]/g, '\\$&')) + '&select=uid&limit=1', { headers: _headersSB() });
+    const rows = r.ok ? await r.json().catch(() => []) : [];
+    if (Array.isArray(rows) && rows.length) return { ok: true, email: mail, uid: null };
+  } catch (e) {}
+  return { ok: false, error: 'registro_requerido' };
+}
+async function _enviarCodigoOrganizador(email, nombre) {
+  const code = String(require('crypto').randomInt(100000, 1000000));
+  await fetch(SUPABASE_URL + '/rest/v1/otp_codes', { method: 'POST', headers: _headersSB({ 'Prefer': 'return=minimal' }), body: JSON.stringify({ email: email, code: code, expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), used: false }) });
+  return _enviarCodigoOTPPorCorreo(email, code, nombre || '', 'organizador');
+}
+// Solo para las listas del Admin: agrega a cada fila los datos de contacto del organizador (si lo hay).
+async function _adjuntarOrganizadores(filas, fnUid, fnEmail) {
+  try {
+    if (!Array.isArray(filas) || !filas.length) return filas;
+    const r = await fetch(SUPABASE_URL + '/rest/v1/organizadores?select=uid,email,nombre,telefono,organizacion,bloqueado&limit=3000', { headers: _headersSB() });
+    if (!r.ok) return filas;
+    const orgs = (await r.json().catch(() => [])) || [], porUid = {}, porEmail = {};
+    orgs.forEach(function (o) { porUid[o.uid] = o; if (o.email) porEmail[String(o.email).toLowerCase()] = o; });
+    filas.forEach(function (f) {
+      const o = (fnUid && porUid[fnUid(f)]) || (fnEmail && porEmail[String(fnEmail(f) || '').toLowerCase()]);
+      if (o) f.organizador = { uid: o.uid, nombre: o.nombre, telefono: o.telefono, email: o.email, organizacion: o.organizacion, bloqueado: !!o.bloqueado };
+    });
+  } catch (e) {}
+  return filas;
+}
 
 function _normTextoMK(s) {
   return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -1899,9 +1968,11 @@ export default async function handler(req, res) {
 
     // ── Enviar evento a revisión (usuarios) ─────────────────────
     if (action === 'enviarEvento' && req.method === 'POST') {
-      const { titulo, tipo, fecha, hora, lugar, direccion, descripcion, imagen, link, email } = req.body;
+      const { titulo, tipo, fecha, hora, lugar, direccion, descripcion, imagen, link } = req.body;
       if (!titulo || !fecha) return res.status(200).json({ ok: false, error: 'Faltan titulo y fecha' });
-      const payload = { titulo, tipo: tipo||'evento', fecha, hora: hora||null, lugar: lugar||null, direccion: direccion||null, descripcion: descripcion||null, imagen: imagen||null, link: link||null, creado_por: email||null, activo: false };
+      const quien = await _quienEnvia(req.body);   // un organizador con sesión, o el dueño de una mascota
+      if (!quien.ok) return res.status(200).json({ ok: false, error: quien.error });
+      const payload = { titulo, tipo: tipo||'evento', fecha, hora: hora||null, lugar: lugar||null, direccion: direccion||null, descripcion: descripcion||null, imagen: imagen||null, link: link||null, creado_por: quien.email, activo: false };
       const r = await fetch(SUPABASE_URL + '/rest/v1/eventos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=minimal' },
@@ -1918,14 +1989,18 @@ export default async function handler(req, res) {
 
     // ── Enviar lugar a revisión (usuarios) ───────────────────────
     if (action === 'enviarLugar' && req.method === 'POST') {
-      const { nombre, tipo, zona, direccion, descripcion, imagen, google_maps, instagram, telefono, email } = req.body;
+      const { nombre, tipo, zona, direccion, descripcion, imagen, google_maps, instagram, telefono } = req.body;
       if (!nombre) return res.status(200).json({ ok: false, error: 'Falta el nombre' });
-      const r = await fetch(SUPABASE_URL + '/rest/v1/lugares', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ nombre, tipo: tipo||'restaurante', zona, direccion, descripcion, imagen, google_maps, instagram, telefono, activo: false })
-      });
-      if (!r.ok) console.error('enviarLugar insert failed:', r.status, await r.text().catch(() => ''));
+      const quien = await _quienEnvia(req.body);   // un organizador con sesión, o el dueño de una mascota
+      if (!quien.ok) return res.status(200).json({ ok: false, error: quien.error });
+      const base = { nombre, tipo: tipo||'restaurante', zona, direccion, descripcion, imagen, google_maps, instagram, telefono, activo: false };
+      const insertar = function (cuerpo) { return fetch(SUPABASE_URL + '/rest/v1/lugares', { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY, 'Prefer': 'return=minimal' }, body: JSON.stringify(cuerpo) }); };
+      let r = await insertar(Object.assign({}, base, { enviado_por_email: quien.email, enviado_por_uid: quien.uid }));
+      if (!r.ok) {
+        const t = await r.text().catch(() => '');
+        if (/enviado_por/.test(t)) r = await insertar(base);   // aún no se corrió crear_organizadores.sql: se guarda igual, sin quién lo envió
+        else console.error('enviarLugar insert failed:', r.status, t);
+      }
       return res.status(200).json({ ok: r.ok });
     }
 
@@ -1963,6 +2038,7 @@ export default async function handler(req, res) {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
       const data = await r.json();
+      await _adjuntarOrganizadores(data, function (f) { return f.uid_creador; }, null);
       return res.status(200).json({ ok: true, avisos: data || [] });
     }
 
@@ -2037,6 +2113,15 @@ export default async function handler(req, res) {
 
     // ── publicarActividad ─────────────────────────────────────────
     if (action === 'publicarActividad' && req.method === 'POST') {
+      // Un organizador (sin mascota) solo puede publicar EVENTOS, siempre pendientes de aprobación, y los datos del autor salen de su
+      // registro (no de lo que mande la página): así nadie se hace pasar por otro organizador, ni por una mascota, ni por aliado.
+      if (req.body && (req.body.organizador_token || String(req.body.uid_creador || '').indexOf('ORG-') === 0)) {
+        const org = await _organizadorDeToken(req.body.organizador_token);
+        if (!org || org.uid !== String(req.body.uid_creador || '')) return res.status(200).json({ ok: false, error: 'organizador_no_valido' });
+        if (req.body.tipo !== 'evento') return res.status(200).json({ ok: false, error: 'tipo_no_permitido' });
+        Object.assign(req.body, { nombre_creador: org.organizacion || org.nombre, foto_creador: '', email_creador: org.email, activo_override: false, es_afiliado: false, afiliado_email: null, afiliado_plan: null, afiliado_vence: null });
+        delete req.body.whatsapp;
+      }
       const { uid_creador, nombre_creador, foto_creador, tipo, categoria, titulo, descripcion, fecha, hora, ubicacion, imagen, especie, sexo, raza, whatsapp, recompensa } = req.body;
       if (!titulo || !uid_creador) return res.status(200).json({ ok: false, error: 'Faltan campos' });
       // Calcular expiración: planes expiran en la fecha del plan, anuncios en 7 días
@@ -2141,7 +2226,9 @@ export default async function handler(req, res) {
       const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?order=created_at.desc', {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
-      return res.status(200).json({ eventos: await r.json() });
+      const filas = await r.json();
+      await _adjuntarOrganizadores(filas, null, function (f) { return f.creado_por; });
+      return res.status(200).json({ eventos: filas });
     }
 
     // ── getEventosPendientes ──────────────────────────────────
@@ -2149,7 +2236,9 @@ export default async function handler(req, res) {
       const r = await fetch(SUPABASE_URL + '/rest/v1/eventos?activo=eq.false&order=created_at.desc', {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
-      return res.status(200).json({ eventos: await r.json() });
+      const filas = await r.json();
+      await _adjuntarOrganizadores(filas, null, function (f) { return f.creado_por; });
+      return res.status(200).json({ eventos: filas });
     }
 
     // ── toggleEvento (tabla "eventos" — NO es el sistema activo hoy;
@@ -2179,7 +2268,9 @@ export default async function handler(req, res) {
       const r = await fetch(SUPABASE_URL + '/rest/v1/lugares?order=nombre.asc', {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
-      return res.status(200).json({ lugares: await r.json() });
+      const filas = await r.json();
+      await _adjuntarOrganizadores(filas, function (f) { return f.enviado_por_uid; }, null);
+      return res.status(200).json({ lugares: filas });
     }
 
     // ── toggleLugar ───────────────────────────────────────────
@@ -3368,6 +3459,7 @@ export default async function handler(req, res) {
       out.servidor = { ambiente: process.env.VERCEL_ENV || '(no es Vercel)', commit: String(process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7), despliegue: String(process.env.VERCEL_URL || '').slice(0, 90) };
       // ¿Los secretos ya viven en variables de Vercel? (Paso 2: solo cuando todos digan sí se pueden quitar del código)
       out.secretos = { supabase: !!process.env.SUPABASE_SERVICE_KEY, svix: !!process.env.RECURRENTE_WEBHOOK_SECRET, vapid: !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY), admin_apps_script: !!process.env.APPS_SCRIPT_SECRET };
+      try { const ro = await fetch(SUPABASE_URL + '/rest/v1/organizadores?select=id&limit=1', { headers: _headersSB() }); out.organizadores_tabla = ro.ok; } catch (e) { out.organizadores_tabla = false; }
       // Las tres comprobaciones corren A LA VEZ (antes una tras otra: si Apps Script tardaba, la prueba entera se alargaba).
       // 1) Subir fotos (registro): pedir una dirección de subida no crea ningún archivo
       const probarMedios = async function () {
@@ -3527,6 +3619,103 @@ export default async function handler(req, res) {
       res.setHeader('Content-Type', hr.get('content-type') || 'application/json');
       if (hr.get('content-range')) res.setHeader('Content-Range', hr.get('content-range'));
       return res.status(r.status).send(txt);
+    }
+
+    // ══ Organizadores ═════════════════════════════════════════════════
+    // organizadorRegistrar — PÚBLICA. Guarda lo escrito como "pendiente" y manda un código al correo. Los datos solo pasan a ser
+    // los oficiales cuando se verifica el código: así nadie puede cambiar los datos de otra persona escribiendo su correo.
+    if (action === 'organizadorRegistrar' && req.method === 'POST') {
+      const b = req.body || {};
+      const email = _textoLimpio(b.email, 120).toLowerCase(), nombre = _textoLimpio(b.nombre, 80), organizacion = _textoLimpio(b.organizacion, 80), tel = _telGT8(b.telefono);
+      const no = function (error, extra) { return res.status(200).json(Object.assign({ ok: false, error: error }, extra || {})); };
+      if (!_ORG_EMAIL_RE.test(email)) return no('correo_invalido');
+      if (nombre.length < 2) return no('nombre');
+      if (!tel) return no('telefono');
+      if (b.acepta !== true) return no('acepta');
+      // Tope general: como mucho 100 registros nuevos por hora (contra quien quiera llenar la base o mandar correos a la fuerza).
+      const rG = await fetch(SUPABASE_URL + '/rest/v1/organizadores?creado_at=gte.' + encodeURIComponent(new Date(Date.now() - 3600e3).toISOString()) + '&select=id&limit=101', { headers: _headersSB() });
+      if (!rG.ok) return no('no_se_pudo_enviar');
+      if ((((await rG.json().catch(() => [])) || []).length) > 100) return no('espera');
+      const rE = await fetch(SUPABASE_URL + '/rest/v1/organizadores?email=eq.' + encodeURIComponent(email) + '&select=uid,otp_enviado_at,bloqueado&limit=1', { headers: _headersSB() });
+      if (!rE.ok) return no('no_se_pudo_enviar');
+      const ex = ((await rE.json().catch(() => [])) || [])[0];
+      if (ex && ex.bloqueado) return no('no_se_pudo_enviar');
+      if (ex && ex.otp_enviado_at && Date.now() - Date.parse(ex.otp_enviado_at) < 60000) return no('espera', { espera: Math.ceil((60000 - (Date.now() - Date.parse(ex.otp_enviado_at))) / 1000) });
+      const pend = { nombre_pend: nombre, telefono_pend: tel, organizacion_pend: organizacion || null, acepto_at: new Date().toISOString() };
+      let uid;
+      if (ex) {
+        uid = ex.uid;
+        await fetch(SUPABASE_URL + '/rest/v1/organizadores?uid=eq.' + encodeURIComponent(uid), { method: 'PATCH', headers: _headersSB({ 'Prefer': 'return=minimal' }), body: JSON.stringify(pend) });
+      } else {
+        uid = 'ORG-' + require('crypto').randomBytes(4).toString('hex');
+        const rI = await fetch(SUPABASE_URL + '/rest/v1/organizadores', { method: 'POST', headers: _headersSB({ 'Prefer': 'return=minimal' }), body: JSON.stringify(Object.assign({ uid: uid, email: email }, pend)) });
+        if (!rI.ok) return no('no_se_pudo_enviar');
+      }
+      const envio = await _enviarCodigoOrganizador(email, nombre);
+      if (!envio.ok) return no('no_se_pudo_enviar');
+      await fetch(SUPABASE_URL + '/rest/v1/organizadores?uid=eq.' + encodeURIComponent(uid), { method: 'PATCH', headers: _headersSB({ 'Prefer': 'return=minimal' }), body: JSON.stringify({ otp_enviado_at: new Date().toISOString(), otp_intentos: 0 }) });
+      return res.status(200).json({ ok: true, espera: 60 });
+    }
+
+    // organizadorLogin — PÚBLICA. Para quien ya se registró. La respuesta es la misma exista o no el correo (no revela quién está registrado).
+    if (action === 'organizadorLogin' && req.method === 'POST') {
+      const email = _textoLimpio((req.body || {}).email, 120).toLowerCase();
+      if (!_ORG_EMAIL_RE.test(email)) return res.status(200).json({ ok: false, error: 'correo_invalido' });
+      const rE = await fetch(SUPABASE_URL + '/rest/v1/organizadores?email=eq.' + encodeURIComponent(email) + '&verificado_at=not.is.null&bloqueado=eq.false&select=uid,nombre,otp_enviado_at&limit=1', { headers: _headersSB() });
+      const ex = rE.ok ? ((await rE.json().catch(() => [])) || [])[0] : null;
+      if (!ex) return res.status(200).json({ ok: true, espera: 60 });
+      if (ex.otp_enviado_at && Date.now() - Date.parse(ex.otp_enviado_at) < 60000) return res.status(200).json({ ok: false, error: 'espera' });
+      const envio = await _enviarCodigoOrganizador(email, ex.nombre);
+      if (!envio.ok) return res.status(200).json({ ok: false, error: 'no_se_pudo_enviar' });
+      await fetch(SUPABASE_URL + '/rest/v1/organizadores?uid=eq.' + encodeURIComponent(ex.uid), { method: 'PATCH', headers: _headersSB({ 'Prefer': 'return=minimal' }), body: JSON.stringify({ otp_enviado_at: new Date().toISOString(), otp_intentos: 0 }) });
+      return res.status(200).json({ ok: true, espera: 60 });
+    }
+
+    // organizadorVerificar — PÚBLICA. Máximo 5 intentos por código; con el código correcto devuelve la sesión firmada (30 días).
+    if (action === 'organizadorVerificar' && req.method === 'POST') {
+      const email = _textoLimpio((req.body || {}).email, 120).toLowerCase(), code = String((req.body || {}).code || '').replace(/\D/g, '');
+      const mal = function (error) { return res.status(200).json({ ok: false, error: error }); };
+      if (!_ORG_EMAIL_RE.test(email) || code.length !== 6) return mal('codigo_incorrecto');
+      const rO = await fetch(SUPABASE_URL + '/rest/v1/organizadores?email=eq.' + encodeURIComponent(email) + '&select=*&limit=1', { headers: _headersSB() });
+      const o = rO.ok ? ((await rO.json().catch(() => [])) || [])[0] : null;
+      if (!o || o.bloqueado) return mal('codigo_incorrecto');
+      if ((o.otp_intentos || 0) >= 5) return mal('demasiados_intentos');
+      const rC = await fetch(SUPABASE_URL + '/rest/v1/otp_codes?email=eq.' + encodeURIComponent(email) + '&used=eq.false&expires_at=gte.' + encodeURIComponent(new Date().toISOString()) + '&select=id,code&order=created_at.desc&limit=1', { headers: _headersSB() });
+      const otp = rC.ok ? ((await rC.json().catch(() => [])) || [])[0] : null;
+      if (!otp) return mal('expirado');
+      const a = Buffer.from(String(otp.code)), bb = Buffer.from(code);
+      if (a.length !== bb.length || !require('crypto').timingSafeEqual(a, bb)) {
+        await fetch(SUPABASE_URL + '/rest/v1/organizadores?uid=eq.' + encodeURIComponent(o.uid), { method: 'PATCH', headers: _headersSB({ 'Prefer': 'return=minimal' }), body: JSON.stringify({ otp_intentos: (o.otp_intentos || 0) + 1 }) });
+        return mal('codigo_incorrecto');
+      }
+      await fetch(SUPABASE_URL + '/rest/v1/otp_codes?id=eq.' + encodeURIComponent(otp.id), { method: 'PATCH', headers: _headersSB({ 'Prefer': 'return=minimal' }), body: JSON.stringify({ used: true }) });
+      const ahora = new Date().toISOString(); const upd = { ultimo_acceso: ahora, otp_intentos: 0 };
+      let nombre = o.nombre, telefono = o.telefono, organizacion = o.organizacion;
+      if (o.nombre_pend) { nombre = o.nombre_pend; telefono = o.telefono_pend; organizacion = o.organizacion_pend; Object.assign(upd, { nombre: nombre, telefono: telefono, organizacion: organizacion, nombre_pend: null, telefono_pend: null, organizacion_pend: null }); }
+      if (!o.verificado_at) upd.verificado_at = ahora;
+      await fetch(SUPABASE_URL + '/rest/v1/organizadores?uid=eq.' + encodeURIComponent(o.uid), { method: 'PATCH', headers: _headersSB({ 'Prefer': 'return=minimal' }), body: JSON.stringify(upd) });
+      const t = _crearTokenOrganizador(o.uid, o.email, 30);
+      return res.status(200).json({ ok: true, organizador: { uid: o.uid, email: o.email, nombre: nombre, telefono: telefono, organizacion: organizacion || '' }, token: t.token, exp: t.exp });
+    }
+
+    // getOrganizadoresAdmin — con clave. Lista de organizadores con cuántas cosas han enviado.
+    if (action === 'getOrganizadoresAdmin') {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/organizadores?select=uid,email,nombre,telefono,organizacion,verificado_at,bloqueado,creado_at,ultimo_acceso&order=creado_at.desc&limit=1000', { headers: _headersSB() });
+      if (!r.ok) return res.status(200).json({ ok: false, error: 'No se pudo leer la tabla organizadores. ¿Ya corriste crear_organizadores.sql en Supabase?' });
+      const lista = (await r.json().catch(() => [])) || [];
+      const cuenta = { ev: {}, lu: {} };
+      try { const ra = await fetch(SUPABASE_URL + '/rest/v1/actividades?uid_creador=like.ORG-*&select=uid_creador&limit=5000', { headers: _headersSB() }); if (ra.ok) ((await ra.json().catch(() => [])) || []).forEach(function (x) { cuenta.ev[x.uid_creador] = (cuenta.ev[x.uid_creador] || 0) + 1; }); } catch (e) {}
+      try { const rl = await fetch(SUPABASE_URL + '/rest/v1/lugares?enviado_por_uid=not.is.null&select=enviado_por_uid&limit=5000', { headers: _headersSB() }); if (rl.ok) ((await rl.json().catch(() => [])) || []).forEach(function (x) { cuenta.lu[x.enviado_por_uid] = (cuenta.lu[x.enviado_por_uid] || 0) + 1; }); } catch (e) {}
+      const filas = lista.map(function (o) { return Object.assign({}, o, { eventos: cuenta.ev[o.uid] || 0, lugares: cuenta.lu[o.uid] || 0 }); });
+      return res.status(200).json({ ok: true, resumen: { total: filas.length, verificados: filas.filter(function (o) { return o.verificado_at; }).length, bloqueados: filas.filter(function (o) { return o.bloqueado; }).length }, organizadores: filas });
+    }
+
+    // bloquearOrganizador — con clave. Un organizador bloqueado ya no puede publicar (su sesión deja de valer al instante).
+    if (action === 'bloquearOrganizador' && req.method === 'POST') {
+      const uid = String((req.body || {}).uid || '');
+      if (!/^ORG-[a-f0-9]{8}$/.test(uid)) return res.status(400).json({ ok: false, error: 'uid inválido' });
+      const r = await fetch(SUPABASE_URL + '/rest/v1/organizadores?uid=eq.' + encodeURIComponent(uid), { method: 'PATCH', headers: _headersSB({ 'Prefer': 'return=minimal' }), body: JSON.stringify({ bloqueado: (req.body || {}).bloqueado !== false }) });
+      return res.status(200).json({ ok: r.ok });
     }
 
     // ── enviarRecordatorioFoto (2 oct) — correo para que el dueño agregue la
