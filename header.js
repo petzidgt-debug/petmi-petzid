@@ -87,7 +87,7 @@
       '.h-btab-lbl{font-size:9px;color:#aaa;font-weight:600}',
       '.h-btab.active .h-btab-lbl{color:#00B4B4;font-weight:700}',
       '.h-btab-bdg{position:absolute;top:-2px;right:8px;background:#E24B4A;color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:99px;display:none}',
-      '.h-fab-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border:none;background:none;font-family:Arial,sans-serif;padding:0;text-decoration:none}',
+      '.h-fab-tab{flex:1.3;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border:none;background:none;font-family:Arial,sans-serif;padding:0;text-decoration:none}',
       '.h-fab-circle{width:48px;height:48px;border-radius:99px;background:#F5C842;display:flex;align-items:center;justify-content:center;font-size:24px;margin-top:-18px;box-shadow:0 4px 14px rgba(0,0,0,.18);border:3px solid #fff;color:#1a1a2e;font-weight:900;line-height:1}',
       '.h-fab-lbl{font-size:9px;color:#cc9800;font-weight:700;white-space:nowrap}',
       // Mobile body padding
@@ -175,14 +175,6 @@
             '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>');
     // ── Bottom nav mobile ─────────────────────────────────────
     var bottomNavHTML =
-      '<a href="/" class="h-btab' + (esPaginaGaleria ? ' active' : '') + '">' +
-        '<span class="h-btab-ico"><img src="/ID.png" alt="PetMi" style="width:22px;height:22px;object-fit:contain;display:block"></span>' +
-        '<span class="h-btab-lbl">Inicio</span>' +
-      '</a>' +
-      '<a href="/juego.html" class="h-btab' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '">' +
-        '<span class="h-btab-ico">🎮</span>' +
-        '<span class="h-btab-lbl">Juegos</span>' +
-      '</a>' +
       (sessionEmail
         ? '<a href="/familia.html" class="h-fab-tab">' +
             '<div class="h-fab-circle">🐾</div>' +
@@ -192,6 +184,14 @@
             '<div class="h-fab-circle">➕</div>' +
             '<span class="h-fab-lbl">Unirme a PetMi</span>' +
           '</a>') +
+      '<a href="/" class="h-btab' + (esPaginaGaleria ? ' active' : '') + '">' +
+        '<span class="h-btab-ico"><img src="/ID.png" alt="PetMi" style="width:22px;height:22px;object-fit:contain;display:block"></span>' +
+        '<span class="h-btab-lbl">Inicio</span>' +
+      '</a>' +
+      '<a href="/juego.html" class="h-btab' + (currentPath.indexOf('juego') >= 0 ? ' active' : '') + '">' +
+        '<span class="h-btab-ico">🎮</span>' +
+        '<span class="h-btab-lbl">Juegos</span>' +
+      '</a>' +
       '<a href="/tienda.html" class="h-btab' + (currentPath.indexOf('tienda') >= 0 ? ' active' : '') + '">' +
         '<span class="h-btab-ico">🛍️</span>' +
         '<span class="h-btab-lbl">Tienda</span>' +
@@ -199,7 +199,11 @@
       '<a href="/buscar.html" class="h-btab' + (currentPath.indexOf('buscar') >= 0 ? ' active' : '') + '">' +
         '<span class="h-btab-ico">🔍</span>' +
         '<span class="h-btab-lbl">Buscar</span>' +
-      '</a>';
+      '</a>' +
+      '<button type="button" class="h-btab" onclick="petmiAbrirMas()" aria-label="Más opciones">' +
+        '<span class="h-btab-ico" style="color:#9c9c98;font-size:25px;font-weight:700;line-height:22px">☰</span>' +
+        '<span class="h-btab-lbl">Más</span>' +
+      '</button>';
     var loginHTML =
       '<div class="h-login-overlay" id="petmiLoginOverlay">' +
         '<div class="h-login-box">' +
@@ -297,6 +301,60 @@
     bottomNav.className = 'h-bottom-nav';
     bottomNav.innerHTML = bottomNavHTML;
     document.body.appendChild(bottomNav);
+
+    // ── Panel "Más": lo que no cabe en la barra (Avisos, Lugares, Eventos) y la entrada para negocios y organizadores ──
+    (function(){
+      var est = document.createElement('style');
+      est.textContent =
+        '.h-mas-ov{display:none;position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.55);align-items:flex-end;justify-content:center;font-family:Arial,Helvetica,sans-serif}' +
+        '.h-mas-ov.open{display:flex}' +
+        '.h-mas-sheet{background:#fff;width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:10px 18px 26px;max-height:88vh;overflow-y:auto;box-shadow:0 -8px 30px rgba(0,0,0,.25)}' +
+        '.h-mas-handle{width:42px;height:4px;border-radius:99px;background:#ddd;margin:2px auto 12px}' +
+        '.h-mas-sec{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#aaa;margin:14px 2px 6px}' +
+        '.h-mas-item{display:flex;align-items:center;gap:14px;padding:11px 8px;border-radius:14px;text-decoration:none;color:#1a1a2e;-webkit-tap-highlight-color:transparent}' +
+        '.h-mas-item:active{background:#f3f3f1}' +
+        '.h-mas-item .ic{font-size:24px;width:30px;text-align:center}' +
+        '.h-mas-item b{display:block;font-size:15px}' +
+        '.h-mas-item small{display:block;font-size:12px;color:#888;margin-top:1px}' +
+        '.h-mas-neg{background:linear-gradient(135deg,#e0f7f7,#fde8f1);border-radius:18px;padding:14px 14px 12px;margin-top:6px}' +
+        '.h-mas-neg p{font-size:12.5px;color:#666;line-height:1.5;margin:0 0 10px}' +
+        '.h-mas-cta{display:block;text-align:center;padding:13px;border-radius:99px;background:linear-gradient(135deg,#00B4B4,#E05090);color:#fff;font-weight:800;font-size:14.5px;text-decoration:none}' +
+        '.h-mas-link{display:block;text-align:center;padding:10px 4px 2px;color:#007a7a;font-weight:700;font-size:13px;text-decoration:none;background:none;border:0;width:100%;font-family:inherit;cursor:pointer}' +
+        '.h-mas-quien{font-size:13px;color:#007a7a;font-weight:700;margin:0 2px 6px}' +
+        '.h-mas-neg .h-mas-item{background:#fff;margin-top:6px}';
+      document.head.appendChild(est);
+      var org = null; try { var o = JSON.parse(localStorage.getItem('petmi_org') || 'null'); if (o && o.email && o.token && (!o.exp || Date.now() / 1000 < o.exp)) org = o; } catch (e) {}
+      var ov = document.createElement('div'); ov.className = 'h-mas-ov'; ov.id = 'petmiMasOverlay';
+      ov.innerHTML =
+        '<div class="h-mas-sheet" role="dialog" aria-label="Más opciones"><div class="h-mas-handle"></div>' +
+          '<div class="h-mas-sec">Explora</div>' +
+          '<a class="h-mas-item" href="/avisos.html?tipo=todos"><span class="ic">📢</span><span><b>Avisos</b><small>Mascotas perdidas, adopciones y eventos</small></span></a>' +
+          '<a class="h-mas-item" href="/lugares.html"><span class="ic">📍</span><span><b>Lugares pet-friendly</b><small>Restaurantes, parques, veterinarias…</small></span></a>' +
+          '<a class="h-mas-item" href="/eventos.html"><span class="ic">🎪</span><span><b>Eventos</b><small>Ferias, jornadas y encuentros</small></span></a>' +
+          '<div class="h-mas-sec">🏪 Para negocios y organizadores</div>' +
+          '<div class="h-mas-neg" id="petmiMasNeg"></div>' +
+          '<div class="h-mas-sec">PetMi</div>' +
+          '<a class="h-mas-item" href="/QueEsPetmi.html"><span class="ic">🐾</span><span><b>¿Qué es PetMi?</b></span></a>' +
+        '</div>';
+      document.body.appendChild(ov);
+      var neg = document.getElementById('petmiMasNeg');
+      if (org) {
+        var quien = document.createElement('div'); quien.className = 'h-mas-quien'; quien.textContent = 'Publicas como: ' + (org.organizacion || org.nombre || org.email);
+        neg.appendChild(quien);
+        neg.insertAdjacentHTML('beforeend',
+          '<a class="h-mas-item" href="/avisos.html?tipo=evento"><span class="ic">🎪</span><span><b>Publicar un evento</b></span></a>' +
+          '<a class="h-mas-item" href="/lugares.html?sugerir=1"><span class="ic">📍</span><span><b>Sugerir un lugar o servicio</b></span></a>' +
+          '<button type="button" class="h-mas-link" onclick="localStorage.removeItem(\'petmi_org\');location.reload()">Cerrar sesión de organizador</button>');
+      } else {
+        neg.innerHTML =
+          '<p><b>No necesitas una mascota.</b> Regístrate gratis para publicar tus eventos y tus lugares o servicios. Revisamos cada publicación.</p>' +
+          '<a class="h-mas-cta" href="/registro-organizador.html">Registrar mi negocio u organización</a>' +
+          '<a class="h-mas-link" href="/registro-organizador.html?entrar=1">Ya me registré: entrar con mi correo</a>';
+      }
+      ov.addEventListener('click', function(e){ if (e.target === ov) petmiCerrarMas(); });
+      window.petmiAbrirMas = function(){ ov.classList.add('open'); };
+      window.petmiCerrarMas = function(){ ov.classList.remove('open'); };
+    })();
 
     document.body.insertAdjacentHTML('beforeend', loginHTML);
 
