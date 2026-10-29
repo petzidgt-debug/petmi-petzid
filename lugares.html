@@ -364,6 +364,11 @@ function abrirFormLugar(){
   if(c){ if(!sessionEmail&&org){ c.textContent='Publicas como: '+PetmiOrg.nombreParaMostrar(org)+' · '+org.email; c.style.display='block'; } else { c.style.display='none'; } }
   document.getElementById('modalSugerirLugar').classList.add('open');
 }
+// ?sugerir=1 (lo usa el menú "Más" → "Sugerir un lugar o servicio"): abre el formulario directamente.
+// Si la persona no tiene sesión, abrirFormLugar() le muestra la invitación a registrarse.
+(function(){
+  if (new URLSearchParams(location.search).get('sugerir') === '1') setTimeout(function(){ abrirFormLugar(); }, 600);
+})();
 function cerrarFormLugar(){
   document.getElementById('modalSugerirLugar').classList.remove('open');
   sgFotoBase64=null;sgFotoMime=null;
