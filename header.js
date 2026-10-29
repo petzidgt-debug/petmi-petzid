@@ -52,6 +52,8 @@
       // Desktop nav
       '.h-nav{display:flex;align-items:center;gap:2px}',
       '@media(max-width:768px){.h-nav{display:none}}',
+      // "¿Qué es PetMi?" solo se muestra si hay lugar (ocupa ~120 px): en pantallas de menos de 1100 px el menú de arriba se saldría.
+      '@media(max-width:1099px){.h-nav a.h-qes{display:none!important}}',
       '@media(min-width:769px){.h-search{display:none}}',
       '.h-link{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:99px;font-size:13px;font-weight:600;color:#555;text-decoration:none;border:none;background:none;cursor:pointer;white-space:nowrap;font-family:Arial,sans-serif;transition:background .15s}',
       '.h-link:hover,.h-link.active{background:#e0f7f7;color:#00B4B4}',
@@ -141,6 +143,7 @@
       '<a href="/lugares.html" class="h-link' + (currentPath.indexOf('lugares') >= 0 ? ' active' : '') + '">📍 Lugares</a>' +
       '<a href="/buscar.html" class="h-link' + (currentPath.indexOf('buscar') >= 0 ? ' active' : '') + '">🔍 Buscar</a>' +
       '<a href="/tienda.html" class="h-link' + (currentPath.indexOf('tienda') >= 0 ? ' active' : '') + '">🛍️ Tienda</a>' +
+      '<a href="/QueEsPetmi.html" class="h-link h-qes" style="opacity:.6;font-size:12.5px">¿Qué es PetMi?</a>' +
       '';
     // ── Right: avatar o botones ──────────────────────────────
     var userInitials = sessionDueno
@@ -330,7 +333,7 @@
           '<div class="h-mas-sec">Explora</div>' +
           '<a class="h-mas-item" href="/avisos.html?tipo=todos"><span class="ic">📢</span><span><b>Avisos</b><small>Mascotas perdidas, adopciones y eventos</small></span></a>' +
           '<a class="h-mas-item" href="/lugares.html"><span class="ic">📍</span><span><b>Lugares pet-friendly</b><small>Restaurantes, parques, veterinarias…</small></span></a>' +
-          '<a class="h-mas-item" href="/eventos.html"><span class="ic">🎪</span><span><b>Eventos</b><small>Ferias, jornadas y encuentros</small></span></a>' +
+          '<a class="h-mas-item" href="/avisos.html?filtro=evento"><span class="ic">🎪</span><span><b>Eventos</b><small>Ferias, jornadas y encuentros</small></span></a>' +
           '<div class="h-mas-sec">🏪 Para negocios y organizadores</div>' +
           '<div class="h-mas-neg" id="petmiMasNeg"></div>' +
           '<div class="h-mas-sec">PetMi</div>' +
