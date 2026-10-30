@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Convivio Familiar Moralitos | Intercambio navideño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF6EA; --ink:#1E3A2F; --muted:#5E7468; --card:#FFFFFF; --line:#EBDCC7;
+  --red:#D7263D; --red-dark:#9E1528; --pine:#1F8A5B; --gold:#F2B33D; --soft:#FCEBD3;
+  --miss:#FDE3E5; --ok:#DDF3E6;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F2A20; --ink:#FFF3E2; --muted:#A9C3B5; --card:#16382B; --line:#265541;
+    --red:#F0384F; --red-dark:#8E1022; --pine:#5CC48E; --gold:#FFC857; --soft:#1B4434;
+    --miss:#4A2028; --ok:#1D4A35;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F2A20; --ink:#FFF3E2; --muted:#A9C3B5; --card:#16382B; --line:#265541;
+  --red:#F0384F; --red-dark:#8E1022; --pine:#5CC48E; --gold:#FFC857; --soft:#1B4434;
+  --miss:#4A2028; --ok:#1D4A35;
+  color-scheme: dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fredoka","Trebuchet MS",system-ui,sans-serif;font-size:17px;line-height:1.5}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:8px}
+[hidden]{display:none!important}
+
+/* Luces */
+.lights{display:flex;justify-content:space-between;padding:0 4%;height:40px;position:relative;overflow:hidden}
+.lights::before{content:"";position:absolute;left:0;right:0;top:-30px;height:44px;border-bottom:2px solid var(--muted);border-radius:0 0 50% 50%/0 0 100% 100%;opacity:.5}
+.bulb{width:12px;height:18px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;margin-top:14px;position:relative;background:var(--c);box-shadow:0 0 12px var(--c);animation:twinkle 2.4s infinite;animation-delay:var(--d)}
+.bulb:nth-child(odd){margin-top:9px}
+.bulb::before{content:"";position:absolute;top:-5px;left:3px;width:6px;height:6px;border-radius:2px;background:var(--muted)}
+@keyframes twinkle{50%{opacity:.45;box-shadow:none}}
+
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+.narrow{max-width:620px;margin:0 auto;padding:0 20px 48px}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1fr auto;gap:12px 28px;align-items:center;padding-top:14px}
+.hero h1{font-size:clamp(2.4rem,8.5vw,4.4rem);line-height:.95;margin:0;font-weight:700;letter-spacing:-.02em;color:var(--red)}
+.hero h1 small{display:block;font-size:.4em;color:var(--pine);font-weight:600;letter-spacing:0;margin-top:.4em}
+.pup{width:160px;height:auto}
+@media (max-width:620px){.hero{grid-template-columns:1fr}.pup{order:-1;width:110px}}
+.facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.chip{font-size:.92rem;padding:4px 12px;border-radius:999px;background:var(--soft);white-space:nowrap;font-weight:500}
+.chip.open{background:var(--ok);color:var(--pine)}
+.chip.sm{font-size:.82rem;padding:2px 10px}
+
+/* Instrucciones */
+.how{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:18px 20px;margin-top:26px;position:relative;overflow:hidden}
+.how::before{content:"";position:absolute;inset:0 0 auto;height:10px;background:repeating-linear-gradient(-45deg,var(--red) 0 10px,transparent 10px 20px)}
+.how h2{margin:6px 0 10px;font-size:1.35rem}
+.how ol{margin:0;padding-left:1.4em}
+.how li{margin-bottom:6px;padding-left:4px}
+.how li::marker{color:var(--red);font-weight:700}
+.how .warn{margin:12px 0 0;background:var(--soft);border-radius:12px;padding:10px 12px;font-size:.96rem}
+
+/* Lista de nombres */
+.list-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:34px 0 14px}
+.list-head h2{margin:0;font-size:1.6rem}
+.list-head p{margin:0;color:var(--muted)}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;list-style:none;padding:0;margin:0}
+.name-btn{width:100%;text-align:left;cursor:pointer;background:var(--card);border:2px solid var(--line);border-left:10px solid var(--gc);border-radius:10px 20px 20px 10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;transition:transform .12s}
+.name-btn:hover:not(:disabled){transform:translateY(-2px);border-color:var(--gc)}
+.name-btn:disabled{cursor:default;opacity:.7}
+.name-btn strong{font-size:1.15rem;font-weight:600}
+.name-btn .st{font-size:.88rem;color:var(--muted)}
+.name-btn .st.open{color:var(--pine);font-weight:500}
+.wait{background:var(--soft);border-radius:16px;padding:14px 16px;margin:0 0 14px}
+
+/* Botones */
+.big-btn{border:0;cursor:pointer;background:var(--red);color:#fff;font-weight:700;font-size:1.25rem;padding:14px 32px;border-radius:999px;box-shadow:0 6px 0 var(--red-dark);transition:transform .08s,box-shadow .08s}
+.big-btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--red-dark)}
+.big-btn:disabled{opacity:.5;cursor:not-allowed}
+.small-btn{border:0;cursor:pointer;background:var(--red);color:#fff;font-weight:600;padding:10px 20px;border-radius:999px;box-shadow:0 4px 0 var(--red-dark)}
+.small-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--red-dark)}
+.link-btn{border:0;background:none;color:var(--pine);font-weight:600;cursor:pointer;padding:6px;border-radius:8px}
+.link-btn:disabled,.icon-btn:disabled{opacity:.35;cursor:not-allowed}
+.icon-btn{border:0;background:none;width:34px;height:34px;border-radius:50%;cursor:pointer;color:var(--muted);font-size:1.3rem;line-height:1;flex:none}
+.icon-btn:hover:not(:disabled){background:var(--soft);color:var(--red)}
+.back{margin:10px 0 0 -6px}
+
+/* Acceso */
+.gate{max-width:440px;margin:24px auto 0;background:var(--card);border:3px solid var(--red);border-radius:24px;padding:24px;text-align:center}
+.gate h1{margin:0;color:var(--red);font-size:2.2rem;line-height:1.05}
+.gate p{color:var(--muted);margin:8px 0 18px}
+.gate input{width:100%;padding:14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);text-align:center;font-size:1.3rem;letter-spacing:.06em}
+.gate input.pin{letter-spacing:.6em;font-size:1.6rem}
+.gate input:focus{border-color:var(--pine);outline:none}
+.gate .err{color:var(--red);min-height:1.5em;margin:8px 0 10px;font-weight:500}
+.gate .tiny{font-size:.9rem;color:var(--muted);margin:16px 0 0}
+.gate .alert{background:var(--miss);color:var(--ink);border-radius:12px;padding:10px 12px;margin:0 0 14px;text-align:left;font-size:.95rem}
+
+/* Página personal */
+.me h1{font-size:clamp(2.3rem,9vw,3.4rem);color:var(--red);margin:6px 0 0;line-height:1}
+.hint{color:var(--muted);margin:8px 0 20px}
+.card-tag{background:var(--card);border:3px solid var(--red);border-radius:22px;padding:22px 22px 24px;text-align:center;box-shadow:0 8px 0 var(--soft)}
+.card-tag .lbl{font-weight:500;color:var(--muted);margin:0 0 10px}
+.scratch{position:relative;border-radius:16px;overflow:hidden;min-height:124px;display:grid;place-items:center;background:var(--soft)}
+.scratch .secret{font-size:clamp(2rem,8vw,2.8rem);font-weight:700;color:var(--pine);padding:18px 12px;line-height:1.1}
+.scratch canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;transition:opacity .6s}
+.scratch canvas.gone{opacity:0;pointer-events:none}
+.opened-at{font-size:.9rem;color:var(--muted);margin:12px 0 0}
+.card-tag .facts{justify-content:center}
+.me section{margin-top:34px}
+.me h2{font-size:1.4rem;margin:0}
+.wishes{list-style:none;padding:0;margin:12px 0 0}
+.wishes li{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 8px 8px 14px;margin-bottom:8px;min-height:50px}
+.wishes li::before{content:"🎁";flex:none}
+.wishes li span{flex:1;overflow-wrap:anywhere}
+.empty{color:var(--muted);background:var(--soft);border-radius:14px;padding:12px 14px;margin:12px 0 0}
+.wish-form{display:flex;gap:8px;margin-top:12px}
+.wish-form input{flex:1;min-width:0;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--card)}
+.wish-form input:focus{border-color:var(--pine);outline:none}
+
+/* Intro navideña */
+.intro{position:fixed;inset:0;z-index:30;background:radial-gradient(circle at 50% 45%,#1F6B4A 0%,#0C281D 70%);display:grid;place-items:center;overflow:hidden;color:#FFF3E2;transition:opacity .6s}
+.intro.out{opacity:0}
+.flake{position:absolute;top:-12px;border-radius:50%;background:#fff;opacity:.85;animation:snow linear infinite}
+@keyframes snow{to{transform:translate(var(--dx),110vh)}}
+.stagebox{position:relative;display:grid;place-items:center;text-align:center}
+.rays{position:absolute;width:420px;height:420px;border-radius:50%;background:repeating-conic-gradient(rgba(255,215,110,.35) 0 10deg,transparent 10deg 20deg);transform:scale(0);opacity:0;-webkit-mask:radial-gradient(circle,#000 30%,transparent 70%);mask:radial-gradient(circle,#000 30%,transparent 70%)}
+.gift-big{width:170px;height:auto;position:relative}
+.gift-big .lid{transform-box:fill-box;transform-origin:50% 100%}
+.intro-text{position:absolute;top:calc(100% + 18px);left:50%;transform:translate(-50%,10px);white-space:nowrap;font-size:clamp(1.6rem,6vw,2.4rem);font-weight:700;opacity:0}
+.intro-text small{display:block;font-size:.5em;font-weight:500;opacity:.85}
+.intro.play .gift-big{animation:wiggle .5s ease-in-out 3,pop .5s ease-out 1.5s forwards}
+.intro.play .lid{animation:lidoff .8s cubic-bezier(.3,1.6,.5,1) 1.5s forwards}
+.intro.play .rays{animation:rays 2.4s ease-out 1.6s forwards,spin 12s linear 1.6s infinite}
+.intro.play .intro-text{animation:txt .6s ease-out 1.9s forwards}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg) translateY(-6px)}75%{transform:rotate(9deg) translateY(-6px)}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes lidoff{to{transform:translate(40px,-110px) rotate(28deg);opacity:0}}
+@keyframes rays{0%{transform:scale(0);opacity:0}30%{opacity:1}100%{transform:scale(1.2);opacity:.9}}
+@keyframes spin{from{rotate:0deg}to{rotate:360deg}}
+@keyframes txt{to{opacity:1;transform:translate(-50%,0)}}
+.skip{position:absolute;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));border:0;background:rgba(255,255,255,.15);color:#fff;border-radius:999px;padding:8px 16px;cursor:pointer;font-weight:500}
+
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:20}
+.confetti i{position:absolute;top:-20px;width:10px;height:14px;border-radius:2px;animation:fall 1.8s ease-in forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
+
+/* Admin */
+.admin-bar{background:var(--ink);color:var(--bg);padding:10px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.admin-bar strong{font-size:1.05rem}
+.admin-bar button{border:0;background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 14px;font-weight:600;cursor:pointer}
+.admin section{margin-top:30px}
+.admin h2{font-size:1.5rem;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 16px;max-width:60ch}
+.note{background:var(--soft);border-radius:14px;padding:10px 14px;margin:0 0 16px}
+.note.err{background:var(--miss)}
+.board-head{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin:6px 0 12px}
+.board-head .big{font-size:clamp(2.6rem,8vw,3.4rem);font-weight:700;line-height:1;color:var(--pine)}
+.board-head p{margin:0;color:var(--muted);max-width:28ch}
+.bar{height:14px;border-radius:999px;background:var(--soft);overflow:hidden;margin-bottom:18px}
+.bar span{display:block;height:100%;background:repeating-linear-gradient(-45deg,var(--red) 0 12px,#fff 12px 18px);transition:width .4s}
+.rows{list-style:none;padding:0;margin:0;border:2px solid var(--line);border-radius:18px;overflow:hidden;background:var(--card)}
+.rows li{display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding:12px 16px;border-top:1px dashed var(--line);align-items:center}
+.rows li:first-child{border-top:0}
+.rows .nm{font-weight:600;display:flex;align-items:center;gap:8px}
+.rows .nm .dot{width:12px;height:12px;border-radius:50%;background:var(--gc)}
+.rows .meta{font-size:.9rem;color:var(--muted);grid-column:1}
+.rows .acts{grid-row:1/span 2;grid-column:2;display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end}
+.rows .acts .link-btn{font-size:.9rem}
+@media (max-width:560px){.rows li{grid-template-columns:1fr}.rows .acts{grid-row:auto;grid-column:1;justify-content:flex-start}}
+.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.group{background:var(--card);border-radius:20px;padding:14px 14px 10px;border:2px solid var(--line);position:relative;overflow:hidden}
+.group::before{content:"";position:absolute;inset:0 0 auto;height:10px;background:repeating-linear-gradient(-45deg,var(--gc) 0 10px,transparent 10px 20px)}
+.group header{display:flex;align-items:center;gap:8px;margin-top:6px}
+.group .dot{width:14px;height:14px;border-radius:50%;background:var(--gc);flex:none}
+.gname{font-weight:600;font-size:1.1rem;border:0;background:none;padding:4px 6px;border-radius:8px;flex:1;min-width:0}
+.group ul{list-style:none;margin:6px 0;padding:0}
+.person{display:flex;align-items:center;padding:4px 0;border-top:1px dashed var(--line)}
+.person input{border:0;background:none;padding:4px 6px;border-radius:8px;flex:1;min-width:0;font-weight:500}
+.person input:hover,.gname:hover{background:var(--soft)}
+.stage{display:flex;justify-content:center;gap:clamp(6px,3vw,22px);padding:10px 0 4px}
+.stage svg{width:clamp(44px,12vw,68px);height:auto}
+.stage.shaking svg{animation:hop .55s ease-in-out infinite;animation-delay:var(--d)}
+@keyframes hop{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-18px) rotate(-10deg)}60%{transform:translateY(0) rotate(8deg)}}
+.cta-row{display:flex;flex-direction:column;align-items:center;gap:8px}
+.status{min-height:1.5em;color:var(--muted);text-align:center;margin:0}
+
+dialog{border:0;border-radius:22px;padding:22px;max-width:min(400px,92vw);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(15,42,32,.55)}
+dialog h3{margin:0 0 8px;font-size:1.3rem}
+dialog p{color:var(--muted);margin:0 0 14px}
+dialog input{width:100%;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg)}
+dialog .err{color:var(--red);min-height:1.4em;margin:6px 0}
+.dlg-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.demo{font-size:.85rem;color:var(--muted);background:var(--soft);border-radius:10px;padding:6px 10px;margin:10px 0 0}
+
+footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:.95rem;border-top:2px dashed var(--line)}
+
+@media (prefers-reduced-motion:reduce){
+  .bulb,.stage.shaking svg,.flake{animation:none}
+  .confetti{display:none}
+  .name-btn{transition:none}
+}
+
+/* Añadidos de la versión real (servidor) */
+.alert-open{background:var(--miss);color:var(--ink);border-radius:14px;padding:10px 14px;margin:0 0 16px;font-size:.96rem}
+.err-inline{color:var(--red);margin:8px 0 0;font-weight:500}
+.save-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+.intro #snow{position:absolute;inset:0;pointer-events:none;overflow:hidden}   /* la nieve ya no ocupa media pantalla: el regalo queda al centro */
+.small-btn:disabled{opacity:.5;cursor:not-allowed}
+.link-btn:disabled{opacity:.35;cursor:not-allowed}
+</style>
+</head>
+<body>
+
+<!-- ====== LISTA PÚBLICA ====== -->
+<div id="listView">
+  <div class="lights" aria-hidden="true"></div>
+  <div class="wrap">
+    <header class="hero">
+      <div>
+        <h1>Convivio Familiar Moralitos<small>Intercambio de regalos 🎄</small></h1>
+        <div class="facts" id="facts1"></div>
+      </div>
+      <svg class="pup" viewBox="0 0 200 200" aria-hidden="true">
+        <ellipse cx="52" cy="112" rx="24" ry="40" fill="#8A5A32" transform="rotate(18 52 112)"/>
+        <ellipse cx="148" cy="112" rx="24" ry="40" fill="#8A5A32" transform="rotate(-18 148 112)"/>
+        <circle cx="100" cy="120" r="56" fill="#D9A066"/>
+        <ellipse cx="100" cy="146" rx="32" ry="24" fill="#F3DCC0"/>
+        <circle cx="80" cy="114" r="7" fill="#1E1E1E"/><circle cx="120" cy="114" r="7" fill="#1E1E1E"/>
+        <circle cx="82" cy="111" r="2.2" fill="#fff"/><circle cx="122" cy="111" r="2.2" fill="#fff"/>
+        <ellipse cx="100" cy="136" rx="11" ry="8" fill="#1E1E1E"/>
+        <path d="M90 150 q10 9 20 0" stroke="#1E1E1E" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M104 156 q6 14 0 18 q-8 -2 -6 -16" fill="#E8546B"/>
+        <circle cx="66" cy="140" r="7" fill="#F2A1A1" opacity=".6"/><circle cx="134" cy="140" r="7" fill="#F2A1A1" opacity=".6"/>
+        <path d="M52 78 Q96 2 156 40 L146 76 Z" fill="#D7263D"/>
+        <rect x="44" y="70" width="114" height="20" rx="10" fill="#fff"/>
+        <circle cx="160" cy="40" r="13" fill="#fff"/>
+      </svg>
+    </header>
+
+    <div class="how">
+      <h2>Cómo descubrir a tu amigo secreto</h2>
+      <ol>
+        <li>Busca tu nombre en la lista de abajo y tócalo.</li>
+        <li>Tu clave es tu <b>primer nombre al revés</b>. Por ejemplo, Elsa escribe <b>asle</b>.</li>
+        <li>Raspa tu tarjeta y descubre a quién le regalas.</li>
+        <li>Deja ideas de lo que te gustaría recibir. Solo las ve quien te tiene de amigo secreto.</li>
+      </ol>
+      <p class="warn">Si al entrar ves que tu tarjeta ya fue raspada y no fuiste tú, avísale a la organizadora para que te asigne otro amigo secreto. <b>Quien abra la tarjeta de otra persona paga una multa de Q100.</b> 💸</p>
+    </div>
+
+    <div class="list-head">
+      <h2>Participantes</h2>
+      <p id="listCount" aria-live="polite"></p>
+    </div>
+    <p class="wait" id="waitNote" hidden>El sorteo todavía no se ha hecho. Vuelve cuando la organizadora avise.</p>
+    <p class="wait" id="listErr" hidden role="alert"></p>
+    <ul class="names" id="names"></ul>
+  </div>
+  <footer>
+    <span>Hecho con cariño por PetMi 🐾</span>
+    <button class="link-btn" id="adminLink">Soy la organizadora</button>
+  </footer>
+</div>
+
+<!-- ====== ACCESO (participante u organizadora) ====== -->
+<div id="gateView" hidden>
+  <div class="lights" aria-hidden="true"></div>
+  <div class="narrow">
+    <button class="link-btn back" data-go="list">← Volver a la lista</button>
+    <form class="gate" id="gateForm" autocomplete="off">
+      <h1 id="gateTitle"></h1>
+      <p id="gateText"></p>
+      <div class="alert" id="gateAlert" hidden></div>
+      <input id="gateInput" aria-labelledby="gateText" autocapitalize="none" autocorrect="off" spellcheck="false">
+      <div class="err" id="gateErr" role="alert"></div>
+      <button class="big-btn" type="submit" id="gateBtn">Entrar</button>
+      <p class="tiny" id="gateTiny"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ====== PÁGINA PERSONAL ====== -->
+<div id="meView" hidden>
+  <div class="lights" aria-hidden="true"></div>
+  <div class="narrow me">
+    <button class="link-btn back" id="salirBtn">← Salir</button>
+    <h1 id="meHello"></h1>
+    <p class="hint">Esta página es solo tuya. ¡No le cuentes a nadie quién te tocó!</p>
+    <div class="alert-open" id="openedBanner" hidden></div>
+    <div class="card-tag">
+      <p class="lbl">Tu amigo secreto es…</p>
+      <div class="scratch" id="scratch">
+        <div class="secret" id="secretName">🎁</div>
+        <canvas id="scratchCv" aria-hidden="true"></canvas>
+      </div>
+      <button class="link-btn" id="revealBtn" style="margin-top:8px">Descubrir sin raspar</button>
+      <p class="opened-at" id="openedAt" hidden></p>
+      <p class="err-inline" id="scratchErr" role="alert" hidden></p>
+      <div class="facts" id="facts2"></div>
+    </div>
+    <section aria-labelledby="h-theirs">
+      <h2 id="h-theirs">Ideas para tu amigo secreto</h2>
+      <div id="theirWishes"></div>
+    </section>
+    <section aria-labelledby="h-mine">
+      <h2 id="h-mine">Lo que a ti te gustaría recibir</h2>
+      <p class="hint" style="margin:4px 0 0">Solo lo verá la persona que te tiene de amigo secreto.</p>
+      <form class="wish-form" id="wishForm">
+        <input id="wishInput" maxlength="120" placeholder="Ej. una taza grande, talla M, libros de misterio" aria-label="Nueva idea de regalo" autocomplete="off">
+        <button class="small-btn" type="submit">Agregar</button>
+      </form>
+      <p class="err-inline" id="wishErr" role="alert" hidden></p>
+      <ul class="wishes" id="myWishes"></ul>
+    </section>
+  </div>
+</div>
+
+<!-- ====== INTRO NAVIDEÑA ====== -->
+<div class="intro" id="intro" hidden aria-live="polite">
+  <div id="snow" aria-hidden="true"></div>
+  <div class="stagebox">
+    <div class="rays" aria-hidden="true"></div>
+    <svg class="gift-big" viewBox="0 0 120 130" aria-hidden="true">
+      <rect x="14" y="52" width="92" height="72" rx="8" fill="#D7263D"/>
+      <rect x="54" y="52" width="12" height="72" fill="#F2B33D"/>
+      <rect x="14" y="80" width="92" height="10" fill="#F2B33D" opacity=".9"/>
+      <g class="lid">
+        <rect x="8" y="36" width="104" height="20" rx="6" fill="#E8394F"/>
+        <rect x="54" y="36" width="12" height="20" fill="#F2B33D"/>
+        <ellipse cx="46" cy="28" rx="16" ry="10" fill="#F2B33D" transform="rotate(-22 46 28)"/>
+        <ellipse cx="74" cy="28" rx="16" ry="10" fill="#F2B33D" transform="rotate(22 74 28)"/>
+        <circle cx="60" cy="32" r="7" fill="#E3A126"/>
+      </g>
+    </svg>
+    <p class="intro-text" id="introText"></p>
+  </div>
+  <button class="skip" id="skipIntro">Saltar</button>
+</div>
+
+<!-- ====== PANEL DE LA ORGANIZADORA ====== -->
+<div id="adminView" hidden>
+  <div class="admin-bar"><strong>Panel de la organizadora</strong><button id="adminSalir">Salir del panel</button></div>
+  <div class="wrap admin">
+    <section id="boardSec">
+      <h2>Así va el sorteo</h2>
+      <p class="lead">Aquí ves quién ya raspó su tarjeta y cuándo, pero nunca a quién le tocó cada persona.</p>
+      <div class="board-head"><span class="big" id="openCount">0/0</span><p>ya saben a quién le regalan</p></div>
+      <div class="bar"><span id="openBar" style="width:0%"></span></div>
+      <ul class="rows" id="rows"></ul>
+    </section>
+
+    <section>
+      <h2>Sorteo</h2>
+      <p class="lead" id="drawLead">Nadie puede quedar con alguien de su mismo grupo.</p>
+      <div class="stage" id="stage" aria-hidden="true"></div>
+      <div class="cta-row">
+        <button class="big-btn" id="drawBtn">Hacer el sorteo</button>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Participantes y grupos</h2>
+      <p class="lead" id="count"></p>
+      <p class="note" id="lockNote" hidden>El sorteo ya está hecho. Puedes corregir nombres, pero para agregar o quitar personas hay que volver a sortear.</p>
+      <p class="note err" id="warn" hidden></p>
+      <p class="note" id="dirtyNote" hidden>Tienes cambios sin guardar. Guárdalos antes de hacer el sorteo.</p>
+      <div class="groups" id="groups"></div>
+      <div class="save-row">
+        <button class="link-btn" data-act="add-group" id="addGroup">+ Agregar grupo</button>
+        <button class="small-btn" id="saveGroups" disabled>Guardar cambios</button>
+      </div>
+      <p class="status" id="saveStatus" role="status" aria-live="polite"></p>
+    </section>
+  </div>
+  <footer><span>Hecho con cariño por PetMi 🐾</span></footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+/* Datos fijos del evento (no son secretos) */
+const EVENT={budget:'US$40',date:'13 de diciembre',place:'Casa de Jose'};
+const COLORS=['#D7263D','#1F8A5B','#E39B17','#2F7FC1','#8E4BC4','#E0662A'];
+const reduced=(typeof matchMedia==='function')&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=ts=>new Date(ts).toLocaleString('es-GT',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+const idOk=s=>/^[a-z0-9]{10}$/.test(s||'');
+
+/* ── Hablar con el servidor ── */
+async function api(action,o){
+  o=o||{};
+  const qs=new URLSearchParams(Object.assign({action:action},o.query||{}));
+  try{
+    const r=await fetch('/api/navidad?'+qs,{method:o.method||'GET',headers:o.body?{'Content-Type':'application/json'}:{},body:o.body?JSON.stringify(o.body):undefined,credentials:'same-origin',cache:'no-store'});
+    let d={};try{d=await r.json()}catch(e){}
+    return {ok:r.ok,status:r.status,d:d||{}};
+  }catch(e){return {ok:false,status:0,d:{error:'Sin conexión. Revisa tu internet e intenta de nuevo.'}}}
+}
+
+/* ── Decoración ── */
+const bulbColors=['#D7263D','#F2B33D','#1F8A5B','#2F7FC1','#E0662A'];
+document.querySelectorAll('.lights').forEach(l=>l.innerHTML=Array.from({length:18},(_,i)=>`<span class="bulb" style="--c:${bulbColors[i%5]};--d:${(i%4)*.5}s"></span>`).join(''));
+const factsHTML=`<span class="chip">💰 ${EVENT.budget}</span><span class="chip">📅 ${EVENT.date}</span><span class="chip">🏠 ${EVENT.place}</span>`;
+$('#facts1').innerHTML=factsHTML;$('#facts2').innerHTML=factsHTML;
+function gift(c,r,i){return `<svg style="--d:${i*.09}s" viewBox="0 0 64 64"><rect x="8" y="26" width="48" height="32" rx="4" fill="${c}"/><rect x="5" y="18" width="54" height="12" rx="4" fill="${c}" opacity=".85"/><rect x="28" y="18" width="8" height="40" fill="${r}"/><ellipse cx="24" cy="14" rx="9" ry="6" fill="${r}" transform="rotate(-20 24 14)"/><ellipse cx="40" cy="14" rx="9" ry="6" fill="${r}" transform="rotate(20 40 14)"/></svg>`}
+$('#stage').innerHTML=[['#D7263D','#F2B33D'],['#1F8A5B','#fff'],['#F2B33D','#D7263D'],['#2F7FC1','#fff'],['#8E4BC4','#F2B33D']].map(([c,r],i)=>gift(c,r,i)).join('');
+
+/* ── Navegación (las direcciones son /navidad, /navidad/<id> y /navidad/admin) ── */
+const VIEWS=['listView','gateView','meView','adminView'];
+function show(view){VIEWS.forEach(v=>$('#'+v).hidden=v!==view);window.scrollTo(0,0)}
+function go(path,replace){if(location.pathname!==path){history[replace?'replaceState':'pushState'](null,'',path)}route()}
+function parseRoute(){
+  const p=location.pathname.replace(/\/+$/,'');
+  if(p==='/navidad/admin')return {v:'admin'};
+  const m=p.match(/^\/navidad\/([a-z0-9]{10})$/);
+  return m?{v:'person',id:m[1]}:{v:'list'};
+}
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');
+  if(g){go('/navidad')}
+});
+window.addEventListener('popstate',()=>route());
+let lista=null,gateFor=null;
+
+async function route(){
+  const r=parseRoute();
+  if(r.v==='list'){await showList();return}
+  if(r.v==='admin'){await showAdmin();return}
+  await showPerson(r.id);
+}
+
+/* ── Lista pública ── */
+async function loadList(){
+  const res=await api('participantes');
+  if(res.ok&&Array.isArray(res.d.participantes)){lista=res.d;return true}
+  lista=null;$('#listErr').hidden=false;
+  $('#listErr').textContent=res.status===503?'El sorteo todavía no está listo. Vuelve en un rato.':(res.d.error||'No se pudo cargar la lista. Intenta de nuevo.');
+  return false;
+}
+async function showList(){
+  show('listView');$('#listErr').hidden=true;
+  $('#listCount').textContent='Cargando…';$('#names').innerHTML='';
+  if(!await loadList()){$('#listCount').textContent='';$('#waitNote').hidden=true;return}
+  renderList();
+}
+function renderList(){
+  const all=lista.participantes,has=lista.sorteo_hecho;
+  $('#waitNote').hidden=has;
+  const opened=all.filter(p=>p.raspada_en).length;
+  $('#listCount').textContent=has?`${opened} de ${all.length} ya descubrieron a su amigo secreto`:`${all.length} participantes`;
+  $('#names').innerHTML=all.map(p=>`<li><button class="name-btn" data-person="${esc(p.id)}" style="--gc:${COLORS[p.grupo%COLORS.length]}" ${has?'':'disabled'}>
+      <strong>${esc(p.nombre)}</strong>
+      <span class="st ${p.raspada_en?'open':''}">${p.raspada_en?`🎉 Raspó su tarjeta el ${esc(fmt(p.raspada_en))}`:'Aún no entra'}</span></button></li>`).join('');
+}
+$('#names').addEventListener('click',e=>{
+  const b=e.target.closest('[data-person]');if(!b||b.disabled)return;
+  go('/navidad/'+b.dataset.person);
+});
+$('#adminLink').onclick=()=>go('/navidad/admin');
+
+/* ── Acceso de una persona ── */
+async function showPerson(id){
+  if(!lista&&!await loadList()){show('listView');return}
+  const p=lista.participantes.find(x=>x.id===id);
+  if(!p||!lista.sorteo_hecho){go('/navidad',true);return}
+  const yo=await api('yo');
+  if(yo.ok&&yo.d.id===id){startMe(yo.d,false);return}       // ya tenía sesión: entra directo, sin animación
+  openGate({tipo:'persona',id:id,nombre:p.nombre,raspada_en:p.raspada_en});
+}
+function openGate(g){
+  gateFor=g;const inp=$('#gateInput'),al=$('#gateAlert');
+  $('#gateErr').textContent='';inp.value='';$('#gateBtn').disabled=false;
+  if(g.tipo==='persona'){
+    $('#gateTitle').textContent='Hola, '+g.nombre;
+    $('#gateText').textContent='Escribe tu primer nombre al revés para entrar.';
+    inp.type='text';inp.maxLength=30;$('#gateBtn').textContent='Entrar';$('#gateTiny').textContent='';
+    if(g.raspada_en){al.hidden=false;al.textContent=`Esta tarjeta se raspó (${fmt(g.raspada_en)}). Si no fuiste tú, avísale a la organizadora: quien la abrió paga Q100.`}else al.hidden=true;
+  }else{
+    $('#gateTitle').textContent='Panel de la organizadora';
+    $('#gateText').textContent='Escribe la clave de organizadora.';
+    inp.type='password';inp.maxLength=200;$('#gateBtn').textContent='Entrar';$('#gateTiny').textContent='';al.hidden=true;
+  }
+  show('gateView');setTimeout(()=>inp.focus(),50);
+}
+$('#gateForm').addEventListener('submit',async e=>{
+  e.preventDefault();if(!gateFor)return;
+  const v=$('#gateInput').value.trim(),err=$('#gateErr'),btn=$('#gateBtn');
+  if(!v){err.textContent=gateFor.tipo==='persona'?'Escribe tu clave.':'Escribe la clave.';return}
+  btn.disabled=true;err.textContent='';
+  if(gateFor.tipo==='persona'){
+    const r=await api('entrar',{method:'POST',body:{id:gateFor.id,clave:v}});
+    if(r.ok){const yo=await api('yo');if(yo.ok){startMe(yo.d,true);return}err.textContent=yo.d.error||'No se pudo entrar. Intenta de nuevo.'}
+    else err.textContent=r.status===401?'Esa no es la clave. Recuerda: tu primer nombre, escrito al revés.':(r.d.error||'No se pudo entrar. Intenta de nuevo.');
+  }else{
+    const r=await api('admin_entrar',{method:'POST',body:{clave:v}});
+    if(r.ok){await showAdmin();return}
+    err.textContent=r.status>=500?await explicarFalta(r):(r.d.error||'No se pudo entrar. Intenta de nuevo.');
+  }
+  btn.disabled=false;$('#gateInput').value='';$('#gateInput').focus();
+});
+
+/* ── Intro navideña ── */
+function playIntro(name,done){
+  if(reduced){done();return}
+  const ov=$('#intro');
+  $('#introText').innerHTML=`¡Hola, ${esc(name)}!<small>Tu sorpresa te espera…</small>`;
+  $('#snow').innerHTML=Array.from({length:45},()=>{const s=Math.random()*6+3;
+    return `<span class="flake" style="left:${Math.random()*100}%;width:${s}px;height:${s}px;--dx:${(Math.random()*80-40).toFixed(0)}px;animation-duration:${(Math.random()*4+4).toFixed(1)}s;animation-delay:-${(Math.random()*6).toFixed(1)}s"></span>`}).join('');
+  ov.hidden=false;ov.classList.remove('out','play');void ov.offsetWidth;ov.classList.add('play');
+  let finished=false;
+  const finish=()=>{if(finished)return;finished=true;ov.classList.add('out');setTimeout(()=>{ov.hidden=true;ov.classList.remove('play','out')},600);done()};
+  const t=setTimeout(finish,3600);
+  $('#skipIntro').onclick=()=>{clearTimeout(t);finish()};
+  $('#skipIntro').focus();
+}
+
+/* ── Página personal ── */
+let me=null;               // datos de la persona que entró
+let amigo=null,pedido=null;   // el amigo secreto SOLO se pide al servidor con el primer toque de la tarjeta
+function startMe(yo,conIntro){
+  me=yo;amigo=yo.amigo||null;pedido=null;
+  gateFor=null;if(location.pathname!=='/navidad/'+yo.id)history.replaceState(null,'','/navidad/'+yo.id);
+  const ban=$('#openedBanner');ban.hidden=!yo.raspada_en;
+  if(yo.raspada_en)ban.textContent=`Tu tarjeta ya fue raspada (${fmt(yo.raspada_en)}). Si no fuiste tú, avísale a la organizadora para que te asigne otro amigo secreto: quien la abrió paga Q100.`;
+  show('meView');renderMe(true);
+  if(conIntro)playIntro(yo.nombre,()=>{});
+}
+function renderMe(fresh){
+  const abierta=!!me.raspada_en&&!!amigo;
+  $('#meHello').textContent=`¡Hola, ${me.nombre}!`;
+  if(fresh)$('#secretName').textContent=abierta?amigo.nombre:'🎁';
+  $('#revealBtn').hidden=abierta;
+  $('#openedAt').hidden=!me.raspada_en;
+  if(me.raspada_en)$('#openedAt').textContent=`Raspaste tu tarjeta el ${fmt(me.raspada_en)}`;
+  $('#scratchErr').hidden=true;
+  if(fresh)setupScratch(abierta);
+  $('#h-theirs').textContent=abierta?`Ideas para ${amigo.nombre}`:'Ideas para tu amigo secreto';
+  const theirs=abierta?amigo.ideas:[];
+  $('#theirWishes').innerHTML=!abierta
+    ?`<p class="empty">Raspa tu tarjeta para ver sus ideas de regalo.</p>`
+    :theirs.length?`<ul class="wishes">${theirs.map(w=>`<li><span>${esc(w.texto)}</span></li>`).join('')}</ul>`
+    :`<p class="empty">${esc(amigo.nombre)} todavía no ha agregado ideas. Vuelve a revisar más cerca del ${EVENT.date}.</p>`;
+  renderMine();
+}
+function renderMine(){
+  const mine=me.mis_ideas||[];
+  $('#myWishes').innerHTML=mine.length
+    ?mine.map(w=>`<li><span>${esc(w.texto)}</span><button class="icon-btn" data-wish="${esc(w.id)}" aria-label="Quitar idea">×</button></li>`).join('')
+    :`<p class="empty">Aún no agregas ideas. ¡Dale una pista a tu amigo secreto!</p>`;
+}
+function wishErr(msg){const e=$('#wishErr');e.hidden=!msg;e.textContent=msg||''}
+$('#wishForm').addEventListener('submit',async e=>{
+  e.preventDefault();const v=$('#wishInput').value.trim();if(!v||!me)return;wishErr('');
+  const r=await api('ideas',{method:'POST',body:{texto:v}});
+  if(r.ok){me.mis_ideas=r.d.ideas;$('#wishInput').value='';renderMine()}
+  else if(r.status===401){go('/navidad/'+me.id,true)}else wishErr(r.d.error||'No se pudo agregar. Intenta de nuevo.');
+});
+$('#myWishes').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-wish]');if(!b||!me)return;wishErr('');
+  const r=await api('ideas',{method:'DELETE',query:{id:b.dataset.wish}});
+  if(r.ok){me.mis_ideas=r.d.ideas;renderMine()}else wishErr(r.d.error||'No se pudo quitar. Intenta de nuevo.');
+});
+$('#salirBtn').onclick=async()=>{await api('salir',{method:'POST'});me=null;amigo=null;go('/navidad')};
+
+/* Tarjeta para raspar: el nombre NO está en la página hasta el primer toque */
+let scratchDone=false;
+function pedirAmigo(){
+  if(amigo)return Promise.resolve(true);
+  if(pedido)return pedido;
+  pedido=api('raspar',{method:'POST'}).then(r=>{
+    pedido=null;
+    if(r.ok&&r.d.amigo){amigo=r.d.amigo;me.raspada_en=r.d.raspada_en;$('#secretName').textContent=amigo.nombre;renderMe(false);return true}
+    const e=$('#scratchErr');e.hidden=false;e.textContent=r.status===409?'El sorteo todavía no se ha hecho.':(r.d.error||'No se pudo abrir la tarjeta. Intenta de nuevo.');
+    return false;
+  });
+  return pedido;
+}
+async function setupScratch(abierta){
+  const cv=$('#scratchCv');
+  cv.classList.toggle('gone',abierta);scratchDone=abierta;
+  if(abierta||!cv.getContext)return;
+  try{await document.fonts.ready}catch(e){}
+  const box=$('#scratch').getBoundingClientRect();const dpr=window.devicePixelRatio||1;
+  cv.width=Math.round(box.width*dpr);cv.height=Math.round(box.height*dpr);
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalCompositeOperation='source-over';
+  const w=box.width,h=box.height;
+  const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,'#D9A12E');g.addColorStop(.5,'#F7D982');g.addColorStop(1,'#C98F1F');
+  ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  ctx.fillStyle='rgba(255,255,255,.55)';
+  for(let i=0;i<90;i++){ctx.beginPath();ctx.arc(Math.random()*w,Math.random()*h,Math.random()*2+.5,0,7);ctx.fill()}
+  ctx.fillStyle='#6B4300';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='600 22px Fredoka, sans-serif';ctx.fillText('Raspa aquí ✨',w/2,h/2-10);
+  ctx.font='400 15px Fredoka, sans-serif';ctx.fillText('con el dedo o el mouse',w/2,h/2+16);
+  ctx.globalCompositeOperation='destination-out';ctx.lineWidth=40;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#000';
+  let down=false,last=null,moves=0;
+  const pos=e=>{const b=cv.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top}};
+  const stroke=p=>{const a=last||{x:p.x+.1,y:p.y};ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;if(++moves%6===0)check()};
+  cv.onpointerdown=e=>{if(scratchDone)return;pedirAmigo();down=true;last=null;try{cv.setPointerCapture(e.pointerId)}catch(_){}stroke(pos(e))};   // el primer toque le pide el nombre al servidor
+  cv.onpointermove=e=>{if(down&&!scratchDone)stroke(pos(e))};
+  cv.onpointerup=cv.onpointercancel=()=>{down=false;last=null;check()};
+  function check(){
+    if(scratchDone)return;
+    const d=ctx.getImageData(0,0,cv.width,cv.height).data;let c=0,t=0;
+    for(let i=3;i<d.length;i+=64){t++;if(d[i]<20)c++}
+    if(t&&c/t>.45)reveal();
+  }
+}
+async function reveal(){
+  if(scratchDone)return;scratchDone=true;
+  if(!await pedirAmigo()){scratchDone=false;return}
+  $('#scratchCv').classList.add('gone');confetti();renderMe(false);
+}
+$('#revealBtn').onclick=()=>reveal();
+function confetti(){
+  if(reduced)return;
+  const c=document.createElement('div');c.className='confetti';c.setAttribute('aria-hidden','true');
+  const cols=['#D7263D','#F2B33D','#1F8A5B','#2F7FC1','#fff'];
+  c.innerHTML=Array.from({length:60},(_,i)=>`<i style="left:${Math.random()*100}%;background:${cols[i%5]};animation-delay:${Math.random()*.5}s;animation-duration:${1.4+Math.random()}s"></i>`).join('');
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);
+}
+
+/* ── Panel de la organizadora ── */
+let est=null,draft=null,dirty=false,nuevoN=0;
+async function showAdmin(){
+  const r=await api('admin_estado');
+  if(r.ok){est=r.d;resetDraft();show('adminView');renderAdmin();return}
+  if(r.status===401){openGate({tipo:'admin'});return}
+  show('listView');$('#listErr').hidden=false;$('#listErr').textContent=await explicarFalta(r);
+}
+// Si el sorteo no está listo, le dice a la organizadora EXACTAMENTE qué falta configurar (solo nombres, nunca valores)
+async function explicarFalta(r){
+  const d=await api('diagnostico');
+  if(d.ok&&d.d.variables){
+    const falta=Object.keys(d.d.variables).filter(k=>!d.d.variables[k]),partes=[];
+    if(falta.length)partes.push('Faltan estas variables en Vercel: '+falta.join(', ')+'. Después de ponerlas hay que hacer Redeploy.');
+    if(d.d.tablas===false&&!falta.includes('SUPABASE_SERVICE_KEY'))partes.push('Falta correr crear_navidad.sql en Supabase.');
+    if(partes.length)return partes.join(' ');
+  }
+  return r.status===503?'El sorteo todavía no está listo.':(r.d.error||'No se pudo abrir el panel.');
+}
+function resetDraft(){
+  draft={grupos:est.grupos.map(g=>({id:String(g.id),nombre:g.nombre})),personas:est.personas.map(p=>({id:p.id,nombre:p.nombre,grupo:String(p.grupo_id)}))};
+  dirty=false;
+}
+const peopleOf=gid=>draft.personas.filter(p=>p.grupo===gid);
+function feasibility(){
+  const con=draft.personas.filter(p=>p.nombre.trim()),n=con.length;
+  if(n<2)return 'Agrega al menos dos personas.';
+  const tam=draft.grupos.map(g=>con.filter(p=>p.grupo===g.id).length);
+  if(tam.filter(s=>s>0).length<2)return 'Se necesitan al menos dos grupos con personas.';
+  const big=Math.max(...tam);
+  if(big>n-big)return 'Un grupo tiene más de la mitad de las personas, así que no se puede sortear sin que se toquen entre ellos.';
+  return null;
+}
+function renderAdmin(){renderBoard();renderGroups()}
+function renderBoard(){
+  const has=est.sorteo_hecho;
+  $('#boardSec').hidden=!has;
+  $('#drawBtn').textContent=has?'Volver a sortear a todos':'Hacer el sorteo';
+  $('#drawLead').textContent=has?'Si vuelves a sortear, cambian todas las asignaciones y todos tendrían que raspar de nuevo.':'Nadie puede quedar con alguien de su mismo grupo.';
+  if(!has)return;
+  const gi={};est.grupos.forEach((g,i)=>gi[g.id]=i);
+  const all=est.personas,opened=all.filter(p=>p.raspada_en).length;
+  $('#openCount').textContent=`${opened}/${all.length}`;
+  $('#openBar').style.width=(all.length?opened/all.length*100:0)+'%';
+  $('#rows').innerHTML=all.map(p=>{
+    const meta=p.raspada_en?`Raspó el ${fmt(p.raspada_en)}`:'Aún no raspa';
+    return `<li style="--gc:${COLORS[gi[p.grupo_id]%COLORS.length]}">
+      <span class="nm"><span class="dot"></span>${esc(p.nombre)} ${p.raspada_en?'<span class="chip open sm">🎉</span>':''}</span>
+      <span class="meta">${esc(meta)}</span>
+      <span class="acts"><button class="link-btn" data-act="reassign" data-p="${esc(p.id)}">Cambiar su amigo secreto</button></span></li>`}).join('');
+}
+function renderGroups(){
+  const locked=est.sorteo_hecho;
+  $('#groups').innerHTML=draft.grupos.map((g,gi)=>`
+  <article class="group" style="--gc:${COLORS[gi%COLORS.length]}">
+    <header><span class="dot"></span>
+      <input class="gname" data-g="${esc(g.id)}" value="${esc(g.nombre)}" maxlength="40" aria-label="Nombre del grupo">
+      <button class="icon-btn" data-act="del-group" data-g="${esc(g.id)}" ${locked?'disabled':''} aria-label="Quitar ${esc(g.nombre)}">×</button>
+    </header>
+    <ul>${peopleOf(g.id).map(p=>`<li class="person">
+        <input class="pname" data-k="${esc(p.id||p.tmp)}" value="${esc(p.nombre)}" maxlength="40" placeholder="Nombre" aria-label="Nombre">
+        <button class="icon-btn" data-act="del-person" data-k="${esc(p.id||p.tmp)}" ${locked?'disabled':''} aria-label="Quitar a ${esc(p.nombre)}">×</button></li>`).join('')}</ul>
+    <button class="link-btn" data-act="add-person" data-g="${esc(g.id)}" ${locked?'disabled':''}>+ Agregar persona</button>
+  </article>`).join('');
+  $('#addGroup').disabled=locked;$('#lockNote').hidden=!locked;
+  $('#count').textContent=`${draft.personas.length} personas en ${draft.grupos.length} grupos.`;
+  const prob=feasibility();$('#warn').hidden=!prob;$('#warn').textContent=prob||'';
+  syncButtons();
+}
+function syncButtons(){
+  const prob=feasibility();
+  $('#drawBtn').disabled=!!prob||dirty;$('#dirtyNote').hidden=!dirty;$('#saveGroups').disabled=!dirty;
+}
+function markDirty(){dirty=true;$('#saveStatus').textContent='';syncButtons();const prob=feasibility();$('#warn').hidden=!prob;$('#warn').textContent=prob||'';$('#count').textContent=`${draft.personas.length} personas en ${draft.grupos.length} grupos.`}
+const findP=k=>draft.personas.find(p=>(p.id||p.tmp)===k);
+$('#groups').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.classList.contains('gname')){const g=draft.grupos.find(x=>x.id===t.dataset.g);if(g){g.nombre=t.value;markDirty()}}
+  if(t.classList.contains('pname')){const p=findP(t.dataset.k);if(p){p.nombre=t.value;markDirty()}}
+});
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.disabled||!est)return;
+  const a=b.dataset.act;
+  if(a==='add-person'){const np={id:null,tmp:'n'+(++nuevoN),nombre:'',grupo:b.dataset.g};draft.personas.push(np);markDirty();renderGroups();const el=document.querySelector(`input.pname[data-k="${np.tmp}"]`);el&&el.focus()}
+  if(a==='del-person'){draft.personas=draft.personas.filter(p=>(p.id||p.tmp)!==b.dataset.k);markDirty();renderGroups()}
+  if(a==='del-group'){const g=draft.grupos.find(x=>x.id===b.dataset.g);const n=peopleOf(g.id).length;if(n&&!confirm(`¿Quitar ${g.nombre} y sus ${n} personas?`))return;draft.personas=draft.personas.filter(p=>p.grupo!==g.id);draft.grupos=draft.grupos.filter(x=>x.id!==g.id);markDirty();renderGroups()}
+  if(a==='add-group'){draft.grupos.push({id:'nuevo-'+(++nuevoN),nombre:'Grupo '+(draft.grupos.length+1)});const id=draft.grupos[draft.grupos.length-1].id;draft.personas.push({id:null,tmp:'n'+(++nuevoN),nombre:'',grupo:id});markDirty();renderGroups()}
+  if(a==='reassign')reassign(b.dataset.p);
+});
+$('#saveGroups').onclick=async()=>{
+  const st=$('#saveStatus');st.textContent='Guardando…';$('#saveGroups').disabled=true;
+  // Las filas nuevas que quedaron vacías, y los grupos nuevos sin nadie, se ignoran (no son un error)
+  const personas=draft.personas.filter(p=>p.id||p.nombre.trim()),usados=new Set(personas.map(p=>p.grupo));
+  const grupos=draft.grupos.filter(g=>!String(g.id).startsWith('nuevo-')||usados.has(g.id));
+  const r=await api('admin_grupos',{method:'PUT',body:{grupos:grupos,personas:personas.map(p=>({id:p.id,nombre:p.nombre,grupo:p.grupo}))}});
+  if(r.ok){est=r.d;resetDraft();renderAdmin();$('#saveStatus').textContent='Cambios guardados.'}
+  else{st.textContent=r.d.error||'No se pudo guardar. Intenta de nuevo.';syncButtons()}
+};
+$('#drawBtn').addEventListener('click',async()=>{
+  const hay=est.sorteo_hecho,o=est.personas.filter(p=>p.raspada_en).length;
+  if(hay&&!confirm(o?`${o} personas ya rasparon su tarjeta. Si vuelves a sortear, todo cambia y tendrán que raspar otra vez. ¿Continuar?`:'¿Volver a sortear a todos?'))return;
+  const btn=$('#drawBtn');btn.disabled=true;
+  $('#stage').classList.add('shaking');$('#status').textContent='Mezclando los regalos…';
+  const [r]=await Promise.all([api('admin_sortear',{method:'POST'}),new Promise(res=>setTimeout(res,reduced?200:1800))]);
+  $('#stage').classList.remove('shaking');
+  if(!r.ok){$('#status').textContent=r.d.error||'No se pudo hacer el sorteo. Intenta de nuevo.';syncButtons();return}
+  $('#status').textContent='¡Listo! Ya pueden entrar a raspar su tarjeta.';
+  const e2=await api('admin_estado');if(e2.ok){est=e2.d;resetDraft()}
+  renderAdmin();
+});
+async function reassign(xid){
+  const x=est.personas.find(p=>p.id===xid);if(!x)return;
+  if(!confirm(`¿Darle otro amigo secreto a ${x.nombre}? Se intercambia con alguien que todavía no ha raspado, así que nadie más se entera. ${x.nombre} tendrá que raspar otra vez.`))return;
+  $('#status').textContent='';
+  const r=await api('admin_reasignar',{method:'POST',body:{id:xid}});
+  if(r.ok&&r.d.ok){
+    const e2=await api('admin_estado');if(e2.ok){est=e2.d;if(!dirty)resetDraft()}
+    renderBoard();$('#status').textContent=`Listo. ${x.nombre} ya tiene otro amigo secreto. Avísale que entre de nuevo a raspar su tarjeta.`;
+  }else{alert(r.d.motivo||r.d.error||'No se pudo cambiar. Intenta de nuevo.')}
+}
+$('#adminSalir').onclick=async()=>{await api('salir',{method:'POST'});est=null;draft=null;go('/navidad')};
+
+route();
+})();
+</script>
+</body>
+</html>

@@ -1,6 +1,18 @@
 {
   "rewrites": [
     {
+      "source": "/navidad/admin",
+      "destination": "/navidad.html"
+    },
+    {
+      "source": "/navidad/:id",
+      "destination": "/navidad.html"
+    },
+    {
+      "source": "/navidad",
+      "destination": "/navidad.html"
+    },
+    {
       "source": "/r/:e",
       "destination": "/api/galeria?action=r&e=:e"
     },
@@ -34,6 +46,15 @@
     }
   ],
   "headers": [
+    {
+      "source": "/navidad(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
     {
       "source": "/(.*).html",
       "headers": [
