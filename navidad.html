@@ -214,6 +214,7 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
   .bulb,.stage.shaking svg,.flake{animation:none}
   .confetti{display:none}
   .name-btn{transition:none}
+  .sheet-box{animation:none}
 }
 
 /* Añadidos de la versión real (servidor) */
@@ -222,10 +223,12 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
 .save-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
 .intro #snow{position:absolute;inset:0;pointer-events:none;overflow:hidden}   /* la nieve ya no ocupa media pantalla: el regalo queda al centro */
 .small-btn:disabled{opacity:.5;cursor:not-allowed}
-.sheet{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px}
 .sheet[hidden]{display:none}
-.sheet-box{background:var(--card);color:var(--ink);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:22px 22px calc(22px + env(safe-area-inset-bottom));text-align:center;box-shadow:0 -8px 30px rgba(0,0,0,.3)}
-.sheet-ico{font-size:2.4rem;line-height:1}
+.sheet-box{position:relative;background:var(--card);color:var(--ink);width:100%;max-width:400px;border-radius:24px;padding:28px 22px 20px;text-align:center;box-shadow:0 14px 44px rgba(0,0,0,.4);animation:popin .28s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes popin{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.sheet-x{position:absolute;top:8px;right:10px;border:0;background:none;color:var(--muted);font-size:1.6rem;line-height:1;cursor:pointer;padding:6px 10px;border-radius:10px}
+.sheet-ico{font-size:2.6rem;line-height:1}
 .sheet-box h2{margin:6px 0 8px;font-size:1.25rem;color:var(--red)}
 .sheet-box p{margin:0 0 10px;line-height:1.5}
 .sheet-box .tiny{color:var(--muted);font-size:.9rem}
@@ -343,6 +346,7 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
 <!-- ====== SUGERENCIA: AGREGAR A LA PANTALLA DE INICIO (no se descarga nada) ====== -->
 <div class="sheet" id="accesoSheet" hidden role="dialog" aria-modal="true" aria-labelledby="accesoTitulo">
   <div class="sheet-box">
+    <button class="sheet-x" id="accesoX" aria-label="Cerrar">×</button>
     <div class="sheet-ico" aria-hidden="true">📲</div>
     <h2 id="accesoTitulo">Guarda tu tarjeta en la pantalla de inicio</h2>
     <p id="accesoPasos"></p>
@@ -512,7 +516,7 @@ async function showPerson(id){
   const tk=store.get(TP);
   if(tk){
     const yo=await rpc('navidad_yo',{p_token:tk});
-    if(yo.ok&&yo.d.id===id){startMe(yo.d,false);return}      // ya tenía sesión: entra directo, sin animación
+    if(yo.ok&&yo.d.id===id){startMe(yo.d);return}      // ya tenía sesión: entra directo
     if(yo.d.error==='sesion')store.del(TP);
   }
   openGate({tipo:'persona',id:id,nombre:p.nombre,raspada_en:p.raspada_en});
@@ -542,7 +546,7 @@ $('#gateForm').addEventListener('submit',async e=>{
     if(r.ok){
       store.set(TP,r.d.token);
       const yo=await rpc('navidad_yo',{p_token:r.d.token});
-      if(yo.ok){startMe(yo.d,true);return}
+      if(yo.ok){startMe(yo.d);return}
       err.textContent=yo.d.mensaje||'No se pudo entrar. Intenta de nuevo.';
     }else err.textContent=r.d.error==='clave'?'Esa no es la clave. Recuerda: tu primer nombre, escrito al revés.':(r.d.mensaje||'No se pudo entrar. Intenta de nuevo.');
   }else{
@@ -571,15 +575,17 @@ function playIntro(name,done){
 /* ── Página personal ── */
 let me=null;               // datos de la persona que entró
 let amigo=null,pedido=null;   // el amigo secreto SOLO se pide con el primer toque de la tarjeta
-function startMe(yo,conIntro){
+function startMe(yo){
   me=yo;amigo=yo.amigo||null;pedido=null;
   gateFor=null;if(location.search!=='?p='+yo.id)history.replaceState(null,'',location.pathname+'?p='+yo.id);
   const ban=$('#openedBanner');ban.hidden=!yo.raspada_en;
   if(yo.raspada_en)ban.textContent=`Tu tarjeta ya fue raspada (${fmt(yo.raspada_en)}). Si no fuiste tú, avísale a la organizadora para que te asigne otro amigo secreto: quien la abrió paga Q100.`;
   show('meView');renderMe(true);$('#accesoBtn').hidden=enApp();
-  if(conIntro)playIntro(yo.nombre,()=>{});
+  // La animación de regalo sale SOLO la primera vez que esta persona abre su página en este aparato (después entra directo)
+  const k='navidad_intro_'+yo.id;
+  if(!store.get(k)){store.set(k,'1');playIntro(yo.nombre,()=>{})}
 }
-/* ── Acceso directo: se sugiere "Agregar a la pantalla de inicio" (no se descarga ningún archivo) ──
+/* ── Acceso directo: un pop-up sugiere "Agregar a la pantalla de inicio" (no se descarga ningún archivo) ──
    Lo que se guarda es la dirección de SU página (navidad.html?p=...): nunca lleva a su amigo secreto y siempre pide la clave. */
 const enApp=()=>{try{return (typeof matchMedia==='function'&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true}catch(e){return false}};
 function plataforma(){const ua=navigator.userAgent||'';if(/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1))return 'ios';if(/Android/i.test(ua))return 'android';return 'otro'}
@@ -587,11 +593,11 @@ const PASOS={ios:'Toca el botón <b>Compartir</b> (el cuadrito con la flecha ⬆
 let accesoPrevio=null;
 function abrirAcceso(){$('#accesoPasos').innerHTML=PASOS[plataforma()];accesoPrevio=document.activeElement;$('#accesoSheet').hidden=false;$('#accesoOk').focus()}
 function cerrarAcceso(){$('#accesoSheet').hidden=true;if(me)store.set('navidad_ac_'+me.id,'1');if(accesoPrevio&&accesoPrevio.focus)accesoPrevio.focus()}
-function ofrecerAcceso(){   // una sola vez por persona, justo después de descubrir a su amigo secreto
+function ofrecerAcceso(){   // el pop-up sale UNA sola vez por persona: justo después de raspar (cuando ya descubrió a su amigo secreto)
   if(!me||enApp()||store.get('navidad_ac_'+me.id))return;
-  setTimeout(()=>{if(me&&parseRoute().v==='person'&&$('#accesoSheet').hidden)abrirAcceso()},reduced?400:1500);
+  setTimeout(()=>{if(me&&parseRoute().v==='person'&&$('#accesoSheet').hidden)abrirAcceso()},reduced?400:1500);   // un momento después, para no tapar el confeti
 }
-$('#accesoOk').onclick=cerrarAcceso;$('#accesoNo').onclick=cerrarAcceso;$('#accesoBtn').onclick=abrirAcceso;
+$('#accesoOk').onclick=cerrarAcceso;$('#accesoNo').onclick=cerrarAcceso;$('#accesoX').onclick=cerrarAcceso;$('#accesoBtn').onclick=abrirAcceso;
 $('#accesoSheet').addEventListener('click',e=>{if(e.target.id==='accesoSheet')cerrarAcceso()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#accesoSheet').hidden)cerrarAcceso()});
 function sesionPerdida(){store.del(TP);if(me)nav('?p='+me.id,true)}
