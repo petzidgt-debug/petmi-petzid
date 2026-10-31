@@ -435,9 +435,11 @@ async function rpc(fn,args){
     let d={};try{d=await r.json()}catch(e){}
     if(r.ok&&d&&typeof d==='object')return {ok:d.ok!==false,status:r.status,d:d};
     if(r.status===404&&d&&(d.code==='PGRST202'||/find the function/i.test(d.message||'')))return {ok:false,status:404,falta:true,d:{error:'falta_sql',mensaje:'Falta correr crear_navidad.sql en Supabase.'}};
-    return {ok:false,status:r.status,d:{error:'servidor',mensaje:'Algo salió mal. Intenta de nuevo.'}};
+    return {ok:false,status:r.status,d:{error:'servidor',mensaje:'Algo salió mal. Intenta de nuevo.',detalle:String((d&&d.message)||'').slice(0,160)}};
   }catch(e){return {ok:false,status:0,d:{error:'red',mensaje:'Sin conexión. Revisa tu internet e intenta de nuevo.'}}}
 }
+/* Solo el panel de la organizadora muestra el motivo técnico de un error (entre paréntesis), para poder arreglarlo; la familia nunca lo ve */
+const fallo=(r,base)=>(r.d.error==='servidor'?base:(r.d.mensaje||base))+(r.d.detalle?` (${r.d.detalle})`:'');
 /* La sesión se guarda en el celular (si el navegador no lo permite, solo mientras la página siga abierta) */
 const mem={};
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}},del(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}}};
@@ -546,7 +548,7 @@ $('#gateForm').addEventListener('submit',async e=>{
   }else{
     const r=await rpc('navidad_admin_entrar',{p_clave:v});
     if(r.ok){store.set(TA,r.d.token);await showAdmin();return}
-    err.textContent=r.d.mensaje||'No se pudo entrar. Intenta de nuevo.';
+    err.textContent=fallo(r,'No se pudo entrar. Intenta de nuevo.');
   }
   btn.disabled=false;$('#gateInput').value='';$('#gateInput').focus();
 });
@@ -780,7 +782,7 @@ $('#saveGroups').onclick=async()=>{
   const r=await rpc('navidad_admin_grupos',{p_token:store.get(TA),p_datos:{grupos:grupos,personas:personas.map(p=>({id:p.id,nombre:p.nombre,grupo:p.grupo}))}});
   if(r.ok){est=r.d;resetDraft();renderAdmin();$('#saveStatus').textContent='Cambios guardados.'}
   else if(r.d.error==='sesion')adminSesionPerdida();
-  else{st.textContent=r.d.mensaje||'No se pudo guardar. Intenta de nuevo.';syncButtons()}
+  else{st.textContent=fallo(r,'No se pudo guardar. Intenta de nuevo.');syncButtons()}
 };
 $('#drawBtn').addEventListener('click',async()=>{
   const hay=est.sorteo_hecho,o=est.personas.filter(p=>p.raspada_en).length;
@@ -790,7 +792,7 @@ $('#drawBtn').addEventListener('click',async()=>{
   const [r]=await Promise.all([rpc('navidad_admin_sortear',{p_token:store.get(TA)}),new Promise(res=>setTimeout(res,reduced?200:1800))]);
   $('#stage').classList.remove('shaking');
   if(r.d.error==='sesion'){adminSesionPerdida();return}
-  if(!r.ok){$('#status').textContent=r.d.mensaje||'No se pudo hacer el sorteo. Intenta de nuevo.';syncButtons();return}
+  if(!r.ok){$('#status').textContent=fallo(r,'No se pudo hacer el sorteo. Intenta de nuevo.');syncButtons();return}
   $('#status').textContent='¡Listo! Ya pueden entrar a raspar su tarjeta.';
   const e2=await rpc('navidad_admin_estado',{p_token:store.get(TA)});if(e2.ok){est=e2.d;resetDraft()}
   renderAdmin();
@@ -804,7 +806,7 @@ async function reassign(xid){
   if(r.ok&&r.d.ok){
     const e2=await rpc('navidad_admin_estado',{p_token:store.get(TA)});if(e2.ok){est=e2.d;if(!dirty)resetDraft()}
     renderBoard();$('#status').textContent=`Listo. ${x.nombre} ya tiene otro amigo secreto. Avísale que entre de nuevo a raspar su tarjeta.`;
-  }else{alert(r.d.motivo||r.d.mensaje||'No se pudo cambiar. Intenta de nuevo.')}
+  }else{alert(r.d.motivo||fallo(r,'No se pudo cambiar. Intenta de nuevo.'))}
 }
 $('#adminSalir').onclick=async()=>{await rpc('navidad_salir',{p_token:store.get(TA)});store.del(TA);est=null;draft=null;nav('')};
 
