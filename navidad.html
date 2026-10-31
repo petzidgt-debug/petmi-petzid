@@ -400,16 +400,23 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const fmt=ts=>new Date(ts).toLocaleString('es-GT',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
 const idOk=s=>/^[a-z0-9]{10}$/.test(s||'');
 
-/* ── Hablar con el servidor ── */
-async function api(action,o){
-  o=o||{};
-  const qs=new URLSearchParams(Object.assign({action:action},o.query||{}));
+/* ── Hablar con Supabase ──
+   La llave de abajo es la llave PÚBLICA de Supabase (la misma que ya usan las demás páginas del sitio): no es un secreto.
+   Las tablas están cerradas; esta página solo puede llamar a las funciones navidad_*, que revisan la sesión por dentro. */
+const SB='https://ilcreewilnkchvozicyp.supabase.co',KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+async function rpc(fn,args){
   try{
-    const r=await fetch('/api/navidad?'+qs,{method:o.method||'GET',headers:o.body?{'Content-Type':'application/json'}:{},body:o.body?JSON.stringify(o.body):undefined,credentials:'same-origin',cache:'no-store'});
+    const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify(args||{}),cache:'no-store'});
     let d={};try{d=await r.json()}catch(e){}
-    return {ok:r.ok,status:r.status,d:d||{}};
-  }catch(e){return {ok:false,status:0,d:{error:'Sin conexión. Revisa tu internet e intenta de nuevo.'}}}
+    if(r.ok&&d&&typeof d==='object')return {ok:d.ok!==false,status:r.status,d:d};
+    if(r.status===404&&d&&(d.code==='PGRST202'||/find the function/i.test(d.message||'')))return {ok:false,status:404,falta:true,d:{error:'falta_sql',mensaje:'Falta correr crear_navidad.sql en Supabase.'}};
+    return {ok:false,status:r.status,d:{error:'servidor',mensaje:'Algo salió mal. Intenta de nuevo.'}};
+  }catch(e){return {ok:false,status:0,d:{error:'red',mensaje:'Sin conexión. Revisa tu internet e intenta de nuevo.'}}}
 }
+/* La sesión se guarda en el celular (si el navegador no lo permite, solo mientras la página siga abierta) */
+const mem={};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}},del(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}}};
+const TP='navidad_tp',TA='navidad_ta';
 
 /* ── Decoración ── */
 const bulbColors=['#D7263D','#F2B33D','#1F8A5B','#2F7FC1','#E0662A'];
@@ -419,20 +426,17 @@ $('#facts1').innerHTML=factsHTML;$('#facts2').innerHTML=factsHTML;
 function gift(c,r,i){return `<svg style="--d:${i*.09}s" viewBox="0 0 64 64"><rect x="8" y="26" width="48" height="32" rx="4" fill="${c}"/><rect x="5" y="18" width="54" height="12" rx="4" fill="${c}" opacity=".85"/><rect x="28" y="18" width="8" height="40" fill="${r}"/><ellipse cx="24" cy="14" rx="9" ry="6" fill="${r}" transform="rotate(-20 24 14)"/><ellipse cx="40" cy="14" rx="9" ry="6" fill="${r}" transform="rotate(20 40 14)"/></svg>`}
 $('#stage').innerHTML=[['#D7263D','#F2B33D'],['#1F8A5B','#fff'],['#F2B33D','#D7263D'],['#2F7FC1','#fff'],['#8E4BC4','#F2B33D']].map(([c,r],i)=>gift(c,r,i)).join('');
 
-/* ── Navegación (las direcciones son /navidad, /navidad/<id> y /navidad/admin) ── */
+/* ── Navegación (direcciones: navidad.html, navidad.html?p=<id> y navidad.html?admin=1) ── */
 const VIEWS=['listView','gateView','meView','adminView'];
 function show(view){VIEWS.forEach(v=>$('#'+v).hidden=v!==view);window.scrollTo(0,0)}
-function go(path,replace){if(location.pathname!==path){history[replace?'replaceState':'pushState'](null,'',path)}route()}
+function nav(search,replace){const url=location.pathname+search;if(location.pathname+location.search!==url)history[replace?'replaceState':'pushState'](null,'',url);route()}
 function parseRoute(){
-  const p=location.pathname.replace(/\/+$/,'');
-  if(p==='/navidad/admin')return {v:'admin'};
-  const m=p.match(/^\/navidad\/([a-z0-9]{10})$/);
-  return m?{v:'person',id:m[1]}:{v:'list'};
+  const q=new URLSearchParams(location.search);
+  if(q.has('admin'))return {v:'admin'};
+  const id=q.get('p');
+  return idOk(id)?{v:'person',id:id}:{v:'list'};
 }
-document.addEventListener('click',e=>{
-  const g=e.target.closest('[data-go]');
-  if(g){go('/navidad')}
-});
+document.addEventListener('click',e=>{if(e.target.closest('[data-go]'))nav('')});
 window.addEventListener('popstate',()=>route());
 let lista=null,gateFor=null;
 
@@ -445,10 +449,10 @@ async function route(){
 
 /* ── Lista pública ── */
 async function loadList(){
-  const res=await api('participantes');
+  const res=await rpc('navidad_lista');
   if(res.ok&&Array.isArray(res.d.participantes)){lista=res.d;return true}
   lista=null;$('#listErr').hidden=false;
-  $('#listErr').textContent=res.status===503?'El sorteo todavía no está listo. Vuelve en un rato.':(res.d.error||'No se pudo cargar la lista. Intenta de nuevo.');
+  $('#listErr').textContent=res.falta?res.d.mensaje:'No se pudo cargar la lista. Intenta de nuevo.';
   return false;
 }
 async function showList(){
@@ -468,17 +472,21 @@ function renderList(){
 }
 $('#names').addEventListener('click',e=>{
   const b=e.target.closest('[data-person]');if(!b||b.disabled)return;
-  go('/navidad/'+b.dataset.person);
+  nav('?p='+b.dataset.person);
 });
-$('#adminLink').onclick=()=>go('/navidad/admin');
+$('#adminLink').onclick=()=>nav('?admin=1');
 
 /* ── Acceso de una persona ── */
 async function showPerson(id){
   if(!lista&&!await loadList()){show('listView');return}
   const p=lista.participantes.find(x=>x.id===id);
-  if(!p||!lista.sorteo_hecho){go('/navidad',true);return}
-  const yo=await api('yo');
-  if(yo.ok&&yo.d.id===id){startMe(yo.d,false);return}       // ya tenía sesión: entra directo, sin animación
+  if(!p||!lista.sorteo_hecho){nav('',true);return}
+  const tk=store.get(TP);
+  if(tk){
+    const yo=await rpc('navidad_yo',{p_token:tk});
+    if(yo.ok&&yo.d.id===id){startMe(yo.d,false);return}      // ya tenía sesión: entra directo, sin animación
+    if(yo.d.error==='sesion')store.del(TP);
+  }
   openGate({tipo:'persona',id:id,nombre:p.nombre,raspada_en:p.raspada_en});
 }
 function openGate(g){
@@ -502,13 +510,17 @@ $('#gateForm').addEventListener('submit',async e=>{
   if(!v){err.textContent=gateFor.tipo==='persona'?'Escribe tu clave.':'Escribe la clave.';return}
   btn.disabled=true;err.textContent='';
   if(gateFor.tipo==='persona'){
-    const r=await api('entrar',{method:'POST',body:{id:gateFor.id,clave:v}});
-    if(r.ok){const yo=await api('yo');if(yo.ok){startMe(yo.d,true);return}err.textContent=yo.d.error||'No se pudo entrar. Intenta de nuevo.'}
-    else err.textContent=r.status===401?'Esa no es la clave. Recuerda: tu primer nombre, escrito al revés.':(r.d.error||'No se pudo entrar. Intenta de nuevo.');
+    const r=await rpc('navidad_entrar',{p_id:gateFor.id,p_clave:v});
+    if(r.ok){
+      store.set(TP,r.d.token);
+      const yo=await rpc('navidad_yo',{p_token:r.d.token});
+      if(yo.ok){startMe(yo.d,true);return}
+      err.textContent=yo.d.mensaje||'No se pudo entrar. Intenta de nuevo.';
+    }else err.textContent=r.d.error==='clave'?'Esa no es la clave. Recuerda: tu primer nombre, escrito al revés.':(r.d.mensaje||'No se pudo entrar. Intenta de nuevo.');
   }else{
-    const r=await api('admin_entrar',{method:'POST',body:{clave:v}});
-    if(r.ok){await showAdmin();return}
-    err.textContent=r.status>=500?await explicarFalta(r):(r.d.error||'No se pudo entrar. Intenta de nuevo.');
+    const r=await rpc('navidad_admin_entrar',{p_clave:v});
+    if(r.ok){store.set(TA,r.d.token);await showAdmin();return}
+    err.textContent=r.d.mensaje||'No se pudo entrar. Intenta de nuevo.';
   }
   btn.disabled=false;$('#gateInput').value='';$('#gateInput').focus();
 });
@@ -530,15 +542,16 @@ function playIntro(name,done){
 
 /* ── Página personal ── */
 let me=null;               // datos de la persona que entró
-let amigo=null,pedido=null;   // el amigo secreto SOLO se pide al servidor con el primer toque de la tarjeta
+let amigo=null,pedido=null;   // el amigo secreto SOLO se pide con el primer toque de la tarjeta
 function startMe(yo,conIntro){
   me=yo;amigo=yo.amigo||null;pedido=null;
-  gateFor=null;if(location.pathname!=='/navidad/'+yo.id)history.replaceState(null,'','/navidad/'+yo.id);
+  gateFor=null;if(location.search!=='?p='+yo.id)history.replaceState(null,'',location.pathname+'?p='+yo.id);
   const ban=$('#openedBanner');ban.hidden=!yo.raspada_en;
   if(yo.raspada_en)ban.textContent=`Tu tarjeta ya fue raspada (${fmt(yo.raspada_en)}). Si no fuiste tú, avísale a la organizadora para que te asigne otro amigo secreto: quien la abrió paga Q100.`;
   show('meView');renderMe(true);
   if(conIntro)playIntro(yo.nombre,()=>{});
 }
+function sesionPerdida(){store.del(TP);if(me)nav('?p='+me.id,true)}
 function renderMe(fresh){
   const abierta=!!me.raspada_en&&!!amigo;
   $('#meHello').textContent=`¡Hola, ${me.nombre}!`;
@@ -565,26 +578,29 @@ function renderMine(){
 function wishErr(msg){const e=$('#wishErr');e.hidden=!msg;e.textContent=msg||''}
 $('#wishForm').addEventListener('submit',async e=>{
   e.preventDefault();const v=$('#wishInput').value.trim();if(!v||!me)return;wishErr('');
-  const r=await api('ideas',{method:'POST',body:{texto:v}});
+  const r=await rpc('navidad_idea_agregar',{p_token:store.get(TP),p_texto:v});
   if(r.ok){me.mis_ideas=r.d.ideas;$('#wishInput').value='';renderMine()}
-  else if(r.status===401){go('/navidad/'+me.id,true)}else wishErr(r.d.error||'No se pudo agregar. Intenta de nuevo.');
+  else if(r.d.error==='sesion')sesionPerdida();else wishErr(r.d.mensaje||'No se pudo agregar. Intenta de nuevo.');
 });
 $('#myWishes').addEventListener('click',async e=>{
   const b=e.target.closest('[data-wish]');if(!b||!me)return;wishErr('');
-  const r=await api('ideas',{method:'DELETE',query:{id:b.dataset.wish}});
-  if(r.ok){me.mis_ideas=r.d.ideas;renderMine()}else wishErr(r.d.error||'No se pudo quitar. Intenta de nuevo.');
+  const r=await rpc('navidad_idea_borrar',{p_token:store.get(TP),p_id:Number(b.dataset.wish)});
+  if(r.ok){me.mis_ideas=r.d.ideas;renderMine()}
+  else if(r.d.error==='sesion')sesionPerdida();else wishErr(r.d.mensaje||'No se pudo quitar. Intenta de nuevo.');
 });
-$('#salirBtn').onclick=async()=>{await api('salir',{method:'POST'});me=null;amigo=null;go('/navidad')};
+$('#salirBtn').onclick=async()=>{await rpc('navidad_salir',{p_token:store.get(TP)});store.del(TP);me=null;amigo=null;nav('')};
 
 /* Tarjeta para raspar: el nombre NO está en la página hasta el primer toque */
 let scratchDone=false;
 function pedirAmigo(){
   if(amigo)return Promise.resolve(true);
   if(pedido)return pedido;
-  pedido=api('raspar',{method:'POST'}).then(r=>{
+  pedido=rpc('navidad_raspar',{p_token:store.get(TP)}).then(r=>{
     pedido=null;
     if(r.ok&&r.d.amigo){amigo=r.d.amigo;me.raspada_en=r.d.raspada_en;$('#secretName').textContent=amigo.nombre;renderMe(false);return true}
-    const e=$('#scratchErr');e.hidden=false;e.textContent=r.status===409?'El sorteo todavía no se ha hecho.':(r.d.error||'No se pudo abrir la tarjeta. Intenta de nuevo.');
+    const e=$('#scratchErr');e.hidden=false;
+    if(r.d.error==='sesion'){store.del(TP);e.textContent='Tu sesión venció. Sal y vuelve a entrar con tu clave.'}
+    else e.textContent=r.d.error==='sin_sorteo'?r.d.mensaje:(r.d.mensaje||'No se pudo abrir la tarjeta. Intenta de nuevo.');
     return false;
   });
   return pedido;
@@ -609,7 +625,7 @@ async function setupScratch(abierta){
   let down=false,last=null,moves=0;
   const pos=e=>{const b=cv.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top}};
   const stroke=p=>{const a=last||{x:p.x+.1,y:p.y};ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;if(++moves%6===0)check()};
-  cv.onpointerdown=e=>{if(scratchDone)return;pedirAmigo();down=true;last=null;try{cv.setPointerCapture(e.pointerId)}catch(_){}stroke(pos(e))};   // el primer toque le pide el nombre al servidor
+  cv.onpointerdown=e=>{if(scratchDone)return;pedirAmigo();down=true;last=null;try{cv.setPointerCapture(e.pointerId)}catch(_){}stroke(pos(e))};   // el primer toque le pide el nombre a Supabase
   cv.onpointermove=e=>{if(down&&!scratchDone)stroke(pos(e))};
   cv.onpointerup=cv.onpointercancel=()=>{down=false;last=null;check()};
   function check(){
@@ -636,22 +652,14 @@ function confetti(){
 /* ── Panel de la organizadora ── */
 let est=null,draft=null,dirty=false,nuevoN=0;
 async function showAdmin(){
-  const r=await api('admin_estado');
+  const tk=store.get(TA);
+  if(!tk){openGate({tipo:'admin'});return}
+  const r=await rpc('navidad_admin_estado',{p_token:tk});
   if(r.ok){est=r.d;resetDraft();show('adminView');renderAdmin();return}
-  if(r.status===401){openGate({tipo:'admin'});return}
-  show('listView');$('#listErr').hidden=false;$('#listErr').textContent=await explicarFalta(r);
+  if(r.d.error==='sesion'){store.del(TA);openGate({tipo:'admin'});return}
+  show('listView');$('#listErr').hidden=false;$('#listErr').textContent=r.d.mensaje||'No se pudo abrir el panel.';
 }
-// Si el sorteo no está listo, le dice a la organizadora EXACTAMENTE qué falta configurar (solo nombres, nunca valores)
-async function explicarFalta(r){
-  const d=await api('diagnostico');
-  if(d.ok&&d.d.variables){
-    const falta=Object.keys(d.d.variables).filter(k=>!d.d.variables[k]),partes=[];
-    if(falta.length)partes.push('Faltan estas variables en Vercel: '+falta.join(', ')+'. Después de ponerlas hay que hacer Redeploy.');
-    if(d.d.tablas===false&&!falta.includes('SUPABASE_SERVICE_KEY'))partes.push('Falta correr crear_navidad.sql en Supabase.');
-    if(partes.length)return partes.join(' ');
-  }
-  return r.status===503?'El sorteo todavía no está listo.':(r.d.error||'No se pudo abrir el panel.');
-}
+function adminSesionPerdida(){store.del(TA);est=null;nav('?admin=1',true)}
 function resetDraft(){
   draft={grupos:est.grupos.map(g=>({id:String(g.id),nombre:g.nombre})),personas:est.personas.map(p=>({id:p.id,nombre:p.nombre,grupo:String(p.grupo_id)}))};
   dirty=false;
@@ -727,33 +735,36 @@ $('#saveGroups').onclick=async()=>{
   // Las filas nuevas que quedaron vacías, y los grupos nuevos sin nadie, se ignoran (no son un error)
   const personas=draft.personas.filter(p=>p.id||p.nombre.trim()),usados=new Set(personas.map(p=>p.grupo));
   const grupos=draft.grupos.filter(g=>!String(g.id).startsWith('nuevo-')||usados.has(g.id));
-  const r=await api('admin_grupos',{method:'PUT',body:{grupos:grupos,personas:personas.map(p=>({id:p.id,nombre:p.nombre,grupo:p.grupo}))}});
+  const r=await rpc('navidad_admin_grupos',{p_token:store.get(TA),p_datos:{grupos:grupos,personas:personas.map(p=>({id:p.id,nombre:p.nombre,grupo:p.grupo}))}});
   if(r.ok){est=r.d;resetDraft();renderAdmin();$('#saveStatus').textContent='Cambios guardados.'}
-  else{st.textContent=r.d.error||'No se pudo guardar. Intenta de nuevo.';syncButtons()}
+  else if(r.d.error==='sesion')adminSesionPerdida();
+  else{st.textContent=r.d.mensaje||'No se pudo guardar. Intenta de nuevo.';syncButtons()}
 };
 $('#drawBtn').addEventListener('click',async()=>{
   const hay=est.sorteo_hecho,o=est.personas.filter(p=>p.raspada_en).length;
   if(hay&&!confirm(o?`${o} personas ya rasparon su tarjeta. Si vuelves a sortear, todo cambia y tendrán que raspar otra vez. ¿Continuar?`:'¿Volver a sortear a todos?'))return;
   const btn=$('#drawBtn');btn.disabled=true;
   $('#stage').classList.add('shaking');$('#status').textContent='Mezclando los regalos…';
-  const [r]=await Promise.all([api('admin_sortear',{method:'POST'}),new Promise(res=>setTimeout(res,reduced?200:1800))]);
+  const [r]=await Promise.all([rpc('navidad_admin_sortear',{p_token:store.get(TA)}),new Promise(res=>setTimeout(res,reduced?200:1800))]);
   $('#stage').classList.remove('shaking');
-  if(!r.ok){$('#status').textContent=r.d.error||'No se pudo hacer el sorteo. Intenta de nuevo.';syncButtons();return}
+  if(r.d.error==='sesion'){adminSesionPerdida();return}
+  if(!r.ok){$('#status').textContent=r.d.mensaje||'No se pudo hacer el sorteo. Intenta de nuevo.';syncButtons();return}
   $('#status').textContent='¡Listo! Ya pueden entrar a raspar su tarjeta.';
-  const e2=await api('admin_estado');if(e2.ok){est=e2.d;resetDraft()}
+  const e2=await rpc('navidad_admin_estado',{p_token:store.get(TA)});if(e2.ok){est=e2.d;resetDraft()}
   renderAdmin();
 });
 async function reassign(xid){
   const x=est.personas.find(p=>p.id===xid);if(!x)return;
   if(!confirm(`¿Darle otro amigo secreto a ${x.nombre}? Se intercambia con alguien que todavía no ha raspado, así que nadie más se entera. ${x.nombre} tendrá que raspar otra vez.`))return;
   $('#status').textContent='';
-  const r=await api('admin_reasignar',{method:'POST',body:{id:xid}});
+  const r=await rpc('navidad_admin_reasignar',{p_token:store.get(TA),p_id:xid});
+  if(r.d.error==='sesion'){adminSesionPerdida();return}
   if(r.ok&&r.d.ok){
-    const e2=await api('admin_estado');if(e2.ok){est=e2.d;if(!dirty)resetDraft()}
+    const e2=await rpc('navidad_admin_estado',{p_token:store.get(TA)});if(e2.ok){est=e2.d;if(!dirty)resetDraft()}
     renderBoard();$('#status').textContent=`Listo. ${x.nombre} ya tiene otro amigo secreto. Avísale que entre de nuevo a raspar su tarjeta.`;
-  }else{alert(r.d.motivo||r.d.error||'No se pudo cambiar. Intenta de nuevo.')}
+  }else{alert(r.d.motivo||r.d.mensaje||'No se pudo cambiar. Intenta de nuevo.')}
 }
-$('#adminSalir').onclick=async()=>{await api('salir',{method:'POST'});est=null;draft=null;go('/navidad')};
+$('#adminSalir').onclick=async()=>{await rpc('navidad_salir',{p_token:store.get(TA)});store.del(TA);est=null;draft=null;nav('')};
 
 route();
 })();
