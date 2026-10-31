@@ -218,6 +218,7 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
 }
 
 /* Añadidos de la versión real (servidor) */
+.nota-nombre{background:rgba(242,179,61,.18);border:1px solid rgba(242,179,61,.5);color:var(--ink);border-radius:14px;padding:10px 14px;margin:12px 0 0;font-size:.95rem;line-height:1.45;text-align:left}
 .alert-open{background:var(--miss);color:var(--ink);border-radius:14px;padding:10px 14px;margin:0 0 16px;font-size:.96rem}
 .err-inline{color:var(--red);margin:8px 0 0;font-weight:500}
 .save-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
@@ -269,8 +270,8 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       <ol>
         <li>Busca tu nombre en la lista de abajo y tócalo.</li>
         <li>Tu clave es tu <b>primer nombre al revés</b>. Por ejemplo, Elsa escribe <b>asle</b>.</li>
-        <li>Raspa tu tarjeta y descubre a quién le regalas.</li>
-        <li>Deja ideas de lo que te gustaría recibir. Solo las ve quien te tiene de amigo secreto.</li>
+        <li>Raspa tu tarjeta y descubre a quién le regalas. <b>Su nombre se muestra una sola vez</b>: anótalo. Si lo olvidas, pídele acceso a la organizadora.</li>
+        <li>Deja ideas de lo que te gustaría recibir. Solo las ve quien te tiene de amigo secreto. Las ideas de tu amigo sí puedes volver a verlas cuando quieras.</li>
       </ol>
       <p class="warn">Si al entrar ves que tu tarjeta ya fue raspada y no fuiste tú, avísale a la organizadora para que te asigne otro amigo secreto. <b>Quien abra la tarjeta de otra persona paga una multa de Q100.</b> 💸</p>
     </div>
@@ -322,6 +323,7 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       </div>
       <button class="link-btn" id="revealBtn" style="margin-top:8px">Descubrir sin raspar</button>
       <p class="opened-at" id="openedAt" hidden></p>
+      <p class="nota-nombre" id="notaNombre" hidden></p>
       <p class="err-inline" id="scratchErr" role="alert" hidden></p>
       <div class="facts" id="facts2"></div>
       <button class="link-btn acceso-btn" id="accesoBtn" hidden>📲 Guardar en la pantalla de inicio</button>
@@ -581,6 +583,7 @@ function startMe(yo){
   const ban=$('#openedBanner');ban.hidden=!yo.raspada_en;
   if(yo.raspada_en)ban.textContent=`Tu tarjeta ya fue raspada (${fmt(yo.raspada_en)}). Si no fuiste tú, avísale a la organizadora para que te asigne otro amigo secreto: quien la abrió paga Q100.`;
   show('meView');renderMe(true);$('#accesoBtn').hidden=enApp();
+  if(yo.raspada_en&&amigo&&amigo.nombre)nombreMostrado();      // lo ve de entrada (por ejemplo, la organizadora le dio acceso otra vez)
   // La animación de regalo sale SOLO la primera vez que esta persona abre su página en este aparato (después entra directo)
   const k='navidad_intro_'+yo.id;
   if(!store.get(k)){store.set(k,'1');playIntro(yo.nombre,()=>{})}
@@ -602,21 +605,31 @@ $('#accesoSheet').addEventListener('click',e=>{if(e.target.id==='accesoSheet')ce
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#accesoSheet').hidden)cerrarAcceso()});
 function sesionPerdida(){store.del(TP);if(me)nav('?p='+me.id,true)}
 function renderMe(fresh){
-  const abierta=!!me.raspada_en&&!!amigo;
+  const abierta=!!me.raspada_en&&!!amigo;                 // ya raspó
+  const conNombre=abierta&&!!amigo.nombre;                // todavía se le puede mostrar su nombre
+  const oculto=abierta&&!amigo.nombre;                    // ya se le mostró: solo quedan las ideas de regalo
   $('#meHello').textContent=`¡Hola, ${me.nombre}!`;
-  if(fresh)$('#secretName').textContent=abierta?amigo.nombre:'🎁';
+  if(fresh)$('#secretName').textContent=conNombre?amigo.nombre:(oculto?'🔒':'🎁');
   $('#revealBtn').hidden=abierta;
   $('#openedAt').hidden=!me.raspada_en;
   if(me.raspada_en)$('#openedAt').textContent=`Raspaste tu tarjeta el ${fmt(me.raspada_en)}`;
   $('#scratchErr').hidden=true;
+  const nota=$('#notaNombre');
+  if(oculto){nota.hidden=false;nota.textContent='🔒 Tu amigo secreto ya se te mostró y, por seguridad, no se vuelve a mostrar. Si necesitas verlo otra vez, pídele acceso a la organizadora. Si no fuiste tú quien abrió tu tarjeta, avísale para que te asigne otro amigo secreto. Sus ideas de regalo sí las puedes ver aquí abajo.'}
+  else if(fresh)nota.hidden=true;
   if(fresh)setupScratch(abierta);
-  $('#h-theirs').textContent=abierta?`Ideas para ${amigo.nombre}`:'Ideas para tu amigo secreto';
+  $('#h-theirs').textContent=conNombre?`Ideas para ${amigo.nombre}`:'Ideas para tu amigo secreto';
   const theirs=abierta?amigo.ideas:[];
   $('#theirWishes').innerHTML=!abierta
     ?`<p class="empty">Raspa tu tarjeta para ver sus ideas de regalo.</p>`
     :theirs.length?`<ul class="wishes">${theirs.map(w=>`<li><span>${esc(w.texto)}</span></li>`).join('')}</ul>`
-    :`<p class="empty">${esc(amigo.nombre)} todavía no ha agregado ideas. Vuelve a revisar más cerca del ${EVENT.date}.</p>`;
+    :`<p class="empty">${conNombre?esc(amigo.nombre):'Tu amigo secreto'} todavía no ha agregado ideas. Vuelve a revisar más cerca del ${EVENT.date}.</p>`;
   renderMine();
+}
+/* El nombre se le muestra a la persona UNA sola vez: cuando la página lo pone a la vista, se avisa a Supabase y desde ahí ya no vuelve a salir */
+function nombreMostrado(){
+  const nota=$('#notaNombre');nota.hidden=false;nota.textContent='📝 Anota su nombre ahora: por seguridad no se vuelve a mostrar. Si lo olvidas, pídele acceso a la organizadora. Sus ideas de regalo sí las podrás ver siempre.';
+  rpc('navidad_visto',{p_token:store.get(TP)});
 }
 function renderMine(){
   const mine=me.mis_ideas||[];
@@ -642,11 +655,12 @@ $('#salirBtn').onclick=async()=>{await rpc('navidad_salir',{p_token:store.get(TP
 /* Tarjeta para raspar: el nombre NO está en la página hasta el primer toque */
 let scratchDone=false;
 function pedirAmigo(){
-  if(amigo)return Promise.resolve(true);
+  if(amigo&&amigo.nombre)return Promise.resolve(true);
   if(pedido)return pedido;
   pedido=rpc('navidad_raspar',{p_token:store.get(TP)}).then(r=>{
     pedido=null;
-    if(r.ok&&r.d.amigo){amigo=r.d.amigo;me.raspada_en=r.d.raspada_en;$('#secretName').textContent=amigo.nombre;renderMe(false);return true}
+    if(r.ok&&r.d.amigo&&r.d.amigo.nombre){amigo=r.d.amigo;me.raspada_en=r.d.raspada_en;$('#secretName').textContent=amigo.nombre;renderMe(false);return true}
+    if(r.ok&&r.d.amigo){amigo=r.d.amigo;me.raspada_en=r.d.raspada_en;renderMe(true);return 'oculto'}   // ya se le había mostrado (por ejemplo, desde otro aparato)
     const e=$('#scratchErr');e.hidden=false;
     if(r.d.error==='sesion'){store.del(TP);e.textContent='Tu sesión venció. Sal y vuelve a entrar con tu clave.'}
     else e.textContent=r.d.error==='sin_sorteo'?r.d.mensaje:(r.d.mensaje||'No se pudo abrir la tarjeta. Intenta de nuevo.');
@@ -686,8 +700,10 @@ async function setupScratch(abierta){
 }
 async function reveal(){
   if(scratchDone)return;scratchDone=true;
-  if(!await pedirAmigo()){scratchDone=false;return}
+  const ok=await pedirAmigo();
+  if(ok!==true){if(ok!=='oculto')scratchDone=false;return}
   $('#scratchCv').classList.add('gone');confetti();renderMe(false);
+  nombreMostrado();      // ya lo está viendo: de aquí en adelante no se vuelve a mostrar
   ofrecerAcceso();
 }
 $('#revealBtn').onclick=()=>reveal();
@@ -736,11 +752,11 @@ function renderBoard(){
   $('#openCount').textContent=`${opened}/${all.length}`;
   $('#openBar').style.width=(all.length?opened/all.length*100:0)+'%';
   $('#rows').innerHTML=all.map(p=>{
-    const meta=p.raspada_en?`Raspó el ${fmt(p.raspada_en)}`:'Aún no raspa';
+    const meta=p.raspada_en?`Raspó el ${fmt(p.raspada_en)} · ${p.oculto?'ya no puede ver el nombre':'todavía puede ver el nombre'}`:'Aún no raspa';
     return `<li style="--gc:${COLORS[gi[p.grupo_id]%COLORS.length]}">
       <span class="nm"><span class="dot"></span>${esc(p.nombre)} ${p.raspada_en?'<span class="chip open sm">🎉</span>':''}</span>
       <span class="meta">${esc(meta)}</span>
-      <span class="acts"><button class="link-btn" data-act="reassign" data-p="${esc(p.id)}">Cambiar su amigo secreto</button></span></li>`}).join('');
+      <span class="acts">${p.oculto?`<button class="link-btn" data-act="permitir" data-p="${esc(p.id)}">Darle acceso otra vez</button>`:''}<button class="link-btn" data-act="reassign" data-p="${esc(p.id)}">Cambiar su amigo secreto</button></span></li>`}).join('');
 }
 function renderGroups(){
   const locked=est.sorteo_hecho;
@@ -779,6 +795,7 @@ document.addEventListener('click',async e=>{
   if(a==='del-group'){const g=draft.grupos.find(x=>x.id===b.dataset.g);const n=peopleOf(g.id).length;if(n&&!confirm(`¿Quitar ${g.nombre} y sus ${n} personas?`))return;draft.personas=draft.personas.filter(p=>p.grupo!==g.id);draft.grupos=draft.grupos.filter(x=>x.id!==g.id);markDirty();renderGroups()}
   if(a==='add-group'){draft.grupos.push({id:'nuevo-'+(++nuevoN),nombre:'Grupo '+(draft.grupos.length+1)});const id=draft.grupos[draft.grupos.length-1].id;draft.personas.push({id:null,tmp:'n'+(++nuevoN),nombre:'',grupo:id});markDirty();renderGroups()}
   if(a==='reassign')reassign(b.dataset.p);
+  if(a==='permitir')permitir(b.dataset.p);
 });
 $('#saveGroups').onclick=async()=>{
   const st=$('#saveStatus');st.textContent='Guardando…';$('#saveGroups').disabled=true;
@@ -803,6 +820,17 @@ $('#drawBtn').addEventListener('click',async()=>{
   const e2=await rpc('navidad_admin_estado',{p_token:store.get(TA)});if(e2.ok){est=e2.d;resetDraft()}
   renderAdmin();
 });
+async function permitir(xid){
+  const x=est.personas.find(p=>p.id===xid);if(!x)return;
+  if(!confirm(`¿Dejar que ${x.nombre} vea otra vez a su amigo secreto? Lo verá una sola vez cuando entre con su clave, y luego se vuelve a ocultar.`))return;
+  $('#status').textContent='';
+  const r=await rpc('navidad_admin_permitir',{p_token:store.get(TA),p_id:xid});
+  if(r.d.error==='sesion'){adminSesionPerdida();return}
+  if(r.ok&&r.d.ok){
+    const e2=await rpc('navidad_admin_estado',{p_token:store.get(TA)});if(e2.ok){est=e2.d;if(!dirty)resetDraft()}
+    renderBoard();$('#status').textContent=`Listo. ${x.nombre} puede entrar con su clave y ver su amigo secreto una vez más.`;
+  }else{alert(r.d.motivo||fallo(r,'No se pudo dar el acceso. Intenta de nuevo.'))}
+}
 async function reassign(xid){
   const x=est.personas.find(p=>p.id===xid);if(!x)return;
   if(!confirm(`¿Darle otro amigo secreto a ${x.nombre}? Se intercambia con alguien que todavía no ha raspado, así que nadie más se entera. ${x.nombre} tendrá que raspar otra vez.`))return;
