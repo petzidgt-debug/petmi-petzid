@@ -88,6 +88,11 @@ button,input{font:inherit;color:inherit}
 .name-btn strong{font-size:1.15rem;font-weight:600}
 .name-btn .st{font-size:.88rem;color:var(--muted)}
 .name-btn .st.open{color:var(--pine);font-weight:500}
+.name-btn .lista{display:flex;align-items:center;gap:6px;font-size:.88rem;width:fit-content}
+.name-btn .lista.si{background:var(--soft);color:var(--ink);border:2px solid var(--gold);border-radius:999px;padding:1px 10px;font-weight:600}
+.name-btn .lista.no{color:var(--muted)}
+.name-btn .lista svg.grinch{flex:none}
+.pub-board{margin-top:30px}.pub-board h2{margin:0 0 6px;font-size:1.6rem}
 .wait{background:var(--soft);border-radius:16px;padding:14px 16px;margin:0 0 14px}
 
 /* Botones */
@@ -278,6 +283,14 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       </ol>
       <p class="warn">Si al entrar ves que tu tarjeta ya fue raspada y no fuiste tú, avísale a la organizadora para que te asigne otro amigo secreto. <b>Quien abra la tarjeta de otra persona paga una multa de Q100.</b> 💸</p>
     </div>
+
+    <section id="pubBoard" class="pub-board" hidden>
+      <h2>Así va el sorteo</h2>
+      <div class="board-head"><span class="big" id="pubOpenCount">0/0</span><p>ya saben a quién le regalan</p></div>
+      <div class="bar"><span id="pubOpenBar" style="width:0%"></span></div>
+      <div class="board-head"><span class="big" id="pubIdeasCount">0/0</span><p>ya escribieron su lista de regalos</p></div>
+      <div class="bar ideas"><span id="pubIdeasBar" style="width:0%"></span></div>
+    </section>
 
     <div class="list-head">
       <h2>Participantes</h2>
@@ -473,7 +486,7 @@ $('#facts1').innerHTML=factsHTML;$('#facts2').innerHTML=factsHTML;
 function gift(c,r,i){return `<svg style="--d:${i*.09}s" viewBox="0 0 64 64"><rect x="8" y="26" width="48" height="32" rx="4" fill="${c}"/><rect x="5" y="18" width="54" height="12" rx="4" fill="${c}" opacity=".85"/><rect x="28" y="18" width="8" height="40" fill="${r}"/><ellipse cx="24" cy="14" rx="9" ry="6" fill="${r}" transform="rotate(-20 24 14)"/><ellipse cx="40" cy="14" rx="9" ry="6" fill="${r}" transform="rotate(20 40 14)"/></svg>`}
 $('#stage').innerHTML=[['#D7263D','#F2B33D'],['#1F8A5B','#fff'],['#F2B33D','#D7263D'],['#2F7FC1','#fff'],['#8E4BC4','#F2B33D']].map(([c,r],i)=>gift(c,r,i)).join('');
 
-/* ── Navegación (direcciones: la raíz del sitio, /?p=<id> y /?admin=1) ── */
+/* ── Navegación (direcciones: la página, la página?p=<id> y la página?admin=1; no depende del nombre del archivo) ── */
 const VIEWS=['listView','gateView','meView','adminView'];
 const TITULO=document.title;   // el acceso directo de la pantalla de inicio se llama como la página: en la tarjeta personal es corto
 function show(view){VIEWS.forEach(v=>$('#'+v).hidden=v!==view);document.title=view==='meView'?'Amigo secreto':TITULO;window.scrollTo(0,0)}
@@ -509,14 +522,22 @@ async function showList(){
   if(!await loadList()){$('#listCount').textContent='';$('#waitNote').hidden=true;return}
   renderList();
 }
+const GRINCH='<svg class="grinch" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path d="M7 8 L4 2.5 L12 6Z M25 8 L28 2.5 L20 6Z" fill="#5E9E2E"/><circle cx="16" cy="17" r="13" fill="#7BC043"/><ellipse cx="11" cy="16" rx="3.4" ry="3.6" fill="#FFE066"/><ellipse cx="21" cy="16" rx="3.4" ry="3.6" fill="#FFE066"/><ellipse cx="11.8" cy="16.4" rx="1.2" ry="2" fill="#1b1b1b"/><ellipse cx="20.2" cy="16.4" rx="1.2" ry="2" fill="#1b1b1b"/><path d="M6.5 10.2 L13.8 13" stroke="#2b4a1c" stroke-width="2.2" stroke-linecap="round"/><path d="M25.5 10.2 L18.2 13" stroke="#2b4a1c" stroke-width="2.2" stroke-linecap="round"/><path d="M9 22.2 Q16 28 24 21" stroke="#2b4a1c" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M22 22.2 l2.6 -1.2" stroke="#2b4a1c" stroke-width="2.2" stroke-linecap="round"/></svg>';   // carita de Grinch (decorativa): va siempre junto al texto "aún sin lista"
 function renderList(){
   const all=lista.participantes,has=lista.sorteo_hecho;
   $('#waitNote').hidden=has;
-  const opened=all.filter(p=>p.raspada_en).length;
+  const opened=all.filter(p=>p.raspada_en).length,conLista=all.filter(p=>p.tiene_lista).length;   // la lista pública solo sabe SÍ o NO: nunca cuántas ideas ni cuáles
   $('#listCount').textContent=has?`${opened} de ${all.length} ya descubrieron a su amigo secreto`:`${all.length} participantes`;
+  $('#listCount').hidden=has;      // con el sorteo hecho, el avance de abajo lo reemplaza
+  $('#pubBoard').hidden=!has;
+  if(has){
+    $('#pubOpenCount').textContent=`${opened}/${all.length}`;$('#pubOpenBar').style.width=(all.length?opened/all.length*100:0)+'%';
+    $('#pubIdeasCount').textContent=`${conLista}/${all.length}`;$('#pubIdeasBar').style.width=(all.length?conLista/all.length*100:0)+'%';
+  }
   $('#names').innerHTML=all.map(p=>`<li><button class="name-btn" data-person="${esc(p.id)}" style="--gc:${COLORS[p.grupo%COLORS.length]}" ${has?'':'disabled'}>
       <strong>${esc(p.nombre)}</strong>
-      <span class="st ${p.raspada_en?'open':''}">${p.raspada_en?`🎉 Raspó su tarjeta el ${esc(fmt(p.raspada_en))}`:'Aún no entra'}</span></button></li>`).join('');
+      <span class="st ${p.raspada_en?'open':''}">${p.raspada_en?`🎉 Raspó su tarjeta el ${esc(fmt(p.raspada_en))}`:'Aún no entra'}</span>
+      ${has?(p.tiene_lista?'<span class="lista si">⭐ ¡Ya tiene lista!</span>':`<span class="lista no">${GRINCH}<span>aún sin lista</span></span>`):''}</button></li>`).join('');
 }
 $('#names').addEventListener('click',e=>{
   const b=e.target.closest('[data-person]');if(!b||b.disabled)return;
@@ -603,7 +624,7 @@ function startMe(yo){
   if(!store.get(k)){store.set(k,'1');playIntro(yo.nombre,()=>{})}
 }
 /* ── Acceso directo: un pop-up sugiere "Agregar a la pantalla de inicio" (no se descarga ningún archivo) ──
-   Lo que se guarda es la dirección de SU página (/?p=...): nunca lleva a su amigo secreto y siempre pide la clave. */
+   Lo que se guarda es la dirección de SU página (la página con ?p=...): nunca lleva a su amigo secreto y siempre pide la clave. */
 const enApp=()=>{try{return (typeof matchMedia==='function'&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true}catch(e){return false}};
 function plataforma(){const ua=navigator.userAgent||'';if(/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1))return 'ios';if(/Android/i.test(ua))return 'android';return 'otro'}
 const PASOS={ios:'Toca el botón <b>Compartir</b> (el cuadrito con la flecha ⬆️, abajo en Safari) y elige <b>Agregar a inicio</b>.',android:'Toca los <b>tres puntitos ⋮</b> del navegador (arriba a la derecha) y elige <b>Agregar a la pantalla de inicio</b>.',otro:'Agrega esta página a tus favoritos (<b>Ctrl + D</b>, o <b>Cmd + D</b> en Mac) para volver con un clic.'};
