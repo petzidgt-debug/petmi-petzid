@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#127A6E">
+<title>Tribbi | Intercambios que arman tribu</title>
+<meta name="description" content="Tribbi organiza intercambios de regalos y libros en Guatemala: te inscribes, te toca alguien y PetMi entrega a domicilio.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F7F1; --ink:#1C2A33; --muted:#5B6B70; --card:#FFFFFF; --line:#DCE4D8;
+  --coral:#E2483D; --coral-dark:#A82A21; --teal:#127A6E; --teal-dark:#0B5249; --sun:#F3B431; --soft:#E8EFE4;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#111C20; --ink:#EEF3EC; --muted:#A3B4B2; --card:#182A2F; --line:#2A4046;
+    --coral:#F2665B; --coral-dark:#8E2219; --teal:#38B3A3; --teal-dark:#0E5C52; --sun:#FFC94D; --soft:#1F353A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111C20; --ink:#EEF3EC; --muted:#A3B4B2; --card:#182A2F; --line:#2A4046;
+  --coral:#F2665B; --coral-dark:#8E2219; --teal:#38B3A3; --teal-dark:#0E5C52; --sun:#FFC94D; --soft:#1F353A; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Nunito",system-ui,sans-serif;font-size:17px;line-height:1.55}
+h1,h2,h3,.btn{font-family:"Fredoka","Trebuchet MS",sans-serif}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px;border-radius:8px}
+[hidden]{display:none!important}
+.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+
+/* Hero: la palabra y el círculo de intercambio */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center;padding:40px 0 20px}
+.hero h1{font-size:clamp(4rem,15vw,8.5rem);line-height:.85;margin:0;font-weight:700;letter-spacing:-.03em;color:var(--teal)}
+.hero .tag{font-family:"Fredoka",sans-serif;font-size:clamp(1.35rem,4vw,1.9rem);font-weight:600;margin:14px 0 0;line-height:1.15}
+.hero .lead{color:var(--muted);max-width:44ch;margin:14px 0 0;font-size:1.08rem}
+.ring{width:100%;max-width:400px;justify-self:center}
+.ring .arc{fill:none;stroke:var(--muted);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:4 7;opacity:.55}
+.ring .p{transform-box:fill-box;transform-origin:center}
+.ring .center{font-size:46px}
+@media (prefers-reduced-motion:no-preference){
+  .ring .people{animation:turn 1.6s cubic-bezier(.3,.8,.3,1) both}
+  @keyframes turn{from{transform:rotate(-60deg);opacity:0}to{transform:rotate(0);opacity:1}}
+  .ring .people{transform-origin:200px 200px}
+}
+@media (max-width:760px){.hero{grid-template-columns:1fr;padding-top:24px}.ring{max-width:260px;order:-1}}
+
+/* Elegir intercambio */
+.pick{margin-top:34px}
+.pick h2{font-size:1.7rem;margin:0 0 4px}
+.pick > p{color:var(--muted);margin:0 0 18px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:760px){.opts{grid-template-columns:1fr}}
+.opt{background:var(--card);border:2px solid var(--line);border-radius:26px;padding:24px 24px 26px;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.opt .band{position:absolute;inset:0 0 auto;height:12px}
+.opt.navidad .band{background:repeating-linear-gradient(-45deg,var(--coral) 0 12px,transparent 12px 24px)}
+.opt.bookpal .band{background:repeating-linear-gradient(90deg,var(--teal) 0 18px,var(--sun) 18px 22px)}
+.opt .ico{font-size:2.4rem;line-height:1;margin-top:8px}
+.opt h3{font-size:1.6rem;margin:10px 0 2px;line-height:1.1}
+.opt.navidad h3{color:var(--coral)}
+.opt.bookpal h3{color:var(--teal)}
+.opt .sub{font-weight:700;margin:0 0 10px}
+.opt p{margin:0 0 12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 18px}
+.chip{font-size:.9rem;padding:3px 12px;border-radius:999px;background:var(--soft);font-weight:600;white-space:nowrap}
+.chip.live{background:var(--teal);color:#fff}
+.chip.soon{background:var(--sun);color:#3A2A00}
+.opt .push{margin-top:auto}
+.btn{display:inline-block;border:0;cursor:pointer;color:#fff;font-weight:600;font-size:1.12rem;padding:12px 26px;border-radius:999px;text-decoration:none;transition:transform .08s,box-shadow .08s}
+.btn.coral{background:var(--coral);box-shadow:0 5px 0 var(--coral-dark)}
+.btn.teal{background:var(--teal);box-shadow:0 5px 0 var(--teal-dark)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 transparent}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.wait{display:grid;grid-template-columns:1fr auto;gap:10px}
+.wait input,.wait select{width:100%;padding:11px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg)}
+.wait input:focus,.wait select:focus{border-color:var(--teal);outline:none}
+.wait select{grid-column:1/-1}
+.wait .btn{grid-column:1/-1;justify-self:start}
+@media (min-width:480px){.wait select{grid-column:1}.wait .btn{grid-column:2;grid-row:1/span 2;align-self:end}}
+.msg{min-height:1.4em;margin:10px 0 0;font-weight:600}
+.msg.ok{color:var(--teal)}
+.msg.bad{color:var(--coral)}
+
+/* Cómo funciona */
+.how{margin-top:48px}
+.how h2{font-size:1.7rem;margin:0 0 16px}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:s}
+@media (max-width:760px){.steps{grid-template-columns:1fr}}
+.steps li{counter-increment:s;position:relative;padding:0 0 0 58px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--sun);color:#3A2A00;font-family:"Fredoka",sans-serif;font-weight:700;font-size:1.3rem}
+.steps b{display:block;font-family:"Fredoka",sans-serif;font-size:1.15rem;font-weight:600}
+.steps span{color:var(--muted)}
+
+footer{margin:56px auto 0;padding:20px 22px 36px;max-width:1040px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);border-top:2px dashed var(--line);font-size:.95rem}
+footer a{color:var(--teal);font-weight:700}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero">
+    <div>
+      <h1>Tribbi</h1>
+      <p class="tag">Intercambios que arman tribu</p>
+      <p class="lead">Te inscribes, te toca alguien al azar y le das algo pensado para esa persona. Nosotros organizamos el sorteo y las entregas; tú solo eliges el regalo.</p>
+    </div>
+    <svg class="ring" viewBox="0 0 400 400" role="img" aria-label="Seis personas en círculo pasándose regalos y libros">
+      <circle class="arc" cx="200" cy="200" r="130"/>
+      <g class="people">
+        <g transform="translate(200 70)"><circle r="30" fill="#E2483D"/><text y="10" text-anchor="middle" font-size="28">🎁</text></g>
+        <g transform="translate(312.6 135)"><circle r="30" fill="#127A6E"/><text y="10" text-anchor="middle" font-size="28">📚</text></g>
+        <g transform="translate(312.6 265)"><circle r="30" fill="#F3B431"/><text y="10" text-anchor="middle" font-size="28">🎁</text></g>
+        <g transform="translate(200 330)"><circle r="30" fill="#2F7FC1"/><text y="10" text-anchor="middle" font-size="28">📚</text></g>
+        <g transform="translate(87.4 265)"><circle r="30" fill="#8E4BC4"/><text y="10" text-anchor="middle" font-size="28">🎁</text></g>
+        <g transform="translate(87.4 135)"><circle r="30" fill="#E0662A"/><text y="10" text-anchor="middle" font-size="28">📚</text></g>
+      </g>
+      <text class="center" x="200" y="216" text-anchor="middle">🤝</text>
+    </svg>
+  </header>
+
+  <section class="pick" aria-labelledby="h-pick">
+    <h2 id="h-pick">Elige tu intercambio</h2>
+    <p>Cada intercambio tiene sus propias reglas. Puedes participar en los dos.</p>
+    <div class="opts">
+      <article class="opt navidad">
+        <div class="band" aria-hidden="true"></div>
+        <div class="ico" aria-hidden="true">🎄</div>
+        <h3>Amigo Secreto Navideño</h3>
+        <p class="sub">Con la comunidad PetMi</p>
+        <p>Un solo gran intercambio entre todos los inscritos. Recibes tu regalo en casa antes de Navidad, y si tu amigo secreto falla, el Ángel de Rescate de PetMi te envía uno.</p>
+        <div class="chips" id="navChips"><span class="chip">🎁 Regalo de Q75</span><span class="chip">🚚 Envío Q35</span></div>
+        <div class="push"><a class="btn coral" href="tribbi.html">Ir al amigo secreto</a></div>
+      </article>
+
+      <article class="opt bookpal">
+        <div class="band" aria-hidden="true"></div>
+        <div class="ico" aria-hidden="true">📚</div>
+        <h3>BookPal</h3>
+        <p class="sub">Intercambio de libros usados</p>
+        <p>Envías un libro que ya leíste a alguien que le va a gustar y recibes uno de otra persona. Sin fechas: entras cuando quieras. También hay libros para niños.</p>
+        <div class="chips"><span class="chip soon">Muy pronto</span><span class="chip">🚚 Envío Q50</span><span class="chip">📖 De 1 a 3 libros</span></div>
+        <form class="wait push" id="waitForm" novalidate>
+          <input id="waitEmail" type="email" autocomplete="email" placeholder="Tu correo" aria-label="Tu correo" maxlength="120" required>
+          <select id="waitInteres" aria-label="Para quién son los libros">
+            <option value="adultos">Libros para mí</option>
+            <option value="ninos">Libros para niños</option>
+            <option value="ambos">Los dos</option>
+          </select>
+          <button class="btn teal" type="submit" id="waitBtn">Avísame</button>
+        </form>
+        <p class="msg" id="waitMsg" role="status" aria-live="polite"></p>
+      </article>
+    </div>
+  </section>
+
+  <section class="how" aria-labelledby="h-how">
+    <h2 id="h-how">Así funciona</h2>
+    <ol class="steps">
+      <li><b>Te inscribes</b><span>Con tu correo, sin contraseñas. Nos cuentas qué te gusta para que acierten contigo.</span></li>
+      <li><b>Te toca alguien</b><span>El sorteo es al azar. Descubres a tu persona raspando una tarjeta y ves sus ideas.</span></li>
+      <li><b>PetMi entrega</b><span>Dejas tu regalo o libro marcado con tu código y el mensajero lo lleva a domicilio.</span></li>
+    </ol>
+  </section>
+</main>
+<footer><span>Tribbi · Una iniciativa de PetMi 🐾</span><a href="tribbi.html?admin=1">Panel de PetMi</a></footer>
+
+<script>
+(function(){
+'use strict';
+/* Llave PÚBLICA de Supabase ("anon"): puede ir en la página, no es un secreto. */
+const CONFIG={
+  supabaseUrl:'https://ilcreewilnkchvozicyp.supabase.co',
+  supabaseAnonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM',
+  navidad:'navidad-petmi-2026'
+};
+const $=s=>document.querySelector(s);
+async function rpc(fn,args){
+  try{
+    const r=await fetch(CONFIG.supabaseUrl+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:CONFIG.supabaseAnonKey,Authorization:'Bearer '+CONFIG.supabaseAnonKey},body:JSON.stringify(args||{})});
+    let d={};try{d=await r.json()}catch(e){}
+    return {ok:r.ok&&d&&d.ok!==false,status:r.status,d:d};
+  }catch(e){return {ok:false,status:0,d:{}}}
+}
+const dia=s=>new Date(s).toLocaleDateString('es-GT',{day:'numeric',month:'long',timeZone:'America/Guatemala'});
+const q=n=>'Q'+Number(n||0).toLocaleString('es-GT');
+
+/* Datos en vivo del Amigo Secreto (si no cargan, se quedan los de arriba) */
+rpc('tribbi_edicion',{p_slug:CONFIG.navidad}).then(r=>{
+  if(!r.ok)return;const e=r.d,ahora=new Date();
+  const estado=e.inscripciones_abiertas?'<span class="chip live">Inscripciones abiertas</span>'
+    :ahora<new Date(e.inscripcion_desde)?`<span class="chip">Inscripciones desde el ${dia(e.inscripcion_desde)}</span>`
+    :e.sorteo_hecho?'<span class="chip">Sorteo hecho</span>':'<span class="chip">Inscripciones cerradas</span>';
+  $('#navChips').innerHTML=`${estado}<span class="chip">🎁 Regalo de ${q(e.presupuesto_q)}</span><span class="chip">🚚 Envío ${q(e.envio_q)}</span>`;
+});
+
+/* Lista de espera de BookPal */
+$('#waitForm').addEventListener('submit',async ev=>{
+  ev.preventDefault();
+  const em=$('#waitEmail').value.trim(),m=$('#waitMsg'),b=$('#waitBtn');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){m.className='msg bad';m.textContent='Revisa tu correo.';$('#waitEmail').focus();return}
+  b.disabled=true;m.className='msg';m.textContent='';
+  const r=await rpc('tribbi_lista_espera',{p_programa:'bookpal',p_email:em,p_interes:$('#waitInteres').value});
+  b.disabled=false;
+  if(r.ok){m.className='msg ok';m.textContent='¡Listo! Te escribimos cuando BookPal abra. 📚';$('#waitForm').reset();return}
+  m.className='msg bad';m.textContent=r.status===0?'Sin conexión. Revisa tu internet e intenta de nuevo.':(r.d.mensaje&&r.d.error!=='servidor'?r.d.mensaje:'No se pudo guardar. Intenta de nuevo.');
+});
+})();
+</script>
+</body>
+</html>
