@@ -64,6 +64,9 @@ button,input{font:inherit;color:inherit}
 .chip{font-size:.92rem;padding:4px 12px;border-radius:999px;background:var(--soft);white-space:nowrap;font-weight:500}
 .chip.open{background:var(--ok);color:var(--pine)}
 .chip.sm{font-size:.82rem;padding:2px 10px}
+.chip.ideas{background:var(--ok);color:var(--pine)}
+.chip.vacio{background:var(--soft);color:var(--muted)}
+.bar.ideas span{background:repeating-linear-gradient(-45deg,var(--pine) 0 12px,#fff 12px 18px)}
 
 /* Instrucciones */
 .how{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:18px 20px;margin-top:26px;position:relative;overflow:hidden}
@@ -285,7 +288,7 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
     <ul class="names" id="names"></ul>
   </div>
   <footer>
-    <span>Hecho con cariño por PetMi 🐾</span>
+    <span>Convivio Familiar Moralitos 🎄</span>
     <button class="link-btn" id="adminLink">Soy la organizadora</button>
   </footer>
 </div>
@@ -386,9 +389,11 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
   <div class="wrap admin">
     <section id="boardSec">
       <h2>Así va el sorteo</h2>
-      <p class="lead">Aquí ves quién ya raspó su tarjeta y cuándo, pero nunca a quién le tocó cada persona.</p>
+      <p class="lead">Aquí ves quién ya raspó su tarjeta y cuándo, y quién ya escribió su lista de regalos (sin ver lo que escribió), pero nunca a quién le tocó cada persona.</p>
       <div class="board-head"><span class="big" id="openCount">0/0</span><p>ya saben a quién le regalan</p></div>
       <div class="bar"><span id="openBar" style="width:0%"></span></div>
+      <div class="board-head"><span class="big" id="ideasCount">0/0</span><p>ya escribieron su lista de regalos</p></div>
+      <div class="bar ideas"><span id="ideasBar" style="width:0%"></span></div>
       <ul class="rows" id="rows"></ul>
     </section>
 
@@ -416,14 +421,23 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       <p class="status" id="saveStatus" role="status" aria-live="polite"></p>
     </section>
   </div>
-  <footer><span>Hecho con cariño por PetMi 🐾</span></footer>
+  <footer><span>Convivio Familiar Moralitos 🎄</span></footer>
 </div>
 
 <script>
 (function(){
 'use strict';
-/* Datos fijos del evento (no son secretos) */
-const EVENT={budget:'US$40',date:'13 de diciembre',place:'Casa de Jose'};
+/* ═══════════ CONFIGURACIÓN ═══════════
+   Lo único que hay que cambiar para usar otro Supabase o para otro evento.
+   La llave de Supabase es la llave PÚBLICA ("anon"): está pensada para ir dentro de la página y NO es un secreto.
+   Lo que protege los datos es que las tablas están cerradas al navegador (ver supabase/crear_navidad.sql).
+   Nunca pegues aquí la llave "service_role": esa sí es secreta. */
+const CONFIG={
+  supabaseUrl:'https://ilcreewilnkchvozicyp.supabase.co',
+  supabaseAnonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM',
+  evento:{presupuesto:'US$40',fecha:'13 de diciembre',lugar:'Casa de Jose'}
+};
+const EVENT={budget:CONFIG.evento.presupuesto,date:CONFIG.evento.fecha,place:CONFIG.evento.lugar};
 const COLORS=['#D7263D','#1F8A5B','#E39B17','#2F7FC1','#8E4BC4','#E0662A'];
 const reduced=(typeof matchMedia==='function')&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=s=>document.querySelector(s);
@@ -432,9 +446,9 @@ const fmt=ts=>new Date(ts).toLocaleString('es-GT',{day:'numeric',month:'short',h
 const idOk=s=>/^[a-z0-9]{10}$/.test(s||'');
 
 /* ── Hablar con Supabase ──
-   La llave de abajo es la llave PÚBLICA de Supabase (la misma que ya usan las demás páginas del sitio): no es un secreto.
+   La llave (ver CONFIGURACIÓN, arriba) es la llave PÚBLICA de Supabase: no es un secreto.
    Las tablas están cerradas; esta página solo puede llamar a las funciones navidad_*, que revisan la sesión por dentro. */
-const SB='https://ilcreewilnkchvozicyp.supabase.co',KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
+const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
 async function rpc(fn,args){
   try{
     const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+KEY},body:JSON.stringify(args||{}),cache:'no-store'});
@@ -459,7 +473,7 @@ $('#facts1').innerHTML=factsHTML;$('#facts2').innerHTML=factsHTML;
 function gift(c,r,i){return `<svg style="--d:${i*.09}s" viewBox="0 0 64 64"><rect x="8" y="26" width="48" height="32" rx="4" fill="${c}"/><rect x="5" y="18" width="54" height="12" rx="4" fill="${c}" opacity=".85"/><rect x="28" y="18" width="8" height="40" fill="${r}"/><ellipse cx="24" cy="14" rx="9" ry="6" fill="${r}" transform="rotate(-20 24 14)"/><ellipse cx="40" cy="14" rx="9" ry="6" fill="${r}" transform="rotate(20 40 14)"/></svg>`}
 $('#stage').innerHTML=[['#D7263D','#F2B33D'],['#1F8A5B','#fff'],['#F2B33D','#D7263D'],['#2F7FC1','#fff'],['#8E4BC4','#F2B33D']].map(([c,r],i)=>gift(c,r,i)).join('');
 
-/* ── Navegación (direcciones: navidad.html, navidad.html?p=<id> y navidad.html?admin=1) ── */
+/* ── Navegación (direcciones: la raíz del sitio, /?p=<id> y /?admin=1) ── */
 const VIEWS=['listView','gateView','meView','adminView'];
 const TITULO=document.title;   // el acceso directo de la pantalla de inicio se llama como la página: en la tarjeta personal es corto
 function show(view){VIEWS.forEach(v=>$('#'+v).hidden=v!==view);document.title=view==='meView'?'Amigo secreto':TITULO;window.scrollTo(0,0)}
@@ -589,7 +603,7 @@ function startMe(yo){
   if(!store.get(k)){store.set(k,'1');playIntro(yo.nombre,()=>{})}
 }
 /* ── Acceso directo: un pop-up sugiere "Agregar a la pantalla de inicio" (no se descarga ningún archivo) ──
-   Lo que se guarda es la dirección de SU página (navidad.html?p=...): nunca lleva a su amigo secreto y siempre pide la clave. */
+   Lo que se guarda es la dirección de SU página (/?p=...): nunca lleva a su amigo secreto y siempre pide la clave. */
 const enApp=()=>{try{return (typeof matchMedia==='function'&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true}catch(e){return false}};
 function plataforma(){const ua=navigator.userAgent||'';if(/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1))return 'ios';if(/Android/i.test(ua))return 'android';return 'otro'}
 const PASOS={ios:'Toca el botón <b>Compartir</b> (el cuadrito con la flecha ⬆️, abajo en Safari) y elige <b>Agregar a inicio</b>.',android:'Toca los <b>tres puntitos ⋮</b> del navegador (arriba a la derecha) y elige <b>Agregar a la pantalla de inicio</b>.',otro:'Agrega esta página a tus favoritos (<b>Ctrl + D</b>, o <b>Cmd + D</b> en Mac) para volver con un clic.'};
@@ -751,10 +765,13 @@ function renderBoard(){
   const all=est.personas,opened=all.filter(p=>p.raspada_en).length;
   $('#openCount').textContent=`${opened}/${all.length}`;
   $('#openBar').style.width=(all.length?opened/all.length*100:0)+'%';
+  const conIdeas=all.filter(p=>p.ideas>0).length;      // quién ya escribió su lista de regalos (solo se cuenta, nunca se ve lo que escribió)
+  $('#ideasCount').textContent=`${conIdeas}/${all.length}`;
+  $('#ideasBar').style.width=(all.length?conIdeas/all.length*100:0)+'%';
   $('#rows').innerHTML=all.map(p=>{
     const meta=p.raspada_en?`Raspó el ${fmt(p.raspada_en)} · ${p.oculto?'ya no puede ver el nombre':'todavía puede ver el nombre'}`:'Aún no raspa';
     return `<li style="--gc:${COLORS[gi[p.grupo_id]%COLORS.length]}">
-      <span class="nm"><span class="dot"></span>${esc(p.nombre)} ${p.raspada_en?'<span class="chip open sm">🎉</span>':''}</span>
+      <span class="nm"><span class="dot"></span>${esc(p.nombre)} ${p.raspada_en?'<span class="chip open sm">🎉</span>':''} ${p.ideas>0?`<span class="chip ideas sm">📝 ${p.ideas} ${p.ideas===1?'idea':'ideas'}</span>`:'<span class="chip vacio sm">sin lista</span>'}</span>
       <span class="meta">${esc(meta)}</span>
       <span class="acts">${p.oculto?`<button class="link-btn" data-act="permitir" data-p="${esc(p.id)}">Darle acceso otra vez</button>`:''}<button class="link-btn" data-act="reassign" data-p="${esc(p.id)}">Cambiar su amigo secreto</button></span></li>`}).join('');
 }
