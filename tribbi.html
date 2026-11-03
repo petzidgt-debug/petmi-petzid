@@ -470,7 +470,7 @@ $('#emailForm').addEventListener('submit',async e=>{
   const r=await auth('otp',{email:v,create_user:true});
   b.disabled=false;
   if(r.ok){correo=v;$('#codeText').textContent=`Escribe el código que enviamos a ${v}.`;$('#emailForm').hidden=true;$('#codeForm').hidden=false;$('#codeErr').textContent='';$('#codeIn').value='';setTimeout(()=>$('#codeIn').focus(),50);return}
-  err.textContent=r.status===429?'Ya pediste un código hace poco. Espera un minuto y vuelve a intentar.':r.status===0?'Sin conexión. Revisa tu internet.':'No se pudo enviar el código. Intenta de nuevo.';
+  err.textContent=r.status===429?'Se enviaron demasiados códigos. Revisa si ya te llegó uno (también en spam); si no, espera unos minutos y vuelve a intentar.':r.status===0?'Sin conexión. Revisa tu internet.':'No se pudo enviar el código. Intenta de nuevo.';
 });
 $('#codeForm').addEventListener('submit',async e=>{
   e.preventDefault();const v=$('#codeIn').value.replace(/\D/g,''),err=$('#codeErr'),b=$('#codeBtn');
