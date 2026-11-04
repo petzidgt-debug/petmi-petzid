@@ -37,20 +37,12 @@ button,input,select{font:inherit;color:inherit}
 .wrap{max-width:1040px;margin:0 auto;padding:0 22px}
 
 /* Hero: la palabra y el círculo de intercambio */
-.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:center;padding:40px 0 20px}
-.hero h1{font-size:clamp(4rem,15vw,8.5rem);line-height:.85;margin:0;font-weight:700;letter-spacing:-.03em;color:var(--teal)}
+.hero{padding:44px 0 20px}
+@media (max-width:760px){.hero{padding-top:24px}}
+.hero h1{font-size:clamp(4.4rem,18vw,9.5rem);line-height:.85;margin:0;font-weight:700;letter-spacing:-.03em;color:var(--teal)}
 .hero .tag{font-family:"Fredoka",sans-serif;font-size:clamp(1.35rem,4vw,1.9rem);font-weight:600;margin:14px 0 0;line-height:1.15}
 .hero .lead{color:var(--muted);max-width:44ch;margin:14px 0 0;font-size:1.08rem}
-.ring{width:100%;max-width:400px;justify-self:center}
-.ring .arc{fill:none;stroke:var(--muted);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:4 7;opacity:.55}
-.ring .p{transform-box:fill-box;transform-origin:center}
-.ring .center{font-size:46px}
-@media (prefers-reduced-motion:no-preference){
-  .ring .people{animation:turn 1.6s cubic-bezier(.3,.8,.3,1) both}
-  @keyframes turn{from{transform:rotate(-60deg);opacity:0}to{transform:rotate(0);opacity:1}}
-  .ring .people{transform-origin:200px 200px}
-}
-@media (max-width:760px){.hero{grid-template-columns:1fr;padding-top:24px}.ring{max-width:260px;order:-1}}
+
 
 /* Elegir intercambio */
 .pick{margin-top:34px}
@@ -110,28 +102,32 @@ footer a{color:var(--teal);font-weight:700}
 .tb-logo .i b:nth-child(3){left:-.0785em;top:.195em;background:#F2553D}
 .tb-logo .i b:nth-child(4){left:.1585em;top:.195em;background:#F5AF35}
 .tb-logo .i b:nth-child(5){left:.0385em;top:.145em;width:.16em;height:.16em;background:var(--logo);box-shadow:0 0 0 .014em var(--bg)}
+
+/* Animación del logo: el punto sale de la i y luego la tribu sale del punto */
+.tb-logo .i b:nth-child(1){--dx:.2em;--dy:-.075em}
+.tb-logo .i b:nth-child(2){--dx:-.2em;--dy:-.075em}
+.tb-logo .i b:nth-child(3){--dx:.137em;--dy:-.03em}
+.tb-logo .i b:nth-child(4){--dx:-.1em;--dy:-.03em}
+.tb-logo.anim{cursor:pointer}
+.tb-logo.anim .i b{animation:tbsale .75s cubic-bezier(.34,1.56,.64,1) both}
+.tb-logo.anim .i b:nth-child(5){animation:tbpunto .5s cubic-bezier(.34,1.56,.64,1) .2s both}
+.tb-logo.anim .i b:nth-child(3){animation-delay:.6s}
+.tb-logo.anim .i b:nth-child(4){animation-delay:.72s}
+.tb-logo.anim .i b:nth-child(1){animation-delay:.88s}
+.tb-logo.anim .i b:nth-child(2){animation-delay:1s}
+@keyframes tbsale{from{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}30%{opacity:1}to{transform:none;opacity:1}}
+@keyframes tbpunto{from{transform:translateY(.17em) scale(.25);opacity:0}40%{opacity:1}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.tb-logo.anim .i b{animation:none!important}}
 </style>
 </head>
 <body>
 <main class="wrap">
   <header class="hero">
     <div>
-      <h1><span class="tb-logo" role="img" aria-label="Tribbi">Tribb<span class="i" aria-hidden="true">ı<b></b><b></b><b></b><b></b><b></b></span></span></h1>
+      <h1><span class="tb-logo anim" id="logo" role="img" aria-label="Tribbi" title="Tócame">Tribb<span class="i" aria-hidden="true">ı<b></b><b></b><b></b><b></b><b></b></span></span></h1>
       <p class="tag">Intercambios que arman tribu</p>
       <p class="lead">Te inscribes, te toca alguien al azar y le das algo pensado para esa persona. Nosotros organizamos el sorteo y las entregas; tú solo eliges el regalo.</p>
     </div>
-    <svg class="ring" viewBox="0 0 400 400" role="img" aria-label="Seis personas en círculo pasándose regalos y libros">
-      <circle class="arc" cx="200" cy="200" r="130"/>
-      <g class="people">
-        <g transform="translate(200 70)"><circle r="30" fill="#E2483D"/><text y="10" text-anchor="middle" font-size="28">🎁</text></g>
-        <g transform="translate(312.6 135)"><circle r="30" fill="#127A6E"/><text y="10" text-anchor="middle" font-size="28">📚</text></g>
-        <g transform="translate(312.6 265)"><circle r="30" fill="#F3B431"/><text y="10" text-anchor="middle" font-size="28">🎁</text></g>
-        <g transform="translate(200 330)"><circle r="30" fill="#2F7FC1"/><text y="10" text-anchor="middle" font-size="28">📚</text></g>
-        <g transform="translate(87.4 265)"><circle r="30" fill="#8E4BC4"/><text y="10" text-anchor="middle" font-size="28">🎁</text></g>
-        <g transform="translate(87.4 135)"><circle r="30" fill="#E0662A"/><text y="10" text-anchor="middle" font-size="28">📚</text></g>
-      </g>
-      <text class="center" x="200" y="216" text-anchor="middle">🤝</text>
-    </svg>
   </header>
 
   <section class="pick" aria-labelledby="h-pick">
@@ -191,6 +187,7 @@ const CONFIG={
   navidad:'navidad-petmi-2026'
 };
 const $=s=>document.querySelector(s);
+$('#logo').addEventListener('click',e=>{const l=e.currentTarget;l.classList.remove('anim');void l.offsetWidth;l.classList.add('anim')});
 async function rpc(fn,args){
   try{
     const r=await fetch(CONFIG.supabaseUrl+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:CONFIG.supabaseAnonKey,Authorization:'Bearer '+CONFIG.supabaseAnonKey},body:JSON.stringify(args||{})});
