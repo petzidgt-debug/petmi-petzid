@@ -195,7 +195,7 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       <ol id="pasos"></ol>
     </div>
   </div>
-  <footer><span>Una iniciativa de PetMi 🐾</span><button class="link-btn" id="adminLink">Panel de PetMi</button></footer>
+  <footer><span>Una iniciativa de PetMi 🐾 · <a href="./" style="color:inherit">hecho con Tribbi</a></span><button class="link-btn" id="adminLink">Panel de PetMi</button></footer>
 </div>
 
 <!-- ====== ENTRAR CON CÓDIGO POR CORREO ====== -->
@@ -386,7 +386,8 @@ const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
 const ED=ED_URL||CONFIG.edicion;
-const base=()=>location.pathname+(ED_URL?'?e='+ED_URL:'');
+const INV=(new URLSearchParams(location.search).get('i')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');   // invitación (intercambios que no son públicos)
+const base=()=>location.pathname+(ED_URL?'?e='+ED_URL+(INV?'&i='+INV:''):'');
 const reduced=(typeof matchMedia==='function')&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -639,7 +640,7 @@ async function inscribirme(){
   const err=$('#inscErr'),b=$('#inscBtn');
   if(!$('#aceptoIn').checked){err.textContent='Para inscribirte debes aceptar el reglamento.';return}
   b.disabled=true;err.textContent='';
-  const r=await rpc('tribbi_inscribirme',{p_slug:ED,p_acepto_reglamento:true});
+  const r=await rpc('tribbi_inscribirme',{p_slug:ED,p_acepto_reglamento:true,p_invitacion:INV||null});
   if(!r.ok){b.disabled=false;if(r.d.error==='sesion'){borrarSesion();abrirLogin();return}err.textContent=r.d.mensaje||'No se pudo inscribir. Intenta de nuevo.';return}
   if(r.d.estado==='pagada'){await showMe();return}
   await pagar(b,err);

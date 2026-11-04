@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#127A6E">
+<title>Organiza tu amigo secreto | Tribbi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tribbi-comun.css">
+<style>
+.wrap{max-width:860px;margin:0 auto;padding:0 20px 60px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;flex-wrap:wrap}
+.top a{text-decoration:none}
+h1.big{font-size:clamp(2.2rem,8vw,3.4rem);line-height:1;margin:6px 0 4px;color:var(--teal)}
+.lead{color:var(--muted);margin:0 0 18px;max-width:58ch}
+.card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:20px 22px;margin-top:16px}
+.card.go{border-color:var(--teal)}
+.card h2{margin:0 0 6px;font-size:1.35rem}
+.card h3{margin:0;font-size:1.15rem}
+.card p{margin:0 0 10px}
+.cuenta-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.lista{list-style:none;padding:0;margin:12px 0 0}
+.lista li{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px dashed var(--line);padding:10px 0}
+.lista li:first-child{border-top:0}
+.lista small{display:block;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 16px}
+label.f{display:block;font-weight:700;margin:12px 0 0}
+label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
+.modos{display:grid;gap:8px;margin-top:8px}
+.modos label{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer;background:var(--bg)}
+.modos label:has(input:checked){border-color:var(--teal)}
+.modos input{margin-top:4px;accent-color:var(--teal)}
+.modos small{display:block;color:var(--muted)}
+.check{display:flex;gap:10px;align-items:flex-start;margin:14px 0 0;font-weight:600}
+.check input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--teal)}
+.acts{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px}
+.share{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.share code{background:var(--soft);border-radius:10px;padding:8px 12px;font-size:.9rem;overflow-wrap:anywhere;flex:1;min-width:220px}
+.add{display:grid;grid-template-columns:2fr 1.4fr auto;gap:8px;align-items:end;margin-top:10px}
+@media (max-width:560px){.add{grid-template-columns:1fr}}
+.add .tb-field{margin:0}
+.clave{background:var(--soft);border:2px dashed var(--sun);border-radius:16px;padding:14px 16px;margin-top:12px}
+.clave b.k{font-family:"Fredoka",sans-serif;font-size:1.6rem;letter-spacing:.12em}
+.people{list-style:none;padding:0;margin:12px 0 0}
+.people li{display:grid;grid-template-columns:1fr auto;gap:4px 10px;border-top:1px dashed var(--line);padding:10px 0;align-items:center}
+.people li:first-child{border-top:0}
+.people .nm{font-weight:700}
+.people .meta{grid-column:1;font-size:.9rem;color:var(--muted)}
+.people .acts2{grid-row:1/span 2;grid-column:2;display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end}
+.people .grp{width:150px;padding:5px 10px;border-radius:10px;border:2px solid var(--line);background:var(--bg);font-size:.9rem}
+@media (max-width:560px){.people li{grid-template-columns:1fr}.people .acts2{grid-row:auto;grid-column:1;justify-content:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="tb-link" href="./">← Tribbi</a><span><button class="tb-link" id="inicioBtn" hidden>Mis intercambios</button><button class="tb-link" id="salirBtn" hidden>Salir</button></span></div>
+
+  <div id="vLogin" hidden>
+    <h1 class="big">Organiza tu amigo secreto</h1>
+    <p class="lead">Crea tu intercambio, agrega a tu familia o tus amigos y Tribbi hace el sorteo. Es gratis.</p>
+    <div id="login"></div>
+  </div>
+
+  <div id="vPerfil" hidden>
+    <form class="tb-box" id="perfilForm" novalidate>
+      <h1>¿Cómo te llamas?</h1>
+      <p>Así te verán los participantes de tus intercambios.</p>
+      <label>Tu nombre<input class="tb-field" name="nombre" maxlength="40" autocomplete="given-name"></label>
+      <label class="check"><input type="checkbox" name="edad"> Confirmo que soy mayor de 18 años.</label>
+      <p class="tb-err" role="alert"></p>
+      <button class="tb-btn" type="submit">Continuar</button>
+    </form>
+  </div>
+
+  <div id="vInicio" hidden>
+    <h1 class="big">Tus intercambios</h1>
+    <p class="lead">Cada cuenta (por ejemplo, Familia Pérez) puede tener varios intercambios.</p>
+    <div id="cuentas"></div>
+    <form class="card" id="cuentaForm" novalidate>
+      <h2 id="cuentaTit">Crea tu cuenta</h2>
+      <p class="tb-msg">El nombre de tu familia, grupo de amigos u oficina.</p>
+      <div class="add" style="grid-template-columns:1fr auto"><input class="tb-field" name="nombre" maxlength="60" placeholder="Familia Pérez" aria-label="Nombre de la cuenta"><button class="tb-btn" type="submit">Crear</button></div>
+      <p class="tb-err" role="alert"></p>
+    </form>
+  </div>
+
+  <div id="vForm" hidden>
+    <form class="card go" id="exForm" novalidate>
+      <h2 id="exTit">Nuevo intercambio</h2>
+      <p class="tb-msg" id="exCuenta"></p>
+      <div class="grid">
+        <label class="f">Nombre del intercambio<input class="tb-field" name="nombre" maxlength="80" placeholder="Navidad 2026"></label>
+        <label class="f">Presupuesto del regalo (Q)<input class="tb-field" name="presupuesto_q" type="number" min="1" step="1" placeholder="150"></label>
+        <label class="f">Día y hora del intercambio<small>Opcional</small><input class="tb-field" name="evento_fecha" type="datetime-local"></label>
+        <label class="f">Lugar<small>Opcional</small><input class="tb-field" name="evento_lugar" maxlength="120" placeholder="Casa de la abuela"></label>
+      </div>
+      <p class="f" style="font-weight:700;margin:16px 0 0">¿Cómo entran los participantes?</p>
+      <div class="modos">
+        <label><input type="radio" name="modo" value="clave" checked><span>Yo los agrego<small>Escribes los nombres y le mandas a cada quien su clave. Ideal para familias, también con niños.</small></span></label>
+        <label><input type="radio" name="modo" value="correo"><span>Cada quien se une con su correo<small>Compartes un enlace y cada quien se inscribe solo.</small></span></label>
+        <label><input type="radio" name="modo" value="ambos"><span>Las dos formas<small>Agregas a algunos y otros se unen con el enlace.</small></span></label>
+      </div>
+      <div class="grid">
+        <label class="f">Mínimo de ideas de regalo<small>0 si no quieres pedirlas</small><input class="tb-field" name="min_ideas" type="number" min="0" max="20" step="1" value="1"></label>
+        <label class="f" id="cierreLbl">Cierre de inscripciones<small>Opcional. Después, nadie más se puede unir.</small><input class="tb-field" name="inscripcion_hasta" type="datetime-local"></label>
+      </div>
+      <label class="f">Reglas<small>Opcional. Una por línea.</small><textarea class="tb-field" name="reglas" rows="3" placeholder="Nada de dinero en efectivo"></textarea></label>
+      <div id="envioBox">
+        <label class="check"><input type="checkbox" name="con_envio"> <span>Que el mensajero de PetMi recoja y entregue los regalos<br><small class="tb-msg" style="font-weight:400">Cada participante paga Q35 de envío y deja su dirección. Solo en el área de entrega de PetMi. Requiere que cada quien entre con su correo.</small></span></label>
+        <label class="f" id="entregaLbl" hidden>Límite para entregar los regalos a PetMi<input class="tb-field" name="entrega_hasta" type="datetime-local"></label>
+      </div>
+      <p class="tb-err" id="exErr" role="alert"></p>
+      <div class="acts"><button class="tb-btn" type="submit" id="exGuardar">Guardar</button><button class="tb-link" type="button" id="exCancelar">Cancelar</button></div>
+    </form>
+  </div>
+
+  <div id="vGestion" hidden>
+    <h1 class="big" id="gTit"></h1>
+    <p class="lead" id="gSub"></p>
+    <div class="facts" id="gChips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    <button class="tb-link" id="gEditar" style="margin-top:6px">Editar el intercambio</button>
+
+    <div class="card go" id="gInvita">
+      <h2>Invita a los participantes</h2>
+      <p class="tb-msg" id="gInvitaTxt"></p>
+      <div class="share"><code id="gLink"></code><button class="tb-btn sm" id="gCopiar">Copiar enlace</button></div>
+      <div class="acts" style="margin-top:10px"><a class="tb-link" id="gWa" target="_blank" rel="noopener">Compartir por WhatsApp</a><button class="tb-link" id="gNuevaInv">Cambiar el enlace</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Participantes</h2>
+      <p class="tb-msg">Escribe el mismo <b>grupo</b> para quienes no deben regalarse entre sí (por ejemplo, una pareja o hermanos). Déjalo vacío si no importa.</p>
+      <form class="add" id="addForm" novalidate>
+        <label>Nombre<input class="tb-field" name="nombre" maxlength="40" placeholder="Tío Juan"></label>
+        <label>Grupo (opcional)<input class="tb-field" name="grupo" maxlength="30" placeholder="Juan y Rosa"></label>
+        <button class="tb-btn" type="submit">Agregar</button>
+      </form>
+      <p class="tb-err" id="addErr" role="alert"></p>
+      <div id="claveBox"></div>
+      <ul class="people" id="gPeople"></ul>
+      <p class="tb-msg" id="gCount"></p>
+    </div>
+
+    <div class="card">
+      <h2>Sorteo</h2>
+      <p class="tb-msg" id="gSorteoTxt"></p>
+      <button class="tb-btn coral" id="gSortear">Hacer el sorteo</button>
+      <p class="tb-msg" id="gSorteoMsg" role="status"></p>
+    </div>
+  </div>
+</div>
+
+<script src="tribbi-comun.js"></script>
+<script>
+(function(){
+'use strict';
+const T=window.Tribbi,{$,esc,dia,diaHora,q,rpc}=T;
+const V=['vLogin','vPerfil','vInicio','vForm','vGestion'];
+const show=v=>{V.forEach(x=>$('#'+x).hidden=x!==v);$('#inicioBtn').hidden=v==='vInicio'||v==='vLogin'||v==='vPerfil';window.scrollTo(0,0)};
+const urlBase=()=>location.origin+location.pathname.replace(/[^/]*$/,'');
+let data=null,actual=null,cuentaForm=null,editando=null;
+const sesion=r=>{if(r.d.error==='sesion'){T.borrarSesion();abrirLogin();return true}return false};
+const ir=(qs)=>{history.pushState(null,'',location.pathname+qs);ruta()};
+window.addEventListener('popstate',()=>ruta());
+$('#inicioBtn').onclick=()=>ir('');
+$('#salirBtn').onclick=async()=>{await T.salir();abrirLogin()};
+
+function abrirLogin(){$('#salirBtn').hidden=true;show('vLogin');T.montarLogin($('#login'),{titulo:'Entra con tu correo',onEntrar:ruta})}
+async function ruta(){
+  if(!await T.token()){abrirLogin();return}
+  $('#salirBtn').hidden=false;
+  const r=await rpc('tribbi_mis_cuentas');
+  if(!r.ok){if(sesion(r))return;show('vInicio');$('#cuentas').innerHTML=`<p class="tb-msg bad">${esc(r.d.error==='falta_sql'?'Falta correr 5_cuentas_y_amigo_general.sql en Supabase.':r.d.mensaje||'No se pudo cargar.')}</p>`;return}
+  data=r.d;
+  if(!data.perfil){show('vPerfil');return}
+  const p=new URLSearchParams(location.search);
+  if(p.get('e')){await abrirGestion(p.get('e'));return}
+  if(p.get('nuevo')){abrirForm(p.get('nuevo'),null);return}
+  pintarInicio();
+}
+$('#perfilForm').addEventListener('submit',async e=>{
+  e.preventDefault();const f=e.target,err=f.querySelector('.tb-err');
+  const r=await rpc('tribbi_guardar_nombre',{p_nombre:f.nombre.value,p_nombre_publico:f.nombre.value,p_mayor_edad:f.edad.checked});
+  if(r.ok){ruta();return}if(!sesion(r))err.textContent=r.d.mensaje||'No se pudo guardar.';
+});
+
+/* ── Inicio: cuentas e intercambios ── */
+function pintarInicio(){
+  show('vInicio');const cs=data.cuentas;
+  $('#cuentaTit').textContent=cs.length?'Crea otra cuenta':'Crea tu cuenta';
+  $('#cuentas').innerHTML=cs.map(c=>`<div class="card">
+    <div class="cuenta-h"><h2>${esc(c.nombre)}${c.white_label?' <span class="tb-chip warn">Marca propia</span>':''}</h2><button class="tb-btn sm" data-nuevo="${esc(c.slug)}">+ Nuevo intercambio</button></div>
+    ${c.intercambios.length?`<ul class="lista">${c.intercambios.map(x=>`<li><span><b>${esc(x.nombre)}</b><small>${x.evento_fecha?esc(diaHora(x.evento_fecha))+' · ':''}${Number(x.participantes)} participantes · ${x.sorteo_hecho?'sorteo hecho':'sin sortear'}${x.con_envio?' · con envío':''}</small></span>
+      <button class="tb-link" data-abrir="${esc(x.slug)}">Abrir</button></li>`).join('')}</ul>`:'<p class="tb-msg">Todavía no tiene intercambios.</p>'}</div>`).join('');
+}
+$('#cuentas').addEventListener('click',e=>{const n=e.target.closest('[data-nuevo]'),a=e.target.closest('[data-abrir]');if(n)ir('?nuevo='+encodeURIComponent(n.dataset.nuevo));if(a)ir('?e='+encodeURIComponent(a.dataset.abrir))});
+$('#cuentaForm').addEventListener('submit',async e=>{
+  e.preventDefault();const f=e.target,err=f.querySelector('.tb-err');err.textContent='';
+  const r=await rpc('tribbi_cuenta_crear',{p_nombre:f.nombre.value});
+  if(r.ok){f.reset();ir('?nuevo='+encodeURIComponent(r.d.slug));return}if(!sesion(r))err.textContent=r.d.mensaje||'No se pudo crear.';
+});
+
+/* ── Crear o editar un intercambio ── */
+const fx=$('#exForm');
+function syncForm(){
+  const modo=fx.modo.value;$('#envioBox').hidden=modo!=='correo';if(modo!=='correo')fx.con_envio.checked=false;
+  $('#entregaLbl').hidden=!fx.con_envio.checked;$('#cierreLbl').hidden=modo==='clave';
+}
+fx.addEventListener('change',syncForm);
+function abrirForm(cuenta,ex){
+  cuentaForm=cuenta;editando=ex;fx.reset();$('#exErr').textContent='';
+  const c=data.cuentas.find(x=>x.slug===cuenta);$('#exCuenta').textContent=c?`Cuenta: ${c.nombre}`:'';
+  $('#exTit').textContent=ex?`Editar: ${ex.nombre}`:'Nuevo intercambio';
+  if(ex){fx.nombre.value=ex.nombre;fx.presupuesto_q.value=Number(ex.presupuesto_q);fx.evento_fecha.value=T.aLocal(ex.evento_fecha);fx.evento_lugar.value=ex.evento_lugar||'';
+    fx.modo.value=ex.modo_ingreso;fx.min_ideas.value=ex.min_ideas;fx.inscripcion_hasta.value=T.aLocal(ex.inscripcion_hasta);fx.reglas.value=(ex.reglas||[]).join('\n');
+    fx.con_envio.checked=ex.con_envio;fx.entrega_hasta.value=ex.con_envio?T.aLocal(ex.entrega_hasta):''}
+  syncForm();show('vForm');fx.nombre.focus();
+}
+$('#exCancelar').onclick=()=>history.back();
+fx.addEventListener('submit',async e=>{
+  e.preventDefault();const b=$('#exGuardar');b.disabled=true;$('#exErr').textContent='';
+  const d={slug:editando?editando.slug:null,nombre:fx.nombre.value,presupuesto_q:fx.presupuesto_q.value,evento_fecha:T.deLocal(fx.evento_fecha.value),evento_lugar:fx.evento_lugar.value,
+    modo_ingreso:fx.modo.value,min_ideas:fx.min_ideas.value||0,inscripcion_hasta:T.deLocal(fx.inscripcion_hasta.value),reglas:fx.reglas.value.split('\n').map(s=>s.trim()).filter(Boolean),
+    con_envio:fx.con_envio.checked,entrega_hasta:T.deLocal(fx.entrega_hasta.value)};
+  const r=await rpc('tribbi_org_guardar',{p_cuenta:cuentaForm,p_datos:d});b.disabled=false;
+  if(r.ok){history.replaceState(null,'',location.pathname+'?e='+encodeURIComponent(r.d.slug));actual=r.d;pintarGestion();return}
+  if(!sesion(r))$('#exErr').textContent=r.d.mensaje||'No se pudo guardar.';
+});
+
+/* ── Gestionar un intercambio ── */
+async function abrirGestion(slug){
+  const r=await rpc('tribbi_org_intercambio',{p_slug:slug});
+  if(!r.ok){if(sesion(r))return;pintarInicio();$('#cuentas').insertAdjacentHTML('afterbegin',`<p class="tb-msg bad">${esc(r.d.error==='admin'?'No tienes acceso a ese intercambio.':r.d.mensaje||'No se pudo abrir.')}</p>`);return}
+  actual=r.d;pintarGestion();
+}
+const linkPart=()=>urlBase()+(actual.con_envio?'tribbi.html':'amigo-secreto.html')+'?e='+encodeURIComponent(actual.slug)+'&i='+encodeURIComponent(actual.invitacion);
+function pintarGestion(){
+  const x=actual,c=x.cuenta||{};show('vGestion');
+  $('#gTit').textContent=x.nombre;
+  $('#gSub').textContent=[c.nombre,x.evento_fecha?diaHora(x.evento_fecha):'',x.evento_lugar].filter(Boolean).join(' · ');
+  const modos={clave:'Tú agregas a los participantes',correo:'Cada quien se une con su correo',ambos:'Las dos formas'};
+  $('#gChips').innerHTML=`<span class="tb-chip">🎁 ${q(x.presupuesto_q)}</span><span class="tb-chip">${esc(modos[x.modo_ingreso])}</span>${x.con_envio?'<span class="tb-chip warn">🚚 Envío PetMi Q35</span>':''}${x.sorteo_hecho?'<span class="tb-chip ok">Sorteo hecho</span>':''}`;
+  const link=linkPart();$('#gLink').textContent=link;
+  $('#gInvitaTxt').textContent=x.modo_ingreso==='correo'?'Comparte este enlace. Cada quien entra con su correo y se une.':x.modo_ingreso==='clave'?'Comparte este enlace. Cada quien elige su nombre y escribe la clave que le mandes (la ves al agregarlo).':'Comparte este enlace. Quienes agregaste entran con su clave; los demás se unen con su correo.';
+  const msg=`🎁 ¡Ya está el amigo secreto «${x.nombre}»!${x.evento_fecha?` Nos vemos el ${diaHora(x.evento_fecha)}`:''}${x.evento_lugar?` en ${x.evento_lugar}`:''}. Presupuesto: ${q(x.presupuesto_q)}. Entra aquí: ${link}`;
+  $('#gWa').href='https://wa.me/?text='+encodeURIComponent(msg);
+  $('#addForm').hidden=x.modo_ingreso==='correo'||x.sorteo_hecho;$('#addErr').textContent='';$('#claveBox').innerHTML='';
+  pintarGente();
+}
+function pintarGente(){
+  const x=actual,l=x.participantes,s=x.sorteo_hecho;
+  const est={pagada:'',pendiente_pago:' · falta pagar el envío',excluida:' · excluida'};
+  $('#gPeople').innerHTML=l.length?l.map(p=>`<li><span class="nm">${esc(p.nombre)}${p.descubrio?' <span class="tb-chip ok">Ya descubrió</span>':''}</span>
+    <span class="meta">${p.tipo==='clave'?'Entra con clave':'Se unió con su correo'} · ${Number(p.ideas)} ${Number(p.ideas)===1?'idea':'ideas'}${esc(est[p.estado]||'')}</span>
+    <span class="acts2"><input class="grp" data-grupo="${esc(p.id)}" value="${esc(p.grupo||'')}" placeholder="Grupo" maxlength="30" aria-label="Grupo de ${esc(p.nombre)}" ${s?'disabled':''}>
+      ${p.tipo==='clave'?`<button class="tb-link" data-clave="${esc(p.id)}" data-nombre="${esc(p.nombre)}">Nueva clave</button>`:''}${s?'':`<button class="tb-link bad" data-quitar="${esc(p.id)}" data-nombre="${esc(p.nombre)}">Quitar</button>`}</span></li>`).join('')
+    :'<p class="tb-msg">Todavía no hay participantes.</p>';
+  const ok=l.filter(p=>p.estado==='pagada'),sinIdeas=ok.filter(p=>p.ideas<x.min_ideas).length;
+  $('#gCount').textContent=l.length?`${l.length} participantes${sinIdeas?` · ${sinIdeas} todavía sin ${x.min_ideas===1?'su idea':'sus ideas'}`:''}.`:'';
+  const des=l.filter(p=>p.descubrio).length;
+  $('#gSorteoTxt').textContent=s?`Listo. ${des} de ${l.length} ya descubrieron a su amigo secreto.${des?'':' Mientras nadie lo haya descubierto, puedes volver a sortear.'}`
+    :`Cuando estén todos, haz el sorteo. Nadie queda con alguien de su mismo grupo.${x.min_ideas?` Solo entran quienes tengan al menos ${x.min_ideas} ${x.min_ideas===1?'idea':'ideas'}.`:''}`;
+  $('#gSortear').textContent=s?'Volver a sortear':'Hacer el sorteo';$('#gSortear').hidden=s&&des>0;
+}
+function mostrarClave(nombre,clave){
+  const link=linkPart(),msg=`Hola ${nombre} 🎁 Ya está el amigo secreto «${actual.nombre}». Entra aquí: ${link} — elige tu nombre y escribe tu clave: ${clave}. ¡No se la compartas a nadie!`;
+  $('#claveBox').innerHTML=`<div class="clave" role="status"><p>Clave de <b>${esc(nombre)}</b>: <b class="k">${esc(clave)}</b></p>
+    <p class="tb-msg">Mándasela ahora: por seguridad no se vuelve a mostrar. Si se pierde, genera una nueva.</p>
+    <div class="acts" style="margin-top:6px"><button class="tb-btn sm" id="copiarMsg">Copiar mensaje</button><a class="tb-link" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Enviar por WhatsApp</a></div></div>`;
+  $('#copiarMsg').onclick=e=>T.copiar(msg,e.target);
+}
+$('#gEditar').onclick=()=>{const c=actual.cuenta;abrirForm(c?c.slug:null,actual)};
+$('#gCopiar').onclick=e=>T.copiar($('#gLink').textContent,e.target);
+$('#gNuevaInv').onclick=async()=>{
+  if(!confirm('¿Cambiar el enlace? El enlace anterior dejará de funcionar y tendrás que compartir el nuevo.'))return;
+  const r=await rpc('tribbi_org_nueva_invitacion',{p_slug:actual.slug});if(r.ok){actual.invitacion=r.d.invitacion;pintarGestion()}else if(!sesion(r))alert(r.d.mensaje||'No se pudo cambiar.');
+};
+$('#addForm').addEventListener('submit',async e=>{
+  e.preventDefault();const f=e.target,err=$('#addErr');err.textContent='';
+  const r=await rpc('tribbi_org_participante',{p_slug:actual.slug,p_id:null,p_nombre:f.nombre.value,p_grupo:f.grupo.value});
+  if(!r.ok){if(!sesion(r))err.textContent=r.d.mensaje||'No se pudo agregar.';return}
+  const g=f.grupo.value;f.reset();f.grupo.value=g;f.nombre.focus();
+  const r2=await rpc('tribbi_org_intercambio',{p_slug:actual.slug});if(r2.ok){actual=r2.d;pintarGente()}
+  mostrarClave(r.d.nombre,r.d.clave);
+});
+$('#gPeople').addEventListener('change',async e=>{
+  const i=e.target.closest('[data-grupo]');if(!i)return;
+  const p=actual.participantes.find(x=>x.id===i.dataset.grupo);
+  const r=await rpc('tribbi_org_participante',{p_slug:actual.slug,p_id:p.id,p_nombre:p.nombre,p_grupo:i.value});
+  if(r.ok)p.grupo=i.value;else if(!sesion(r)){alert(r.d.mensaje||'No se pudo guardar.');i.value=p.grupo||''}
+});
+$('#gPeople').addEventListener('click',async e=>{
+  const c=e.target.closest('[data-clave]'),qq=e.target.closest('[data-quitar]');
+  if(c){if(!confirm(`¿Generar una clave nueva para ${c.dataset.nombre}? La anterior deja de funcionar.`))return;
+    const r=await rpc('tribbi_org_nueva_clave',{p_slug:actual.slug,p_id:c.dataset.clave});
+    if(r.ok){mostrarClave(c.dataset.nombre,r.d.clave);$('#claveBox').scrollIntoView({block:'center'})}else if(!sesion(r))alert(r.d.mensaje||'No se pudo.')}
+  if(qq){if(!confirm(`¿Quitar a ${qq.dataset.nombre} del intercambio?`))return;
+    const r=await rpc('tribbi_org_quitar',{p_slug:actual.slug,p_id:qq.dataset.quitar});
+    if(r.ok){const r2=await rpc('tribbi_org_intercambio',{p_slug:actual.slug});if(r2.ok){actual=r2.d;pintarGente()}}else if(!sesion(r))alert(r.d.mensaje||'No se pudo quitar.')}
+});
+$('#gSortear').onclick=async()=>{
+  const m=$('#gSorteoMsg');if(!confirm(actual.sorteo_hecho?'¿Volver a sortear? Cambian todas las asignaciones.':'¿Hacer el sorteo ahora?'))return;
+  m.className='tb-msg';m.textContent='Sorteando…';
+  const r=await rpc('tribbi_admin_sortear',{p_slug:actual.slug});
+  if(r.ok){m.className='tb-msg ok';m.textContent=`¡Listo! ${r.d.participantes} personas ya pueden descubrir a su amigo secreto.${r.d.fuera?` ${r.d.fuera} quedaron fuera por no tener ideas.`:''}`;T.confetti();
+    const r2=await rpc('tribbi_org_intercambio',{p_slug:actual.slug});if(r2.ok){actual=r2.d;pintarGestion();$('#gSorteoMsg').className='tb-msg ok';$('#gSorteoMsg').textContent=m.textContent}}
+  else if(!sesion(r)){m.className='tb-msg bad';m.textContent=r.d.mensaje||'No se pudo sortear.'}
+};
+
+ruta();
+})();
+</script>
+</body>
+</html>

@@ -130,11 +130,11 @@ footer a{color:var(--teal);font-weight:700}
       <article class="opt navidad">
         <div class="band" aria-hidden="true"></div>
         <div class="ico" aria-hidden="true">🎄</div>
-        <h3>Amigo Secreto Navideño</h3>
-        <p class="sub">Con la comunidad PetMi</p>
-        <p>Un solo gran intercambio entre todos los inscritos. Recibes tu regalo en casa antes de Navidad, y si tu amigo secreto falla, el Ángel de Rescate de PetMi te envía uno.</p>
-        <div class="chips" id="navChips"><span class="chip">🎁 Regalo de Q75</span><span class="chip">🚚 Envío Q35</span></div>
-        <div class="push"><a class="btn coral" href="tribbi.html">Ir al amigo secreto</a></div>
+        <h3>Amigo Secreto</h3>
+        <p class="sub">Para tu familia, tus amigos o tu oficina</p>
+        <p>Crea tu intercambio en un minuto: agregas a la gente (también a los niños) o compartes un enlace, pones el presupuesto y Tribbi hace el sorteo. Nadie queda con su pareja si así lo indicas.</p>
+        <div class="chips"><span class="chip live">Gratis</span><span class="chip">🔒 Sin que nadie vea el sorteo</span><span class="chip">🚚 Envío opcional</span></div>
+        <div class="push"><a class="btn coral" href="organizar.html">Crear mi amigo secreto</a></div>
       </article>
 
       <article class="opt bookpal">
@@ -162,9 +162,9 @@ footer a{color:var(--teal);font-weight:700}
   <section class="how" aria-labelledby="h-how">
     <h2 id="h-how">Así funciona</h2>
     <ol class="steps">
-      <li><b>Te inscribes</b><span>Con tu correo, sin contraseñas. Nos cuentas qué te gusta para que acierten contigo.</span></li>
+      <li><b>Arma tu intercambio</b><span>Agregas a la gente o compartes un enlace. Cada quien deja sus ideas de regalo.</span></li>
       <li><b>Te toca alguien</b><span>El sorteo es al azar. Descubres a tu persona raspando una tarjeta y ves sus ideas.</span></li>
-      <li><b>PetMi entrega</b><span>Dejas tu regalo o libro marcado con tu código y el mensajero lo lleva a domicilio.</span></li>
+      <li><b>Se entrega</b><span>En persona el día del intercambio, o con el mensajero de PetMi si activas el envío.</span></li>
     </ol>
   </section>
 </main>
@@ -189,15 +189,6 @@ async function rpc(fn,args){
 }
 const dia=s=>new Date(s).toLocaleDateString('es-GT',{day:'numeric',month:'long',timeZone:'America/Guatemala'});
 const q=n=>'Q'+Number(n||0).toLocaleString('es-GT');
-
-/* Datos en vivo del Amigo Secreto (si no cargan, se quedan los de arriba) */
-rpc('tribbi_edicion',{p_slug:CONFIG.navidad}).then(r=>{
-  if(!r.ok)return;const e=r.d,ahora=new Date();
-  const estado=e.inscripciones_abiertas?'<span class="chip live">Inscripciones abiertas</span>'
-    :ahora<new Date(e.inscripcion_desde)?`<span class="chip">Inscripciones desde el ${dia(e.inscripcion_desde)}</span>`
-    :e.sorteo_hecho?'<span class="chip">Sorteo hecho</span>':'<span class="chip">Inscripciones cerradas</span>';
-  $('#navChips').innerHTML=`${estado}<span class="chip">🎁 Regalo de ${q(e.presupuesto_q)}</span><span class="chip">🚚 Envío ${q(e.envio_q)}</span>`;
-});
 
 /* Lista de espera de BookPal */
 $('#waitForm').addEventListener('submit',async ev=>{
