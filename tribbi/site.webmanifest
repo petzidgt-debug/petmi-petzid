@@ -1,0 +1,22 @@
+{
+  "name": "Tribbi",
+  "short_name": "Tribbi",
+  "description": "Intercambios que arman tribu.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0E2229",
+  "theme_color": "#0E2229",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
