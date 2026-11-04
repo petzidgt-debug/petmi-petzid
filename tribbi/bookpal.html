@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#127A6E">
+<title>BookPal | Intercambio de libros de Tribbi</title>
+<meta name="description" content="BookPal: envía un libro que ya leíste a alguien que le va a gustar y recibe uno de otra persona. Con Tribbi y PetMi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tribbi-comun.css">
+<style>
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px 60px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;flex-wrap:wrap}
+.top a{text-decoration:none}
+.hero{padding:10px 0 6px}
+.hero h1{font-size:clamp(3rem,11vw,5.6rem);line-height:.9;margin:0;color:var(--teal);letter-spacing:-.02em}
+.hero p{color:var(--muted);max-width:52ch;margin:12px 0 0;font-size:1.06rem}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tabs{display:flex;gap:6px;margin:26px 0 0;border-bottom:3px solid var(--line)}
+.tabs button{border:0;background:none;font-family:"Fredoka",sans-serif;font-size:1.15rem;font-weight:600;color:var(--muted);padding:10px 16px;cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-3px}
+.tabs button[aria-current="page"]{color:var(--teal);border-bottom-color:var(--teal)}
+
+/* Estantería: cada fila de libros descansa sobre una repisa */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:18px 0 6px}
+.filters label{font-weight:700;font-size:.92rem}
+.filters .tb-field{width:auto;min-width:180px}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:30px 18px;margin-top:16px;padding:0 10px 14px;overflow:hidden}
+.book::after{content:"";position:absolute;left:-23px;right:-11px;bottom:-14px;height:9px;background:#B7834C;border-radius:2px}
+.book{background:var(--card);border:2px solid var(--line);border-left:12px solid var(--spine);border-radius:6px 16px 16px 6px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:6px;min-height:220px;position:relative}
+.book h3{margin:0;font-size:1.12rem;line-height:1.2;overflow-wrap:anywhere}
+.book .autor{color:var(--muted);font-size:.93rem;margin:-2px 0 2px}
+.book .meta{display:flex;flex-wrap:wrap;gap:6px}
+.book .nota{font-size:.9rem;color:var(--muted);margin:0}
+.book .pie{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.heart{border:2px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 12px;font-weight:700;cursor:pointer;font-size:.9rem}
+.heart[aria-pressed="true"]{background:var(--coral);border-color:var(--coral);color:#fff}
+.mine{font-size:.85rem;color:var(--muted);font-weight:700}
+.empty{color:var(--muted);background:var(--soft);border-radius:14px;padding:14px 16px;margin-top:16px}
+
+/* Mi BookPal */
+.panel{max-width:720px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:20px 22px;margin-top:18px}
+.card.go{border-color:var(--teal)}
+.card.warn{border-color:var(--coral);background:var(--miss)}
+.card h2{margin:0 0 6px;font-size:1.35rem}
+.card p{margin:0 0 10px}
+.step{display:flex;gap:12px;align-items:baseline}
+.step .n{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--sun);color:#3A2A00;font-family:"Fredoka",sans-serif;font-weight:700}
+.step.ok .n{background:var(--teal);color:#fff}
+.picks{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
+.picks label{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer;font-weight:600;background:var(--bg)}
+.picks input{accent-color:var(--teal)}
+.picks label:has(input:checked){border-color:var(--teal);background:var(--soft)}
+.sub{font-weight:700;margin:14px 0 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 14px}
+.grid label{display:block;font-weight:700;margin:10px 0 0}
+.mylist{list-style:none;padding:0;margin:10px 0 0}
+.mylist li{display:flex;justify-content:space-between;gap:10px;align-items:center;border:2px solid var(--line);border-left:10px solid var(--spine);border-radius:6px 14px 14px 6px;padding:8px 10px 8px 14px;margin-bottom:8px;background:var(--bg)}
+.mylist small{display:block;color:var(--muted)}
+.tag{display:inline-block;font-family:"Fredoka",sans-serif;font-weight:700;font-size:1.3rem;letter-spacing:.06em;background:var(--soft);border:2px dashed var(--sun);border-radius:12px;padding:4px 14px;margin:2px 0 8px}
+.opts{list-style:none;padding:0;margin:10px 0 0}
+.opts label{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px;cursor:pointer;background:var(--bg)}
+.opts label:has(input:checked){border-color:var(--teal)}
+.opts input{margin-top:5px;accent-color:var(--teal)}
+details.rules{margin-top:12px;background:var(--soft);border-radius:14px;padding:10px 14px}
+details.rules summary{cursor:pointer;font-weight:700}
+details.rules ol{padding-left:1.3em;margin:10px 0 4px;font-size:.95rem}
+.check{display:flex;gap:10px;align-items:flex-start;margin:14px 0 0;font-weight:600}
+.check input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--teal)}
+footer{max-width:1040px;margin:30px auto 0;padding:18px 20px 36px;color:var(--muted);border-top:2px dashed var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.95rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a href="./" class="tb-link">← Tribbi</a><span><button class="tb-link" id="salirBtn" hidden>Salir</button></span></div>
+  <header class="hero">
+    <h1>BookPal</h1>
+    <p>Envías un libro que ya leíste a alguien que le va a gustar, y recibes uno de otra persona. Sin fechas: entras cuando quieras. También hay libros para niños.</p>
+    <div class="chips" id="heroChips"><span class="tb-chip">📖 De 1 a 3 libros</span><span class="tb-chip">🚚 Entrega PetMi</span></div>
+  </header>
+  <nav class="tabs" aria-label="Secciones">
+    <button data-tab="estanteria" aria-current="page">Estantería</button>
+    <button data-tab="mio">Mi BookPal</button>
+  </nav>
+
+  <!-- ═══ ESTANTERÍA ═══ -->
+  <section data-panel="estanteria" aria-label="Estantería">
+    <div class="filters">
+      <label>Género<br><select class="tb-field" id="fGenero"><option value="">Todos</option></select></label>
+      <label>Para<br><select class="tb-field" id="fPublico"><option value="">Todos</option></select></label>
+      <span class="tb-msg" id="likesInfo"></span>
+    </div>
+    <p class="tb-msg bad" id="estErr" hidden role="alert"></p>
+    <div class="shelf" id="shelf"></div>
+  </section>
+
+  <!-- ═══ MI BOOKPAL ═══ -->
+  <section data-panel="mio" class="panel" hidden aria-label="Mi BookPal">
+    <div id="login"></div>
+    <div id="mio" hidden>
+      <div id="estado"></div>
+
+      <div class="card" id="cDatos">
+        <div class="step" id="sDatos"><span class="n">1</span><h2>Tus datos de entrega</h2></div>
+        <p id="datosResumen" class="tb-msg"></p>
+        <form id="datosForm" hidden novalidate>
+          <p class="tb-msg">Tu amigo lector solo verá el nombre que elijas y tus gustos. Tu dirección y tu teléfono solo los ve PetMi, para la entrega.</p>
+          <div class="grid">
+            <label>Nombre completo<input class="tb-field" name="nombre" autocomplete="name" maxlength="80"></label>
+            <label>Nombre que verá tu BookPal<input class="tb-field" name="publico" maxlength="40" placeholder="Ana, o Ana y Mateo 📚"></label>
+            <label>WhatsApp<input class="tb-field" name="wa" type="tel" autocomplete="tel" maxlength="20"></label>
+            <label>Municipio<input class="tb-field" name="mun" maxlength="60"></label>
+            <label>Zona<input class="tb-field" name="zona" maxlength="20"></label>
+          </div>
+          <label class="sub">Dirección de entrega<textarea class="tb-field" name="dir" maxlength="300" autocomplete="street-address" placeholder="Calle, número, colonia y una referencia"></textarea></label>
+          <p class="tb-tiny" id="dirNota" hidden style="text-align:left">Ya tenemos tu dirección. Escríbela solo si quieres cambiarla.</p>
+          <label class="check"><input type="checkbox" name="edad"> Confirmo que soy mayor de 18 años. Si participo por un niño, lo hago como su madre, padre o encargado.</label>
+          <p class="tb-err" id="datosErr" role="alert"></p>
+          <button class="tb-btn" type="submit">Guardar mis datos</button>
+        </form>
+        <button class="tb-link" id="datosEditar" hidden>Editar mis datos</button>
+      </div>
+
+      <div class="card" id="cLector">
+        <div class="step" id="sLector"><span class="n">2</span><h2>Tu perfil lector</h2></div>
+        <form id="lectorForm" novalidate>
+          <p class="sub">¿Para quién son los libros que quieres recibir?</p>
+          <div class="picks"><label><input type="checkbox" name="adultos"> Para mí</label></div>
+          <div class="picks" id="pEdades"></div>
+          <p class="sub">Géneros que te gustan</p>
+          <div class="picks"><label><input type="checkbox" name="sorprendeme"> ✨ Sorpréndeme</label></div>
+          <div class="picks" id="pGeneros"></div>
+          <p class="sub">Lo que no quieres recibir <span class="tb-tiny">(opcional)</span></p>
+          <div class="picks" id="pNo"></div>
+          <p class="tb-err" id="lectorErr" role="alert"></p>
+          <button class="tb-btn" type="submit">Guardar mi perfil lector</button> <span class="tb-msg" id="lectorMsg" role="status"></span>
+        </form>
+      </div>
+
+      <div class="card" id="cEstante">
+        <div class="step" id="sEstante"><span class="n">3</span><h2>Mi estante</h2></div>
+        <p class="tb-msg" id="estanteInfo"></p>
+        <ul class="mylist" id="misLibros"></ul>
+        <button class="tb-link" id="libroNuevo">+ Agregar un libro</button>
+        <form id="libroForm" hidden novalidate>
+          <div class="grid">
+            <label>Título<input class="tb-field" name="titulo" maxlength="120"></label>
+            <label>Autor<input class="tb-field" name="autor" maxlength="80"></label>
+            <label>Género<select class="tb-field" name="genero"></select></label>
+            <label>Es para<select class="tb-field" name="publico"></select></label>
+            <label>Estado<select class="tb-field" name="condicion"></select></label>
+          </div>
+          <label class="sub">Nota <span class="tb-tiny">(opcional: tiene subrayados, dedicatoria, etc.)</span><input class="tb-field" name="nota" maxlength="200"></label>
+          <p class="tb-err" id="libroErr" role="alert"></p>
+          <button class="tb-btn" type="submit" id="libroGuardar">Guardar libro</button> <button class="tb-link" type="button" id="libroCancelar">Cancelar</button>
+        </form>
+      </div>
+
+      <div class="card" id="cParticipar">
+        <div class="step"><span class="n">4</span><h2>Participa</h2></div>
+        <div id="participar"></div>
+      </div>
+    </div>
+  </section>
+</div>
+<footer><span>BookPal · Tribbi y PetMi 🐾</span><a href="./">Volver a Tribbi</a></footer>
+
+<script src="tribbi-comun.js"></script>
+<script>
+(function(){
+'use strict';
+const T=window.Tribbi,{$,esc,q,rpc,GENEROS,PUBLICO,CONDICION}=T;
+const qs=new URLSearchParams(location.search);
+const SPINES=['#E2483D','#127A6E','#F3B431','#2F7FC1','#8E4BC4','#E0662A','#3B9C5A','#C2457A','#5A6ACF','#B7834C','#1E8FA0','#D9772B','#6B8E23','#9C3D54','#4A6B7C'];
+const spine=g=>SPINES[Object.keys(GENEROS).indexOf(g)%SPINES.length]||'#888';
+const opt=(o,sel)=>Object.entries(o).map(([k,v])=>`<option value="${k}"${k===sel?' selected':''}>${esc(v)}</option>`).join('');
+$('#fGenero').insertAdjacentHTML('beforeend',opt(GENEROS));$('#fPublico').insertAdjacentHTML('beforeend',opt(PUBLICO));
+const lf=$('#libroForm');lf.genero.innerHTML=opt(GENEROS);lf.publico.innerHTML=opt(PUBLICO,'adultos');lf.condicion.innerHTML=opt(CONDICION,'buen_estado');
+$('#pGeneros').innerHTML=Object.entries(GENEROS).map(([k,v])=>`<label><input type="checkbox" name="g" value="${k}"> ${esc(v)}</label>`).join('');
+$('#pNo').innerHTML=Object.entries(GENEROS).map(([k,v])=>`<label><input type="checkbox" name="no" value="${k}"> ${esc(v)}</label>`).join('');
+$('#pEdades').innerHTML=['0-5','6-9','10-12','juvenil'].map(k=>`<label><input type="checkbox" name="edad" value="${k}"> ${esc(PUBLICO[k])}</label>`).join('');
+
+let yo=null;
+/* ── Pestañas (#estanteria / #mio) ── */
+function tab(t){
+  document.querySelectorAll('[data-tab]').forEach(b=>{if(b.dataset.tab===t)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  document.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==t);
+  if(location.hash!=='#'+t)history.replaceState(null,'',location.pathname+location.search+'#'+t);
+  if(t==='mio')abrirMio();
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+window.addEventListener('hashchange',()=>{const t=location.hash.slice(1);if(t==='mio'||t==='estanteria')tab(t)});
+$('#salirBtn').onclick=async()=>{await T.salir();yo=null;$('#salirBtn').hidden=true;cargarEstante();tab('estanteria')};
+
+/* ═══ Estantería ═══ */
+async function cargarEstante(){
+  const r=await rpc('tribbi_bp_estante',{p_genero:$('#fGenero').value||null,p_publico:$('#fPublico').value||null});
+  const err=$('#estErr');
+  if(!r.ok){err.hidden=false;err.textContent=r.d.error==='falta_sql'?'BookPal todavía no está instalado.':(r.d.mensaje||'No se pudo cargar la estantería.');return}
+  err.hidden=true;const l=r.d.libros;
+  pintarLikes(l);
+  $('#shelf').innerHTML=!l.length?'<p class="empty">Todavía no hay libros con ese filtro. ¡Pon el primero en tu estante!</p>':l.map(b=>`
+    <article class="book" style="--spine:${spine(b.genero)}">
+      <h3>${esc(b.titulo)}</h3>${b.autor?`<p class="autor">${esc(b.autor)}</p>`:''}
+      <div class="meta"><span class="tb-chip">${esc(GENEROS[b.genero]||b.genero)}</span><span class="tb-chip">${esc(PUBLICO[b.publico]||b.publico)}</span></div>
+      <p class="nota">${esc(CONDICION[b.condicion]||'')}${b.nota?` · ${esc(b.nota)}`:''}</p>
+      <div class="pie">${b.mio?'<span class="mine">Es de tu estante</span>':`<button class="heart" data-like="${b.id}" aria-pressed="${b.me_gusta?'true':'false'}">${b.me_gusta?'♥ Te gustaría':'♡ Me gustaría este'}</button>`}</div>
+    </article>`).join('');
+}
+function pintarLikes(l){
+  const max=yo&&yo.config?yo.config.max_megusta:5,n=l.filter(b=>b.me_gusta).length;
+  $('#likesInfo').textContent=T.ses?`Marca los libros que te gustaría recibir (hasta ${max}).`:'Entra en "Mi BookPal" para marcar los libros que te gustaría recibir.';
+}
+$('#fGenero').onchange=cargarEstante;$('#fPublico').onchange=cargarEstante;
+$('#shelf').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-like]');if(!b)return;
+  if(!await T.token()){tab('mio');return}
+  const si=b.getAttribute('aria-pressed')!=='true';b.disabled=true;
+  const r=await rpc('tribbi_bp_megusta',{p_libro:Number(b.dataset.like),p_si:si});b.disabled=false;
+  if(r.ok){b.setAttribute('aria-pressed',si?'true':'false');b.textContent=si?'♥ Te gustaría':'♡ Me gustaría este'}
+  else if(r.d.error==='sesion'){T.borrarSesion();tab('mio')}else alert(r.d.mensaje||'No se pudo marcar.');
+});
+
+/* ═══ Mi BookPal ═══ */
+async function abrirMio(){
+  if(!await T.token()){$('#mio').hidden=true;$('#login').hidden=false;T.montarLogin($('#login'),{onEntrar:()=>{$('#salirBtn').hidden=false;abrirMio();cargarEstante()}});return}
+  $('#login').hidden=true;$('#salirBtn').hidden=false;await recargar();
+}
+async function recargar(){
+  const r=await rpc('tribbi_bp_yo');
+  if(!r.ok){if(r.d.error==='sesion'){T.borrarSesion();abrirMio();return}$('#mio').hidden=false;$('#estado').innerHTML=`<div class="card warn"><p>${esc(r.d.error==='falta_sql'?'BookPal todavía no está instalado.':r.d.mensaje||'No se pudo cargar.')}</p></div>`;return}
+  yo=r.d;$('#mio').hidden=false;pintar();
+}
+function pintar(){
+  const c=yo.config;
+  $('#heroChips').innerHTML=`${c.abierto?'<span class="tb-chip ok">Abierto</span>':'<span class="tb-chip warn">Muy pronto</span>'}<span class="tb-chip">🚚 Envío ${q(c.envio_q)}</span><span class="tb-chip">📖 De 1 a ${c.max_libros} libros</span>`;
+  // 1. Datos
+  const p=yo.perfil,okDatos=!!(p&&p.tiene_direccion);
+  $('#sDatos').classList.toggle('ok',okDatos);
+  $('#datosResumen').textContent=okDatos?`${p.nombre} · ${p.municipio}${p.zona?', '+p.zona:''} · tu BookPal te verá como "${p.nombre_publico}".`:'';
+  $('#datosForm').hidden=okDatos;$('#datosEditar').hidden=!okDatos;
+  if(!okDatos)llenarDatos();
+  // 2. Lector
+  const l=yo.lector;$('#sLector').classList.toggle('ok',!!l);
+  const f=$('#lectorForm');
+  f.adultos.checked=l?l.para_adultos:true;f.sorprendeme.checked=l?l.sorprendeme:false;
+  f.querySelectorAll('[name=g]').forEach(i=>i.checked=!!l&&l.generos.includes(i.value));
+  f.querySelectorAll('[name=no]').forEach(i=>i.checked=!!l&&l.no_quiero.includes(i.value));
+  f.querySelectorAll('[name=edad]').forEach(i=>i.checked=!!l&&l.edades_ninos.includes(i.value));
+  // 3. Estante
+  const mis=yo.mis_libros;$('#sEstante').classList.toggle('ok',mis.length>0);
+  $('#estanteInfo').textContent=mis.length?`Tienes ${mis.length} de ${c.max_libros} libros. Solo se envía uno por intercambio; los demás se quedan para la próxima.`:'Agrega de 1 a '+c.max_libros+' libros usados que estés dispuesta o dispuesto a regalar.';
+  $('#misLibros').innerHTML=mis.map(b=>`<li style="--spine:${spine(b.genero)}"><span><b>${esc(b.titulo)}</b><small>${esc([b.autor,GENEROS[b.genero],PUBLICO[b.publico],CONDICION[b.condicion]].filter(Boolean).join(' · '))}</small></span>
+    <span>${b.estado==='reservado'?'<span class="tb-chip warn">Apartado para envío</span>':`<button class="tb-link" data-editar="${b.id}">Editar</button><button class="tb-link bad" data-quitar="${b.id}">Quitar</button>`}</span></li>`).join('');
+  $('#libroNuevo').hidden=mis.length>=c.max_libros;
+  // 4. Participar
+  pintarParticipar(okDatos,!!l,mis.length>0);
+}
+function llenarDatos(){
+  const p=yo.perfil||{},f=$('#datosForm');
+  f.nombre.value=p.nombre||'';f.publico.value=p.nombre_publico||'';f.wa.value=p.whatsapp||'';f.mun.value=p.municipio||'';f.zona.value=p.zona||'';f.dir.value='';
+  f.edad.checked=!!yo.perfil;$('#dirNota').hidden=!(p&&p.tiene_direccion);$('#datosErr').textContent='';
+}
+$('#datosEditar').onclick=()=>{llenarDatos();$('#datosForm').hidden=false;$('#datosEditar').hidden=true};
+$('#datosForm').addEventListener('submit',async e=>{
+  e.preventDefault();const f=$('#datosForm');
+  const r=await rpc('tribbi_guardar_perfil',{p_nombre:f.nombre.value,p_nombre_publico:f.publico.value,p_whatsapp:f.wa.value,p_municipio:f.mun.value,p_zona:f.zona.value,p_direccion:f.dir.value,p_mayor_edad:f.edad.checked});
+  if(r.ok){await recargar();return}
+  if(r.d.error==='sesion'){T.borrarSesion();abrirMio();return}$('#datosErr').textContent=r.d.mensaje||'No se pudo guardar.';
+});
+$('#lectorForm').addEventListener('submit',async e=>{
+  e.preventDefault();const f=$('#lectorForm'),val=n=>[...f.querySelectorAll(`[name=${n}]:checked`)].map(i=>i.value);
+  $('#lectorErr').textContent='';$('#lectorMsg').textContent='';
+  const r=await rpc('tribbi_bp_guardar_lector',{p_generos:val('g'),p_sorprendeme:f.sorprendeme.checked,p_no_quiero:val('no'),p_para_adultos:f.adultos.checked,p_edades_ninos:val('edad')});
+  if(r.ok){$('#lectorMsg').className='tb-msg ok';$('#lectorMsg').textContent='Guardado ✓';await recargar();return}
+  if(r.d.error==='sesion'){T.borrarSesion();abrirMio();return}$('#lectorErr').textContent=r.d.mensaje||'No se pudo guardar.';
+});
+let editandoLibro=null;
+function abrirLibro(b){
+  editandoLibro=b||null;lf.reset();lf.genero.value=b?b.genero:'novela';lf.publico.value=b?b.publico:'adultos';lf.condicion.value=b?b.condicion:'buen_estado';
+  if(b){lf.titulo.value=b.titulo;lf.autor.value=b.autor||'';lf.nota.value=b.nota||''}
+  $('#libroErr').textContent='';lf.hidden=false;$('#libroNuevo').hidden=true;lf.titulo.focus();
+}
+$('#libroNuevo').onclick=()=>abrirLibro(null);
+$('#libroCancelar').onclick=()=>{lf.hidden=true;pintar()};
+$('#misLibros').addEventListener('click',async e=>{
+  const ed=e.target.closest('[data-editar]'),qu=e.target.closest('[data-quitar]');
+  if(ed)abrirLibro(yo.mis_libros.find(b=>String(b.id)===ed.dataset.editar));
+  if(qu){if(!confirm('¿Quitar este libro de tu estante?'))return;
+    const r=await rpc('tribbi_bp_libro_quitar',{p_id:Number(qu.dataset.quitar)});
+    if(r.ok){await recargar();cargarEstante()}else alert(r.d.mensaje||'No se pudo quitar.')}
+});
+lf.addEventListener('submit',async e=>{
+  e.preventDefault();const b=$('#libroGuardar');b.disabled=true;
+  const r=await rpc('tribbi_bp_libro_guardar',{p_id:editandoLibro?editandoLibro.id:null,p_titulo:lf.titulo.value,p_autor:lf.autor.value,p_genero:lf.genero.value,p_publico:lf.publico.value,p_condicion:lf.condicion.value,p_nota:lf.nota.value});
+  b.disabled=false;
+  if(r.ok){lf.hidden=true;editandoLibro=null;await recargar();cargarEstante();return}
+  if(r.d.error==='sesion'){T.borrarSesion();abrirMio();return}$('#libroErr').textContent=r.d.mensaje||'No se pudo guardar.';
+});
+
+/* ── Participar y el intercambio ── */
+function pintarParticipar(okD,okL,okE){
+  const c=yo.config,pa=yo.participacion,el=$('#participar'),est=$('#estado');let h='',top='';
+  const reglas=(c.reglas&&c.reglas.length)?`<details class="rules"><summary>Leer las reglas de BookPal</summary><ol>${c.reglas.map(t=>`<li>${esc(t)}</li>`).join('')}</ol></details>`:'';
+  const activa=pa&&(pa.estado==='activa'||pa.estado==='pendiente_pago');
+  if(!pa||pa.estado==='completada'){
+    if(pa&&pa.estado==='completada')top=`<div class="card go"><h2>¡Completaste tu intercambio! 📚</h2><p>Gracias por compartir tu libro. Cuando quieras, vuelve a participar con otro.</p></div>`;
+    if(!c.abierto)h='<p>BookPal todavía no recibe inscripciones. Mientras tanto, arma tu perfil lector y tu estante, y marca en la estantería los libros que te gustaría recibir.</p>';
+    else if(!(okD&&okL&&okE))h='<p>Completa los pasos 1, 2 y 3 para poder participar.</p>';
+    else h=`<p>Al participar pagas ${q(c.envio_q)} de envío. Te asignamos a alguien en el próximo sorteo, y a ti te enviará un libro otra persona.</p>${reglas}
+      <label class="check"><input type="checkbox" id="acepto"> Leí y acepto las reglas de BookPal.</label>
+      <p class="tb-err" id="partErr" role="alert"></p><button class="tb-btn coral" id="partBtn">Participar y pagar ${q(c.envio_q)}</button>`;
+  }else if(pa.estado==='pendiente_pago'){
+    h=`<p>Falta pagar el envío de ${q(c.envio_q)} para confirmar tu lugar.</p><p class="tb-err" id="partErr" role="alert"></p><button class="tb-btn coral" id="pagarBtn">Pagar ${q(c.envio_q)}</button><p class="tb-msg" id="pagoMsg" role="status"></p>`;
+  }else h=`<p>Estás participando. Tu código es <span class="tag">${esc(pa.codigo)}</span></p>`;
+  el.innerHTML=h;
+  if(activa&&pa.estado==='activa')top+=pintarIntercambio();
+  est.innerHTML=top;
+  const pb=$('#partBtn');if(pb)pb.onclick=participar;
+  const pg=$('#pagarBtn');if(pg)pg.onclick=pagar;
+  enlazarIntercambio();
+  if(qs.get('pago')==='ok'&&pa&&pa.estado==='pendiente_pago')esperarPago();
+}
+function pintarIntercambio(){
+  const pa=yo.participacion,a=yo.amigo,m=yo.mi_envio,pm=yo.para_mi;let h='';
+  if(!yo.tengo_a_quien)h+=`<div class="card go"><h2>Esperando el sorteo</h2><p>En cuanto haya suficientes personas, el sistema te asigna a quién enviarle tu libro. Vuelve a revisar en unos días.</p></div>`;
+  else if(!a)h+=`<div class="card go"><h2>¡Ya te tocó alguien!</h2><p>Raspa la tarjeta para descubrir a tu BookPal.</p><div class="tb-scratch" id="raspa"></div><button class="tb-link" id="revelarBtn">Descubrir sin raspar</button><p class="tb-err" id="raspaErr" role="alert"></p></div>`;
+  else{
+    const gustos=[a.sorprendeme?'¡Sorpréndeme!':'',...(a.generos||[]).map(g=>GENEROS[g]||g)].filter(Boolean).join(', ')||'—';
+    const para=[a.para_adultos?'Para sí':'',...(a.edades_ninos||[]).map(e=>PUBLICO[e])].filter(Boolean).join(', ');
+    h+=`<div class="card go"><h2>Tu BookPal es ${esc(a.nombre)}</h2>
+      <p><b>Le gusta:</b> ${esc(gustos)}<br><b>Libros:</b> ${esc(para)}${a.no_quiero&&a.no_quiero.length?`<br><b>No quiere:</b> ${esc(a.no_quiero.map(g=>GENEROS[g]||g).join(', '))}`:''}</p>`;
+    if(!m.recibido_petmi_en){
+      h+=`<p class="sub">Elige cuál de tus libros le envías</p><ul class="opts">${(yo.opciones||[]).map(b=>`<li><label><input type="radio" name="libro" value="${b.id}" ${m.libro_id===b.id?'checked':''}>
+          <span><b>${esc(b.titulo)}</b>${b.puntaje===3?' <span class="tb-chip ok">¡Lo marcó!</span>':b.puntaje===2?' <span class="tb-chip">Le gusta este género</span>':''}<br><span class="tb-tiny">${esc([GENEROS[b.genero],CONDICION[b.condicion]].join(' · '))}</span></span></label></li>`).join('')}</ul>
+        ${(yo.opciones||[]).length?'':'<p class="tb-err">Ninguno de tus libros le sirve. Agrega otro a tu estante que calce con sus gustos.</p>'}
+        <label class="sub">Dedicatoria <span class="tb-tiny">(opcional)</span><input class="tb-field" id="dedic" maxlength="200" value="${esc(m.dedicatoria||'')}"></label>
+        <p class="tb-err" id="elegirErr" role="alert"></p><button class="tb-btn" id="elegirBtn">${m.libro_id?'Cambiar mi elección':'Elegir este libro'}</button>`;
+    }
+    if(m.libro_id)h+=`<p class="sub">Tu código para la etiqueta</p><span class="tag">${esc(pa.codigo)}</span><p>Envuelve el libro, pega este código por fuera y PetMi coordina la entrega.</p>
+      <p>${m.entregado_en?'✓ Tu libro ya fue entregado.':m.recibido_petmi_en?'✓ PetMi ya tiene tu libro.':'○ PetMi todavía no recibe tu libro.'}</p>`;
+    h+='</div>';
+  }
+  if(pm&&pm.entregado_en){
+    h+=`<div class="card go"><h2>¡Te llegó un libro! 🎁</h2>${pm.libro?`<p><b>${esc(pm.libro.titulo)}</b>${pm.libro.autor?` de ${esc(pm.libro.autor)}`:''}</p>`:''}${pm.dedicatoria?`<p>“${esc(pm.dedicatoria)}”</p>`:''}
+      ${pa.recibido_confirmado_en?'<p>Confirmaste que lo recibiste. ¡Que lo disfrutes!</p>':'<button class="tb-btn" id="recibiBtn">Ya lo recibí</button>'}</div>`;
+  }else if(yo.tengo_a_quien)h+=`<div class="card"><h2>Tu libro</h2><p>${pm?'Ya hay alguien que te va a enviar un libro. PetMi te avisará cuando vaya en camino.':'Pronto te asignamos a alguien que te enviará un libro.'}</p></div>`;
+  return h;
+}
+function enlazarIntercambio(){
+  const box=$('#raspa');
+  if(box){const rev=T.montarRaspa(box,async()=>{const r=await rpc('tribbi_bp_revelar');if(r.ok&&r.d.amigo){yo=r.d;return r.d.amigo.nombre}
+      $('#raspaErr').textContent=r.d.mensaje||'No se pudo abrir la tarjeta.';return null},()=>setTimeout(()=>pintar(),1200));$('#revelarBtn').onclick=()=>rev()}
+  const eb=$('#elegirBtn');if(eb)eb.onclick=async()=>{
+    const s=document.querySelector('input[name=libro]:checked');if(!s){$('#elegirErr').textContent='Elige un libro.';return}
+    eb.disabled=true;const r=await rpc('tribbi_bp_elegir_libro',{p_libro:Number(s.value),p_dedicatoria:$('#dedic').value});eb.disabled=false;
+    if(r.ok){yo=r.d;pintar();cargarEstante()}else $('#elegirErr').textContent=r.d.mensaje||'No se pudo guardar.';
+  };
+  const rb=$('#recibiBtn');if(rb)rb.onclick=async()=>{const r=await rpc('tribbi_bp_confirmar_recibido');if(r.ok){T.confetti();await recargar()}else alert(r.d.mensaje||'No se pudo confirmar.')};
+}
+async function participar(){
+  const err=$('#partErr');if(!$('#acepto').checked){err.textContent='Para participar debes aceptar las reglas.';return}
+  const b=$('#partBtn');b.disabled=true;err.textContent='';
+  const r=await rpc('tribbi_bp_inscribirme',{p_acepto_reglamento:true});
+  if(!r.ok){b.disabled=false;err.textContent=r.d.mensaje||'No se pudo inscribir.';return}
+  const m=await T.pagar({programa:'bookpal'});await recargar();if(m){const e2=$('#partErr');if(e2)e2.textContent=m}
+}
+async function pagar(){const b=$('#pagarBtn');b.disabled=true;const m=await T.pagar({programa:'bookpal'});b.disabled=false;if(m)$('#partErr').textContent=m}
+async function esperarPago(){
+  const msg=$('#pagoMsg');if(msg)msg.textContent='Confirmando tu pago…';
+  for(let n=0;n<10;n++){
+    await new Promise(r=>setTimeout(r,3000));const r=await rpc('tribbi_bp_yo');
+    if(r.ok&&r.d.participacion&&r.d.participacion.estado==='activa'){yo=r.d;history.replaceState(null,'',location.pathname+'#mio');qs.delete('pago');pintar();T.confetti();return}
+  }
+  const m2=$('#pagoMsg');if(m2)m2.textContent='Tu pago todavía no aparece. Si ya pagaste, recarga la página en unos minutos.';
+}
+
+/* ── Arranque ── */
+(async()=>{
+  if(await T.token()){$('#salirBtn').hidden=false;const r=await rpc('tribbi_bp_yo');if(r.ok){yo=r.d;pintar()}}
+  cargarEstante();
+  tab(location.hash==='#mio'||qs.get('pago')?'mio':'estanteria');
+})();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#D7263D">
+<title>Amigo secreto PetMi 2026</title>
+<meta name="description" content="Intercambio navideño de la comunidad PetMi: inscríbete, deja tus ideas de regalo y descubre a tu amigo secreto.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF6EA; --ink:#1E3A2F; --muted:#5E7468; --card:#FFFFFF; --line:#EBDCC7;
+  --red:#D7263D; --red-dark:#9E1528; --pine:#1F8A5B; --gold:#F2B33D; --soft:#FCEBD3;
+  --miss:#FDE3E5; --ok:#DDF3E6;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F2A20; --ink:#FFF3E2; --muted:#A9C3B5; --card:#16382B; --line:#265541;
+    --red:#F0384F; --red-dark:#8E1022; --pine:#5CC48E; --gold:#FFC857; --soft:#1B4434;
+    --miss:#4A2028; --ok:#1D4A35; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F2A20; --ink:#FFF3E2; --muted:#A9C3B5; --card:#16382B; --line:#265541;
+  --red:#F0384F; --red-dark:#8E1022; --pine:#5CC48E; --gold:#FFC857; --soft:#1B4434;
+  --miss:#4A2028; --ok:#1D4A35; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fredoka","Trebuchet MS",system-ui,sans-serif;font-size:17px;line-height:1.5}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:8px}
+[hidden]{display:none!important}
+a{color:var(--pine);font-weight:600}
+
+.lights{display:flex;justify-content:space-between;padding:0 4%;height:40px;position:relative;overflow:hidden}
+.lights::before{content:"";position:absolute;left:0;right:0;top:-30px;height:44px;border-bottom:2px solid var(--muted);border-radius:0 0 50% 50%/0 0 100% 100%;opacity:.5}
+.bulb{width:12px;height:18px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;margin-top:14px;position:relative;background:var(--c);box-shadow:0 0 12px var(--c);animation:twinkle 2.4s infinite;animation-delay:var(--d)}
+.bulb:nth-child(odd){margin-top:9px}
+.bulb::before{content:"";position:absolute;top:-5px;left:3px;width:6px;height:6px;border-radius:2px;background:var(--muted)}
+@keyframes twinkle{50%{opacity:.45;box-shadow:none}}
+
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+.narrow{max-width:620px;margin:0 auto;padding:0 20px 48px}
+
+.hero{display:grid;grid-template-columns:1fr auto;gap:12px 28px;align-items:center;padding-top:14px}
+.hero h1{font-size:clamp(2.4rem,8.5vw,4.2rem);line-height:.95;margin:0;font-weight:700;letter-spacing:-.02em;color:var(--red)}
+.hero h1 small{display:block;font-size:.4em;color:var(--pine);font-weight:600;letter-spacing:0;margin-top:.45em}
+.hero .lead{margin:14px 0 0;max-width:46ch;color:var(--muted);font-size:1.05rem}
+.pup{width:170px;height:auto}
+@media (max-width:620px){.hero{grid-template-columns:1fr}.pup{order:-1;width:110px}}
+.facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.chip{font-size:.92rem;padding:4px 12px;border-radius:999px;background:var(--soft);white-space:nowrap;font-weight:500}
+.chip.ok{background:var(--ok);color:var(--pine)}
+.cta{margin-top:24px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+
+.how{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:18px 20px;margin-top:30px;position:relative;overflow:hidden}
+.how::before{content:"";position:absolute;inset:0 0 auto;height:10px;background:repeating-linear-gradient(-45deg,var(--red) 0 10px,transparent 10px 20px)}
+.how h2{margin:6px 0 10px;font-size:1.35rem}
+.how ol{margin:0;padding-left:1.4em}
+.how li{margin-bottom:8px;padding-left:4px}
+.how li::marker{color:var(--red);font-weight:700}
+.how li span{display:block;color:var(--muted);font-size:.93rem}
+
+.big-btn{border:0;cursor:pointer;background:var(--red);color:#fff;font-weight:700;font-size:1.2rem;padding:13px 30px;border-radius:999px;box-shadow:0 6px 0 var(--red-dark);transition:transform .08s,box-shadow .08s}
+.big-btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--red-dark)}
+.big-btn:disabled,.small-btn:disabled{opacity:.5;cursor:not-allowed}
+.small-btn{border:0;cursor:pointer;background:var(--red);color:#fff;font-weight:600;padding:10px 20px;border-radius:999px;box-shadow:0 4px 0 var(--red-dark)}
+.small-btn.alt{background:var(--pine);box-shadow:0 4px 0 #13583A}
+.small-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--red-dark)}
+.link-btn{border:0;background:none;color:var(--pine);font-weight:600;cursor:pointer;padding:6px;border-radius:8px}
+.icon-btn{border:0;background:none;width:34px;height:34px;border-radius:50%;cursor:pointer;color:var(--muted);font-size:1.3rem;line-height:1;flex:none}
+.icon-btn:hover{background:var(--soft);color:var(--red)}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0 0 -6px;flex-wrap:wrap}
+
+.box{max-width:460px;margin:24px auto 0;background:var(--card);border:3px solid var(--red);border-radius:24px;padding:24px}
+.box h1{margin:0;color:var(--red);font-size:2rem;line-height:1.05;text-align:center}
+.box > p{color:var(--muted);margin:8px 0 18px;text-align:center}
+label{display:block;font-weight:500;margin:14px 0 4px}
+label small{color:var(--muted);font-weight:400}
+.field{width:100%;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg)}
+.field:focus{border-color:var(--pine);outline:none}
+textarea.field{resize:vertical;min-height:84px}
+.code{text-align:center;font-size:1.6rem;letter-spacing:.4em}
+.check{display:flex;gap:10px;align-items:flex-start;margin:16px 0 0;font-weight:400}
+.check input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--pine)}
+.err{color:var(--red);min-height:1.5em;margin:10px 0;font-weight:500}
+.center{text-align:center}
+.tiny{font-size:.9rem;color:var(--muted)}
+
+.me h1{font-size:clamp(2.1rem,8vw,3.2rem);color:var(--red);margin:6px 0 0;line-height:1}
+.hint{color:var(--muted);margin:8px 0 20px}
+.status{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:18px 20px;margin-top:18px}
+.status h2{margin:0 0 6px;font-size:1.3rem}
+.status p{margin:0 0 10px}
+.status.go{border-color:var(--pine)}
+.status.warn{border-color:var(--red);background:var(--miss)}
+.tag{display:inline-block;font-weight:700;font-size:1.3rem;letter-spacing:.06em;background:var(--soft);border:2px dashed var(--gold);border-radius:12px;padding:4px 14px;margin:2px 0 8px}
+.steps{list-style:none;padding:0;margin:8px 0 0}
+.steps li{display:flex;gap:10px;align-items:baseline;padding:4px 0}
+.steps li b{flex:none;width:1.4em;text-align:center}
+.steps li.done{color:var(--pine)}
+
+.card-tag{background:var(--card);border:3px solid var(--red);border-radius:22px;padding:22px 22px 24px;text-align:center;box-shadow:0 8px 0 var(--soft);margin-top:18px}
+.card-tag .lbl{font-weight:500;color:var(--muted);margin:0 0 10px}
+.scratch{position:relative;border-radius:16px;overflow:hidden;min-height:124px;display:grid;place-items:center;background:var(--soft)}
+.scratch .secret{font-size:clamp(2rem,8vw,2.8rem);font-weight:700;color:var(--pine);padding:18px 12px;line-height:1.1;overflow-wrap:anywhere}
+.scratch canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;transition:opacity .6s}
+.scratch canvas.gone{opacity:0;pointer-events:none}
+
+.me section{margin-top:30px}
+.me h2.sec{font-size:1.35rem;margin:0}
+.wishes{list-style:none;padding:0;margin:12px 0 0}
+.wishes li{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 8px 8px 14px;margin-bottom:8px;min-height:50px}
+.wishes li::before{content:"🎁";flex:none}
+.wishes li span{flex:1;overflow-wrap:anywhere}
+.empty{color:var(--muted);background:var(--soft);border-radius:14px;padding:12px 14px;margin:12px 0 0}
+.wish-form{display:flex;gap:8px;margin-top:12px}
+.wish-form input{flex:1;min-width:0}
+
+details.rules{margin-top:14px;background:var(--soft);border-radius:14px;padding:10px 14px}
+details.rules summary{cursor:pointer;font-weight:600}
+details.rules ol{padding-left:1.3em;margin:10px 0 4px;font-size:.95rem}
+details.rules li{margin-bottom:6px}
+
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:20}
+.confetti i{position:absolute;top:-20px;width:10px;height:14px;border-radius:2px;animation:fall 1.8s ease-in forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
+
+/* Panel de PetMi */
+.admin-bar{background:var(--ink);color:var(--bg);padding:10px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.admin-bar button{border:0;background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 14px;font-weight:600;cursor:pointer}
+.admin section{margin-top:30px}
+.admin h2{font-size:1.45rem;margin:0 0 4px}
+.admin .lead{color:var(--muted);margin:0 0 14px;max-width:62ch}
+.nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));border:2px solid var(--line);border-radius:18px;overflow:hidden;background:var(--card)}
+.nums div{padding:12px 16px;border-right:1px dashed var(--line);border-bottom:1px dashed var(--line)}
+.nums b{display:block;font-size:2rem;line-height:1.1;color:var(--pine)}
+.nums span{font-size:.9rem;color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row .field{max-width:220px;text-transform:uppercase;letter-spacing:.06em}
+.scroll{overflow-x:auto;margin-top:12px;border:2px solid var(--line);border-radius:14px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{padding:8px 12px;text-align:left;border-top:1px dashed var(--line);vertical-align:top}
+th{border-top:0;color:var(--muted);font-weight:500;white-space:nowrap}
+td.nw{white-space:nowrap}
+.msg{min-height:1.5em;margin:8px 0 0;color:var(--muted)}
+.msg.bad{color:var(--red);font-weight:500}
+
+footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:.95rem;border-top:2px dashed var(--line)}
+
+@media (prefers-reduced-motion:reduce){.bulb{animation:none}.confetti{display:none}.scratch canvas{transition:none}}
+</style>
+</head>
+<body>
+
+<!-- ====== INICIO (sin sesión) ====== -->
+<div id="inicioView" hidden>
+  <div class="lights" aria-hidden="true"></div>
+  <div class="wrap">
+    <header class="hero">
+      <div>
+        <h1>Amigo secreto PetMi<small>Intercambio navideño de la comunidad 🎄</small></h1>
+        <p class="lead">Inscríbete, deja tus ideas de regalo y descubre a quién le regalas. PetMi se encarga de recoger y entregar todos los regalos.</p>
+        <div class="facts" id="facts1"></div>
+        <div class="cta">
+          <button class="big-btn" id="entrarBtn">Inscribirme</button>
+          <button class="link-btn" id="yaInscritoBtn">Ya estoy inscrito: entrar</button>
+        </div>
+        <p class="msg bad" id="edErr" hidden role="alert"></p>
+      </div>
+      <svg class="pup" viewBox="0 0 200 200" aria-hidden="true">
+        <ellipse cx="52" cy="112" rx="24" ry="40" fill="#8A5A32" transform="rotate(18 52 112)"/>
+        <ellipse cx="148" cy="112" rx="24" ry="40" fill="#8A5A32" transform="rotate(-18 148 112)"/>
+        <circle cx="100" cy="120" r="56" fill="#D9A066"/>
+        <ellipse cx="100" cy="146" rx="32" ry="24" fill="#F3DCC0"/>
+        <circle cx="80" cy="114" r="7" fill="#1E1E1E"/><circle cx="120" cy="114" r="7" fill="#1E1E1E"/>
+        <circle cx="82" cy="111" r="2.2" fill="#fff"/><circle cx="122" cy="111" r="2.2" fill="#fff"/>
+        <ellipse cx="100" cy="136" rx="11" ry="8" fill="#1E1E1E"/>
+        <path d="M90 150 q10 9 20 0" stroke="#1E1E1E" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M104 156 q6 14 0 18 q-8 -2 -6 -16" fill="#E8546B"/>
+        <circle cx="66" cy="140" r="7" fill="#F2A1A1" opacity=".6"/><circle cx="134" cy="140" r="7" fill="#F2A1A1" opacity=".6"/>
+        <path d="M52 78 Q96 2 156 40 L146 76 Z" fill="#D7263D"/>
+        <rect x="44" y="70" width="114" height="20" rx="10" fill="#fff"/>
+        <circle cx="160" cy="40" r="13" fill="#fff"/>
+      </svg>
+    </header>
+
+    <div class="how">
+      <h2>Cómo funciona</h2>
+      <ol id="pasos"></ol>
+    </div>
+  </div>
+  <footer><span>Una iniciativa de PetMi 🐾</span><button class="link-btn" id="adminLink">Panel de PetMi</button></footer>
+</div>
+
+<!-- ====== ENTRAR CON CÓDIGO POR CORREO ====== -->
+<div id="loginView" hidden>
+  <div class="lights" aria-hidden="true"></div>
+  <div class="narrow">
+    <div class="topbar"><button class="link-btn" data-go="inicio">← Volver</button></div>
+    <form class="box" id="emailForm" autocomplete="on">
+      <h1>Entra con tu correo</h1>
+      <p>Te enviamos un código para confirmar que el correo es tuyo. No necesitas contraseña.</p>
+      <label for="emailIn">Correo electrónico</label>
+      <input class="field" id="emailIn" type="email" autocomplete="email" required maxlength="120">
+      <div class="err" id="emailErr" role="alert"></div>
+      <div class="center"><button class="big-btn" type="submit" id="emailBtn">Enviar código</button></div>
+    </form>
+    <form class="box" id="codeForm" hidden autocomplete="off">
+      <h1>Revisa tu correo</h1>
+      <p id="codeText"></p>
+      <label for="codeIn">Código</label>
+      <input class="field code" id="codeIn" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required>
+      <div class="err" id="codeErr" role="alert"></div>
+      <div class="center"><button class="big-btn" type="submit" id="codeBtn">Entrar</button></div>
+      <p class="tiny center">¿No llegó? Revisa la carpeta de spam o <button type="button" class="link-btn" id="otroCorreo">usa otro correo</button>.</p>
+    </form>
+    <p class="tiny center" id="passLink" hidden><button type="button" class="link-btn" id="usarClave">Entrar con contraseña (equipo PetMi)</button></p>
+    <form class="box" id="passForm" hidden autocomplete="on">
+      <h1>Panel de PetMi</h1>
+      <p>Entra con el correo y la contraseña de tu cuenta de administradora.</p>
+      <label for="passEmail">Correo electrónico</label>
+      <input class="field" id="passEmail" type="email" autocomplete="username" required maxlength="120">
+      <label for="passIn">Contraseña</label>
+      <input class="field" id="passIn" type="password" autocomplete="current-password" required maxlength="200">
+      <div class="err" id="passErr" role="alert"></div>
+      <div class="center"><button class="big-btn" type="submit" id="passBtn">Entrar</button></div>
+      <p class="tiny center"><button type="button" class="link-btn" id="usarCodigo">Entrar con código por correo</button></p>
+    </form>
+  </div>
+</div>
+
+<!-- ====== MIS DATOS ====== -->
+<div id="perfilView" hidden>
+  <div class="lights" aria-hidden="true"></div>
+  <div class="narrow">
+    <div class="topbar"><button class="link-btn" id="perfilVolver">← Volver</button><button class="link-btn" data-salir>Salir</button></div>
+    <form class="box" id="perfilForm" autocomplete="on">
+      <h1>Tus datos</h1>
+      <p>Tu amigo secreto solo verá el nombre que elijas para él y tus ideas de regalo. Tu dirección y tu teléfono solo los ve PetMi, para la entrega.</p>
+      <label for="pNombre">Nombre completo <small>(para la entrega)</small></label>
+      <input class="field" id="pNombre" autocomplete="name" maxlength="80" required>
+      <label for="pPublico">Nombre que verá tu amigo secreto <small>(por ejemplo, Ana o Ana y Toby 🐶)</small></label>
+      <input class="field" id="pPublico" maxlength="40" required>
+      <label for="pWa">WhatsApp</label>
+      <input class="field" id="pWa" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="5555 1234" required>
+      <label for="pMun">Municipio</label>
+      <input class="field" id="pMun" maxlength="60" placeholder="Guatemala, Mixco, Villa Nueva…" required>
+      <label for="pZona">Zona <small>(si aplica)</small></label>
+      <input class="field" id="pZona" maxlength="20" placeholder="Zona 10">
+      <label for="pDir">Dirección de entrega</label>
+      <textarea class="field" id="pDir" maxlength="300" autocomplete="street-address" placeholder="Calle, número, colonia o condominio, y una referencia"></textarea>
+      <p class="tiny" id="pDirNota" hidden>Ya tenemos tu dirección guardada. Escríbela de nuevo solo si quieres cambiarla.</p>
+      <label class="check"><input type="checkbox" id="pEdad"> <span>Confirmo que soy mayor de 18 años.</span></label>
+      <div class="err" id="perfilErr" role="alert"></div>
+      <div class="center"><button class="big-btn" type="submit" id="perfilBtn">Guardar mis datos</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ====== MI INTERCAMBIO ====== -->
+<div id="meView" hidden>
+  <div class="lights" aria-hidden="true"></div>
+  <div class="narrow me">
+    <div class="topbar"><button class="link-btn" id="editarDatos">Editar mis datos</button><button class="link-btn" data-salir>Salir</button></div>
+    <h1 id="meHola"></h1>
+    <div class="facts" id="facts2"></div>
+    <div id="estado"></div>
+    <div id="amigoBox" hidden>
+      <div class="card-tag">
+        <p class="lbl">Tu amigo secreto es…</p>
+        <div class="scratch" id="scratch">
+          <div class="secret" id="secretName">🎁</div>
+          <canvas id="scratchCv" aria-hidden="true"></canvas>
+        </div>
+        <button class="link-btn" id="revealBtn" style="margin-top:8px">Descubrir sin raspar</button>
+        <p class="msg bad" id="scratchErr" role="alert" hidden></p>
+      </div>
+      <section aria-labelledby="h-theirs">
+        <h2 class="sec" id="h-theirs">Ideas para tu amigo secreto</h2>
+        <div id="theirWishes"></div>
+      </section>
+    </div>
+    <section id="mineSec" aria-labelledby="h-mine" hidden>
+      <h2 class="sec" id="h-mine">Lo que a ti te gustaría recibir</h2>
+      <p class="hint" style="margin:4px 0 0">Solo lo verá la persona que te tiene de amigo secreto. Puede ser para ti o para tu mascota.</p>
+      <form class="wish-form" id="wishForm">
+        <input class="field" id="wishInput" maxlength="120" placeholder="Ej. juguete para perro grande, una taza, libros de misterio" aria-label="Nueva idea de regalo" autocomplete="off">
+        <button class="small-btn" type="submit">Agregar</button>
+      </form>
+      <p class="msg bad" id="wishErr" role="alert" hidden></p>
+      <ul class="wishes" id="myWishes"></ul>
+    </section>
+  </div>
+  <footer><span>Amigo secreto PetMi 🐾</span><span id="contacto"></span></footer>
+</div>
+
+<!-- ====== PANEL DE PETMI ====== -->
+<div id="adminView" hidden>
+  <div class="admin-bar"><strong>Panel de PetMi · Amigo secreto</strong><a href="admin.html" style="color:var(--bg);font-weight:600">Panel general de Tribbi</a><button data-salir>Salir</button></div>
+  <div class="wrap admin">
+    <section>
+      <h2>Cómo va</h2>
+      <div class="nums" id="nums"></div>
+      <p class="msg"><button class="link-btn" id="refrescar">Actualizar números</button></p>
+    </section>
+
+    <section>
+      <h2>Sorteo</h2>
+      <p class="lead">Entran las inscripciones pagadas que tengan al menos una idea de regalo. Solo se puede hacer después del cierre de inscripciones, y repetir mientras nadie haya descubierto a su amigo secreto.</p>
+      <button class="big-btn" id="sortearBtn">Hacer el sorteo</button>
+      <p class="msg" id="sorteoMsg" role="status"></p>
+    </section>
+
+    <section>
+      <h2>Registrar regalos</h2>
+      <p class="lead">Escribe el código de la etiqueta. Para "Recibido en PetMi" y "Entregado", usa el código que trae el paquete. Para "Rescate entregado", usa el código de quien recibe.</p>
+      <div class="row">
+        <input class="field" id="codigoIn" placeholder="TR-XXXXXX" maxlength="12" aria-label="Código">
+        <button class="small-btn alt" data-marcar="recibido">Recibido en PetMi</button>
+        <button class="small-btn alt" data-marcar="entregado">Entregado</button>
+        <button class="small-btn alt" data-marcar="rescate_entregado">Rescate entregado</button>
+      </div>
+      <p class="msg" id="marcarMsg" role="status"></p>
+    </section>
+
+    <section>
+      <h2>Quién no tiene regalo en camino</h2>
+      <p class="lead">Regalos que todavía no han llegado a PetMi. Úsalo para recordarle a quien regala y, después del 15 de diciembre, para activar el Ángel de Rescate.</p>
+      <button class="small-btn" id="sinRegaloBtn">Cargar lista</button>
+      <div id="sinRegalo"></div>
+    </section>
+
+    <section>
+      <h2>Ruta de entrega</h2>
+      <p class="lead">Regalos en PetMi y rescates pendientes de entregar, con dirección. Cada vez que se abre esta lista queda registrado.</p>
+      <div class="row"><button class="small-btn" id="rutaBtn">Ver ruta</button><button class="link-btn" id="copiarRuta" hidden>Copiar para WhatsApp</button></div>
+      <div id="ruta"></div>
+    </section>
+
+    <section>
+      <h2>Inscritos</h2>
+      <div class="row"><button class="small-btn" id="inscritosBtn">Cargar lista</button>
+        <label class="check" style="margin:0"><input type="checkbox" id="soloPend"> <span>Solo quienes no han pagado o no tienen ideas</span></label></div>
+      <div id="inscritos"></div>
+    </section>
+
+    <section>
+      <h2>Lista de espera de BookPal</h2>
+      <p class="lead">Personas que se apuntaron desde la home de Tribbi para que les avisen cuando BookPal abra.</p>
+      <div class="row"><button class="small-btn" id="esperaBtn">Cargar lista</button><button class="link-btn" id="copiarCorreos" hidden>Copiar correos</button></div>
+      <div id="espera"></div>
+    </section>
+
+    <section>
+      <h2>Al terminar</h2>
+      <p class="lead">Borra las direcciones de quienes participaron. Solo funciona cuando ya pasó el último día de entregas.</p>
+      <button class="link-btn" id="borrarDirBtn">Borrar direcciones de esta edición</button>
+      <p class="msg" id="borrarMsg" role="status"></p>
+    </section>
+  </div>
+  <footer><span>Amigo secreto PetMi 🐾</span></footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+/* ═══════════ CONFIGURACIÓN ═══════════
+   La llave de Supabase es la llave PÚBLICA ("anon"): está pensada para ir en la página y NO es un secreto.
+   Lo que protege los datos es que las tablas de Tribbi están cerradas (ver 1_crear_tribbi.sql).
+   Nunca pegues aquí la llave "service_role" ni la llave secreta de Recurrente: esas van en variables de entorno de Vercel. */
+const CONFIG={
+  supabaseUrl:'https://ilcreewilnkchvozicyp.supabase.co',
+  supabaseAnonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM',
+  edicion:'navidad-petmi-2026',
+  pagoApi:'/api/tribbi-pago',      // función de Vercel que crea el cobro en Recurrente (siguiente paso)
+  reglamentoUrl:'',                // enlace al reglamento completo, cuando esté publicado
+  contacto:''                      // correo o WhatsApp de PetMi para dudas, por ejemplo 'WhatsApp 5555 1234'
+};
+const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
+/* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
+const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
+const ED=ED_URL||CONFIG.edicion;
+const base=()=>location.pathname+(ED_URL?'?e='+ED_URL:'');
+const reduced=(typeof matchMedia==='function')&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TZ='America/Guatemala';
+function dia(s){if(!s)return '';const soloFecha=/^\d{4}-\d{2}-\d{2}$/.test(s);return new Date(soloFecha?s+'T12:00:00Z':s).toLocaleDateString('es-GT',{day:'numeric',month:'long',timeZone:soloFecha?'UTC':TZ})}
+function diaHora(s){return s?new Date(s).toLocaleString('es-GT',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:TZ}):''}
+const q=n=>'Q'+Number(n||0).toLocaleString('es-GT',{maximumFractionDigits:2});
+const mem={};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}},del(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}}};
+
+/* ── Sesión (Supabase Auth con código por correo; se guarda aparte de la sesión de PetMi) ── */
+const SK='tribbi_sesion';
+let ses=null;try{ses=JSON.parse(store.get(SK)||'null')}catch(e){ses=null}
+function guardarSesion(d){ses={at:d.access_token,rt:d.refresh_token,exp:Math.floor(Date.now()/1000)+(d.expires_in||3600),email:(d.user&&d.user.email)||(ses&&ses.email)||''};store.set(SK,JSON.stringify(ses))}
+function borrarSesion(){ses=null;store.del(SK)}
+async function auth(path,body,tk){
+  try{
+    const r=await fetch(SB+'/auth/v1/'+path,{method:'POST',headers:Object.assign({'Content-Type':'application/json',apikey:KEY},tk?{Authorization:'Bearer '+tk}:{}),body:JSON.stringify(body||{})});
+    let d={};try{d=await r.json()}catch(e){}
+    return {ok:r.ok,status:r.status,d:d};
+  }catch(e){return {ok:false,status:0,d:{}}}
+}
+let renovando=null;
+async function token(){
+  if(!ses)return null;
+  if(ses.exp-60>Date.now()/1000)return ses.at;
+  if(!renovando)renovando=auth('token?grant_type=refresh_token',{refresh_token:ses.rt}).then(r=>{renovando=null;if(r.ok&&r.d.access_token){guardarSesion(r.d);return ses.at}if(r.status!==0)borrarSesion();return null});
+  return renovando;
+}
+async function rpc(fn,args){
+  const tk=await token();
+  try{
+    const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+(tk||KEY)},body:JSON.stringify(args||{}),cache:'no-store'});
+    let d={};try{d=await r.json()}catch(e){}
+    if(r.ok&&d&&typeof d==='object')return {ok:d.ok!==false,d:d};
+    if(r.status===401||r.status===403)return {ok:false,d:{error:'sesion',mensaje:'Tu sesión venció. Vuelve a entrar con tu correo.'}};
+    if(r.status===404)return {ok:false,d:{error:'falta_sql',mensaje:'Falta correr 1_crear_tribbi.sql en Supabase.'}};
+    return {ok:false,d:{error:'servidor',mensaje:'Algo salió mal. Intenta de nuevo.',detalle:String((d&&d.message)||'').slice(0,160)}};
+  }catch(e){return {ok:false,d:{error:'red',mensaje:'Sin conexión. Revisa tu internet e intenta de nuevo.'}}}
+}
+
+/* ── Decoración y textos fijos ── */
+const bulbColors=['#D7263D','#F2B33D','#1F8A5B','#2F7FC1','#E0662A'];
+document.querySelectorAll('.lights').forEach(l=>l.innerHTML=Array.from({length:18},(_,i)=>`<span class="bulb" style="--c:${bulbColors[i%5]};--d:${(i%4)*.5}s"></span>`).join(''));
+if(CONFIG.contacto)$('#contacto').textContent='Dudas: '+CONFIG.contacto;
+
+/* ── Navegación: tribbi.html, tribbi.html?admin=1 y tribbi.html?pago=ok (regreso de Recurrente) ── */
+const VIEWS=['inicioView','loginView','perfilView','meView','adminView'];
+function show(v){VIEWS.forEach(x=>$('#'+x).hidden=x!==v);window.scrollTo(0,0)}
+const qs=new URLSearchParams(location.search);
+const esAdmin=()=>new URLSearchParams(location.search).has('admin');
+let ed=null,yo=null,volverA=null;
+
+async function cargarEdicion(){
+  const r=await rpc('tribbi_edicion',{p_slug:ED});
+  if(r.ok){ed=r.d;pintarEdicion();return true}
+  $('#edErr').hidden=false;$('#edErr').textContent=r.d.mensaje||'No se pudo cargar el intercambio.';return false;
+}
+function pintarEdicion(){
+  if(ED_URL&&ed.nombre){const h=$('#inicioView .hero h1');if(h&&h.firstChild)h.firstChild.textContent=ed.nombre;document.title=ed.nombre}
+  const f=`<span class="chip">🎁 Regalo de ${q(ed.presupuesto_q)}</span><span class="chip">🚚 Envío ${q(ed.envio_q)}</span><span class="chip">📅 Sorteo el ${dia(ed.sorteo_en)}</span>`;
+  $('#facts1').innerHTML=f+(ed.inscripciones_abiertas?'<span class="chip ok">Inscripciones abiertas</span>':'');
+  $('#facts2').innerHTML=f;
+  $('#pasos').innerHTML=[
+    ['Inscríbete y paga el envío',`Del ${dia(ed.inscripcion_desde)} al ${dia(ed.inscripcion_hasta)}. El envío cuesta ${q(ed.envio_q)} y lo hace el mensajero de PetMi.`],
+    ['Deja al menos una idea de regalo','Puede ser para ti o para tu mascota. Sin ideas no entras al sorteo.'],
+    ['Descubre a tu amigo secreto',`El ${dia(ed.sorteo_en)} raspas tu tarjeta y ves su nombre y sus ideas.`],
+    ['Compra y entrega el regalo a PetMi',`Presupuesto de ${q(ed.presupuesto_q)}. Márcalo con tu código y entrégalo a más tardar el ${dia(ed.entrega_hasta)}.`],
+    ['Recibe tu regalo en casa',`PetMi reparte del ${dia(ed.reparto_desde)} al ${dia(ed.reparto_hasta)}. Si tu amigo secreto falla, el Ángel de Rescate de PetMi te envía uno.`]
+  ].map(([t,s])=>`<li>${esc(t)}<span>${esc(s)}</span></li>`).join('');
+  const ab=ed.inscripciones_abiertas,antes=new Date()<new Date(ed.inscripcion_desde);
+  $('#entrarBtn').textContent=ab?'Inscribirme':'Entrar';
+  $('#yaInscritoBtn').hidden=!ab;
+  if(!ab&&antes){$('#edErr').hidden=false;$('#edErr').className='msg';$('#edErr').textContent=`Las inscripciones abren el ${dia(ed.inscripcion_desde)}.`}
+}
+
+async function route(){
+  if(!ed&&!await cargarEdicion()){show('inicioView');return}
+  if(esAdmin()){if(!await token()){volverA='admin';abrirLogin();return}await showAdmin();return}
+  if(!await token()){show('inicioView');return}
+  await showMe();
+}
+$('#entrarBtn').onclick=()=>{volverA=null;token().then(t=>t?showMe():abrirLogin())};
+$('#yaInscritoBtn').onclick=$('#entrarBtn').onclick;
+$('#adminLink').onclick=()=>{history.pushState(null,'',base()+(ED_URL?'&':'?')+'admin=1');route()};
+document.addEventListener('click',e=>{if(e.target.closest('[data-go="inicio"]'))show('inicioView')});
+document.addEventListener('click',async e=>{
+  if(!e.target.closest('[data-salir]'))return;
+  const tk=ses&&ses.at;borrarSesion();yo=null;if(tk)auth('logout',{},tk);
+  history.replaceState(null,'',base());show('inicioView');
+});
+window.addEventListener('popstate',()=>route());
+
+/* ── Entrar con código ── */
+let correo='';
+function abrirLogin(){
+  $('#emailForm').hidden=false;$('#codeForm').hidden=true;$('#passForm').hidden=true;$('#emailErr').textContent='';
+  $('#passLink').hidden=volverA!=='admin';
+  if(ses&&ses.email)$('#emailIn').value=ses.email;
+  show('loginView');setTimeout(()=>$('#emailIn').focus(),50);
+}
+$('#emailForm').addEventListener('submit',async e=>{
+  e.preventDefault();const v=$('#emailIn').value.trim().toLowerCase(),err=$('#emailErr'),b=$('#emailBtn');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){err.textContent='Revisa tu correo.';return}
+  b.disabled=true;err.textContent='';
+  const r=await auth('otp',{email:v,create_user:true});
+  b.disabled=false;
+  if(r.ok){correo=v;$('#codeText').textContent=`Escribe el código que enviamos a ${v}.`;$('#emailForm').hidden=true;$('#codeForm').hidden=false;$('#codeErr').textContent='';$('#codeIn').value='';setTimeout(()=>$('#codeIn').focus(),50);return}
+  err.textContent=r.status===429?'Se enviaron demasiados códigos. Revisa si ya te llegó uno (también en spam); si no, espera unos minutos y vuelve a intentar.':r.status===0?'Sin conexión. Revisa tu internet.':'No se pudo enviar el código. Intenta de nuevo.';
+});
+$('#codeForm').addEventListener('submit',async e=>{
+  e.preventDefault();const v=$('#codeIn').value.replace(/\D/g,''),err=$('#codeErr'),b=$('#codeBtn');
+  if(v.length<6){err.textContent='El código tiene 6 números.';return}
+  b.disabled=true;err.textContent='';
+  const r=await auth('verify',{type:'email',email:correo,token:v});
+  b.disabled=false;
+  if(r.ok&&r.d.access_token){guardarSesion(r.d);if(volverA==='admin'){await showAdmin();return}await showMe();return}
+  err.textContent=r.status===429?'Demasiados intentos. Espera un momento.':'Ese código no es válido o ya venció. Revisa el último correo que te llegó.';
+});
+$('#otroCorreo').onclick=()=>abrirLogin();
+/* Contraseña: solo para el equipo de PetMi (cuentas creadas a mano en Supabase). La familia y la comunidad entran con código. */
+$('#usarClave').onclick=()=>{$('#emailForm').hidden=true;$('#codeForm').hidden=true;$('#passLink').hidden=true;$('#passForm').hidden=false;$('#passErr').textContent='';
+  $('#passEmail').value=$('#emailIn').value;setTimeout(()=>($('#passEmail').value?$('#passIn'):$('#passEmail')).focus(),50)};
+$('#usarCodigo').onclick=()=>abrirLogin();
+$('#passForm').addEventListener('submit',async e=>{
+  e.preventDefault();const em=$('#passEmail').value.trim().toLowerCase(),pw=$('#passIn').value,err=$('#passErr'),b=$('#passBtn');
+  if(!em||!pw){err.textContent='Escribe tu correo y tu contraseña.';return}
+  b.disabled=true;err.textContent='';
+  const r=await auth('token?grant_type=password',{email:em,password:pw});
+  b.disabled=false;$('#passIn').value='';
+  if(r.ok&&r.d.access_token){guardarSesion(r.d);await showAdmin();return}
+  err.textContent=r.status===429?'Demasiados intentos. Espera unos minutos.':r.status===0?'Sin conexión. Revisa tu internet.':'Correo o contraseña incorrectos.';
+});
+
+/* ── Mis datos ── */
+function abrirPerfil(){
+  const p=(yo&&yo.perfil)||{};
+  $('#pNombre').value=p.nombre||'';$('#pPublico').value=p.nombre_publico||'';$('#pWa').value=p.whatsapp||'';
+  $('#pMun').value=p.municipio||'';$('#pZona').value=p.zona||'';$('#pDir').value='';
+  $('#pDirNota').hidden=!p.direccion;$('#pDir').placeholder=p.direccion?p.direccion:'Calle, número, colonia o condominio, y una referencia';
+  $('#pEdad').checked=!!yo&&!!yo.perfil;$('#perfilErr').textContent='';
+  $('#perfilVolver').hidden=!(yo&&yo.perfil);
+  show('perfilView');
+}
+$('#perfilVolver').onclick=()=>showMe();
+$('#editarDatos').onclick=()=>abrirPerfil();
+$('#perfilForm').addEventListener('submit',async e=>{
+  e.preventDefault();const b=$('#perfilBtn'),err=$('#perfilErr');b.disabled=true;err.textContent='';
+  const r=await rpc('tribbi_guardar_perfil',{p_nombre:$('#pNombre').value,p_nombre_publico:$('#pPublico').value,p_whatsapp:$('#pWa').value,
+    p_municipio:$('#pMun').value,p_zona:$('#pZona').value,p_direccion:$('#pDir').value,p_mayor_edad:$('#pEdad').checked});
+  b.disabled=false;
+  if(r.ok){await showMe();return}
+  if(r.d.error==='sesion'){borrarSesion();abrirLogin();return}
+  err.textContent=r.d.mensaje||'No se pudo guardar. Intenta de nuevo.';
+});
+
+/* ── Mi intercambio ── */
+async function showMe(){
+  const r=await rpc('tribbi_yo',{p_slug:ED});
+  if(!r.ok){if(r.d.error==='sesion'){borrarSesion();abrirLogin();return}show('inicioView');$('#edErr').hidden=false;$('#edErr').className='msg bad';$('#edErr').textContent=r.d.mensaje;return}
+  yo=r.d;
+  if(!yo.perfil){abrirPerfil();return}
+  show('meView');renderMe(true);
+  if(qs.get('pago')==='ok'&&yo.inscripcion&&yo.inscripcion.estado==='pendiente_pago')esperarPago();
+}
+function renderMe(fresh){
+  $('#meHola').textContent=`¡Hola, ${yo.perfil.nombre_publico}!`;
+  const i=yo.inscripcion,est=$('#estado');let h='';
+  const abierto=ed.inscripciones_abiertas,antes=new Date()<new Date(ed.inscripcion_desde);
+  const nIdeas=(yo.mis_ideas||[]).length,faltan=Math.max(0,ed.min_ideas-nIdeas);
+  const reglas=`<details class="rules"><summary>Leer el reglamento</summary><ol>
+      <li>Solo mayores de 18 años, dentro del área de entrega de PetMi. Una inscripción por persona.</li>
+      <li>El envío cuesta ${q(ed.envio_q)} y se paga al inscribirte. Después del sorteo no se reembolsa.</li>
+      <li>Para entrar al sorteo necesitas al menos ${ed.min_ideas} idea en tu lista de deseos al cierre (${dia(ed.inscripcion_hasta)}).</li>
+      <li>El sorteo es el ${dia(ed.sorteo_en)}, al azar. Nadie queda consigo mismo.</li>
+      <li>El regalo tiene un presupuesto de ${q(ed.presupuesto_q)} y debe ser nuevo. No se permiten animales vivos, alimentos perecederos, medicamentos, alcohol, tabaco, armas, artículos ilegales ni contenido para adultos.</li>
+      <li>Envuélvelo, márcalo con tu código y entrégalo a PetMi a más tardar el ${dia(ed.entrega_hasta)}. PetMi te avisará cómo y dónde.</li>
+      <li>PetMi reparte del ${dia(ed.reparto_desde)} al ${dia(ed.reparto_hasta)}. Si tu regalo no llega a tiempo, PetMi te envía uno de respaldo (Ángel de Rescate).</li>
+      <li>Quien no entregue a tiempo pierde el pago del envío y puede quedar fuera de futuras ediciones.</li>
+      <li>Tu dirección se guarda cifrada y solo la ve PetMi. Tu amigo secreto solo ve tu nombre público y tus ideas.</li>
+      <li>No reveles a quién le regalas ni contactes a tu amigo secreto para pedirle datos.</li>
+      ${(ed.reglas||[]).map(t=>`<li>${esc(t)}</li>`).join('')}
+    </ol>${CONFIG.reglamentoUrl?`<a href="${esc(CONFIG.reglamentoUrl)}" target="_blank" rel="noopener">Reglamento completo</a>`:''}</details>`;
+  if(!i||i.estado==='cancelada'){
+    if(abierto)h=`<div class="status go"><h2>Inscríbete al intercambio</h2><p>Al inscribirte pagas ${q(ed.envio_q)} de envío. Las inscripciones cierran el ${dia(ed.inscripcion_hasta)}.</p>
+      ${reglas}<label class="check"><input type="checkbox" id="aceptoIn"> <span>Leí y acepto el reglamento.</span></label>
+      <p class="msg bad" id="inscErr" role="alert"></p><button class="big-btn" id="inscBtn">Inscribirme y pagar ${q(ed.envio_q)}</button></div>`;
+    else h=`<div class="status"><h2>${antes?'Las inscripciones todavía no abren':'Las inscripciones ya cerraron'}</h2><p>${antes?`Abren el ${dia(ed.inscripcion_desde)}. Tus datos ya quedaron guardados.`:'Gracias por tu interés. Te esperamos en el próximo intercambio.'}</p></div>`;
+  }else if(i.estado==='excluida'){
+    h=`<div class="status warn"><h2>Tu inscripción no está habilitada</h2><p>Escríbele a PetMi para más información.</p></div>`;
+  }else if(i.estado==='pendiente_pago'){
+    h=`<div class="status warn"><h2>Falta pagar el envío</h2><p>Tu inscripción se confirma cuando se aprueba el pago de ${q(ed.envio_q)}.${abierto?'':' Las inscripciones ya cerraron.'}</p>
+      ${abierto?`<p class="msg bad" id="inscErr" role="alert"></p><button class="big-btn" id="pagarBtn">Pagar ${q(ed.envio_q)}</button>`:''}<p class="msg" id="pagoMsg" role="status"></p></div>`;
+  }else if(!yo.sorteo_hecho){
+    h=`<div class="status go"><h2>¡Estás inscrito! 🎉</h2><p>Tu código es</p><span class="tag">${esc(i.codigo)}</span>
+      <p>El sorteo es el ${dia(ed.sorteo_en)}. Ese día vuelve aquí para descubrir a tu amigo secreto.</p>
+      ${faltan?`<p><b>Te falta agregar ${faltan} idea de regalo</b> para entrar al sorteo.</p>`:''}</div>`;
+  }else if(!yo.tengo_amigo){
+    h=`<div class="status warn"><h2>No entraste al sorteo</h2><p>Al cierre de inscripciones tu pago o tu lista de deseos no estaban completos. Si crees que es un error, escríbele a PetMi.</p></div>`;
+  }else{
+    const m=yo.mi_regalo||{},pm=yo.para_mi;
+    const pasos=[[!!yo.amigo,'Descubre a tu amigo secreto'],[!!m.recibido_petmi_en,`Entrega su regalo a PetMi antes del ${dia(ed.entrega_hasta)}`],[!!m.entregado_en,'PetMi se lo entrega']];
+    h=`<div class="status go"><h2>Tu código para la etiqueta</h2><span class="tag">${esc(i.codigo)}</span>
+      <p>Envuelve el regalo, pega este código por fuera y entrégalo a PetMi. No pongas tu nombre si quieres mantener la sorpresa.</p>
+      <ul class="steps">${pasos.map(([ok,t])=>`<li class="${ok?'done':''}"><b>${ok?'✓':'○'}</b>${esc(t)}</li>`).join('')}</ul></div>`;
+    if(pm&&pm.entregado_en)h+=`<div class="status ${pm.confirmado_en?'':'go'}"><h2>${pm.confirmado_en?'Confirmaste que recibiste tu regalo 🎁':'¡Tu regalo ya fue entregado! 🎁'}</h2>
+      ${pm.confirmado_en?'<p>Gracias por participar.</p>':'<p>Cuando lo tengas en tus manos, confírmalo aquí.</p><button class="small-btn alt" id="recibiBtn">Ya recibí mi regalo</button>'}</div>`;
+  }
+  est.innerHTML=h;
+  const ib=$('#inscBtn');if(ib)ib.onclick=inscribirme;
+  const pb=$('#pagarBtn');if(pb)pb.onclick=pagar;
+  const rb=$('#recibiBtn');if(rb)rb.onclick=confirmarRecibido;
+  // Amigo secreto
+  const verAmigo=yo.sorteo_hecho&&yo.tengo_amigo;$('#amigoBox').hidden=!verAmigo;
+  if(verAmigo)renderAmigo(fresh);
+  // Mis ideas
+  const editable=i&&!['cancelada','excluida'].includes(i.estado)&&new Date()<=new Date(ed.entrega_hasta);
+  $('#mineSec').hidden=!i||['cancelada','excluida'].includes(i.estado);$('#wishForm').hidden=!editable;
+  renderMine(editable);
+}
+function renderAmigo(fresh){
+  const a=yo.amigo;
+  if(fresh){$('#secretName').textContent=a?a.nombre:'🎁';$('#revealBtn').hidden=!!a;$('#scratchErr').hidden=true;setupScratch(!!a)}
+  $('#h-theirs').textContent=a?`Ideas para ${a.nombre}`:'Ideas para tu amigo secreto';
+  $('#theirWishes').innerHTML=!a?'<p class="empty">Raspa tu tarjeta para ver sus ideas de regalo.</p>'
+    :a.ideas.length?`<ul class="wishes">${a.ideas.map(w=>`<li><span>${esc(w.texto)}</span></li>`).join('')}</ul>`
+    :'<p class="empty">Todavía no tiene ideas. Vuelve a revisar en unos días.</p>';
+}
+function renderMine(editable){
+  const mine=yo.mis_ideas||[];
+  $('#myWishes').innerHTML=mine.length
+    ?mine.map(w=>`<li><span>${esc(w.texto)}</span>${editable?`<button class="icon-btn" data-wish="${esc(w.id)}" aria-label="Quitar idea">×</button>`:''}</li>`).join('')
+    :'<p class="empty">Aún no agregas ideas. Dale una pista a tu amigo secreto.</p>';
+}
+function wishErr(m){const e=$('#wishErr');e.hidden=!m;e.textContent=m||''}
+$('#wishForm').addEventListener('submit',async e=>{
+  e.preventDefault();const v=$('#wishInput').value.trim();if(!v)return;wishErr('');
+  const r=await rpc('tribbi_idea_agregar',{p_slug:ED,p_texto:v});
+  if(r.ok){yo.mis_ideas=r.d.ideas;$('#wishInput').value='';renderMe(false)}
+  else if(r.d.error==='sesion'){borrarSesion();abrirLogin()}else wishErr(r.d.mensaje||'No se pudo agregar. Intenta de nuevo.');
+});
+$('#myWishes').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-wish]');if(!b)return;wishErr('');
+  const r=await rpc('tribbi_idea_borrar',{p_slug:ED,p_id:Number(b.dataset.wish)});
+  if(r.ok){yo.mis_ideas=r.d.ideas;renderMe(false)}
+  else if(r.d.error==='sesion'){borrarSesion();abrirLogin()}else wishErr(r.d.mensaje||'No se pudo quitar. Intenta de nuevo.');
+});
+
+async function inscribirme(){
+  const err=$('#inscErr'),b=$('#inscBtn');
+  if(!$('#aceptoIn').checked){err.textContent='Para inscribirte debes aceptar el reglamento.';return}
+  b.disabled=true;err.textContent='';
+  const r=await rpc('tribbi_inscribirme',{p_slug:ED,p_acepto_reglamento:true});
+  if(!r.ok){b.disabled=false;if(r.d.error==='sesion'){borrarSesion();abrirLogin();return}err.textContent=r.d.mensaje||'No se pudo inscribir. Intenta de nuevo.';return}
+  if(r.d.estado==='pagada'){await showMe();return}
+  await pagar(b,err);
+}
+async function pagar(b,err){
+  b=b instanceof HTMLElement?b:$('#pagarBtn');err=err||$('#inscErr');
+  if(b)b.disabled=true;if(err)err.textContent='';
+  const tk=await token();if(!tk){abrirLogin();return}
+  try{
+    const r=await fetch(CONFIG.pagoApi,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({edicion:ED})});
+    let d={};try{d=await r.json()}catch(e){}
+    if(r.ok&&d.url){location.href=d.url;return}
+    if(err)err.textContent=r.status===404?'El pago en línea todavía no está activado. Ya quedaste inscrito: vuelve pronto para pagar.':(d.mensaje||'No se pudo abrir el pago. Intenta de nuevo.');
+  }catch(e){if(err)err.textContent='Sin conexión. Revisa tu internet e intenta de nuevo.'}
+  if(b)b.disabled=false;
+  const yo2=await rpc('tribbi_yo',{p_slug:ED});if(yo2.ok){yo=yo2.d;const m=err&&err.textContent;renderMe(false);const e2=$('#inscErr');if(e2&&m)e2.textContent=m}
+}
+/* Al volver de Recurrente: el pago se confirma por detrás (el aviso de Recurrente llega a la función de Vercel). Se revisa unas veces. */
+async function esperarPago(){
+  const msg=()=>$('#pagoMsg');if(msg())msg().textContent='Confirmando tu pago…';
+  for(let n=0;n<10;n++){
+    await new Promise(r=>setTimeout(r,3000));
+    const r=await rpc('tribbi_yo',{p_slug:ED});
+    if(r.ok&&r.d.inscripcion&&r.d.inscripcion.estado==='pagada'){yo=r.d;history.replaceState(null,'',base());renderMe(true);confetti();return}
+  }
+  if(msg())msg().textContent='Tu pago todavía no aparece. Si ya pagaste, recarga la página en unos minutos.';
+}
+async function confirmarRecibido(){
+  const r=await rpc('tribbi_confirmar_recibido',{p_slug:ED});
+  if(r.ok){const y=await rpc('tribbi_yo',{p_slug:ED});if(y.ok){yo=y.d;renderMe(false);confetti()}}
+  else alert(r.d.mensaje||'No se pudo confirmar. Intenta de nuevo.');
+}
+
+/* Tarjeta para raspar: el nombre NO está en la página hasta que se raspa */
+let scratchDone=false,pedido=null;
+function pedirAmigo(){
+  if(yo.amigo)return Promise.resolve(true);
+  if(pedido)return pedido;
+  pedido=rpc('tribbi_revelar',{p_slug:ED}).then(r=>{
+    pedido=null;
+    if(r.ok&&r.d.amigo){yo.amigo=r.d.amigo;$('#secretName').textContent=r.d.amigo.nombre;return true}
+    const e=$('#scratchErr');e.hidden=false;e.textContent=r.d.error==='sesion'?'Tu sesión venció. Sal y vuelve a entrar.':(r.d.mensaje||'No se pudo abrir la tarjeta. Intenta de nuevo.');
+    return false;
+  });
+  return pedido;
+}
+async function setupScratch(abierta){
+  const cv=$('#scratchCv');cv.classList.toggle('gone',abierta);scratchDone=abierta;
+  if(abierta||!cv.getContext)return;
+  try{await document.fonts.ready}catch(e){}
+  const box=$('#scratch').getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  cv.width=Math.round(box.width*dpr);cv.height=Math.round(box.height*dpr);
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalCompositeOperation='source-over';
+  const w=box.width,h=box.height,g=ctx.createLinearGradient(0,0,w,h);
+  g.addColorStop(0,'#D9A12E');g.addColorStop(.5,'#F7D982');g.addColorStop(1,'#C98F1F');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  ctx.fillStyle='rgba(255,255,255,.55)';for(let k=0;k<90;k++){ctx.beginPath();ctx.arc(Math.random()*w,Math.random()*h,Math.random()*2+.5,0,7);ctx.fill()}
+  ctx.fillStyle='#6B4300';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='600 22px Fredoka, sans-serif';ctx.fillText('Raspa aquí ✨',w/2,h/2-10);
+  ctx.font='400 15px Fredoka, sans-serif';ctx.fillText('con el dedo o el mouse',w/2,h/2+16);
+  ctx.globalCompositeOperation='destination-out';ctx.lineWidth=40;ctx.lineCap='round';ctx.lineJoin='round';
+  let down=false,last=null,moves=0;
+  const pos=e=>{const b=cv.getBoundingClientRect();return {x:e.clientX-b.left,y:e.clientY-b.top}};
+  const stroke=p=>{const a=last||{x:p.x+.1,y:p.y};ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;if(++moves%6===0)check()};
+  cv.onpointerdown=e=>{if(scratchDone)return;pedirAmigo();down=true;last=null;try{cv.setPointerCapture(e.pointerId)}catch(_){}stroke(pos(e))};
+  cv.onpointermove=e=>{if(down&&!scratchDone)stroke(pos(e))};
+  cv.onpointerup=cv.onpointercancel=()=>{down=false;last=null;check()};
+  function check(){
+    if(scratchDone)return;
+    const d=ctx.getImageData(0,0,cv.width,cv.height).data;let c=0,t=0;
+    for(let k=3;k<d.length;k+=64){t++;if(d[k]<20)c++}
+    if(t&&c/t>.45)reveal();
+  }
+}
+async function reveal(){
+  if(scratchDone)return;scratchDone=true;
+  const ok=await pedirAmigo();if(!ok){scratchDone=false;return}
+  $('#scratchCv').classList.add('gone');$('#revealBtn').hidden=true;confetti();renderMe(false);
+}
+$('#revealBtn').onclick=()=>reveal();
+function confetti(){
+  if(reduced)return;
+  const c=document.createElement('div');c.className='confetti';c.setAttribute('aria-hidden','true');
+  const cols=['#D7263D','#F2B33D','#1F8A5B','#2F7FC1','#fff'];
+  c.innerHTML=Array.from({length:60},(_,i)=>`<i style="left:${Math.random()*100}%;background:${cols[i%5]};animation-delay:${Math.random()*.5}s;animation-duration:${1.4+Math.random()}s"></i>`).join('');
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3200);
+}
+
+/* ── Panel de PetMi ── */
+const falloAdmin=(r,base)=>(r.d.error==='servidor'?base:(r.d.mensaje||base))+(r.d.detalle?` (${r.d.detalle})`:'');
+async function admin(fn,args){
+  const r=await rpc(fn,Object.assign({p_slug:ED},args||{}));
+  if(r.d.error==='sesion'){borrarSesion();volverA='admin';abrirLogin()}
+  return r;
+}
+async function showAdmin(){
+  const r=await admin('tribbi_admin_resumen');
+  if(!r.ok){if(r.d.error==='sesion')return;show('inicioView');$('#edErr').hidden=false;$('#edErr').className='msg bad';
+    $('#edErr').textContent=r.d.error==='admin'?'Esta cuenta no tiene acceso al panel. Corre 2_hacerme_admin.sql con tu correo.':falloAdmin(r,'No se pudo abrir el panel.');return}
+  show('adminView');pintarNums(r.d);
+}
+function pintarNums(d){
+  const items=[['pagadas','inscripciones pagadas'],['pendientes_pago','sin pagar'],['pagadas_sin_ideas','pagadas sin ideas'],['en_sorteo','en el sorteo'],
+    ['reveladas','ya descubrieron'],['recibidos_petmi','regalos en PetMi'],['entregados','regalos entregados'],['rescates','Ángeles de Rescate'],['confirmados','confirmaron recibido']];
+  $('#nums').innerHTML=items.map(([k,t])=>`<div><b>${Number(d[k]||0)}</b><span>${t}</span></div>`).join('');
+  $('#sortearBtn').textContent=d.en_sorteo?'Volver a sortear':'Hacer el sorteo';
+}
+$('#refrescar').onclick=async()=>{const r=await admin('tribbi_admin_resumen');if(r.ok)pintarNums(r.d)};
+$('#sortearBtn').onclick=async()=>{
+  const m=$('#sorteoMsg');
+  if(!confirm('¿Hacer el sorteo ahora? Entran solo las inscripciones pagadas con ideas.'))return;
+  m.className='msg';m.textContent='Sorteando…';
+  const r=await admin('tribbi_admin_sortear');
+  if(r.ok){m.textContent=`Listo: ${r.d.participantes} personas en el sorteo.${r.d.fuera?` ${r.d.fuera} pagaron pero no tenían ideas y quedaron fuera.`:''}`;$('#refrescar').click()}
+  else{m.className='msg bad';m.textContent=falloAdmin(r,'No se pudo hacer el sorteo.')}
+};
+document.querySelectorAll('[data-marcar]').forEach(b=>b.onclick=async()=>{
+  const c=$('#codigoIn').value.trim().toUpperCase(),m=$('#marcarMsg');
+  if(!c){m.className='msg bad';m.textContent='Escribe el código.';return}
+  const r=await admin('tribbi_admin_marcar',{p_codigo:c,p_accion:b.dataset.marcar});
+  m.className=r.ok?'msg':'msg bad';m.textContent=r.ok?`${c}: ${b.textContent.toLowerCase()} ✓`:falloAdmin(r,'No se pudo registrar.');
+  if(r.ok){$('#codigoIn').value='';$('#codigoIn').focus()}
+});
+$('#codigoIn').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.querySelector('[data-marcar="recibido"]').click()}});
+$('#sinRegaloBtn').onclick=async()=>{
+  const r=await admin('tribbi_admin_sin_regalo'),el=$('#sinRegalo');
+  if(!r.ok){el.innerHTML=`<p class="msg bad">${esc(falloAdmin(r,'No se pudo cargar.'))}</p>`;return}
+  const l=r.d.pendientes;
+  el.innerHTML=!l.length?'<p class="msg">Todos los regalos ya llegaron o tienen rescate. 🎉</p>':`<div class="scroll"><table><thead><tr><th>Recibe</th><th>Municipio</th><th>Regala</th><th>WhatsApp de quien regala</th><th></th></tr></thead><tbody>${
+    l.map(p=>`<tr><td>${esc(p.recibe_nombre)}<br><span class="tiny">${esc(p.recibe_codigo)}</span></td><td>${esc(p.recibe_municipio)}</td><td>${esc(p.da_nombre)}<br><span class="tiny">${esc(p.da_codigo)}</span></td>
+      <td class="nw"><a href="https://wa.me/${esc(String(p.da_whatsapp).replace(/\D/g,'').replace(/^(\d{8})$/,'502$1'))}" target="_blank" rel="noopener">${esc(p.da_whatsapp)}</a></td>
+      <td><button class="link-btn" data-rescate="${esc(p.recibe_codigo)}">Activar rescate</button></td></tr>`).join('')}</tbody></table></div>`;
+};
+$('#sinRegalo').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-rescate]');if(!b)return;
+  if(!confirm('¿Activar el Ángel de Rescate? PetMi enviará un regalo de respaldo a esta persona.'))return;
+  const r=await admin('tribbi_admin_rescate',{p_codigo_recibe:b.dataset.rescate});
+  if(r.ok){b.closest('tr').remove()}else alert(falloAdmin(r,'No se pudo activar.'));
+});
+let rutaTexto='';
+$('#rutaBtn').onclick=async()=>{
+  const r=await admin('tribbi_admin_ruta'),el=$('#ruta');
+  if(!r.ok){el.innerHTML=`<p class="msg bad">${esc(falloAdmin(r,'No se pudo cargar.'))}</p>`;return}
+  const l=r.d.entregas;$('#copiarRuta').hidden=!l.length;
+  rutaTexto=l.map((x,n)=>`${n+1}. ${x.tipo==='rescate'?'[RESCATE] ':''}${x.codigo} → ${x.nombre} (${x.whatsapp})\n${x.direccion}, ${x.zona?x.zona+', ':''}${x.municipio}`).join('\n\n');
+  el.innerHTML=!l.length?'<p class="msg">No hay entregas pendientes.</p>':`<div class="scroll"><table><thead><tr><th>Código</th><th>Para</th><th>Dirección</th><th>WhatsApp</th></tr></thead><tbody>${
+    l.map(x=>`<tr><td class="nw">${esc(x.codigo)}${x.tipo==='rescate'?'<br><span class="tiny">Rescate</span>':''}</td><td>${esc(x.nombre)}</td><td>${esc(x.direccion)}<br><span class="tiny">${esc([x.zona,x.municipio].filter(Boolean).join(', '))}</span></td><td class="nw">${esc(x.whatsapp)}</td></tr>`).join('')}</tbody></table></div>`;
+};
+$('#copiarRuta').onclick=async()=>{try{await navigator.clipboard.writeText(rutaTexto);$('#copiarRuta').textContent='Copiado ✓'}catch(e){prompt('Copia la ruta:',rutaTexto)}};
+$('#inscritosBtn').onclick=async()=>{
+  const r=await admin('tribbi_admin_inscripciones'),el=$('#inscritos');
+  if(!r.ok){el.innerHTML=`<p class="msg bad">${esc(falloAdmin(r,'No se pudo cargar.'))}</p>`;return}
+  let l=r.d.inscripciones;if($('#soloPend').checked)l=l.filter(x=>x.estado==='pendiente_pago'||(x.estado==='pagada'&&x.ideas<(ed.min_ideas||1)));
+  const nom={pendiente_pago:'Sin pagar',pagada:'Pagada',cancelada:'Cancelada',excluida:'Excluida'};
+  el.innerHTML=!l.length?'<p class="msg">No hay nadie en esta lista.</p>':`<div class="scroll"><table><thead><tr><th>Código</th><th>Nombre</th><th>WhatsApp</th><th>Municipio</th><th>Estado</th><th>Ideas</th><th>Inscripción</th></tr></thead><tbody>${
+    l.map(x=>`<tr><td class="nw">${esc(x.codigo)}</td><td>${esc(x.nombre)}</td><td class="nw">${esc(x.whatsapp)}</td><td>${esc(x.municipio)}</td><td>${esc(nom[x.estado]||x.estado)}</td><td>${Number(x.ideas)}</td><td class="nw">${esc(diaHora(x.creada_en))}</td></tr>`).join('')}</tbody></table></div>`;
+};
+$('#soloPend').onchange=()=>{if($('#inscritos').innerHTML)$('#inscritosBtn').click()};
+let correosEspera='';
+$('#esperaBtn').onclick=async()=>{
+  const r=await rpc('tribbi_admin_lista_espera',{p_programa:'bookpal'}),el=$('#espera');
+  if(r.d.error==='sesion'){borrarSesion();volverA='admin';abrirLogin();return}
+  if(!r.ok){el.innerHTML=`<p class="msg bad">${esc(r.d.error==='falta_sql'?'Falta correr 3_lista_espera.sql en Supabase.':falloAdmin(r,'No se pudo cargar.'))}</p>`;return}
+  const l=r.d.personas,nom={adultos:'Para sí',ninos:'Para niños',ambos:'Los dos'};
+  correosEspera=l.map(x=>x.email).join(', ');$('#copiarCorreos').hidden=!l.length;
+  el.innerHTML=`<p class="msg">${Number(r.d.total)} personas apuntadas.</p>`+(l.length?`<div class="scroll"><table><thead><tr><th>Correo</th><th>Libros</th><th>Desde</th></tr></thead><tbody>${
+    l.map(x=>`<tr><td>${esc(x.email)}</td><td>${esc(nom[x.interes]||x.interes)}</td><td class="nw">${esc(diaHora(x.creado_en))}</td></tr>`).join('')}</tbody></table></div>`:'');
+};
+$('#copiarCorreos').onclick=async()=>{try{await navigator.clipboard.writeText(correosEspera);$('#copiarCorreos').textContent='Copiados ✓'}catch(e){prompt('Copia los correos:',correosEspera)}};
+$('#borrarDirBtn').onclick=async()=>{
+  if(!confirm('¿Borrar todas las direcciones de esta edición? No se puede deshacer.'))return;
+  const r=await admin('tribbi_admin_borrar_direcciones'),m=$('#borrarMsg');
+  m.className=r.ok?'msg':'msg bad';m.textContent=r.ok?`Listo: ${r.d.borradas} direcciones borradas.`:falloAdmin(r,'No se pudo borrar.');
+};
+
+route();
+})();
+</script>
+</body>
+</html>

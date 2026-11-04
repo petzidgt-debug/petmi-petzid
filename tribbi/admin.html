@@ -1,1 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1C2A33">
+<title>Panel de Tribbi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tribbi-comun.css">
+<style>
+.bar{background:var(--ink);color:var(--bg);padding:10px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:11;background:var(--ink)}
+.bar{top:env(safe-area-inset-top,0px)}
+.bar strong{font-family:"Fredoka",sans-serif;font-size:1.15rem}
+.bar nav{display:flex;gap:4px;flex-wrap:wrap}
+.bar nav button{border:0;background:transparent;color:var(--bg);font-weight:700;padding:7px 14px;border-radius:999px;cursor:pointer}
+.bar nav button[aria-current="page"]{background:var(--bg);color:var(--ink)}
+.bar .out{border:0;background:none;color:var(--bg);opacity:.8;cursor:pointer;font-weight:700}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 60px}
+section.blk{margin-top:30px}
+section.blk h2{font-size:1.45rem;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 14px;max-width:64ch}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row .tb-field{width:auto;max-width:220px;text-transform:uppercase;letter-spacing:.06em;margin:0}
+.nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));border:2px solid var(--line);border-radius:18px;overflow:hidden;background:var(--card)}
+.nums div{padding:12px 16px;border-right:1px dashed var(--line);border-bottom:1px dashed var(--line)}
+.nums b{display:block;font-family:"Fredoka",sans-serif;font-size:1.9rem;line-height:1.1;color:var(--teal)}
+.nums span{font-size:.9rem;color:var(--muted)}
+.form{background:var(--card);border:2px solid var(--teal);border-radius:22px;padding:20px 22px;margin-top:14px}
+.form h3{margin:0 0 6px;font-size:1.3rem;color:var(--teal)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 16px}
+.grid label,.form > label{display:block;font-weight:700;margin:10px 0 0}
+.grid label small,.form label small{display:block;font-weight:400;color:var(--muted);font-size:.85rem}
+.check{display:flex;gap:10px;align-items:center;font-weight:700;margin:14px 0 0}
+.check input{width:20px;height:20px;accent-color:var(--teal)}
+.acts{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px}
+</style>
+</head>
+<body>
+<div id="loginView" hidden><div class="wrap" id="login"></div></div>
 
+<div id="panelView" hidden>
+  <div class="bar">
+    <strong>Panel de Tribbi</strong>
+    <nav aria-label="Secciones">
+      <button data-tab="regalos" aria-current="page">Intercambios de regalos</button>
+      <button data-tab="bookpal">BookPal</button>
+      <button data-tab="espera">Lista de espera</button>
+    </nav>
+    <button class="out" id="salir">Salir</button>
+  </div>
+
+  <!-- ═══ INTERCAMBIOS DE REGALOS ═══ -->
+  <div class="wrap" data-panel="regalos">
+    <section class="blk">
+      <h2>Intercambios de regalos</h2>
+      <p class="lead">Crea cada intercambio con sus fechas, montos y reglas propias. Mientras esté como borrador, solo lo ves tú. Para hacer el sorteo, registrar regalos y ver la ruta, usa "Operar".</p>
+      <div class="row"><button class="tb-btn" id="nuevoEd">+ Nuevo intercambio</button><span class="tb-msg" id="edMsg" role="status"></span></div>
+      <form class="form" id="edForm" hidden novalidate>
+        <h3 id="edTitulo">Nuevo intercambio</h3>
+        <div class="grid">
+          <label>Nombre<input class="tb-field" name="nombre" maxlength="80" required></label>
+          <label>Dirección (identificador)<small>Va en el enlace: tribbi.html?e=…</small><input class="tb-field" name="slug" maxlength="40" pattern="[a-z0-9-]{3,40}" required></label>
+          <label>Abren inscripciones<input class="tb-field" type="datetime-local" name="inscripcion_desde" required></label>
+          <label>Cierran inscripciones<input class="tb-field" type="datetime-local" name="inscripcion_hasta" required></label>
+          <label>Sorteo<input class="tb-field" type="datetime-local" name="sorteo_en" required></label>
+          <label>Límite para entregar el regalo<small>También es el último día para cambiar ideas</small><input class="tb-field" type="datetime-local" name="entrega_hasta" required></label>
+          <label>Reparto desde<input class="tb-field" type="date" name="reparto_desde"></label>
+          <label>Reparto hasta<input class="tb-field" type="date" name="reparto_hasta"></label>
+          <label>Ángel de Rescate desde<input class="tb-field" type="date" name="rescate_desde"></label>
+          <label>Ángel de Rescate hasta<input class="tb-field" type="date" name="rescate_hasta"></label>
+          <label>Presupuesto del regalo (Q)<input class="tb-field" type="number" name="presupuesto_q" min="1" step="1" required></label>
+          <label>Costo de envío (Q)<small>0 si no hay envío</small><input class="tb-field" type="number" name="envio_q" min="0" step="1" required></label>
+          <label>Mínimo de ideas de regalo<input class="tb-field" type="number" name="min_ideas" min="0" max="20" step="1" required></label>
+        </div>
+        <label>Reglas propias de este intercambio<small>Una por línea. Se agregan a las reglas básicas (fechas, presupuesto, envío), que salen solas.</small>
+          <textarea class="tb-field" name="reglas" rows="5" placeholder="Ej. Solo regalos hechos a mano"></textarea></label>
+        <label class="check"><input type="checkbox" name="publicada"> Publicado (visible para la comunidad)</label>
+        <p class="tb-err" id="edErr" role="alert"></p>
+        <div class="acts"><button class="tb-btn" type="submit" id="edGuardar">Guardar</button><button class="tb-link" type="button" id="edCancelar">Cancelar</button></div>
+      </form>
+      <div id="ediciones"></div>
+    </section>
+  </div>
+
+  <!-- ═══ BOOKPAL ═══ -->
+  <div class="wrap" data-panel="bookpal" hidden>
+    <section class="blk">
+      <h2>Cómo va BookPal</h2>
+      <div class="nums" id="bpNums"></div>
+      <p class="tb-msg"><button class="tb-link" id="bpRefrescar">Actualizar números</button></p>
+    </section>
+
+    <section class="blk">
+      <h2>Configuración y reglas</h2>
+      <form class="form" id="bpForm" novalidate>
+        <label class="check"><input type="checkbox" name="abierto"> BookPal abierto (se aceptan inscripciones)</label>
+        <div class="grid">
+          <label>Costo de envío (Q)<input class="tb-field" type="number" name="envio_q" min="0" step="1"></label>
+          <label>Libros por estante<input class="tb-field" type="number" name="max_libros" min="1" max="10" step="1"></label>
+          <label>"Me gustaría este" por persona<input class="tb-field" type="number" name="max_megusta" min="0" max="20" step="1"></label>
+        </div>
+        <label>Reglas de BookPal<small>Una por línea. Las ve cada persona antes de participar.</small>
+          <textarea class="tb-field" name="reglas" rows="6"></textarea></label>
+        <p class="tb-err" id="bpErr" role="alert"></p>
+        <div class="acts"><button class="tb-btn" type="submit">Guardar configuración</button><span class="tb-msg" id="bpMsg" role="status"></span></div>
+      </form>
+    </section>
+
+    <section class="blk">
+      <h2>Sorteo automático</h2>
+      <p class="lead">Junta a quienes esperan a quién enviarle con quienes esperan libro, dando prioridad a los gustos. Quien no tenga pareja compatible sigue esperando al siguiente sorteo. Se puede correr cuantas veces quieras.</p>
+      <button class="tb-btn" id="bpSortear">Sortear ahora</button>
+      <p class="tb-msg" id="bpSorteoMsg" role="status"></p>
+    </section>
+
+    <section class="blk">
+      <h2>Registrar libros</h2>
+      <p class="lead">Escribe el código de la etiqueta (BP-…). "Recibido en PetMi" y "Entregado" usan el código de quien envía; "Ángel Lector entregado", el de quien recibe.</p>
+      <div class="row">
+        <input class="tb-field" id="bpCodigo" placeholder="BP-XXXXXX" maxlength="12" aria-label="Código">
+        <button class="tb-btn sm" data-bpmarcar="recibido">Recibido en PetMi</button>
+        <button class="tb-btn sm" data-bpmarcar="entregado">Entregado</button>
+        <button class="tb-btn sm" data-bpmarcar="rescate_entregado">Ángel Lector entregado</button>
+      </div>
+      <p class="tb-msg" id="bpMarcarMsg" role="status"></p>
+    </section>
+
+    <section class="blk">
+      <h2>Quién espera su libro</h2>
+      <p class="lead">Ordenado por días de espera. Escríbele a quien envía para recordarle, o activa el Ángel Lector para que PetMi envíe un libro de respaldo.</p>
+      <button class="tb-btn sm" id="bpEsperandoBtn">Cargar lista</button>
+      <div id="bpEsperando"></div>
+    </section>
+
+    <section class="blk">
+      <h2>Ruta de entrega</h2>
+      <p class="lead">Libros en PetMi y Ángeles Lectores pendientes, con dirección. Cada vez que se abre queda registrado.</p>
+      <div class="row"><button class="tb-btn sm" id="bpRutaBtn">Ver ruta</button><button class="tb-link" id="bpCopiarRuta" hidden>Copiar para WhatsApp</button></div>
+      <div id="bpRuta"></div>
+    </section>
+
+    <section class="blk">
+      <h2>Participantes</h2>
+      <button class="tb-btn sm" id="bpPartBtn">Cargar lista</button>
+      <div id="bpPart"></div>
+    </section>
+
+    <section class="blk">
+      <h2>Estantería</h2>
+      <p class="lead">Todos los libros ofrecidos. Retira los que no cumplan las reglas (solo si todavía no están apartados para un envío).</p>
+      <button class="tb-btn sm" id="bpLibrosBtn">Cargar estantería</button>
+      <div id="bpLibros"></div>
+    </section>
+  </div>
+
+  <!-- ═══ LISTA DE ESPERA ═══ -->
+  <div class="wrap" data-panel="espera" hidden>
+    <section class="blk">
+      <h2>Lista de espera de BookPal</h2>
+      <p class="lead">Personas que se apuntaron desde la home de Tribbi para que les avisen cuando BookPal abra.</p>
+      <div class="row"><button class="tb-btn sm" id="esperaBtn">Cargar lista</button><button class="tb-link" id="copiarCorreos" hidden>Copiar correos</button></div>
+      <div id="espera"></div>
+    </section>
+  </div>
+</div>
+
+<script src="tribbi-comun.js"></script>
+<script>
+(function(){
+'use strict';
+const T=window.Tribbi,{$,esc,dia,diaHora,q,rpc,GENEROS,PUBLICO,CONDICION}=T;
+const F=(r,b)=>T.fallo(r,b,true);
+const sesionPerdida=r=>{if(r.d.error==='sesion'){T.borrarSesion();abrirLogin();return true}return false};
+
+/* ── Entrar ── */
+function abrirLogin(msg){
+  $('#panelView').hidden=true;$('#loginView').hidden=false;
+  T.montarLogin($('#login'),{titulo:'Panel de Tribbi',conClave:true,onEntrar:iniciar});
+  if(msg){const e=$('#login .tb-err');if(e)e.textContent=msg}
+}
+async function iniciar(){
+  if(!await T.token()){abrirLogin();return}
+  const r=await rpc('tribbi_admin_ediciones');
+  if(!r.ok){if(sesionPerdida(r))return;
+    if(r.d.error==='admin'){await T.salir();abrirLogin('Esta cuenta no tiene acceso al panel. Corre 2_hacerme_admin.sql con tu correo.');return}
+    abrirLogin(F(r,'No se pudo abrir el panel.'));return}
+  $('#loginView').hidden=true;$('#panelView').hidden=false;
+  pintarEdiciones(r.d.ediciones);
+  const t=(location.hash||'').slice(1);if(['regalos','bookpal','espera'].includes(t))tab(t);
+}
+$('#salir').onclick=async()=>{await T.salir();abrirLogin()};
+
+/* ── Pestañas ── */
+function tab(t){
+  document.querySelectorAll('[data-tab]').forEach(b=>{if(b.dataset.tab===t)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  document.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==t);
+  if(location.hash!=='#'+t)history.replaceState(null,'','#'+t);
+  if(t==='bookpal'&&!bpCargado)cargarBookpal();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+
+/* ═══ Intercambios de regalos ═══ */
+let ediciones=[],editando=null;
+function pintarEdiciones(l){
+  ediciones=l;
+  $('#ediciones').innerHTML=!l.length?'<p class="tb-msg">Todavía no hay intercambios.</p>':`<div class="tb-scroll"><table><thead><tr><th>Intercambio</th><th>Estado</th><th>Inscripciones</th><th>Sorteo</th><th>Pagadas</th><th></th></tr></thead><tbody>${
+    l.map(e=>{const ab=new Date()>=new Date(e.inscripcion_desde)&&new Date()<=new Date(e.inscripcion_hasta);
+      const est=!e.publicada?'<span class="tb-chip off">Borrador</span>':e.sorteo_hecho?'<span class="tb-chip">Sorteado</span>':ab?'<span class="tb-chip ok">Inscripciones abiertas</span>':'<span class="tb-chip warn">Publicado</span>';
+      return `<tr><td><b>${esc(e.nombre)}</b><br><span class="tb-tiny">${esc(e.slug)}</span></td><td>${est}</td>
+      <td class="nw">${esc(dia(e.inscripcion_desde))} – ${esc(dia(e.inscripcion_hasta))}</td><td class="nw">${esc(dia(e.sorteo_en))}</td><td>${Number(e.pagadas)} de ${Number(e.inscritas)}</td>
+      <td class="nw"><button class="tb-link" data-editar="${e.id}">Editar</button><a class="tb-link" href="tribbi.html?e=${encodeURIComponent(e.slug)}&admin=1">Operar</a><a class="tb-link" href="tribbi.html?e=${encodeURIComponent(e.slug)}" target="_blank" rel="noopener">Ver página</a></td></tr>`}).join('')}</tbody></table></div>`;
+}
+async function recargarEdiciones(){const r=await rpc('tribbi_admin_ediciones');if(r.ok)pintarEdiciones(r.d.ediciones);else if(!sesionPerdida(r))$('#edMsg').textContent=F(r,'No se pudo cargar.')}
+function abrirForm(e){
+  editando=e||null;const f=$('#edForm');f.reset();$('#edErr').textContent='';
+  $('#edTitulo').textContent=e?`Editar: ${e.nombre}`:'Nuevo intercambio';
+  if(e){
+    f.nombre.value=e.nombre;f.slug.value=e.slug;
+    ['inscripcion_desde','inscripcion_hasta','sorteo_en','entrega_hasta'].forEach(k=>f[k].value=T.aLocal(e[k]));
+    ['reparto_desde','reparto_hasta','rescate_desde','rescate_hasta'].forEach(k=>f[k].value=e[k]||'');
+    f.presupuesto_q.value=Number(e.presupuesto_q);f.envio_q.value=Number(e.envio_q);f.min_ideas.value=e.min_ideas;
+    f.reglas.value=(e.reglas||[]).join('\n');f.publicada.checked=!!e.publicada;
+  }else{f.envio_q.value=35;f.min_ideas.value=1;f.presupuesto_q.value=75}
+  f.hidden=false;f.nombre.focus();f.scrollIntoView({behavior:T.reduced?'auto':'smooth',block:'start'});
+}
+$('#nuevoEd').onclick=()=>abrirForm(null);
+$('#edCancelar').onclick=()=>{$('#edForm').hidden=true;editando=null};
+$('#ediciones').addEventListener('click',e=>{const b=e.target.closest('[data-editar]');if(b)abrirForm(ediciones.find(x=>String(x.id)===b.dataset.editar))});
+$('#edForm').nombre.addEventListener('input',e=>{if(!editando){$('#edForm').slug.value=e.target.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)}});
+$('#edForm').addEventListener('submit',async ev=>{
+  ev.preventDefault();const f=$('#edForm'),err=$('#edErr'),b=$('#edGuardar');
+  const req=['inscripcion_desde','inscripcion_hasta','sorteo_en','entrega_hasta'];
+  if(req.some(k=>!f[k].value)){err.textContent='Faltan fechas.';return}
+  const datos={id:editando?editando.id:null,slug:f.slug.value.trim(),nombre:f.nombre.value,
+    presupuesto_q:f.presupuesto_q.value,envio_q:f.envio_q.value,min_ideas:f.min_ideas.value,
+    reglas:f.reglas.value.split('\n').map(s=>s.trim()).filter(Boolean),publicada:f.publicada.checked};
+  req.forEach(k=>datos[k]=T.deLocal(f[k].value));
+  ['reparto_desde','reparto_hasta','rescate_desde','rescate_hasta'].forEach(k=>datos[k]=f[k].value||'');
+  b.disabled=true;err.textContent='';
+  const r=await rpc('tribbi_admin_edicion_guardar',{p_datos:datos});b.disabled=false;
+  if(r.ok){f.hidden=true;editando=null;$('#edMsg').className='tb-msg ok';$('#edMsg').textContent='Guardado ✓';await recargarEdiciones();return}
+  if(!sesionPerdida(r))err.textContent=F(r,'No se pudo guardar.');
+});
+
+/* ═══ BookPal ═══ */
+let bpCargado=false;
+const reglasTexto=l=>(l||[]).join('\n');
+async function cargarBookpal(){
+  const r=await rpc('tribbi_admin_bp_resumen');
+  if(!r.ok){if(!sesionPerdida(r)){$('#bpNums').innerHTML='';$('#bpErr').textContent=F(r,'No se pudo cargar BookPal.')}return}
+  bpCargado=true;pintarBp(r.d,true);
+}
+function pintarBp(d,conForm){
+  const items=[['activas','participando'],['esperan_a_quien','esperan a quién enviar'],['esperan_libro','esperan libro'],['sin_elegir_libro','sin elegir libro'],
+    ['en_petmi','libros en PetMi'],['entregados','libros entregados'],['completadas','completaron'],['rescates','Ángeles Lectores'],
+    ['pendientes_pago','sin pagar'],['libros_disponibles','libros en la estantería'],['lectores','perfiles lectores']];
+  $('#bpNums').innerHTML=items.map(([k,t])=>`<div><b>${Number(d[k]||0)}</b><span>${t}</span></div>`).join('');
+  if(conForm){const f=$('#bpForm'),c=d.config;f.abierto.checked=!!c.abierto;f.envio_q.value=Number(c.envio_q);f.max_libros.value=c.max_libros;f.max_megusta.value=c.max_megusta;f.reglas.value=reglasTexto(c.reglas)}
+}
+$('#bpRefrescar').onclick=async()=>{const r=await rpc('tribbi_admin_bp_resumen');if(r.ok)pintarBp(r.d,false);else sesionPerdida(r)};
+$('#bpForm').addEventListener('submit',async ev=>{
+  ev.preventDefault();const f=$('#bpForm'),m=$('#bpMsg');$('#bpErr').textContent='';m.textContent='';
+  const r=await rpc('tribbi_admin_bp_config',{p_datos:{abierto:f.abierto.checked,envio_q:f.envio_q.value,max_libros:f.max_libros.value,max_megusta:f.max_megusta.value,
+    reglas:f.reglas.value.split('\n').map(s=>s.trim()).filter(Boolean)}});
+  if(r.ok){pintarBp(r.d,true);m.className='tb-msg ok';m.textContent='Guardado ✓';return}
+  if(!sesionPerdida(r))$('#bpErr').textContent=F(r,'No se pudo guardar.');
+});
+$('#bpSortear').onclick=async()=>{
+  const m=$('#bpSorteoMsg');m.className='tb-msg';m.textContent='Sorteando…';
+  const r=await rpc('tribbi_admin_bp_sortear');
+  if(r.ok){m.className='tb-msg ok';m.textContent=r.d.asignados?`Listo: ${r.d.asignados} personas ya saben a quién enviarle.${r.d.sin_pareja?` ${r.d.sin_pareja} siguen esperando una pareja compatible.`:''}`:(r.d.mensaje||'No hubo parejas compatibles esta vez.');$('#bpRefrescar').click()}
+  else if(!sesionPerdida(r)){m.className='tb-msg bad';m.textContent=F(r,'No se pudo sortear.')}
+};
+document.querySelectorAll('[data-bpmarcar]').forEach(b=>b.onclick=async()=>{
+  const c=$('#bpCodigo').value.trim().toUpperCase(),m=$('#bpMarcarMsg');
+  if(!c){m.className='tb-msg bad';m.textContent='Escribe el código.';return}
+  const r=await rpc('tribbi_admin_bp_marcar',{p_codigo:c,p_accion:b.dataset.bpmarcar});
+  if(sesionPerdida(r))return;
+  m.className=r.ok?'tb-msg ok':'tb-msg bad';m.textContent=r.ok?`${c}: ${b.textContent.toLowerCase()} ✓`:F(r,'No se pudo registrar.');
+  if(r.ok){$('#bpCodigo').value='';$('#bpCodigo').focus()}
+});
+$('#bpCodigo').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.querySelector('[data-bpmarcar="recibido"]').click()}});
+const wa=n=>'https://wa.me/'+String(n||'').replace(/\D/g,'').replace(/^(\d{8})$/,'502$1');
+$('#bpEsperandoBtn').onclick=async()=>{
+  const r=await rpc('tribbi_admin_bp_esperando'),el=$('#bpEsperando');if(sesionPerdida(r))return;
+  if(!r.ok){el.innerHTML=`<p class="tb-msg bad">${esc(F(r,'No se pudo cargar.'))}</p>`;return}
+  const l=r.d.esperando;
+  el.innerHTML=!l.length?'<p class="tb-msg">Nadie está esperando. 🎉</p>':`<div class="tb-scroll"><table><thead><tr><th>Espera</th><th>Quién</th><th>Días</th><th>Situación</th><th>Quien le envía</th><th></th></tr></thead><tbody>${
+    l.map(x=>`<tr><td class="nw">${esc(x.codigo)}</td><td>${esc(x.nombre)}<br><span class="tb-tiny">${esc(x.municipio)}</span></td><td>${Number(x.dias)}</td><td>${esc(x.situacion)}</td>
+      <td class="nw">${x.envia_codigo?`${esc(x.envia_codigo)}<br><a href="${esc(wa(x.envia_whatsapp))}" target="_blank" rel="noopener">${esc(x.envia_whatsapp)}</a>`:'—'}</td>
+      <td><button class="tb-link" data-rescate="${esc(x.codigo)}">Ángel Lector</button></td></tr>`).join('')}</tbody></table></div>`;
+};
+$('#bpEsperando').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-rescate]');if(!b)return;
+  if(!confirm('¿Activar el Ángel Lector? PetMi enviará un libro de respaldo a esta persona.'))return;
+  const r=await rpc('tribbi_admin_bp_rescate',{p_codigo_recibe:b.dataset.rescate});
+  if(r.ok)b.closest('tr').remove();else if(!sesionPerdida(r))alert(F(r,'No se pudo activar.'));
+});
+let rutaTxt='';
+$('#bpRutaBtn').onclick=async()=>{
+  const r=await rpc('tribbi_admin_bp_ruta'),el=$('#bpRuta');if(sesionPerdida(r))return;
+  if(!r.ok){el.innerHTML=`<p class="tb-msg bad">${esc(F(r,'No se pudo cargar.'))}</p>`;return}
+  const l=r.d.entregas;$('#bpCopiarRuta').hidden=!l.length;
+  rutaTxt=l.map((x,n)=>`${n+1}. ${x.tipo==='rescate'?'[ÁNGEL LECTOR] ':''}${x.codigo} · ${x.libro} → ${x.nombre} (${x.whatsapp})\n${x.direccion}, ${x.zona?x.zona+', ':''}${x.municipio}`).join('\n\n');
+  el.innerHTML=!l.length?'<p class="tb-msg">No hay entregas pendientes.</p>':`<div class="tb-scroll"><table><thead><tr><th>Código</th><th>Libro</th><th>Para</th><th>Dirección</th><th>WhatsApp</th></tr></thead><tbody>${
+    l.map(x=>`<tr><td class="nw">${esc(x.codigo)}</td><td>${esc(x.libro)}${x.dedicatoria?`<br><span class="tb-tiny">“${esc(x.dedicatoria)}”</span>`:''}</td><td>${esc(x.nombre)}</td>
+      <td>${esc(x.direccion)}<br><span class="tb-tiny">${esc([x.zona,x.municipio].filter(Boolean).join(', '))}</span></td><td class="nw">${esc(x.whatsapp)}</td></tr>`).join('')}</tbody></table></div>`;
+};
+$('#bpCopiarRuta').onclick=e=>T.copiar(rutaTxt,e.target);
+$('#bpPartBtn').onclick=async()=>{
+  const r=await rpc('tribbi_admin_bp_participaciones'),el=$('#bpPart');if(sesionPerdida(r))return;
+  if(!r.ok){el.innerHTML=`<p class="tb-msg bad">${esc(F(r,'No se pudo cargar.'))}</p>`;return}
+  const nom={pendiente_pago:'Sin pagar',activa:'Participando',completada:'Completó',excluida:'Excluida'},l=r.d.participaciones;
+  el.innerHTML=!l.length?'<p class="tb-msg">Todavía no hay participantes.</p>':`<div class="tb-scroll"><table><thead><tr><th>Código</th><th>Nombre</th><th>WhatsApp</th><th>Estado</th><th>Envía</th><th>Recibe</th><th>Desde</th></tr></thead><tbody>${
+    l.map(x=>`<tr><td class="nw">${esc(x.codigo)}</td><td>${esc(x.nombre)}<br><span class="tb-tiny">${esc(x.municipio)}</span></td><td class="nw">${esc(x.whatsapp)}</td>
+      <td>${esc(nom[x.estado]||x.estado)}</td><td>${x.envia_a?`${esc(x.envio)}${x.libro?`<br><span class="tb-tiny">${esc(x.libro)}</span>`:''}`:(x.estado==='activa'?'esperando sorteo':'—')}</td>
+      <td>${esc(x.recibe)}</td><td class="nw">${esc(diaHora(x.creada_en))}</td></tr>`).join('')}</tbody></table></div>`;
+};
+$('#bpLibrosBtn').onclick=async()=>{
+  const r=await rpc('tribbi_admin_bp_libros'),el=$('#bpLibros');if(sesionPerdida(r))return;
+  if(!r.ok){el.innerHTML=`<p class="tb-msg bad">${esc(F(r,'No se pudo cargar.'))}</p>`;return}
+  const l=r.d.libros;
+  el.innerHTML=!l.length?'<p class="tb-msg">La estantería está vacía.</p>':`<div class="tb-scroll"><table><thead><tr><th>Libro</th><th>Género</th><th>Para</th><th>Estado</th><th>De</th><th>Me gusta</th><th></th></tr></thead><tbody>${
+    l.map(x=>`<tr><td><b>${esc(x.titulo)}</b>${x.autor?`<br><span class="tb-tiny">${esc(x.autor)}</span>`:''}${x.nota?`<br><span class="tb-tiny">${esc(x.nota)}</span>`:''}</td>
+      <td>${esc(GENEROS[x.genero]||x.genero)}</td><td>${esc(PUBLICO[x.publico]||x.publico)}</td><td>${esc(CONDICION[x.condicion]||x.condicion)}${x.estado==='reservado'?'<br><span class="tb-chip warn">Apartado</span>':''}</td>
+      <td>${esc(x.dueno||'')}</td><td>${Number(x.me_gusta)}</td><td>${x.estado==='disponible'?`<button class="tb-link bad" data-retirar="${x.id}">Retirar</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;
+};
+$('#bpLibros').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-retirar]');if(!b)return;
+  if(!confirm('¿Retirar este libro de la estantería? Su dueño ya no podrá enviarlo.'))return;
+  const r=await rpc('tribbi_admin_bp_retirar_libro',{p_libro:Number(b.dataset.retirar)});
+  if(r.ok)b.closest('tr').remove();else if(!sesionPerdida(r))alert(F(r,'No se pudo retirar.'));
+});
+
+/* ═══ Lista de espera ═══ */
+let correos='';
+$('#esperaBtn').onclick=async()=>{
+  const r=await rpc('tribbi_admin_lista_espera',{p_programa:'bookpal'}),el=$('#espera');if(sesionPerdida(r))return;
+  if(!r.ok){el.innerHTML=`<p class="tb-msg bad">${esc(r.d.error==='falta_sql'?'Falta correr 3_lista_espera.sql en Supabase.':F(r,'No se pudo cargar.'))}</p>`;return}
+  const l=r.d.personas,nom={adultos:'Para sí',ninos:'Para niños',ambos:'Los dos'};correos=l.map(x=>x.email).join(', ');$('#copiarCorreos').hidden=!l.length;
+  el.innerHTML=`<p class="tb-msg">${Number(r.d.total)} personas apuntadas.</p>`+(l.length?`<div class="tb-scroll"><table><thead><tr><th>Correo</th><th>Libros</th><th>Desde</th></tr></thead><tbody>${
+    l.map(x=>`<tr><td>${esc(x.email)}</td><td>${esc(nom[x.interes]||x.interes)}</td><td class="nw">${esc(diaHora(x.creado_en))}</td></tr>`).join('')}</tbody></table></div>`:'');
+};
+$('#copiarCorreos').onclick=e=>T.copiar(correos,e.target);
+
+iniciar();
+})();
+</script>
+</body>
+</html>

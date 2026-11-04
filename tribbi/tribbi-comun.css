@@ -1,0 +1,66 @@
+/* TRIBBI · estilos compartidos de admin.html y bookpal.html */
+:root{
+  --bg:#F4F7F1; --ink:#1C2A33; --muted:#5B6B70; --card:#FFFFFF; --line:#DCE4D8;
+  --coral:#E2483D; --coral-dark:#A82A21; --teal:#127A6E; --teal-dark:#0B5249; --sun:#F3B431; --soft:#E8EFE4; --miss:#FBE3E0;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#111C20; --ink:#EEF3EC; --muted:#A3B4B2; --card:#182A2F; --line:#2A4046;
+    --coral:#F2665B; --coral-dark:#8E2219; --teal:#38B3A3; --teal-dark:#0E5C52; --sun:#FFC94D; --soft:#1F353A; --miss:#4A2622; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111C20; --ink:#EEF3EC; --muted:#A3B4B2; --card:#182A2F; --line:#2A4046;
+  --coral:#F2665B; --coral-dark:#8E2219; --teal:#38B3A3; --teal-dark:#0E5C52; --sun:#FFC94D; --soft:#1F353A; --miss:#4A2622; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Nunito",system-ui,sans-serif;font-size:17px;line-height:1.55}
+h1,h2,h3,.tb-btn{font-family:"Fredoka","Trebuchet MS",sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px;border-radius:8px}
+[hidden]{display:none!important}
+a{color:var(--teal);font-weight:700}
+
+.tb-box{max-width:460px;margin:24px auto 0;background:var(--card);border:2px solid var(--line);border-radius:24px;padding:24px}
+.tb-box h1{margin:0 0 6px;font-size:1.8rem;line-height:1.1;color:var(--teal)}
+.tb-box > p{color:var(--muted);margin:0 0 14px}
+.tb-box label{display:block;font-weight:700;margin:12px 0 0}
+.tb-field{display:block;width:100%;margin-top:4px;padding:11px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);font-weight:400}
+.tb-field:focus{border-color:var(--teal);outline:none}
+textarea.tb-field{resize:vertical;min-height:90px}
+.tb-code{text-align:center;font-size:1.6rem;letter-spacing:.4em}
+.tb-err{color:var(--coral);min-height:1.5em;margin:10px 0;font-weight:700}
+.tb-btn{display:inline-block;border:0;cursor:pointer;background:var(--teal);color:#fff;font-weight:600;font-size:1.08rem;padding:11px 24px;border-radius:999px;box-shadow:0 5px 0 var(--teal-dark);text-decoration:none;transition:transform .08s,box-shadow .08s}
+.tb-btn.coral{background:var(--coral);box-shadow:0 5px 0 var(--coral-dark)}
+.tb-btn.sm{font-size:.95rem;padding:8px 16px;box-shadow:0 3px 0 var(--teal-dark)}
+.tb-btn:active{transform:translateY(4px);box-shadow:0 1px 0 transparent}
+.tb-btn:disabled{opacity:.5;cursor:not-allowed}
+.tb-link{border:0;background:none;color:var(--teal);font-weight:700;cursor:pointer;padding:4px 6px;border-radius:8px}
+.tb-link.bad{color:var(--coral)}
+.tb-link:disabled{opacity:.4;cursor:not-allowed}
+.tb-tiny{font-size:.92rem;color:var(--muted);text-align:center}
+.tb-msg{min-height:1.4em;margin:8px 0 0;color:var(--muted)}
+.tb-msg.bad{color:var(--coral);font-weight:700}
+.tb-msg.ok{color:var(--teal);font-weight:700}
+.tb-chip{display:inline-block;font-size:.88rem;padding:2px 11px;border-radius:999px;background:var(--soft);font-weight:700;white-space:nowrap}
+.tb-chip.ok{background:var(--teal);color:#fff}
+.tb-chip.warn{background:var(--sun);color:#3A2A00}
+.tb-chip.off{background:var(--miss)}
+
+.tb-scratch{position:relative;border-radius:16px;overflow:hidden;min-height:120px;display:grid;place-items:center;background:var(--soft)}
+.tb-secret{font-family:"Fredoka",sans-serif;font-size:clamp(1.8rem,7vw,2.6rem);font-weight:700;color:var(--teal);padding:18px 12px;line-height:1.1;text-align:center;overflow-wrap:anywhere}
+.tb-scratch canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;transition:opacity .6s}
+.tb-scratch canvas.tb-gone{opacity:0;pointer-events:none}
+.tb-confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+.tb-confetti i{position:absolute;top:-20px;width:10px;height:14px;border-radius:2px;animation:tbfall 1.8s ease-in forwards}
+@keyframes tbfall{to{transform:translateY(105vh) rotate(540deg)}}
+
+.tb-scroll{overflow-x:auto;margin-top:12px;border:2px solid var(--line);border-radius:14px;background:var(--card)}
+.tb-scroll table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tb-scroll th,.tb-scroll td{padding:8px 12px;text-align:left;border-top:1px dashed var(--line);vertical-align:top}
+.tb-scroll th{border-top:0;color:var(--muted);font-weight:700;white-space:nowrap}
+.tb-scroll td.nw{white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.tb-scratch canvas{transition:none}.tb-confetti{display:none}}
