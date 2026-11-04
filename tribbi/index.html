@@ -6,25 +6,26 @@
 <meta name="theme-color" content="#127A6E">
 <title>Tribbi | Intercambios que arman tribu</title>
 <meta name="description" content="Tribbi organiza intercambios de regalos y libros en Guatemala: te inscribes, te toca alguien y PetMi entrega a domicilio.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Crect%20width='100'%20height='100'%20rx='22'%20fill='%230E2229'/%3E%3Crect%20x='42.2'%20y='37.5'%20width='15.6'%20height='43.6'%20rx='7.8'%20fill='%2336D6C4'/%3E%3Ccircle%20cx='32.8'%20cy='31.3'%20r='5.2'%20fill='%23A24FD4'/%3E%3Ccircle%20cx='67.2'%20cy='31.3'%20r='5.2'%20fill='%234C8DF6'/%3E%3Ccircle%20cx='38.2'%20cy='27.5'%20r='5.2'%20fill='%23F2553D'/%3E%3Ccircle%20cx='61.8'%20cy='27.5'%20r='5.2'%20fill='%23F5AF35'/%3E%3Ccircle%20cx='50'%20cy='24.9'%20r='6.9'%20fill='%2336D6C4'%20stroke='%230E2229'%20stroke-width='1.2'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#F4F7F1; --ink:#1C2A33; --muted:#5B6B70; --card:#FFFFFF; --line:#DCE4D8;
-  --coral:#E2483D; --coral-dark:#A82A21; --teal:#127A6E; --teal-dark:#0B5249; --sun:#F3B431; --soft:#E8EFE4;
+  --coral:#E2483D; --coral-dark:#A82A21; --teal:#127A6E; --teal-dark:#0B5249; --sun:#F3B431; --soft:#E8EFE4; --logo:#0F9E90;
   color-scheme:light; box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#111C20; --ink:#EEF3EC; --muted:#A3B4B2; --card:#182A2F; --line:#2A4046;
-    --coral:#F2665B; --coral-dark:#8E2219; --teal:#38B3A3; --teal-dark:#0E5C52; --sun:#FFC94D; --soft:#1F353A; color-scheme:dark;
+    --coral:#F2665B; --coral-dark:#8E2219; --teal:#38B3A3; --teal-dark:#0E5C52; --sun:#FFC94D; --soft:#1F353A; --logo:#36D6C4; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#111C20; --ink:#EEF3EC; --muted:#A3B4B2; --card:#182A2F; --line:#2A4046;
-  --coral:#F2665B; --coral-dark:#8E2219; --teal:#38B3A3; --teal-dark:#0E5C52; --sun:#FFC94D; --soft:#1F353A; color-scheme:dark;
+  --coral:#F2665B; --coral-dark:#8E2219; --teal:#38B3A3; --teal-dark:#0E5C52; --sun:#FFC94D; --soft:#1F353A; --logo:#36D6C4; color-scheme:dark;
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:border-box}
@@ -99,13 +100,23 @@ button,input,select{font:inherit;color:inherit}
 
 footer{margin:56px auto 0;padding:20px 22px 36px;max-width:1040px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);border-top:2px dashed var(--line);font-size:.95rem}
 footer a{color:var(--teal);font-weight:700}
+
+/* Logo Tribbi (opción B: la tribu en fila sobre la última i) */
+.tb-logo{font-family:"Fredoka","Trebuchet MS",sans-serif;font-weight:700;line-height:1;letter-spacing:0;color:var(--logo);white-space:nowrap;display:inline-block;padding-top:.14em;text-decoration:none}
+.tb-logo .i{position:relative;display:inline-block}
+.tb-logo .i b{position:absolute;border-radius:50%;width:.12em;height:.12em}
+.tb-logo .i b:nth-child(1){left:-.1415em;top:.24em;background:#A24FD4}
+.tb-logo .i b:nth-child(2){left:.2585em;top:.24em;background:#4C8DF6}
+.tb-logo .i b:nth-child(3){left:-.0785em;top:.195em;background:#F2553D}
+.tb-logo .i b:nth-child(4){left:.1585em;top:.195em;background:#F5AF35}
+.tb-logo .i b:nth-child(5){left:.0385em;top:.145em;width:.16em;height:.16em;background:var(--logo);box-shadow:0 0 0 .014em var(--bg)}
 </style>
 </head>
 <body>
 <main class="wrap">
   <header class="hero">
     <div>
-      <h1>Tribbi</h1>
+      <h1><span class="tb-logo" role="img" aria-label="Tribbi">Tribb<span class="i" aria-hidden="true">ı<b></b><b></b><b></b><b></b><b></b></span></span></h1>
       <p class="tag">Intercambios que arman tribu</p>
       <p class="lead">Te inscribes, te toca alguien al azar y le das algo pensado para esa persona. Nosotros organizamos el sorteo y las entregas; tú solo eliges el regalo.</p>
     </div>
