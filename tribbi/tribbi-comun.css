@@ -65,12 +65,11 @@ textarea.tb-field{resize:vertical;min-height:90px}
 .tb-scroll td.nw{white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.tb-scratch canvas{transition:none}.tb-confetti{display:none}}
 
-/* Logo Tribbi (opción B: la tribu en fila sobre la última i) */
-.tb-logo{font-family:"Fredoka","Trebuchet MS",sans-serif;font-weight:700;line-height:1;letter-spacing:0;color:var(--logo);white-space:nowrap;display:inline-block;padding-top:.14em;text-decoration:none}
-.tb-logo .i{position:relative;display:inline-block}
-.tb-logo .i b{position:absolute;border-radius:50%;width:.12em;height:.12em}
-.tb-logo .i b:nth-child(1){left:-.1415em;top:.24em;background:#A24FD4}
-.tb-logo .i b:nth-child(2){left:.2585em;top:.24em;background:#4C8DF6}
-.tb-logo .i b:nth-child(3){left:-.0785em;top:.195em;background:#F2553D}
-.tb-logo .i b:nth-child(4){left:.1585em;top:.195em;background:#F5AF35}
-.tb-logo .i b:nth-child(5){left:.0385em;top:.145em;width:.16em;height:.16em;background:var(--logo);box-shadow:0 0 0 .014em var(--bg)}
+/* Logo Tribbi: la última i igual a la primera, con réplicas de su punto en fila por detrás.
+   Cada réplica es la forma exacta del punto de la letra y lleva un borde del color del fondo. */
+.tb-logo{font-family:"Fredoka","Trebuchet MS",sans-serif;font-weight:700;line-height:1;letter-spacing:0;color:var(--logo);white-space:nowrap;display:inline-block;padding:.08em .3em 0 0;text-decoration:none}
+.tb-logo .i{position:relative;display:inline-block;z-index:0}
+.tb-logo .i .c{position:absolute;z-index:-1;width:.181em;height:.181em;overflow:visible}
+.tb-logo .i .c.p{z-index:1}
+.tb-logo .i .c path{stroke:var(--bg);stroke-width:40px;paint-order:stroke}
+.tb-logo .i .c.p path{fill:var(--logo)}

@@ -96,38 +96,32 @@ button,input,select{font:inherit;color:inherit}
 footer{margin:56px auto 0;padding:20px 22px 36px;max-width:1040px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);border-top:2px dashed var(--line);font-size:.95rem}
 footer a{color:var(--teal);font-weight:700}
 
-/* Logo Tribbi (opción B: la tribu en fila sobre la última i) */
-.tb-logo{font-family:"Fredoka","Trebuchet MS",sans-serif;font-weight:700;line-height:1;letter-spacing:0;color:var(--logo);white-space:nowrap;display:inline-block;padding-top:.14em;text-decoration:none}
-.tb-logo .i{position:relative;display:inline-block}
-.tb-logo .i b{position:absolute;border-radius:50%;width:.12em;height:.12em}
-.tb-logo .i b:nth-child(1){left:-.1415em;top:.24em;background:#A24FD4}
-.tb-logo .i b:nth-child(2){left:.2585em;top:.24em;background:#4C8DF6}
-.tb-logo .i b:nth-child(3){left:-.0785em;top:.195em;background:#F2553D}
-.tb-logo .i b:nth-child(4){left:.1585em;top:.195em;background:#F5AF35}
-.tb-logo .i b:nth-child(5){left:.0385em;top:.145em;width:.16em;height:.16em;background:var(--logo);box-shadow:0 0 0 .014em var(--bg)}
+/* Logo Tribbi: la última i igual a la primera, con réplicas de su punto en fila por detrás.
+   Cada réplica es la forma exacta del punto de la letra y lleva un borde del color del fondo. */
+.tb-logo{font-family:"Fredoka","Trebuchet MS",sans-serif;font-weight:700;line-height:1;letter-spacing:0;color:var(--logo);white-space:nowrap;display:inline-block;padding:.08em .3em 0 0;text-decoration:none}
+.tb-logo .i{position:relative;display:inline-block;z-index:0}
+.tb-logo .i .c{position:absolute;z-index:-1;width:.181em;height:.181em;overflow:visible}
+.tb-logo .i .c.p{z-index:1}
+.tb-logo .i .c path{stroke:var(--bg);stroke-width:40px;paint-order:stroke}
+.tb-logo .i .c.p path{fill:var(--logo)}
 
-/* Animación del logo: el punto sale de la i y luego la tribu sale del punto */
-.tb-logo .i b:nth-child(1){--dx:.2em;--dy:-.075em}
-.tb-logo .i b:nth-child(2){--dx:-.2em;--dy:-.075em}
-.tb-logo .i b:nth-child(3){--dx:.137em;--dy:-.03em}
-.tb-logo .i b:nth-child(4){--dx:-.1em;--dy:-.03em}
+/* Animación del logo: las réplicas salen de detrás del punto de la i */
 .tb-logo.anim{cursor:pointer}
-.tb-logo.anim .i b{animation:tbsale .75s cubic-bezier(.34,1.56,.64,1) both}
-.tb-logo.anim .i b:nth-child(5){animation:tbpunto .5s cubic-bezier(.34,1.56,.64,1) .2s both}
-.tb-logo.anim .i b:nth-child(3){animation-delay:.6s}
-.tb-logo.anim .i b:nth-child(4){animation-delay:.72s}
-.tb-logo.anim .i b:nth-child(1){animation-delay:.88s}
-.tb-logo.anim .i b:nth-child(2){animation-delay:1s}
-@keyframes tbsale{from{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}30%{opacity:1}to{transform:none;opacity:1}}
-@keyframes tbpunto{from{transform:translateY(.17em) scale(.25);opacity:0}40%{opacity:1}to{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){.tb-logo.anim .i b{animation:none!important}}
+.tb-logo.anim .i .c{animation:tbsale .7s cubic-bezier(.34,1.56,.64,1) both}
+.tb-logo.anim .i .c.p{animation:none}
+.tb-logo.anim .i .c:nth-child(1){animation-delay:.25s}
+.tb-logo.anim .i .c:nth-child(2){animation-delay:.37s}
+.tb-logo.anim .i .c:nth-child(3){animation-delay:.49s}
+.tb-logo.anim .i .c:nth-child(4){animation-delay:.61s}
+@keyframes tbsale{from{transform:translateX(var(--dx))}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.tb-logo.anim .i .c{animation:none!important}}
 </style>
 </head>
 <body>
 <main class="wrap">
   <header class="hero">
     <div>
-      <h1><span class="tb-logo anim" id="logo" role="img" aria-label="Tribbi" title="Tócame">Tribb<span class="i" aria-hidden="true">ı<b></b><b></b><b></b><b></b><b></b></span></span></h1>
+      <h1><span class="tb-logo anim" id="logo" role="img" aria-label="Tribbi" title="Tócame">Tribb<span class="i" aria-hidden="true">i<svg class="c" style="left:-0.165em;top:.141em;--dx:0.2em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#A24FD4"/></svg><svg class="c" style="left:0.235em;top:.141em;--dx:-0.2em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#4C8DF6"/></svg><svg class="c" style="left:-0.065em;top:.141em;--dx:0.1em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#F2553D"/></svg><svg class="c" style="left:0.135em;top:.141em;--dx:-0.1em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#F5AF35"/></svg><svg class="c p" style="left:0.035em;top:.141em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z"/></svg></span></span></h1>
       <p class="tag">Intercambios que arman tribu</p>
       <p class="lead">Te inscribes, te toca alguien al azar y le das algo pensado para esa persona. Nosotros organizamos el sorteo y las entregas; tú solo eliges el regalo.</p>
     </div>
