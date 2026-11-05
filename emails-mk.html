@@ -210,10 +210,11 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
         <input id="mkTitulo" class="mk-in" placeholder="Ej. ¡Feliz mes de cumpleaños, {mascota}!" oninput="mkVista()">
         <label class="mk-lbl">Texto del correo</label>
         <textarea id="mkCuerpo" class="mk-in" rows="9" placeholder="Hola {nombre},&#10;&#10;Esta semana tenemos novedades para {mascota}..." oninput="mkVista()"></textarea>
-        <div class="mk-hint">Escribe <b>{nombre}</b> y <b>{mascota}</b> para personalizar. <b>**así**</b> pone negrita. Una línea en blanco separa párrafos.</div>
+        <div class="mk-hint">Escribe <b>{nombre}</b> y <b>{mascota}</b> para personalizar. Para <b>cumpleaños y aniversarios</b>: <b>{celebracion}</b> (cumpleaños o aniversario, según la mascota), <b>{felicitacion}</b> (Feliz cumpleaños / Feliz aniversario) y <b>{edad}</b> (3 años). <b>**así**</b> pone negrita. Una línea en blanco separa párrafos. Un párrafo que empieza con <b>&gt;</b> sale en un <b>recuadro dorado</b>.</div>
         <label class="mk-lbl">Imagen (opcional)</label>
         <div style="display:flex;gap:8px"><input id="mkImagen" class="mk-in" placeholder="https://..." oninput="mkVista()" style="flex:1;min-width:0"><button class="btn-sm" style="background:#e0f0ff;color:#0055aa;white-space:nowrap" onclick="mkSubirImagen()">📷 Subir</button></div>
         <div class="mk-hint" id="mkImagenEstado"></div>
+        <label style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:12.5px;color:#555;line-height:1.5"><input type="checkbox" id="mkFotoMascota" onchange="mkVista()" style="margin-top:3px"><span>📸 <b>Mostrar la foto de la mascota</b> arriba del correo, en un círculo con 🎂 (cumpleaños) o 🎉 (aniversario). Si no tiene foto, sale un emoji. En la vista previa y en la prueba la foto es un ícono de ejemplo; en el envío real va la foto de cada mascota.</span></label>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <div style="flex:1;min-width:140px"><label class="mk-lbl">Texto del botón</label><input id="mkBotonTexto" class="mk-in" placeholder="Ej. Ver la tienda" oninput="mkVista()"></div>
           <div style="flex:2;min-width:200px"><label class="mk-lbl">A dónde lleva el botón</label><input id="mkBotonUrl" class="mk-in" list="mkDestinos" placeholder="https://app.revistapetmi.com/..." oninput="mkVista()"></div>
@@ -233,6 +234,7 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
       </div>
       <div>
         <label class="mk-lbl" style="margin-top:0">Así se verá (con nombres de ejemplo)</label>
+        <select id="mkVistaTipo" class="mk-in" onchange="mkVista()" style="margin-bottom:6px"><option value="dos">Ver como: dos mascotas (Rocky y Luna)</option><option value="cumple">Ver como: 🎂 cumpleaños de Luna (3 años)</option><option value="aniversario">Ver como: 🎉 aniversario de Luna (2 años en casa)</option></select>
         <div id="mkAsuntoVista" style="font-size:12.5px;color:#555;margin-bottom:6px"></div>
         <iframe id="mkPrev" class="mk-prev" title="Vista previa del correo"></iframe>
         <label class="mk-lbl">Enviarme una prueba</label>
@@ -942,6 +944,8 @@ async function _mkAbrirEditor(c){
   document.getElementById('mkAudiencia').value = v.audiencia || 'todos';
   _mkLlenarParam(v.audiencia || 'todos', v.audiencia_param || '');
   document.getElementById('mkOfertas').checked = v.respetar_ofertas !== false;
+  document.getElementById('mkFotoMascota').checked = v.foto_mascota === true;
+  document.getElementById('mkVistaTipo').value = 'dos';
   document.getElementById('mkPruebaEmail').value = localStorage.getItem('petmi_mk_prueba') || '';
   document.getElementById('modalMKEditor').classList.add('open');
   mkVista(); mkContarAudiencia();
@@ -951,7 +955,7 @@ function mkEditar(id){ var c = _mkCampanas.find(function(x){ return String(x.id)
 
 function _mkLeerEditor(){
   var aud = document.getElementById('mkAudiencia').value;
-  return {
+  var o = {
     id: _mkActual ? _mkActual.id : undefined,
     nombre: document.getElementById('mkNombre').value.trim(), semana: document.getElementById('mkSemana').value,
     asunto: document.getElementById('mkAsunto').value.trim(), titulo: document.getElementById('mkTitulo').value.trim(),
@@ -960,6 +964,11 @@ function _mkLeerEditor(){
     audiencia: aud, audiencia_param: aud === 'raza' ? document.getElementById('mkParamRaza').value.trim() : ((aud === 'zona' || aud === 'cumple') ? document.getElementById('mkParam').value : ''),
     respetar_ofertas: document.getElementById('mkOfertas').checked
   };
+  // foto_mascota solo se manda si se marcó, o si el correo que se edita ya la tenía (así nada falla antes de correr el SQL nuevo)
+  var fm = document.getElementById('mkFotoMascota');
+  if(fm.checked || (_mkActual && _mkActual.foto_mascota !== undefined)) o.foto_mascota = fm.checked;
+  o.ejemplo = document.getElementById('mkVistaTipo').value;   // solo para la vista previa y la prueba
+  return o;
 }
 
 // Vista previa en vivo (espera un momento después de que dejas de escribir)
@@ -1041,6 +1050,7 @@ async function mkDuplicar(id){
   var copia = { nombre: c.nombre + ' (copia)', semana: _mkLunes(new Date(new Date(c.semana || _mkLunes() + 'T00:00:00').getTime() + 7 * 86400000).toISOString().slice(0, 10)),
     asunto: c.asunto, titulo: c.titulo, cuerpo: c.cuerpo, imagen_url: c.imagen_url, boton_texto: c.boton_texto, boton_url: c.boton_url,
     audiencia: c.audiencia, audiencia_param: c.audiencia_param, respetar_ofertas: c.respetar_ofertas };
+  if(c.foto_mascota !== undefined) copia.foto_mascota = c.foto_mascota;
   var d = await mkFetch('guardarCampanaMK', copia);
   if(!d.ok){ alert('No se pudo duplicar: ' + (d.error || '')); return; }
   await mkCargar();
