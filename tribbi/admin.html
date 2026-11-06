@@ -41,6 +41,13 @@ section.blk h2{font-size:1.45rem;margin:0 0 4px}
 .check{display:flex;gap:10px;align-items:center;font-weight:700;margin:14px 0 0}
 .check input{width:20px;height:20px;accent-color:var(--teal)}
 .acts{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px}
+.row .tb-field.buscar{text-transform:none;letter-spacing:0;max-width:320px;min-width:200px}
+.feed{list-style:none;padding:0;margin:0;background:var(--card);border:2px solid var(--line);border-radius:14px}
+.feed li{padding:9px 14px;border-top:1px dashed var(--line)}.feed li:first-child{border-top:0}
+.feed time{color:var(--muted);font-size:.85rem;margin-right:8px;white-space:nowrap}
+.det{margin-top:16px;background:var(--card);border:2px solid var(--teal);border-radius:16px;padding:14px 16px}
+.det h3{margin:0 0 4px;font-size:1.2rem}
+td small{display:block;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -50,7 +57,10 @@ section.blk h2{font-size:1.45rem;margin:0 0 4px}
   <div class="bar">
     <strong>Panel de Tribbi</strong>
     <nav aria-label="Secciones">
-      <button data-tab="regalos" aria-current="page">Intercambios de regalos</button>
+      <button data-tab="resumen" aria-current="page">Resumen</button>
+      <button data-tab="intercambios">Intercambios</button>
+      <button data-tab="usuarios">Usuarios</button>
+      <button data-tab="cuentas">Cuentas</button>
       <button data-tab="bookpal">BookPal</button>
       <button data-tab="espera">Lista de espera</button>
     </nav>
@@ -58,35 +68,48 @@ section.blk h2{font-size:1.45rem;margin:0 0 4px}
   </div>
 
   <!-- ═══ INTERCAMBIOS DE REGALOS ═══ -->
-  <div class="wrap" data-panel="regalos">
+  <!-- ═══ RESUMEN ═══ -->
+  <div class="wrap" data-panel="resumen">
     <section class="blk">
-      <h2>Intercambios de regalos</h2>
-      <p class="lead">Crea cada intercambio con sus fechas, montos y reglas propias. Mientras esté como borrador, solo lo ves tú. Para hacer el sorteo, registrar regalos y ver la ruta, usa "Operar".</p>
-      <div class="row"><button class="tb-btn" id="nuevoEd">+ Nuevo intercambio</button><span class="tb-msg" id="edMsg" role="status"></span></div>
-      <form class="form" id="edForm" hidden novalidate>
-        <h3 id="edTitulo">Nuevo intercambio</h3>
-        <div class="grid">
-          <label>Nombre<input class="tb-field" name="nombre" maxlength="80" required></label>
-          <label>Dirección (identificador)<small>Va en el enlace: tribbi.html?e=…</small><input class="tb-field" name="slug" maxlength="40" pattern="[a-z0-9-]{3,40}" required></label>
-          <label>Abren inscripciones<input class="tb-field" type="datetime-local" name="inscripcion_desde" required></label>
-          <label>Cierran inscripciones<input class="tb-field" type="datetime-local" name="inscripcion_hasta" required></label>
-          <label>Sorteo<input class="tb-field" type="datetime-local" name="sorteo_en" required></label>
-          <label>Límite para entregar el regalo<small>También es el último día para cambiar ideas</small><input class="tb-field" type="datetime-local" name="entrega_hasta" required></label>
-          <label>Reparto desde<input class="tb-field" type="date" name="reparto_desde"></label>
-          <label>Reparto hasta<input class="tb-field" type="date" name="reparto_hasta"></label>
-          <label>Ángel de Rescate desde<input class="tb-field" type="date" name="rescate_desde"></label>
-          <label>Ángel de Rescate hasta<input class="tb-field" type="date" name="rescate_hasta"></label>
-          <label>Presupuesto del regalo (Q)<input class="tb-field" type="number" name="presupuesto_q" min="1" step="1" required></label>
-          <label>Costo de envío (Q)<small>0 si no hay envío</small><input class="tb-field" type="number" name="envio_q" min="0" step="1" required></label>
-          <label>Mínimo de ideas de regalo<input class="tb-field" type="number" name="min_ideas" min="0" max="20" step="1" required></label>
-        </div>
-        <label>Reglas propias de este intercambio<small>Una por línea. Se agregan a las reglas básicas (fechas, presupuesto, envío), que salen solas.</small>
-          <textarea class="tb-field" name="reglas" rows="5" placeholder="Ej. Solo regalos hechos a mano"></textarea></label>
-        <label class="check"><input type="checkbox" name="publicada"> Publicado (visible para la comunidad)</label>
-        <p class="tb-err" id="edErr" role="alert"></p>
-        <div class="acts"><button class="tb-btn" type="submit" id="edGuardar">Guardar</button><button class="tb-link" type="button" id="edCancelar">Cancelar</button></div>
-      </form>
-      <div id="ediciones"></div>
+      <h2>Resumen</h2>
+      <p class="lead">Cómo va toda la plataforma hoy.</p>
+      <div class="nums" id="gNums"></div>
+      <p class="tb-msg"><button class="tb-link" id="gRefrescar">Actualizar</button></p>
+    </section>
+    <section class="blk">
+      <h2>Actividad reciente</h2>
+      <ul class="feed" id="feed"></ul>
+    </section>
+  </div>
+
+  <!-- ═══ INTERCAMBIOS ═══ -->
+  <div class="wrap" data-panel="intercambios" hidden>
+    <section class="blk">
+      <h2>Intercambios</h2>
+      <p class="lead">Todos los intercambios de todas las cuentas. El panel nunca muestra quién le regala a quién.</p>
+      <div class="row"><input class="tb-field buscar" id="exBuscar" placeholder="Buscar por nombre o cuenta" aria-label="Buscar intercambios">
+        <select class="tb-field buscar" id="exFiltro" aria-label="Filtrar"><option value="">Todos</option><option value="sin">Sin sortear</option><option value="sorteo">Sorteo hecho</option><option value="envio">Con envío</option><option value="borrador">Borrador</option></select></div>
+      <div id="exLista"></div>
+      <div id="exDetalle"></div>
+    </section>
+  </div>
+
+  <!-- ═══ USUARIOS ═══ -->
+  <div class="wrap" data-panel="usuarios" hidden>
+    <section class="blk">
+      <h2>Usuarios</h2>
+      <p class="lead" id="usTotal">Todas las personas que crearon su cuenta.</p>
+      <div class="row"><input class="tb-field buscar" id="usBuscar" placeholder="Buscar por correo o nombre" aria-label="Buscar usuarios"></div>
+      <div id="usLista"></div>
+    </section>
+  </div>
+
+  <!-- ═══ CUENTAS ═══ -->
+  <div class="wrap" data-panel="cuentas" hidden>
+    <section class="blk">
+      <h2>Cuentas</h2>
+      <p class="lead">Familias, grupos y empresas que organizan intercambios. Aquí se activa la marca propia (white label).</p>
+      <div id="cuLista"></div>
     </section>
   </div>
 
@@ -183,18 +206,19 @@ const sesionPerdida=r=>{if(r.d.error==='sesion'){T.borrarSesion();abrirLogin();r
 /* ── Entrar ── */
 function abrirLogin(msg){
   $('#panelView').hidden=true;$('#loginView').hidden=false;
-  T.montarLogin($('#login'),{titulo:'Panel de Tribbi',conClave:true,onEntrar:iniciar});
+  T.montarLogin($('#login'),{titulo:'Panel de Tribbi',sinCrear:true,onEntrar:iniciar});
   if(msg){const e=$('#login .tb-err');if(e)e.textContent=msg}
 }
 async function iniciar(){
   if(!await T.token()){abrirLogin();return}
-  const r=await rpc('tribbi_admin_ediciones');
+  const r=await rpc('tribbi_admin_resumen_global');
   if(!r.ok){if(sesionPerdida(r))return;
     if(r.d.error==='admin'){await T.salir();abrirLogin('Esta cuenta no tiene acceso al panel. Corre 2_hacerme_admin.sql con tu correo.');return}
+    if(r.d.error==='falta_sql'){abrirLogin('Falta correr 7_panel_admin.sql en Supabase.');return}
     abrirLogin(F(r,'No se pudo abrir el panel.'));return}
   $('#loginView').hidden=true;$('#panelView').hidden=false;
-  pintarEdiciones(r.d.ediciones);
-  const t=(location.hash||'').slice(1);if(['regalos','bookpal','espera'].includes(t))tab(t);
+  pintarResumen(r.d);
+  const t=(location.hash||'').slice(1);if(['resumen','intercambios','usuarios','cuentas','bookpal','espera'].includes(t))tab(t);
 }
 $('#salir').onclick=async()=>{await T.salir();abrirLogin()};
 
@@ -204,51 +228,89 @@ function tab(t){
   document.querySelectorAll('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==t);
   if(location.hash!=='#'+t)history.replaceState(null,'','#'+t);
   if(t==='bookpal'&&!bpCargado)cargarBookpal();
+  if(t==='intercambios'&&!exCargado)cargarIntercambios();
+  if(t==='usuarios'&&!usCargado)cargarUsuarios();
+  if(t==='cuentas')cargarCuentas();
   window.scrollTo(0,0);
 }
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 
-/* ═══ Intercambios de regalos ═══ */
-let ediciones=[],editando=null;
-function pintarEdiciones(l){
-  ediciones=l;
-  $('#ediciones').innerHTML=!l.length?'<p class="tb-msg">Todavía no hay intercambios.</p>':`<div class="tb-scroll"><table><thead><tr><th>Intercambio</th><th>Estado</th><th>Inscripciones</th><th>Sorteo</th><th>Pagadas</th><th></th></tr></thead><tbody>${
-    l.map(e=>{const ab=new Date()>=new Date(e.inscripcion_desde)&&new Date()<=new Date(e.inscripcion_hasta);
-      const est=!e.publicada?'<span class="tb-chip off">Borrador</span>':e.sorteo_hecho?'<span class="tb-chip">Sorteado</span>':ab?'<span class="tb-chip ok">Inscripciones abiertas</span>':'<span class="tb-chip warn">Publicado</span>';
-      return `<tr><td><b>${esc(e.nombre)}</b><br><span class="tb-tiny">${esc(e.slug)}</span></td><td>${est}</td>
-      <td class="nw">${esc(dia(e.inscripcion_desde))} – ${esc(dia(e.inscripcion_hasta))}</td><td class="nw">${esc(dia(e.sorteo_en))}</td><td>${Number(e.pagadas)} de ${Number(e.inscritas)}</td>
-      <td class="nw"><button class="tb-link" data-editar="${e.id}">Editar</button><a class="tb-link" href="tribbi.html?e=${encodeURIComponent(e.slug)}&admin=1">Operar</a><a class="tb-link" href="tribbi.html?e=${encodeURIComponent(e.slug)}" target="_blank" rel="noopener">Ver página</a></td></tr>`}).join('')}</tbody></table></div>`;
+/* ═══ Resumen ═══ */
+function pintarResumen(d){
+  const items=[['usuarios','usuarios registrados'],['registros_semana','registros esta semana'],['cuentas','cuentas'],['intercambios','intercambios'],
+    ['sorteados','con sorteo hecho'],['participantes','participantes'],['sin_activar','sin activar su cuenta'],['ninos','niños a cargo'],
+    ['marca_propia','con marca propia'],['lista_espera','en lista de espera BookPal']];
+  $('#gNums').innerHTML=items.map(([k,t])=>`<div><b>${Number(d[k]||0)}</b><span>${t}</span></div>`).join('');
+  $('#feed').innerHTML=(d.actividad||[]).length?d.actividad.map(x=>`<li><time>${esc(diaHora(x.cuando))}</time>${esc(x.texto)}</li>`).join(''):'<li>Todavía no hay actividad.</li>';
 }
-async function recargarEdiciones(){const r=await rpc('tribbi_admin_ediciones');if(r.ok)pintarEdiciones(r.d.ediciones);else if(!sesionPerdida(r))$('#edMsg').textContent=F(r,'No se pudo cargar.')}
-function abrirForm(e){
-  editando=e||null;const f=$('#edForm');f.reset();$('#edErr').textContent='';
-  $('#edTitulo').textContent=e?`Editar: ${e.nombre}`:'Nuevo intercambio';
-  if(e){
-    f.nombre.value=e.nombre;f.slug.value=e.slug;
-    ['inscripcion_desde','inscripcion_hasta','sorteo_en','entrega_hasta'].forEach(k=>f[k].value=T.aLocal(e[k]));
-    ['reparto_desde','reparto_hasta','rescate_desde','rescate_hasta'].forEach(k=>f[k].value=e[k]||'');
-    f.presupuesto_q.value=Number(e.presupuesto_q);f.envio_q.value=Number(e.envio_q);f.min_ideas.value=e.min_ideas;
-    f.reglas.value=(e.reglas||[]).join('\n');f.publicada.checked=!!e.publicada;
-  }else{f.envio_q.value=35;f.min_ideas.value=1;f.presupuesto_q.value=75}
-  f.hidden=false;f.nombre.focus();f.scrollIntoView({behavior:T.reduced?'auto':'smooth',block:'start'});
+$('#gRefrescar').onclick=async()=>{const r=await rpc('tribbi_admin_resumen_global');if(r.ok)pintarResumen(r.d);else sesionPerdida(r)};
+
+/* ═══ Intercambios ═══ */
+let exCargado=false,exTodos=[];
+async function cargarIntercambios(){
+  const r=await rpc('tribbi_admin_intercambios');if(sesionPerdida(r))return;
+  if(!r.ok){$('#exLista').innerHTML=`<p class="tb-msg bad">${esc(F(r,'No se pudo cargar.'))}</p>`;return}
+  exCargado=true;exTodos=r.d.intercambios;pintarIntercambios();
 }
-$('#nuevoEd').onclick=()=>abrirForm(null);
-$('#edCancelar').onclick=()=>{$('#edForm').hidden=true;editando=null};
-$('#ediciones').addEventListener('click',e=>{const b=e.target.closest('[data-editar]');if(b)abrirForm(ediciones.find(x=>String(x.id)===b.dataset.editar))});
-$('#edForm').nombre.addEventListener('input',e=>{if(!editando){$('#edForm').slug.value=e.target.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)}});
-$('#edForm').addEventListener('submit',async ev=>{
-  ev.preventDefault();const f=$('#edForm'),err=$('#edErr'),b=$('#edGuardar');
-  const req=['inscripcion_desde','inscripcion_hasta','sorteo_en','entrega_hasta'];
-  if(req.some(k=>!f[k].value)){err.textContent='Faltan fechas.';return}
-  const datos={id:editando?editando.id:null,slug:f.slug.value.trim(),nombre:f.nombre.value,
-    presupuesto_q:f.presupuesto_q.value,envio_q:f.envio_q.value,min_ideas:f.min_ideas.value,
-    reglas:f.reglas.value.split('\n').map(s=>s.trim()).filter(Boolean),publicada:f.publicada.checked};
-  req.forEach(k=>datos[k]=T.deLocal(f[k].value));
-  ['reparto_desde','reparto_hasta','rescate_desde','rescate_hasta'].forEach(k=>datos[k]=f[k].value||'');
-  b.disabled=true;err.textContent='';
-  const r=await rpc('tribbi_admin_edicion_guardar',{p_datos:datos});b.disabled=false;
-  if(r.ok){f.hidden=true;editando=null;$('#edMsg').className='tb-msg ok';$('#edMsg').textContent='Guardado ✓';await recargarEdiciones();return}
-  if(!sesionPerdida(r))err.textContent=F(r,'No se pudo guardar.');
+function pintarIntercambios(){
+  const qq=$('#exBuscar').value.trim().toLowerCase(),f=$('#exFiltro').value;
+  const l=exTodos.filter(x=>(!qq||(x.nombre+' '+(x.cuenta||'')).toLowerCase().includes(qq))&&
+    (!f||(f==='sin'&&!x.sorteo_hecho)||(f==='sorteo'&&x.sorteo_hecho)||(f==='envio'&&x.con_envio)||(f==='borrador'&&!x.publicada)));
+  const estado=x=>!x.publicada?'<span class="tb-chip off">Borrador</span>':x.sorteo_hecho?`<span class="tb-chip ok">Sorteo hecho</span><small>${Number(x.descubrieron)} de ${Number(x.total)} descubrieron</small>`
+    :x.inscripciones_abiertas?'<span class="tb-chip warn">Inscripciones abiertas</span>':'<span class="tb-chip">Sin sortear</span>';
+  const gente=x=>x.con_envio?`${Number(x.total)}<small>${Number(x.total)-Number(x.sin_pagar)} pagaron · ${Number(x.sin_pagar)} sin pagar</small>`
+    :`${Number(x.total)}<small>${Number(x.activas)} activas · ${Number(x.pendientes)} pendientes${Number(x.ninos)?` · ${Number(x.ninos)} niños`:''}</small>`;
+  $('#exLista').innerHTML=!l.length?'<p class="tb-msg">No hay intercambios con ese filtro.</p>':`<div class="tb-scroll"><table><thead><tr><th>Intercambio</th><th>Cuenta</th><th>Participantes</th><th>Estado</th><th>Fecha</th><th>Creado</th><th></th></tr></thead><tbody>${
+    l.map(x=>`<tr><td><b>${esc(x.nombre)}</b><small>${esc(x.slug)}</small></td><td>${esc(x.cuenta||'—')}${x.marca_propia?' <span class="tb-chip">Marca propia</span>':''}</td>
+      <td>${gente(x)}</td><td>${estado(x)}${x.con_envio?'<small>🚚 con envío</small>':''}</td><td class="nw">${esc(x.evento_fecha?dia(x.evento_fecha):'—')}</td><td class="nw">${esc(dia(x.creada_en))}</td>
+      <td class="nw"><button class="tb-link" data-ver="${esc(x.slug)}">Ver</button>${x.con_envio?`<a class="tb-link" href="tribbi.html?e=${encodeURIComponent(x.slug)}&admin=1">Operar entregas</a>`
+        :`<a class="tb-link" href="organizar.html?e=${encodeURIComponent(x.slug)}">Abrir como organizador</a>`}</td></tr>`).join('')}</tbody></table></div>`;
+}
+$('#exBuscar').addEventListener('input',pintarIntercambios);$('#exFiltro').addEventListener('change',pintarIntercambios);
+$('#exLista').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-ver]');if(!b)return;
+  const r=await rpc('tribbi_admin_intercambio_detalle',{p_slug:b.dataset.ver});if(sesionPerdida(r))return;
+  const el=$('#exDetalle');if(!r.ok){el.innerHTML=`<p class="tb-msg bad">${esc(F(r,'No se pudo cargar.'))}</p>`;return}
+  const d=r.d,c=d.cuenta||{},p=d.participantes;
+  const est=x=>x.es_nino?`<span class="tb-chip warn">Niño</span> A cargo de ${esc(x.a_cargo_nombre||'—')}`:x.tipo==='correo'||x.activada?`<span class="tb-chip ok">Activa</span> ${esc(x.correo||'')}`:'<span class="tb-chip">Pendiente</span>';
+  el.innerHTML=`<div class="det"><h3>${esc(d.nombre)} · ${esc(c.nombre||'')}</h3>
+    <p class="tb-msg">Organiza: ${esc((d.organizan||[]).join(', ')||'—')} · Presupuesto ${esc(q(d.presupuesto_q))}${d.evento_lugar?' · '+esc(d.evento_lugar):''}${d.evento_fecha?' · '+esc(diaHora(d.evento_fecha)):''}</p>
+    ${p.length?`<div class="tb-scroll"><table><thead><tr><th>Participante</th><th>Cuenta</th><th>Ideas</th><th>Tarjeta</th></tr></thead><tbody>${
+      p.map(x=>`<tr><td>${esc(x.nombre)}${x.estado==='pendiente_pago'?'<small>falta pagar</small>':''}</td><td>${est(x)}</td><td>${Number(x.ideas)}</td><td>${x.descubrio?'Raspó':'—'}</td></tr>`).join('')}</tbody></table></div>`
+      :'<p class="tb-msg">Todavía no hay participantes.</p>'}</div>`;
+  el.scrollIntoView({behavior:T.reduced?'auto':'smooth',block:'start'});
+});
+
+/* ═══ Usuarios ═══ */
+let usCargado=false,usT=null;
+async function cargarUsuarios(){
+  const r=await rpc('tribbi_admin_usuarios',{p_buscar:$('#usBuscar').value.trim()||null});if(sesionPerdida(r))return;
+  if(!r.ok){$('#usLista').innerHTML=`<p class="tb-msg bad">${esc(F(r,'No se pudo cargar.'))}</p>`;return}
+  usCargado=true;const l=r.d.usuarios;
+  $('#usTotal').textContent=`${Number(r.d.total)} personas crearon su cuenta.${l.length<Number(r.d.total)?` Se muestran ${l.length}.`:''}`;
+  $('#usLista').innerHTML=!l.length?'<p class="tb-msg">No se encontró a nadie.</p>':`<div class="tb-scroll"><table><thead><tr><th>Usuario</th><th>Registro</th><th>Último ingreso</th><th>Organiza</th><th>Participa</th></tr></thead><tbody>${
+    l.map(x=>`<tr><td><b>${esc(x.nombre||'—')}</b>${x.equipo?' <span class="tb-chip ok">Equipo Tribbi</span>':''}<small>${esc(x.correo)}</small></td>
+      <td class="nw">${esc(diaHora(x.registro))}</td><td class="nw">${esc(x.ultimo?diaHora(x.ultimo):'—')}</td><td>${Number(x.organiza)}</td>
+      <td>${Number(x.participa)}${Number(x.ninos)?` · ${Number(x.ninos)} ${Number(x.ninos)===1?'niño':'niños'}`:''}</td></tr>`).join('')}</tbody></table></div>`;
+}
+$('#usBuscar').addEventListener('input',()=>{clearTimeout(usT);usT=setTimeout(cargarUsuarios,350)});
+
+/* ═══ Cuentas ═══ */
+async function cargarCuentas(){
+  const r=await rpc('tribbi_admin_cuentas');if(sesionPerdida(r))return;
+  if(!r.ok){$('#cuLista').innerHTML=`<p class="tb-msg bad">${esc(F(r,'No se pudo cargar.'))}</p>`;return}
+  const l=r.d.cuentas;
+  $('#cuLista').innerHTML=!l.length?'<p class="tb-msg">Todavía no hay cuentas.</p>':`<div class="tb-scroll"><table><thead><tr><th>Cuenta</th><th>Dueña</th><th>Intercambios</th><th>Marca propia</th><th>Creada</th></tr></thead><tbody>${
+    l.map(x=>`<tr><td><b>${esc(x.nombre)}</b><small>${esc(x.slug)}</small></td><td>${esc(x.duena||'—')}</td><td>${Number(x.intercambios)}</td>
+      <td class="nw">${x.marca_propia?'<span class="tb-chip ok">Sí</span>':'<span class="tb-chip">No</span>'} <button class="tb-link" data-marca="${esc(x.slug)}" data-si="${x.marca_propia?'0':'1'}" data-nombre="${esc(x.nombre)}">${x.marca_propia?'Quitar':'Activar'}</button>
+        ${x.marca_propia&&x.marca&&x.marca.color?`<small><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${esc(x.marca.color)}"></span> ${esc(x.marca.nombre||'')}</small>`:''}</td>
+      <td class="nw">${esc(dia(x.creada_en))}</td></tr>`).join('')}</tbody></table></div>`;
+}
+$('#cuLista').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-marca]');if(!b)return;const si=b.dataset.si==='1';
+  if(!confirm(si?`¿Activar la marca propia para ${b.dataset.nombre}?`:`¿Quitar la marca propia de ${b.dataset.nombre}?`))return;
+  const r=await rpc('tribbi_admin_cuenta_marca',{p_slug:b.dataset.marca,p_marca_propia:si,p_marca:null});
+  if(r.ok)cargarCuentas();else if(!sesionPerdida(r))alert(F(r,'No se pudo cambiar.'));
 });
 
 /* ═══ BookPal ═══ */
