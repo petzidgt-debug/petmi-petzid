@@ -62,62 +62,94 @@ async function rpc(fn,args){
 /* Mensaje de error; con detalle técnico solo en el panel */
 const fallo=(r,base,conDetalle)=>(r.d.error==='servidor'?base:(r.d.mensaje||base))+(conDetalle&&r.d.detalle?` (${r.d.detalle})`:'');
 
-/* ── Entrar: código por correo, y contraseña solo para el equipo ── */
+/* ── Entrar: una sola forma, correo y contraseña ── */
+const URL_ENTRAR=()=>location.origin+location.pathname.replace(/[^/]*$/,'')+'entrar.html';
+const errAuth=r=>{
+  const m=String((r.d&&(r.d.msg||r.d.error_description||r.d.message||r.d.error_code||r.d.code))||'').toLowerCase();
+  if(r.status===0)return 'Sin conexión. Revisa tu internet.';
+  if(r.status===429)return 'Demasiados intentos. Espera unos minutos.';
+  if(m.includes('already')||m.includes('exists'))return 'Ya hay una cuenta con ese correo. Entra con tu contraseña.';
+  if(m.includes('invalid login')||m.includes('invalid_credentials')||m.includes('invalid grant'))return 'Correo o contraseña incorrectos.';
+  if(m.includes('password'))return 'La contraseña debe tener al menos 6 caracteres.';
+  if(m.includes('email'))return 'Revisa tu correo.';
+  return 'No se pudo. Intenta de nuevo.';
+};
+/* Crea la cuenta. Devuelve '' si quedó dentro, o un mensaje de error. */
+async function crearCuenta(email,clave){
+  const r=await auth('signup',{email:email.trim().toLowerCase(),password:clave});
+  if(r.ok&&r.d.access_token){guardarSesion(r.d);return ''}
+  if(r.ok)return 'Tu cuenta se creó, pero hay que confirmarla desde tu correo. Revisa tu bandeja y vuelve a entrar.';
+  return errAuth(r);
+}
+async function entrarConClave(email,clave){
+  const r=await auth('token?grant_type=password',{email:email.trim().toLowerCase(),password:clave});
+  if(r.ok&&r.d.access_token){guardarSesion(r.d);return ''}
+  return errAuth(r);
+}
+async function recuperar(email){
+  const r=await auth('recover?redirect_to='+encodeURIComponent(URL_ENTRAR()),{email:email.trim().toLowerCase()});
+  return r.ok||r.status===200?'':errAuth(r);
+}
+/* Formulario de entrar, crear cuenta y "olvidé mi contraseña" */
 function montarLogin(el,opts){
-  opts=opts||{};let correo='';
+  opts=opts||{};
   el.innerHTML=`
-  <form class="tb-box" data-paso="correo" autocomplete="on">
-    <h1>${esc(opts.titulo||'Entra con tu correo')}</h1>
-    <p>Te enviamos un código para confirmar que el correo es tuyo. No necesitas contraseña.</p>
-    <label>Correo electrónico<input class="tb-field" name="email" type="email" autocomplete="email" required maxlength="120"></label>
-    <div class="tb-err" role="alert"></div>
-    <button class="tb-btn" type="submit">Enviar código</button>
-  </form>
-  <form class="tb-box" data-paso="codigo" hidden autocomplete="off">
-    <h1>Revisa tu correo</h1>
-    <p class="tb-txt"></p>
-    <label>Código<input class="tb-field tb-code" name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></label>
+  <form class="tb-box" data-paso="entrar" autocomplete="on">
+    <h1>${esc(opts.titulo||'Entrar')}</h1>
+    <p>${esc(opts.texto||'Entra con tu correo y tu contraseña.')}</p>
+    <label>Correo<input class="tb-field" name="email" type="email" autocomplete="username" required maxlength="120"></label>
+    <label>Contraseña<input class="tb-field" name="clave" type="password" autocomplete="current-password" required maxlength="72"></label>
     <div class="tb-err" role="alert"></div>
     <button class="tb-btn" type="submit">Entrar</button>
-    <p class="tb-tiny">¿No llegó? Revisa la carpeta de spam o <button type="button" class="tb-link" data-ir="correo">usa otro correo</button>.</p>
+    <p class="tb-tiny"><button type="button" class="tb-link" data-ir="olvide">Olvidé mi contraseña</button>${opts.sinCrear?'':` · <button type="button" class="tb-link" data-ir="crear">Crear una cuenta</button>`}</p>
   </form>
-  ${opts.conClave?`<p class="tb-tiny" data-ir-clave><button type="button" class="tb-link" data-ir="clave">Entrar con contraseña (equipo PetMi)</button></p>
-  <form class="tb-box" data-paso="clave" hidden autocomplete="on">
-    <h1>Panel de Tribbi</h1>
-    <p>Entra con el correo y la contraseña de tu cuenta de administradora.</p>
-    <label>Correo electrónico<input class="tb-field" name="email" type="email" autocomplete="username" required maxlength="120"></label>
-    <label>Contraseña<input class="tb-field" name="clave" type="password" autocomplete="current-password" required maxlength="200"></label>
+  <form class="tb-box" data-paso="crear" hidden autocomplete="on">
+    <h1>Crea tu cuenta</h1>
+    <p>Con tu correo y una contraseña entras desde cualquier celular o computadora.</p>
+    <label>Correo<input class="tb-field" name="email" type="email" autocomplete="username" required maxlength="120"></label>
+    <label>Contraseña<input class="tb-field" name="clave" type="password" autocomplete="new-password" required minlength="6" maxlength="72"></label>
+    <label>Repítela<input class="tb-field" name="clave2" type="password" autocomplete="new-password" required maxlength="72"></label>
     <div class="tb-err" role="alert"></div>
-    <button class="tb-btn" type="submit">Entrar</button>
-    <p class="tb-tiny"><button type="button" class="tb-link" data-ir="correo">Entrar con código por correo</button></p>
-  </form>`:''}`;
+    <button class="tb-btn" type="submit">Crear mi cuenta</button>
+    <p class="tb-tiny"><button type="button" class="tb-link" data-ir="entrar">Ya tengo cuenta</button></p>
+  </form>
+  <form class="tb-box" data-paso="olvide" hidden autocomplete="on">
+    <h1>¿Olvidaste tu contraseña?</h1>
+    <p>Te mandamos un correo con un enlace para crear una nueva.</p>
+    <label>Correo<input class="tb-field" name="email" type="email" autocomplete="username" required maxlength="120"></label>
+    <div class="tb-err" role="alert"></div>
+    <button class="tb-btn" type="submit">Enviar correo</button>
+    <p class="tb-tiny"><button type="button" class="tb-link" data-ir="entrar">Volver a entrar</button></p>
+  </form>`;
   const f=p=>el.querySelector(`[data-paso="${p}"]`);
-  function ir(p){['correo','codigo','clave'].forEach(x=>{const n=f(x);if(n)n.hidden=x!==p});const c=el.querySelector('[data-ir-clave]');if(c)c.hidden=p!=='correo';
-    const n=f(p);if(n){n.querySelector('.tb-err').textContent='';setTimeout(()=>{const i=n.querySelector('input');i&&i.focus()},50)}}
-  el.addEventListener('click',e=>{const b=e.target.closest('[data-ir]');if(b)ir(b.dataset.ir)});
-  if(ses&&ses.email)f('correo').email.value=ses.email;
-  f('correo').addEventListener('submit',async e=>{
-    e.preventDefault();const fo=f('correo'),v=fo.email.value.trim().toLowerCase(),err=fo.querySelector('.tb-err'),b=fo.querySelector('button[type=submit]');
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){err.textContent='Revisa tu correo.';return}
-    b.disabled=true;err.textContent='';const r=await auth('otp',{email:v,create_user:!opts.soloExistentes});b.disabled=false;
-    if(r.ok){correo=v;f('codigo').querySelector('.tb-txt').textContent=`Escribe el código que enviamos a ${v}.`;f('codigo').codigo.value='';ir('codigo');return}
-    err.textContent=r.status===429?'Se enviaron demasiados códigos. Revisa si ya te llegó uno (también en spam); si no, espera unos minutos.':r.status===0?'Sin conexión. Revisa tu internet.':'No se pudo enviar el código. Intenta de nuevo.';
+  function ir(p){['entrar','crear','olvide'].forEach(x=>f(x).hidden=x!==p);const n=f(p);n.querySelector('.tb-err').textContent='';n.querySelector('.tb-err').className='tb-err';
+    const prev=el.querySelector('[data-paso]:not([hidden]) [name=email]');setTimeout(()=>{const i=n.querySelector('input');i&&i.focus()},50)}
+  el.addEventListener('click',e=>{const b=e.target.closest('[data-ir]');if(!b)return;const em=el.querySelector('form:not([hidden]) [name=email]').value;ir(b.dataset.ir);f(b.dataset.ir).email.value=em});
+  if(ses&&ses.email)f('entrar').email.value=ses.email;
+  const enviar=(paso,fn)=>f(paso).addEventListener('submit',async e=>{
+    e.preventDefault();const fo=f(paso),err=fo.querySelector('.tb-err'),b=fo.querySelector('button[type=submit]');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fo.email.value.trim())){err.textContent='Revisa tu correo.';return}
+    b.disabled=true;err.className='tb-err';err.textContent='';const m=await fn(fo,err);b.disabled=false;if(m)err.textContent=m;
   });
-  f('codigo').addEventListener('submit',async e=>{
-    e.preventDefault();const fo=f('codigo'),v=fo.codigo.value.replace(/\D/g,''),err=fo.querySelector('.tb-err'),b=fo.querySelector('button[type=submit]');
-    if(v.length<6){err.textContent='El código tiene 6 números.';return}
-    b.disabled=true;err.textContent='';const r=await auth('verify',{type:'email',email:correo,token:v});b.disabled=false;
-    if(r.ok&&r.d.access_token){guardarSesion(r.d);opts.onEntrar&&opts.onEntrar();return}
-    err.textContent=r.status===429?'Demasiados intentos. Espera un momento.':'Ese código no es válido o ya venció. Revisa el último correo que te llegó.';
-  });
-  if(f('clave'))f('clave').addEventListener('submit',async e=>{
-    e.preventDefault();const fo=f('clave'),em=fo.email.value.trim().toLowerCase(),pw=fo.clave.value,err=fo.querySelector('.tb-err'),b=fo.querySelector('button[type=submit]');
-    if(!em||!pw){err.textContent='Escribe tu correo y tu contraseña.';return}
-    b.disabled=true;err.textContent='';const r=await auth('token?grant_type=password',{email:em,password:pw});b.disabled=false;fo.clave.value='';
-    if(r.ok&&r.d.access_token){guardarSesion(r.d);opts.onEntrar&&opts.onEntrar();return}
-    err.textContent=r.status===429?'Demasiados intentos. Espera unos minutos.':r.status===0?'Sin conexión. Revisa tu internet.':'Correo o contraseña incorrectos.';
-  });
-  ir('correo');
+  enviar('entrar',async fo=>{const m=await entrarConClave(fo.email.value,fo.clave.value);fo.clave.value='';if(!m){opts.onEntrar&&opts.onEntrar();return ''}return m});
+  enviar('crear',async fo=>{if(fo.clave.value.length<6)return 'La contraseña debe tener al menos 6 caracteres.';if(fo.clave.value!==fo.clave2.value)return 'Las contraseñas no coinciden.';
+    const m=await crearCuenta(fo.email.value,fo.clave.value);if(!m){opts.onEntrar&&opts.onEntrar();return ''}return m});
+  enviar('olvide',async (fo,err)=>{const m=await recuperar(fo.email.value);if(m)return m;err.className='tb-msg ok';err.textContent='Listo. Si hay una cuenta con ese correo, te llegará un enlace en unos minutos (revisa también spam).';return ''});
+  ir(opts.paso||'entrar');
+}
+/* Cambiar la contraseña cuando la persona llega desde el correo de recuperación */
+async function cambiarClave(nueva){
+  const tk=await token();if(!tk)return 'El enlace venció. Pide otro correo.';
+  try{const r=await fetch(SB+'/auth/v1/user',{method:'PUT',headers:{'Content-Type':'application/json',apikey:KEY,Authorization:'Bearer '+tk},body:JSON.stringify({password:nueva})});
+    let d={};try{d=await r.json()}catch(e){}return r.ok?'':errAuth({status:r.status,d})}catch(e){return 'Sin conexión. Revisa tu internet.'}
+}
+/* Si la página se abrió desde el correo de recuperación, guarda esa sesión. Devuelve true en ese caso. */
+function sesionDesdeEnlace(){
+  const h=new URLSearchParams((location.hash||'').slice(1));
+  if(!h.get('access_token'))return false;
+  guardarSesion({access_token:h.get('access_token'),refresh_token:h.get('refresh_token'),expires_in:Number(h.get('expires_in')||3600)});
+  history.replaceState(null,'',location.pathname+location.search);
+  return h.get('type')||'magiclink';
 }
 
 /* ── Tarjeta para raspar: llama a pedir() en el primer toque; pedir() devuelve el texto a mostrar o null ── */
@@ -162,5 +194,5 @@ async function pagar(cuerpo){
 }
 async function copiar(texto,boton){try{await navigator.clipboard.writeText(texto);if(boton){const t=boton.textContent;boton.textContent='Copiado ✓';setTimeout(()=>boton.textContent=t,1800)}}catch(e){prompt('Copia el texto:',texto)}}
 
-window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,montarRaspa,confetti,pagar,copiar,reduced};
+window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,entrarConClave,recuperar,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced};
 })();

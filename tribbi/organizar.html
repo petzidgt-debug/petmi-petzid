@@ -44,6 +44,8 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
 .share{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .share code{background:var(--soft);border-radius:10px;padding:8px 12px;font-size:.9rem;overflow-wrap:anywhere;flex:1;min-width:220px}
 .add{display:grid;grid-template-columns:2fr 1.4fr auto;gap:8px;align-items:end;margin-top:10px}
+.add .check{display:flex;gap:8px;align-items:center;font-weight:700}
+.add .check input{width:18px;height:18px;accent-color:var(--teal)}
 @media (max-width:560px){.add{grid-template-columns:1fr}}
 .add .tb-field{margin:0}
 .clave{background:var(--soft);border:2px dashed var(--sun);border-radius:16px;padding:14px 16px;margin-top:12px}
@@ -103,9 +105,9 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
       </div>
       <p class="f" style="font-weight:700;margin:16px 0 0">¿Cómo entran los participantes?</p>
       <div class="modos">
-        <label><input type="radio" name="modo" value="clave" checked><span>Yo los agrego<small>Escribes los nombres y le mandas a cada quien su clave. Ideal para familias, también con niños.</small></span></label>
+        <label><input type="radio" name="modo" value="clave" checked><span>Yo armo la lista<small>Escribes los nombres y cada quien entra la primera vez con su nombre al revés. Ideal para familias, también con niños.</small></span></label>
         <label><input type="radio" name="modo" value="correo"><span>Cada quien se une con su correo<small>Compartes un enlace y cada quien se inscribe solo.</small></span></label>
-        <label><input type="radio" name="modo" value="ambos"><span>Las dos formas<small>Agregas a algunos y otros se unen con el enlace.</small></span></label>
+        <label><input type="radio" name="modo" value="ambos"><span>Las dos formas<small>Armas la lista y, quien no esté, se une con el enlace.</small></span></label>
       </div>
       <div class="grid">
         <label class="f">Mínimo de ideas de regalo<small>0 si no quieres pedirlas</small><input class="tb-field" name="min_ideas" type="number" min="0" max="20" step="1" value="1"></label>
@@ -136,14 +138,16 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
 
     <div class="card">
       <h2>Participantes</h2>
-      <p class="tb-msg">Escribe el mismo <b>grupo</b> para quienes no deben regalarse entre sí (por ejemplo, una pareja o hermanos). Déjalo vacío si no importa.</p>
+      <p class="tb-msg"><b>Nombres sin tildes ni espacios y sin repetir</b> (TiaRosa, JoseA, JoseB): cada quien entra la primera vez con su nombre al revés. Escribe el mismo <b>grupo</b> para quienes no deben regalarse entre sí, como una pareja.</p>
       <form class="add" id="addForm" novalidate>
-        <label>Nombre<input class="tb-field" name="nombre" maxlength="40" placeholder="Tío Juan"></label>
+        <label>Nombre<input class="tb-field" name="nombre" maxlength="30" placeholder="TiaRosa" autocapitalize="words" autocorrect="off" spellcheck="false"></label>
         <label>Grupo (opcional)<input class="tb-field" name="grupo" maxlength="30" placeholder="Juan y Rosa"></label>
         <button class="tb-btn" type="submit">Agregar</button>
+        <label class="check" style="grid-column:1/-1;margin:2px 0 0"><input type="checkbox" name="nino"> Es niño o niña</label>
+        <label id="cargoLbl" hidden style="grid-column:1/-1">A cargo de<select class="tb-field" name="cargo"></select></label>
       </form>
       <p class="tb-err" id="addErr" role="alert"></p>
-      <div id="claveBox"></div>
+      <div id="msgBox"></div>
       <ul class="people" id="gPeople"></ul>
       <p class="tb-msg" id="gCount"></p>
     </div>
@@ -172,7 +176,7 @@ window.addEventListener('popstate',()=>ruta());
 $('#inicioBtn').onclick=()=>ir('');
 $('#salirBtn').onclick=async()=>{await T.salir();abrirLogin()};
 
-function abrirLogin(){$('#salirBtn').hidden=true;show('vLogin');T.montarLogin($('#login'),{titulo:'Entra con tu correo',onEntrar:ruta})}
+function abrirLogin(){$('#salirBtn').hidden=true;show('vLogin');T.montarLogin($('#login'),{titulo:'Entra para organizar',texto:'Con tu correo y tu contraseña. Si es tu primera vez, crea tu cuenta.',onEntrar:ruta})}
 async function ruta(){
   if(!await T.token()){abrirLogin();return}
   $('#salirBtn').hidden=false;
@@ -245,37 +249,44 @@ function pintarGestion(){
   const x=actual,c=x.cuenta||{};show('vGestion');
   $('#gTit').textContent=x.nombre;
   $('#gSub').textContent=[c.nombre,x.evento_fecha?diaHora(x.evento_fecha):'',x.evento_lugar].filter(Boolean).join(' · ');
-  const modos={clave:'Tú agregas a los participantes',correo:'Cada quien se une con su correo',ambos:'Las dos formas'};
+  const modos={clave:'Tú armas la lista',correo:'Cada quien se une con su correo',ambos:'Las dos formas'};
   $('#gChips').innerHTML=`<span class="tb-chip">🎁 ${q(x.presupuesto_q)}</span><span class="tb-chip">${esc(modos[x.modo_ingreso])}</span>${x.con_envio?'<span class="tb-chip warn">🚚 Envío PetMi Q35</span>':''}${x.sorteo_hecho?'<span class="tb-chip ok">Sorteo hecho</span>':''}`;
   const link=linkPart();$('#gLink').textContent=link;
-  $('#gInvitaTxt').textContent=x.modo_ingreso==='correo'?'Comparte este enlace. Cada quien entra con su correo y se une.':x.modo_ingreso==='clave'?'Comparte este enlace. Cada quien elige su nombre y escribe la clave que le mandes (la ves al agregarlo).':'Comparte este enlace. Quienes agregaste entran con su clave; los demás se unen con su correo.';
+  $('#gInvitaTxt').textContent=x.modo_ingreso==='correo'?'Comparte este enlace. Cada quien crea su cuenta con su correo y se une.':x.modo_ingreso==='clave'?'Comparte este enlace. La primera vez, cada quien escribe su nombre al revés y crea su cuenta con correo y contraseña. Después entra con su correo.':'Comparte este enlace. Quienes están en tu lista entran con su nombre al revés; los demás se unen con su correo.';
   const msg=`🎁 ¡Ya está el amigo secreto «${x.nombre}»!${x.evento_fecha?` Nos vemos el ${diaHora(x.evento_fecha)}`:''}${x.evento_lugar?` en ${x.evento_lugar}`:''}. Presupuesto: ${q(x.presupuesto_q)}. Entra aquí: ${link}`;
   $('#gWa').href='https://wa.me/?text='+encodeURIComponent(msg);
-  $('#addForm').hidden=x.modo_ingreso==='correo'||x.sorteo_hecho;$('#addErr').textContent='';$('#claveBox').innerHTML='';
+  $('#addForm').hidden=x.modo_ingreso==='correo'||x.sorteo_hecho;$('#addErr').textContent='';$('#msgBox').innerHTML='';
   pintarGente();
 }
 function pintarGente(){
   const x=actual,l=x.participantes,s=x.sorteo_hecho;
   const est={pagada:'',pendiente_pago:' · falta pagar el envío',excluida:' · excluida'};
-  $('#gPeople').innerHTML=l.length?l.map(p=>`<li><span class="nm">${esc(p.nombre)}${p.descubrio?' <span class="tb-chip ok">Ya descubrió</span>':''}</span>
-    <span class="meta">${p.tipo==='clave'?'Entra con clave':'Se unió con su correo'} · ${Number(p.ideas)} ${Number(p.ideas)===1?'idea':'ideas'}${esc(est[p.estado]||'')}</span>
+  const chip=p=>p.es_nino?'<span class="tb-chip warn">Niño</span>':p.tipo==='correo'||p.activada?'<span class="tb-chip ok">Activa</span>':'<span class="tb-chip">Pendiente</span>';
+  const meta=p=>[p.es_nino?`A cargo de ${p.a_cargo_nombre||'—'}`:p.tipo==='correo'?'Se unió con su correo':p.activada?'Ya activó su cuenta':`Clave inicial: <b>${esc(p.clave_inicial)}</b>`,
+    `${Number(p.ideas)} ${Number(p.ideas)===1?'idea':'ideas'}${esc(est[p.estado]||'')}`].join(' · ');
+  $('#gPeople').innerHTML=l.length?l.map(p=>`<li><span class="nm">${esc(p.nombre)} ${chip(p)}${p.descubrio?' <span class="tb-chip ok">Ya descubrió</span>':''}</span>
+    <span class="meta">${meta(p)}</span>
     <span class="acts2"><input class="grp" data-grupo="${esc(p.id)}" value="${esc(p.grupo||'')}" placeholder="Grupo" maxlength="30" aria-label="Grupo de ${esc(p.nombre)}" ${s?'disabled':''}>
-      ${p.tipo==='clave'?`<button class="tb-link" data-clave="${esc(p.id)}" data-nombre="${esc(p.nombre)}">Nueva clave</button>`:''}${s?'':`<button class="tb-link bad" data-quitar="${esc(p.id)}" data-nombre="${esc(p.nombre)}">Quitar</button>`}</span></li>`).join('')
+      ${p.tipo==='lista'&&!p.es_nino&&!p.activada?`<button class="tb-link" data-msg="${esc(p.id)}">Mensaje</button>`:''}
+      ${p.tipo==='lista'&&p.activada?`<button class="tb-link" data-reiniciar="${esc(p.id)}" data-nombre="${esc(p.nombre)}">Reiniciar</button>`:''}
+      ${s?'':`<button class="tb-link bad" data-quitar="${esc(p.id)}" data-nombre="${esc(p.nombre)}">Quitar</button>`}</span></li>`).join('')
     :'<p class="tb-msg">Todavía no hay participantes.</p>';
-  const ok=l.filter(p=>p.estado==='pagada'),sinIdeas=ok.filter(p=>p.ideas<x.min_ideas).length;
-  $('#gCount').textContent=l.length?`${l.length} participantes${sinIdeas?` · ${sinIdeas} todavía sin ${x.min_ideas===1?'su idea':'sus ideas'}`:''}.`:'';
+  const adultos=l.filter(p=>!p.es_nino);
+  $('#addForm').cargo.innerHTML=adultos.map(p=>`<option value="${esc(p.id)}">${esc(p.nombre)}</option>`).join('');
+  const ok=l.filter(p=>p.estado==='pagada'),sinIdeas=ok.filter(p=>p.ideas<x.min_ideas).length,pend=l.filter(p=>p.tipo==='lista'&&!p.es_nino&&!p.activada).length;
+  $('#gCount').textContent=l.length?`${l.length} participantes${pend?` · ${pend} sin activar`:''}${sinIdeas?` · ${sinIdeas} todavía sin ${x.min_ideas===1?'su idea':'sus ideas'}`:''}.`:'';
   const des=l.filter(p=>p.descubrio).length;
   $('#gSorteoTxt').textContent=s?`Listo. ${des} de ${l.length} ya descubrieron a su amigo secreto.${des?'':' Mientras nadie lo haya descubierto, puedes volver a sortear.'}`
     :`Cuando estén todos, haz el sorteo. Nadie queda con alguien de su mismo grupo.${x.min_ideas?` Solo entran quienes tengan al menos ${x.min_ideas} ${x.min_ideas===1?'idea':'ideas'}.`:''}`;
   $('#gSortear').textContent=s?'Volver a sortear':'Hacer el sorteo';$('#gSortear').hidden=s&&des>0;
 }
-function mostrarClave(nombre,clave){
-  const link=linkPart(),msg=`Hola ${nombre} 🎁 Ya está el amigo secreto «${actual.nombre}». Entra aquí: ${link} — elige tu nombre y escribe tu clave: ${clave}. ¡No se la compartas a nadie!`;
-  $('#claveBox').innerHTML=`<div class="clave" role="status"><p>Clave de <b>${esc(nombre)}</b>: <b class="k">${esc(clave)}</b></p>
-    <p class="tb-msg">Mándasela ahora: por seguridad no se vuelve a mostrar. Si se pierde, genera una nueva.</p>
+function mostrarMensaje(nombre,clave){
+  const link=linkPart(),msg=`Hola ${nombre} 🎁 Ya está el amigo secreto «${actual.nombre}». Entra aquí: ${link} y escribe tu nombre al revés: ${clave}. Luego crea tu cuenta con tu correo y una contraseña.`;
+  $('#msgBox').innerHTML=`<div class="clave" role="status"><p><b>${esc(nombre)}</b> entra la primera vez con: <b class="k">${esc(clave)}</b></p>
     <div class="acts" style="margin-top:6px"><button class="tb-btn sm" id="copiarMsg">Copiar mensaje</button><a class="tb-link" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Enviar por WhatsApp</a></div></div>`;
   $('#copiarMsg').onclick=e=>T.copiar(msg,e.target);
 }
+$('#addForm').nino.addEventListener('change',e=>{$('#cargoLbl').hidden=!e.target.checked});
 $('#gEditar').onclick=()=>{const c=actual.cuenta;abrirForm(c?c.slug:null,actual)};
 $('#gCopiar').onclick=e=>T.copiar($('#gLink').textContent,e.target);
 $('#gNuevaInv').onclick=async()=>{
@@ -284,23 +295,27 @@ $('#gNuevaInv').onclick=async()=>{
 };
 $('#addForm').addEventListener('submit',async e=>{
   e.preventDefault();const f=e.target,err=$('#addErr');err.textContent='';
-  const r=await rpc('tribbi_org_participante',{p_slug:actual.slug,p_id:null,p_nombre:f.nombre.value,p_grupo:f.grupo.value});
+  const nom=f.nombre.value.trim();
+  if(!/^[A-Za-z0-9ñÑ]{2,30}$/.test(nom)){err.textContent='Escribe el nombre sin tildes ni espacios, por ejemplo TiaRosa o JoseA.';return}
+  if(f.nino.checked&&!f.cargo.value){err.textContent='Primero agrega a la mamá o al papá, y luego al niño.';return}
+  const r=await rpc('tribbi_org_participante',{p_slug:actual.slug,p_id:null,p_nombre:nom,p_grupo:f.grupo.value,p_es_nino:f.nino.checked,p_a_cargo:f.nino.checked?f.cargo.value:null});
   if(!r.ok){if(!sesion(r))err.textContent=r.d.mensaje||'No se pudo agregar.';return}
-  const g=f.grupo.value;f.reset();f.grupo.value=g;f.nombre.focus();
+  const g=f.grupo.value,cargo=f.cargo.value;f.reset();f.grupo.value=g;$('#cargoLbl').hidden=true;f.nombre.focus();
   const r2=await rpc('tribbi_org_intercambio',{p_slug:actual.slug});if(r2.ok){actual=r2.d;pintarGente()}
-  mostrarClave(r.d.nombre,r.d.clave);
+  if(r.d.clave_inicial)mostrarMensaje(r.d.nombre,r.d.clave_inicial);else $('#msgBox').innerHTML='';
 });
 $('#gPeople').addEventListener('change',async e=>{
   const i=e.target.closest('[data-grupo]');if(!i)return;
   const p=actual.participantes.find(x=>x.id===i.dataset.grupo);
-  const r=await rpc('tribbi_org_participante',{p_slug:actual.slug,p_id:p.id,p_nombre:p.nombre,p_grupo:i.value});
+  const r=await rpc('tribbi_org_participante',{p_slug:actual.slug,p_id:p.id,p_nombre:p.nombre,p_grupo:i.value,p_es_nino:p.es_nino,p_a_cargo:p.a_cargo_de});
   if(r.ok)p.grupo=i.value;else if(!sesion(r)){alert(r.d.mensaje||'No se pudo guardar.');i.value=p.grupo||''}
 });
 $('#gPeople').addEventListener('click',async e=>{
-  const c=e.target.closest('[data-clave]'),qq=e.target.closest('[data-quitar]');
-  if(c){if(!confirm(`¿Generar una clave nueva para ${c.dataset.nombre}? La anterior deja de funcionar.`))return;
-    const r=await rpc('tribbi_org_nueva_clave',{p_slug:actual.slug,p_id:c.dataset.clave});
-    if(r.ok){mostrarClave(c.dataset.nombre,r.d.clave);$('#claveBox').scrollIntoView({block:'center'})}else if(!sesion(r))alert(r.d.mensaje||'No se pudo.')}
+  const mm=e.target.closest('[data-msg]'),rr=e.target.closest('[data-reiniciar]'),qq=e.target.closest('[data-quitar]');
+  if(mm){const p=actual.participantes.find(x=>x.id===mm.dataset.msg);mostrarMensaje(p.nombre,p.clave_inicial);$('#msgBox').scrollIntoView({block:'center'})}
+  if(rr){if(!confirm(`¿Reiniciar a ${rr.dataset.nombre}? Su cuenta se desvincula y podrá activarla de nuevo con su nombre al revés. Su amigo secreto no cambia.`))return;
+    const r=await rpc('tribbi_org_reiniciar',{p_slug:actual.slug,p_id:rr.dataset.reiniciar});
+    if(r.ok){const r2=await rpc('tribbi_org_intercambio',{p_slug:actual.slug});if(r2.ok){actual=r2.d;pintarGente()}}else if(!sesion(r))alert(r.d.mensaje||'No se pudo reiniciar.')}
   if(qq){if(!confirm(`¿Quitar a ${qq.dataset.nombre} del intercambio?`))return;
     const r=await rpc('tribbi_org_quitar',{p_slug:actual.slug,p_id:qq.dataset.quitar});
     if(r.ok){const r2=await rpc('tribbi_org_intercambio',{p_slug:actual.slug});if(r2.ok){actual=r2.d;pintarGente()}}else if(!sesion(r))alert(r.d.mensaje||'No se pudo quitar.')}
