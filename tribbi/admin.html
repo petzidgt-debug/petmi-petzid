@@ -61,6 +61,7 @@ td small{display:block;color:var(--muted)}
       <button data-tab="intercambios">Intercambios</button>
       <button data-tab="usuarios">Usuarios</button>
       <button data-tab="cuentas">Cuentas</button>
+      <button data-tab="contactos">Contactos</button>
       <button data-tab="bookpal">BookPal</button>
       <button data-tab="espera">Lista de espera</button>
     </nav>
@@ -110,6 +111,25 @@ td small{display:block;color:var(--muted)}
       <h2>Cuentas</h2>
       <p class="lead">Familias, grupos y empresas que organizan intercambios. Aquí se activa la marca propia (white label).</p>
       <div id="cuLista"></div>
+    </section>
+  </div>
+
+  <!-- ═══ CONTACTOS ═══ -->
+  <div class="wrap" data-panel="contactos" hidden>
+    <section class="blk">
+      <h2>Contactos</h2>
+      <p class="lead">Todas las personas con cuenta, más la lista de espera de BookPal. “Acepta promos” solo cambia cuando la persona responde el correo de gracias.</p>
+      <div class="nums" id="coNums"></div>
+      <div class="row" style="margin-top:14px"><input class="tb-field buscar" id="coBuscar" placeholder="Buscar por correo o nombre" aria-label="Buscar contactos">
+        <select class="tb-field buscar" id="coFiltro" aria-label="Filtrar"><option value="">Todos</option><option value="Sí">Aceptan promos</option><option value="No">No aceptan</option><option value="Sin respuesta">Sin respuesta</option></select>
+        <button class="tb-btn sm" id="coCsv">⬇ Descargar CSV</button></div>
+      <p class="tb-msg" id="coCuenta"></p>
+      <div id="coLista"></div>
+    </section>
+    <section class="blk">
+      <h2>Por intercambio</h2>
+      <div class="row"><button class="tb-link" id="piCsv">⬇ Descargar CSV</button></div>
+      <div id="piLista"></div>
     </section>
   </div>
 
@@ -218,7 +238,7 @@ async function iniciar(){
     abrirLogin(F(r,'No se pudo abrir el panel.'));return}
   $('#loginView').hidden=true;$('#panelView').hidden=false;
   pintarResumen(r.d);
-  const t=(location.hash||'').slice(1);if(['resumen','intercambios','usuarios','cuentas','bookpal','espera'].includes(t))tab(t);
+  const t=(location.hash||'').slice(1);if(['resumen','intercambios','usuarios','cuentas','contactos','bookpal','espera'].includes(t))tab(t);
 }
 $('#salir').onclick=async()=>{await T.salir();abrirLogin()};
 
@@ -231,6 +251,7 @@ function tab(t){
   if(t==='intercambios'&&!exCargado)cargarIntercambios();
   if(t==='usuarios'&&!usCargado)cargarUsuarios();
   if(t==='cuentas')cargarCuentas();
+  if(t==='contactos'&&!coCargado)cargarContactos();
   window.scrollTo(0,0);
 }
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
@@ -312,6 +333,48 @@ $('#cuLista').addEventListener('click',async e=>{
   const r=await rpc('tribbi_admin_cuenta_marca',{p_slug:b.dataset.marca,p_marca_propia:si,p_marca:null});
   if(r.ok)cargarCuentas();else if(!sesionPerdida(r))alert(F(r,'No se pudo cambiar.'));
 });
+
+/* ═══ Contactos ═══ */
+let coCargado=false,coTodos=[],piTodos=[];
+const fechaCorta=v=>v?new Date(v).toLocaleString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'America/Guatemala'}):'';
+async function cargarContactos(){
+  const r=await rpc('tribbi_admin_contactos');if(sesionPerdida(r))return;
+  if(!r.ok){$('#coLista').innerHTML=`<p class="tb-msg bad">${esc(r.d.error==='falta_sql'?'Falta correr 11_contactos_panel.sql en Supabase.':F(r,'No se pudo cargar.'))}</p>`;return}
+  coCargado=true;coTodos=r.d.contactos;piTodos=r.d.por_intercambio;
+  const n=k=>coTodos.filter(c=>c.acepta_promos===k).length;
+  $('#coNums').innerHTML=[[coTodos.length,'contactos'],[n('Sí'),'aceptan promos'],[n('No'),'no aceptan'],[n('Sin respuesta'),'sin respuesta']].map(([v,t])=>`<div><b>${v}</b><span>${t}</span></div>`).join('');
+  pintarContactos();pintarPorIntercambio();
+}
+function filtrados(){
+  const q=$('#coBuscar').value.trim().toLowerCase(),f=$('#coFiltro').value;
+  return coTodos.filter(c=>(!f||c.acepta_promos===f)&&(!q||(c.correo+' '+(c.nombre||'')).toLowerCase().includes(q)));
+}
+function pintarContactos(){
+  const l=filtrados(),cls={'Sí':'ok','No':'off','Sin respuesta':''};
+  $('#coCuenta').textContent=`${l.length} de ${coTodos.length} contactos.`;
+  $('#coLista').innerHTML=!l.length?'<p class="tb-msg">No hay contactos con ese filtro.</p>':`<div class="tb-scroll"><table><thead><tr><th>Contacto</th><th>Rol</th><th>Intercambios</th><th>Último intercambio</th><th>Origen</th><th>Registro</th><th>Acepta promos</th></tr></thead><tbody>${
+    l.slice(0,500).map(c=>`<tr><td><b>${esc(c.nombre||'—')}</b><small>${esc(c.correo)}</small></td><td>${esc(c.rol||'')}</td><td>${Number(c.intercambios||0)}</td><td>${esc(c.ultimo||'')}</td>
+      <td>${esc(c.origen)}</td><td class="nw">${esc(dia(c.registro))}</td><td class="nw"><span class="tb-chip ${cls[c.acepta_promos]||''}">${esc(c.acepta_promos)}</span>${c.respondio?`<small>${esc(dia(c.respondio))}</small>`:''}</td></tr>`).join('')}</tbody></table></div>
+    ${l.length>500?'<p class="tb-msg">Se muestran los primeros 500. El CSV trae todos.</p>':''}`;
+}
+function pintarPorIntercambio(){
+  $('#piLista').innerHTML=!piTodos.length?'<p class="tb-msg">Todavía no hay intercambios.</p>':`<div class="tb-scroll"><table><thead><tr><th>Intercambio</th><th>Cuenta</th><th>Fecha</th><th>Participantes</th><th>Con correo</th><th>Aceptan promos</th><th>Correos de gracias</th></tr></thead><tbody>${
+    piTodos.map(x=>`<tr><td><b>${esc(x.intercambio)}</b></td><td>${esc(x.cuenta||'')}</td><td class="nw">${esc(x.fecha?dia(x.fecha):'—')}</td><td>${Number(x.participantes)}</td><td>${Number(x.con_correo)}</td><td>${Number(x.aceptan_promos)}</td><td>${Number(x.gracias_enviados)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+$('#coBuscar').addEventListener('input',pintarContactos);$('#coFiltro').addEventListener('change',pintarContactos);
+/* CSV que abre bien en Excel y Google Sheets (con tildes): separado por comas, con BOM */
+function descargarCSV(nombre,encabezado,filas){
+  const cel=v=>{v=v==null?'':String(v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const txt='\uFEFF'+[encabezado,...filas].map(f=>f.map(cel).join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/csv;charset=utf-8'}));
+  a.download=nombre;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+}
+const hoyArchivo=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/Guatemala'});
+$('#coCsv').onclick=()=>{const f=$('#coFiltro').value,suf=f==='Sí'?'aceptan-promos':f==='No'?'no-aceptan':f==='Sin respuesta'?'sin-respuesta':'todos';
+  descargarCSV(`tribbi-contactos-${suf}-${hoyArchivo()}.csv`,['Correo','Nombre','Rol','Intercambios','Último intercambio','Origen','Registro','Acepta promos','Fecha de respuesta'],
+    filtrados().map(c=>[c.correo,c.nombre||'',c.rol||'',c.intercambios||0,c.ultimo||'',c.origen,fechaCorta(c.registro),c.acepta_promos,fechaCorta(c.respondio)]))};
+$('#piCsv').onclick=()=>descargarCSV(`tribbi-por-intercambio-${hoyArchivo()}.csv`,['Intercambio','Cuenta','Fecha','Participantes','Con correo','Aceptan promos','Correos de gracias enviados'],
+  piTodos.map(x=>[x.intercambio,x.cuenta||'',fechaCorta(x.fecha),x.participantes,x.con_correo,x.aceptan_promos,x.gracias_enviados]));
 
 /* ═══ BookPal ═══ */
 let bpCargado=false;
