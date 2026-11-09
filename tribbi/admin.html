@@ -261,7 +261,7 @@ function pintarIntercambios(){
   const gente=x=>x.con_envio?`${Number(x.total)}<small>${Number(x.total)-Number(x.sin_pagar)} pagaron · ${Number(x.sin_pagar)} sin pagar</small>`
     :`${Number(x.total)}<small>${Number(x.activas)} activas · ${Number(x.pendientes)} pendientes${Number(x.ninos)?` · ${Number(x.ninos)} niños`:''}</small>`;
   $('#exLista').innerHTML=!l.length?'<p class="tb-msg">No hay intercambios con ese filtro.</p>':`<div class="tb-scroll"><table><thead><tr><th>Intercambio</th><th>Cuenta</th><th>Participantes</th><th>Estado</th><th>Fecha</th><th>Creado</th><th></th></tr></thead><tbody>${
-    l.map(x=>`<tr><td><b>${esc(x.nombre)}</b><small>${esc(x.slug)}</small></td><td>${esc(x.cuenta||'—')}${x.marca_propia?' <span class="tb-chip">Marca propia</span>':''}</td>
+    l.map(x=>`<tr><td><span style="display:flex;gap:10px;align-items:center">${T.portadaHTML(x,'mini')}<span><b>${esc(x.nombre)}</b><small>${esc(x.slug)}</small></span></span></td><td>${esc(x.cuenta||'—')}${x.marca_propia?' <span class="tb-chip">Marca propia</span>':''}</td>
       <td>${gente(x)}</td><td>${estado(x)}${x.con_envio?'<small>🚚 con envío</small>':''}</td><td class="nw">${esc(x.evento_fecha?dia(x.evento_fecha):'—')}</td><td class="nw">${esc(dia(x.creada_en))}</td>
       <td class="nw"><button class="tb-link" data-ver="${esc(x.slug)}">Ver</button>${x.con_envio?`<a class="tb-link" href="tribbi.html?e=${encodeURIComponent(x.slug)}&admin=1">Operar entregas</a>`
         :`<a class="tb-link" href="organizar.html?e=${encodeURIComponent(x.slug)}">Abrir como organizador</a>`}</td></tr>`).join('')}</tbody></table></div>`;

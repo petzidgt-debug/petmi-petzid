@@ -73,3 +73,27 @@ textarea.tb-field{resize:vertical;min-height:90px}
 .tb-logo .i .c.p{z-index:1}
 .tb-logo .i .c path{stroke:var(--bg);stroke-width:40px;paint-order:stroke}
 .tb-logo .i .c.p path{fill:var(--logo)}
+
+/* Portada del intercambio: foto o uno de 6 diseños */
+.tb-portada{position:relative;border-radius:20px;overflow:hidden;height:170px;background-color:var(--soft);background-size:cover;background-position:center;display:grid;place-items:center;font-size:3.4rem;line-height:1}
+.tb-portada.thumb{width:56px;height:56px;border-radius:12px;font-size:1.6rem;flex:none}
+.tb-portada.mini{width:40px;height:40px;border-radius:10px;font-size:1.1rem;flex:none}
+.d-navidad{background-image:linear-gradient(135deg,#D7263D,#F2B33D)}
+.d-morado{background-image:linear-gradient(135deg,#8E4BC4,#F49AB5)}
+.d-nieve{background-image:linear-gradient(135deg,#2F7FC1,#9BD3F5)}
+.d-estrella{background-image:linear-gradient(135deg,#F3B431,#FFE58A)}
+.d-noche{background-image:linear-gradient(135deg,#1C2A33,#4A6B7C)}
+.d-luces{background:#0F2A20}
+.tb-luces{position:absolute;inset:0;display:flex;justify-content:space-around;align-items:flex-start;padding:0 5%}
+.tb-luces::before{content:"";position:absolute;left:-5%;right:-5%;top:-34%;height:60%;border-bottom:2px solid #A9C3B5;border-radius:0 0 50% 50%/0 0 100% 100%;opacity:.6}
+.tb-luces i{position:relative;width:12px;height:18px;margin-top:17%;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:var(--c);box-shadow:0 0 12px var(--c);animation:tbtitila 2.4s infinite;animation-delay:var(--d)}
+.tb-luces i:nth-child(odd){margin-top:12%}
+.tb-luces i::before{content:"";position:absolute;top:-5px;left:3px;width:6px;height:6px;border-radius:2px;background:#A9C3B5}
+.tb-portada.thumb .tb-luces i,.tb-portada.mini .tb-luces i{width:6px;height:9px;box-shadow:0 0 6px var(--c)}
+.tb-portada.thumb .tb-luces i::before,.tb-portada.mini .tb-luces i::before{top:-3px;left:1px;width:4px;height:3px}
+@keyframes tbtitila{50%{opacity:.45;box-shadow:none}}
+@media (prefers-reduced-motion:reduce){.tb-luces i{animation:none}}
+.tb-disenos{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
+@media (max-width:520px){.tb-disenos{grid-template-columns:repeat(3,1fr)}}
+.tb-disenos button{height:56px;border-radius:12px;border:3px solid transparent;cursor:pointer;padding:0;position:relative;overflow:hidden;font-size:1.4rem;display:grid;place-items:center}
+.tb-disenos button[aria-pressed="true"]{border-color:var(--teal);box-shadow:0 0 0 2px var(--bg) inset}

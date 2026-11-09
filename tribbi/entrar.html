@@ -89,10 +89,10 @@ async function mis(){
   $('#participo').innerHTML=d.participo.length?d.participo.map(x=>{
     const href=(x.con_envio?'tribbi.html':'amigo-secreto.html')+'?e='+encodeURIComponent(x.slug);
     const est=x.estado==='pendiente_pago'?'falta pagar el envío':!x.sorteo_hecho?'esperando el sorteo':x.descubrio?'ya descubriste':'¡ya puedes raspar tu tarjeta!';
-    return `<div class="item"><span><b>${esc(x.nombre)}</b><small>${esc([x.cuenta,'como '+x.como].filter(Boolean).join(' · '))}</small>
-      ${x.ninos.length?`<small>A tu cargo: ${esc(x.ninos.join(', '))}</small>`:''}<small>${esc(est)}</small></span><a class="tb-btn sm" href="${href}">Abrir</a></div>`}).join('')
+    return `<div class="item"><span style="display:flex;gap:12px;align-items:center;min-width:0">${T.portadaHTML(x,'thumb')}<span><b>${esc(x.nombre)}</b><small>${esc([x.cuenta,'como '+x.como].filter(Boolean).join(' · '))}</small>
+      ${x.ninos.length?`<small>A tu cargo: ${esc(x.ninos.join(', '))}</small>`:''}<small>${esc(est)}</small></span></span><a class="tb-btn sm" href="${href}">Abrir</a></div>`}).join('')
     :'<p class="empty">Todavía no participas en ningún intercambio. Si te invitaron, abre el enlace que te mandaron.</p>';
-  $('#organizo').innerHTML=d.organizo.length?d.organizo.map(x=>`<div class="item"><span><b>${esc(x.nombre)}</b><small>${esc(x.cuenta)} · ${Number(x.participantes)} participantes · ${x.sorteo_hecho?'sorteo hecho':'sin sortear'}</small></span>
+  $('#organizo').innerHTML=d.organizo.length?d.organizo.map(x=>`<div class="item"><span style="display:flex;gap:12px;align-items:center;min-width:0">${T.portadaHTML(x,'thumb')}<span><b>${esc(x.nombre)}</b><small>${esc(x.cuenta)} · ${Number(x.participantes)} participantes · ${x.sorteo_hecho?'sorteo hecho':'sin sortear'}</small></span></span>
       <a class="tb-btn sm" href="organizar.html?e=${encodeURIComponent(x.slug)}">Administrar</a></div>`).join('')
     :'<p class="empty">No organizas ningún intercambio todavía.</p>';
 }

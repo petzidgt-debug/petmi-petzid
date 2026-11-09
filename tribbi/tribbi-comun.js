@@ -221,5 +221,49 @@ async function pagar(cuerpo){
 }
 async function copiar(texto,boton){try{await navigator.clipboard.writeText(texto);if(boton){const t=boton.textContent;boton.textContent='Copiado ✓';setTimeout(()=>boton.textContent=t,1800)}}catch(e){prompt('Copia el texto:',texto)}}
 
-window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced};
+
+/* ── Portada del intercambio ── */
+const DISENOS={navidad:'🎄',luces:'',morado:'💜',nieve:'❄️',estrella:'⭐',noche:'✨'};
+const LUZ=['#D7263D','#F2B33D','#1F8A5B','#2F7FC1','#E0662A'];
+const lucesHTML=n=>`<span class="tb-luces" aria-hidden="true">${Array.from({length:n},(_,i)=>`<i style="--c:${LUZ[i%5]};--d:${(i%4)*.5}s"></i>`).join('')}</span>`;
+const urlPortadaOk=u=>typeof u==='string'&&u.startsWith(SB+'/storage/v1/object/public/tribbi/portadas/')&&/^[A-Za-z0-9._\-\/:]+$/.test(u);
+/* tam: '' (grande), 'thumb' o 'mini' */
+function portadaHTML(x,tam){
+  const cls='tb-portada'+(tam?' '+tam:''),nombre=esc((x&&x.nombre)||'el intercambio');
+  if(x&&urlPortadaOk(x.portada_url))return `<div class="${cls}" style="background-image:url('${x.portada_url}')" role="img" aria-label="Portada de ${nombre}"></div>`;
+  const d=(x&&DISENOS.hasOwnProperty(x.portada_diseno))?x.portada_diseno:'navidad';
+  return `<div class="${cls} d-${d}" role="img" aria-label="Portada de ${nombre}">${d==='luces'?lucesHTML(tam?4:9):`<span aria-hidden="true">${DISENOS[d]}</span>`}</div>`;
+}
+/* Achica la foto en el aparato (máximo 1600 px) y la sube. Devuelve {url} o {error}. */
+async function subirPortada(slug,archivo){
+  if(!archivo||!/^image\//.test(archivo.type||''))return {error:'Elige una foto (JPG o PNG).'};
+  let img=null;
+  try{img=await createImageBitmap(archivo)}catch(e){
+    img=await new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=URL.createObjectURL(archivo)});
+  }
+  if(!img)return {error:'No pudimos leer esa foto. Prueba con una JPG o PNG.'};
+  const w=img.width,h=img.height,k=Math.min(1,1600/Math.max(w,h)),cv=document.createElement('canvas');
+  cv.width=Math.round(w*k);cv.height=Math.round(h*k);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+  const blob=await new Promise(res=>cv.toBlob(res,'image/jpeg',.82));
+  if(!blob)return {error:'No pudimos preparar la foto. Intenta con otra.'};
+  const tk=await token();if(!tk)return {error:'Tu sesión venció. Vuelve a entrar.'};
+  const ruta='portadas/'+slug+'/'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)+'.jpg';
+  try{
+    const r=await fetch(SB+'/storage/v1/object/tribbi/'+ruta,{method:'POST',headers:{Authorization:'Bearer '+tk,apikey:KEY,'Content-Type':'image/jpeg','x-upsert':'false'},body:blob});
+    if(r.ok)return {url:SB+'/storage/v1/object/public/tribbi/'+ruta};
+    let d={};try{d=await r.json()}catch(e){}
+    const m=String(d.message||d.error||'').toLowerCase();
+    if(m.includes('bucket'))return {error:'Falta correr 8_portadas.sql en Supabase.'};
+    if(r.status===413||m.includes('size'))return {error:'La foto es muy pesada. Prueba con otra.'};
+    if(r.status===401||r.status===403||m.includes('policy'))return {error:'No tienes permiso para cambiar la portada de este intercambio.'};
+    return {error:'No se pudo subir la foto. Intenta de nuevo.'};
+  }catch(e){return {error:'Sin conexión. Revisa tu internet e intenta de nuevo.'}}
+}
+/* Borra una foto anterior (si falla, no pasa nada) */
+async function borrarPortada(url){
+  if(!urlPortadaOk(url))return;const tk=await token();if(!tk)return;
+  try{await fetch(SB+'/storage/v1/object/tribbi/'+url.split('/object/public/tribbi/')[1],{method:'DELETE',headers:{Authorization:'Bearer '+tk,apikey:KEY}})}catch(e){}
+}
+
+window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML};
 })();
