@@ -90,6 +90,12 @@ async function recuperar(email){
   const r=await auth('recover?redirect_to='+encodeURIComponent(URL_ENTRAR()),{email:email.trim().toLowerCase()});
   return r.ok||r.status===200?'':errAuth(r);
 }
+/* Verifica el código de recuperación que llega por correo y deja la sesión abierta para cambiar la contraseña */
+async function verificarRecuperacion(email,codigo){
+  const r=await auth('verify',{type:'recovery',email:email.trim().toLowerCase(),token:String(codigo).replace(/\D/g,'')});
+  if(r.ok&&r.d.access_token){guardarSesion(r.d);return ''}
+  return r.status===429?'Demasiados intentos. Espera unos minutos.':'Ese código no es válido o ya venció. Revisa el último correo que te llegó o pide otro.';
+}
 /* Formulario de entrar, crear cuenta y "olvidé mi contraseña" */
 function montarLogin(el,opts){
   opts=opts||{};
@@ -115,16 +121,27 @@ function montarLogin(el,opts){
   </form>
   <form class="tb-box" data-paso="olvide" hidden autocomplete="on">
     <h1>¿Olvidaste tu contraseña?</h1>
-    <p>Te mandamos un correo con un enlace para crear una nueva.</p>
+    <p>Te mandamos un código a tu correo para crear una nueva.</p>
     <label>Correo<input class="tb-field" name="email" type="email" autocomplete="username" required maxlength="120"></label>
     <div class="tb-err" role="alert"></div>
-    <button class="tb-btn" type="submit">Enviar correo</button>
+    <button class="tb-btn" type="submit">Enviar código</button>
     <p class="tb-tiny"><button type="button" class="tb-link" data-ir="entrar">Volver a entrar</button></p>
+  </form>
+  <form class="tb-box" data-paso="codigo" hidden autocomplete="off">
+    <h1>Revisa tu correo</h1>
+    <p class="tb-txt"></p>
+    <input type="hidden" name="email">
+    <label>Código<input class="tb-field tb-code" name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></label>
+    <label>Contraseña nueva<input class="tb-field" name="clave" type="password" autocomplete="new-password" minlength="6" maxlength="72" required></label>
+    <label>Repítela<input class="tb-field" name="clave2" type="password" autocomplete="new-password" maxlength="72" required></label>
+    <div class="tb-err" role="alert"></div>
+    <button class="tb-btn" type="submit">Guardar y entrar</button>
+    <p class="tb-tiny">¿No llegó? Revisa spam o <button type="button" class="tb-link" data-ir="olvide">pide otro código</button>.</p>
   </form>`;
   const f=p=>el.querySelector(`[data-paso="${p}"]`);
-  function ir(p){['entrar','crear','olvide'].forEach(x=>f(x).hidden=x!==p);const n=f(p);n.querySelector('.tb-err').textContent='';n.querySelector('.tb-err').className='tb-err';
+  function ir(p){['entrar','crear','olvide','codigo'].forEach(x=>f(x).hidden=x!==p);const n=f(p);n.querySelector('.tb-err').textContent='';n.querySelector('.tb-err').className='tb-err';
     const prev=el.querySelector('[data-paso]:not([hidden]) [name=email]');setTimeout(()=>{const i=n.querySelector('input');i&&i.focus()},50)}
-  el.addEventListener('click',e=>{const b=e.target.closest('[data-ir]');if(!b)return;const em=el.querySelector('form:not([hidden]) [name=email]').value;ir(b.dataset.ir);f(b.dataset.ir).email.value=em});
+  el.addEventListener('click',e=>{const b=e.target.closest('[data-ir]');if(!b)return;const em=(el.querySelector('form:not([hidden]) [name=email]')||{}).value||'';ir(b.dataset.ir);f(b.dataset.ir).email.value=em});
   if(ses&&ses.email)f('entrar').email.value=ses.email;
   const enviar=(paso,fn)=>f(paso).addEventListener('submit',async e=>{
     e.preventDefault();const fo=f(paso),err=fo.querySelector('.tb-err'),b=fo.querySelector('button[type=submit]');
@@ -134,7 +151,17 @@ function montarLogin(el,opts){
   enviar('entrar',async fo=>{const m=await entrarConClave(fo.email.value,fo.clave.value);fo.clave.value='';if(!m){opts.onEntrar&&opts.onEntrar();return ''}return m});
   enviar('crear',async fo=>{if(fo.clave.value.length<6)return 'La contraseña debe tener al menos 6 caracteres.';if(fo.clave.value!==fo.clave2.value)return 'Las contraseñas no coinciden.';
     const m=await crearCuenta(fo.email.value,fo.clave.value);if(!m){opts.onEntrar&&opts.onEntrar();return ''}return m});
-  enviar('olvide',async (fo,err)=>{const m=await recuperar(fo.email.value);if(m)return m;err.className='tb-msg ok';err.textContent='Listo. Si hay una cuenta con ese correo, te llegará un enlace en unos minutos (revisa también spam).';return ''});
+  enviar('olvide',async fo=>{const em=fo.email.value.trim().toLowerCase(),m=await recuperar(em);if(m)return m;
+    const c=f('codigo');c.email.value=em;c.querySelector('.tb-txt').textContent=`Si hay una cuenta con ${em}, te llegó un código. Escríbelo aquí y crea tu contraseña nueva.`;
+    ir('codigo');c.email.value=em;return ''});
+  f('codigo').addEventListener('submit',async e=>{
+    e.preventDefault();const fo=f('codigo'),err=fo.querySelector('.tb-err'),b=fo.querySelector('button[type=submit]');err.textContent='';
+    if(fo.codigo.value.replace(/\D/g,'').length<6){err.textContent='El código tiene 6 números.';return}
+    if(fo.clave.value.length<6){err.textContent='La contraseña debe tener al menos 6 caracteres.';return}
+    if(fo.clave.value!==fo.clave2.value){err.textContent='Las contraseñas no coinciden.';return}
+    b.disabled=true;let m=await verificarRecuperacion(fo.email.value,fo.codigo.value);if(!m)m=await cambiarClave(fo.clave.value);b.disabled=false;
+    if(m){err.textContent=m;return}fo.reset();opts.onEntrar&&opts.onEntrar();
+  });
   ir(opts.paso||'entrar');
 }
 /* Cambiar la contraseña cuando la persona llega desde el correo de recuperación */
@@ -194,5 +221,5 @@ async function pagar(cuerpo){
 }
 async function copiar(texto,boton){try{await navigator.clipboard.writeText(texto);if(boton){const t=boton.textContent;boton.textContent='Copiado ✓';setTimeout(()=>boton.textContent=t,1800)}}catch(e){prompt('Copia el texto:',texto)}}
 
-window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,entrarConClave,recuperar,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced};
+window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced};
 })();
