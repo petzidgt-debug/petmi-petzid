@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<base href="/tribbi/">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#127A6E">
@@ -92,6 +93,10 @@ async function mis(){
     return `<div class="item"><span style="display:flex;gap:12px;align-items:center;min-width:0">${T.portadaHTML(x,'thumb')}<span><b>${esc(x.nombre)}</b><small>${esc([x.cuenta,'como '+x.como].filter(Boolean).join(' · '))}</small>
       ${x.ninos.length?`<small>A tu cargo: ${esc(x.ninos.join(', '))}</small>`:''}<small>${esc(est)}</small></span></span><a class="tb-btn sm" href="${href}">Abrir</a></div>`}).join('')
     :'<p class="empty">Todavía no participas en ningún intercambio. Si te invitaron, abre el enlace que te mandaron.</p>';
+  const recs=d.organizo.map(x=>({x,r:T.recordatorioSorteo(x)})).filter(o=>o.r);
+  $('#aviso').insertAdjacentHTML('afterend','');
+  document.querySelectorAll('.tb-recordatorio').forEach(n=>n.remove());
+  if(recs.length)$('#hola').insertAdjacentHTML('afterend',recs.map(o=>`<div class="tb-recordatorio" role="status"><span>${esc(o.r.t)}<small>${esc(o.r.s)}</small></span><a class="tb-btn sm coral" href="organizar.html?e=${encodeURIComponent(o.x.slug)}">Ir al sorteo</a></div>`).join(''));
   $('#organizo').innerHTML=d.organizo.length?d.organizo.map(x=>`<div class="item"><span style="display:flex;gap:12px;align-items:center;min-width:0">${T.portadaHTML(x,'thumb')}<span><b>${esc(x.nombre)}</b><small>${esc(x.cuenta)} · ${Number(x.participantes)} participantes · ${x.sorteo_hecho?'sorteo hecho':'sin sortear'}</small></span></span>
       <a class="tb-btn sm" href="organizar.html?e=${encodeURIComponent(x.slug)}">Administrar</a></div>`).join('')
     :'<p class="empty">No organizas ningún intercambio todavía.</p>';

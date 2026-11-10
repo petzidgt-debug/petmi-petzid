@@ -63,7 +63,7 @@ async function rpc(fn,args){
 const fallo=(r,base,conDetalle)=>(r.d.error==='servidor'?base:(r.d.mensaje||base))+(conDetalle&&r.d.detalle?` (${r.d.detalle})`:'');
 
 /* ── Entrar: una sola forma, correo y contraseña ── */
-const URL_ENTRAR=()=>location.origin+location.pathname.replace(/[^/]*$/,'')+'entrar.html';
+const URL_ENTRAR=()=>new URL('entrar.html',document.baseURI).href;   // la página tiene <base href="/tribbi/">
 const errAuth=r=>{
   const m=String((r.d&&(r.d.msg||r.d.error_description||r.d.message||r.d.error_code||r.d.code))||'').toLowerCase();
   if(r.status===0)return 'Sin conexión. Revisa tu internet.';
@@ -265,5 +265,73 @@ async function borrarPortada(url){
   try{await fetch(SB+'/storage/v1/object/tribbi/'+url.split('/object/public/tribbi/')[1],{method:'DELETE',headers:{Authorization:'Bearer '+tk,apikey:KEY}})}catch(e){}
 }
 
-window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML};
+/* ── Fechas: días que faltan (por calendario de Guatemala) ── */
+const diaGT=d=>new Date(d).toLocaleDateString('en-CA',{timeZone:TZ});
+function diasHasta(iso){const a=new Date(diaGT(Date.now())+'T00:00:00Z'),b=new Date(diaGT(iso)+'T00:00:00Z');return Math.round((b-a)/864e5)}
+const horaGT=iso=>new Date(iso).toLocaleTimeString('es-GT',{hour:'numeric',minute:'2-digit',timeZone:TZ});
+/* Avisos de la página que se comparte: fecha límite, sorteo y día del intercambio */
+function fechasHTML(ed){
+  const out=[],ahora=Date.now(),f=(cls,e,t,s)=>`<div class="tb-f ${cls}"><span class="e" aria-hidden="true">${e}</span><span>${esc(t)}${s?`<small>${esc(s)}</small>`:''}</span></div>`;
+  if(ed.sorteo_hecho)out.push(f('listo','🎉','¡Ya se hizo el sorteo!','Entra para raspar tu tarjeta.'));
+  else{
+    if(ed.inscripcion_hasta){
+      if(ahora>new Date(ed.inscripcion_hasta))out.push(f('info','🔒','Ya no se puede unir nadie',ed.sorteo_en?`El sorteo es el ${dia(ed.sorteo_en)}.`:''));
+      else{const d=diasHasta(ed.inscripcion_hasta);
+        out.push(d<=0?f('urge','⏰','¡Último día para unirte!',`Hoy hasta las ${horaGT(ed.inscripcion_hasta)}`)
+          :d===1?f('urge','⏰','¡Mañana se cierra!',`Tienes hasta el ${dia(ed.inscripcion_hasta)}.`)
+          :f('unir','⏰',`¡Tienes hasta el ${dia(ed.inscripcion_hasta)} para unirte!`,`Faltan ${d} días. Deja tus ideas antes de esa fecha.`))}
+    }
+    if(ed.sorteo_en){const d=diasHasta(ed.sorteo_en);
+      out.push(d<0?f('info','🎲','El sorteo está por hacerse',`Estaba programado para el ${dia(ed.sorteo_en)}.`)
+        :d===0?f('info','🎲','¡Hoy es el sorteo!',horaGT(ed.sorteo_en))
+        :d===1?f('info','🎲','¡Mañana es el sorteo!',`${dia(ed.sorteo_en)}, ${horaGT(ed.sorteo_en)}`)
+        :f('info','🎲',`En ${d} días se hace el sorteo`,`${dia(ed.sorteo_en)}, ${horaGT(ed.sorteo_en)}`))}
+  }
+  if(ed.evento_fecha)out.push(f('info','🎄',`Intercambio: ${diaHora(ed.evento_fecha)}`,ed.evento_lugar||''));
+  return out.length?`<div class="tb-fechas">${out.join('')}</div>`:'';
+}
+/* Recordatorio para quien organiza: null si no toca */
+function recordatorioSorteo(x){
+  if(x.sorteo_hecho||!x.sorteo_en)return null;const d=diasHasta(x.sorteo_en);
+  if(d>1)return null;
+  return d===1?{t:`Mañana toca el sorteo de ${x.nombre}`,s:`${dia(x.sorteo_en)}, ${horaGT(x.sorteo_en)}`}
+    :d===0?{t:`🎲 Hoy toca el sorteo de ${x.nombre}`,s:`Programado para las ${horaGT(x.sorteo_en)}`}
+    :{t:`🎲 El sorteo de ${x.nombre} está pendiente`,s:`Estaba programado para el ${dia(x.sorteo_en)}.`};
+}
+
+/* ── Acceso directo en la pantalla de inicio ── */
+const enApp=()=>{try{return (typeof matchMedia==='function'&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true}catch(e){return false}};
+function plataforma(){const ua=navigator.userAgent||'';if(/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1))return 'ios';if(/Android/i.test(ua))return 'android';return 'otro'}
+const PASOS={ios:'Toca el botón <b>Compartir</b> (el cuadrito con la flecha ⬆️, abajo en Safari) y elige <b>Agregar a inicio</b>.',
+  android:'Toca los <b>tres puntitos ⋮</b> del navegador (arriba a la derecha) y elige <b>Agregar a la pantalla de inicio</b>.',
+  otro:'Agrega esta página a tus favoritos (<b>Ctrl + D</b>, o <b>Cmd + D</b> en Mac) para volver con un clic.'};
+/* Hace que el acceso directo abra ESTA página (y no la home de Tribbi) y se llame como el intercambio */
+function prepararAcceso(nombre){
+  const base=new URL('.',document.baseURI).href;
+  const m={name:nombre||'Tribbi',short_name:(nombre||'Tribbi').slice(0,24),start_url:location.href.split('#')[0],scope:base,display:'standalone',
+    background_color:'#0E2229',theme_color:'#0E2229',icons:[{src:base+'icon-192.png',sizes:'192x192',type:'image/png'},{src:base+'icon-512.png',sizes:'512x512',type:'image/png'}]};
+  let l=document.querySelector('link[rel="manifest"]');if(!l){l=document.createElement('link');l.rel='manifest';document.head.appendChild(l)}
+  l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));
+  let t=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(!t){t=document.createElement('meta');t.name='apple-mobile-web-app-title';document.head.appendChild(t)}
+  t.content=(nombre||'Tribbi').slice(0,24);
+}
+let sheetPrevio=null;
+function abrirAcceso(){
+  let sh=document.getElementById('tbSheet');
+  if(!sh){sh=document.createElement('div');sh.id='tbSheet';sh.className='tb-sheet';sh.hidden=true;sh.setAttribute('role','dialog');sh.setAttribute('aria-modal','true');sh.setAttribute('aria-labelledby','tbSheetT');
+    sh.innerHTML=`<div class="tb-sheet-box"><button class="tb-sheet-x" aria-label="Cerrar">×</button><div style="font-size:2.6rem" aria-hidden="true">📲</div>
+      <h2 id="tbSheetT">Guarda tu amigo secreto en la pantalla de inicio</h2><p id="tbSheetP"></p>
+      <p class="tb-tiny">Así vuelves con un toque.${plataforma()==='ios'?' La primera vez que lo abras, entra con tu correo y contraseña.':''}</p>
+      <button class="tb-btn" data-cerrar>Listo</button><br><button class="tb-link" data-cerrar style="margin-top:6px">Ahora no</button></div>`;
+    document.body.appendChild(sh);
+    sh.addEventListener('click',e=>{if(e.target===sh||e.target.closest('[data-cerrar]')||e.target.closest('.tb-sheet-x'))cerrarAcceso()});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sh.hidden)cerrarAcceso()});}
+  document.getElementById('tbSheetP').innerHTML=PASOS[plataforma()];
+  sheetPrevio=document.activeElement;sh.hidden=false;sh.querySelector('[data-cerrar]').focus();
+}
+function cerrarAcceso(){const sh=document.getElementById('tbSheet');if(sh)sh.hidden=true;if(sheetPrevio&&sheetPrevio.focus)sheetPrevio.focus()}
+/* La ventanita sale UNA vez por intercambio, un momento después de raspar */
+function ofrecerAcceso(clave){if(enApp()||store.get(clave))return;store.set(clave,'1');setTimeout(abrirAcceso,reduced?400:1500)}
+
+window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML,diasHasta,fechasHTML,recordatorioSorteo,enApp,prepararAcceso,abrirAcceso,ofrecerAcceso};
 })();

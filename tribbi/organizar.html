@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<base href="/tribbi/">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#127A6E">
@@ -111,7 +112,8 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
       </div>
       <div class="grid">
         <label class="f">Mínimo de ideas de regalo<small>0 si no quieres pedirlas</small><input class="tb-field" name="min_ideas" type="number" min="0" max="20" step="1" value="1"></label>
-        <label class="f" id="cierreLbl">Cierre de inscripciones<small>Opcional. Después, nadie más se puede unir.</small><input class="tb-field" name="inscripcion_hasta" type="datetime-local"></label>
+        <label class="f" id="cierreLbl">Fecha límite para unirse<small>Opcional. Después, nadie nuevo se une ni activa su cuenta.</small><input class="tb-field" name="inscripcion_hasta" type="datetime-local"></label>
+        <label class="f">Fecha del sorteo<small>Opcional. Ese día Tribbi te lo recuerda; el sorteo lo haces tú.</small><input class="tb-field" name="sorteo_en" type="datetime-local"></label>
       </div>
       <label class="f">Reglas<small>Opcional. Una por línea.</small><textarea class="tb-field" name="reglas" rows="3" placeholder="Nada de dinero en efectivo"></textarea></label>
       <p class="f" style="font-weight:700;margin:16px 0 4px">Imagen de portada <span class="tb-msg" style="font-weight:400">(opcional)</span></p>
@@ -130,6 +132,7 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
   </div>
 
   <div id="vGestion" hidden>
+    <div id="gRecuerda"></div>
     <div id="gPortada" style="margin-top:6px"></div>
     <h1 class="big" id="gTit"></h1>
     <p class="lead" id="gSub"></p>
@@ -175,7 +178,7 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
 const T=window.Tribbi,{$,esc,dia,diaHora,q,rpc}=T;
 const V=['vLogin','vPerfil','vInicio','vForm','vGestion'];
 const show=v=>{V.forEach(x=>$('#'+x).hidden=x!==v);$('#inicioBtn').hidden=v==='vInicio'||v==='vLogin'||v==='vPerfil';window.scrollTo(0,0)};
-const urlBase=()=>location.origin+location.pathname.replace(/[^/]*$/,'');
+const urlBase=()=>new URL('.',document.baseURI).href;   // siempre .../tribbi/
 let data=null,actual=null,cuentaForm=null,editando=null;
 const sesion=r=>{if(r.d.error==='sesion'){T.borrarSesion();abrirLogin();return true}return false};
 const ir=(qs)=>{history.pushState(null,'',location.pathname+qs);ruta()};
@@ -206,7 +209,8 @@ $('#perfilForm').addEventListener('submit',async e=>{
 function pintarInicio(){
   show('vInicio');const cs=data.cuentas;
   $('#cuentaTit').textContent=cs.length?'Crea otra cuenta':'Crea tu cuenta';
-  $('#cuentas').innerHTML=cs.map(c=>`<div class="card">
+  const recs=cs.flatMap(c=>c.intercambios.map(x=>({x,r:T.recordatorioSorteo(x)}))).filter(o=>o.r);
+  $('#cuentas').innerHTML=recs.map(o=>`<div class="tb-recordatorio" role="status"><span>${esc(o.r.t)}<small>${esc(o.r.s)}</small></span><button class="tb-btn sm coral" data-abrir="${esc(o.x.slug)}">Abrir</button></div>`).join('')+cs.map(c=>`<div class="card">
     <div class="cuenta-h"><h2>${esc(c.nombre)}${c.white_label?' <span class="tb-chip warn">Marca propia</span>':''}</h2><button class="tb-btn sm" data-nuevo="${esc(c.slug)}">+ Nuevo intercambio</button></div>
     ${c.intercambios.length?`<ul class="lista">${c.intercambios.map(x=>`<li><span style="display:flex;gap:12px;align-items:center">${T.portadaHTML(x,'thumb')}<span><b>${esc(x.nombre)}</b><small>${x.evento_fecha?esc(diaHora(x.evento_fecha))+' · ':''}${Number(x.participantes)} participantes · ${x.sorteo_hecho?'sorteo hecho':'sin sortear'}${x.con_envio?' · con envío':''}</small></span></span>
       <button class="tb-link" data-abrir="${esc(x.slug)}">Abrir</button></li>`).join('')}</ul>`:'<p class="tb-msg">Todavía no tiene intercambios.</p>'}</div>`).join('');
@@ -222,7 +226,7 @@ $('#cuentaForm').addEventListener('submit',async e=>{
 const fx=$('#exForm');
 function syncForm(){
   const modo=fx.modo.value;$('#envioBox').hidden=modo!=='correo';if(modo!=='correo')fx.con_envio.checked=false;
-  $('#entregaLbl').hidden=!fx.con_envio.checked;$('#cierreLbl').hidden=modo==='clave';
+  $('#entregaLbl').hidden=!fx.con_envio.checked;
 }
 fx.addEventListener('change',syncForm);
 let pArchivo=null,pUrl=null,pDiseno='navidad',pPrevUrl=null;
@@ -244,7 +248,7 @@ function abrirForm(cuenta,ex){
   const c=data.cuentas.find(x=>x.slug===cuenta);$('#exCuenta').textContent=c?`Cuenta: ${c.nombre}`:'';
   $('#exTit').textContent=ex?`Editar: ${ex.nombre}`:'Nuevo intercambio';
   if(ex){fx.nombre.value=ex.nombre;fx.presupuesto_q.value=Number(ex.presupuesto_q);fx.evento_fecha.value=T.aLocal(ex.evento_fecha);fx.evento_lugar.value=ex.evento_lugar||'';
-    fx.modo.value=ex.modo_ingreso;fx.min_ideas.value=ex.min_ideas;fx.inscripcion_hasta.value=T.aLocal(ex.inscripcion_hasta);fx.reglas.value=(ex.reglas||[]).join('\n');
+    fx.modo.value=ex.modo_ingreso;fx.min_ideas.value=ex.min_ideas;fx.inscripcion_hasta.value=T.aLocal(ex.inscripcion_hasta);fx.sorteo_en.value=T.aLocal(ex.sorteo_en);fx.reglas.value=(ex.reglas||[]).join('\n');
     fx.con_envio.checked=ex.con_envio;fx.entrega_hasta.value=ex.con_envio?T.aLocal(ex.entrega_hasta):''}
   syncForm();pintarPortadaForm();show('vForm');fx.nombre.focus();
 }
@@ -252,7 +256,7 @@ $('#exCancelar').onclick=()=>history.back();
 fx.addEventListener('submit',async e=>{
   e.preventDefault();const b=$('#exGuardar');b.disabled=true;$('#exErr').textContent='';
   const d={slug:editando?editando.slug:null,nombre:fx.nombre.value,presupuesto_q:fx.presupuesto_q.value,evento_fecha:T.deLocal(fx.evento_fecha.value),evento_lugar:fx.evento_lugar.value,
-    modo_ingreso:fx.modo.value,min_ideas:fx.min_ideas.value||0,inscripcion_hasta:T.deLocal(fx.inscripcion_hasta.value),reglas:fx.reglas.value.split('\n').map(s=>s.trim()).filter(Boolean),
+    modo_ingreso:fx.modo.value,min_ideas:fx.min_ideas.value||0,inscripcion_hasta:T.deLocal(fx.inscripcion_hasta.value),sorteo_en:T.deLocal(fx.sorteo_en.value),reglas:fx.reglas.value.split('\n').map(s=>s.trim()).filter(Boolean),
     con_envio:fx.con_envio.checked,entrega_hasta:T.deLocal(fx.entrega_hasta.value)};
   const r=await rpc('tribbi_org_guardar',{p_cuenta:cuentaForm,p_datos:d});
   if(r.ok){
@@ -281,13 +285,17 @@ const linkPart=()=>urlBase()+(actual.con_envio?'tribbi.html':'amigo-secreto.html
 function pintarGestion(){
   const x=actual,c=x.cuenta||{};show('vGestion');
   $('#gPortada').innerHTML=T.portadaHTML(x);
+  const rec=T.recordatorioSorteo(x);
+  $('#gRecuerda').innerHTML=rec?`<div class="tb-recordatorio" role="status"><span>${esc(rec.t)}<small>${esc(rec.s)}</small></span><button class="tb-btn sm coral" id="irSorteo">Ir al sorteo</button></div>`:'';
+  if(rec)$('#irSorteo').onclick=()=>$('#gSortear').scrollIntoView({behavior:T.reduced?'auto':'smooth',block:'center'});
   $('#gTit').textContent=x.nombre;
   $('#gSub').textContent=[c.nombre,x.evento_fecha?diaHora(x.evento_fecha):'',x.evento_lugar].filter(Boolean).join(' · ');
   const modos={clave:'Tú armas la lista',correo:'Cada quien se une con su correo',ambos:'Las dos formas'};
-  $('#gChips').innerHTML=`<span class="tb-chip">🎁 ${q(x.presupuesto_q)}</span><span class="tb-chip">${esc(modos[x.modo_ingreso])}</span>${x.con_envio?'<span class="tb-chip warn">🚚 Envío PetMi Q35</span>':''}${x.sorteo_hecho?'<span class="tb-chip ok">Sorteo hecho</span>':''}`;
+  $('#gChips').innerHTML=`<span class="tb-chip">🎁 ${q(x.presupuesto_q)}</span><span class="tb-chip">${esc(modos[x.modo_ingreso])}</span>${x.con_envio?'<span class="tb-chip warn">🚚 Envío PetMi Q35</span>':''}${x.inscripcion_hasta?`<span class="tb-chip">⏰ Unirse hasta el ${esc(dia(x.inscripcion_hasta))}</span>`:''}${x.sorteo_en&&!x.sorteo_hecho?`<span class="tb-chip">🎲 Sorteo el ${esc(dia(x.sorteo_en))}</span>`:''}${x.sorteo_hecho?'<span class="tb-chip ok">Sorteo hecho</span>':''}`;
   const link=linkPart();$('#gLink').textContent=link;
   $('#gInvitaTxt').textContent=x.modo_ingreso==='correo'?'Comparte este enlace. Cada quien crea su cuenta con su correo y se une.':x.modo_ingreso==='clave'?'Comparte este enlace. La primera vez, cada quien escribe su nombre al revés y crea su cuenta con correo y contraseña. Después entra con su correo.':'Comparte este enlace. Quienes están en tu lista entran con su nombre al revés; los demás se unen con su correo.';
-  const msg=`🎁 ¡Ya está el amigo secreto «${x.nombre}»!${x.evento_fecha?` Nos vemos el ${diaHora(x.evento_fecha)}`:''}${x.evento_lugar?` en ${x.evento_lugar}`:''}. Presupuesto: ${q(x.presupuesto_q)}. Entra aquí: ${link}`;
+  const fechasTxt=`${x.inscripcion_hasta?` Tienes hasta el ${dia(x.inscripcion_hasta)} para unirte.`:''}${x.sorteo_en?` El sorteo es el ${dia(x.sorteo_en)}.`:''}`;
+  const msg=`🎁 ¡Ya está el amigo secreto «${x.nombre}»!${fechasTxt}${x.evento_fecha?` Nos vemos el ${diaHora(x.evento_fecha)}`:''}${x.evento_lugar?` en ${x.evento_lugar}`:''}. Presupuesto: ${q(x.presupuesto_q)}. Entra aquí: ${link}`;
   $('#gWa').href='https://wa.me/?text='+encodeURIComponent(msg);
   $('#addForm').hidden=x.modo_ingreso==='correo'||x.sorteo_hecho;$('#addErr').textContent='';$('#msgBox').innerHTML='';
   pintarGente();
@@ -315,7 +323,7 @@ function pintarGente(){
   $('#gSortear').textContent=s?'Volver a sortear':'Hacer el sorteo';$('#gSortear').hidden=s&&des>0;
 }
 function mostrarMensaje(nombre,clave){
-  const link=linkPart(),msg=`Hola ${nombre} 🎁 Ya está el amigo secreto «${actual.nombre}». Entra aquí: ${link} y escribe tu nombre al revés: ${clave}. Luego crea tu cuenta con tu correo y una contraseña.`;
+  const link=linkPart(),lim=actual.inscripcion_hasta?` Tienes hasta el ${dia(actual.inscripcion_hasta)} para unirte.`:'',msg=`Hola ${nombre} 🎁 Ya está el amigo secreto «${actual.nombre}».${lim} Entra aquí: ${link} y escribe tu nombre al revés: ${clave}. Luego crea tu cuenta con tu correo y una contraseña.`;
   $('#msgBox').innerHTML=`<div class="clave" role="status"><p><b>${esc(nombre)}</b> entra la primera vez con: <b class="k">${esc(clave)}</b></p>
     <div class="acts" style="margin-top:6px"><button class="tb-btn sm" id="copiarMsg">Copiar mensaje</button><a class="tb-link" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Enviar por WhatsApp</a></div></div>`;
   $('#copiarMsg').onclick=e=>T.copiar(msg,e.target);
