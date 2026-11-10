@@ -31,8 +31,9 @@ const CONDICION={como_nuevo:'Como nuevo',buen_estado:'Buen estado',con_uso:'Con 
 /* ── Sesión (la misma de tribbi.html: entrar en una página sirve para las demás) ── */
 const SK='tribbi_sesion';
 let ses=null;try{ses=JSON.parse(store.get(SK)||'null')}catch(e){ses=null}
-function guardarSesion(d){ses={at:d.access_token,rt:d.refresh_token,exp:Math.floor(Date.now()/1000)+(d.expires_in||3600),email:(d.user&&d.user.email)||(ses&&ses.email)||''};store.set(SK,JSON.stringify(ses))}
-function borrarSesion(){ses=null;store.del(SK)}
+function avisarSesion(){try{window.dispatchEvent(new Event('tribbi-sesion'))}catch(e){}}
+function guardarSesion(d){ses={at:d.access_token,rt:d.refresh_token,exp:Math.floor(Date.now()/1000)+(d.expires_in||3600),email:(d.user&&d.user.email)||(ses&&ses.email)||''};store.set(SK,JSON.stringify(ses));avisarSesion()}
+function borrarSesion(){ses=null;store.del(SK);avisarSesion()}
 async function auth(path,body,tk){
   try{
     const r=await fetch(SB+'/auth/v1/'+path,{method:'POST',headers:Object.assign({'Content-Type':'application/json',apikey:KEY},tk?{Authorization:'Bearer '+tk}:{}),body:JSON.stringify(body||{})});
@@ -376,5 +377,83 @@ function cerrarAcceso(){const sh=document.getElementById('tbSheet');if(sh)sh.hid
 /* La ventanita sale UNA vez por intercambio, un momento después de raspar */
 function ofrecerAcceso(clave){if(enApp()||store.get(clave))return;store.set(clave,'1');setTimeout(abrirAcceso,reduced?400:1500)}
 
-window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,confirmarCuenta,reenviarCodigo,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML,diasHasta,fechasHTML,recordatorioSorteo,enApp,prepararAcceso,abrirAcceso,ofrecerAcceso};
+/* ── Menú de Tribbi (igual en celular y computadora) ── */
+const MENU_CSS=`
+.tb-top{position:sticky;top:0;z-index:40;background:var(--bg);background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.tb-top .tb-in{max-width:1040px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tb-top .tb-logo{font-size:32px}
+.tb-der{display:flex;align-items:center;gap:10px}
+.tb-avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#FCE4EC;color:#9E2F59;font-family:"Fredoka",sans-serif;font-weight:700;flex:none}
+.tb-hamb{width:44px;height:44px;border-radius:14px;border:2px solid var(--line);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--ink);padding:0}
+.tb-hamb span,.tb-hamb span::before,.tb-hamb span::after{display:block;width:20px;height:2.5px;border-radius:2px;background:currentColor;position:relative;transition:transform .2s}
+.tb-hamb span::before,.tb-hamb span::after{content:"";position:absolute;left:0}
+.tb-hamb span::before{top:-7px}.tb-hamb span::after{top:7px}
+.tb-velo{position:fixed;inset:0;z-index:70;background:rgba(15,25,24,.45);opacity:0;pointer-events:none;transition:opacity .25s}
+.tb-velo.on{opacity:1;pointer-events:auto}
+.tb-panel{position:fixed;top:0;right:0;bottom:0;z-index:71;width:min(340px,88vw);background:var(--card);color:var(--ink);box-shadow:-10px 0 40px rgba(0,0,0,.18);transform:translateX(105%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s .28s;display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top,0px)) 18px calc(18px + env(safe-area-inset-bottom,0px));overflow-y:auto}
+.tb-panel.on{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion:reduce){.tb-panel,.tb-velo,.tb-hamb span::before,.tb-hamb span::after{transition:none}}
+.tb-panel .tb-cab{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tb-panel .tb-logo{font-size:30px}
+.tb-panel .tb-logo .i .c path{stroke:var(--card)}
+.tb-cerrar{border:0;background:none;font-size:1.8rem;line-height:1;color:var(--muted);cursor:pointer;width:44px;height:44px;border-radius:12px}
+.tb-yo{display:flex;gap:12px;align-items:center;background:var(--soft);border-radius:16px;padding:12px;margin-bottom:8px;min-width:0}
+.tb-yo b{display:block;font-family:"Fredoka",sans-serif}
+.tb-yo small{color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-nav{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:4px}
+.tb-nav a{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;color:var(--ink);text-decoration:none;font-weight:700;font-size:1.05rem}
+.tb-nav a:hover,.tb-nav a[aria-current="page"]{background:var(--soft)}
+.tb-nav a[aria-current="page"]{color:var(--teal)}
+.tb-nav .e{width:28px;text-align:center;font-size:1.2rem}
+.tb-pie{margin-top:auto;display:grid;gap:8px;padding-top:14px}
+.tb-mbtn{display:block;text-align:center;font-family:"Fredoka",sans-serif;font-weight:600;font-size:1.05rem;padding:11px 20px;border-radius:999px;background:var(--btn);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-dark);text-decoration:none}
+.tb-mbtn.sec{background:transparent;color:var(--teal);box-shadow:none;border:2px solid var(--line)}
+.tb-msalir{border:0;border-top:1px solid var(--line);background:none;color:var(--coral);padding:14px 10px 4px;cursor:pointer;font:inherit;font-weight:700}
+`;
+const LOGO_PATH="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z";
+function logoHTML(){
+  const c=[['#F7B3C6',-.165],['#E86F94',.235],['#F2C14E',-.065],['#36D6C4',.135]];
+  return `<a class="tb-logo" href="./" aria-label="Tribbi, inicio">Tribb<span class="i" aria-hidden="true">i${c.map(([f,l])=>`<svg class="c" style="left:${l}em;top:.141em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="${LOGO_PATH}" fill="${f}"/></svg>`).join('')}<svg class="c p" style="left:.035em;top:.141em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="${LOGO_PATH}"/></svg></span></a>`;
+}
+let menuInfo=null,menuActual='';
+async function infoMenu(){
+  if(!(await token())){menuInfo=null;return}
+  const r=await rpc('tribbi_mis_cuentas');
+  menuInfo={email:(ses&&ses.email)||'',nombre:r.ok&&r.d.perfil?(r.d.perfil.nombre_publico||r.d.perfil.nombre):'',equipo:!!(r.ok&&r.d.es_equipo)};
+}
+function pintarMenu(){
+  const top=document.getElementById('tbTop');if(!top)return;
+  const conSes=!!ses,inicial=((menuInfo&&menuInfo.nombre)||(ses&&ses.email)||'?').trim().charAt(0).toUpperCase();
+  const av=top.querySelector('.tb-avatar');av.hidden=!conSes;av.textContent=inicial;
+  const items=[['🏠','Inicio','./','inicio'],['🎁','Mis intercambios','entrar.html','mis'],['✨','Organizar un amigo secreto','organizar.html','org'],['📚','BookPal','bookpal.html','bp']]
+    .filter(i=>conSes||i[3]!=='mis').concat(menuInfo&&menuInfo.equipo?[['🛠️','Panel admin','admin.html','admin']]:[]);
+  document.getElementById('tbYo').innerHTML=conSes?`<div class="tb-yo"><span class="tb-avatar" aria-hidden="true">${esc(inicial)}</span><span style="min-width:0"><b>${esc((menuInfo&&menuInfo.nombre)||'Tu cuenta')}</b><small>${esc((ses&&ses.email)||'')}</small></span></div>`:'';
+  document.getElementById('tbNav').innerHTML=items.map(([e,t,h,k])=>`<li><a href="${h}"${k===menuActual?' aria-current="page"':''}><span class="e" aria-hidden="true">${e}</span>${esc(t)}</a></li>`).join('');
+  document.getElementById('tbPie').innerHTML=conSes?`<button class="tb-msalir" id="tbSalir">Salir</button>`:`<a class="tb-mbtn" href="entrar.html">Entrar</a><a class="tb-mbtn sec" href="entrar.html#crear">Crear cuenta</a>`;
+}
+let menuPrevio=null;
+function abrirMenu(){menuPrevio=document.activeElement;const p=document.getElementById('tbPanel');p.classList.add('on');document.getElementById('tbVelo').classList.add('on');p.setAttribute('aria-hidden','false');
+  document.getElementById('tbHamb').setAttribute('aria-expanded','true');setTimeout(()=>document.getElementById('tbCerrar').focus(),50);infoMenu().then(pintarMenu)}
+function cerrarMenu(){const p=document.getElementById('tbPanel');if(!p||!p.classList.contains('on'))return;p.classList.remove('on');document.getElementById('tbVelo').classList.remove('on');p.setAttribute('aria-hidden','true');
+  document.getElementById('tbHamb').setAttribute('aria-expanded','false');if(menuPrevio&&menuPrevio.focus)menuPrevio.focus()}
+/* actual: 'inicio' | 'mis' | 'org' | 'bp' | 'admin' */
+function montarMenu(actual){
+  if(document.getElementById('tbTop'))return;menuActual=actual||'';
+  if(!document.getElementById('tbMenuCss')){const st=document.createElement('style');st.id='tbMenuCss';st.textContent=MENU_CSS;document.head.appendChild(st)}
+  const top=document.createElement('header');top.className='tb-top';top.id='tbTop';
+  top.innerHTML=`<div class="tb-in">${logoHTML()}<div class="tb-der"><span class="tb-avatar" aria-hidden="true" hidden></span><button class="tb-hamb" id="tbHamb" aria-label="Abrir menú" aria-expanded="false" aria-controls="tbPanel"><span></span></button></div></div>`;
+  document.body.insertBefore(top,document.body.firstChild);
+  const velo=document.createElement('div');velo.className='tb-velo';velo.id='tbVelo';
+  const panel=document.createElement('nav');panel.className='tb-panel';panel.id='tbPanel';panel.setAttribute('aria-label','Menú de Tribbi');panel.setAttribute('aria-hidden','true');
+  panel.innerHTML=`<div class="tb-cab">${logoHTML()}<button class="tb-cerrar" id="tbCerrar" aria-label="Cerrar menú">×</button></div><div id="tbYo"></div><ul class="tb-nav" id="tbNav"></ul><div class="tb-pie" id="tbPie"></div>`;
+  document.body.appendChild(velo);document.body.appendChild(panel);
+  document.getElementById('tbHamb').onclick=()=>panel.classList.contains('on')?cerrarMenu():abrirMenu();
+  document.getElementById('tbCerrar').onclick=cerrarMenu;velo.onclick=cerrarMenu;
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarMenu()});
+  panel.addEventListener('click',async e=>{if(e.target.id==='tbSalir'){await salir();cerrarMenu();location.reload()}});
+  window.addEventListener('tribbi-sesion',()=>{infoMenu().then(pintarMenu)});
+  pintarMenu();infoMenu().then(pintarMenu);
+}
+
+window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,confirmarCuenta,reenviarCodigo,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML,diasHasta,fechasHTML,recordatorioSorteo,enApp,prepararAcceso,abrirAcceso,ofrecerAcceso,montarMenu,cerrarMenu};
 })();
