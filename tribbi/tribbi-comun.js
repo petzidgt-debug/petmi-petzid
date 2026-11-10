@@ -79,10 +79,13 @@ const errAuth=r=>{
 async function crearCuenta(email,clave){
   const r=await auth('signup',{email:email.trim().toLowerCase(),password:clave});
   if(r.ok&&r.d.access_token){guardarSesion(r.d);return ''}
+  // Si el correo ya tenía cuenta confirmada, Supabase responde "listo" sin mandar nada (identities vacío)
+  const u=(r.d&&r.d.user)||r.d||{};
+  if(r.ok&&Array.isArray(u.identities)&&u.identities.length===0)return YA_EXISTE;
   if(r.ok)return CONFIRMAR;   // Supabase mandó un código al correo para confirmar la cuenta
   return errAuth(r);
 }
-const CONFIRMAR='__confirmar__';
+const CONFIRMAR='__confirmar__',YA_EXISTE='__ya_existe__';
 /* Confirma la cuenta con el código que llegó al correo y deja la sesión abierta */
 async function confirmarCuenta(email,codigo){
   const em=email.trim().toLowerCase(),tk=String(codigo).replace(/\D/g,'');
@@ -184,6 +187,8 @@ function montarLogin(el,opts){
   enviar('crear',async fo=>{if(fo.clave.value.length<6)return 'La contraseña debe tener al menos 6 caracteres.';if(fo.clave.value!==fo.clave2.value)return 'Las contraseñas no coinciden.';
     const em=fo.email.value,m=await crearCuenta(em,fo.clave.value);
     if(m===CONFIRMAR){fo.clave.value='';fo.clave2.value='';aConfirmar(em,false);return ''}
+    if(m===YA_EXISTE){fo.clave.value='';fo.clave2.value='';const er=fo.querySelector('.tb-err');er.className='tb-err';
+      er.innerHTML='Ya hay una cuenta con ese correo.<br><button type="button" class="tb-link" data-ir="entrar">Entrar con mi contraseña</button> · <button type="button" class="tb-link" data-ir="olvide">Olvidé mi contraseña</button>';return ''}
     if(!m){opts.onEntrar&&opts.onEntrar();return ''}return m});
   f('confirmar').addEventListener('submit',async e=>{
     e.preventDefault();const fo=f('confirmar'),err=fo.querySelector('.tb-err'),b=fo.querySelector('button[type=submit]');err.className='tb-err';err.textContent='';
