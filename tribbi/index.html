@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <base href="/tribbi/">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#127A6E">
+<meta name="theme-color" content="#FAFAF5">
 <title>Tribbi | Intercambios que arman tribu</title>
 <meta name="description" content="Tribbi organiza intercambios de regalos y libros en Guatemala: te inscribes, te toca alguien y PetMi entrega a domicilio.">
 <link rel="icon" href="favicon.ico" sizes="48x48">
@@ -16,20 +16,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F4F7F1; --ink:#1C2A33; --muted:#5B6B70; --card:#FFFFFF; --line:#DCE4D8;
-  --coral:#E2483D; --coral-dark:#A82A21; --teal:#127A6E; --teal-dark:#0B5249; --sun:#F3B431; --soft:#E8EFE4; --logo:#0F9E90;
+  --bg:#FAFAF5; --ink:#1F3534; --muted:#5E6F6D; --card:#FFFFFF; --line:#E6E8DF;
+  --coral:#C94375; --coral-dark:#9E2F59; --teal:#0B7A70; --teal-dark:#075A53; --sun:#F2C14E; --soft:#F2F3EA; --miss:#FCE4EC; --logo:#0F9E90;
+  --btn:#F2C14E; --btn-ink:#1F3534; --btn-dark:#C99A2E; --rosa:#E86F94; --rosa-dark:#B84A70;
   color-scheme:light; box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#111C20; --ink:#EEF3EC; --muted:#A3B4B2; --card:#182A2F; --line:#2A4046;
-    --coral:#F2665B; --coral-dark:#8E2219; --teal:#38B3A3; --teal-dark:#0E5C52; --sun:#FFC94D; --soft:#1F353A; --logo:#36D6C4; color-scheme:dark;
+    --bg:#142321; --ink:#F3F5EE; --muted:#A9B8B5; --card:#1C2E2C; --line:#2C4340;
+    --coral:#F49AB5; --coral-dark:#9E2F59; --teal:#5FD9CB; --teal-dark:#0B5249; --sun:#F2C14E; --soft:#223634; --miss:#4A2633; --logo:#36D6C4;
+    --btn:#F2C14E; --btn-ink:#1F3534; --btn-dark:#9C7A26; --rosa:#E86F94; --rosa-dark:#9E2F59; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#111C20; --ink:#EEF3EC; --muted:#A3B4B2; --card:#182A2F; --line:#2A4046;
-  --coral:#F2665B; --coral-dark:#8E2219; --teal:#38B3A3; --teal-dark:#0E5C52; --sun:#FFC94D; --soft:#1F353A; --logo:#36D6C4; color-scheme:dark;
+  --bg:#142321; --ink:#F3F5EE; --muted:#A9B8B5; --card:#1C2E2C; --line:#2C4340;
+    --coral:#F49AB5; --coral-dark:#9E2F59; --teal:#5FD9CB; --teal-dark:#0B5249; --sun:#F2C14E; --soft:#223634; --miss:#4A2633; --logo:#36D6C4;
+    --btn:#F2C14E; --btn-ink:#1F3534; --btn-dark:#9C7A26; --rosa:#E86F94; --rosa-dark:#9E2F59; color-scheme:dark;
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:border-box}
@@ -56,8 +59,8 @@ button,input,select{font:inherit;color:inherit}
 @media (max-width:760px){.opts{grid-template-columns:1fr}}
 .opt{background:var(--card);border:2px solid var(--line);border-radius:26px;padding:24px 24px 26px;position:relative;overflow:hidden;display:flex;flex-direction:column}
 .opt .band{position:absolute;inset:0 0 auto;height:12px}
-.opt.navidad .band{background:repeating-linear-gradient(-45deg,var(--coral) 0 12px,transparent 12px 24px)}
-.opt.bookpal .band{background:repeating-linear-gradient(90deg,var(--teal) 0 18px,var(--sun) 18px 22px)}
+.opt.navidad .band{background:repeating-linear-gradient(-45deg,var(--rosa) 0 12px,transparent 12px 24px)}
+.opt.bookpal .band{background:repeating-linear-gradient(90deg,#36D6C4 0 18px,var(--sun) 18px 22px)}
 .opt .ico{font-size:2.4rem;line-height:1;margin-top:8px}
 .opt h3{font-size:1.6rem;margin:10px 0 2px;line-height:1.1}
 .opt.navidad h3{color:var(--coral)}
@@ -66,12 +69,12 @@ button,input,select{font:inherit;color:inherit}
 .opt p{margin:0 0 12px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 18px}
 .chip{font-size:.9rem;padding:3px 12px;border-radius:999px;background:var(--soft);font-weight:600;white-space:nowrap}
-.chip.live{background:var(--teal);color:#fff}
-.chip.soon{background:var(--sun);color:#3A2A00}
+.chip.live{background:var(--teal);color:var(--bg)}
+.chip.soon{background:#FBEFC8;color:#3A2A00}
 .opt .push{margin-top:auto}
-.btn{display:inline-block;border:0;cursor:pointer;color:#fff;font-weight:600;font-size:1.12rem;padding:12px 26px;border-radius:999px;text-decoration:none;transition:transform .08s,box-shadow .08s}
-.btn.coral{background:var(--coral);box-shadow:0 5px 0 var(--coral-dark)}
-.btn.teal{background:var(--teal);box-shadow:0 5px 0 var(--teal-dark)}
+.btn{display:inline-block;border:0;cursor:pointer;color:var(--btn-ink);font-weight:600;font-size:1.12rem;padding:12px 26px;border-radius:999px;text-decoration:none;transition:transform .08s,box-shadow .08s}
+.btn.coral{background:var(--btn);box-shadow:0 5px 0 var(--btn-dark)}
+.btn.teal{background:var(--rosa);box-shadow:0 5px 0 var(--rosa-dark)}
 .btn:active{transform:translateY(4px);box-shadow:0 1px 0 transparent}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .wait{display:grid;grid-template-columns:1fr auto;gap:10px}
@@ -90,7 +93,7 @@ button,input,select{font:inherit;color:inherit}
 .steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:s}
 @media (max-width:760px){.steps{grid-template-columns:1fr}}
 .steps li{counter-increment:s;position:relative;padding:0 0 0 58px}
-.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--sun);color:#3A2A00;font-family:"Fredoka",sans-serif;font-weight:700;font-size:1.3rem}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#FCE4EC;color:#9E2F59;font-family:"Fredoka",sans-serif;font-weight:700;font-size:1.3rem}
 .steps b{display:block;font-family:"Fredoka",sans-serif;font-size:1.15rem;font-weight:600}
 .steps span{color:var(--muted)}
 
@@ -121,6 +124,7 @@ footer a{color:var(--teal);font-weight:700}
 .topnav .entrar{font-family:"Fredoka",sans-serif;font-weight:600;color:var(--teal);text-decoration:none;border:2px solid var(--line);background:var(--card);border-radius:999px;padding:6px 18px}
 .topnav .entrar:hover{border-color:var(--teal)}
 .hero{padding-top:12px!important}
+.opt p a{color:var(--teal);font-weight:700}
 </style>
 </head>
 <body>
@@ -128,7 +132,7 @@ footer a{color:var(--teal);font-weight:700}
   <nav class="topnav" aria-label="Cuenta"><a class="entrar" href="entrar.html">Entrar</a></nav>
   <header class="hero">
     <div>
-      <h1><span class="tb-logo anim" id="logo" role="img" aria-label="Tribbi" title="Tócame">Tribb<span class="i" aria-hidden="true">i<svg class="c" style="left:-0.165em;top:.141em;--dx:0.2em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#A24FD4"/></svg><svg class="c" style="left:0.235em;top:.141em;--dx:-0.2em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#4C8DF6"/></svg><svg class="c" style="left:-0.065em;top:.141em;--dx:0.1em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#F2553D"/></svg><svg class="c" style="left:0.135em;top:.141em;--dx:-0.1em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#F5AF35"/></svg><svg class="c p" style="left:0.035em;top:.141em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z"/></svg></span></span></h1>
+      <h1><span class="tb-logo anim" id="logo" role="img" aria-label="Tribbi" title="Tócame">Tribb<span class="i" aria-hidden="true">i<svg class="c" style="left:-0.165em;top:.141em;--dx:0.2em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#F7B3C6"/></svg><svg class="c" style="left:0.235em;top:.141em;--dx:-0.2em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#E86F94"/></svg><svg class="c" style="left:-0.065em;top:.141em;--dx:0.1em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#F2C14E"/></svg><svg class="c" style="left:0.135em;top:.141em;--dx:-0.1em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#36D6C4"/></svg><svg class="c p" style="left:0.035em;top:.141em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z"/></svg></span></span></h1>
       <p class="tag">Intercambios que arman tribu</p>
       <p class="lead">Te inscribes, te toca alguien al azar y le das algo pensado para esa persona. Nosotros organizamos el sorteo y las entregas; tú solo eliges el regalo.</p>
     </div>

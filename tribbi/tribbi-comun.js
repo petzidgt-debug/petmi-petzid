@@ -309,7 +309,7 @@ const PASOS={ios:'Toca el botón <b>Compartir</b> (el cuadrito con la flecha ⬆
 function prepararAcceso(nombre){
   const base=new URL('.',document.baseURI).href;
   const m={name:nombre||'Tribbi',short_name:(nombre||'Tribbi').slice(0,24),start_url:location.href.split('#')[0],scope:base,display:'standalone',
-    background_color:'#0E2229',theme_color:'#0E2229',icons:[{src:base+'icon-192.png',sizes:'192x192',type:'image/png'},{src:base+'icon-512.png',sizes:'512x512',type:'image/png'}]};
+    background_color:'#FAFAF5',theme_color:'#FAFAF5',icons:[{src:base+'icon-192.png',sizes:'192x192',type:'image/png'},{src:base+'icon-512.png',sizes:'512x512',type:'image/png'}]};
   let l=document.querySelector('link[rel="manifest"]');if(!l){l=document.createElement('link');l.rel='manifest';document.head.appendChild(l)}
   l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));
   let t=document.querySelector('meta[name="apple-mobile-web-app-title"]');if(!t){t=document.createElement('meta');t.name='apple-mobile-web-app-title';document.head.appendChild(t)}
