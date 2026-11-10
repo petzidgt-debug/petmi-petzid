@@ -78,12 +78,27 @@ const errAuth=r=>{
 async function crearCuenta(email,clave){
   const r=await auth('signup',{email:email.trim().toLowerCase(),password:clave});
   if(r.ok&&r.d.access_token){guardarSesion(r.d);return ''}
-  if(r.ok)return 'Tu cuenta se creó, pero hay que confirmarla desde tu correo. Revisa tu bandeja y vuelve a entrar.';
+  if(r.ok)return CONFIRMAR;   // Supabase mandó un código al correo para confirmar la cuenta
   return errAuth(r);
+}
+const CONFIRMAR='__confirmar__';
+/* Confirma la cuenta con el código que llegó al correo y deja la sesión abierta */
+async function confirmarCuenta(email,codigo){
+  const em=email.trim().toLowerCase(),tk=String(codigo).replace(/\D/g,'');
+  let r=await auth('verify',{type:'signup',email:em,token:tk});
+  if(!(r.ok&&r.d.access_token))r=await auth('verify',{type:'email',email:em,token:tk});
+  if(r.ok&&r.d.access_token){guardarSesion(r.d);return ''}
+  return r.status===429?'Demasiados intentos. Espera unos minutos.':'Ese código no es válido o ya venció. Revisa el último correo que te llegó o pide otro.';
+}
+async function reenviarCodigo(email){
+  const r=await auth('resend',{type:'signup',email:email.trim().toLowerCase()});
+  return r.ok?'':r.status===429?'Espera un minuto antes de pedir otro código.':'No se pudo reenviar el código. Intenta de nuevo.';
 }
 async function entrarConClave(email,clave){
   const r=await auth('token?grant_type=password',{email:email.trim().toLowerCase(),password:clave});
   if(r.ok&&r.d.access_token){guardarSesion(r.d);return ''}
+  const m=String((r.d&&(r.d.msg||r.d.error_description||r.d.message||r.d.error_code||r.d.code))||'').toLowerCase();
+  if(m.includes('not confirmed')||m.includes('not_confirmed'))return CONFIRMAR;
   return errAuth(r);
 }
 async function recuperar(email){
@@ -119,6 +134,15 @@ function montarLogin(el,opts){
     <button class="tb-btn" type="submit">Crear mi cuenta</button>
     <p class="tb-tiny"><button type="button" class="tb-link" data-ir="entrar">Ya tengo cuenta</button></p>
   </form>
+  <form class="tb-box" data-paso="confirmar" hidden autocomplete="off">
+    <h1>Confirma tu correo</h1>
+    <p class="tb-txt"></p>
+    <input type="hidden" name="email">
+    <label>Código<input class="tb-field tb-code" name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></label>
+    <div class="tb-err" role="alert"></div>
+    <button class="tb-btn" type="submit">Confirmar y entrar</button>
+    <p class="tb-tiny">¿No llegó? Revisa spam o <button type="button" class="tb-link" data-reenviar>reenvía el código</button>. <button type="button" class="tb-link" data-ir="crear">Usar otro correo</button></p>
+  </form>
   <form class="tb-box" data-paso="olvide" hidden autocomplete="on">
     <h1>¿Olvidaste tu contraseña?</h1>
     <p>Te mandamos un código a tu correo para crear una nueva.</p>
@@ -139,7 +163,7 @@ function montarLogin(el,opts){
     <p class="tb-tiny">¿No llegó? Revisa spam o <button type="button" class="tb-link" data-ir="olvide">pide otro código</button>.</p>
   </form>`;
   const f=p=>el.querySelector(`[data-paso="${p}"]`);
-  function ir(p){['entrar','crear','olvide','codigo'].forEach(x=>f(x).hidden=x!==p);const n=f(p);n.querySelector('.tb-err').textContent='';n.querySelector('.tb-err').className='tb-err';
+  function ir(p){['entrar','crear','olvide','codigo','confirmar'].forEach(x=>f(x).hidden=x!==p);const n=f(p);n.querySelector('.tb-err').textContent='';n.querySelector('.tb-err').className='tb-err';
     const prev=el.querySelector('[data-paso]:not([hidden]) [name=email]');setTimeout(()=>{const i=n.querySelector('input');i&&i.focus()},50)}
   el.addEventListener('click',e=>{const b=e.target.closest('[data-ir]');if(!b)return;const em=(el.querySelector('form:not([hidden]) [name=email]')||{}).value||'';ir(b.dataset.ir);f(b.dataset.ir).email.value=em});
   if(ses&&ses.email)f('entrar').email.value=ses.email;
@@ -148,9 +172,28 @@ function montarLogin(el,opts){
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fo.email.value.trim())){err.textContent='Revisa tu correo.';return}
     b.disabled=true;err.className='tb-err';err.textContent='';const m=await fn(fo,err);b.disabled=false;if(m)err.textContent=m;
   });
-  enviar('entrar',async fo=>{const m=await entrarConClave(fo.email.value,fo.clave.value);fo.clave.value='';if(!m){opts.onEntrar&&opts.onEntrar();return ''}return m});
+  /* Muestra el paso de confirmar el correo */
+  function aConfirmar(email,reenviado){
+    const c=f('confirmar'),em=email.trim().toLowerCase();ir('confirmar');c.email.value=em;c.codigo.value='';
+    c.querySelector('.tb-txt').textContent=reenviado?`Tu cuenta todavía no está confirmada. Te mandamos un código a ${em}: escríbelo aquí.`:`Te mandamos un código a ${em}. Escríbelo aquí para confirmar tu cuenta.`;
+  }
+  enviar('entrar',async fo=>{const em=fo.email.value,m=await entrarConClave(em,fo.clave.value);fo.clave.value='';
+    if(m===CONFIRMAR){await reenviarCodigo(em);aConfirmar(em,true);return ''}
+    if(!m){opts.onEntrar&&opts.onEntrar();return ''}return m});
   enviar('crear',async fo=>{if(fo.clave.value.length<6)return 'La contraseña debe tener al menos 6 caracteres.';if(fo.clave.value!==fo.clave2.value)return 'Las contraseñas no coinciden.';
-    const m=await crearCuenta(fo.email.value,fo.clave.value);if(!m){opts.onEntrar&&opts.onEntrar();return ''}return m});
+    const em=fo.email.value,m=await crearCuenta(em,fo.clave.value);
+    if(m===CONFIRMAR){fo.clave.value='';fo.clave2.value='';aConfirmar(em,false);return ''}
+    if(!m){opts.onEntrar&&opts.onEntrar();return ''}return m});
+  f('confirmar').addEventListener('submit',async e=>{
+    e.preventDefault();const fo=f('confirmar'),err=fo.querySelector('.tb-err'),b=fo.querySelector('button[type=submit]');err.className='tb-err';err.textContent='';
+    if(fo.codigo.value.replace(/\D/g,'').length<6){err.textContent='El código tiene 6 números.';return}
+    b.disabled=true;const m=await confirmarCuenta(fo.email.value,fo.codigo.value);b.disabled=false;
+    if(m){err.textContent=m;return}fo.reset();opts.onEntrar&&opts.onEntrar();
+  });
+  el.querySelector('[data-reenviar]').addEventListener('click',async()=>{
+    const fo=f('confirmar'),err=fo.querySelector('.tb-err'),m=await reenviarCodigo(fo.email.value);
+    err.className=m?'tb-err':'tb-msg ok';err.textContent=m||'Listo, te mandamos un código nuevo.';
+  });
   enviar('olvide',async fo=>{const em=fo.email.value.trim().toLowerCase(),m=await recuperar(em);if(m)return m;
     const c=f('codigo');c.email.value=em;c.querySelector('.tb-txt').textContent=`Si hay una cuenta con ${em}, te llegó un código. Escríbelo aquí y crea tu contraseña nueva.`;
     ir('codigo');c.email.value=em;return ''});
@@ -333,5 +376,5 @@ function cerrarAcceso(){const sh=document.getElementById('tbSheet');if(sh)sh.hid
 /* La ventanita sale UNA vez por intercambio, un momento después de raspar */
 function ofrecerAcceso(clave){if(enApp()||store.get(clave))return;store.set(clave,'1');setTimeout(abrirAcceso,reduced?400:1500)}
 
-window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML,diasHasta,fechasHTML,recordatorioSorteo,enApp,prepararAcceso,abrirAcceso,ofrecerAcceso};
+window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,confirmarCuenta,reenviarCodigo,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML,diasHasta,fechasHTML,recordatorioSorteo,enApp,prepararAcceso,abrirAcceso,ofrecerAcceso};
 })();
