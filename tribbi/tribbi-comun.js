@@ -496,5 +496,75 @@ function confirmarEliminar(nombre,detalle,eliminar){
   });
 }
 
-window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,confirmarCuenta,reenviarCodigo,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML,diasHasta,fechasHTML,recordatorioSorteo,enApp,prepararAcceso,abrirAcceso,ofrecerAcceso,montarMenu,cerrarMenu,confirmarEliminar,CONFIRMAR,YA_EXISTE};
+/* ── Fecha y hora: el día escrito y la hora con un reloj ──
+   Se monta sobre un <input type="datetime-local"> que sigue guardando el valor (AAAA-MM-DDTHH:MM). */
+const pad2=n=>String(n).padStart(2,'0');
+function textoDia(d){if(!d)return '';const t=new Date(d+'T12:00:00Z').toLocaleDateString('es-GT',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'});return t.charAt(0).toUpperCase()+t.slice(1)}
+function textoHora(hm){if(!hm)return '';let [h,m]=hm.split(':').map(Number);const pm=h>=12;h=h%12||12;return `${h}:${pad2(m)} ${pm?'p. m.':'a. m.'}`}
+function relojAbrir(hm,alListo){
+  let [h24,m]=(hm||'19:00').split(':').map(Number);let h=h24%12||12,pm=h24>=12,modo='h';
+  const sh=document.createElement('div');sh.className='tb-sheet abajo';sh.setAttribute('role','dialog');sh.setAttribute('aria-modal','true');sh.setAttribute('aria-label','Elegir hora');
+  sh.innerHTML=`<div class="tb-sheet-box tb-reloj"><div class="disp"><button data-dh aria-label="Hora"></button>:<button data-dm aria-label="Minutos"></button>
+    <div class="ampm"><button data-am>a. m.</button><button data-pm>p. m.</button></div></div>
+    <div class="tb-cara"><div class="tb-aguja"></div><div class="tb-centro"></div></div><p class="tip"></p>
+    <div class="acts"><button class="tb-link" data-no>Cancelar</button><button class="tb-btn sm" data-ok>Listo</button></div></div>`;
+  document.body.appendChild(sh);const cara=sh.querySelector('.tb-cara'),previo=document.activeElement;
+  const pos=i=>{const a=(i/12)*2*Math.PI-Math.PI/2;return [130+104*Math.cos(a),130+104*Math.sin(a)]};
+  function pintar(){
+    cara.querySelectorAll('.tb-num').forEach(n=>n.remove());
+    const vals=modo==='h'?[12,1,2,3,4,5,6,7,8,9,10,11]:[0,5,10,15,20,25,30,35,40,45,50,55];
+    vals.forEach((v,i)=>{const [x,y]=pos(i),b=document.createElement('button');b.type='button';b.className='tb-num';b.style.left=x+'px';b.style.top=y+'px';
+      b.textContent=modo==='h'?v:pad2(v);b.setAttribute('aria-label',modo==='h'?`${v} en punto`:`${v} minutos`);
+      b.setAttribute('aria-pressed',String(modo==='h'?v===h:v===m));b.onclick=()=>{if(modo==='h'){h=v;modo='m'}else m=v;pintar()};cara.appendChild(b)});
+    sh.querySelector('.tb-aguja').style.transform=`translateX(-50%) rotate(${(modo==='h'?h%12:Math.round(m/5)%12)*30}deg)`;
+    const dh=sh.querySelector('[data-dh]'),dm=sh.querySelector('[data-dm]');dh.textContent=h;dm.textContent=pad2(m);
+    dh.setAttribute('aria-pressed',String(modo==='h'));dm.setAttribute('aria-pressed',String(modo==='m'));
+    sh.querySelector('[data-am]').setAttribute('aria-pressed',String(!pm));sh.querySelector('[data-pm]').setAttribute('aria-pressed',String(pm));
+    sh.querySelector('.tip').textContent=modo==='h'?'Toca la hora':'Ahora los minutos';
+  }
+  const punto=e=>{const r=cara.getBoundingClientRect(),x=e.clientX-r.left-130,y=e.clientY-r.top-130;let a=Math.atan2(y,x)+Math.PI/2;if(a<0)a+=2*Math.PI;
+    const i=Math.round(a/(2*Math.PI)*12)%12;if(modo==='h')h=i===0?12:i;else m=i*5;pintar()};
+  let arr=false;
+  cara.addEventListener('pointerdown',e=>{if(e.target.classList.contains('tb-num'))return;arr=true;try{cara.setPointerCapture(e.pointerId)}catch(_){}punto(e)});
+  cara.addEventListener('pointermove',e=>{if(arr)punto(e)});
+  cara.addEventListener('pointerup',()=>{if(arr&&modo==='h'){modo='m';pintar()}arr=false});
+  const fin=ok=>{sh.remove();if(previo&&previo.focus)previo.focus();if(ok)alListo(`${pad2((h%12)+(pm?12:0))}:${pad2(m)}`)};
+  sh.addEventListener('click',e=>{const t=e.target;
+    if(t===sh||t.closest('[data-no]'))fin(false);else if(t.closest('[data-ok]'))fin(true);
+    else if(t.closest('[data-dh]')){modo='h';pintar()}else if(t.closest('[data-dm]')){modo='m';pintar()}
+    else if(t.closest('[data-am]')){pm=false;pintar()}else if(t.closest('[data-pm]')){pm=true;pintar()}});
+  sh.addEventListener('keydown',e=>{if(e.key==='Escape')fin(false)});
+  pintar();setTimeout(()=>sh.querySelector('[data-dh]').focus(),50);
+}
+/* opts: {rapidas:['12:00','19:00'], horaPorDefecto:'19:00', opcional:true} */
+function montarFechaHora(inp,opts){
+  opts=opts||{};if(inp.dataset.tbFh)return;inp.dataset.tbFh='1';inp.hidden=true;
+  const w=document.createElement('div');w.className='tb-fh';
+  w.innerHTML=`<label class="tb-pick"><span class="e" aria-hidden="true">📅</span><span><b data-dia></b><small data-dia2></small></span><input type="date" aria-label="Elegir día"></label>
+    <button type="button" class="tb-pick" data-hora><span class="e" aria-hidden="true">🕖</span><span><b data-h></b><small data-h2></small></span></button>
+    ${opts.opcional!==false?'<button type="button" class="tb-quitar" data-quitar hidden>Quitar</button>':''}
+    ${(opts.rapidas||[]).length?`<div class="tb-rapidas" role="group" aria-label="Horas frecuentes">${opts.rapidas.map(r=>`<button type="button" data-r="${r}">${textoHora(r)}</button>`).join('')}</div>`:''}`;
+  inp.insertAdjacentElement('afterend',w);
+  const fecha=w.querySelector('input[type=date]');
+  const val=()=>{const v=inp.value||'';return {d:v.slice(0,10),hm:v.length>=16?v.slice(11,16):''}};
+  const poner=(d,hm)=>{inp.value=d?`${d}T${hm||opts.horaPorDefecto||'19:00'}`:'';inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));pintar()};
+  function pintar(){
+    const {d,hm}=val();
+    w.querySelector('[data-dia]').textContent=d?textoDia(d):'Elegir día';w.querySelector('[data-dia2]').textContent=d?'Cambiar día':'Toca para elegir';
+    w.querySelector('[data-h]').textContent=hm?textoHora(hm):'Hora';w.querySelector('[data-h2]').textContent=hm?'Cambiar hora':(d?'Toca para elegir':'Primero el día');
+    fecha.value=d;const q=w.querySelector('[data-quitar]');if(q)q.hidden=!d;
+    w.querySelectorAll('[data-r]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.r===hm)));
+  }
+  fecha.addEventListener('click',()=>{try{fecha.showPicker&&fecha.showPicker()}catch(e){}});
+  fecha.addEventListener('change',()=>poner(fecha.value,val().hm));
+  w.querySelector('[data-hora]').addEventListener('click',()=>{const {d,hm}=val();
+    relojAbrir(hm||opts.horaPorDefecto,nueva=>{const dd=d||new Date().toLocaleDateString('en-CA',{timeZone:TZ});poner(dd,nueva)})});
+  w.querySelectorAll('[data-r]').forEach(b=>b.addEventListener('click',()=>{const {d}=val();poner(d||new Date().toLocaleDateString('en-CA',{timeZone:TZ}),b.dataset.r)}));
+  const q=w.querySelector('[data-quitar]');if(q)q.addEventListener('click',()=>poner('',''));
+  inp._tbPintar=pintar;pintar();
+}
+/* Volver a pintar después de cambiar los valores por código (por ejemplo, al abrir un formulario) */
+function refrescarFechaHora(raiz){(raiz||document).querySelectorAll('input[data-tb-fh]').forEach(i=>i._tbPintar&&i._tbPintar())}
+
+window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,confirmarCuenta,reenviarCodigo,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML,diasHasta,fechasHTML,recordatorioSorteo,enApp,prepararAcceso,abrirAcceso,ofrecerAcceso,montarMenu,cerrarMenu,confirmarEliminar,CONFIRMAR,YA_EXISTE,montarFechaHora,refrescarFechaHora};
 })();

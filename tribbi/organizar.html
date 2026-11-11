@@ -226,6 +226,11 @@ $('#cuentaForm').addEventListener('submit',async e=>{
 
 /* ── Crear o editar un intercambio ── */
 const fx=$('#exForm');
+/* Fechas: el día escrito y la hora con un reloj */
+T.montarFechaHora(fx.evento_fecha,{rapidas:['12:00','18:00','19:00','20:00'],horaPorDefecto:'19:00'});
+T.montarFechaHora(fx.inscripcion_hasta,{rapidas:['12:00','18:00','23:59'],horaPorDefecto:'23:59'});
+T.montarFechaHora(fx.sorteo_en,{rapidas:['12:00','18:00','20:00'],horaPorDefecto:'20:00'});
+T.montarFechaHora(fx.entrega_hasta,{rapidas:['12:00','18:00'],horaPorDefecto:'18:00'});
 function syncForm(){
   const modo=fx.modo.value;$('#envioBox').hidden=modo!=='correo';if(modo!=='correo')fx.con_envio.checked=false;
   $('#entregaLbl').hidden=!fx.con_envio.checked;
@@ -253,6 +258,7 @@ function abrirForm(cuenta,ex){
     fx.modo.value=ex.modo_ingreso;fx.min_ideas.value=ex.min_ideas;fx.inscripcion_hasta.value=T.aLocal(ex.inscripcion_hasta);fx.sorteo_en.value=T.aLocal(ex.sorteo_en);fx.reglas.value=(ex.reglas||[]).join('\n');
     fx.con_envio.checked=ex.con_envio;fx.entrega_hasta.value=ex.con_envio?T.aLocal(ex.entrega_hasta):''}
   $('#modoAmbos').hidden=!(ex&&ex.modo_ingreso==='ambos');
+  T.refrescarFechaHora(fx);
   syncForm();pintarPortadaForm();show('vForm');fx.nombre.focus();
 }
 $('#exCancelar').onclick=()=>history.back();
