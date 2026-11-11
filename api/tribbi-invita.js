@@ -36,11 +36,11 @@ export default async function handler(req, res) {
         const pagina = d.con_envio ? 'tribbi.html' : 'amigo-secreto.html';
         destino = base + '/tribbi/' + pagina + '?e=' + encodeURIComponent(e) + (i ? '&i=' + encodeURIComponent(i) : '');
         const quien = d.cuenta && d.cuenta.nombre ? d.cuenta.nombre + ' te invita: ' : '';
-        titulo = quien + d.nombre + ' 🎁';
+        titulo = quien + d.nombre';
         const partes = [];
         if (d.sorteo_hecho) partes.push('¡Ya se hizo el sorteo! Entra para raspar tu tarjeta');
         else {
-          if (d.inscripcion_hasta && new Date(d.inscripcion_hasta) > new Date()) partes.push('Tienes hasta el ' + dia(d.inscripcion_hasta) + ' para unirte');
+          if (d.inscripcion_hasta && new Date(d.inscripcion_hasta) > new Date()) partes.push('Tienes hasta el ' + dia(d.inscripcion_hasta) + ' para unirte al intercambio'+' 🎁');
           partes.push('Regalo de ' + q(d.presupuesto_q));
           if (d.sorteo_en) partes.push('Sorteo el ' + dia(d.sorteo_en));
           else if (d.evento_fecha) partes.push('Intercambio el ' + dia(d.evento_fecha));
