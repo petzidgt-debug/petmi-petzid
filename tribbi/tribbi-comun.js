@@ -129,13 +129,13 @@ function montarLogin(el,opts){
     <p class="tb-tiny"><button type="button" class="tb-link" data-ir="olvide">Olvidé mi contraseña</button>${opts.sinCrear?'':` · <button type="button" class="tb-link" data-ir="crear">Crear una cuenta</button>`}</p>
   </form>
   <form class="tb-box" data-paso="crear" hidden autocomplete="on">
-    <h1>Crea tu cuenta</h1>
-    <p>Con tu correo y una contraseña entras desde cualquier celular o computadora.</p>
+    <h1>${esc(opts.tituloCrear||'Crea tu cuenta')}</h1>
+    <p>${esc(opts.textoCrear||'Con tu correo y una contraseña entras desde cualquier celular o computadora.')}</p>
     <label>Correo<input class="tb-field" name="email" type="email" autocomplete="username" required maxlength="120"></label>
     <label>Contraseña<input class="tb-field" name="clave" type="password" autocomplete="new-password" required minlength="6" maxlength="72"></label>
     <label>Repítela<input class="tb-field" name="clave2" type="password" autocomplete="new-password" required maxlength="72"></label>
     <div class="tb-err" role="alert"></div>
-    <button class="tb-btn" type="submit">Crear mi cuenta</button>
+    <button class="tb-btn" type="submit">${esc(opts.botonCrear||'Crear mi cuenta')}</button>
     <p class="tb-tiny"><button type="button" class="tb-link" data-ir="entrar">Ya tengo cuenta</button></p>
   </form>
   <form class="tb-box" data-paso="confirmar" hidden autocomplete="off">
@@ -414,6 +414,12 @@ const MENU_CSS=`
 .tb-mbtn{display:block;text-align:center;font-family:"Fredoka",sans-serif;font-weight:600;font-size:1.05rem;padding:11px 20px;border-radius:999px;background:var(--btn);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-dark);text-decoration:none}
 .tb-mbtn.sec{background:transparent;color:var(--teal);box-shadow:none;border:2px solid var(--line)}
 .tb-msalir{border:0;border-top:1px solid var(--line);background:none;color:var(--coral);padding:14px 10px 4px;cursor:pointer;font:inherit;font-weight:700}
+.tb-sitio-pie{max-width:1040px;margin:40px auto 0;padding:18px 20px calc(30px + env(safe-area-inset-bottom,0px));color:var(--muted);border-top:2px dashed var(--line);text-align:center;font-size:.95rem}
+.tb-dlg-box{text-align:left}
+.tb-dlg-box h2{color:var(--coral)}
+.tb-dlg-box .tb-field{margin:6px 0 0}
+.tb-dlg-acts{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.tb-btn.peligro{background:var(--coral);color:#fff;box-shadow:0 4px 0 var(--coral-dark)}
 `;
 const LOGO_PATH="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z";
 function logoHTML(){
@@ -452,6 +458,8 @@ function montarMenu(actual){
   const panel=document.createElement('nav');panel.className='tb-panel';panel.id='tbPanel';panel.setAttribute('aria-label','Menú de Tribbi');panel.setAttribute('aria-hidden','true');
   panel.innerHTML=`<div class="tb-cab">${logoHTML()}<button class="tb-cerrar" id="tbCerrar" aria-label="Cerrar menú">×</button></div><div id="tbYo"></div><ul class="tb-nav" id="tbNav"></ul><div class="tb-pie" id="tbPie"></div>`;
   document.body.appendChild(velo);document.body.appendChild(panel);
+  document.querySelectorAll('body > footer').forEach(f=>f.remove());
+  const pie=document.createElement('footer');pie.className='tb-sitio-pie';pie.textContent='Tribbi · Una iniciativa de PetMi 🐾';document.body.insertBefore(pie,velo);
   document.getElementById('tbHamb').onclick=()=>panel.classList.contains('on')?cerrarMenu():abrirMenu();
   document.getElementById('tbCerrar').onclick=cerrarMenu;velo.onclick=cerrarMenu;
   document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarMenu()});
@@ -460,5 +468,33 @@ function montarMenu(actual){
   pintarMenu();infoMenu().then(pintarMenu);
 }
 
-window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,confirmarCuenta,reenviarCodigo,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML,diasHasta,fechasHTML,recordatorioSorteo,enApp,prepararAcceso,abrirAcceso,ofrecerAcceso,montarMenu,cerrarMenu};
+/* Ventanita para eliminar algo escribiendo su nombre. eliminar(forzar) → {ok} o {error,mensaje}. */
+function confirmarEliminar(nombre,detalle,eliminar){
+  return new Promise(res=>{
+    if(!document.getElementById('tbMenuCss')){const st=document.createElement('style');st.id='tbMenuCss';st.textContent=MENU_CSS;document.head.appendChild(st)}
+    const sh=document.createElement('div');sh.className='tb-sheet';sh.setAttribute('role','dialog');sh.setAttribute('aria-modal','true');sh.setAttribute('aria-labelledby','tbDlgT');
+    sh.innerHTML=`<div class="tb-sheet-box tb-dlg-box"><button class="tb-sheet-x" aria-label="Cerrar">×</button>
+      <h2 id="tbDlgT">Eliminar «${esc(nombre)}»</h2><p>${esc(detalle)}</p><p><b>No se puede deshacer.</b></p>
+      <label>Escribe el nombre del intercambio para confirmar<input class="tb-field" autocomplete="off" spellcheck="false"></label>
+      <label class="check" hidden style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-weight:700"><input type="checkbox"> <span></span></label>
+      <p class="tb-err" role="alert"></p>
+      <div class="tb-dlg-acts"><button class="tb-btn peligro" disabled>Eliminar para siempre</button><button class="tb-link" data-no>Cancelar</button></div></div>`;
+    document.body.appendChild(sh);
+    const inp=sh.querySelector('input.tb-field'),btn=sh.querySelector('.peligro'),err=sh.querySelector('.tb-err'),ck=sh.querySelector('label.check'),previo=document.activeElement;
+    const fin=v=>{sh.remove();if(previo&&previo.focus)previo.focus();res(v)};
+    inp.addEventListener('input',()=>{btn.disabled=inp.value.trim().toLowerCase()!==nombre.trim().toLowerCase()||(!ck.hidden&&!ck.querySelector('input').checked)});
+    ck.querySelector('input').addEventListener('change',()=>inp.dispatchEvent(new Event('input')));
+    sh.addEventListener('click',e=>{if(e.target===sh||e.target.closest('.tb-sheet-x')||e.target.closest('[data-no]'))fin(false)});
+    sh.addEventListener('keydown',e=>{if(e.key==='Escape')fin(false)});
+    btn.addEventListener('click',async()=>{
+      btn.disabled=true;err.textContent='';const r=await eliminar(!ck.hidden&&ck.querySelector('input').checked);
+      if(r&&r.ok){fin(r);return}
+      if(r&&r.error==='sorteado'){ck.hidden=false;ck.querySelector('span').textContent=r.mensaje+' Entiendo, eliminarlo de todas formas.';btn.disabled=true;return}
+      err.textContent=(r&&r.mensaje)||'No se pudo eliminar.';btn.disabled=false;
+    });
+    setTimeout(()=>inp.focus(),50);
+  });
+}
+
+window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,confirmarCuenta,reenviarCodigo,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML,diasHasta,fechasHTML,recordatorioSorteo,enApp,prepararAcceso,abrirAcceso,ofrecerAcceso,montarMenu,cerrarMenu,confirmarEliminar,CONFIRMAR,YA_EXISTE};
 })();

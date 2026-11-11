@@ -285,11 +285,17 @@ function pintarIntercambios(){
   $('#exLista').innerHTML=!l.length?'<p class="tb-msg">No hay intercambios con ese filtro.</p>':`<div class="tb-scroll"><table><thead><tr><th>Intercambio</th><th>Cuenta</th><th>Participantes</th><th>Estado</th><th>Fecha</th><th>Creado</th><th></th></tr></thead><tbody>${
     l.map(x=>`<tr><td><span style="display:flex;gap:10px;align-items:center">${T.portadaHTML(x,'mini')}<span><b>${esc(x.nombre)}</b><small>${esc(x.slug)}</small></span></span></td><td>${esc(x.cuenta||'—')}${x.marca_propia?' <span class="tb-chip">Marca propia</span>':''}</td>
       <td>${gente(x)}</td><td>${estado(x)}${x.con_envio?'<small>🚚 con envío</small>':''}</td><td class="nw">${esc(x.evento_fecha?dia(x.evento_fecha):'—')}</td><td class="nw">${esc(dia(x.creada_en))}</td>
-      <td class="nw"><button class="tb-link" data-ver="${esc(x.slug)}">Ver</button>${x.con_envio?`<a class="tb-link" href="tribbi.html?e=${encodeURIComponent(x.slug)}&admin=1">Operar entregas</a>`
+      <td class="nw"><button class="tb-link" data-ver="${esc(x.slug)}">Ver</button><button class="tb-link bad" data-eliminar="${esc(x.slug)}">Eliminar</button>${x.con_envio?`<a class="tb-link" href="tribbi.html?e=${encodeURIComponent(x.slug)}&admin=1">Operar entregas</a>`
         :`<a class="tb-link" href="organizar.html?e=${encodeURIComponent(x.slug)}">Abrir como organizador</a>`}</td></tr>`).join('')}</tbody></table></div>`;
 }
 $('#exBuscar').addEventListener('input',pintarIntercambios);$('#exFiltro').addEventListener('change',pintarIntercambios);
 $('#exLista').addEventListener('click',async e=>{
+  const del=e.target.closest('[data-eliminar]');
+  if(del){const x=exTodos.find(i=>i.slug===del.dataset.eliminar);if(!x)return;
+    const r=await T.confirmarEliminar(x.nombre,`Intercambio de ${x.cuenta||'Tribbi'}, con ${Number(x.total)} participantes. Se borran la lista, las ideas, el sorteo y la portada. Las cuentas no se borran.`,
+      async forzar=>{const r=await rpc('tribbi_org_eliminar',{p_slug:x.slug,p_nombre:x.nombre,p_forzar:!!forzar});if(r.d.error==='falta_sql')r.d.mensaje='Falta correr 12_eliminar_intercambio.sql en Supabase.';return r.d});
+    if(r&&r.ok){if(r.portada_url)T.borrarPortada(r.portada_url);$('#exDetalle').innerHTML='';exCargado=false;cargarIntercambios()}
+    return}
   const b=e.target.closest('[data-ver]');if(!b)return;
   const r=await rpc('tribbi_admin_intercambio_detalle',{p_slug:b.dataset.ver});if(sesionPerdida(r))return;
   const el=$('#exDetalle');if(!r.ok){el.innerHTML=`<p class="tb-msg bad">${esc(F(r,'No se pudo cargar.'))}</p>`;return}

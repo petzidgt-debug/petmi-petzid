@@ -106,9 +106,9 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
       </div>
       <p class="f" style="font-weight:700;margin:16px 0 0">¿Cómo entran los participantes?</p>
       <div class="modos">
-        <label><input type="radio" name="modo" value="clave" checked><span>Yo armo la lista<small>Escribes los nombres y cada quien entra la primera vez con su nombre al revés. Ideal para familias, también con niños.</small></span></label>
-        <label><input type="radio" name="modo" value="correo"><span>Cada quien se une con su correo<small>Compartes un enlace y cada quien se inscribe solo.</small></span></label>
-        <label><input type="radio" name="modo" value="ambos"><span>Las dos formas<small>Armas la lista y, quien no esté, se une con el enlace.</small></span></label>
+        <label><input type="radio" name="modo" value="clave" checked><span>Yo creo la lista<small>Escribes los nombres (sin tildes ni espacios). Cada quien entra la primera vez con su nombre al revés y luego crea su contraseña. Ideal para familias, también con niños.</small></span></label>
+        <label><input type="radio" name="modo" value="correo"><span>Se unen con un enlace<small>Compartes un enlace y cada quien crea su cuenta al unirse.</small></span></label>
+        <label id="modoAmbos" hidden><input type="radio" name="modo" value="ambos"><span>Las dos formas<small>Este intercambio ya usa las dos formas: lista y enlace.</small></span></label>
       </div>
       <div class="grid">
         <label class="f">Mínimo de ideas de regalo<small>0 si no quieres pedirlas</small><input class="tb-field" name="min_ideas" type="number" min="0" max="20" step="1" value="1"></label>
@@ -168,6 +168,7 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
       <button class="tb-btn coral" id="gSortear">Hacer el sorteo</button>
       <p class="tb-msg" id="gSorteoMsg" role="status"></p>
     </div>
+    <p style="margin-top:28px;text-align:center"><button class="tb-link bad" id="gEliminar">Eliminar intercambio</button></p>
   </div>
 </div>
 
@@ -251,6 +252,7 @@ function abrirForm(cuenta,ex){
   if(ex){fx.nombre.value=ex.nombre;fx.presupuesto_q.value=Number(ex.presupuesto_q);fx.evento_fecha.value=T.aLocal(ex.evento_fecha);fx.evento_lugar.value=ex.evento_lugar||'';
     fx.modo.value=ex.modo_ingreso;fx.min_ideas.value=ex.min_ideas;fx.inscripcion_hasta.value=T.aLocal(ex.inscripcion_hasta);fx.sorteo_en.value=T.aLocal(ex.sorteo_en);fx.reglas.value=(ex.reglas||[]).join('\n');
     fx.con_envio.checked=ex.con_envio;fx.entrega_hasta.value=ex.con_envio?T.aLocal(ex.entrega_hasta):''}
+  $('#modoAmbos').hidden=!(ex&&ex.modo_ingreso==='ambos');
   syncForm();pintarPortadaForm();show('vForm');fx.nombre.focus();
 }
 $('#exCancelar').onclick=()=>history.back();
@@ -291,7 +293,7 @@ function pintarGestion(){
   if(rec)$('#irSorteo').onclick=()=>$('#gSortear').scrollIntoView({behavior:T.reduced?'auto':'smooth',block:'center'});
   $('#gTit').textContent=x.nombre;
   $('#gSub').textContent=[c.nombre,x.evento_fecha?diaHora(x.evento_fecha):'',x.evento_lugar].filter(Boolean).join(' · ');
-  const modos={clave:'Tú armas la lista',correo:'Cada quien se une con su correo',ambos:'Las dos formas'};
+  const modos={clave:'Tú creas la lista',correo:'Se unen con un enlace',ambos:'Las dos formas'};
   $('#gChips').innerHTML=`<span class="tb-chip">🎁 ${q(x.presupuesto_q)}</span><span class="tb-chip">${esc(modos[x.modo_ingreso])}</span>${x.con_envio?'<span class="tb-chip warn">🚚 Envío PetMi Q35</span>':''}${x.inscripcion_hasta?`<span class="tb-chip">⏰ Unirse hasta el ${esc(dia(x.inscripcion_hasta))}</span>`:''}${x.sorteo_en&&!x.sorteo_hecho?`<span class="tb-chip">🎲 Sorteo el ${esc(dia(x.sorteo_en))}</span>`:''}${x.sorteo_hecho?'<span class="tb-chip ok">Sorteo hecho</span>':''}`;
   const link=linkPart();$('#gLink').textContent=link;
   $('#gInvitaTxt').textContent=x.modo_ingreso==='correo'?'Comparte este enlace. Cada quien crea su cuenta con su correo y se une.':x.modo_ingreso==='clave'?'Comparte este enlace. La primera vez, cada quien escribe su nombre al revés y crea su cuenta con correo y contraseña. Después entra con su correo.':'Comparte este enlace. Quienes están en tu lista entran con su nombre al revés; los demás se unen con su correo.';
@@ -330,6 +332,11 @@ function mostrarMensaje(nombre,clave){
   $('#copiarMsg').onclick=e=>T.copiar(msg,e.target);
 }
 $('#addForm').nino.addEventListener('change',e=>{$('#cargoLbl').hidden=!e.target.checked});
+$('#gEliminar').onclick=async()=>{
+  const x=actual,r=await T.confirmarEliminar(x.nombre,`Se borran su lista de participantes, las ideas de regalo, el sorteo y la portada. Las cuentas de las personas no se borran.`,
+    async forzar=>{const r=await rpc('tribbi_org_eliminar',{p_slug:x.slug,p_nombre:x.nombre,p_forzar:!!forzar});if(r.d.error==='falta_sql')r.d.mensaje='Falta correr 12_eliminar_intercambio.sql en Supabase.';return r.ok?r.d:r.d});
+  if(r&&r.ok){if(r.portada_url)T.borrarPortada(r.portada_url);ir('')}
+};
 $('#gEditar').onclick=()=>{const c=actual.cuenta;abrirForm(c?c.slug:null,actual)};
 $('#gCopiar').onclick=e=>T.copiar($('#gLink').textContent,e.target);
 $('#gNuevaInv').onclick=async()=>{
