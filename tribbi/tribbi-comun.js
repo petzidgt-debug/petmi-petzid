@@ -341,7 +341,9 @@ function fechasHTML(ed){
 }
 /* Recordatorio para quien organiza: null si no toca */
 function recordatorioSorteo(x){
-  if(x.sorteo_hecho||!x.sorteo_en)return null;const d=diasHasta(x.sorteo_en);
+  if(x.sorteo_hecho||!x.sorteo_en)return null;
+  if(x.sorteo_auto){return x.sorteo_error?{t:`⚠️ El sorteo automático de ${x.nombre} no se pudo hacer`,s:`${x.sorteo_error} Resuélvelo y haz el sorteo a mano.`}:null}
+  const d=diasHasta(x.sorteo_en);
   if(d>1)return null;
   return d===1?{t:`Mañana toca el sorteo de ${x.nombre}`,s:`${dia(x.sorteo_en)}, ${horaGT(x.sorteo_en)}`}
     :d===0?{t:`🎲 Hoy toca el sorteo de ${x.nombre}`,s:`Programado para las ${horaGT(x.sorteo_en)}`}

@@ -132,7 +132,7 @@ textarea.tb-field{resize:vertical;min-height:90px}
 .tb-pick b{display:block;font-weight:700}
 .tb-pick small{display:block;color:var(--muted);font-size:.85rem}
 .tb-pick input[type=date]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
-.tb-fh .tb-quitar{border:0;background:none;color:var(--muted);cursor:pointer;font:inherit;font-weight:700;padding:6px 8px;border-radius:10px}
+.tb-fh .tb-quitar{border:0;background:none;color:var(--muted);cursor:pointer;font:inherit;font-weight:700;padding:6px 8px;border-radius:10px;align-self:center}
 .tb-rapidas{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;width:100%}
 .tb-rapidas button{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;font:inherit;font-size:.88rem;font-weight:700;cursor:pointer;color:var(--ink)}
 .tb-rapidas button[aria-pressed="true"]{border-color:var(--teal);color:var(--teal);background:var(--soft)}

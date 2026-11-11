@@ -32,6 +32,24 @@ h1.big{font-size:clamp(2.2rem,8vw,3.4rem);line-height:1;margin:6px 0 4px;color:v
 .lista li:first-child{border-top:0}
 .lista small{display:block;color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 16px}
+.tb-sec{border:2px solid var(--line);border-radius:20px;padding:6px 16px 16px;margin:18px 0 0;background:var(--bg);min-width:0}
+.tb-sec legend{font-family:"Fredoka",sans-serif;font-weight:600;font-size:1.15rem;padding:0 8px;color:var(--teal)}
+.tb-sec .tb-marco{margin-top:12px!important}
+.tb-sec .grid > label.f:first-child{margin-top:4px}
+div.tb-marco{font-weight:700}
+div.tb-marco > small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
+.tb-marco{grid-column:1/-1;border:2px solid var(--line);border-radius:18px;padding:12px 14px 14px;margin-top:14px!important;background:var(--card)}
+.tb-marco-t{display:block;font-family:"Fredoka",sans-serif;font-size:1.08rem}
+.tb-marco.destacado{border-color:var(--btn);background:#FFF8DE}
+.tb-marco.destacado .tb-marco-t{font-size:1.2rem}
+.tb-modo-sorteo{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+@media (max-width:520px){.tb-modo-sorteo{grid-template-columns:1fr}}
+.tb-ms{display:flex;gap:8px;align-items:flex-start;border:2px solid var(--line);border-radius:14px;padding:8px 10px;background:var(--card);cursor:pointer;font-weight:400}
+.tb-ms:has(input:checked){border-color:var(--teal)}
+.tb-ms input{margin-top:4px;accent-color:var(--teal)}
+.tb-ms b{display:block}.tb-ms small{display:block;color:var(--muted)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tb-marco.destacado{background:#33301F}}
+:root[data-theme="dark"] .tb-marco.destacado{background:#33301F}
 label.f{display:block;font-weight:700;margin:12px 0 0}
 label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
 .modos{display:grid;gap:8px;margin-top:8px}
@@ -98,34 +116,49 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
     <form class="card go" id="exForm" novalidate>
       <h2 id="exTit">Nuevo intercambio</h2>
       <p class="tb-msg" id="exCuenta"></p>
-      <div class="grid">
+      <fieldset class="tb-sec"><legend><span aria-hidden="true">📝</span> Lo básico</legend>
+        <div class="grid">
         <label class="f">Nombre del intercambio<input class="tb-field" name="nombre" maxlength="80" placeholder="Navidad 2026"></label>
         <label class="f">Presupuesto del regalo (Q)<input class="tb-field" name="presupuesto_q" type="number" min="1" step="1" placeholder="150"></label>
-        <label class="f">Día y hora del intercambio<small>Opcional</small><input class="tb-field" name="evento_fecha" type="datetime-local"></label>
         <label class="f">Lugar<small>Opcional</small><input class="tb-field" name="evento_lugar" maxlength="120" placeholder="Casa de la abuela"></label>
-      </div>
-      <p class="f" style="font-weight:700;margin:16px 0 0">¿Cómo entran los participantes?</p>
-      <div class="modos">
-        <label><input type="radio" name="modo" value="clave" checked><span>Yo creo la lista<small>Escribes los nombres (sin tildes ni espacios). Cada quien entra la primera vez con su nombre al revés y luego crea su contraseña. Ideal para familias, también con niños.</small></span></label>
-        <label><input type="radio" name="modo" value="correo"><span>Se unen con un enlace<small>Compartes un enlace y cada quien crea su cuenta al unirse.</small></span></label>
-        <label id="modoAmbos" hidden><input type="radio" name="modo" value="ambos"><span>Las dos formas<small>Este intercambio ya usa las dos formas: lista y enlace.</small></span></label>
-      </div>
-      <div class="grid">
-        <label class="f">Mínimo de ideas de regalo<small>0 si no quieres pedirlas</small><input class="tb-field" name="min_ideas" type="number" min="0" max="20" step="1" value="1"></label>
-        <label class="f" id="cierreLbl">Fecha límite para unirse<small>Opcional. Después, nadie nuevo se une ni activa su cuenta.</small><input class="tb-field" name="inscripcion_hasta" type="datetime-local"></label>
-        <label class="f">Fecha del sorteo<small>Opcional. Ese día Tribbi te lo recuerda; el sorteo lo haces tú.</small><input class="tb-field" name="sorteo_en" type="datetime-local"></label>
-      </div>
-      <label class="f">Reglas<small>Opcional. Una por línea.</small><textarea class="tb-field" name="reglas" rows="3" placeholder="Nada de dinero en efectivo"></textarea></label>
-      <p class="f" style="font-weight:700;margin:16px 0 4px">Imagen de portada <span class="tb-msg" style="font-weight:400">(opcional)</span></p>
-      <div id="pPrev"></div>
+        </div>
+      </fieldset>
+      <fieldset class="tb-sec"><legend><span aria-hidden="true">🖼️</span> Imagen de portada <span class="tb-msg" style="font-weight:400;font-family:Nunito,sans-serif;font-size:.9rem">(opcional)</span></legend>
+        <div id="pPrev"></div>
       <div class="acts" style="margin-top:10px"><label class="tb-btn sm" style="cursor:pointer">📷 Subir una foto<input type="file" id="pArchivo" accept="image/*" hidden></label><button class="tb-link bad" type="button" id="pQuitar" hidden>Quitar foto</button></div>
       <p class="tb-msg" style="margin:10px 0 0">O elige un diseño:</p>
       <div class="tb-disenos" id="pDisenos"></div>
       <p class="tb-msg" style="font-size:.88rem">La foto la verán todas las personas que tengan el enlace del intercambio. Tribbi la achica sola para que cargue rápido.</p>
-      <div id="envioBox">
-        <label class="check"><input type="checkbox" name="con_envio"> <span>Que el mensajero de PetMi recoja y entregue los regalos<br><small class="tb-msg" style="font-weight:400">Cada participante paga Q35 de envío y deja su dirección. Solo en el área de entrega de PetMi. Requiere que cada quien entre con su correo.</small></span></label>
-        <label class="f" id="entregaLbl" hidden>Límite para entregar los regalos a PetMi<input class="tb-field" name="entrega_hasta" type="datetime-local"></label>
+      </fieldset>
+      <fieldset class="tb-sec"><legend><span aria-hidden="true">📅</span> Fechas</legend>
+        <div class="grid">
+        <div class="f tb-marco"><span class="tb-marco-t"><span aria-hidden="true">🎄</span> Día y hora del intercambio</span><small>Opcional. El día que se entregan los regalos.</small><input class="tb-field" name="evento_fecha" type="datetime-local"></div>
+        <div class="f tb-marco" id="cierreLbl"><span class="tb-marco-t"><span aria-hidden="true">⏰</span> Fecha límite para unirse</span><small>Opcional. Después, nadie nuevo se une ni activa su cuenta.</small><input class="tb-field" name="inscripcion_hasta" type="datetime-local"></div>
+        <div class="f tb-marco destacado"><span class="tb-marco-t"><span aria-hidden="true">🎲</span> Fecha del sorteo</span><small>Se muestra a todos con cuenta regresiva.</small><input class="tb-field" name="sorteo_en" type="datetime-local">
+          <span class="tb-modo-sorteo" role="radiogroup" aria-label="Cómo se hace el sorteo">
+            <label class="tb-ms"><input type="radio" name="sorteo_auto" value="1"><span><b>Automático</b><small>Tribbi lo hace solo a esa hora y avisa a todos.</small></span></label>
+            <label class="tb-ms"><input type="radio" name="sorteo_auto" value="0" checked><span><b>Manual</b><small>Tribbi te lo recuerda ese día y tú tocas “Hacer el sorteo”.</small></span></label>
+          </span></div>
+        <div class="f tb-marco" id="entregaLbl" hidden><span class="tb-marco-t"><span aria-hidden="true">🚚</span> Límite para entregar los regalos a PetMi</span><input class="tb-field" name="entrega_hasta" type="datetime-local"></div>
+        </div>
+      </fieldset>
+      <fieldset class="tb-sec"><legend><span aria-hidden="true">👥</span> Participantes</legend>
+        <p class="f" style="font-weight:700;margin:0">¿Cómo entran los participantes?</p>
+        <div class="modos">
+        <label><input type="radio" name="modo" value="clave" checked><span>Yo creo la lista<small>Escribes los nombres (sin tildes ni espacios). Cada quien entra la primera vez con su nombre al revés y luego crea su contraseña. Ideal para familias, también con niños.</small></span></label>
+        <label><input type="radio" name="modo" value="correo"><span>Se unen con un enlace<small>Compartes un enlace y cada quien crea su cuenta al unirse.</small></span></label>
+        <label id="modoAmbos" hidden><input type="radio" name="modo" value="ambos"><span>Las dos formas<small>Este intercambio ya usa las dos formas: lista y enlace.</small></span></label>
       </div>
+        <div class="grid">
+        <label class="f">Mínimo de ideas de regalo<small>0 si no quieres pedirlas</small><input class="tb-field" name="min_ideas" type="number" min="0" max="20" step="1" value="1"></label>
+        </div>
+        <div id="envioBox">
+        <label class="check"><input type="checkbox" name="con_envio"> <span>Que el mensajero de PetMi recoja y entregue los regalos<br><small class="tb-msg" style="font-weight:400">Cada participante paga Q35 de envío y deja su dirección. Solo en el área de entrega de PetMi. Requiere que cada quien entre con su correo.</small></span></label>
+        </div>
+      </fieldset>
+      <fieldset class="tb-sec"><legend><span aria-hidden="true">📜</span> Reglas</legend>
+        <label class="f" style="margin-top:0">Reglas del intercambio<small>Opcional. Una por línea.</small><textarea class="tb-field" name="reglas" rows="3" placeholder="Nada de dinero en efectivo"></textarea></label>
+      </fieldset>
       <p class="tb-err" id="exErr" role="alert"></p>
       <div class="acts"><button class="tb-btn" type="submit" id="exGuardar">Guardar</button><button class="tb-link" type="button" id="exCancelar">Cancelar</button></div>
     </form>
@@ -227,10 +260,10 @@ $('#cuentaForm').addEventListener('submit',async e=>{
 /* ── Crear o editar un intercambio ── */
 const fx=$('#exForm');
 /* Fechas: el día escrito y la hora con un reloj */
-T.montarFechaHora(fx.evento_fecha,{rapidas:['12:00','18:00','19:00','20:00'],horaPorDefecto:'19:00'});
-T.montarFechaHora(fx.inscripcion_hasta,{rapidas:['12:00','18:00','23:59'],horaPorDefecto:'23:59'});
-T.montarFechaHora(fx.sorteo_en,{rapidas:['12:00','18:00','20:00'],horaPorDefecto:'20:00'});
-T.montarFechaHora(fx.entrega_hasta,{rapidas:['12:00','18:00'],horaPorDefecto:'18:00'});
+T.montarFechaHora(fx.evento_fecha,{horaPorDefecto:'19:00'});
+T.montarFechaHora(fx.inscripcion_hasta,{horaPorDefecto:'23:59'});
+T.montarFechaHora(fx.sorteo_en,{horaPorDefecto:'20:00'});
+T.montarFechaHora(fx.entrega_hasta,{horaPorDefecto:'18:00'});
 function syncForm(){
   const modo=fx.modo.value;$('#envioBox').hidden=modo!=='correo';if(modo!=='correo')fx.con_envio.checked=false;
   $('#entregaLbl').hidden=!fx.con_envio.checked;
@@ -255,7 +288,7 @@ function abrirForm(cuenta,ex){
   const c=data.cuentas.find(x=>x.slug===cuenta);$('#exCuenta').textContent=c?`Cuenta: ${c.nombre}`:'';
   $('#exTit').textContent=ex?`Editar: ${ex.nombre}`:'Nuevo intercambio';
   if(ex){fx.nombre.value=ex.nombre;fx.presupuesto_q.value=Number(ex.presupuesto_q);fx.evento_fecha.value=T.aLocal(ex.evento_fecha);fx.evento_lugar.value=ex.evento_lugar||'';
-    fx.modo.value=ex.modo_ingreso;fx.min_ideas.value=ex.min_ideas;fx.inscripcion_hasta.value=T.aLocal(ex.inscripcion_hasta);fx.sorteo_en.value=T.aLocal(ex.sorteo_en);fx.reglas.value=(ex.reglas||[]).join('\n');
+    fx.modo.value=ex.modo_ingreso;fx.min_ideas.value=ex.min_ideas;fx.inscripcion_hasta.value=T.aLocal(ex.inscripcion_hasta);fx.sorteo_en.value=T.aLocal(ex.sorteo_en);fx.sorteo_auto.value=ex.sorteo_auto?'1':'0';fx.reglas.value=(ex.reglas||[]).join('\n');
     fx.con_envio.checked=ex.con_envio;fx.entrega_hasta.value=ex.con_envio?T.aLocal(ex.entrega_hasta):''}
   $('#modoAmbos').hidden=!(ex&&ex.modo_ingreso==='ambos');
   T.refrescarFechaHora(fx);
@@ -265,8 +298,9 @@ $('#exCancelar').onclick=()=>history.back();
 fx.addEventListener('submit',async e=>{
   e.preventDefault();const b=$('#exGuardar');b.disabled=true;$('#exErr').textContent='';
   const d={slug:editando?editando.slug:null,nombre:fx.nombre.value,presupuesto_q:fx.presupuesto_q.value,evento_fecha:T.deLocal(fx.evento_fecha.value),evento_lugar:fx.evento_lugar.value,
-    modo_ingreso:fx.modo.value,min_ideas:fx.min_ideas.value||0,inscripcion_hasta:T.deLocal(fx.inscripcion_hasta.value),sorteo_en:T.deLocal(fx.sorteo_en.value),reglas:fx.reglas.value.split('\n').map(s=>s.trim()).filter(Boolean),
+    modo_ingreso:fx.modo.value,min_ideas:fx.min_ideas.value||0,inscripcion_hasta:T.deLocal(fx.inscripcion_hasta.value),sorteo_en:T.deLocal(fx.sorteo_en.value),sorteo_auto:fx.sorteo_auto.value==='1',reglas:fx.reglas.value.split('\n').map(s=>s.trim()).filter(Boolean),
     con_envio:fx.con_envio.checked,entrega_hasta:T.deLocal(fx.entrega_hasta.value)};
+  if(d.sorteo_auto&&!d.sorteo_en){$('#exErr').textContent='Para el sorteo automático, elige la fecha y hora del sorteo.';b.disabled=false;return}
   const r=await rpc('tribbi_org_guardar',{p_cuenta:cuentaForm,p_datos:d});
   if(r.ok){
     const slug=r.d.slug,antes=editando?editando.portada_url||null:null;let url=pUrl,aviso='';
@@ -301,7 +335,7 @@ function pintarGestion(){
   $('#gTit').textContent=x.nombre;
   $('#gSub').textContent=[c.nombre,x.evento_fecha?diaHora(x.evento_fecha):'',x.evento_lugar].filter(Boolean).join(' · ');
   const modos={clave:'Tú creas la lista',correo:'Se unen con un enlace',ambos:'Las dos formas'};
-  $('#gChips').innerHTML=`<span class="tb-chip">🎁 ${q(x.presupuesto_q)}</span><span class="tb-chip">${esc(modos[x.modo_ingreso])}</span>${x.con_envio?'<span class="tb-chip warn">🚚 Envío PetMi Q35</span>':''}${x.inscripcion_hasta?`<span class="tb-chip">⏰ Unirse hasta el ${esc(dia(x.inscripcion_hasta))}</span>`:''}${x.sorteo_en&&!x.sorteo_hecho?`<span class="tb-chip">🎲 Sorteo el ${esc(dia(x.sorteo_en))}</span>`:''}${x.sorteo_hecho?'<span class="tb-chip ok">Sorteo hecho</span>':''}`;
+  $('#gChips').innerHTML=`<span class="tb-chip">🎁 ${q(x.presupuesto_q)}</span><span class="tb-chip">${esc(modos[x.modo_ingreso])}</span>${x.con_envio?'<span class="tb-chip warn">🚚 Envío PetMi Q35</span>':''}${x.inscripcion_hasta?`<span class="tb-chip">⏰ Unirse hasta el ${esc(dia(x.inscripcion_hasta))}</span>`:''}${x.sorteo_en&&!x.sorteo_hecho?`<span class="tb-chip">🎲 Sorteo ${x.sorteo_auto?'automático ':''}el ${esc(dia(x.sorteo_en))}</span>`:''}${x.sorteo_hecho?'<span class="tb-chip ok">Sorteo hecho</span>':''}`;
   const link=linkPart();$('#gLink').textContent=link;
   $('#gInvitaTxt').textContent=x.modo_ingreso==='correo'?'Comparte este enlace. Cada quien crea su cuenta con su correo y se une.':x.modo_ingreso==='clave'?'Comparte este enlace. La primera vez, cada quien escribe su nombre al revés y crea su cuenta con correo y contraseña. Después entra con su correo.':'Comparte este enlace. Quienes están en tu lista entran con su nombre al revés; los demás se unen con su correo.';
   const fechasTxt=`${x.inscripcion_hasta?` Tienes hasta el ${dia(x.inscripcion_hasta)} para unirte.`:''}${x.sorteo_en?` El sorteo es el ${dia(x.sorteo_en)}.`:''}`;
