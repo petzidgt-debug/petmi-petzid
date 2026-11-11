@@ -284,7 +284,8 @@ async function abrirGestion(slug){
   if(!r.ok){if(sesion(r))return;pintarInicio();$('#cuentas').insertAdjacentHTML('afterbegin',`<p class="tb-msg bad">${esc(r.d.error==='admin'?'No tienes acceso a ese intercambio.':r.d.mensaje||'No se pudo abrir.')}</p>`);return}
   actual=r.d;pintarGestion();
 }
-const linkPart=()=>urlBase()+(actual.con_envio?'tribbi.html':'amigo-secreto.html')+'?e='+encodeURIComponent(actual.slug)+'&i='+encodeURIComponent(actual.invitacion);
+/* Enlace para compartir: pasa por /api/tribbi-invita para que WhatsApp muestre la portada, el nombre y las fechas */
+const linkPart=()=>location.origin+'/api/tribbi-invita?e='+encodeURIComponent(actual.slug)+'&i='+encodeURIComponent(actual.invitacion);
 function pintarGestion(){
   const x=actual,c=x.cuenta||{};show('vGestion');
   $('#gPortada').innerHTML=T.portadaHTML(x);
