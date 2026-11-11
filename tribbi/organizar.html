@@ -324,6 +324,13 @@ async function abrirGestion(slug){
   if(!r.ok){if(sesion(r))return;pintarInicio();$('#cuentas').insertAdjacentHTML('afterbegin',`<p class="tb-msg bad">${esc(r.d.error==='admin'?'No tienes acceso a ese intercambio.':r.d.mensaje||'No se pudo abrir.')}</p>`);return}
   actual=r.d;pintarGestion();
 }
+/* Texto de la invitación: "Elsa te invita a Navidad 2026, el 24 de diciembre en Casa de la abuela. Únete para participar en el intercambio (regalo de Q150). ¡Tienes hasta el 15 de diciembre para unirte!" */
+function invitacionTxt(x){
+  const quien=x.organiza||(x.cuenta&&x.cuenta.nombre)||'';
+  const fecha=x.evento_fecha?new Date(x.evento_fecha).toLocaleDateString('es-GT',{day:'numeric',month:'long',timeZone:'America/Guatemala'}):'';
+  const hasta=x.inscripcion_hasta&&new Date(x.inscripcion_hasta)>new Date()?new Date(x.inscripcion_hasta).toLocaleDateString('es-GT',{day:'numeric',month:'long',timeZone:'America/Guatemala'}):'';
+  return `${quien?quien+' te invita a ':''}${x.nombre}${fecha?', el '+fecha:''}${x.evento_lugar?' en '+x.evento_lugar:''}. Únete para participar en el intercambio (regalo de ${q(x.presupuesto_q)}).${hasta?` ¡Tienes hasta el ${hasta} para unirte!`:''}`;
+}
 /* Enlace para compartir: pasa por /api/tribbi-invita para que WhatsApp muestre la portada, el nombre y las fechas */
 const linkPart=()=>location.origin+'/api/tribbi-invita?e='+encodeURIComponent(actual.slug)+'&i='+encodeURIComponent(actual.invitacion);
 function pintarGestion(){
@@ -338,8 +345,7 @@ function pintarGestion(){
   $('#gChips').innerHTML=`<span class="tb-chip">🎁 ${q(x.presupuesto_q)}</span><span class="tb-chip">${esc(modos[x.modo_ingreso])}</span>${x.con_envio?'<span class="tb-chip warn">🚚 Envío PetMi Q35</span>':''}${x.inscripcion_hasta?`<span class="tb-chip">⏰ Unirse hasta el ${esc(dia(x.inscripcion_hasta))}</span>`:''}${x.sorteo_en&&!x.sorteo_hecho?`<span class="tb-chip">🎲 Sorteo ${x.sorteo_auto?'automático ':''}el ${esc(dia(x.sorteo_en))}</span>`:''}${x.sorteo_hecho?'<span class="tb-chip ok">Sorteo hecho</span>':''}`;
   const link=linkPart();$('#gLink').textContent=link;
   $('#gInvitaTxt').textContent=x.modo_ingreso==='correo'?'Comparte este enlace. Cada quien crea su cuenta con su correo y se une.':x.modo_ingreso==='clave'?'Comparte este enlace. La primera vez, cada quien escribe su nombre al revés y crea su cuenta con correo y contraseña. Después entra con su correo.':'Comparte este enlace. Quienes están en tu lista entran con su nombre al revés; los demás se unen con su correo.';
-  const fechasTxt=`${x.inscripcion_hasta?` Tienes hasta el ${dia(x.inscripcion_hasta)} para unirte.`:''}${x.sorteo_en?` El sorteo es el ${dia(x.sorteo_en)}.`:''}`;
-  const msg=`🎁 ¡Ya está el amigo secreto «${x.nombre}»!${fechasTxt}${x.evento_fecha?` Nos vemos el ${diaHora(x.evento_fecha)}`:''}${x.evento_lugar?` en ${x.evento_lugar}`:''}. Presupuesto: ${q(x.presupuesto_q)}. Entra aquí: ${link}`;
+  const msg=invitacionTxt(x)+` Entra aquí: ${link}`;
   $('#gWa').href='https://wa.me/?text='+encodeURIComponent(msg);
   $('#addForm').hidden=x.modo_ingreso==='correo'||x.sorteo_hecho;$('#addErr').textContent='';$('#msgBox').innerHTML='';
   pintarGente();
@@ -367,7 +373,7 @@ function pintarGente(){
   $('#gSortear').textContent=s?'Volver a sortear':'Hacer el sorteo';$('#gSortear').hidden=s&&des>0;
 }
 function mostrarMensaje(nombre,clave){
-  const link=linkPart(),lim=actual.inscripcion_hasta?` Tienes hasta el ${dia(actual.inscripcion_hasta)} para unirte.`:'',msg=`Hola ${nombre} 🎁 Ya está el amigo secreto «${actual.nombre}».${lim} Entra aquí: ${link} y escribe tu nombre al revés: ${clave}. Luego crea tu cuenta con tu correo y una contraseña.`;
+  const link=linkPart(),msg=`Hola ${nombre} 🎁 `+invitacionTxt(actual)+` Entra aquí: ${link} y escribe tu nombre al revés: ${clave}. Luego crea tu cuenta con tu correo y una contraseña.`;
   $('#msgBox').innerHTML=`<div class="clave" role="status"><p><b>${esc(nombre)}</b> entra la primera vez con: <b class="k">${esc(clave)}</b></p>
     <div class="acts" style="margin-top:6px"><button class="tb-btn sm" id="copiarMsg">Copiar mensaje</button><a class="tb-link" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Enviar por WhatsApp</a></div></div>`;
   $('#copiarMsg').onclick=e=>T.copiar(msg,e.target);
