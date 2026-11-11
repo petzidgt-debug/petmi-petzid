@@ -35,17 +35,17 @@ export default async function handler(req, res) {
       if (r.ok && d && d.ok !== false) {
         const pagina = d.con_envio ? 'tribbi.html' : 'amigo-secreto.html';
         destino = base + '/tribbi/' + pagina + '?e=' + encodeURIComponent(e) + (i ? '&i=' + encodeURIComponent(i) : '');
-        const quien = d.cuenta && d.cuenta.nombre ? d.cuenta.nombre + ' te invita: ' : '';
-        titulo = quien + d.nombre';
-        const partes = [];
-        if (d.sorteo_hecho) partes.push('¡Ya se hizo el sorteo! Entra para raspar tu tarjeta');
+        // Título: "Elsa te invita a Navidad 2026, el 24 de diciembre en Casa de la abuela 🎁"
+        const quien = d.organiza || (d.cuenta && d.cuenta.nombre) || '';
+        titulo = (quien ? quien + ' te invita a ' : '') + d.nombre
+          + (d.evento_fecha ? ', el ' + dia(d.evento_fecha) : '')
+          + (d.evento_lugar ? ' en ' + d.evento_lugar : '') + ' 🎁';
+        // Texto: "Únete para participar en el intercambio (regalo de Q150). ¡Tienes hasta el 15 de diciembre para unirte!"
+        if (d.sorteo_hecho) texto = '¡Ya se hizo el sorteo! Entra para raspar tu tarjeta.';
         else {
-          if (d.inscripcion_hasta && new Date(d.inscripcion_hasta) > new Date()) partes.push('Tienes hasta el ' + dia(d.inscripcion_hasta) + ' para unirte al intercambio'+' 🎁');
-          partes.push('Regalo de ' + q(d.presupuesto_q));
-          if (d.sorteo_en) partes.push('Sorteo el ' + dia(d.sorteo_en));
-          else if (d.evento_fecha) partes.push('Intercambio el ' + dia(d.evento_fecha));
+          texto = 'Únete para participar en el intercambio (regalo de ' + q(d.presupuesto_q) + ').';
+          if (d.inscripcion_hasta && new Date(d.inscripcion_hasta) > new Date()) texto += ' ¡Tienes hasta el ' + dia(d.inscripcion_hasta) + ' para unirte!';
         }
-        texto = partes.join(' · ');
         const u = d.portada_url;
         if (typeof u === 'string' && u.startsWith(SUPABASE_URL + '/storage/v1/object/public/tribbi/portadas/')) imagen = u;
         else imagen = base + '/tribbi/og/' + (DISENOS.includes(d.portada_diseno) ? d.portada_diseno : 'navidad') + '.jpg';
