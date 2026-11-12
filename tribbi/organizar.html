@@ -147,7 +147,6 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
         <div class="modos">
         <label><input type="radio" name="modo" value="clave" checked><span>Yo creo la lista<small>Escribes los nombres (sin tildes ni espacios). Cada quien entra la primera vez con su nombre al revés y luego crea su contraseña. Ideal para familias, también con niños.</small></span></label>
         <label><input type="radio" name="modo" value="correo"><span>Se unen con un enlace<small>Compartes un enlace y cada quien crea su cuenta al unirse.</small></span></label>
-        <label id="modoAmbos" hidden><input type="radio" name="modo" value="ambos"><span>Las dos formas<small>Este intercambio ya usa las dos formas: lista y enlace.</small></span></label>
       </div>
         <div class="grid">
         <label class="f">Mínimo de ideas de regalo<small>0 si no quieres pedirlas</small><input class="tb-field" name="min_ideas" type="number" min="0" max="20" step="1" value="1"></label>
@@ -290,7 +289,6 @@ function abrirForm(cuenta,ex){
   if(ex){fx.nombre.value=ex.nombre;fx.presupuesto_q.value=Number(ex.presupuesto_q);fx.evento_fecha.value=T.aLocal(ex.evento_fecha);fx.evento_lugar.value=ex.evento_lugar||'';
     fx.modo.value=ex.modo_ingreso;fx.min_ideas.value=ex.min_ideas;fx.inscripcion_hasta.value=T.aLocal(ex.inscripcion_hasta);fx.sorteo_en.value=T.aLocal(ex.sorteo_en);fx.sorteo_auto.value=ex.sorteo_auto?'1':'0';fx.reglas.value=(ex.reglas||[]).join('\n');
     fx.con_envio.checked=ex.con_envio;fx.entrega_hasta.value=ex.con_envio?T.aLocal(ex.entrega_hasta):''}
-  $('#modoAmbos').hidden=!(ex&&ex.modo_ingreso==='ambos');
   T.refrescarFechaHora(fx);
   syncForm();pintarPortadaForm();show('vForm');fx.nombre.focus();
 }

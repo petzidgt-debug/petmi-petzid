@@ -87,8 +87,19 @@ button,input,select{font:inherit;color:inherit}
 .msg.ok{color:var(--teal)}
 .msg.bad{color:var(--coral)}
 
-/* Cómo funciona */
-.how{margin-top:48px}
+/* Así funciona: tres burbujas con su número */
+.how{margin-top:30px}
+.burbujas{list-style:none;margin:0;padding:12px 8px 6px;display:grid;gap:34px;max-width:600px}
+@media (min-width:980px){.burbujas{grid-template-columns:repeat(3,1fr);max-width:none;gap:28px}}
+.burbujas li{position:relative;background:var(--card);border:2px solid var(--line);border-radius:36px;padding:22px 26px 24px}
+.burbujas li::after{content:"";position:absolute;bottom:-13px;left:38px;width:24px;height:24px;background:var(--card);border-right:2px solid var(--line);border-bottom:2px solid var(--line);transform:rotate(45deg);border-radius:0 0 6px 0}
+.burbujas li:nth-child(2)::after{left:auto;right:38px}
+.burbujas .n{position:absolute;top:-18px;right:-6px;width:52px;height:52px;border-radius:50%;background:var(--teal);color:var(--bg);font-family:"Fredoka",sans-serif;font-weight:700;font-size:1.6rem;display:grid;place-items:center;border:4px solid var(--bg)}
+.burbujas li:nth-child(2) .n{right:auto;left:-6px}
+.burbujas li:nth-child(2) b{padding-left:34px}
+.burbujas b{display:block;font-family:"Fredoka",sans-serif;font-size:1.3rem;font-weight:600;color:var(--teal);line-height:1.2;padding-right:40px}
+.burbujas li > span:last-child{display:block;color:var(--muted);margin-top:6px;font-size:1.05rem}
+@media (min-width:980px){.burbujas li:nth-child(2) b{padding-left:0}.burbujas li .n,.burbujas li:nth-child(2) .n{left:auto;right:-6px}.burbujas b{padding-right:40px}}
 .how h2{font-size:1.7rem;margin:0 0 16px}
 .steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:s}
 @media (max-width:760px){.steps{grid-template-columns:1fr}}
@@ -133,9 +144,17 @@ footer a{color:var(--teal);font-weight:700}
     <div>
       <h1><span class="tb-logo anim" id="logo" role="img" aria-label="Tribbi" title="Tócame">Tribb<span class="i" aria-hidden="true">i<svg class="c" style="left:-0.165em;top:.141em;--dx:0.2em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#F7B3C6"/></svg><svg class="c" style="left:0.235em;top:.141em;--dx:-0.2em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#E86F94"/></svg><svg class="c" style="left:-0.065em;top:.141em;--dx:0.1em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#F2C14E"/></svg><svg class="c" style="left:0.135em;top:.141em;--dx:-0.1em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z" fill="#36D6C4"/></svg><svg class="c p" style="left:0.035em;top:.141em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z"/></svg></span></span></h1>
       <p class="tag">Intercambios que arman tribu</p>
-      <p class="lead">Te inscribes, te toca alguien al azar y le das algo pensado para esa persona. Nosotros organizamos el sorteo y las entregas; tú solo eliges el regalo.</p>
     </div>
   </header>
+
+  <section class="how" aria-labelledby="h-how">
+    <h2 id="h-how">Así funciona</h2>
+    <ol class="burbujas">
+      <li><span class="n" aria-hidden="true">1</span><b>Arma tu intercambio</b><span>Agrega a tu gente o comparte un enlace. Cada quien deja sus ideas de regalo.</span></li>
+      <li><span class="n" aria-hidden="true">2</span><b>Te toca alguien</b><span>El sorteo es al azar. Descubres a tu persona raspando una tarjeta digital.</span></li>
+      <li><span class="n" aria-hidden="true">3</span><b>Se entrega como prefieras</b><span>En persona el día del intercambio, o con el mensajero de PetMi si activas el envío.</span></li>
+    </ol>
+  </section>
 
   <section class="pick" aria-labelledby="h-pick">
     <h2 id="h-pick">Elige tu intercambio</h2>
@@ -173,16 +192,7 @@ footer a{color:var(--teal);font-weight:700}
     </div>
   </section>
 
-  <section class="how" aria-labelledby="h-how">
-    <h2 id="h-how">Así funciona</h2>
-    <ol class="steps">
-      <li><b>Arma tu intercambio</b><span>Agregas a la gente o compartes un enlace. Cada quien deja sus ideas de regalo.</span></li>
-      <li><b>Te toca alguien</b><span>El sorteo es al azar. Descubres a tu persona raspando una tarjeta y ves sus ideas.</span></li>
-      <li><b>Se entrega</b><span>En persona el día del intercambio, o con el mensajero de PetMi si activas el envío.</span></li>
-    </ol>
-  </section>
 </main>
-<footer><span>Tribbi · Una iniciativa de PetMi 🐾</span><a href="admin.html">Panel de Tribbi</a></footer>
 
 <script src="tribbi-comun.js"></script>
 <script>
