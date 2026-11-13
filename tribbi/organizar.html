@@ -180,7 +180,8 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
 
     <div class="card">
       <h2>Participantes</h2>
-      <p class="tb-msg"><b>Nombres sin tildes ni espacios y sin repetir</b> (TiaRosa, JoseA, JoseB): cada quien entra la primera vez con su nombre al revés. Escribe el mismo <b>grupo</b> para quienes no deben regalarse entre sí, como una pareja.</p>
+      <p class="tb-msg" id="partLista"><b>Nombres sin tildes ni espacios y sin repetir</b> (TiaRosa, JoseA, JoseB): cada quien entra la primera vez con su nombre al revés. Escribe el mismo <b>grupo</b> para quienes no deben regalarse entre sí, como una pareja.</p>
+      <p class="tb-msg" id="partEnlace" hidden>Cada quien se une con el <b>enlace de invitación</b> y aparece aquí al registrarse. Escribe el mismo <b>grupo</b> para quienes no deben regalarse entre sí, como una pareja.</p>
       <form class="add" id="addForm" novalidate>
         <label>Nombre<input class="tb-field" name="nombre" maxlength="30" placeholder="TiaRosa" autocapitalize="words" autocorrect="off" spellcheck="false"></label>
         <label>Grupo (opcional)<input class="tb-field" name="grupo" maxlength="30" placeholder="Juan y Rosa"></label>
@@ -346,6 +347,7 @@ function pintarGestion(){
   $('#gInvitaTxt').textContent=x.modo_ingreso==='correo'?'Comparte este enlace. Cada quien crea su cuenta con su correo y se une.':x.modo_ingreso==='clave'?'Comparte este enlace. La primera vez, cada quien escribe su nombre al revés y crea su cuenta con correo y contraseña. Después entra con su correo.':'Comparte este enlace. Quienes están en tu lista entran con su nombre al revés; los demás se unen con su correo.';
   const msg=invitacionTxt(x)+` Entra aquí: ${link}`;
   $('#gWa').href='https://wa.me/?text='+encodeURIComponent(msg);
+  $('#partLista').hidden=x.modo_ingreso==='correo';$('#partEnlace').hidden=x.modo_ingreso!=='correo';   // las reglas de nombres solo aplican cuando el organizador arma la lista
   $('#addForm').hidden=x.modo_ingreso==='correo'||x.sorteo_hecho;$('#addErr').textContent='';$('#msgBox').innerHTML='';
   pintarGente();
 }
