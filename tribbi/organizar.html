@@ -151,6 +151,7 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
         <div class="grid">
         <label class="f">Mínimo de ideas de regalo<small>0 si no quieres pedirlas</small><input class="tb-field" name="min_ideas" type="number" min="0" max="20" step="1" value="1"></label>
         </div>
+        <label class="check" id="yoLbl"><input type="checkbox" name="yo_participo" checked> <span>Yo también participo<br><small class="tb-msg">Entras con tu cuenta: te toca alguien y alguien te tiene a ti. Como organizador no ves quién le toca a quién.</small></span></label>
         <div id="envioBox">
         <label class="check"><input type="checkbox" name="con_envio"> <span>Que el mensajero de PetMi recoja y entregue los regalos<br><small class="tb-msg" style="font-weight:400">Cada participante paga Q35 de envío y deja su dirección. Solo en el área de entrega de PetMi. Requiere que cada quien entre con su correo.</small></span></label>
         </div>
@@ -182,6 +183,7 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
       <h2>Participantes</h2>
       <p class="tb-msg" id="partLista"><b>Nombres sin tildes ni espacios y sin repetir</b> (TiaRosa, JoseA, JoseB): cada quien entra la primera vez con su nombre al revés. Escribe el mismo <b>grupo</b> para quienes no deben regalarse entre sí, como una pareja.</p>
       <p class="tb-msg" id="partEnlace" hidden>Cada quien se une con el <b>enlace de invitación</b> y aparece aquí al registrarse. Escribe el mismo <b>grupo</b> para quienes no deben regalarse entre sí, como una pareja.</p>
+      <div id="gYo"></div>
       <form class="add" id="addForm" novalidate>
         <label>Nombre<input class="tb-field" name="nombre" maxlength="30" placeholder="TiaRosa" autocapitalize="words" autocorrect="off" spellcheck="false"></label>
         <label>Grupo (opcional)<input class="tb-field" name="grupo" maxlength="30" placeholder="Juan y Rosa"></label>
@@ -291,6 +293,7 @@ function abrirForm(cuenta,ex){
     fx.modo.value=ex.modo_ingreso;fx.min_ideas.value=ex.min_ideas;fx.inscripcion_hasta.value=T.aLocal(ex.inscripcion_hasta);fx.sorteo_en.value=T.aLocal(ex.sorteo_en);fx.sorteo_auto.value=ex.sorteo_auto?'1':'0';fx.reglas.value=(ex.reglas||[]).join('\n');
     fx.con_envio.checked=ex.con_envio;fx.entrega_hasta.value=ex.con_envio?T.aLocal(ex.entrega_hasta):''}
   T.refrescarFechaHora(fx);
+  $('#yoLbl').hidden=!!ex;
   syncForm();pintarPortadaForm();show('vForm');fx.nombre.focus();
 }
 $('#exCancelar').onclick=()=>history.back();
@@ -302,7 +305,8 @@ fx.addEventListener('submit',async e=>{
   if(d.sorteo_auto&&!d.sorteo_en){$('#exErr').textContent='Para el sorteo automático, elige la fecha y hora del sorteo.';b.disabled=false;return}
   const r=await rpc('tribbi_org_guardar',{p_cuenta:cuentaForm,p_datos:d});
   if(r.ok){
-    const slug=r.d.slug,antes=editando?editando.portada_url||null:null;let url=pUrl,aviso='';
+    const slug=r.d.slug,antes=editando?editando.portada_url||null:null;let url=pUrl,aviso='',avisoYo='';
+    if(!editando&&fx.yo_participo.checked&&!fx.con_envio.checked){const pp=await rpc('tribbi_org_participar',{p_slug:slug});if(!pp.ok)avisoYo=pp.d.mensaje||'No se pudo agregarte como participante.'}
     if(pArchivo){$('#exErr').className='tb-msg';$('#exErr').textContent='Subiendo la foto…';const up=await T.subirPortada(slug,pArchivo);
       if(up.url)url=up.url;else{aviso=up.error;url=antes}}
     const pr=await rpc('tribbi_org_portada',{p_slug:slug,p_url:url,p_diseno:pDiseno});
@@ -312,6 +316,7 @@ fx.addEventListener('submit',async e=>{
     history.replaceState(null,'',location.pathname+'?e='+encodeURIComponent(slug));
     const r2=await rpc('tribbi_org_intercambio',{p_slug:slug});actual=r2.ok?r2.d:r.d;pintarGestion();
     if(aviso){$('#addErr').textContent='La portada no se guardó: '+aviso}
+    if(avisoYo){$('#addErr').textContent=($('#addErr').textContent?$('#addErr').textContent+' ':'')+avisoYo}
     return}
   b.disabled=false;
   if(!sesion(r))$('#exErr').textContent=r.d.mensaje||'No se pudo guardar.';
@@ -353,11 +358,17 @@ function pintarGestion(){
 }
 function pintarGente(){
   const x=actual,l=x.participantes,s=x.sorteo_hecho;
+  $('#gYo').innerHTML=x.participo?`<p class="tb-msg">Tú también participas. <a class="tb-link" href="amigo-secreto.html?e=${encodeURIComponent(x.slug)}">Ver mi tarjeta y mis ideas</a></p>`
+    :(!s&&!x.con_envio?`<p><button class="tb-btn sm" id="yoUnirme">Unirme como participante</button></p>`:'');
+  const yb=document.getElementById('yoUnirme');
+  if(yb)yb.onclick=async()=>{yb.disabled=true;const r=await rpc('tribbi_org_participar',{p_slug:x.slug});
+    if(!r.ok){yb.disabled=false;if(!sesion(r))alert(r.d.mensaje||'No se pudo.');return}
+    const r2=await rpc('tribbi_org_intercambio',{p_slug:x.slug});if(r2.ok){actual=r2.d;pintarGente()}};
   const est={pagada:'',pendiente_pago:' · falta pagar el envío',excluida:' · excluida'};
   const chip=p=>p.es_nino?'<span class="tb-chip warn">Niño</span>':p.tipo==='correo'||p.activada?'<span class="tb-chip ok">Activa</span>':'<span class="tb-chip">Pendiente</span>';
   const meta=p=>[p.es_nino?`A cargo de ${p.a_cargo_nombre||'—'}`:p.tipo==='correo'?'Se unió con su correo':p.activada?'Ya activó su cuenta':`Clave inicial: <b>${esc(p.clave_inicial)}</b>`,
     `${Number(p.ideas)} ${Number(p.ideas)===1?'idea':'ideas'}${esc(est[p.estado]||'')}`].join(' · ');
-  $('#gPeople').innerHTML=l.length?l.map(p=>`<li><span class="nm">${esc(p.nombre)} ${chip(p)}${p.descubrio?' <span class="tb-chip ok">Ya descubrió</span>':''}</span>
+  $('#gPeople').innerHTML=l.length?l.map(p=>`<li><span class="nm">${esc(p.nombre)}${p.soy_yo?' <b>(tú)</b>':''} ${chip(p)}${p.descubrio?' <span class="tb-chip ok">Ya descubrió</span>':''}</span>
     <span class="meta">${meta(p)}</span>
     <span class="acts2"><input class="grp" data-grupo="${esc(p.id)}" value="${esc(p.grupo||'')}" placeholder="Grupo" maxlength="30" aria-label="Grupo de ${esc(p.nombre)}" ${s?'disabled':''}>
       ${p.tipo==='lista'&&!p.es_nino&&!p.activada?`<button class="tb-link" data-msg="${esc(p.id)}">Mensaje</button>`:''}
