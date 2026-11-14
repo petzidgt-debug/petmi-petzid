@@ -9,6 +9,14 @@
       "destination": "/api/tribbi-invita?e=:e"
     },
     {
+      "source": "/tribbi/:e/:i",
+      "destination": "/api/tribbi-invita?e=:e&i=:i"
+    },
+    {
+      "source": "/tribbi/:e",
+      "destination": "/api/tribbi-invita?e=:e"
+    },
+    {
       "source": "/navidad/admin",
       "destination": "/navidad.html"
     },
