@@ -332,7 +332,7 @@ function invitacionTxt(x){
 }
 /* Enlace para compartir: pasa por /api/tribbi-invita para que WhatsApp muestre la portada, el nombre y las fechas */
 const SITIO='https://app.revistapetmi.com';   // siempre el dominio de PetMi, aunque Organizar se abra desde una dirección de prueba
-const linkPart=()=>SITIO+'/tribbi/i/'+encodeURIComponent(actual.slug)+'/'+encodeURIComponent(actual.invitacion);
+const linkPart=()=>SITIO+'/tribbi/'+encodeURIComponent(actual.slug)+'/'+encodeURIComponent(actual.invitacion);
 function pintarGestion(){
   const x=actual,c=x.cuenta||{};show('vGestion');
   $('#gPortada').innerHTML=T.portadaHTML(x);
