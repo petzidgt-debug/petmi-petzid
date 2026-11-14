@@ -389,6 +389,7 @@ const MENU_CSS=`
 .tb-top{position:sticky;top:0;z-index:40;background:var(--bg);background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
 .tb-top .tb-in{max-width:1040px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .tb-top .tb-logo{font-size:32px}
+.tb-top.sin-logo .tb-in > .tb-logo{visibility:hidden}
 .tb-der{display:flex;align-items:center;gap:10px}
 .tb-avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#FCE4EC;color:#9E2F59;font-family:"Fredoka",sans-serif;font-weight:700;flex:none}
 .tb-hamb{width:44px;height:44px;border-radius:14px;border:2px solid var(--line);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--ink);padding:0}
@@ -454,6 +455,7 @@ function montarMenu(actual){
   if(document.getElementById('tbTop'))return;menuActual=actual||'';
   if(!document.getElementById('tbMenuCss')){const st=document.createElement('style');st.id='tbMenuCss';st.textContent=MENU_CSS;document.head.appendChild(st)}
   const top=document.createElement('header');top.className='tb-top';top.id='tbTop';
+  if(menuActual==='inicio')top.classList.add('sin-logo');   // en la home, el logo grande ya está en la portada
   top.innerHTML=`<div class="tb-in">${logoHTML()}<div class="tb-der"><span class="tb-avatar" aria-hidden="true" hidden></span><button class="tb-hamb" id="tbHamb" aria-label="Abrir menú" aria-expanded="false" aria-controls="tbPanel"><span></span></button></div></div>`;
   document.body.insertBefore(top,document.body.firstChild);
   const velo=document.createElement('div');velo.className='tb-velo';velo.id='tbVelo';
@@ -568,5 +570,24 @@ function montarFechaHora(inp,opts){
 /* Volver a pintar después de cambiar los valores por código (por ejemplo, al abrir un formulario) */
 function refrescarFechaHora(raiz){(raiz||document).querySelectorAll('input[data-tb-fh]').forEach(i=>i._tbPintar&&i._tbPintar())}
 
-window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,confirmarCuenta,reenviarCodigo,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML,diasHasta,fechasHTML,recordatorioSorteo,enApp,prepararAcceso,abrirAcceso,ofrecerAcceso,montarMenu,cerrarMenu,confirmarEliminar,CONFIRMAR,YA_EXISTE,montarFechaHora,refrescarFechaHora};
+/* ── Reglas del intercambio: las de Tribbi (iguales para todos) + las del organizador ── */
+function reglasHTML(ed){
+  const pres=ed.presupuesto_q?` (${q(ed.presupuesto_q)})`:'',min=Number(ed.min_ideas||0);
+  const base=[
+    `<b>Dar un regalo</b> a la persona que te toque, dentro del presupuesto acordado${pres}.`,
+    `<b>Entregarlo</b> el día del intercambio, o con el mensajero asignado si el intercambio tiene envío.`,
+    `<b>Guardar el secreto:</b> no le cuentes a nadie quién te tocó hasta el día del intercambio.`,
+    `<b>Dejar tus ideas de regalo</b> antes del sorteo${min?` (al menos ${min})`:''}, para que tu amigo secreto sepa qué te gusta.`,
+    `<b>Avisar a tiempo:</b> si ya no puedes participar, sal del intercambio o avísale a quien organiza <b>antes del sorteo</b>. Después del sorteo, salirte deja a alguien sin regalo.`,
+    `<b>Ser respetuoso:</b> nada de regalos ofensivos, peligrosos ni dinero en efectivo, salvo que quien organiza lo permita.`];
+  const propias=(ed.reglas||[]).filter(Boolean);
+  return `<p style="margin:8px 0 4px"><b>Al unirte a este intercambio te comprometes a:</b></p><ol>${base.map(t=>`<li>${t}</li>`).join('')}</ol>
+    ${propias.length?`<p style="margin:10px 0 4px"><b>Reglas de este intercambio:</b></p><ol>${propias.map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`:''}
+    <p style="margin:10px 0 4px"><b>Ten en cuenta:</b></p><ul>
+      <li>Tribbi organiza el sorteo y avisa a los participantes. Los regalos y su entrega son un acuerdo entre las personas del intercambio y quien lo organiza.</li>
+      <li>Tus ideas de regalo solo las ve quien te tiene de amigo secreto. Quien organiza ve la lista de participantes y quién ya raspó su tarjeta, pero <b>nunca quién le toca a quién</b>.</li>
+      <li>Tu correo se usa para entrar a Tribbi y para avisarte del sorteo. Solo recibirás promociones si aceptas.</li></ul>`;
+}
+
+window.Tribbi={CONFIG,$,esc,dia,diaHora,q,aLocal,deLocal,store,GENEROS,PUBLICO,CONDICION,get ses(){return ses},token,salir,borrarSesion,rpc,fallo,montarLogin,crearCuenta,confirmarCuenta,reenviarCodigo,entrarConClave,recuperar,verificarRecuperacion,cambiarClave,sesionDesdeEnlace,montarRaspa,confetti,pagar,copiar,reduced,portadaHTML,subirPortada,borrarPortada,DISENOS,lucesHTML,diasHasta,fechasHTML,recordatorioSorteo,enApp,prepararAcceso,abrirAcceso,ofrecerAcceso,montarMenu,cerrarMenu,confirmarEliminar,CONFIRMAR,YA_EXISTE,montarFechaHora,refrescarFechaHora,reglasHTML};
 })();
