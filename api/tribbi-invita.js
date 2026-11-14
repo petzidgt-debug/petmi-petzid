@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════════
 // TRIBBI · Enlace para compartir un intercambio (con vista previa en WhatsApp)
-//   /tribbi/i/<identificador>/<invitación>   (vercel.json lo manda a /api/tribbi-invita?e=…&i=…)
+//   /tribbi/<identificador>/<invitación>   (vercel.json lo manda a /api/tribbi-invita?e=…&i=…)
 //   WhatsApp y otras apps leen esta "ficha" (imagen, título y texto del intercambio);
 //   las personas que lo abren pasan directo a la página del intercambio.
 // No usa llaves secretas: la de Supabase es la PÚBLICA (anon).
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
 <meta property="og:description" content="${esc(texto)}">
 <meta property="og:image" content="${esc(imagen)}">
 <meta property="og:image:alt" content="${esc(titulo)}">
-<meta property="og:url" content="${esc(e ? base + '/tribbi/i/' + e + (i ? '/' + i : '') : base + '/tribbi/')}">
+<meta property="og:url" content="${esc(e ? base + '/tribbi/' + e + (i ? '/' + i : '') : base + '/tribbi/')}">
 <meta name="twitter:card" content="summary_large_image">
 <meta http-equiv="refresh" content="0;url=${esc(destino)}">
 <link rel="canonical" href="${esc(destino)}">
