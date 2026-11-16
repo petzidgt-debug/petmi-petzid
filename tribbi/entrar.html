@@ -26,6 +26,7 @@ h2.grp{font-size:1.25rem;margin:26px 0 8px}
 .item small{display:block;color:var(--muted)}
 .item .tb-btn{flex:none}
 .empty{color:var(--muted);background:var(--soft);border-radius:14px;padding:12px 14px;margin-top:10px}
+.item .salir{display:block;margin-top:6px;padding:0;font-size:.88rem;text-align:left}
 .crear{display:block;text-align:center;margin-top:22px}
 </style>
 </head>
@@ -92,7 +93,7 @@ async function mis(){
     const href=(x.con_envio?'tribbi.html':'amigo-secreto.html')+'?e='+encodeURIComponent(x.slug);
     const est=x.estado==='pendiente_pago'?'falta pagar el envío':!x.sorteo_hecho?'esperando el sorteo':x.descubrio?'ya descubriste':'¡ya puedes raspar tu tarjeta!';
     return `<div class="item"><span style="display:flex;gap:12px;align-items:center;min-width:0">${T.portadaHTML(x,'thumb')}<span><b>${esc(x.nombre)}</b><small>${esc([x.cuenta,'como '+x.como].filter(Boolean).join(' · '))}</small>
-      ${x.ninos.length?`<small>A tu cargo: ${esc(x.ninos.join(', '))}</small>`:''}<small>${esc(est)}</small></span></span><a class="tb-btn sm" href="${href}">Abrir</a></div>`}).join('')
+      ${x.ninos.length?`<small>A tu cargo: ${esc(x.ninos.join(', '))}</small>`:''}<small>${esc(est)}</small>${!x.sorteo_hecho&&x.estado==='pagada'?`<button class="tb-link bad salir" data-salir="${esc(x.slug)}" data-nombre="${esc(x.nombre)}" data-ninos="${esc((x.ninos||[]).join(', '))}">Salirme de este intercambio</button>`:''}</span></span><a class="tb-btn sm" href="${href}">Abrir</a></div>`}).join('')
     :'<p class="empty">Todavía no participas en ningún intercambio. Si te invitaron, abre el enlace que te mandaron.</p>';
   const recs=d.organizo.map(x=>({x,r:T.recordatorioSorteo(x)})).filter(o=>o.r);
   $('#aviso').insertAdjacentHTML('afterend','');
@@ -102,6 +103,15 @@ async function mis(){
       <a class="tb-btn sm" href="organizar.html?e=${encodeURIComponent(x.slug)}">Administrar</a></div>`).join('')
     :'<p class="empty">No organizas ningún intercambio todavía.</p>';
 }
+/* Salirse de un intercambio (solo antes del sorteo) */
+$('#participo').addEventListener('click',async e=>{
+  const bt=e.target.closest('[data-salir]');if(!bt)return;
+  const ninos=bt.dataset.ninos;
+  if(!confirm(`¿Seguro que quieres salirte de ${bt.dataset.nombre}? Tus ideas de regalo se borran.${ninos?` ${ninos} también ${ninos.includes(',')?'saldrán':'saldrá'}.`:''}`))return;
+  bt.disabled=true;const r=await rpc('tribbi_p_salir',{p_slug:bt.dataset.salir});
+  if(!r.ok){bt.disabled=false;alert(r.d.mensaje||'No se pudo. Intenta de nuevo.');return}
+  await mis();$('#aviso').textContent=`Listo, saliste de ${bt.dataset.nombre}.`;
+});
 inicio();
 })();
 </script>
