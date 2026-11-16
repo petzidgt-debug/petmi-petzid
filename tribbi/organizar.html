@@ -38,6 +38,11 @@ h1.big{font-size:clamp(2.2rem,8vw,3.4rem);line-height:1;margin:6px 0 4px;color:v
 .tb-sec .grid > label.f:first-child{margin-top:4px}
 div.tb-marco{font-weight:700}
 div.tb-marco > small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
+#gBloques{display:flex;flex-direction:column}
+.pasos-lista{margin:0 0 10px;padding-left:1.2em}.pasos-lista li{margin-bottom:6px}
+.yo-check{display:flex;gap:10px;align-items:flex-start;background:var(--soft);border-radius:14px;padding:10px 12px;margin:6px 0 12px;font-weight:400}
+.yo-check small{font-weight:400}
+.yo-check input{width:20px;height:20px;margin-top:2px;accent-color:var(--teal);flex:none}
 .tb-marco{grid-column:1/-1;border:2px solid var(--line);border-radius:18px;padding:12px 14px 14px;margin-top:14px!important;background:var(--card)}
 .tb-marco-t{display:block;font-family:"Fredoka",sans-serif;font-size:1.08rem}
 .tb-marco.destacado{border-color:var(--btn);background:#FFF8DE}
@@ -172,17 +177,24 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
     <div class="facts" id="gChips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
     <button class="tb-link" id="gEditar" style="margin-top:6px">Editar el intercambio</button>
 
-    <div class="card go" id="gInvita">
+<div id="gBloques">
+    <div class="card go" id="gInvita" style="order:1">
       <h2>Invita a los participantes</h2>
       <p class="tb-msg" id="gInvitaTxt"></p>
       <div class="share"><code id="gLink"></code><button class="tb-btn sm" id="gCopiar">Copiar enlace</button></div>
       <div class="acts" style="margin-top:10px"><a class="tb-link" id="gWa" target="_blank" rel="noopener">Compartir por WhatsApp</a><button class="tb-link" id="gNuevaInv">Cambiar el enlace</button></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="gPart" style="order:2">
       <h2>Participantes</h2>
-      <p class="tb-msg" id="partLista"><b>Nombres sin tildes ni espacios y sin repetir</b> (TiaRosa, JoseA, JoseB): cada quien entra la primera vez con su nombre al revés. Escribe el mismo <b>grupo</b> para quienes no deben regalarse entre sí, como una pareja.</p>
+      <ul class="tb-msg pasos-lista" id="partLista">
+        <li>Agrega los nombres <b>sin tildes ni espacios y sin repetir</b> (TiaRosa, JoseA, JoseB).</li>
+        <li>Cuando envíes el enlace de acceso, cada quien entra la primera vez con <b>su nombre al revés</b>.</li>
+        <li>Puedes crear <b>grupos</b> para quienes no deben regalarse entre sí: escribe el nombre del grupo en cada participante. Por ejemplo: GrupoA, Familia Pérez.</li>
+        <li>Puedes agregar <b>niños</b> y asignarlos a un papá o mamá responsable.</li>
+      </ul>
       <p class="tb-msg" id="partEnlace" hidden>Cada quien se une con el <b>enlace de invitación</b> y aparece aquí al registrarse. Escribe el mismo <b>grupo</b> para quienes no deben regalarse entre sí, como una pareja.</p>
+      <label class="check yo-check" id="gYoLbl" hidden><input type="checkbox" id="gYoCheck"> <span><b>Yo también participo</b> (quien organiza)<br><small class="tb-msg">Te toca alguien y alguien te tiene a ti. No ves quién le toca a quién.</small></span></label>
       <div id="gYo"></div>
       <form class="add" id="addForm" novalidate>
         <label>Nombre<input class="tb-field" name="nombre" maxlength="30" placeholder="TiaRosa" autocapitalize="words" autocorrect="off" spellcheck="false"></label>
@@ -197,12 +209,14 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
       <p class="tb-msg" id="gCount"></p>
     </div>
 
+</div>
     <div class="card">
       <h2>Sorteo</h2>
       <p class="tb-msg" id="gSorteoTxt"></p>
       <button class="tb-btn coral" id="gSortear">Hacer el sorteo</button>
       <p class="tb-msg" id="gSorteoMsg" role="status"></p>
     </div>
+    <p style="margin-top:22px;text-align:center"><a class="tb-btn sm" id="gFiesta" href="fiesta.html">🎉 Modo fiesta</a></p>
     <p style="margin-top:28px;text-align:center"><button class="tb-link bad" id="gEliminar">Eliminar intercambio</button></p>
   </div>
 </div>
@@ -341,6 +355,9 @@ const linkPart=()=>SITIO+'/tribbi/'+encodeURIComponent(actual.slug)+'/'+encodeUR
 function pintarGestion(){
   const x=actual,c=x.cuenta||{};show('vGestion');
   $('#gPortada').innerHTML=T.portadaHTML(x);
+  /* Con lista: primero Participantes (agregar nombres) y después el enlace para enviar */
+  $('#gInvita').style.order=x.modo_ingreso==='correo'?1:2;$('#gPart').style.order=x.modo_ingreso==='correo'?2:1;
+  $('#gFiesta').href='fiesta.html?e='+encodeURIComponent(x.slug);
   const rec=T.recordatorioSorteo(x);
   $('#gRecuerda').innerHTML=rec?`<div class="tb-recordatorio" role="status"><span>${esc(rec.t)}<small>${esc(rec.s)}</small></span><button class="tb-btn sm coral" id="irSorteo">Ir al sorteo</button></div>`:'';
   if(rec)$('#irSorteo').onclick=()=>$('#gSortear').scrollIntoView({behavior:T.reduced?'auto':'smooth',block:'center'});
@@ -358,15 +375,18 @@ function pintarGestion(){
 }
 function pintarGente(){
   const x=actual,l=x.participantes,s=x.sorteo_hecho;
-  $('#gYo').innerHTML=x.participo?`<p class="tb-msg">Tú también participas. <a class="tb-link" href="amigo-secreto.html?e=${encodeURIComponent(x.slug)}">Ver mi tarjeta y mis ideas</a></p>`
-    :(!s&&!x.con_envio?`<p><button class="tb-btn sm" id="yoUnirme">Unirme como participante</button></p>`:'');
-  const yb=document.getElementById('yoUnirme');
-  if(yb)yb.onclick=async()=>{yb.disabled=true;const r=await rpc('tribbi_org_participar',{p_slug:x.slug});
-    if(!r.ok){yb.disabled=false;if(!sesion(r))alert(r.d.mensaje||'No se pudo.');return}
+  const yoLbl=$('#gYoLbl'),yoChk=$('#gYoCheck'),yo=l.find(p=>p.soy_yo);
+  yoLbl.hidden=s||x.con_envio;yoChk.checked=!!x.participo;yoChk.disabled=false;
+  $('#gYo').innerHTML=x.participo?`<p class="tb-msg"><a class="tb-link" href="amigo-secreto.html?e=${encodeURIComponent(x.slug)}">Ver mi tarjeta y mis ideas</a></p>`:'';
+  yoChk.onchange=async()=>{
+    yoChk.disabled=true;
+    const r=yoChk.checked?await rpc('tribbi_org_participar',{p_slug:x.slug})
+      :(yo?await rpc('tribbi_org_quitar',{p_slug:x.slug,p_id:yo.id}):{ok:true});
+    if(!r.ok){if(!sesion(r))alert(r.d.mensaje||'No se pudo.');yoChk.checked=!yoChk.checked;yoChk.disabled=false;return}
     const r2=await rpc('tribbi_org_intercambio',{p_slug:x.slug});if(r2.ok){actual=r2.d;pintarGente()}};
   const est={pagada:'',pendiente_pago:' · falta pagar el envío',excluida:' · excluida'};
   const chip=p=>p.es_nino?'<span class="tb-chip warn">Niño</span>':p.tipo==='correo'||p.activada?'<span class="tb-chip ok">Activa</span>':'<span class="tb-chip">Pendiente</span>';
-  const meta=p=>[p.es_nino?`A cargo de ${p.a_cargo_nombre||'—'}`:p.tipo==='correo'?'Se unió con su correo':p.activada?'Ya activó su cuenta':`Clave inicial: <b>${esc(p.clave_inicial)}</b>`,
+  const meta=p=>[p.soy_yo?'Organizas y participas':p.es_nino?`A cargo de ${p.a_cargo_nombre||'—'}`:p.tipo==='correo'?'Se unió con su correo':p.activada?'Ya activó su cuenta':`Clave inicial: <b>${esc(p.clave_inicial)}</b>`,
     `${Number(p.ideas)} ${Number(p.ideas)===1?'idea':'ideas'}${esc(est[p.estado]||'')}`].join(' · ');
   $('#gPeople').innerHTML=l.length?l.map(p=>`<li><span class="nm">${esc(p.nombre)}${p.soy_yo?' <b>(tú)</b>':''} ${chip(p)}${p.descubrio?' <span class="tb-chip ok">Ya descubrió</span>':''}</span>
     <span class="meta">${meta(p)}</span>
