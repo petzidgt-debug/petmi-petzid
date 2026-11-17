@@ -11,7 +11,7 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUz
 const CARRERA_RESERVAS_ABIERTAS = false;
 
 // Marca de versión: se ve abriendo /api/galeria en el navegador. Sirve para comprobar en 5 segundos si un despliegue nuevo ya está en línea.
-const GALERIA_VERSION = '2026-10-29-a';
+const GALERIA_VERSION = '2026-11-17-a';
 
 // ── Web Push (notificaciones) ───────────────────────────────
 const webpush = require('web-push');
@@ -834,24 +834,112 @@ function _unirNombresMK(arr) {
 }
 
 // Reemplaza {nombre} (primer nombre del dueño) y {mascota} (las mascotas de esa audiencia).
+// Reemplaza {nombre} (primer nombre del dueño) y {mascota} (las mascotas de esa audiencia). Para los correos de cumpleaños también:
+// {celebracion} (cumpleaños | aniversario), {felicitacion} (Feliz cumpleaños | Feliz aniversario | Felicidades) y {edad} (3 años | un año más).
 function _tokensMK(texto, dest, html) {
   const nombre = _nombrePropioMK(dest.dueno) || 'Amigo PetMi';
   const mascota = _unirNombresMK((dest.pets || []).map(function (p) { return p.nombre; })) || 'tu mascota';
   const esc = html ? _escHtmlCorreo : function (x) { return x; };
-  return esc(String(texto || '')).replace(/\{nombre\}/gi, esc(nombre)).replace(/\{mascota\}/gi, esc(mascota));
+  const cel = _celebracionMK(dest);
+  return esc(String(texto || '')).replace(/\{nombre\}/gi, esc(nombre)).replace(/\{mascota\}/gi, esc(mascota))
+    .replace(/\{celebraci[oó]n\}/gi, esc(cel.palabra)).replace(/\{felicitaci[oó]n\}/gi, esc(cel.felicitacion)).replace(/\{edad\}/gi, esc(cel.edad));
+}
+
+// ── Cumpleaños y aniversario (igual que el correo de Apps Script de antes): una mascota es de ANIVERSARIO si su fecha es de tipo
+// "llegada" (o "casa"); en cualquier otro caso es de CUMPLEAÑOS. Si en una misma casa hay de las dos, se dice "cumpleaños y aniversario".
+function _esAniversarioMK(p) { return /^(llegada|casa)$/i.test(String((p && p.tipo_fecha) || '').trim()); }
+// Años que cumple en su PRÓXIMA celebración: este año si el mes todavía no ha pasado; si ya pasó, el año que viene. 0 = no se sabe.
+function _anosQueCumpleMK(fecha) {
+  const m = String(fecha || '').match(/^(\d{4})-(\d{2})-\d{2}/); if (!m) return 0;
+  const hoy = new Date(); let anio = hoy.getFullYear(); if (parseInt(m[2], 10) < hoy.getMonth() + 1) anio++;
+  const n = anio - parseInt(m[1], 10); return n > 0 && n < 60 ? n : 0;
+}
+function _celebracionMK(dest) {
+  const pets = (dest && dest.pets) || [];
+  const aniv = pets.filter(_esAniversarioMK).length, cumple = pets.length - aniv;
+  let palabra = 'cumpleaños', felicitacion = 'Feliz cumpleaños';
+  if (aniv && cumple) { palabra = 'cumpleaños y aniversario'; felicitacion = 'Felicidades'; }
+  else if (aniv) { palabra = 'aniversario'; felicitacion = 'Feliz aniversario'; }
+  let edad = 'un año más';
+  if (pets.length === 1) { const n = _anosQueCumpleMK(pets[0].fecha); if (n) edad = n + (n === 1 ? ' año' : ' años'); }
+  return { palabra: palabra, felicitacion: felicitacion, edad: edad, soloAniversario: aniv > 0 && !cumple };
+}
+// La foto (o las fotos, máximo 3) de las mascotas en un círculo con una insignia: 🎂 si es cumpleaños, 🎉 si es aniversario. Sin foto: un emoji grande.
+function _bloqueFotosMascotasMK(dest) {
+  const e = _escHtmlCorreo;
+  const conFoto = ((dest && dest.pets) || []).filter(function (p) { return p && /^https:\/\//i.test(String(p.foto || '').trim()); }).slice(0, 3);
+  if (!conFoto.length) return '<div style="text-align:center;font-size:64px;line-height:1.2;margin:0 0 10px">' + (_celebracionMK(dest).soloAniversario ? '&#x1F389;' : '&#x1F382;') + ' &#x1F43E;</div>';
+  return '<div style="text-align:center;margin:0 0 16px">' + conFoto.map(function (p) {
+    return '<div style="display:inline-block;position:relative;margin:22px 8px 0;vertical-align:top"><img src="' + e(String(p.foto).trim()) + '" alt="' + e(p.nombre || 'Tu mascota') + '" width="110" height="110" style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #00B4B4;display:block">'
+      + '<div style="position:absolute;top:-22px;left:50%;margin-left:-23px;width:46px;height:46px;border-radius:50%;background:#F5C842;border:3px solid #fff;text-align:center;line-height:46px;font-size:24px">' + (_esAniversarioMK(p) ? '&#x1F389;' : '&#x1F382;') + '</div></div>';
+  }).join('') + '</div>';
+}
+// Datos de ejemplo para la vista previa y la prueba ("dos" = como siempre; "cumple" y "aniversario" = una sola mascota con foto).
+const _FOTO_EJEMPLO_MK = 'https://app.revistapetmi.com/icon-192.png';
+function _ejemploMK(clave) {
+  const y = new Date().getFullYear(), f = function (anios, nombre, tipo) { return { nombre: nombre, foto: _FOTO_EJEMPLO_MK, tipo_fecha: tipo, fecha: (y - anios) + '-12-15' }; };
+  if (clave === 'cumple') return { dueno: 'Ana López', pets: [f(3, 'Luna', 'nacimiento')] };
+  if (clave === 'aniversario') return { dueno: 'Ana López', pets: [f(2, 'Luna', 'llegada')] };
+  return { dueno: 'Ana López', pets: [f(4, 'Rocky', 'nacimiento'), f(3, 'Luna', 'nacimiento')] };
 }
 
 function _cuerpoAHtmlMK(cuerpo, dest) {
   return String(cuerpo || '').replace(/\r/g, '').split(/\n{2,}/).map(function (par) {
     par = par.trim();
     if (!par) return '';
+    // Un párrafo que empieza con ">" sale en un RECUADRO dorado (como el "regalo especial del patrocinador" del correo de cumpleaños).
+    const recuadro = /^>/.test(par);
+    if (recuadro) { par = par.split('\n').map(function (l) { return l.replace(/^\s*>\s?/, ''); }).join('\n').trim(); if (!par) return ''; }
     const h = _tokensMK(par, dest, true).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
-    return '<p style="color:#444;line-height:1.7;font-size:15px;margin:0 0 14px">' + h + '</p>';
+    return recuadro
+      ? '<div style="background:#FFF8E0;border:2px solid #F5C842;border-radius:14px;padding:16px 20px;margin:0 0 14px;text-align:center;color:#1a1a2e;line-height:1.6;font-size:15px">' + h + '</div>'
+      : '<p style="color:#444;line-height:1.7;font-size:15px;margin:0 0 14px">' + h + '</p>';
   }).join('');
 }
 
 // El correo completo. ctx.envioId = correo real (links con seguimiento y baja personal);
 // ctx.vista = solo para ver en pantalla; sin ninguno de los dos = correo de prueba.
+// ── Newsletter: "Temas de la semana" (hasta 6 temas por correo; cada uno con título, texto corto, imagen y enlace) ──
+const _TEMAS_MAX_MK = 6;
+// lenient = true (vista previa): no da errores, solo omite lo que no sirve (enlace de otro sitio, imagen sin https) para que la persona vea qué le falta.
+function _normTemasMK(arr, lenient) {
+  if (arr == null) return { temas: [] };
+  if (!Array.isArray(arr)) return lenient ? { temas: [] } : { error: 'Los temas de la semana no tienen el formato correcto.' };
+  const t = function (v, max) { return String(v == null ? '' : v).replace(/\r/g, '').trim().slice(0, max); };
+  const out = [];
+  for (let i = 0; i < arr.length; i++) {
+    const x = arr[i] || {};
+    const it = { titulo: t(x.titulo, 90), texto: t(x.texto, 400), imagen_url: t(x.imagen_url, 500), boton_texto: t(x.boton_texto, 40), boton_url: t(x.boton_url, 500) };
+    if (!it.titulo && !it.texto && !it.imagen_url && !it.boton_url) continue;      // fila vacía: se ignora
+    const n = out.length + 1;
+    if (!it.titulo && !lenient) return { error: 'Tema ' + n + ': escribe el título.' };
+    if (it.imagen_url && !/^https:\/\//i.test(it.imagen_url)) { if (lenient) it.imagen_url = ''; else return { error: 'Tema ' + n + ': la imagen debe ser un enlace que empiece con https.' }; }
+    if (it.boton_url && !_destinoCorreoPermitido(it.boton_url)) { if (lenient) it.boton_url = ''; else return { error: 'Tema ' + n + ': el enlace solo puede llevar a páginas de PetMi (app.revistapetmi.com o revistapetmi.com).' }; }
+    if (it.boton_url && !it.boton_texto) it.boton_texto = 'Leer más';
+    if (!it.boton_url) it.boton_texto = '';
+    out.push(it);
+  }
+  if (out.length > _TEMAS_MAX_MK) { if (lenient) out.length = _TEMAS_MAX_MK; else return { error: 'Máximo ' + _TEMAS_MAX_MK + ' temas por correo.' }; }
+  return { temas: out };
+}
+function _temasHtmlMK(c, dest, ctx) {
+  const lista = Array.isArray(c.temas) ? c.temas.slice(0, _TEMAS_MAX_MK) : [];
+  if (!lista.length) return '';
+  ctx = ctx || {};
+  const e = _escHtmlCorreo, slug = c.slug || 'mk';
+  const bloques = lista.map(function (x, i) {
+    const id = 'tema' + (i + 1);
+    const href = (x.boton_url && _destinoCorreoPermitido(x.boton_url)) ? (ctx.envioId ? _linkRastreado(ctx.envioId, slug, id, x.boton_url) : _agregarUtmCorreo(x.boton_url, slug, id)) : '';
+    const img = (x.imagen_url && /^https:\/\//i.test(x.imagen_url)) ? '<img src="' + e(x.imagen_url) + '" alt="' + _tokensMK(x.titulo || '', dest, true) + '" style="width:100%;height:auto;border-radius:12px;display:block;margin:0 0 10px">' : '';
+    const imgConLink = (img && href) ? '<a href="' + e(href) + '" style="text-decoration:none">' + img + '</a>' : img;
+    const texto = x.texto ? '<p style="margin:0 0 8px;color:#444;line-height:1.6;font-size:14.5px">' + _tokensMK(x.texto, dest, true).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>') + '</p>' : '';
+    const enlace = href ? '<a href="' + e(href) + '" style="color:#00838F;font-weight:800;font-size:14px;text-decoration:none">' + e(x.boton_texto || 'Leer más') + ' &rarr;</a>' : '';
+    return '<div style="margin:0 0 22px;' + (i ? 'padding-top:18px;border-top:1px solid #eee' : '') + '">' + imgConLink
+      + '<div style="font-size:18px;font-weight:900;color:#1a1a2e;line-height:1.3;margin:0 0 6px">' + _tokensMK(x.titulo || '', dest, true) + '</div>' + texto + enlace + '</div>';
+  }).join('');
+  return '<div style="margin:24px 0 4px;padding-top:18px;border-top:2px solid #E3F6F6"><div style="font-size:12px;font-weight:900;letter-spacing:1.4px;color:#00A3A3;text-transform:uppercase;margin:0 0 16px">&#x1F4F0; Temas de la semana</div>' + bloques + '</div>';
+}
+
 function _htmlCampanaMK(c, dest, ctx) {
   ctx = ctx || {};
   const e = _escHtmlCorreo;
@@ -864,11 +952,12 @@ function _htmlCampanaMK(c, dest, ctx) {
   const imagen = c.imagen_url && /^https?:\/\//i.test(c.imagen_url)
     ? '<img src="' + e(c.imagen_url) + '" alt="" style="width:100%;height:auto;border-radius:12px;display:block;margin:0 0 18px">' : '';
   const titulo = c.titulo ? '<h2 style="color:#1a1a2e;margin:0 0 14px;text-align:center;font-size:21px;line-height:1.3">' + _tokensMK(c.titulo, dest, true) + '</h2>' : '';
+  const fotos = c.foto_mascota === true ? _bloqueFotosMascotasMK(dest) : '';
   const baja = ctx.envioId ? 'https://app.revistapetmi.com/baja.html?e=' + ctx.envioId : (ctx.vista ? '#' : 'https://app.revistapetmi.com/baja.html');
   return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:12px;background:#f4f4f2">'
     + '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">'
     + '<div style="background:#00B4B4;padding:24px;text-align:center;border-radius:12px 12px 0 0"><div style="display:inline-block;background:#fff;border-radius:12px;padding:8px 18px"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi" style="height:36px;width:auto;display:block"></div></div>'
-    + '<div style="background:#fff;padding:26px 24px;border:1px solid #eee">' + imagen + titulo + _cuerpoAHtmlMK(c.cuerpo, dest) + boton + '</div>'
+    + '<div style="background:#fff;padding:26px 24px;border:1px solid #eee">' + fotos + imagen + titulo + _cuerpoAHtmlMK(c.cuerpo, dest) + _temasHtmlMK(c, dest, ctx) + boton + '</div>'
     + '<div style="background:#F5C842;padding:14px;text-align:center;border-radius:0 0 12px 12px"><p style="margin:0 0 6px;font-size:12px;color:#555">PetMi Guatemala · app.revistapetmi.com</p>'
     + '<p style="margin:0;font-size:11px;color:#7a6200">¿Ya no quieres recibir estos correos? <a href="' + e(baja) + '" style="color:#7a6200">Date de baja aquí</a></p></div>'
     + '</div></body></html>';
@@ -899,6 +988,12 @@ function _validarCampanaMK(b) {
   if (!!d.boton_texto !== !!d.boton_url) return { error: 'El botón necesita texto Y enlace (o deja los dos vacíos).' };
   if (d.boton_url && !_destinoCorreoPermitido(d.boton_url)) return { error: 'El botón solo puede llevar a páginas de PetMi (app.revistapetmi.com o revistapetmi.com).' };
   if (d.semana && (!/^\d{4}-\d{2}-\d{2}$/.test(d.semana) || isNaN(new Date(d.semana + 'T00:00:00Z').getTime()))) return { error: 'Fecha de semana inválida.' };
+  if (b.foto_mascota === true || b.foto_mascota === 'true') d.foto_mascota = true;
+  else if ((b.foto_mascota === false || b.foto_mascota === 'false') && b.id) d.foto_mascota = false;
+  if (b.temas !== undefined) {      // temas de la semana: solo se guardan si vienen; al editar, una lista vacía los borra
+    const nt = _normTemasMK(b.temas); if (nt.error) return { error: nt.error };
+    if (nt.temas.length) d.temas = nt.temas; else if (b.id) d.temas = [];
+  }
   return { datos: d };
 }
 
@@ -3371,8 +3466,8 @@ export default async function handler(req, res) {
       if (!(await _adminAutorizado(req, res))) return;
       const b = req.body || {};
       const c = { slug: 'vista', asunto: String(b.asunto || '').slice(0, 150), titulo: String(b.titulo || '').slice(0, 120), cuerpo: String(b.cuerpo || '').slice(0, 5000),
-        imagen_url: String(b.imagen_url || '').slice(0, 500), boton_texto: String(b.boton_texto || '').slice(0, 40), boton_url: String(b.boton_url || '').slice(0, 500) };
-      const ejemplo = { dueno: 'Ana López', pets: [{ nombre: 'Rocky' }, { nombre: 'Luna' }] };
+        imagen_url: String(b.imagen_url || '').slice(0, 500), boton_texto: String(b.boton_texto || '').slice(0, 40), boton_url: String(b.boton_url || '').slice(0, 500), foto_mascota: b.foto_mascota === true, temas: _normTemasMK(b.temas, true).temas };
+      const ejemplo = _ejemploMK(b.ejemplo);
       return res.status(200).json({ ok: true, asunto: _tokensMK(c.asunto, ejemplo, false), html: _htmlCampanaMK(c, ejemplo, { vista: true }) });
     }
 
@@ -3414,7 +3509,7 @@ export default async function handler(req, res) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(para)) return res.status(200).json({ ok: false, error: 'Escribe un correo válido para la prueba.' });
       const v = _validarCampanaMK({ nombre: 'prueba', audiencia: 'todos', ...b });
       if (v.error) return res.status(200).json({ ok: false, error: v.error });
-      const ejemplo = { dueno: 'Ana López', pets: [{ nombre: 'Rocky' }, { nombre: 'Luna' }] };
+      const ejemplo = _ejemploMK(b.ejemplo);
       const c = { ...v.datos, slug: 'prueba' };
       const r = await _enviarHtmlPorWix(para, '[PRUEBA] ' + _tokensMK(c.asunto, ejemplo, false), _htmlCampanaMK(c, ejemplo, {}), 'pruebaMK');
       return res.status(200).json(r.ok ? { ok: true } : { ok: false, error: r.error });
