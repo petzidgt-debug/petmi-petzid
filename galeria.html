@@ -893,6 +893,7 @@ function renderCumpleaneros(){
   document.getElementById('mesActualNombre').textContent=MESES[mesActual];
   var cumpleMes=allPets.filter(function(p){
     if(!p.fecha||p.angelito)return false;
+    if(!tieneFoto(p))return false;      // los cumpleañeros del mes también solo con foto
     var mes=getMesFecha(p.fecha);
     return mes!==null&&mes===mesActual;
   }).sort(function(a,b){
@@ -903,7 +904,7 @@ function renderCumpleaneros(){
   var html=cumpleMes.map(function(p){
     var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
     var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
-      ?'<img src="'+p.foto+'" onerror="this.style.display=\'none\'">'
+      ?'<img src="'+p.foto+'" onerror="var c=this.closest(\'.cumple-card\');if(c)c.style.display=\'none\'">'
       :'<div style="width:130px;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px;background:#fff3cd">'+(esGato?'🐱':'🐶')+'</div>';
     var hoy=(new Date().getMonth()===mesActual)&&(new Date().getDate()===getDiaFecha(p.fecha));
     var fechaLabel=(p.tipoFecha==='llegada'||p.tipoFecha==='casa')?'Llegó a casa':'Cumpleaños';
@@ -1020,6 +1021,8 @@ function enviarMensajePublico(){
     alert('No se pudo enviar el mensaje. Revisa tu conexión e intenta de nuevo.');
   });
 }
+// Solo se muestran mascotas con una foto de verdad (dirección http/https): vacío, "null", "undefined" u otro texto no cuentan.
+function tieneFoto(p){ return !!(p && p.foto && /^https?:\/\//i.test(String(p.foto).trim())); }
 function applyFilter(){
   var searchEl=document.getElementById('searchInput');
   var search=searchEl?searchEl.value.toLowerCase():'';
@@ -1028,6 +1031,7 @@ function applyFilter(){
       if(!p.angelito)return false;
     } else {
       if(p.angelito)return false;
+      if(!tieneFoto(p))return false;      // la galería pública solo muestra mascotas con foto
       if(currentFilter==='perro'&&p.especie.toLowerCase().indexOf('perro')<0)return false;
       if(currentFilter==='gato' &&p.especie.toLowerCase().indexOf('gato') <0)return false;
     }
@@ -1057,7 +1061,7 @@ function renderGallery(append){
     var esGato=p.especie.toLowerCase().indexOf('gato')>=0;
     var emoji=esGato?'🐱':'🐶';
     var fotoHTML=p.foto&&p.foto.indexOf('http')>=0
-      ?'<img src="'+p.foto+'" alt="'+p.nombre+'" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover" onerror="this.style.display=\'none\'">'
+      ?'<img src="'+p.foto+'" alt="'+p.nombre+'" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:cover" onerror="var c=this.closest(\'.pet-card\');if(c)c.style.display=\'none\'">'
       :'<div style="width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:40px;background:#e0f7f7">'+emoji+'</div>';
     var esNuevo=false;
     if(p.createdAt){

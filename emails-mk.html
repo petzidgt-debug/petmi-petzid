@@ -221,6 +221,16 @@ td{padding:10px 12px;border-bottom:1px solid #f2f2f0;vertical-align:top}
         </div>
         <datalist id="mkDestinos"><option value="https://app.revistapetmi.com/tienda.html"><option value="https://app.revistapetmi.com/juego.html"><option value="https://app.revistapetmi.com/ruleta.html"><option value="https://app.revistapetmi.com/salud.html"><option value="https://app.revistapetmi.com/registro.html"><option value="https://app.revistapetmi.com/"></datalist>
         <div class="mk-hint">Solo puede llevar a páginas de PetMi. Los clics del botón se cuentan solos.</div>
+        <div style="margin-top:16px;padding:12px;border:1.5px dashed #9fd9d9;border-radius:12px;background:#f4fbfb">
+          <div style="font-weight:900;font-size:13.5px;color:#0a6f6f">📰 Temas de la semana <span style="font-weight:600;color:#777">(opcional · para el newsletter)</span></div>
+          <div class="mk-hint">Cada tema lleva título, un texto corto, una imagen y un enlace. Salen después del texto del correo y antes del botón. Máximo 6. Los clics de cada tema se cuentan aparte.</div>
+          <div id="mkTemas"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button type="button" class="btn-sm" style="background:#e0f7f7;color:#0a6f6f" onclick="mkAgregarTema()">➕ Agregar tema</button>
+            <button type="button" class="btn-sm" style="background:#e0f0ff;color:#0055aa" onclick="mkTraerBlog()">📥 Traer los últimos artículos del blog</button>
+          </div>
+          <div class="mk-hint" id="mkTemasEstado">Sin temas: el correo sale como siempre.</div>
+        </div>
         <label class="mk-lbl">¿A quién le llega?</label>
         <select id="mkAudiencia" class="mk-in" onchange="mkCambioAudiencia()"></select>
         <div id="mkParamWrap" style="display:none;margin-top:6px">
@@ -924,6 +934,46 @@ function mkCambioAudiencia(){
   mkContarAudiencia();
 }
 
+// ── Temas de la semana (newsletter) ──
+var _mkTemas = [];
+var _MK_TEMAS_MAX = 6;
+function _mkEsc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function _mkPintarTemas(){
+  var cont = document.getElementById('mkTemas'); if(!cont) return;
+  cont.innerHTML = _mkTemas.map(function(t, i){
+    return '<div style="background:#fff;border:1px solid #cfe9e9;border-radius:10px;padding:10px;margin-top:8px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><b style="font-size:12.5px;color:#0a6f6f">Tema ' + (i + 1) + '</b>'
+      + '<span><button type="button" class="btn-sm" title="Subir" onclick="mkMoverTema(' + i + ',-1)"' + (i === 0 ? ' disabled' : '') + '>↑</button> <button type="button" class="btn-sm" title="Bajar" onclick="mkMoverTema(' + i + ',1)"' + (i === _mkTemas.length - 1 ? ' disabled' : '') + '>↓</button> <button type="button" class="btn-sm" style="background:#fde8e8;color:#b00020" onclick="mkQuitarTema(' + i + ')">✕ Quitar</button></span></div>'
+      + '<label class="mk-lbl">Título</label><input class="mk-in" maxlength="90" value="' + _mkEsc(t.titulo) + '" oninput="mkCambioTema(' + i + ',\'titulo\',this.value)">'
+      + '<label class="mk-lbl">Texto corto (opcional)</label><textarea class="mk-in" rows="3" maxlength="400" oninput="mkCambioTema(' + i + ',\'texto\',this.value)">' + _mkEsc(t.texto) + '</textarea>'
+      + '<label class="mk-lbl">Imagen (opcional, enlace que empiece con https)</label><input class="mk-in" maxlength="500" placeholder="https://..." value="' + _mkEsc(t.imagen_url) + '" oninput="mkCambioTema(' + i + ',\'imagen_url\',this.value)">'
+      + '<div style="display:flex;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:120px"><label class="mk-lbl">Texto del enlace</label><input class="mk-in" maxlength="40" placeholder="Leer más" value="' + _mkEsc(t.boton_texto) + '" oninput="mkCambioTema(' + i + ',\'boton_texto\',this.value)"></div>'
+      + '<div style="flex:2;min-width:180px"><label class="mk-lbl">A dónde lleva (página de PetMi)</label><input class="mk-in" maxlength="500" placeholder="https://www.revistapetmi.com/..." value="' + _mkEsc(t.boton_url) + '" oninput="mkCambioTema(' + i + ',\'boton_url\',this.value)"></div></div>'
+      + '</div>';
+  }).join('');
+  var est = document.getElementById('mkTemasEstado'); if(est) est.textContent = _mkTemas.length ? (_mkTemas.length + ' de ' + _MK_TEMAS_MAX + ' temas') : 'Sin temas: el correo sale como siempre.';
+}
+function mkCambioTema(i, campo, valor){ if(_mkTemas[i]){ _mkTemas[i][campo] = valor; mkVista(); } }   // no se vuelve a pintar la lista para no perder el cursor
+function mkAgregarTema(){
+  if(_mkTemas.length >= _MK_TEMAS_MAX){ alert('Máximo ' + _MK_TEMAS_MAX + ' temas por correo.'); return; }
+  _mkTemas.push({ titulo: '', texto: '', imagen_url: '', boton_texto: 'Leer más', boton_url: '' }); _mkPintarTemas(); mkVista();
+}
+function mkQuitarTema(i){ _mkTemas.splice(i, 1); _mkPintarTemas(); mkVista(); }
+function mkMoverTema(i, d){ var j = i + d; if(j < 0 || j >= _mkTemas.length) return; var x = _mkTemas[i]; _mkTemas[i] = _mkTemas[j]; _mkTemas[j] = x; _mkPintarTemas(); mkVista(); }
+async function mkTraerBlog(){
+  var est = document.getElementById('mkTemasEstado'); est.textContent = 'Buscando los artículos del blog…';
+  try {
+    var r = await fetch('/api/galeria?action=getBlogPosts'); var d = await r.json(); var posts = (d && d.posts) || [];
+    var ya = _mkTemas.map(function(t){ return t.boton_url; });
+    var nuevos = posts.filter(function(p){ return p.link && ya.indexOf(p.link) < 0; });
+    if(!nuevos.length){ est.textContent = posts.length ? 'Esos artículos ya están en la lista.' : 'No se encontraron artículos en el blog.'; return; }
+    var espacio = _MK_TEMAS_MAX - _mkTemas.length;
+    if(espacio <= 0){ est.textContent = 'Ya hay ' + _MK_TEMAS_MAX + ' temas: quita alguno para traer más.'; return; }
+    nuevos.slice(0, Math.min(3, espacio)).forEach(function(p){ _mkTemas.push({ titulo: p.title || '', texto: p.excerpt || '', imagen_url: /^https:\/\//i.test(p.image || '') ? p.image : '', boton_texto: 'Leer más', boton_url: p.link }); });
+    _mkPintarTemas(); mkVista(); est.textContent = _mkTemas.length + ' de ' + _MK_TEMAS_MAX + ' temas · revisa y ajusta lo que quieras.';
+  } catch(e){ est.textContent = 'No se pudo traer el blog. Intenta de nuevo.'; }
+}
+
 async function _mkAbrirEditor(c){
   _mkActual = c || null;
   await _mkPrepararEditor();
@@ -945,6 +995,8 @@ async function _mkAbrirEditor(c){
   _mkLlenarParam(v.audiencia || 'todos', v.audiencia_param || '');
   document.getElementById('mkOfertas').checked = v.respetar_ofertas !== false;
   document.getElementById('mkFotoMascota').checked = v.foto_mascota === true;
+  _mkTemas = Array.isArray(v.temas) ? v.temas.map(function(x){ return { titulo: x.titulo || '', texto: x.texto || '', imagen_url: x.imagen_url || '', boton_texto: x.boton_texto || '', boton_url: x.boton_url || '' }; }) : [];
+  _mkPintarTemas();
   document.getElementById('mkVistaTipo').value = 'dos';
   document.getElementById('mkPruebaEmail').value = localStorage.getItem('petmi_mk_prueba') || '';
   document.getElementById('modalMKEditor').classList.add('open');
@@ -968,6 +1020,8 @@ function _mkLeerEditor(){
   var fm = document.getElementById('mkFotoMascota');
   if(fm.checked || (_mkActual && _mkActual.foto_mascota !== undefined)) o.foto_mascota = fm.checked;
   o.ejemplo = document.getElementById('mkVistaTipo').value;   // solo para la vista previa y la prueba
+  // temas de la semana: solo se mandan si hay alguno, o si el correo que se edita ya los tenía (así nada falla antes de correr el SQL nuevo)
+  if(_mkTemas.length || (_mkActual && _mkActual.temas !== undefined)) o.temas = _mkTemas.map(function(x){ return { titulo: x.titulo, texto: x.texto, imagen_url: x.imagen_url, boton_texto: x.boton_texto, boton_url: x.boton_url }; });
   return o;
 }
 
@@ -1051,6 +1105,7 @@ async function mkDuplicar(id){
     asunto: c.asunto, titulo: c.titulo, cuerpo: c.cuerpo, imagen_url: c.imagen_url, boton_texto: c.boton_texto, boton_url: c.boton_url,
     audiencia: c.audiencia, audiencia_param: c.audiencia_param, respetar_ofertas: c.respetar_ofertas };
   if(c.foto_mascota !== undefined) copia.foto_mascota = c.foto_mascota;
+  if(c.temas !== undefined) copia.temas = c.temas;
   var d = await mkFetch('guardarCampanaMK', copia);
   if(!d.ok){ alert('No se pudo duplicar: ' + (d.error || '')); return; }
   await mkCargar();
