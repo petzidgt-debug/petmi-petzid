@@ -102,6 +102,11 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
   #modalProdOverlay .galeria-slide{aspect-ratio:auto;height:min(62vh,100vw)}
   .modal-prod-nombre{font-size:20px}
 }
+#bpdBanner{background:#111;color:#fff;text-align:center;padding:14px 16px;border-bottom:3px solid #FFC107}
+#bpdBanner b{color:#FFC107;font-size:19px;font-family:'Arial Black',Arial,sans-serif;letter-spacing:.5px}
+#bpdBanner span{display:block;font-size:12.5px;color:rgba(255,255,255,.8);margin-top:3px}
+.bpd-viejo{color:#999;text-decoration:line-through;font-weight:700;font-size:12.5px;margin-right:6px}
+.bpd-chip{display:inline-block;background:#FFC107;color:#111;font-size:10px;font-weight:900;padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:1px}
 </style>
 </head>
 <body>
@@ -111,6 +116,7 @@ body{font-family:Arial,sans-serif;background:#f8f7f4;min-height:100vh;padding-bo
   <p>Pide por WhatsApp, así de fácil</p>
 </div>
 
+<div id="bpdBanner" style="display:none"></div>
 <div id="yaComeWrap"></div>
 <div class="filtros" id="filtrosWrap"></div>
 
@@ -274,7 +280,7 @@ function renderCarrito(){
       + foto
       + '<div class="carrito-item-info">'
       + '<div class="carrito-item-nombre">'+i.nombre+'</div>'
-      + '<div class="carrito-item-precio">Q'+i.precio.toFixed(2)+'</div>'
+      + '<div class="carrito-item-precio">'+precioHtml(i.precio)+'</div>'
       + '<div class="carrito-item-controles">'
       + '<button class="carrito-qty-btn" onclick="cambiarCantidad(\''+i.producto_id+'\',-1)">−</button>'
       + '<span class="carrito-qty-num">'+i.cantidad+'</span>'
@@ -283,13 +289,36 @@ function renderCarrito(){
       + '</div></div></div>';
   }).join('');
 
-  var subtotal = carrito.reduce(function(s,i){return s+(i.precio*i.cantidad);}, 0);
+  var subtotal = carrito.reduce(function(s,i){return s+(precioVigente(i.precio)*i.cantidad);}, 0);
   document.getElementById('carritoSubtotalMonto').textContent = 'Q'+subtotal.toFixed(2);
 
   var emailGuardado = sessionEmail || localStorage.getItem('petzid_carrito_email') || '';
   document.getElementById('carritoEmailWrap').style.display = emailGuardado ? 'none' : 'block';
   document.getElementById('carritoErrorMsg').style.display = 'none';
   prefillContactoEntrega();
+}
+
+// ── Black Pet Day: el servidor es quien decide (GET /api/crear-checkout) ──
+var oferta = null;
+function precioVigente(base){
+  var n = Number(base);
+  return oferta ? Number((n*(1-oferta.porcentaje/100)).toFixed(2)) : n;
+}
+function precioHtml(base){
+  if(!oferta) return 'Q'+Number(base).toFixed(2);
+  return '<span class="bpd-viejo">Q'+Number(base).toFixed(2)+'</span>Q'+precioVigente(base).toFixed(2)+'<span class="bpd-chip">-'+oferta.porcentaje+'%</span>';
+}
+function cargarOferta(){
+  return fetch('/api/crear-checkout').then(function(r){return r.json();}).then(function(d){
+    oferta = (d && d.ok && d.oferta) ? d.oferta : null;
+    var b = document.getElementById('bpdBanner');
+    if(oferta){
+      var fin = new Date(oferta.fin);
+      var meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      b.innerHTML = '<b>🖤 '+oferta.nombre.toUpperCase()+' · '+oferta.porcentaje+'% OFF en toda la tienda</b><span>Hasta el '+fin.toLocaleDateString('es-GT',{weekday:'long',timeZone:'America/Guatemala'})+' '+fin.toLocaleDateString('en-GB',{day:'numeric',timeZone:'America/Guatemala'})+' de '+meses[Number(fin.toLocaleDateString('en-GB',{month:'numeric',timeZone:'America/Guatemala'}))-1]+' · el descuento se ve ya aplicado en tu carrito</span>';
+      b.style.display = 'block';
+    } else b.style.display = 'none';
+  }).catch(function(){ oferta = null; });
 }
 
 var cuponActual = '';
@@ -300,7 +329,9 @@ function aplicarCupon(){
   cuponActual = val;
   msg.style.display = 'block';
   msg.style.color = '#00838f';
-  msg.textContent = 'Cupón "'+val+'" listo — se valida al momento de pagar.';
+  msg.textContent = oferta
+    ? 'Cupón "'+val+'" guardado. Durante '+oferta.nombre+' no se combina con cupones: se cobra el '+oferta.porcentaje+'% de la oferta.'
+    : 'Cupón "'+val+'" listo — se valida al momento de pagar.';
 }
 
 // ── Datos de entrega (el pedido lo lleva nuestro mensajero) ──
@@ -478,7 +509,7 @@ function enviarPedidoMarca(){
 }
 
 function cargarProductos(){
-  fetch('/api/galeria?action=getProductosTienda')
+  cargarOferta().then(function(){ return fetch('/api/galeria?action=getProductosTienda'); })
   .then(function(r){return r.json();})
   .then(function(d){
     productos = d.productos || [];
@@ -491,6 +522,7 @@ function cargarProductos(){
     renderFiltros();
     renderGrid();
     abrirProductoDesdeLink();
+    renderCarrito();
   }).catch(function(){
     document.getElementById('grid').innerHTML = '<div class="vacio">No se pudo cargar la tienda. Intenta de nuevo.</div>';
   });
@@ -526,7 +558,7 @@ function renderGrid(){
     var usadoBadge = p.condicion === 'Usado'
       ? '<div style="position:absolute;top:8px;left:8px;background:#1a1a2e;color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px">Usado</div>'
       : '<div style="position:absolute;top:8px;left:8px;background:#2e7d32;color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px">Nuevo</div>';
-    var precioTxt = p.precio ? ('Q'+Number(p.precio).toFixed(2)) : 'Consultar precio';
+    var precioTxt = p.precio ? precioHtml(p.precio) : 'Consultar precio';
     var envioTxt = p.envio_incluido
       ? '<div style="font-size:10.5px;color:#00838f;font-weight:700;margin:-4px 0 8px">🚚 Envío incluido</div>'
       : (p.costo_envio ? '<div style="font-size:10.5px;color:#888;margin:-4px 0 8px">🚚 Envío: '+p.costo_envio+'</div>' : '');
@@ -601,7 +633,7 @@ function abrirModalProducto(p){
   var usadoBadge = p.condicion === 'Usado'
     ? '<div style="position:absolute;top:14px;left:14px;background:#1a1a2e;color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:99px;z-index:3">Usado</div>'
     : '<div style="position:absolute;top:14px;left:14px;background:#2e7d32;color:#fff;font-size:11px;font-weight:700;padding:4px 11px;border-radius:99px;z-index:3">Nuevo</div>';
-  var precioTxt = p.precio ? ('Q'+Number(p.precio).toFixed(2)) : 'Consultar precio';
+  var precioTxt = p.precio ? precioHtml(p.precio) : 'Consultar precio';
   var envioTxt = p.envio_incluido
     ? '<div style="font-size:12px;color:#00838f;font-weight:700;margin-bottom:14px">🚚 Envío incluido</div>'
     : (p.costo_envio ? '<div style="font-size:12px;color:#888;margin-bottom:14px">🚚 Envío: '+p.costo_envio+'</div>' : '<div style="margin-bottom:14px"></div>');
