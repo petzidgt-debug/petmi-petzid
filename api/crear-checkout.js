@@ -13,7 +13,28 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUz
 const RECURRENTE_SECRET_KEY = process.env.RECURRENTE_SECRET_KEY || '';
 const BASE_APP = 'https://app.revistapetmi.com';
 
+// ── BLACK PET DAY ─────────────────────────────────────────────────
+// 50% en toda la tienda. Guatemala es UTC-6 todo el año (sin horario de
+// verano): del jueves 19 nov 2026 00:00 al jueves 3 dic 2026 23:59:59.
+// Para otra oferta solo se cambian estas 4 líneas (o se pone activa:false).
+const OFERTA = {
+  activa: true,
+  nombre: 'Black Pet Day',
+  porcentaje: 50,
+  inicio: '2026-11-19T00:00:00-06:00',
+  fin: '2026-12-03T23:59:59-06:00'
+};
+function ofertaVigente(ahora) {
+  const t = (ahora || new Date()).getTime();
+  return !!(OFERTA.activa && t >= Date.parse(OFERTA.inicio) && t <= Date.parse(OFERTA.fin));
+}
+
 export default async function handler(req, res) {
+  // La tienda pregunta aquí si hay oferta, para que fechas y % vivan en un solo lugar.
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).json({ ok: true, oferta: ofertaVigente() ? { nombre: OFERTA.nombre, porcentaje: OFERTA.porcentaje, fin: OFERTA.fin } : null });
+  }
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
   }
@@ -81,7 +102,10 @@ export default async function handler(req, res) {
     // no admite una línea de "descuento" separada. ──────────────────
     let cuponAplicado = null;
     let porcentajeDescuento = 0;
-    if (cupon && String(cupon).trim()) {
+    // Durante la oferta NO se combinan cupones: se cobra el % de la oferta y
+    // el cupón no se toca (no se marca como usado), queda para después.
+    const enOferta = ofertaVigente();
+    if (!enOferta && cupon && String(cupon).trim()) {
       const codigoCupon = String(cupon).trim().toUpperCase();
       const rCupon = await fetch(
         SUPABASE_URL + '/rest/v1/cupones_tienda?codigo=eq.' + encodeURIComponent(codigoCupon) + '&select=*',
@@ -98,6 +122,8 @@ export default async function handler(req, res) {
       if (c.tipo === 'porcentaje') porcentajeDescuento = Number(c.valor) || 0;
       cuponAplicado = c.reusable ? null : c.codigo; // null = no lo marques como usado más abajo
     }
+
+    if (enOferta) porcentajeDescuento = OFERTA.porcentaje;
 
     const itemsConDescuento = itemsFinal.map(i => ({
       ...i,
@@ -140,7 +166,7 @@ export default async function handler(req, res) {
       headers: { 'X-SECRET-KEY': RECURRENTE_SECRET_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         items: itemsConDescuento.map(i => ({
-          name: i.nombre + (porcentajeDescuento ? ' (-' + porcentajeDescuento + '%)' : ''),
+          name: i.nombre + (enOferta ? ' (' + OFERTA.nombre + ' -' + porcentajeDescuento + '%)' : (porcentajeDescuento ? ' (-' + porcentajeDescuento + '%)' : '')),
           amount_in_cents: Math.round(i.precio * 100),
           currency: 'GTQ',
           quantity: i.cantidad
