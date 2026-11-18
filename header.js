@@ -170,10 +170,7 @@
             '<button class="h-drop-item danger" onclick="petmiCerrarSesion()">🚪 Cerrar sesión</button>' +
           '</div>' +
         '</div>'
-      : (esPaginaGaleria ? '<a href="/QueEsPetmi.html" class="h-link" style="opacity:.6;font-size:12px;white-space:nowrap">¿Qué es PetMi?</a>' :
-        currentPath.indexOf('tienda') >= 0
-          ? '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>'
-          : '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>');
+      : '<button class="h-btn-in" onclick="petmiAbrirLogin()">Ingresar</button>';   // sin sesión: siempre "Ingresar" (en la galería salía un segundo "¿Qué es PetMi?", que ya está en el menú)
     // ── Bottom nav mobile ─────────────────────────────────────
     var bottomNavHTML =
       (sessionEmail
