@@ -242,7 +242,7 @@ body{font-family:Arial,sans-serif;background:#f0f0ee;min-height:100vh}
 
 <div id="dashboardPersonal"></div>
 
-<div style="background:#f0f7f7;padding:20px 20px 16px">
+<div id="tituloComunidad" style="background:#f0f7f7;padding:20px 20px 16px;display:none">
   <div style="max-width:900px;margin:0 auto;font-size:22px;font-weight:900;color:#1a1a2e">🐾 Actividad de la comunidad</div>
 </div>
 
@@ -1654,9 +1654,18 @@ function cargarActividadesPreview(){
   fetch('/api/galeria?action=getActividades')
     .then(function(r){return r.json();})
     .then(function(d){
-      var acts=(d.actividades||[]).slice(0,6);
-      if(!acts.length)return;
-      document.getElementById('seccionActividades').style.display='block';
+      // Solo las actividades de ESTE MES que todavía no pasaron. Los avisos sin fecha (perdidos, busco, adopción) siguen vigentes
+      // hasta que vencen y el servidor ya descarta los vencidos, así que también cuentan. Si no queda ninguna, la sección se COLAPSA.
+      var hoyD=new Date(), pad=function(n){return (n<10?'0':'')+n;};
+      var hoy=hoyD.getFullYear()+'-'+pad(hoyD.getMonth()+1)+'-'+pad(hoyD.getDate()), mesHoy=hoy.slice(0,7);
+      var acts=(d.actividades||[]).filter(function(a){
+        var f=String(a.fecha||'').slice(0,10);
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(f))return true;
+        return f.slice(0,7)===mesHoy&&f>=hoy;
+      }).slice(0,6);
+      var secAct=document.getElementById('seccionActividades');
+      if(!acts.length){secAct.style.display='none';return;}
+      secAct.style.display='block';
       var TIPO_EMOJIS={plan:'🐾',busco:'🔍',perdido:'🚨',adopcion:'🏠'};
       var TIPO_COLORS={plan:{bg:'#f3e8ff',color:'#764ba2'},busco:{bg:'#e8f5e9',color:'#2e7d32'},perdido:{bg:'#ffebee',color:'#c0392b'},adopcion:{bg:'#e8f5e9',color:'#2e7d32'}};
       var html='';
@@ -1684,9 +1693,26 @@ function cargarActividadesPreview(){
           +'</div></div>';
       });
       document.getElementById('actividadesScroll').innerHTML=html;
-    });
+    })
+    .catch(function(){});   // sin conexión o con error: la sección se queda colapsada, sin mensajes
 }
 cargarActividadesPreview();
+
+// El título "Actividad de la comunidad" solo se ve si hay al menos uno de sus bloques a la vista (solicitudes de amistad, grupos,
+// cumpleañeros del mes o ¿Quién se apunta?). Cada bloque aparece o desaparece por su cuenta, así que se revisa cada vez que cambia.
+(function(){
+  var ids=['seccionSolicitudes','seccionGrupos','seccionCumple','seccionActividades'];
+  var titulo=document.getElementById('tituloComunidad'); if(!titulo)return;
+  function revisar(){
+    var hay=ids.some(function(id){var e=document.getElementById(id);return e&&window.getComputedStyle(e).display!=='none';});
+    titulo.style.display=hay?'block':'none';
+  }
+  if(typeof MutationObserver!=='undefined'){
+    var ob=new MutationObserver(revisar);
+    ids.forEach(function(id){var e=document.getElementById(id);if(e)ob.observe(e,{attributes:true,attributeFilter:['style','class']});});
+  }
+  revisar();
+})();
 
 // ── Cache de amigos ───────────────────────────────────────────
 function renderSolicitudes(){
