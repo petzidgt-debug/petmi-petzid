@@ -9,11 +9,11 @@
       "destination": "/api/tribbi-invita?e=:e"
     },
     {
-      "source": "/tribbi/:e/:i",
+      "source": "/tribbi/:e([a-z0-9-]+)/:i([A-Za-z0-9]+)",
       "destination": "/api/tribbi-invita?e=:e&i=:i"
     },
     {
-      "source": "/tribbi/:e",
+      "source": "/tribbi/:e([a-z0-9-]+)",
       "destination": "/api/tribbi-invita?e=:e"
     },
     {
