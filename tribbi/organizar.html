@@ -215,6 +215,12 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
       <p class="tb-msg" id="gSorteoTxt"></p>
       <button class="tb-btn coral" id="gSortear">Hacer el sorteo</button>
       <p class="tb-msg" id="gSorteoMsg" role="status"></p>
+      <div id="gReenvio" hidden style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)">
+        <p class="tb-msg" style="margin:0 0 8px"><b>¿Alguien no recibió el correo del sorteo?</b> Vuelve a mandarlo. El correo no dice quién le tocó a cada quien.</p>
+        <button class="tb-btn sm" id="gReenviar">📧 Reenviar a quienes no han descubierto</button>
+        <button class="tb-link" id="gReenviarTodos" style="margin-left:6px">Reenviar a todos</button>
+        <p class="tb-msg" id="gReenvioMsg" role="status" style="margin:8px 0 0"></p>
+      </div>
     </div>
     <p style="margin-top:22px;text-align:center"><a class="tb-btn sm" id="gFiesta" href="fiesta.html">🎉 Modo fiesta</a></p>
     <p style="margin-top:28px;text-align:center"><button class="tb-link bad" id="gEliminar">Eliminar intercambio</button></p>
@@ -402,7 +408,8 @@ function pintarGente(){
   const des=l.filter(p=>p.descubrio).length;
   $('#gSorteoTxt').textContent=s?`Listo. ${des} de ${l.length} ya descubrieron a su amigo secreto.${des?'':' Mientras nadie lo haya descubierto, puedes volver a sortear.'}`
     :`Cuando estén todos, haz el sorteo. Nadie queda con alguien de su mismo grupo.${x.min_ideas?` Solo entran quienes tengan al menos ${x.min_ideas} ${x.min_ideas===1?'idea':'ideas'}.`:''}`;
-  $('#gSortear').textContent=s?'Volver a sortear':'Hacer el sorteo';$('#gSortear').hidden=s&&des>0;
+  $('#gSortear').textContent=s?'Volver a sortear':'Hacer el sorteo';
+  $('#gReenvio').hidden=!s;$('#gSortear').hidden=s&&des>0;
 }
 function mostrarMensaje(nombre,clave){
   const link=linkPart(),msg=`Hola ${nombre} 🎁 `+invitacionTxt(actual)+` Entra aquí: ${link} y escribe tu nombre al revés: ${clave}. Luego crea tu cuenta con tu correo y una contraseña.`;
@@ -416,6 +423,16 @@ $('#gEliminar').onclick=async()=>{
     async forzar=>{const r=await rpc('tribbi_org_eliminar',{p_slug:x.slug,p_nombre:x.nombre,p_forzar:!!forzar});if(r.d.error==='falta_sql')r.d.mensaje='Falta correr 12_eliminar_intercambio.sql en Supabase.';return r.ok?r.d:r.d});
   if(r&&r.ok){if(r.portada_url)T.borrarPortada(r.portada_url);ir('')}
 };
+async function reenviarAviso(soloPendientes){
+  const m=$('#gReenvioMsg');m.className='tb-msg';m.textContent='Enviando…';
+  $('#gReenviar').disabled=true;$('#gReenviarTodos').disabled=true;
+  const r=await rpc('tribbi_org_reenviar_aviso',{p_slug:actual.slug,p_solo_pendientes:soloPendientes});
+  $('#gReenviar').disabled=false;$('#gReenviarTodos').disabled=false;
+  if(!r.ok){if(sesion(r))return;m.className='tb-msg bad';m.textContent=r.d.error==='falta_sql'?'Falta correr 20_reenviar_aviso.sql en Supabase.':(r.d.mensaje||'No se pudo enviar.');return}
+  m.className='tb-msg ok';m.textContent=r.d.enviados?`Listo: ${r.d.enviados} ${r.d.enviados===1?'correo enviado':'correos enviados'}. Llegan en unos minutos (que revisen también spam).`:(r.d.mensaje||'No había a quién enviarlo.');
+}
+$('#gReenviar').onclick=()=>reenviarAviso(true);
+$('#gReenviarTodos').onclick=()=>{if(confirm('¿Reenviar el aviso del sorteo a todos los participantes con correo, incluso a quienes ya descubrieron a su amigo secreto?'))reenviarAviso(false)};
 $('#gEditar').onclick=()=>{const c=actual.cuenta;abrirForm(c?c.slug:null,actual)};
 $('#gCopiar').onclick=e=>T.copiar($('#gLink').textContent,e.target);
 $('#gNuevaInv').onclick=async()=>{
