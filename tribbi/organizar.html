@@ -154,7 +154,7 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
         <label><input type="radio" name="modo" value="correo"><span>Se unen con un enlace<small>Compartes un enlace y cada quien crea su cuenta al unirse.</small></span></label>
       </div>
         <div class="grid">
-        <label class="f">Mínimo de ideas de regalo<small>0 si no quieres pedirlas</small><input class="tb-field" name="min_ideas" type="number" min="0" max="20" step="1" value="1"></label>
+        <label class="f">Ideas de regalo que pides<small>Opcional. Nadie queda fuera del sorteo por no ponerlas; puedes mandarles un recordatorio.</small><input class="tb-field" name="min_ideas" type="number" min="0" max="20" step="1" value="0"></label>
         </div>
         <label class="check" id="yoLbl"><input type="checkbox" name="yo_participo" checked> <span>Yo también participo<br><small class="tb-msg">Entras con tu cuenta: te toca alguien y alguien te tiene a ti. Como organizador no ves quién le toca a quién.</small></span></label>
         <div id="envioBox">
@@ -207,6 +207,10 @@ label.f small{display:block;font-weight:400;color:var(--muted);font-size:.86rem}
       <div id="msgBox"></div>
       <ul class="people" id="gPeople"></ul>
       <p class="tb-msg" id="gCount"></p>
+      <div id="gRecIdeas" hidden style="margin:4px 0 12px">
+        <button class="tb-btn sm" id="gRecIdeasBtn">📧 Recordar a quienes no tienen ideas</button>
+        <p class="tb-msg" id="gRecIdeasMsg" role="status" style="margin:6px 0 0"></p>
+      </div>
     </div>
 
 </div>
@@ -404,10 +408,13 @@ function pintarGente(){
   const adultos=l.filter(p=>!p.es_nino);
   $('#addForm').cargo.innerHTML=adultos.map(p=>`<option value="${esc(p.id)}">${esc(p.nombre)}</option>`).join('');
   const ok=l.filter(p=>p.estado==='pagada'),sinIdeas=ok.filter(p=>p.ideas<x.min_ideas).length,pend=l.filter(p=>p.tipo==='lista'&&!p.es_nino&&!p.activada).length;
+  const sinI=ok.filter(p=>p.ideas<x.min_ideas).length;
+  $('#gRecIdeas').hidden=!(x.min_ideas>0&&!s&&sinI>0);
+  $('#gRecIdeasBtn').textContent=`📧 Recordar a quienes no tienen ideas (${sinI})`;
   $('#gCount').textContent=l.length?`${l.length} participantes${pend?` · ${pend} sin activar`:''}${sinIdeas?` · ${sinIdeas} todavía sin ${x.min_ideas===1?'su idea':'sus ideas'}`:''}.`:'';
   const des=l.filter(p=>p.descubrio).length;
   $('#gSorteoTxt').textContent=s?`Listo. ${des} de ${l.length} ya descubrieron a su amigo secreto.${des?'':' Mientras nadie lo haya descubierto, puedes volver a sortear.'}`
-    :`Cuando estén todos, haz el sorteo. Nadie queda con alguien de su mismo grupo.${x.min_ideas?` Solo entran quienes tengan al menos ${x.min_ideas} ${x.min_ideas===1?'idea':'ideas'}.`:''}`;
+    :`Cuando estén todos, haz el sorteo. Nadie queda con alguien de su mismo grupo.`;
   $('#gSortear').textContent=s?'Volver a sortear':'Hacer el sorteo';
   $('#gReenvio').hidden=!s;$('#gSortear').hidden=s&&des>0;
 }
@@ -433,6 +440,15 @@ async function reenviarAviso(soloPendientes){
 }
 $('#gReenviar').onclick=()=>reenviarAviso(true);
 $('#gReenviarTodos').onclick=()=>{if(confirm('¿Reenviar el aviso del sorteo a todos los participantes con correo, incluso a quienes ya descubrieron a su amigo secreto?'))reenviarAviso(false)};
+$('#gRecIdeasBtn').onclick=async()=>{
+  const b=$('#gRecIdeasBtn'),m=$('#gRecIdeasMsg');b.disabled=true;m.className='tb-msg';m.textContent='Enviando…';
+  const r=await rpc('tribbi_org_recordar_ideas',{p_slug:actual.slug});b.disabled=false;
+  if(!r.ok){if(sesion(r))return;m.className='tb-msg bad';m.textContent=r.d.error==='falta_sql'?'Falta correr 26_ideas_opcionales.sql en Supabase.':(r.d.mensaje||'No se pudo enviar.');return}
+  const n=Number(r.d.enviados||0),sc=Number(r.d.sin_correo||0);
+  m.className='tb-msg ok';
+  m.textContent=(n?`Listo: ${n} ${n===1?'recordatorio enviado':'recordatorios enviados'}.`:'Nadie con correo tenía ideas pendientes.')
+    +(sc?` ${sc} ${sc===1?'persona no ha':'personas no han'} activado su cuenta: ${sc===1?'mándale':'mándales'} el recordatorio con el botón “Mensaje”.`:'');
+};
 $('#gEditar').onclick=()=>{const c=actual.cuenta;abrirForm(c?c.slug:null,actual)};
 $('#gCopiar').onclick=e=>T.copiar($('#gLink').textContent,e.target);
 $('#gNuevaInv').onclick=async()=>{
