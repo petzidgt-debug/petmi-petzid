@@ -387,7 +387,7 @@ function enviarInvitacion(uid,nombre,email){
   invitadosEnviados[eventoInvitarActual.id+'_'+uid]=true;
   fetch('/api/submit',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'notificarInvitacion',emailReceptor:email,nombreEvento:eventoInvitarActual.titulo,fechaEvento:eventoInvitarActual.fecha,lugarEvento:eventoInvitarActual.lugar,nombreEmisor:miMascota?miMascota.nombre:'Un amigo',urlEventos:'https://petmi-petzid.vercel.app/eventos.html'})
+    body:JSON.stringify({action:'notificarInvitacion',emailReceptor:email,nombreEvento:eventoInvitarActual.titulo,fechaEvento:eventoInvitarActual.fecha,lugarEvento:eventoInvitarActual.lugar,nombreEmisor:miMascota?miMascota.nombre:'Un amigo',urlEventos:'https://app.revistapetmi.com/eventos.html?id='+encodeURIComponent(eventoInvitarActual.id)})
   }).then(function(){
     mostrarToast('Invitación enviada a '+nombre);
     abrirInvitar(eventoInvitarActual.id,eventoInvitarActual.titulo,eventoInvitarActual.fecha,eventoInvitarActual.lugar);
