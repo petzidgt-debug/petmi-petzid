@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         descripcion = [e.fecha, e.lugar].filter(Boolean).join(' · ') || descripcion;
         if (e.imagen && e.imagen.indexOf('http') >= 0) imagen = e.imagen;
       }
-      urlDestino = BASE_URL + '/eventos.html';
+      urlDestino = BASE_URL + '/eventos.html?id=' + encodeURIComponent(id);   // abre ESE evento (la página lo resalta)
     }
 
     else if (tipo === 'aviso' && id) {
