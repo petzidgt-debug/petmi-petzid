@@ -942,7 +942,7 @@ function _mkPintarTemas(){
   var cont = document.getElementById('mkTemas'); if(!cont) return;
   cont.innerHTML = _mkTemas.map(function(t, i){
     return '<div style="background:#fff;border:1px solid #cfe9e9;border-radius:10px;padding:10px;margin-top:8px">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><b style="font-size:12.5px;color:#0a6f6f">Tema ' + (i + 1) + '</b>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><b style="font-size:12.5px;color:#0a6f6f">Tema ' + (i + 1) + ((!t.titulo && !t.texto && !t.imagen_url && !t.boton_url) ? ' <span style="font-weight:400;color:#888">· opcional: si lo dejas vacío, no sale en el correo</span>' : '') + '</b>'
       + '<span><button type="button" class="btn-sm" title="Subir" onclick="mkMoverTema(' + i + ',-1)"' + (i === 0 ? ' disabled' : '') + '>↑</button> <button type="button" class="btn-sm" title="Bajar" onclick="mkMoverTema(' + i + ',1)"' + (i === _mkTemas.length - 1 ? ' disabled' : '') + '>↓</button> <button type="button" class="btn-sm" style="background:#fde8e8;color:#b00020" onclick="mkQuitarTema(' + i + ')">✕ Quitar</button></span></div>'
       + '<label class="mk-lbl">Título</label><input class="mk-in" maxlength="90" value="' + _mkEsc(t.titulo) + '" oninput="mkCambioTema(' + i + ',\'titulo\',this.value)">'
       + '<label class="mk-lbl">Texto corto (opcional)</label><textarea class="mk-in" rows="3" maxlength="400" oninput="mkCambioTema(' + i + ',\'texto\',this.value)">' + _mkEsc(t.texto) + '</textarea>'
