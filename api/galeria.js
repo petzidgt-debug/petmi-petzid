@@ -954,11 +954,17 @@ function _htmlCampanaMK(c, dest, ctx) {
     ? '<img src="' + e(c.imagen_url) + '" alt="" style="width:100%;height:auto;border-radius:12px;display:block;margin:0 0 18px">' : '';
   const titulo = c.titulo ? '<h2 style="color:#1a1a2e;margin:0 0 14px;text-align:center;font-size:21px;line-height:1.3">' + _tokensMK(c.titulo, dest, true) + '</h2>' : '';
   const fotos = c.foto_mascota === true ? _bloqueFotosMascotasMK(dest) : '';
+  // Cierre del newsletter: solo en correos que llevan temas de la semana.
+  const temasHtml = _temasHtmlMK(c, dest, ctx);
+  const cierre = temasHtml ? '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 0;width:100%"><tr><td align="center" valign="middle" bgcolor="#00B5B4" height="160" style="background:#00B5B4;border-radius:24px;padding:24px;height:160px;text-align:center;font-family:Arial,Helvetica,sans-serif">'
+    + '<div class="pm-cierre-t" style="margin:0;color:#ffffff;font-size:34px;line-height:1.2;font-weight:bold;font-family:Arial,Helvetica,sans-serif;text-align:center">&iexcl;Nos leemos la pr&oacute;xima semana!</div>'
+    + '<div class="pm-cierre-s" style="margin:20px 0 0;color:#ffffff;font-size:28px;line-height:1.25;font-weight:normal;font-family:Arial,Helvetica,sans-serif;text-align:center">Porque tener mascota hace&nbsp;bien.&nbsp;&#10084;&#65039;</div>'
+    + '</td></tr></table>' : '';
   const baja = ctx.envioId ? 'https://app.revistapetmi.com/baja.html?e=' + ctx.envioId : (ctx.vista ? '#' : 'https://app.revistapetmi.com/baja.html');
-  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;padding:12px;background:#f4f4f2">'
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>@media only screen and (max-width:480px){.pm-cierre-t{font-size:24px !important}.pm-cierre-s{font-size:19px !important;margin-top:14px !important}}</style></head><body style="margin:0;padding:12px;background:#f4f4f2">'
     + '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">'
     + '<div style="background:#00B4B4;padding:24px;text-align:center;border-radius:12px 12px 0 0"><div style="display:inline-block;background:#fff;border-radius:12px;padding:8px 18px"><img src="https://app.revistapetmi.com/logopetmi.png" alt="PetMi" style="height:36px;width:auto;display:block"></div></div>'
-    + '<div style="background:#fff;padding:26px 24px;border:1px solid #eee">' + fotos + imagen + titulo + _cuerpoAHtmlMK(c.cuerpo, dest) + _temasHtmlMK(c, dest, ctx) + boton + '</div>'
+    + '<div style="background:#fff;padding:26px 24px;border:1px solid #eee">' + fotos + imagen + titulo + _cuerpoAHtmlMK(c.cuerpo, dest) + temasHtml + boton + cierre + '</div>'
     + '<div style="background:#F5C842;padding:14px;text-align:center;border-radius:0 0 12px 12px"><p style="margin:0 0 6px;font-size:12px;color:#555">PetMi Guatemala · app.revistapetmi.com</p>'
     + '<p style="margin:0;font-size:11px;color:#7a6200">¿Ya no quieres recibir estos correos? <a href="' + e(baja) + '" style="color:#7a6200">Date de baja aquí</a></p></div>'
     + '</div></body></html>';
