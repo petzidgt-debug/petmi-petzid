@@ -923,7 +923,8 @@ function _normTemasMK(arr, lenient) {
   return { temas: out };
 }
 function _temasHtmlMK(c, dest, ctx) {
-  const lista = Array.isArray(c.temas) ? c.temas.slice(0, _TEMAS_MAX_MK) : [];
+  // Las filas vacías (por ejemplo el "Tema X opcional" sin llenar) no salen en el correo.
+  const lista = (Array.isArray(c.temas) ? c.temas : []).filter(function (x) { x = x || {}; return !!(String(x.titulo || '').trim() || String(x.texto || '').trim() || String(x.imagen_url || '').trim() || String(x.boton_url || '').trim()); }).slice(0, _TEMAS_MAX_MK);
   if (!lista.length) return '';
   ctx = ctx || {};
   const e = _escHtmlCorreo, slug = c.slug || 'mk';
