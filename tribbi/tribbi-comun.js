@@ -577,7 +577,8 @@ function reglasHTML(ed){
     `<b>Dar un regalo</b> a la persona que te toque, dentro del presupuesto acordado${pres}.`,
     `<b>Entregarlo</b> el día del intercambio, o con el mensajero asignado si el intercambio tiene envío.`,
     `<b>Guardar el secreto:</b> no le cuentes a nadie quién te tocó hasta el día del intercambio.`,
-    `<b>Dejar tus ideas de regalo</b> antes del sorteo${min?` (al menos ${min})`:''}, para que tu amigo secreto sepa qué te gusta.`,
+    min?`<b>Dejar tus ideas de regalo</b> antes del sorteo (al menos ${min}), para que tu amigo secreto sepa qué te gusta.`
+       :`<b>Si quieres, deja ideas de regalo</b> para que tu amigo secreto sepa qué te gusta. No son obligatorias para participar.`,
     `<b>Avisar a tiempo:</b> si ya no puedes participar, sal del intercambio o avísale a quien organiza <b>antes del sorteo</b>. Después del sorteo, salirte deja a alguien sin regalo.`,
     `<b>Ser respetuoso:</b> nada de regalos ofensivos, peligrosos ni dinero en efectivo, salvo que quien organiza lo permita.`];
   const propias=(ed.reglas||[]).filter(Boolean);
