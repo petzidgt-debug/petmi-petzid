@@ -188,6 +188,15 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
 .cupon p{margin:2px 0 0;color:var(--muted);font-size:.93rem}
 .cupon .cod{display:inline-block;font-weight:700;font-size:1.3rem;letter-spacing:.08em;background:var(--soft);border-radius:10px;padding:2px 12px;margin:6px 8px 0 0}
 .cupon .acciones{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.entrega{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:16px 18px;margin-top:18px}
+.entrega.falta{border-color:var(--red);background:var(--miss)}
+.entrega.ok{border-color:var(--pine)}
+.entrega h3{margin:0 0 4px;font-size:1.1rem}
+.entrega p{margin:0 0 6px}
+.entrega .fila,.ent-campos .fila{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.ent-campos select.field{text-transform:none}
+.ent-nota{background:var(--soft);border-radius:12px;padding:8px 12px;margin:8px 0 0;font-size:.93rem}
+.envio-chip{display:inline-block;background:var(--soft);border-radius:999px;padding:2px 12px;font-weight:600;margin-top:10px}
 .petz{background:var(--soft);border-radius:14px;padding:10px 14px;margin:8px 0 0}
 .petz b{display:block}
 .status label{margin:12px 0 4px}
@@ -344,6 +353,7 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
     <h1 id="meHola"></h1>
     <div class="facts" id="facts2"></div>
     <div id="estado"></div>
+    <div id="entregaCard" hidden></div>
     <div id="amigoBox" hidden>
       <div class="card-tag">
         <p class="lbl">Tu amigo secreto es…</p>
@@ -424,6 +434,17 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
     </section>
 
     <section>
+      <h2>Direcciones y envíos</h2>
+      <p class="lead">Confirma cada dirección por WhatsApp antes de armar la ruta. "Revisar" son lugares con cobertura parcial (Villa Nueva, otros municipios y departamentos). Si el mensajero no llega, márcalo como punto de entrega y escribe dónde recoger.</p>
+      <div class="row"><button class="small-btn" id="entregasBtn">Cargar lista</button>
+        <select class="field" id="entregasFiltro" style="max-width:240px;text-transform:none;letter-spacing:0" aria-label="Filtro">
+          <option value="">Todas</option><option value="sin">Sin confirmar</option><option value="revisar">Revisar cobertura</option>
+          <option value="q45">Envío mayor a Q35</option><option value="punto">Punto de entrega</option><option value="sin_dir">Sin dirección</option></select></div>
+      <p class="msg" id="entregasMsg" role="status"></p>
+      <div id="entregas"></div>
+    </section>
+
+    <section>
       <h2>Ruta de entrega</h2>
       <p class="lead">Regalos en PetMi y rescates pendientes de entregar, con dirección. Cada vez que se abre esta lista queda registrado.</p>
       <div class="row"><button class="small-btn" id="rutaBtn">Ver ruta</button><button class="link-btn" id="copiarRuta" hidden>Copiar para WhatsApp</button></div>
@@ -473,7 +494,7 @@ const CONFIG={
   cupon:{codigo:'AMIGOXMAS',monto:25,vence:'31 de enero',tienda:'https://app.revistapetmi.com/tienda.html'}
 };
 const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
-const VERSION_PAGINA='v13';   // súbelo con cada cambio para saber qué versión está publicada
+const VERSION_PAGINA='v14';   // súbelo con cada cambio para saber qué versión está publicada
 const REGISTRO_PETZID='https://app.revistapetmi.com/registro.html';
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
@@ -693,6 +714,7 @@ function renderMe(fresh){
         <ul class="resumen" id="resumenDatos"></ul>
         <div id="campoNombre" hidden><label for="uNombre">Tu nombre</label><input class="field" id="uNombre" autocomplete="name" maxlength="80"></div>
         <div id="campoWa" hidden><label for="uWa">WhatsApp</label><input class="field" id="uWa" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="5555 1234"></div>
+        <div id="entregaSlot"></div>
         <p class="msg bad" id="err3" role="alert"></p>
         <div class="nav-pasos"><button class="link-btn" type="button" data-ir="2">← Atrás</button><button class="big-btn" type="button" data-ir="4">Continuar</button></div>
       </div>
@@ -700,17 +722,18 @@ function renderMe(fresh){
         <div class="barra"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
         <p class="paso">Paso 4 de 4 · Pago</p><h2>Confirma tu lugar</h2>
         <div id="resumenFinal"></div>
-        <p>Pagas ${q(ed.envio_q)} de envío y con eso queda confirmado tu lugar. Después podrás dejar tus ideas de regalo. Las inscripciones cierran el ${dia(ed.inscripcion_hasta)}.</p>
+        <div id="envioResumen"></div>
+        <p>Pagas <b data-envio>${q(ed.envio_q)}</b> de envío y con eso queda confirmado tu lugar. Después podrás dejar tus ideas de regalo. Las inscripciones cierran el ${dia(ed.inscripcion_hasta)}.</p>
         ${reglas}<label class="check"><input type="checkbox" id="aceptoIn"> <span>Leí y acepto el <a href="#reglasDet" data-ver-reglas>reglamento</a>.</span></label>
         <p class="msg bad" id="inscErr" role="alert"></p>
-        <div class="nav-pasos"><button class="link-btn" type="button" data-ir="3">← Atrás</button><button class="big-btn" id="inscBtn">Inscribirme y pagar ${q(ed.envio_q)}</button></div>
+        <div class="nav-pasos"><button class="link-btn" type="button" data-ir="3">← Atrás</button><button class="big-btn" id="inscBtn">Inscribirme y pagar <span data-envio>${q(ed.envio_q)}</span></button></div>
       </div></div>`;
     else h=`<div class="status"><h2>${antes?'Las inscripciones todavía no abren':'Las inscripciones ya cerraron'}</h2><p>${antes?`Abren el ${dia(ed.inscripcion_desde)}. Tus datos ya quedaron guardados.`:'Gracias por tu interés. Te esperamos en el próximo intercambio.'}</p></div>`;
   }else if(i.estado==='excluida'){
     h=`<div class="status warn"><h2>Tu inscripción no está habilitada</h2><p>Escríbele a PetMi para más información.</p></div>`;
   }else if(i.estado==='pendiente_pago'){
-    h=`<div class="status warn"><p class="paso">Paso 4 de 4 · Pago</p><h2>Falta pagar el envío</h2><p>Tu lugar queda confirmado cuando se aprueba el pago de ${q(ed.envio_q)}. Después podrás dejar tus ideas de regalo.${abierto?'':' Las inscripciones ya cerraron.'}</p>
-      ${abierto?`<p class="msg bad" id="inscErr" role="alert"></p><button class="big-btn" id="pagarBtn">Pagar ${q(ed.envio_q)}</button>`:''}<p class="msg" id="pagoMsg" role="status"></p><div id="comproSlot"></div></div>`;
+    h=`<div class="status warn"><p class="paso">Paso 4 de 4 · Pago</p><h2>Falta pagar el envío</h2><p>Tu lugar queda confirmado cuando se aprueba el pago de <b data-envio>${q(ed.envio_q)}</b>. Después podrás dejar tus ideas de regalo.${abierto?'':' Las inscripciones ya cerraron.'}</p>
+      ${abierto?`<p class="msg bad" id="inscErr" role="alert"></p><button class="big-btn" id="pagarBtn">Pagar <span data-envio>${q(ed.envio_q)}</span></button>`:''}<p class="msg" id="pagoMsg" role="status"></p><div id="comproSlot"></div></div>`;
   }else if(!yo.sorteo_hecho){
     h=`<div class="status go"><h2>${recienPagado?'¡Pago recibido, ya estás dentro! 🎉':'¡Estás inscrito! 🎉'}</h2><p>Tu código es</p><span class="tag">${esc(i.codigo)}</span>
       <p>El sorteo es el ${dia(ed.sorteo_en)}. Ese día vuelve aquí para descubrir a tu amigo secreto.</p>
@@ -748,6 +771,8 @@ function renderMe(fresh){
   if(verAmigo)renderAmigo(fresh);
   if(pagada&&fresh)cargarDonacion();
   pintarCupon(pagada);
+  const inscrita=!!i&&['pagada','pendiente_pago'].includes(i.estado);
+  if(!inscrita)$('#entregaCard').hidden=true;else if(fresh)cargarEntrega();else pintarEntrega();
   pintarDonacion();
   // Mis ideas
   const editable=i&&!['cancelada','excluida'].includes(i.estado)&&new Date()<=new Date(ed.entrega_hasta);
@@ -790,6 +815,7 @@ async function cargarPetzid(){
   const nombre=tb.nombre||pz.nombre||'',wa=tb.whatsapp||pz.whatsapp||'';
   datosPz={nombre,wa,tiene:!!d.tiene_petzid};
   const correo=(ses&&ses.email)||'';
+  cargarZonas().then(()=>{const sl=$('#entregaSlot');if(sl&&ZONAS){sl.innerHTML=entregaCamposHTML(null);pintarNotaLugar()}});
   if(d.tiene_petzid){box.innerHTML=`<div class="petz"><b>🐾 Encontramos tu cuenta de PetzID</b>${esc(nombre||correo)}</div>`;cargarMascota()}
   else box.innerHTML=`<div class="petz"><b>No encontramos una cuenta de PetzID con ${esc(correo||'tu correo')}</b>Tu amigo secreto le regala a tu mascota. Si ya tiene PetzID con otro correo, <button type="button" class="link-btn" data-salir style="padding:0">entra con ese correo</button>. Si no, <a href="${REGISTRO_PETZID}" target="_blank" rel="noopener">créale su PetzID</a> con este correo y vuelve aquí, o sigue sin ella.</div>`;
   $('#uNombre').value=nombre;$('#uWa').value=wa;
@@ -878,6 +904,141 @@ document.addEventListener('click',async e=>{
   }
 });
 
+/* ── Dirección de entrega y envío por lugar (18_direccion_envio.sql). Sin ese SQL, todo sigue como antes (envío fijo). ── */
+let ZONAS=null,miEnt=null,ubic=null,entEditando=false;
+async function cargarZonas(){
+  if(ZONAS)return ZONAS;
+  const r=await rpc('tribbi_zonas_envio',{p_slug:ED});
+  ZONAS=r.ok&&Array.isArray(r.d.zonas)&&r.d.zonas.length?r.d.zonas:null;
+  return ZONAS;
+}
+const zonaPor=n=>(ZONAS||[]).find(z=>z.nombre===n)||null;
+const zonaElegida=()=>{const s=$('#uLugar');return s?zonaPor(s.value):null};
+function ponerEnvio(v){document.querySelectorAll('[data-envio]').forEach(e=>e.textContent=q(v))}
+function entregaCamposHTML(actual){
+  const a=actual||{},grupos={};
+  (ZONAS||[]).forEach(z=>{(grupos[z.envio_q]=grupos[z.envio_q]||[]).push(z)});
+  const ops=Object.keys(grupos).sort((x,y)=>x-y).map(k=>`<optgroup label="Envío ${q(k)}">${grupos[k].map(z=>`<option value="${esc(z.nombre)}" ${a.lugar===z.nombre?'selected':''}>${esc(z.nombre)}</option>`).join('')}</optgroup>`).join('');
+  return `<div class="ent-campos">
+    <label for="uLugar">¿Dónde vives?</label>
+    <select class="field" id="uLugar"><option value="">Elige tu municipio…</option>${ops}</select>
+    <p class="ent-nota" id="lugarNota" hidden></p>
+    <div id="campoZona" hidden><label for="uZona">Zona</label><input class="field" id="uZona" inputmode="numeric" maxlength="20" placeholder="Ej. 10" value="${esc(a.zona||'')}"></div>
+    <label for="uDir">Dirección completa</label>
+    <textarea class="field" id="uDir" maxlength="300" autocomplete="street-address" placeholder="Calle o avenida, número, colonia o condominio, y una referencia (ej. portón negro, frente a la tienda)"></textarea>
+    ${a.tiene_direccion?'<p class="tiny" style="margin:4px 0 0">Por seguridad no mostramos la dirección que ya tenemos: escríbela completa de nuevo.</p>':''}
+    <div class="fila"><button type="button" class="link-btn" id="ubicBtn" style="padding:0">📍 Usar mi ubicación actual (opcional)</button><span class="tiny" id="ubicTxt">${a.ubicacion?'Ya tenemos tu ubicación ✓':''}</span></div>
+    <span class="envio-chip" id="envioChip" hidden></span></div>`;
+}
+function pintarNotaLugar(){
+  const z=zonaElegida(),n=$('#lugarNota');if(!n)return;
+  n.hidden=!(z&&z.nota);n.textContent=z&&z.nota?'⚠️ '+z.nota:'';
+  $('#campoZona').hidden=!(z&&z.pide_zona);
+  const c=$('#envioChip');if(c){c.hidden=!z;c.textContent=z?`🚚 Envío: ${q(z.envio_q)}`:''}
+}
+function leerEntrega(){
+  const z=zonaElegida();
+  return {lugar:z?z.nombre:'',zona:($('#uZona')||{}).value||'',dir:(($('#uDir')||{}).value||'').trim(),ubic:ubic};
+}
+function validarEntrega(){
+  if(!ZONAS||!$('#uLugar'))return '';
+  const d=leerEntrega(),z=zonaElegida();
+  if(!z){$('#uLugar').focus();return 'Elige dónde vives.'}
+  if(z.pide_zona&&!d.zona.trim()){$('#uZona').focus();return 'Escribe tu zona.'}
+  if(d.dir.length<10){$('#uDir').focus();return 'Escribe tu dirección completa: calle, número, colonia y una referencia.'}
+  return '';
+}
+document.addEventListener('change',e=>{if(e.target.id==='uLugar'){pintarNotaLugar();const x=$('#err3');if(x)x.textContent=''}});
+document.addEventListener('click',e=>{
+  if(e.target.id!=='ubicBtn')return;
+  const t=$('#ubicTxt');
+  if(!navigator.geolocation){t.textContent='Tu navegador no permite compartir la ubicación.';return}
+  t.textContent='Buscando…';
+  navigator.geolocation.getCurrentPosition(p=>{
+    ubic=p.coords.latitude.toFixed(6)+','+p.coords.longitude.toFixed(6);
+    t.innerHTML=`Ubicación lista ✓ <a href="https://maps.google.com/?q=${ubic}" target="_blank" rel="noopener">ver en el mapa</a>`;
+  },()=>{t.textContent='No pudimos obtener tu ubicación. No pasa nada: con la dirección es suficiente.'},{enableHighAccuracy:true,timeout:15000});
+});
+async function cargarEntrega(){
+  await cargarZonas();
+  if(!ZONAS){$('#entregaCard').hidden=true;return}
+  const r=await rpc('tribbi_mi_entrega',{p_slug:ED});
+  miEnt=r.ok?r.d:null;
+  if(miEnt&&miEnt.envio_q)ponerEnvio(miEnt.envio_q);
+  pintarEntrega();
+}
+function pintarEntrega(){
+  const c=$('#entregaCard');
+  if(!ZONAS||!miEnt){c.hidden=true;return}
+  c.hidden=false;if(miEnt.envio_q)ponerEnvio(miEnt.envio_q);
+  const falta=!miEnt.tiene_direccion,pend=yo&&yo.inscripcion&&yo.inscripcion.estado==='pendiente_pago';
+  const lugar=miEnt.lugar?esc(miEnt.lugar)+(miEnt.zona?`, zona ${esc(miEnt.zona)}`:''):'';
+  let estado;
+  if(falta)estado='<p><b>Falta tu dirección de entrega.</b> La necesitamos para enviarte tu regalo'+(pend?' y para saber cuánto es el envío.':'.')+'</p>';
+  else if(miEnt.modo==='punto')estado=`<p>📍 <b>Tu regalo se entrega en un punto de entrega.</b></p>${miEnt.nota?`<p class="ent-nota">${esc(miEnt.nota)}</p>`:'<p class="tiny">PetMi te escribirá por WhatsApp para coordinar dónde y cuándo recogerlo.</p>'}`;
+  else if(miEnt.modo==='domicilio')estado=`<p>✓ <b>Dirección confirmada.</b> El mensajero de PetMi te lo lleva a ${lugar}.</p>`;
+  else estado=`<p>${lugar}. PetMi te escribirá por WhatsApp para confirmar tu dirección.</p>`;
+  c.innerHTML=`<div class="entrega ${falta?'falta':miEnt.modo?'ok':''}"><h3>🚚 Tu entrega</h3>${estado}
+    ${!falta?`<span class="envio-chip">Envío ${q(miEnt.envio_q)}</span>`:''}
+    ${(falta||entEditando)?`${entregaCamposHTML(miEnt)}<p class="msg" id="entMsg" role="status"></p>
+      <div class="fila"><button class="small-btn alt" type="button" id="entGuardar">Guardar dirección</button>${falta?'':'<button class="link-btn" type="button" id="entCancelar">Cancelar</button>'}</div>`
+      :`<div class="fila"><button class="link-btn" type="button" id="entCambiar" style="padding:0">Cambiar mi dirección</button></div><p class="msg" id="entMsg" role="status"></p>`}</div>`;
+  if(falta||entEditando)pintarNotaLugar();
+}
+document.addEventListener('click',async e=>{
+  if(e.target.id==='entCambiar'){entEditando=true;pintarEntrega();return}
+  if(e.target.id==='entCancelar'){entEditando=false;pintarEntrega();return}
+  if(e.target.id!=='entGuardar')return;
+  const b=e.target,m=$('#entMsg'),v=validarEntrega();
+  if(v){m.className='msg bad';m.textContent=v;return}
+  const d=leerEntrega();b.disabled=true;
+  const r=await rpc('tribbi_guardar_entrega',{p_slug:ED,p_lugar:d.lugar,p_zona:d.zona,p_direccion:d.dir,p_ubicacion:d.ubic});
+  b.disabled=false;
+  if(!r.ok){m.className='msg bad';m.textContent=r.d.mensaje||'No se pudo guardar. Intenta de nuevo.';return}
+  miEnt=r.d;entEditando=false;ponerEnvio(miEnt.envio_q);pintarEntrega();
+  const m2=$('#entMsg');if(m2){m2.className='msg';m2.textContent='Dirección guardada ✓'}
+  const ie=$('#inscErr');if(ie)ie.textContent='';
+});
+
+/* ── Panel de PetMi: direcciones y envíos ── */
+let entregasLista=[];
+function waConfirmar(x){
+  const n=String(x.whatsapp||'').replace(/\D/g,'').replace(/^(\d{8})$/,'502$1');
+  const t=`Hola ${x.nombre||''} 👋 Te escribimos de PetMi por el Amigo secreto. ¿Nos confirmas tu dirección de entrega?\n${[x.direccion,x.zona?'zona '+x.zona:'',x.lugar].filter(Boolean).join(', ')}`;
+  return n?'https://wa.me/'+n+'?text='+encodeURIComponent(t):'';
+}
+function pintarEntregasAdmin(){
+  const f=$('#entregasFiltro').value;
+  const l=entregasLista.filter(x=>!f||(f==='sin'&&!x.confirmada_en)||(f==='revisar'&&x.revisar&&!x.confirmada_en)||(f==='q45'&&Number(x.envio_q)>35)||(f==='punto'&&x.modo==='punto')||(f==='sin_dir'&&!x.lugar));
+  const nom={pagada:'Pagada',pendiente_pago:'Sin pagar'};
+  $('#entregas').innerHTML=!l.length?'<p class="msg">No hay nadie en esta lista.</p>':`<div class="scroll"><table><thead><tr><th>Código</th><th>Persona</th><th>Lugar</th><th>Dirección</th><th>Entrega</th></tr></thead><tbody>${l.map(x=>{
+    const wa=waConfirmar(x);
+    return `<tr><td class="nw">${esc(x.codigo)}<br><span class="tiny">${esc(nom[x.estado]||x.estado)}${x.dona_a?' · 💚 Donación':''}</span></td>
+      <td>${esc(x.nombre||'')}<br>${wa?`<a class="tiny" href="${esc(wa)}" target="_blank" rel="noopener">💬 ${esc(x.whatsapp)}</a>`:''}</td>
+      <td>${x.lugar?esc(x.lugar):'<b>Sin dirección</b>'}${x.zona?`<br><span class="tiny">Zona ${esc(x.zona)}</span>`:''}<br><span class="tiny">Envío ${q(x.envio_q)}${x.revisar?' · ⚠️ Revisar':''}</span></td>
+      <td>${esc(x.direccion||'')}${x.ubicacion?`<br><a class="tiny" href="https://maps.google.com/?q=${esc(x.ubicacion)}" target="_blank" rel="noopener">📍 Ver en el mapa</a>`:''}</td>
+      <td>${x.modo==='domicilio'?'✓ Domicilio':x.modo==='punto'?'📍 Punto de entrega'+(x.nota?`<br><span class="tiny">${esc(x.nota)}</span>`:''):'Por confirmar'}
+        <br>${x.modo!=='domicilio'?`<button class="link-btn" data-ent="domicilio" data-cod="${esc(x.codigo)}">✓ Domicilio</button>`:''}<button class="link-btn" data-ent="punto" data-cod="${esc(x.codigo)}">📍 ${x.modo==='punto'?'Cambiar punto':'Punto'}</button>${x.modo?`<button class="link-btn" data-ent="pendiente" data-cod="${esc(x.codigo)}">↺</button>`:''}</td></tr>`}).join('')}</tbody></table></div>`;
+}
+async function cargarEntregasAdmin(){
+  const r=await admin('tribbi_admin_entregas'),m=$('#entregasMsg');
+  if(!r.ok){m.className='msg bad';m.textContent=r.d.error==='falta_sql'?'Falta correr 18_direccion_envio.sql en Supabase.':falloAdmin(r,'No se pudo cargar.');return}
+  entregasLista=r.d.entregas||[];
+  const sin=entregasLista.filter(x=>!x.confirmada_en).length;
+  m.className='msg';m.textContent=`${entregasLista.length} inscripciones · ${sin} sin confirmar · ${entregasLista.filter(x=>!x.lugar).length} sin dirección`;
+  pintarEntregasAdmin();
+}
+$('#entregasBtn').onclick=cargarEntregasAdmin;
+$('#entregasFiltro').onchange=()=>{if(entregasLista.length)pintarEntregasAdmin()};
+$('#entregas').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-ent]');if(!b)return;
+  let nota=null;
+  if(b.dataset.ent==='punto'){nota=prompt('¿Dónde y cuándo recoge su regalo? (lo verá la persona en su página)','');if(nota===null)return}
+  const r=await admin('tribbi_admin_marcar_entrega',{p_codigo:b.dataset.cod,p_accion:b.dataset.ent,p_nota:nota});
+  if(!r.ok){alert(falloAdmin(r,'No se pudo guardar.'));return}
+  cargarEntregasAdmin();
+});
+
 /* ── Cupón de la tienda PetMi (solo con la inscripción pagada) ── */
 function pintarCupon(pagada){
   const c=CONFIG.cupon||{},box=$('#cuponBox');
@@ -951,6 +1112,9 @@ function irPaso(n){
   [2,3,4].forEach(k=>{const el=$('#paso'+k);if(el)el.hidden=k!==n});
   if(n===3)pintarResumenDatos();
   if(n===4){
+    const z=zonaElegida();
+    $('#envioResumen').innerHTML=z?`<span class="envio-chip">🚚 Envío a ${esc(z.nombre)}: ${q(z.envio_q)}</span>`:'';
+    if(z)ponerEnvio(z.envio_q);
     const el=masc&&masc.mascotas.find(m=>m.uid===masc.elegida);
     $('#resumenFinal').innerHTML=el?amigoMascotaHTML(el).replace('Le regalas a','Participa'):'';
   }
@@ -968,6 +1132,7 @@ document.addEventListener('click',e=>{
     const nombre=$('#uNombre').value.trim(),wa=$('#uWa').value.trim();
     if(!$('#campoNombre').hidden&&nombre.length<2){$('#err3').textContent='Escribe tu nombre.';$('#uNombre').focus();return}
     if(!$('#campoWa').hidden&&wa.replace(/\D/g,'').length<8){$('#err3').textContent='Escribe tu WhatsApp (8 números).';$('#uWa').focus();return}
+    const m=validarEntrega();if(m){$('#err3').textContent=m;return}
     $('#err3').textContent='';
   }
   irPaso(n);
@@ -984,12 +1149,18 @@ async function inscribirme(){
     if(r.d.error==='sesion'||r.d.error==='correo'){borrarSesion();abrirLogin();return}
     if(r.d.error==='datos'){const f=r.d.faltan||[];irPaso(3);if(f.includes('nombre'))$('#campoNombre').hidden=false;if(f.includes('whatsapp'))$('#campoWa').hidden=false;$('#err3').textContent='Completa tus datos para seguir.';return}
     err.textContent=r.d.error==='falta_sql'?'Falta correr 14_unirme_con_petzid.sql en Supabase.':(r.d.mensaje||'No se pudo inscribir. Intenta de nuevo.');return}
+  if(ZONAS){   // la dirección y el lugar (de ahí sale el precio del envío)
+    const d=leerEntrega(),g=await rpc('tribbi_guardar_entrega',{p_slug:ED,p_lugar:d.lugar,p_zona:d.zona,p_direccion:d.dir,p_ubicacion:d.ubic});
+    if(!g.ok){b.disabled=false;await showMe();const m=$('#entMsg');if(m){m.className='msg bad';m.textContent=(g.d.mensaje||'No se pudo guardar tu dirección.')+' Escríbela aquí para poder pagar.'}return}
+    miEnt=g.d;
+  }
   if(masc&&masc.local&&masc.elegida)await rpc('tribbi_elegir_mascota',{p_slug:ED,p_uid:masc.elegida});   // la mascota que eligió antes de inscribirse
   if(r.d.estado==='pagada'){await showMe();return}
   await pagar(b,err);
 }
 async function pagar(b,err){
   b=b instanceof HTMLElement?b:$('#pagarBtn');err=err||$('#inscErr');
+  if(ZONAS&&miEnt&&!miEnt.tiene_direccion&&b&&b.id==='pagarBtn'){if(err)err.textContent='Primero escribe tu dirección de entrega (abajo).';const c=$('#entregaCard');if(c)c.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});return}
   if(b)b.disabled=true;if(err)err.textContent='';
   const tk=await token();if(!tk){abrirLogin();return}
   try{
