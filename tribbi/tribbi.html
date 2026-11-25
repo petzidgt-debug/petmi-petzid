@@ -158,6 +158,22 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
 .paso{font-size:.85rem;font-weight:600;color:var(--pine);text-transform:uppercase;letter-spacing:.06em;margin:0 0 2px}
 .box .paso{text-align:center}
 .status hr{border:0;border-top:2px dashed var(--line);margin:16px 0}
+.barra{display:flex;gap:6px;margin:0 0 12px}
+.barra i{flex:1;height:6px;border-radius:99px;background:var(--line)}
+.barra i.on{background:var(--pine)}
+.nav-pasos{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+.resumen{list-style:none;padding:0;margin:10px 0 0}
+.resumen li{background:var(--soft);border-radius:14px;padding:10px 14px;margin-bottom:8px}
+.resumen small{display:block;color:var(--muted)}
+.ayuda{background:var(--card);border:2px dashed var(--line);border-radius:20px;padding:16px 18px;margin-top:22px}
+.ayuda h2{margin:0 0 4px;font-size:1.15rem}
+.ayuda p{margin:0 0 10px;color:var(--muted)}
+.wa-btn{display:inline-flex;align-items:center;gap:8px;background:#1F8A5B;color:#fff;text-decoration:none;font-weight:600;padding:10px 18px;border-radius:999px;box-shadow:0 4px 0 #13583A}
+.status #pagoMsg{margin-top:12px}
+.compro{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:12px}
+.compro b{display:block}
+.compro .fila{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.compro img{max-width:110px;max-height:110px;border-radius:10px;border:2px solid var(--line);display:block;margin-top:8px}
 .petz{background:var(--soft);border-radius:14px;padding:10px 14px;margin:8px 0 0}
 .petz b{display:block}
 .status label{margin:12px 0 4px}
@@ -183,6 +199,13 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
 .amigo-masc .ft img{width:100%;height:100%;object-fit:cover}
 .amigo-masc b{display:block;font-size:1.25rem}
 .amigo-masc small{color:var(--muted)}
+.curioso{grid-column:1/-1;background:var(--soft);border-radius:16px;padding:12px 14px;margin-top:4px}
+.curioso b{display:block}
+.curioso p{margin:4px 0 6px;overflow-wrap:anywhere}
+.curioso textarea{min-height:110px}
+.curioso .vacio{color:var(--muted);font-style:italic}
+.pregunta{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--soft);border-radius:16px;padding:10px 14px}
+.pregunta span{font-weight:500}
 .amigo-desc{margin:10px 0 0;font-style:italic;overflow-wrap:anywhere}
 
 @media (prefers-reduced-motion:reduce){.bulb{animation:none}.confetti{display:none}.scratch canvas{transition:none}}
@@ -227,7 +250,7 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       <ol id="pasos"></ol>
     </div>
   </div>
-  <footer><span>Una iniciativa de PetMi 🐾 · <a href="./" style="color:inherit">hecho con Tribbi</a></span><button class="link-btn" id="adminLink">Panel de PetMi</button></footer>
+  <footer><span>Una iniciativa de PetMi 🐾 · <a href="./" style="color:inherit">hecho con Tribbi</a></span><a id="waPie" target="_blank" rel="noopener" hidden>Contactar a PetMi</a><button class="link-btn" id="adminLink">Panel de PetMi</button></footer>
 </div>
 
 <!-- ====== ENTRAR CON CÓDIGO POR CORREO ====== -->
@@ -236,7 +259,8 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
   <div class="narrow">
     <div class="topbar"><button class="link-btn" data-go="inicio">← Volver</button></div>
     <form class="box" id="emailForm" autocomplete="on">
-      <p class="paso" id="pasoCorreo">Paso 1 de 3 · Tu correo</p>
+      <div class="barra" id="barraCorreo"><i class="on"></i><i></i><i></i><i></i></div>
+      <p class="paso" id="pasoCorreo">Paso 1 de 4 · Tu correo</p>
       <h1>Entra con tu correo</h1>
       <p>Te enviamos un código para confirmar que el correo es tuyo. No necesitas contraseña. Si ya tienes PetzID, usa el mismo correo.</p>
       <label for="emailIn">Correo electrónico</label>
@@ -245,7 +269,8 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       <div class="center"><button class="big-btn" type="submit" id="emailBtn">Enviar código</button></div>
     </form>
     <form class="box" id="codeForm" hidden autocomplete="off">
-      <p class="paso" id="pasoCodigo">Paso 1 de 3 · Tu correo</p>
+      <div class="barra" id="barraCodigo"><i class="on"></i><i></i><i></i><i></i></div>
+      <p class="paso" id="pasoCodigo">Paso 1 de 4 · Tu correo</p>
       <h1>Revisa tu correo</h1>
       <p id="codeText"></p>
       <label for="codeIn">Código</label>
@@ -322,11 +347,15 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
     </div>
     <section id="mascSec" aria-labelledby="h-masc" hidden>
       <h2 class="sec" id="h-masc">Tu mascota en el intercambio</h2>
-      <p class="hint" id="mascTxt" style="margin:4px 0 0"></p>
-      <div class="mascotas" id="mascotas"></div>
-      <p class="msg bad" id="mascErr" role="alert"></p>
-      <input type="file" id="fotoIn" accept="image/*" hidden>
+      <div id="mascBox"></div>
     </section>
+    <input type="file" id="fotoIn" accept="image/*" hidden>
+    <input type="file" id="comproIn" accept="image/*" hidden>
+    <div class="ayuda" id="ayudaBox" hidden>
+      <h2>¿Dudas o algún inconveniente?</h2>
+      <p>Escríbele a PetMi por WhatsApp y te ayudamos.</p>
+      <a class="wa-btn" id="waAyuda" target="_blank" rel="noopener">💬 Contactar a PetMi</a>
+    </div>
     <section id="mineSec" aria-labelledby="h-mine" hidden>
       <h2 class="sec" id="h-mine">Lo que a ti te gustaría recibir</h2>
       <p class="hint" style="margin:4px 0 0">Solo lo verá la persona que te tiene de amigo secreto. Puede ser para ti o para tu mascota.</p>
@@ -421,10 +450,11 @@ const CONFIG={
   edicion:'navidad-petmi-2026',
   pagoApi:'/api/tribbi-pago',      // función de Vercel que crea el cobro en Recurrente (siguiente paso)
   reglamentoUrl:'',                // enlace al reglamento completo, cuando esté publicado
-  contacto:''                      // correo o WhatsApp de PetMi para dudas, por ejemplo 'WhatsApp 5555 1234'
+  contacto:'',                     // texto extra de contacto en el pie (opcional)
+  whatsapp:'50237673927'           // WhatsApp de PetMi para dudas y comprobantes (con 502, sin espacios)
 };
 const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
-const VERSION_PAGINA='v6';   // súbelo con cada cambio para saber qué versión está publicada
+const VERSION_PAGINA='v9';   // súbelo con cada cambio para saber qué versión está publicada
 const REGISTRO_PETZID='https://app.revistapetmi.com/registro.html';
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
@@ -476,6 +506,7 @@ async function rpc(fn,args){
 const bulbColors=['#D7263D','#F2B33D','#1F8A5B','#2F7FC1','#E0662A'];
 document.querySelectorAll('.lights').forEach(l=>l.innerHTML=Array.from({length:18},(_,i)=>`<span class="bulb" style="--c:${bulbColors[i%5]};--d:${(i%4)*.5}s"></span>`).join(''));
 if(CONFIG.contacto)$('#contacto').textContent='Dudas: '+CONFIG.contacto;
+if(CONFIG.whatsapp){const w=$('#waPie');w.hidden=false;w.href='https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent('Hola PetMi 👋 Tengo una duda sobre el amigo secreto.')}
 document.querySelectorAll('footer').forEach(f=>{const v=document.createElement('span');v.className='tiny';v.textContent=VERSION_PAGINA;f.appendChild(v)});
 
 /* ── Navegación: tribbi.html, tribbi.html?admin=1 y tribbi.html?pago=ok (regreso de Recurrente) ── */
@@ -527,7 +558,7 @@ $('#adminLink').onclick=()=>{history.pushState(null,'',base()+(ED_URL?'&':'?')+'
 document.addEventListener('click',e=>{if(e.target.closest('[data-go="inicio"]'))show('inicioView')});
 document.addEventListener('click',async e=>{
   if(!e.target.closest('[data-salir]'))return;
-  const tk=ses&&ses.at;borrarSesion();yo=null;if(tk)auth('logout',{},tk);
+  const tk=ses&&ses.at;borrarSesion();yo=null;masc=null;if(tk)auth('logout',{},tk);
   history.replaceState(null,'',base());show('inicioView');
 });
 window.addEventListener('popstate',()=>route());
@@ -537,7 +568,7 @@ let correo='';
 function abrirLogin(){
   $('#emailForm').hidden=false;$('#codeForm').hidden=true;$('#passForm').hidden=true;$('#emailErr').textContent='';
   $('#passLink').hidden=volverA!=='admin';
-  $('#pasoCorreo').hidden=$('#pasoCodigo').hidden=volverA==='admin'||!(ed&&ed.inscripciones_abiertas);
+  $('#pasoCorreo').hidden=$('#pasoCodigo').hidden=$('#barraCorreo').hidden=$('#barraCodigo').hidden=volverA==='admin'||!(ed&&ed.inscripciones_abiertas);
   if(ses&&ses.email)$('#emailIn').value=ses.email;
   show('loginView');setTimeout(()=>$('#emailIn').focus(),50);
 }
@@ -627,20 +658,39 @@ function renderMe(fresh){
     </ol>${CONFIG.reglamentoUrl?`<a href="${esc(CONFIG.reglamentoUrl)}" target="_blank" rel="noopener">Reglamento completo</a>`:''}</details>`;
   if(!i||i.estado==='cancelada'){
     if(abierto)h=`<div class="status go" id="unirCard">
-      <p class="paso">Paso 2 de 3 · Tus datos</p><h2>Inscríbete al intercambio</h2>
-      <div id="petzBox"><p class="tiny">Buscando tu cuenta de PetzID…</p></div>
-      <div id="campoNombre" hidden><label for="uNombre">Tu nombre</label><input class="field" id="uNombre" autocomplete="name" maxlength="80"></div>
-      <div id="campoWa" hidden><label for="uWa">WhatsApp <small>(para coordinar la entrega)</small></label><input class="field" id="uWa" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="5555 1234"></div>
-      <hr><p class="paso">Paso 3 de 3 · Pago</p>
-      <p>Pagas ${q(ed.envio_q)} de envío y con eso queda confirmado tu lugar. Después eliges a tu mascota, subes su foto y dejas tus ideas. Las inscripciones cierran el ${dia(ed.inscripcion_hasta)}.</p>
-      ${reglas}<label class="check"><input type="checkbox" id="aceptoIn"> <span>Leí y acepto el <a href="#reglasDet" data-ver-reglas>reglamento</a>.</span></label>
-      <p class="msg bad" id="inscErr" role="alert"></p><button class="big-btn" id="inscBtn">Inscribirme y pagar ${q(ed.envio_q)}</button></div>`;
+      <div id="paso2">
+        <div class="barra"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+        <p class="paso">Paso 2 de 4 · Tu mascota</p><h2>¿Quién participa?</h2>
+        <div id="petzBox"><p class="tiny">Buscando tu cuenta de PetzID…</p></div>
+        <div id="mascPre"></div>
+        <p class="msg bad" id="err2" role="alert"></p>
+        <div class="nav-pasos"><span></span><button class="big-btn" type="button" data-ir="3">Continuar</button></div>
+      </div>
+      <div id="paso3" hidden>
+        <div class="barra"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+        <p class="paso">Paso 3 de 4 · Tus datos</p><h2>Para coordinar la entrega</h2>
+        <p class="tiny" style="margin:0">Tu amigo secreto no ve tu WhatsApp: solo PetMi, para la entrega.</p>
+        <ul class="resumen" id="resumenDatos"></ul>
+        <div id="campoNombre" hidden><label for="uNombre">Tu nombre</label><input class="field" id="uNombre" autocomplete="name" maxlength="80"></div>
+        <div id="campoWa" hidden><label for="uWa">WhatsApp</label><input class="field" id="uWa" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="5555 1234"></div>
+        <p class="msg bad" id="err3" role="alert"></p>
+        <div class="nav-pasos"><button class="link-btn" type="button" data-ir="2">← Atrás</button><button class="big-btn" type="button" data-ir="4">Continuar</button></div>
+      </div>
+      <div id="paso4" hidden>
+        <div class="barra"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+        <p class="paso">Paso 4 de 4 · Pago</p><h2>Confirma tu lugar</h2>
+        <div id="resumenFinal"></div>
+        <p>Pagas ${q(ed.envio_q)} de envío y con eso queda confirmado tu lugar. Después podrás dejar tus ideas de regalo. Las inscripciones cierran el ${dia(ed.inscripcion_hasta)}.</p>
+        ${reglas}<label class="check"><input type="checkbox" id="aceptoIn"> <span>Leí y acepto el <a href="#reglasDet" data-ver-reglas>reglamento</a>.</span></label>
+        <p class="msg bad" id="inscErr" role="alert"></p>
+        <div class="nav-pasos"><button class="link-btn" type="button" data-ir="3">← Atrás</button><button class="big-btn" id="inscBtn">Inscribirme y pagar ${q(ed.envio_q)}</button></div>
+      </div></div>`;
     else h=`<div class="status"><h2>${antes?'Las inscripciones todavía no abren':'Las inscripciones ya cerraron'}</h2><p>${antes?`Abren el ${dia(ed.inscripcion_desde)}. Tus datos ya quedaron guardados.`:'Gracias por tu interés. Te esperamos en el próximo intercambio.'}</p></div>`;
   }else if(i.estado==='excluida'){
     h=`<div class="status warn"><h2>Tu inscripción no está habilitada</h2><p>Escríbele a PetMi para más información.</p></div>`;
   }else if(i.estado==='pendiente_pago'){
-    h=`<div class="status warn"><p class="paso">Paso 3 de 3 · Pago</p><h2>Falta pagar el envío</h2><p>Tu lugar queda confirmado cuando se aprueba el pago de ${q(ed.envio_q)}. Después podrás elegir a tu mascota, subir su foto y dejar tus ideas.${abierto?'':' Las inscripciones ya cerraron.'}</p>
-      ${abierto?`<p class="msg bad" id="inscErr" role="alert"></p><button class="big-btn" id="pagarBtn">Pagar ${q(ed.envio_q)}</button>`:''}<p class="msg" id="pagoMsg" role="status"></p></div>`;
+    h=`<div class="status warn"><p class="paso">Paso 4 de 4 · Pago</p><h2>Falta pagar el envío</h2><p>Tu lugar queda confirmado cuando se aprueba el pago de ${q(ed.envio_q)}. Después podrás dejar tus ideas de regalo.${abierto?'':' Las inscripciones ya cerraron.'}</p>
+      ${abierto?`<p class="msg bad" id="inscErr" role="alert"></p><button class="big-btn" id="pagarBtn">Pagar ${q(ed.envio_q)}</button>`:''}<p class="msg" id="pagoMsg" role="status"></p><div id="comproSlot"></div></div>`;
   }else if(!yo.sorteo_hecho){
     h=`<div class="status go"><h2>${recienPagado?'¡Pago recibido, ya estás dentro! 🎉':'¡Estás inscrito! 🎉'}</h2><p>Tu código es</p><span class="tag">${esc(i.codigo)}</span>
       <p>El sorteo es el ${dia(ed.sorteo_en)}. Ese día vuelve aquí para descubrir a tu amigo secreto.</p>
@@ -661,10 +711,13 @@ function renderMe(fresh){
   const pb=$('#pagarBtn');if(pb)pb.onclick=pagar;
   const rb=$('#recibiBtn');if(rb)rb.onclick=confirmarRecibido;
   if($('#unirCard'))cargarPetzid();
+  if($('#comproSlot')&&fresh!==false)cargarComprobante();else if($('#comproSlot')&&compro)$('#comproSlot').innerHTML=comproHTML();
+  pintarAyuda();
   if(i&&i.estado==='pendiente_pago'&&AVISO_PAGO[PAGO]&&$('#pagoMsg')&&!$('#pagoMsg').textContent)$('#pagoMsg').textContent=AVISO_PAGO[PAGO];
   // Mascota: solo con la inscripción pagada
   const pagada=!!i&&i.estado==='pagada';
-  if(!pagada)$('#mascSec').hidden=true;else if(fresh)cargarMascota();
+  const conLugar=pagada||(!!i&&i.estado==='pendiente_pago');
+  if(!conLugar)$('#mascSec').hidden=true;else if(fresh)cargarMascota();
   // Amigo secreto
   const verAmigo=yo.sorteo_hecho&&yo.tengo_amigo;$('#amigoBox').hidden=!verAmigo;
   if(verAmigo)renderAmigo(fresh);
@@ -702,29 +755,107 @@ $('#myWishes').addEventListener('click',async e=>{
 });
 
 /* Paso 2: con el correo validado se busca su cuenta de PetzID (nombre y WhatsApp). Solo se pide lo que falte. */
+let datosPz={nombre:'',wa:'',tiene:false};
 async function cargarPetzid(){
   const r=await rpc('tribbi_mis_datos_petzid',{}),box=$('#petzBox');if(!box)return;
   const d=r.ok?r.d:{},pz=d.petzid||{},tb=d.tribbi||{};
   const nombre=tb.nombre||pz.nombre||'',wa=tb.whatsapp||pz.whatsapp||'';
+  datosPz={nombre,wa,tiene:!!d.tiene_petzid};
   const correo=(ses&&ses.email)||'';
-  if(d.tiene_petzid)box.innerHTML=`<div class="petz"><b>🐾 Encontramos tu cuenta de PetzID</b>${esc(nombre||correo)}${wa?` · WhatsApp terminado en ${esc(String(wa).replace(/\D/g,'').slice(-4))}`:''}</div>`;
-  else box.innerHTML=`<div class="petz"><b>No encontramos una cuenta de PetzID con ${esc(correo||'tu correo')}</b>Solo necesitamos tu nombre y tu WhatsApp. Si tu mascota ya tiene PetzID con otro correo, <button type="button" class="link-btn" data-salir style="padding:0">entra con ese correo</button>.</div>`;
+  if(d.tiene_petzid){box.innerHTML=`<div class="petz"><b>🐾 Encontramos tu cuenta de PetzID</b>${esc(nombre||correo)}</div>`;cargarMascota()}
+  else box.innerHTML=`<div class="petz"><b>No encontramos una cuenta de PetzID con ${esc(correo||'tu correo')}</b>Tu amigo secreto le regala a tu mascota. Si ya tiene PetzID con otro correo, <button type="button" class="link-btn" data-salir style="padding:0">entra con ese correo</button>. Si no, <a href="${REGISTRO_PETZID}" target="_blank" rel="noopener">créale su PetzID</a> con este correo y vuelve aquí, o sigue sin ella.</div>`;
   $('#uNombre').value=nombre;$('#uWa').value=wa;
+}
+/* ── Contactar a PetMi y comprobante de pago ── */
+function waLink(texto){return CONFIG.whatsapp?'https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent(texto):''}
+function datosParaPetMi(){
+  const i=yo&&yo.inscripcion,n=yo&&yo.perfil&&(yo.perfil.nombre||yo.perfil.nombre_publico);
+  return [`Intercambio: ${ed?ed.nombre:ED}`,n?`Nombre: ${n}`:'',ses&&ses.email?`Correo: ${ses.email}`:'',i&&i.codigo?`Código: ${i.codigo}`:''].filter(Boolean).join('\n');
+}
+function pintarAyuda(){
+  const ok=!!CONFIG.whatsapp;$('#ayudaBox').hidden=!ok;
+  if(ok)$('#waAyuda').href=waLink(`Hola PetMi 👋 Tengo una duda sobre el amigo secreto.\n${datosParaPetMi()}`);
+}
+let compro=null;   // {comprobante_url, comprobante_en}
+function comproHTML(){
+  const wa=compro&&compro.comprobante_url?waLink(`Hola PetMi 👋 Ya pagué el envío del amigo secreto pero mi pago no aparece. Aquí está mi comprobante:\n${compro.comprobante_url}\n${datosParaPetMi()}`):'';
+  return `<div class="compro" id="comproBox"><b>¿Ya pagaste y tu pago no aparece?</b>
+    ${compro&&compro.comprobante_url
+      ?`<span class="tiny">Subiste tu comprobante (${esc(diaHora(compro.comprobante_en))}). PetMi lo revisará y confirmará tu lugar.</span>
+        <img src="${esc(compro.comprobante_url)}" alt="Tu comprobante">
+        <div class="fila">${wa?`<a class="wa-btn" href="${esc(wa)}" target="_blank" rel="noopener">💬 Avisar a PetMi</a>`:''}<button class="link-btn" type="button" data-compro>Cambiar comprobante</button></div>`
+      :`<span class="tiny">Sube una foto o captura del comprobante y PetMi lo revisa.</span>
+        <div class="fila"><button class="small-btn alt" type="button" data-compro>📎 Subir comprobante</button></div>`}
+    <p class="msg bad" id="comproErr" role="alert"></p></div>`;
+}
+async function cargarComprobante(){
+  const r=await rpc('tribbi_comprobante',{p_slug:ED,p_url:null});
+  const box=$('#comproSlot');if(!box)return;
+  if(!r.ok){box.innerHTML='';return}      // sin 15_comprobante.sql: no se muestra
+  compro=r.d;box.innerHTML=comproHTML();
+}
+document.addEventListener('click',e=>{if(e.target.closest('[data-compro]')){$('#comproIn').value='';$('#comproIn').click()}});
+$('#comproIn').addEventListener('change',async e=>{
+  const archivo=e.target.files&&e.target.files[0];if(!archivo)return;
+  const er=()=>$('#comproErr'),b=document.querySelector('[data-compro]');
+  if(!/^image\//.test(archivo.type||'')){er().textContent='Sube una foto o captura de pantalla (JPG o PNG).';return}
+  if(b){b.disabled=true;b.textContent='Subiendo…'}
+  const b64=await achicar(archivo,1600);
+  let url=null;
+  if(b64)for(const espera of [0,1200,2500]){
+    if(espera)await new Promise(r=>setTimeout(r,espera));
+    try{const r=await fetch('/api/subir-foto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photoBase64:b64,mimeType:'image/jpeg',fileName:'comprobante_'+Date.now()+'.jpg'})});
+      const d=await r.json();if(d&&d.ok&&d.url){url=d.url;break}}catch(_){}
+  }
+  const r=url?await rpc('tribbi_comprobante',{p_slug:ED,p_url:url}):null;
+  if(r&&r.ok){compro=r.d;$('#comproSlot').innerHTML=comproHTML();return}
+  if(b){b.disabled=false;b.textContent='📎 Subir comprobante'}
+  er().textContent=!b64?'No pudimos leer esa imagen. Prueba con otra.':(r&&r.d.mensaje)||'No pudimos subir el comprobante. Revisa tu conexión e intenta de nuevo.';
+});
+const ultimos4=w=>'•••• '+String(w).replace(/\D/g,'').slice(-4);
+function pintarResumenDatos(){
+  const {nombre,wa}=datosPz;
+  $('#resumenDatos').innerHTML=(nombre?`<li><small>Nombre</small>${esc(nombre)}</li>`:'')+(wa?`<li><small>WhatsApp${datosPz.tiene?' (de tu PetzID)':''}</small>${esc(ultimos4(wa))}</li>`:'');
   $('#campoNombre').hidden=!!nombre;$('#campoWa').hidden=!!wa;
 }
+function irPaso(n){
+  [2,3,4].forEach(k=>{const el=$('#paso'+k);if(el)el.hidden=k!==n});
+  if(n===3)pintarResumenDatos();
+  if(n===4){
+    const el=masc&&masc.mascotas.find(m=>m.uid===masc.elegida);
+    $('#resumenFinal').innerHTML=el?amigoMascotaHTML(el).replace('Le regalas a','Participa'):'';
+  }
+  const c=$('#unirCard');if(c)c.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});
+  const f=$('#paso'+n+' input:not([type=checkbox])');if(f&&!f.closest('[hidden]'))setTimeout(()=>f.focus(),60);
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-ir]');if(!b)return;const n=Number(b.dataset.ir);
+  if(n===3&&!$('#paso2').hidden){   // salir del paso 2: si tiene varias mascotas, que elija una
+    if(masc&&masc.mascotas.length>1&&!masc.elegida){$('#err2').textContent='Toca la mascota que participa.';return}
+    if(editandoDesc){$('#err2').textContent='Guarda o cancela los datos curiosos antes de seguir.';return}
+    $('#err2').textContent='';
+  }
+  if(n===4){
+    const nombre=$('#uNombre').value.trim(),wa=$('#uWa').value.trim();
+    if(!$('#campoNombre').hidden&&nombre.length<2){$('#err3').textContent='Escribe tu nombre.';$('#uNombre').focus();return}
+    if(!$('#campoWa').hidden&&wa.replace(/\D/g,'').length<8){$('#err3').textContent='Escribe tu WhatsApp (8 números).';$('#uWa').focus();return}
+    $('#err3').textContent='';
+  }
+  irPaso(n);
+});
+document.addEventListener('input',e=>{if(e.target.id==='uWa'||e.target.id==='uNombre'){const x=$('#err3');if(x)x.textContent=''}});
 document.addEventListener('click',e=>{const a=e.target.closest('[data-ver-reglas]');if(!a)return;e.preventDefault();const d=$('#reglasDet');if(d){d.open=true;d.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'})}});
 async function inscribirme(){
   const err=$('#inscErr'),b=$('#inscBtn');
   const nIn=$('#uNombre'),wIn=$('#uWa'),nombre=nIn?nIn.value.trim():'',wa=wIn?wIn.value.trim():'';
-  if(!$('#campoNombre').hidden&&nombre.length<2){err.textContent='Escribe tu nombre.';nIn.focus();return}
-  if(!$('#campoWa').hidden&&wa.replace(/\D/g,'').length<8){err.textContent='Escribe tu WhatsApp (8 números).';wIn.focus();return}
   if(!$('#aceptoIn').checked){err.textContent='Para inscribirte debes aceptar el reglamento.';return}
   b.disabled=true;err.textContent='';
   const r=await rpc('tribbi_unirme',{p_slug:ED,p_invitacion:INV||null,p_acepto:true,p_nombre:nombre||null,p_whatsapp:wa||null});
   if(!r.ok){b.disabled=false;
     if(r.d.error==='sesion'||r.d.error==='correo'){borrarSesion();abrirLogin();return}
-    if(r.d.error==='datos'){const f=r.d.faltan||[];if(f.includes('nombre'))$('#campoNombre').hidden=false;if(f.includes('whatsapp'))$('#campoWa').hidden=false;err.textContent='Completa tus datos para seguir.';return}
+    if(r.d.error==='datos'){const f=r.d.faltan||[];irPaso(3);if(f.includes('nombre'))$('#campoNombre').hidden=false;if(f.includes('whatsapp'))$('#campoWa').hidden=false;$('#err3').textContent='Completa tus datos para seguir.';return}
     err.textContent=r.d.error==='falta_sql'?'Falta correr 14_unirme_con_petzid.sql en Supabase.':(r.d.mensaje||'No se pudo inscribir. Intenta de nuevo.');return}
+  if(masc&&masc.local&&masc.elegida)await rpc('tribbi_elegir_mascota',{p_slug:ED,p_uid:masc.elegida});   // la mascota que eligió antes de inscribirse
   if(r.d.estado==='pagada'){await showMe();return}
   await pagar(b,err);
 }
@@ -766,72 +897,92 @@ function amigoMascotaHTML(m){
   return `<div class="amigo-masc"><span class="ft">${fotoHTML(m)}</span><span><small>Le regalas a</small><b>${esc(m.nombre)}</b><small>${subtitulo(m)}</small></span></div>`
     +(m.descripcion?`<p class="amigo-desc">“${esc(m.descripcion)}”</p>`:'');
 }
-let masc=null,fotoPara=null;
+let masc=null,fotoPara=null,editandoDesc=false;
+const mascDestino=()=>$('#mascPre')||$('#mascBox');
+/* Antes de inscribirse se leen sus mascotas de PetzID (tribbi_mis_mascotas) y la elección se guarda al unirse.
+   Ya inscrito, se usa tribbi_mi_mascota / tribbi_elegir_mascota de este intercambio. */
 async function cargarMascota(){
-  const r=await rpc('tribbi_mi_mascota',{p_slug:ED});
-  if(!r.ok||!r.d||!Array.isArray(r.d.mascotas)){$('#mascSec').hidden=true;return}
-  masc=r.d;
+  const i=yo&&yo.inscripcion,inscrito=!!i&&!['cancelada','excluida'].includes(i.estado);
+  const r=inscrito?await rpc('tribbi_mi_mascota',{p_slug:ED}):await rpc('tribbi_mis_mascotas',{});
+  if(!r.ok||!r.d||!Array.isArray(r.d.mascotas)){if(!inscrito){const d=$('#mascPre');if(d)d.innerHTML=''}else $('#mascSec').hidden=true;return}
+  masc=inscrito?Object.assign({local:false},r.d):{local:true,correo:(ses&&ses.email)||'',elegida:(masc&&masc.local&&masc.elegida)||null,puede_cambiar:true,mascotas:r.d.mascotas};
+  editandoDesc=false;
   if(!masc.elegida&&masc.puede_cambiar&&masc.mascotas.length===1){await elegir(masc.mascotas[0].uid,true);return}
   pintarMascota();
 }
 function pintarMascota(){
-  const lista=masc.mascotas;$('#mascSec').hidden=false;
-  if(!lista.length){
-    $('#mascTxt').innerHTML=`Tu amigo secreto le va a regalar a tu mascota. Todavía no hay una mascota en PetzID con tu correo (<b>${esc(masc.correo||'')}</b>).`;
-    $('#mascotas').innerHTML=`<p style="grid-column:1/-1;margin:0"><a class="small-btn" style="display:inline-block;text-decoration:none" href="${REGISTRO_PETZID}" target="_blank" rel="noopener">Crear su PetzID</a></p>`
-      +`<p class="tiny" style="grid-column:1/-1;margin:0">Regístrala con el mismo correo y vuelve a esta página.</p>`;
-    return;
-  }
-  const el=lista.find(m=>m.uid===masc.elegida);
-  $('#mascTxt').textContent=!masc.puede_cambiar?'Tu amigo secreto ya la descubrió.'
-    :el?(el.tiene_foto?`${el.nombre} participa en el intercambio. Tu amigo secreto verá su foto al descubrirte.`:`${el.nombre} participa, pero no tiene foto: agrégale una para que tu amigo secreto la conozca.`)
-    :'¿Con cuál de tus mascotas participas? Tócala para elegirla.';
-  $('#mascotas').innerHTML=lista.filter(m=>masc.puede_cambiar||m.uid===masc.elegida).map(m=>{
+  const dest=mascDestino();if(!dest||!masc)return;
+  if(dest.id==='mascBox')$('#mascSec').hidden=false;
+  const lista=masc.mascotas,el=lista.find(m=>m.uid===masc.elegida);
+  let txt;
+  if(!lista.length)txt=`Tu amigo secreto le va a regalar a tu mascota. Todavía no hay una mascota en PetzID con tu correo (<b>${esc(masc.correo||'')}</b>).`;
+  else if(!masc.puede_cambiar)txt='Tu amigo secreto ya la descubrió.';
+  else if(!el)txt=`<b>Tienes ${lista.length} mascotas en PetzID. ¿Quién participa en el intercambio?</b> Tócala para elegirla.`;
+  else txt=lista.length>1?`<b>Participa ${esc(el.nombre)}.</b> Si prefieres a otra de tus mascotas, tócala.`:`<b>Participa ${esc(el.nombre)}.</b> Tu amigo secreto verá su foto y sus datos curiosos al descubrirte.`;
+  let h=`<p class="hint" style="margin:10px 0 0">${txt}</p><div class="mascotas">`;
+  if(!lista.length)h+=`<p style="grid-column:1/-1;margin:0"><a class="small-btn" style="display:inline-block;text-decoration:none" href="${REGISTRO_PETZID}" target="_blank" rel="noopener">Crear su PetzID</a></p><p class="tiny" style="grid-column:1/-1;margin:0">Regístrala con el mismo correo y vuelve a esta página.</p>`;
+  h+=lista.filter(m=>masc.puede_cambiar||m.uid===masc.elegida).map(m=>{
     const si=m.uid===masc.elegida;
     return `<div class="masc" aria-pressed="${si}">
-      <button class="elegir" data-uid="${esc(m.uid)}" ${masc.puede_cambiar?'':'disabled'} aria-label="${si?'Participa':'Elegir a'} ${esc(m.nombre)}">
+      <button class="elegir" type="button" data-uid="${esc(m.uid)}" ${masc.puede_cambiar?'':'disabled'} aria-label="${si?'Participa':'Elegir a'} ${esc(m.nombre)}">
         <span class="ft">${fotoHTML(m)}</span><span class="nm">${esc(m.nombre)}</span><span class="sb">${subtitulo(m)}</span>
         ${m.tiene_foto?'':'<span class="sinfoto">Sin foto</span>'}</button>
       ${si?'<span class="sel">Participa ✓</span>':''}
-      <button class="foto-btn" data-foto="${esc(m.uid)}">📷 ${m.tiene_foto?'Cambiar foto':'Agregar foto'}</button></div>`}).join('')
-    +(el?`<div class="desc"><label for="descIn">Cuéntale a tu amigo secreto sobre ${esc(el.nombre)}</label>
-      <textarea class="field" id="descIn" maxlength="300" placeholder="Ej. Es una perrita mayor y tranquila, talla M, le encantan los peluches que suenan y es alérgica al pollo.">${esc(el.descripcion||'')}</textarea>
-      <div class="fila"><span class="tiny" id="descCuenta"></span><button class="small-btn alt" id="descGuardar" type="button">Guardar descripción</button></div>
-      <p class="tiny" style="margin:4px 0 0">Es la misma descripción de su perfil de PetzID.</p></div>`:'');
-  const t=$('#descIn');if(t){const cnt=()=>{$('#descCuenta').textContent=`${t.value.length}/300`};t.addEventListener('input',()=>{cnt();$('#descGuardar').disabled=false;$('#descGuardar').textContent='Guardar descripción'});cnt()}
+      ${si?'':`<button class="foto-btn" type="button" data-foto="${esc(m.uid)}">📷 ${m.tiene_foto?'Actualizar foto':'Agregar foto'}</button>`}</div>`}).join('');
+  if(el){
+    h+=`<div class="pregunta"><span>📷 ${el.tiene_foto?`¿Quieres actualizar la foto de ${esc(el.nombre)}?`:`${esc(el.nombre)} no tiene foto. ¿Le agregas una?`}</span>
+      <button class="small-btn alt" type="button" data-foto="${esc(el.uid)}">${el.tiene_foto?'Actualizar foto':'Agregar foto'}</button></div>`;
+    h+=`<div class="curioso"><b>✨ Datos curiosos de ${esc(el.nombre)}</b>`
+      +(editandoDesc?`<label for="descIn" class="tiny" style="margin:6px 0 4px">Un dato curioso, su historia, su talla, lo que le encanta…</label>
+        <textarea class="field" id="descIn" maxlength="300" placeholder="Ej. Es una perrita mayor y tranquila, talla M, le encantan los peluches que suenan y es alérgica al pollo.">${esc(el.descripcion||'')}</textarea>
+        <div class="fila" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap"><span class="tiny" id="descCuenta"></span>
+        <span><button class="link-btn" type="button" data-desc-cancelar>Cancelar</button> <button class="small-btn alt" id="descGuardar" type="button">Guardar</button></span></div>
+        <p class="tiny" style="margin:4px 0 0">Se actualiza también en su perfil de PetzID.</p>`
+      :`<p class="${el.descripcion?'':'vacio'}">${el.descripcion?esc(el.descripcion):'Todavía no tiene datos curiosos.'}</p>
+        <button class="link-btn" type="button" data-desc-editar style="padding:0">${el.descripcion?'¿Quieres actualizarlos?':'¿Quieres agregarlos?'}</button>`)
+      +`</div>`;
+  }
+  h+=`</div><p class="msg bad" id="mascErr" role="alert"></p>`;
+  dest.innerHTML=h;
+  const t=$('#descIn');if(t){const cnt=()=>{$('#descCuenta').textContent=`${t.value.length}/300`};t.addEventListener('input',cnt);cnt();t.focus()}
 }
+const mascErr=m=>{const e=$('#mascErr');if(e)e.textContent=m||''};
 document.addEventListener('click',async e=>{
-  if(e.target.id!=='descGuardar')return;
-  const b=e.target,uid=masc&&masc.elegida,er=$('#mascErr');if(!uid)return;er.textContent='';
-  b.disabled=true;b.textContent='Guardando…';
-  const r=await rpc('tribbi_mascota_descripcion',{p_uid:uid,p_texto:$('#descIn').value});
-  if(!r.ok){b.disabled=false;b.textContent='Guardar descripción';er.textContent=r.d.mensaje||'No se pudo guardar. Intenta de nuevo.';return}
-  const m=masc.mascotas.find(x=>x.uid===uid);if(m&&r.d.mascota)m.descripcion=r.d.mascota.descripcion;
-  b.textContent='Guardada ✓';
+  if(e.target.closest('[data-desc-editar]')){editandoDesc=true;pintarMascota();return}
+  if(e.target.closest('[data-desc-cancelar]')){editandoDesc=false;pintarMascota();return}
+  if(e.target.id==='descGuardar'){
+    const b=e.target,uid=masc&&masc.elegida;if(!uid)return;mascErr('');
+    b.disabled=true;b.textContent='Guardando…';
+    const r=await rpc('tribbi_mascota_descripcion',{p_uid:uid,p_texto:$('#descIn').value});
+    if(!r.ok){b.disabled=false;b.textContent='Guardar';mascErr(r.d.mensaje||'No se pudo guardar. Intenta de nuevo.');return}
+    const m=masc.mascotas.find(x=>x.uid===uid);if(m)m.descripcion=r.d.mascota?r.d.mascota.descripcion:$('#descIn').value.trim();
+    editandoDesc=false;pintarMascota();return;
+  }
+  if(!e.target.closest('.mascotas'))return;
+  const f=e.target.closest('[data-foto]');if(f){fotoPara=f.dataset.foto;$('#fotoIn').value='';$('#fotoIn').click();return}
+  const b=e.target.closest('[data-uid]');if(b&&!b.disabled&&masc&&b.dataset.uid!==masc.elegida)elegir(b.dataset.uid);
 });
 async function elegir(uid,sola){
+  editandoDesc=false;
+  if(masc.local){masc.elegida=uid;pintarMascota();return}
   const r=await rpc('tribbi_elegir_mascota',{p_slug:ED,p_uid:uid});
-  if(r.ok){masc.elegida=uid;$('#mascErr').textContent='';pintarMascota();return}
-  pintarMascota();if(!sola)$('#mascErr').textContent=r.d.mensaje||'No se pudo elegir. Intenta de nuevo.';
+  if(r.ok){masc.elegida=uid;pintarMascota();return}
+  pintarMascota();if(!sola)mascErr(r.d.mensaje||'No se pudo elegir. Intenta de nuevo.');
 }
-$('#mascotas').addEventListener('click',e=>{
-  const f=e.target.closest('[data-foto]');if(f){fotoPara=f.dataset.foto;$('#fotoIn').value='';$('#fotoIn').click();return}
-  const b=e.target.closest('[data-uid]');if(b&&!b.disabled&&b.dataset.uid!==masc.elegida)elegir(b.dataset.uid);
-});
 /* Achica la foto en el celular (máximo 800 px, como en PetzID) y la devuelve en base64 */
-async function achicar(archivo){
+async function achicar(archivo,max){max=max||800;
   let img=null;
   try{img=await createImageBitmap(archivo)}catch(e){img=await new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=URL.createObjectURL(archivo)})}
   if(!img)return null;
-  const k=Math.min(1,800/Math.max(img.width,img.height)),cv=document.createElement('canvas');
+  const k=Math.min(1,max/Math.max(img.width,img.height)),cv=document.createElement('canvas');
   cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
   return cv.toDataURL('image/jpeg',.8).split(',')[1];
 }
 $('#fotoIn').addEventListener('change',async e=>{
-  const archivo=e.target.files&&e.target.files[0],uid=fotoPara,er=$('#mascErr');if(!archivo||!uid)return;er.textContent='';
-  if(!/^image\//.test(archivo.type||'')){er.textContent='Elige una foto (JPG o PNG).';return}
-  const btn=document.querySelector(`[data-foto="${CSS.escape(uid)}"]`);if(btn){btn.disabled=true;btn.textContent='Subiendo foto…'}
-  const fin=m=>{pintarMascota();er.textContent=m||''};
+  const archivo=e.target.files&&e.target.files[0],uid=fotoPara;if(!archivo||!uid)return;mascErr('');
+  if(!/^image\//.test(archivo.type||'')){mascErr('Elige una foto (JPG o PNG).');return}
+  document.querySelectorAll(`[data-foto="${CSS.escape(uid)}"]`).forEach(btn=>{btn.disabled=true;btn.textContent='Subiendo foto…'});
+  const fin=m=>{pintarMascota();mascErr(m)};
   const b64=await achicar(archivo);if(!b64)return fin('No pudimos leer esa foto. Prueba con otra.');
   let url=null;
   for(const espera of [0,1200,2500]){   // la red del celular a veces falla en el primer intento
