@@ -25,6 +25,7 @@ export default async function handler(req, res) {
   let titulo = 'Tribbi · Intercambios que arman tribu';
   let texto = 'Organiza tu amigo secreto gratis: agrega a tu familia o amigos y Tribbi hace el sorteo.';
   let imagen = base + '/tribbi/og/navidad.jpg';
+  let medidas = false;  // solo las copias "-og" (1200×630) llevan medidas
 
   if (e) {
     try {
@@ -49,7 +50,18 @@ export default async function handler(req, res) {
           if (d.inscripcion_hasta && new Date(d.inscripcion_hasta) > new Date()) texto += ' ¡Tienes hasta el ' + dia(d.inscripcion_hasta) + ' para unirte!';
         }
         const u = d.portada_url;
-        if (typeof u === 'string' && u.startsWith(SUPABASE_URL + '/storage/v1/object/public/tribbi/portadas/')) imagen = u;
+        if (typeof u === 'string' && u.startsWith(SUPABASE_URL + '/storage/v1/object/public/tribbi/portadas/')) {
+          // WhatsApp no muestra fotos pesadas: se usa la copia ligera (1200×630, <200 KB) que se guarda al subir la portada.
+          // Las portadas subidas antes no la tienen: entonces va la original (sin medidas).
+          imagen = u; medidas = false;
+          const og = u.replace(/\.jpg$/i, '-og.jpg');
+          if (og !== u) {
+            try {
+              const h = await fetch(og, { method: 'HEAD' });
+              if (h.ok) { imagen = og; medidas = true; }
+            } catch (err) { /* se queda la original */ }
+          }
+        }
         else imagen = base + '/tribbi/og/' + (DISENOS.includes(d.portada_diseno) ? d.portada_diseno : 'navidad') + '.jpg';
       }
     } catch (err) { /* si Supabase no responde, se comparte la ficha general de Tribbi */ }
@@ -65,6 +77,10 @@ export default async function handler(req, res) {
 <meta property="og:title" content="${esc(titulo)}">
 <meta property="og:description" content="${esc(texto)}">
 <meta property="og:image" content="${esc(imagen)}">
+<meta property="og:image:secure_url" content="${esc(imagen)}">
+<meta property="og:image:type" content="image/jpeg">${medidas ? `
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">` : ''}
 <meta property="og:image:alt" content="${esc(titulo)}">
 <meta property="og:url" content="${esc(e ? base + '/tribbi/' + e + (i ? '/' + i : '') : base + '/tribbi/')}">
 <meta name="twitter:card" content="summary_large_image">
