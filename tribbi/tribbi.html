@@ -174,6 +174,13 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
 .compro b{display:block}
 .compro .fila{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
 .compro img{max-width:110px;max-height:110px;border-radius:10px;border:2px solid var(--line);display:block;margin-top:8px}
+.dona{background:var(--card);border:2px solid var(--pine);border-radius:18px;padding:14px 16px;margin-top:14px}
+.dona h3{margin:0 0 4px;font-size:1.1rem}
+.dona p{margin:0 0 8px}
+.dona .opc{display:flex;gap:10px;align-items:center;margin:8px 0 0;font-weight:500}
+.dona .opc input[type=radio]{width:20px;height:20px;accent-color:var(--pine);flex:none;margin:0}
+.dona .fila{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.dona.hecha{background:var(--ok)}
 .petz{background:var(--soft);border-radius:14px;padding:10px 14px;margin:8px 0 0}
 .petz b{display:block}
 .status label{margin:12px 0 4px}
@@ -343,6 +350,7 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       <section aria-labelledby="h-theirs">
         <h2 class="sec" id="h-theirs">Ideas para tu amigo secreto</h2>
         <div id="theirWishes"></div>
+        <div id="donaAmigo" hidden></div>
       </section>
     </div>
     <section id="mascSec" aria-labelledby="h-masc" hidden>
@@ -351,14 +359,10 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
     </section>
     <input type="file" id="fotoIn" accept="image/*" hidden>
     <input type="file" id="comproIn" accept="image/*" hidden>
-    <div class="ayuda" id="ayudaBox" hidden>
-      <h2>¿Dudas o algún inconveniente?</h2>
-      <p>Escríbele a PetMi por WhatsApp y te ayudamos.</p>
-      <a class="wa-btn" id="waAyuda" target="_blank" rel="noopener">💬 Contactar a PetMi</a>
-    </div>
     <section id="mineSec" aria-labelledby="h-mine" hidden>
       <h2 class="sec" id="h-mine">Lo que a ti te gustaría recibir</h2>
       <p class="hint" style="margin:4px 0 0">Solo lo verá la persona que te tiene de amigo secreto. Puede ser para ti o para tu mascota.</p>
+      <div id="donaBox" hidden></div>
       <form class="wish-form" id="wishForm">
         <input class="field" id="wishInput" maxlength="120" placeholder="Ej. collar talla M, calcetas de gatito para mi mami, una correa larga" aria-label="Nueva idea de regalo" autocomplete="off">
         <button class="small-btn" type="submit">Agregar</button>
@@ -366,6 +370,11 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       <p class="msg bad" id="wishErr" role="alert" hidden></p>
       <ul class="wishes" id="myWishes"></ul>
     </section>
+    <div class="ayuda" id="ayudaBox" hidden>
+      <h2>¿Dudas o algún inconveniente?</h2>
+      <p>Escríbele a PetMi por WhatsApp y te ayudamos.</p>
+      <a class="wa-btn" id="waAyuda" target="_blank" rel="noopener">💬 Contactar a PetMi</a>
+    </div>
   </div>
   <footer><span>Amigo secreto PetMi 🐾</span><span id="contacto"></span></footer>
 </div>
@@ -454,7 +463,7 @@ const CONFIG={
   whatsapp:'50237673927'           // WhatsApp de PetMi para dudas y comprobantes (con 502, sin espacios)
 };
 const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
-const VERSION_PAGINA='v9';   // súbelo con cada cambio para saber qué versión está publicada
+const VERSION_PAGINA='v11';   // súbelo con cada cambio para saber qué versión está publicada
 const REGISTRO_PETZID='https://app.revistapetmi.com/registro.html';
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
@@ -517,6 +526,7 @@ const esAdmin=()=>new URLSearchParams(location.search).has('admin');
 let ed=null,yo=null,volverA=null;
 /* Regreso de Recurrente: ?pago=ok | pendiente | revisar | cancelado */
 const PAGO=qs.get('pago')||'';
+const DONA=qs.get('dona')||'';   // regreso de Recurrente de una donación: ok | pendiente | revisar | cancelado
 let recienPagado=false;
 const AVISO_PAGO={cancelado:'Cancelaste el pago. Tu lugar todavía no está confirmado: puedes pagar cuando quieras.',
   revisar:'No pudimos confirmar tu pago. Si ya se te cobró, escríbele a PetMi con tu correo.',
@@ -698,11 +708,16 @@ function renderMe(fresh){
   }else if(!yo.tengo_amigo){
     h=`<div class="status warn"><h2>No entraste al sorteo</h2><p>Al cierre de inscripciones tu pago o tu lista de deseos no estaban completos. Si crees que es un error, escríbele a PetMi.</p></div>`;
   }else{
-    const m=yo.mi_regalo||{},pm=yo.para_mi;
+    const m=yo.mi_regalo||{},pm=yo.para_mi,da=don&&don.amigo&&don.amigo.dona_a?don.amigo:null;
+    if(da)h=`<div class="status go"><h2>${da.pagada_en?'¡Gracias por tu donación! 💚':'Tu amigo secreto pidió una donación'}</h2>
+      <p>${da.pagada_en?`Donaste ${q(da.monto||don.donacion_q)} a ${esc(da.dona_a)} en su nombre. No tienes que comprar ni entregar regalo.`:`En vez de regalo, dona ${q(don.donacion_q)} a ${esc(da.dona_a)} en su nombre. No tienes que comprar ni entregar regalo.`}</p>
+      <ul class="steps"><li class="done"><b>✓</b>Descubre a tu amigo secreto</li><li class="${da.pagada_en?'done':''}"><b>${da.pagada_en?'✓':'○'}</b>Dona ${q(don.donacion_q)} a ${esc(da.dona_a)}</li></ul></div>`;
+    else{
     const pasos=[[!!yo.amigo,'Descubre a tu amigo secreto'],[!!m.recibido_petmi_en,`Entrega su regalo a PetMi antes del ${dia(ed.entrega_hasta)}`],[!!m.entregado_en,'PetMi se lo entrega']];
     h=`<div class="status go"><h2>Tu código para la etiqueta</h2><span class="tag">${esc(i.codigo)}</span>
       <p>Envuelve el regalo, pega este código por fuera y entrégalo a PetMi. No pongas tu nombre si quieres mantener la sorpresa.</p>
       <ul class="steps">${pasos.map(([ok,t])=>`<li class="${ok?'done':''}"><b>${ok?'✓':'○'}</b>${esc(t)}</li>`).join('')}</ul></div>`;
+    }
     if(pm&&pm.entregado_en)h+=`<div class="status ${pm.confirmado_en?'':'go'}"><h2>${pm.confirmado_en?'Confirmaste que recibiste tu regalo 🎁':'¡Tu regalo ya fue entregado! 🎁'}</h2>
       ${pm.confirmado_en?'<p>Gracias por participar.</p>':'<p>Cuando lo tengas en tus manos, confírmalo aquí.</p><button class="small-btn alt" id="recibiBtn">Ya recibí mi regalo</button>'}</div>`;
   }
@@ -721,6 +736,8 @@ function renderMe(fresh){
   // Amigo secreto
   const verAmigo=yo.sorteo_hecho&&yo.tengo_amigo;$('#amigoBox').hidden=!verAmigo;
   if(verAmigo)renderAmigo(fresh);
+  if(pagada&&fresh)cargarDonacion();
+  pintarDonacion();
   // Mis ideas
   const editable=i&&!['cancelada','excluida'].includes(i.estado)&&new Date()<=new Date(ed.entrega_hasta);
   $('#mineSec').hidden=!pagada;$('#wishForm').hidden=!editable;
@@ -766,6 +783,90 @@ async function cargarPetzid(){
   else box.innerHTML=`<div class="petz"><b>No encontramos una cuenta de PetzID con ${esc(correo||'tu correo')}</b>Tu amigo secreto le regala a tu mascota. Si ya tiene PetzID con otro correo, <button type="button" class="link-btn" data-salir style="padding:0">entra con ese correo</button>. Si no, <a href="${REGISTRO_PETZID}" target="_blank" rel="noopener">créale su PetzID</a> con este correo y vuelve aquí, o sigue sin ella.</div>`;
   $('#uNombre').value=nombre;$('#uWa').value=wa;
 }
+/* ── Donación en vez de regalo ──
+   Quien recibe elige "prefiero una donación a…"; quien regala, al descubrirlo, la paga en línea (Recurrente).
+   Monto y organizaciones salen de Supabase (tribbi_donacion, 16_donaciones.sql). Sin ese SQL no se muestra nada. */
+let don=null,donEditando=false;
+const AVISO_DONA={ok:'¡Gracias! Tu donación quedó registrada. 💚',pendiente:'Tu donación está en proceso. En cuanto se apruebe queda registrada.',
+  revisar:'No pudimos confirmar tu donación. Si ya se te cobró, escríbele a PetMi.',cancelado:'Cancelaste la donación. Puedes hacerla cuando quieras.'};
+async function cargarDonacion(){
+  const r=await rpc('tribbi_donacion',{p_slug:ED});
+  const antes=JSON.stringify(don&&don.amigo);
+  don=r.ok?r.d:null;
+  if(DONA==='ok'&&don&&don.amigo&&don.amigo.pagada_en&&!cargarDonacion.festejo){cargarDonacion.festejo=true;confetti();history.replaceState(null,'',base())}
+  if(JSON.stringify(don&&don.amigo)!==antes)renderMe(false);else pintarDonacion();
+}
+function pintarDonacion(){
+  const box=$('#donaBox'),am=$('#donaAmigo');
+  if(!don){box.hidden=true;am.hidden=true;return}
+  // Lo mío (quien recibe)
+  const mi=don.mi||{};box.hidden=false;
+  if(mi.recibida_en)box.innerHTML=`<div class="dona hecha"><h3>💚 Tu amigo secreto donó en tu nombre</h3><p>Donó ${q(mi.monto||don.donacion_q)} a <b>${esc(mi.dona_a)}</b>. ¡Gracias por participar así!</p></div>`;
+  else if(!donEditando)box.innerHTML=`<div class="dona"><h3>🐾 ¿Regalo o donación?</h3>
+    <p>${mi.dona_a?`Elegiste una <b>donación a ${esc(mi.dona_a)}</b>: quien te tiene de amigo secreto donará ${q(don.donacion_q)} y PetMi la entrega en tu nombre, en vez de un regalo.`
+      :`Si prefieres, tu amigo secreto puede donar ${q(don.donacion_q)} a una organización y PetMi la entrega en tu nombre, en vez de un regalo.`}</p>
+    ${don.puede_cambiar?`<div class="fila"><button class="small-btn alt" type="button" data-dona-editar>${mi.dona_a?'Cambiar':'Prefiero una donación'}</button></div>`
+      :'<p class="tiny">Tu amigo secreto ya te descubrió: ya no se puede cambiar.</p>'}</div>`;
+  else{
+    const ops=don.opciones||[],otra=mi.dona_a&&!ops.includes(mi.dona_a)?mi.dona_a:'';
+    const sel=mi.dona_a?(otra?'__otra':mi.dona_a):'';
+    box.innerHTML=`<div class="dona"><h3>🐾 ¿Qué prefieres recibir?</h3>
+      <label class="opc"><input type="radio" name="donaTipo" value="regalo" ${mi.dona_a?'':'checked'}> 🎁 Un regalo</label>
+      <label class="opc"><input type="radio" name="donaTipo" value="donacion" ${mi.dona_a?'checked':''}> 💚 Donación a</label>
+      <select class="field" id="donaSel" aria-label="Organización" style="margin-top:6px">
+        <option value="" ${sel===''?'selected':''} disabled>Elige una organización…</option>
+        ${ops.map(o=>`<option value="${esc(o)}" ${sel===o?'selected':''}>${esc(o)}</option>`).join('')}
+        <option value="__otra" ${sel==='__otra'?'selected':''}>Otra…</option>
+      </select>
+      <div id="donaOtraBox" ${sel==='__otra'?'':'hidden'}><label for="donaOtra" class="tiny" style="margin:8px 0 4px">¿Cuál? Escribe su nombre</label><input class="field" id="donaOtra" maxlength="80" value="${esc(otra)}" placeholder="Ej. Refugio Patitas Felices"></div>
+      <p class="tiny" style="margin:10px 0 0">Si eliges donación, tu amigo secreto dona ${q(don.donacion_q)} en línea y PetMi la entrega <b>en tu nombre</b> a la organización. Tus ideas de regalo se quedan por si acaso.</p>
+      <p class="msg bad" id="donaErr" role="alert"></p>
+      <div class="fila"><button class="small-btn alt" type="button" data-dona-guardar>Guardar</button><button class="link-btn" type="button" data-dona-cancelar>Cancelar</button></div></div>`;
+  }
+  // Lo de mi amigo secreto (quien regala)
+  const da=don.amigo;
+  if(!da||!da.dona_a){am.hidden=true;am.innerHTML='';return}
+  am.hidden=false;
+  am.innerHTML=da.pagada_en
+    ?`<div class="dona hecha"><h3>✓ Donación hecha</h3><p>Donaste ${q(da.monto||don.donacion_q)} a <b>${esc(da.dona_a)}</b> en nombre de tu amigo secreto (${esc(diaHora(da.pagada_en))}). No tienes que comprar ni entregar regalo.</p></div>`
+    :`<div class="dona"><h3>💚 Pidió una donación a ${esc(da.dona_a)}</h3>
+      <p>En vez de comprarle un regalo, dona <b>${q(don.donacion_q)}</b> en línea en su nombre. PetMi entrega la donación a ${esc(da.dona_a)} y le avisa a tu amigo secreto. No tienes que entregar nada.</p>
+      <p class="msg" id="donaMsg" role="status">${esc(AVISO_DONA[DONA]&&DONA!=='ok'?AVISO_DONA[DONA]:'')}</p>
+      <div class="fila"><button class="big-btn" type="button" id="donarBtn">Donar ${q(don.donacion_q)}</button></div></div>`;
+}
+document.addEventListener('change',e=>{
+  if(e.target.id==='donaSel'){const r=document.querySelector('input[name=donaTipo][value=donacion]');if(r)r.checked=true;
+    const b=$('#donaOtraBox');b.hidden=e.target.value!=='__otra';if(!b.hidden)$('#donaOtra').focus()}
+  if(e.target.name==='donaTipo'&&e.target.value==='donacion'&&!$('#donaSel').value)$('#donaSel').focus();
+});
+document.addEventListener('click',async e=>{
+  if(e.target.closest('[data-dona-editar]')){donEditando=true;pintarDonacion();return}
+  if(e.target.closest('[data-dona-cancelar]')){donEditando=false;pintarDonacion();return}
+  if(e.target.closest('[data-dona-guardar]')){
+    const b=e.target.closest('[data-dona-guardar]'),tipo=(document.querySelector('input[name=donaTipo]:checked')||{}).value||'regalo';
+    const op=tipo==='donacion'?$('#donaSel').value:'';
+    if(tipo==='donacion'&&!op){$('#donaErr').textContent='Elige a qué organización.';$('#donaSel').focus();return}
+    const v=op==='__otra'?$('#donaOtra').value.trim():op;
+    if(op==='__otra'&&v.length<2){$('#donaErr').textContent='Escribe el nombre de la organización.';$('#donaOtra').focus();return}
+    b.disabled=true;
+    const r=await rpc('tribbi_mi_donacion',{p_slug:ED,p_dona_a:v||null});
+    b.disabled=false;
+    if(!r.ok){$('#donaErr').textContent=r.d.mensaje||'No se pudo guardar. Intenta de nuevo.';return}
+    don=r.d;donEditando=false;pintarDonacion();return;
+  }
+  if(e.target.id==='donarBtn'){
+    const b=e.target,m=$('#donaMsg');b.disabled=true;m.className='msg';m.textContent='Abriendo el pago…';
+    const tk=await token();if(!tk){abrirLogin();return}
+    try{
+      const r=await fetch(CONFIG.pagoApi,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({tipo:'donacion',slug:ED})});
+      let d={};try{d=await r.json()}catch(_){}
+      if(r.ok&&d.url){location.href=d.url;return}
+      m.className='msg bad';m.textContent=d.mensaje||'No se pudo abrir el pago. Intenta de nuevo.';
+    }catch(_){m.className='msg bad';m.textContent='Sin conexión. Revisa tu internet e intenta de nuevo.'}
+    b.disabled=false;
+  }
+});
+
 /* ── Contactar a PetMi y comprobante de pago ── */
 function waLink(texto){return CONFIG.whatsapp?'https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent(texto):''}
 function datosParaPetMi(){
@@ -1040,7 +1141,7 @@ async function setupScratch(abierta){
 async function reveal(){
   if(scratchDone)return;scratchDone=true;
   const ok=await pedirAmigo();if(!ok){scratchDone=false;return}
-  $('#scratchCv').classList.add('gone');$('#revealBtn').hidden=true;confetti();renderMe(false);
+  $('#scratchCv').classList.add('gone');$('#revealBtn').hidden=true;confetti();renderMe(false);cargarDonacion();
 }
 $('#revealBtn').onclick=()=>reveal();
 function confetti(){
