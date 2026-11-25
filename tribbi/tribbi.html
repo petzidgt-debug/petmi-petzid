@@ -154,6 +154,37 @@ td.nw{white-space:nowrap}
 
 footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:.95rem;border-top:2px dashed var(--line)}
 
+/* Pasos de la inscripción */
+.paso{font-size:.85rem;font-weight:600;color:var(--pine);text-transform:uppercase;letter-spacing:.06em;margin:0 0 2px}
+.box .paso{text-align:center}
+.status hr{border:0;border-top:2px dashed var(--line);margin:16px 0}
+.petz{background:var(--soft);border-radius:14px;padding:10px 14px;margin:8px 0 0}
+.petz b{display:block}
+.status label{margin:12px 0 4px}
+/* Tu mascota en el intercambio */
+.mascotas{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:10px;margin-top:12px}
+.masc{position:relative;display:flex;flex-direction:column;border:2px solid var(--line);background:var(--card);border-radius:18px;overflow:hidden;text-align:left}
+.masc[aria-pressed="true"]{border-color:var(--pine);box-shadow:0 0 0 2px var(--pine)}
+.masc .elegir{all:unset;cursor:pointer;display:block}
+.masc .elegir:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+.masc .ft{display:grid;place-items:center;aspect-ratio:1;background:var(--soft);font-size:3rem}
+.masc .ft img{width:100%;height:100%;object-fit:cover;display:block}
+.masc .nm{display:block;padding:8px 12px 0;font-weight:600;font-size:1.1rem;overflow-wrap:anywhere}
+.masc .sb{display:block;padding:0 12px;color:var(--muted);font-size:.9rem}
+.masc .sel{position:absolute;top:8px;left:8px;background:var(--pine);color:#fff;font-weight:700;font-size:.8rem;border-radius:999px;padding:2px 10px}
+.masc .sinfoto{color:var(--red);font-weight:600;font-size:.85rem;padding:2px 12px 0}
+.masc .foto-btn{border:0;background:none;color:var(--pine);font-weight:600;font-size:.92rem;cursor:pointer;padding:8px 12px 12px;text-align:left}
+.masc .foto-btn:disabled{color:var(--muted);cursor:wait}
+.desc{grid-column:1/-1;margin-top:4px}
+.desc label{margin:6px 0 4px}
+.desc .fila{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap}
+.amigo-masc{display:flex;gap:14px;align-items:center;background:var(--soft);border-radius:18px;padding:12px;margin-top:12px;text-align:left}
+.amigo-masc .ft{width:96px;height:96px;border-radius:14px;overflow:hidden;flex:none;display:grid;place-items:center;background:var(--card);font-size:2.6rem}
+.amigo-masc .ft img{width:100%;height:100%;object-fit:cover}
+.amigo-masc b{display:block;font-size:1.25rem}
+.amigo-masc small{color:var(--muted)}
+.amigo-desc{margin:10px 0 0;font-style:italic;overflow-wrap:anywhere}
+
 @media (prefers-reduced-motion:reduce){.bulb{animation:none}.confetti{display:none}.scratch canvas{transition:none}}
 </style>
 </head>
@@ -205,14 +236,16 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
   <div class="narrow">
     <div class="topbar"><button class="link-btn" data-go="inicio">← Volver</button></div>
     <form class="box" id="emailForm" autocomplete="on">
+      <p class="paso" id="pasoCorreo">Paso 1 de 3 · Tu correo</p>
       <h1>Entra con tu correo</h1>
-      <p>Te enviamos un código para confirmar que el correo es tuyo. No necesitas contraseña.</p>
+      <p>Te enviamos un código para confirmar que el correo es tuyo. No necesitas contraseña. Si ya tienes PetzID, usa el mismo correo.</p>
       <label for="emailIn">Correo electrónico</label>
       <input class="field" id="emailIn" type="email" autocomplete="email" required maxlength="120">
       <div class="err" id="emailErr" role="alert"></div>
       <div class="center"><button class="big-btn" type="submit" id="emailBtn">Enviar código</button></div>
     </form>
     <form class="box" id="codeForm" hidden autocomplete="off">
+      <p class="paso" id="pasoCodigo">Paso 1 de 3 · Tu correo</p>
       <h1>Revisa tu correo</h1>
       <p id="codeText"></p>
       <label for="codeIn">Código</label>
@@ -287,11 +320,18 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
         <div id="theirWishes"></div>
       </section>
     </div>
+    <section id="mascSec" aria-labelledby="h-masc" hidden>
+      <h2 class="sec" id="h-masc">Tu mascota en el intercambio</h2>
+      <p class="hint" id="mascTxt" style="margin:4px 0 0"></p>
+      <div class="mascotas" id="mascotas"></div>
+      <p class="msg bad" id="mascErr" role="alert"></p>
+      <input type="file" id="fotoIn" accept="image/*" hidden>
+    </section>
     <section id="mineSec" aria-labelledby="h-mine" hidden>
       <h2 class="sec" id="h-mine">Lo que a ti te gustaría recibir</h2>
       <p class="hint" style="margin:4px 0 0">Solo lo verá la persona que te tiene de amigo secreto. Puede ser para ti o para tu mascota.</p>
       <form class="wish-form" id="wishForm">
-        <input class="field" id="wishInput" maxlength="120" placeholder="Ej. juguete para perro grande, una taza, libros de misterio" aria-label="Nueva idea de regalo" autocomplete="off">
+        <input class="field" id="wishInput" maxlength="120" placeholder="Ej. collar talla M, calcetas de gatito para mi mami, una correa larga" aria-label="Nueva idea de regalo" autocomplete="off">
         <button class="small-btn" type="submit">Agregar</button>
       </form>
       <p class="msg bad" id="wishErr" role="alert" hidden></p>
@@ -384,6 +424,8 @@ const CONFIG={
   contacto:''                      // correo o WhatsApp de PetMi para dudas, por ejemplo 'WhatsApp 5555 1234'
 };
 const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
+const VERSION_PAGINA='v6';   // súbelo con cada cambio para saber qué versión está publicada
+const REGISTRO_PETZID='https://app.revistapetmi.com/registro.html';
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
 const ED=ED_URL||CONFIG.edicion;
@@ -434,6 +476,7 @@ async function rpc(fn,args){
 const bulbColors=['#D7263D','#F2B33D','#1F8A5B','#2F7FC1','#E0662A'];
 document.querySelectorAll('.lights').forEach(l=>l.innerHTML=Array.from({length:18},(_,i)=>`<span class="bulb" style="--c:${bulbColors[i%5]};--d:${(i%4)*.5}s"></span>`).join(''));
 if(CONFIG.contacto)$('#contacto').textContent='Dudas: '+CONFIG.contacto;
+document.querySelectorAll('footer').forEach(f=>{const v=document.createElement('span');v.className='tiny';v.textContent=VERSION_PAGINA;f.appendChild(v)});
 
 /* ── Navegación: tribbi.html, tribbi.html?admin=1 y tribbi.html?pago=ok (regreso de Recurrente) ── */
 const VIEWS=['inicioView','loginView','perfilView','meView','adminView'];
@@ -441,6 +484,12 @@ function show(v){VIEWS.forEach(x=>$('#'+x).hidden=x!==v);window.scrollTo(0,0)}
 const qs=new URLSearchParams(location.search);
 const esAdmin=()=>new URLSearchParams(location.search).has('admin');
 let ed=null,yo=null,volverA=null;
+/* Regreso de Recurrente: ?pago=ok | pendiente | revisar | cancelado */
+const PAGO=qs.get('pago')||'';
+let recienPagado=false;
+const AVISO_PAGO={cancelado:'Cancelaste el pago. Tu lugar todavía no está confirmado: puedes pagar cuando quieras.',
+  revisar:'No pudimos confirmar tu pago. Si ya se te cobró, escríbele a PetMi con tu correo.',
+  pendiente:'Tu pago está en proceso. En cuanto se apruebe quedas inscrito.'};
 
 async function cargarEdicion(){
   const r=await rpc('tribbi_edicion',{p_slug:ED});
@@ -453,8 +502,9 @@ function pintarEdicion(){
   $('#facts1').innerHTML=f+(ed.inscripciones_abiertas?'<span class="chip ok">Inscripciones abiertas</span>':'');
   $('#facts2').innerHTML=f;
   $('#pasos').innerHTML=[
-    ['Inscríbete y paga el envío',`Del ${dia(ed.inscripcion_desde)} al ${dia(ed.inscripcion_hasta)}. El envío cuesta ${q(ed.envio_q)} y lo hace el mensajero de PetMi.`],
-    ['Deja al menos una idea de regalo','Puede ser para ti o para tu mascota. Sin ideas no entras al sorteo.'],
+    ['Inscríbete con tu correo y paga el envío',`Del ${dia(ed.inscripcion_desde)} al ${dia(ed.inscripcion_hasta)}. El envío cuesta ${q(ed.envio_q)} y lo hace el mensajero de PetMi. Con el pago queda confirmado tu lugar.`],
+    ed.min_ideas>0?['Deja al menos una idea de regalo','Puede ser para ti o para tu mascota. Sin ideas no entras al sorteo.']
+      :['Presenta a tu mascota','Elige a tu mascota de PetzID, súbele una foto y, si quieres, deja ideas de regalo.'],
     ['Descubre a tu amigo secreto',`El ${dia(ed.sorteo_en)} raspas tu tarjeta y ves su nombre y sus ideas.`],
     ['Compra y entrega el regalo a PetMi',`Presupuesto de ${q(ed.presupuesto_q)}. Márcalo con tu código y entrégalo a más tardar el ${dia(ed.entrega_hasta)}.`],
     ['Recibe tu regalo en casa',`PetMi reparte del ${dia(ed.reparto_desde)} al ${dia(ed.reparto_hasta)}. Si tu amigo secreto falla, el Ángel de Rescate de PetMi te envía uno.`]
@@ -468,7 +518,7 @@ function pintarEdicion(){
 async function route(){
   if(!ed&&!await cargarEdicion()){show('inicioView');return}
   if(esAdmin()){if(!await token()){volverA='admin';abrirLogin();return}await showAdmin();return}
-  if(!await token()){show('inicioView');return}
+  if(!await token()){show('inicioView');if(PAGO){$('#edErr').hidden=false;$('#edErr').className='msg';$('#edErr').textContent='Entra con tu correo para ver cómo va tu inscripción.'}return}
   await showMe();
 }
 $('#entrarBtn').onclick=()=>{volverA=null;token().then(t=>t?showMe():abrirLogin())};
@@ -487,6 +537,7 @@ let correo='';
 function abrirLogin(){
   $('#emailForm').hidden=false;$('#codeForm').hidden=true;$('#passForm').hidden=true;$('#emailErr').textContent='';
   $('#passLink').hidden=volverA!=='admin';
+  $('#pasoCorreo').hidden=$('#pasoCodigo').hidden=volverA==='admin'||!(ed&&ed.inscripciones_abiertas);
   if(ses&&ses.email)$('#emailIn').value=ses.email;
   show('loginView');setTimeout(()=>$('#emailIn').focus(),50);
 }
@@ -550,40 +601,48 @@ async function showMe(){
   const r=await rpc('tribbi_yo',{p_slug:ED});
   if(!r.ok){if(r.d.error==='sesion'){borrarSesion();abrirLogin();return}show('inicioView');$('#edErr').hidden=false;$('#edErr').className='msg bad';$('#edErr').textContent=r.d.mensaje;return}
   yo=r.d;
-  if(!yo.perfil){abrirPerfil();return}
+  const est=yo.inscripcion&&yo.inscripcion.estado;
+  if(PAGO==='ok'&&est==='pagada'){recienPagado=true;history.replaceState(null,'',base())}
   show('meView');renderMe(true);
-  if(qs.get('pago')==='ok'&&yo.inscripcion&&yo.inscripcion.estado==='pendiente_pago')esperarPago();
+  if(recienPagado)confetti();
+  if((PAGO==='ok'||PAGO==='pendiente')&&est==='pendiente_pago')esperarPago();
 }
 function renderMe(fresh){
-  $('#meHola').textContent=`¡Hola, ${yo.perfil.nombre_publico}!`;
+  $('#meHola').textContent=yo.perfil&&yo.perfil.nombre_publico?`¡Hola, ${yo.perfil.nombre_publico}!`:'¡Hola!';
+  $('#editarDatos').hidden=!yo.perfil;
   const i=yo.inscripcion,est=$('#estado');let h='';
   const abierto=ed.inscripciones_abiertas,antes=new Date()<new Date(ed.inscripcion_desde);
   const nIdeas=(yo.mis_ideas||[]).length,faltan=Math.max(0,ed.min_ideas-nIdeas);
-  const reglas=`<details class="rules"><summary>Leer el reglamento</summary><ol>
+  const reglas=`<details class="rules" id="reglasDet"><summary>Leer el reglamento</summary><ol>
       <li>Solo mayores de 18 años, dentro del área de entrega de PetMi. Una inscripción por persona.</li>
       <li>El envío cuesta ${q(ed.envio_q)} y se paga al inscribirte. Después del sorteo no se reembolsa.</li>
-      <li>Para entrar al sorteo necesitas al menos ${ed.min_ideas} idea en tu lista de deseos al cierre (${dia(ed.inscripcion_hasta)}).</li>
+      <li>${ed.min_ideas>0?`Para entrar al sorteo necesitas al menos ${ed.min_ideas} idea en tu lista de deseos al cierre (${dia(ed.inscripcion_hasta)}).`:'No es necesario tener lista de regalos para participar.'}</li>
       <li>El sorteo es el ${dia(ed.sorteo_en)}, al azar. Nadie queda consigo mismo.</li>
       <li>El regalo tiene un presupuesto de ${q(ed.presupuesto_q)} y debe ser nuevo. No se permiten animales vivos, alimentos perecederos, medicamentos, alcohol, tabaco, armas, artículos ilegales ni contenido para adultos.</li>
       <li>Envuélvelo, márcalo con tu código y entrégalo a PetMi a más tardar el ${dia(ed.entrega_hasta)}. PetMi te avisará cómo y dónde.</li>
-      <li>PetMi reparte del ${dia(ed.reparto_desde)} al ${dia(ed.reparto_hasta)}. Si tu regalo no llega a tiempo, PetMi te envía uno de respaldo (Ángel de Rescate).</li>
       <li>Quien no entregue a tiempo pierde el pago del envío y puede quedar fuera de futuras ediciones.</li>
       <li>Tu dirección se guarda cifrada y solo la ve PetMi. Tu amigo secreto solo ve tu nombre público y tus ideas.</li>
       <li>No reveles a quién le regalas ni contactes a tu amigo secreto para pedirle datos.</li>
       ${(ed.reglas||[]).map(t=>`<li>${esc(t)}</li>`).join('')}
     </ol>${CONFIG.reglamentoUrl?`<a href="${esc(CONFIG.reglamentoUrl)}" target="_blank" rel="noopener">Reglamento completo</a>`:''}</details>`;
   if(!i||i.estado==='cancelada'){
-    if(abierto)h=`<div class="status go"><h2>Inscríbete al intercambio</h2><p>Al inscribirte pagas ${q(ed.envio_q)} de envío. Las inscripciones cierran el ${dia(ed.inscripcion_hasta)}.</p>
-      ${reglas}<label class="check"><input type="checkbox" id="aceptoIn"> <span>Leí y acepto el reglamento.</span></label>
+    if(abierto)h=`<div class="status go" id="unirCard">
+      <p class="paso">Paso 2 de 3 · Tus datos</p><h2>Inscríbete al intercambio</h2>
+      <div id="petzBox"><p class="tiny">Buscando tu cuenta de PetzID…</p></div>
+      <div id="campoNombre" hidden><label for="uNombre">Tu nombre</label><input class="field" id="uNombre" autocomplete="name" maxlength="80"></div>
+      <div id="campoWa" hidden><label for="uWa">WhatsApp <small>(para coordinar la entrega)</small></label><input class="field" id="uWa" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="5555 1234"></div>
+      <hr><p class="paso">Paso 3 de 3 · Pago</p>
+      <p>Pagas ${q(ed.envio_q)} de envío y con eso queda confirmado tu lugar. Después eliges a tu mascota, subes su foto y dejas tus ideas. Las inscripciones cierran el ${dia(ed.inscripcion_hasta)}.</p>
+      ${reglas}<label class="check"><input type="checkbox" id="aceptoIn"> <span>Leí y acepto el <a href="#reglasDet" data-ver-reglas>reglamento</a>.</span></label>
       <p class="msg bad" id="inscErr" role="alert"></p><button class="big-btn" id="inscBtn">Inscribirme y pagar ${q(ed.envio_q)}</button></div>`;
     else h=`<div class="status"><h2>${antes?'Las inscripciones todavía no abren':'Las inscripciones ya cerraron'}</h2><p>${antes?`Abren el ${dia(ed.inscripcion_desde)}. Tus datos ya quedaron guardados.`:'Gracias por tu interés. Te esperamos en el próximo intercambio.'}</p></div>`;
   }else if(i.estado==='excluida'){
     h=`<div class="status warn"><h2>Tu inscripción no está habilitada</h2><p>Escríbele a PetMi para más información.</p></div>`;
   }else if(i.estado==='pendiente_pago'){
-    h=`<div class="status warn"><h2>Falta pagar el envío</h2><p>Tu inscripción se confirma cuando se aprueba el pago de ${q(ed.envio_q)}.${abierto?'':' Las inscripciones ya cerraron.'}</p>
+    h=`<div class="status warn"><p class="paso">Paso 3 de 3 · Pago</p><h2>Falta pagar el envío</h2><p>Tu lugar queda confirmado cuando se aprueba el pago de ${q(ed.envio_q)}. Después podrás elegir a tu mascota, subir su foto y dejar tus ideas.${abierto?'':' Las inscripciones ya cerraron.'}</p>
       ${abierto?`<p class="msg bad" id="inscErr" role="alert"></p><button class="big-btn" id="pagarBtn">Pagar ${q(ed.envio_q)}</button>`:''}<p class="msg" id="pagoMsg" role="status"></p></div>`;
   }else if(!yo.sorteo_hecho){
-    h=`<div class="status go"><h2>¡Estás inscrito! 🎉</h2><p>Tu código es</p><span class="tag">${esc(i.codigo)}</span>
+    h=`<div class="status go"><h2>${recienPagado?'¡Pago recibido, ya estás dentro! 🎉':'¡Estás inscrito! 🎉'}</h2><p>Tu código es</p><span class="tag">${esc(i.codigo)}</span>
       <p>El sorteo es el ${dia(ed.sorteo_en)}. Ese día vuelve aquí para descubrir a tu amigo secreto.</p>
       ${faltan?`<p><b>Te falta agregar ${faltan} idea de regalo</b> para entrar al sorteo.</p>`:''}</div>`;
   }else if(!yo.tengo_amigo){
@@ -601,21 +660,26 @@ function renderMe(fresh){
   const ib=$('#inscBtn');if(ib)ib.onclick=inscribirme;
   const pb=$('#pagarBtn');if(pb)pb.onclick=pagar;
   const rb=$('#recibiBtn');if(rb)rb.onclick=confirmarRecibido;
+  if($('#unirCard'))cargarPetzid();
+  if(i&&i.estado==='pendiente_pago'&&AVISO_PAGO[PAGO]&&$('#pagoMsg')&&!$('#pagoMsg').textContent)$('#pagoMsg').textContent=AVISO_PAGO[PAGO];
+  // Mascota: solo con la inscripción pagada
+  const pagada=!!i&&i.estado==='pagada';
+  if(!pagada)$('#mascSec').hidden=true;else if(fresh)cargarMascota();
   // Amigo secreto
   const verAmigo=yo.sorteo_hecho&&yo.tengo_amigo;$('#amigoBox').hidden=!verAmigo;
   if(verAmigo)renderAmigo(fresh);
   // Mis ideas
   const editable=i&&!['cancelada','excluida'].includes(i.estado)&&new Date()<=new Date(ed.entrega_hasta);
-  $('#mineSec').hidden=!i||['cancelada','excluida'].includes(i.estado);$('#wishForm').hidden=!editable;
+  $('#mineSec').hidden=!pagada;$('#wishForm').hidden=!editable;
   renderMine(editable);
 }
 function renderAmigo(fresh){
   const a=yo.amigo;
   if(fresh){$('#secretName').textContent=a?a.nombre:'🎁';$('#revealBtn').hidden=!!a;$('#scratchErr').hidden=true;setupScratch(!!a)}
   $('#h-theirs').textContent=a?`Ideas para ${a.nombre}`:'Ideas para tu amigo secreto';
-  $('#theirWishes').innerHTML=!a?'<p class="empty">Raspa tu tarjeta para ver sus ideas de regalo.</p>'
+  $('#theirWishes').innerHTML=(a&&a.mascota?amigoMascotaHTML(a.mascota):'')+(!a?'<p class="empty">Raspa tu tarjeta para ver sus ideas de regalo.</p>'
     :a.ideas.length?`<ul class="wishes">${a.ideas.map(w=>`<li><span>${esc(w.texto)}</span></li>`).join('')}</ul>`
-    :'<p class="empty">Todavía no tiene ideas. Vuelve a revisar en unos días.</p>';
+    :'<p class="empty">Todavía no tiene ideas. Vuelve a revisar en unos días.</p>');
 }
 function renderMine(editable){
   const mine=yo.mis_ideas||[];
@@ -637,12 +701,30 @@ $('#myWishes').addEventListener('click',async e=>{
   else if(r.d.error==='sesion'){borrarSesion();abrirLogin()}else wishErr(r.d.mensaje||'No se pudo quitar. Intenta de nuevo.');
 });
 
+/* Paso 2: con el correo validado se busca su cuenta de PetzID (nombre y WhatsApp). Solo se pide lo que falte. */
+async function cargarPetzid(){
+  const r=await rpc('tribbi_mis_datos_petzid',{}),box=$('#petzBox');if(!box)return;
+  const d=r.ok?r.d:{},pz=d.petzid||{},tb=d.tribbi||{};
+  const nombre=tb.nombre||pz.nombre||'',wa=tb.whatsapp||pz.whatsapp||'';
+  const correo=(ses&&ses.email)||'';
+  if(d.tiene_petzid)box.innerHTML=`<div class="petz"><b>🐾 Encontramos tu cuenta de PetzID</b>${esc(nombre||correo)}${wa?` · WhatsApp terminado en ${esc(String(wa).replace(/\D/g,'').slice(-4))}`:''}</div>`;
+  else box.innerHTML=`<div class="petz"><b>No encontramos una cuenta de PetzID con ${esc(correo||'tu correo')}</b>Solo necesitamos tu nombre y tu WhatsApp. Si tu mascota ya tiene PetzID con otro correo, <button type="button" class="link-btn" data-salir style="padding:0">entra con ese correo</button>.</div>`;
+  $('#uNombre').value=nombre;$('#uWa').value=wa;
+  $('#campoNombre').hidden=!!nombre;$('#campoWa').hidden=!!wa;
+}
+document.addEventListener('click',e=>{const a=e.target.closest('[data-ver-reglas]');if(!a)return;e.preventDefault();const d=$('#reglasDet');if(d){d.open=true;d.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'})}});
 async function inscribirme(){
   const err=$('#inscErr'),b=$('#inscBtn');
+  const nIn=$('#uNombre'),wIn=$('#uWa'),nombre=nIn?nIn.value.trim():'',wa=wIn?wIn.value.trim():'';
+  if(!$('#campoNombre').hidden&&nombre.length<2){err.textContent='Escribe tu nombre.';nIn.focus();return}
+  if(!$('#campoWa').hidden&&wa.replace(/\D/g,'').length<8){err.textContent='Escribe tu WhatsApp (8 números).';wIn.focus();return}
   if(!$('#aceptoIn').checked){err.textContent='Para inscribirte debes aceptar el reglamento.';return}
   b.disabled=true;err.textContent='';
-  const r=await rpc('tribbi_inscribirme',{p_slug:ED,p_acepto_reglamento:true,p_invitacion:INV||null});
-  if(!r.ok){b.disabled=false;if(r.d.error==='sesion'){borrarSesion();abrirLogin();return}err.textContent=r.d.mensaje||'No se pudo inscribir. Intenta de nuevo.';return}
+  const r=await rpc('tribbi_unirme',{p_slug:ED,p_invitacion:INV||null,p_acepto:true,p_nombre:nombre||null,p_whatsapp:wa||null});
+  if(!r.ok){b.disabled=false;
+    if(r.d.error==='sesion'||r.d.error==='correo'){borrarSesion();abrirLogin();return}
+    if(r.d.error==='datos'){const f=r.d.faltan||[];if(f.includes('nombre'))$('#campoNombre').hidden=false;if(f.includes('whatsapp'))$('#campoWa').hidden=false;err.textContent='Completa tus datos para seguir.';return}
+    err.textContent=r.d.error==='falta_sql'?'Falta correr 14_unirme_con_petzid.sql en Supabase.':(r.d.mensaje||'No se pudo inscribir. Intenta de nuevo.');return}
   if(r.d.estado==='pagada'){await showMe();return}
   await pagar(b,err);
 }
@@ -665,7 +747,7 @@ async function esperarPago(){
   for(let n=0;n<10;n++){
     await new Promise(r=>setTimeout(r,3000));
     const r=await rpc('tribbi_yo',{p_slug:ED});
-    if(r.ok&&r.d.inscripcion&&r.d.inscripcion.estado==='pagada'){yo=r.d;history.replaceState(null,'',base());renderMe(true);confetti();return}
+    if(r.ok&&r.d.inscripcion&&r.d.inscripcion.estado==='pagada'){yo=r.d;recienPagado=true;history.replaceState(null,'',base());renderMe(true);confetti();return}
   }
   if(msg())msg().textContent='Tu pago todavía no aparece. Si ya pagaste, recarga la página en unos minutos.';
 }
@@ -674,6 +756,95 @@ async function confirmarRecibido(){
   if(r.ok){const y=await rpc('tribbi_yo',{p_slug:ED});if(y.ok){yo=y.d;renderMe(false);confetti()}}
   else alert(r.d.mensaje||'No se pudo confirmar. Intenta de nuevo.');
 }
+
+/* ── Tu mascota: se elige de PetzID (mismo correo), con foto y descripción. Solo después de pagar. ── */
+const fotoOk=u=>typeof u==='string'&&/^https:\/\/[A-Za-z0-9.\-]+\/[^\s"'<>()]*$/.test(u);
+const emojiDe=m=>/gato/i.test((m&&m.especie)||'')?'🐱':'🐶';
+const subtitulo=m=>[m.especie,m.raza].filter(x=>x&&String(x).trim()).map(esc).join(' · ');
+function fotoHTML(m){return fotoOk(m.foto)?`<img src="${esc(m.foto)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('${emojiDe(m)}'))">`:emojiDe(m)}
+function amigoMascotaHTML(m){
+  return `<div class="amigo-masc"><span class="ft">${fotoHTML(m)}</span><span><small>Le regalas a</small><b>${esc(m.nombre)}</b><small>${subtitulo(m)}</small></span></div>`
+    +(m.descripcion?`<p class="amigo-desc">“${esc(m.descripcion)}”</p>`:'');
+}
+let masc=null,fotoPara=null;
+async function cargarMascota(){
+  const r=await rpc('tribbi_mi_mascota',{p_slug:ED});
+  if(!r.ok||!r.d||!Array.isArray(r.d.mascotas)){$('#mascSec').hidden=true;return}
+  masc=r.d;
+  if(!masc.elegida&&masc.puede_cambiar&&masc.mascotas.length===1){await elegir(masc.mascotas[0].uid,true);return}
+  pintarMascota();
+}
+function pintarMascota(){
+  const lista=masc.mascotas;$('#mascSec').hidden=false;
+  if(!lista.length){
+    $('#mascTxt').innerHTML=`Tu amigo secreto le va a regalar a tu mascota. Todavía no hay una mascota en PetzID con tu correo (<b>${esc(masc.correo||'')}</b>).`;
+    $('#mascotas').innerHTML=`<p style="grid-column:1/-1;margin:0"><a class="small-btn" style="display:inline-block;text-decoration:none" href="${REGISTRO_PETZID}" target="_blank" rel="noopener">Crear su PetzID</a></p>`
+      +`<p class="tiny" style="grid-column:1/-1;margin:0">Regístrala con el mismo correo y vuelve a esta página.</p>`;
+    return;
+  }
+  const el=lista.find(m=>m.uid===masc.elegida);
+  $('#mascTxt').textContent=!masc.puede_cambiar?'Tu amigo secreto ya la descubrió.'
+    :el?(el.tiene_foto?`${el.nombre} participa en el intercambio. Tu amigo secreto verá su foto al descubrirte.`:`${el.nombre} participa, pero no tiene foto: agrégale una para que tu amigo secreto la conozca.`)
+    :'¿Con cuál de tus mascotas participas? Tócala para elegirla.';
+  $('#mascotas').innerHTML=lista.filter(m=>masc.puede_cambiar||m.uid===masc.elegida).map(m=>{
+    const si=m.uid===masc.elegida;
+    return `<div class="masc" aria-pressed="${si}">
+      <button class="elegir" data-uid="${esc(m.uid)}" ${masc.puede_cambiar?'':'disabled'} aria-label="${si?'Participa':'Elegir a'} ${esc(m.nombre)}">
+        <span class="ft">${fotoHTML(m)}</span><span class="nm">${esc(m.nombre)}</span><span class="sb">${subtitulo(m)}</span>
+        ${m.tiene_foto?'':'<span class="sinfoto">Sin foto</span>'}</button>
+      ${si?'<span class="sel">Participa ✓</span>':''}
+      <button class="foto-btn" data-foto="${esc(m.uid)}">📷 ${m.tiene_foto?'Cambiar foto':'Agregar foto'}</button></div>`}).join('')
+    +(el?`<div class="desc"><label for="descIn">Cuéntale a tu amigo secreto sobre ${esc(el.nombre)}</label>
+      <textarea class="field" id="descIn" maxlength="300" placeholder="Ej. Es una perrita mayor y tranquila, talla M, le encantan los peluches que suenan y es alérgica al pollo.">${esc(el.descripcion||'')}</textarea>
+      <div class="fila"><span class="tiny" id="descCuenta"></span><button class="small-btn alt" id="descGuardar" type="button">Guardar descripción</button></div>
+      <p class="tiny" style="margin:4px 0 0">Es la misma descripción de su perfil de PetzID.</p></div>`:'');
+  const t=$('#descIn');if(t){const cnt=()=>{$('#descCuenta').textContent=`${t.value.length}/300`};t.addEventListener('input',()=>{cnt();$('#descGuardar').disabled=false;$('#descGuardar').textContent='Guardar descripción'});cnt()}
+}
+document.addEventListener('click',async e=>{
+  if(e.target.id!=='descGuardar')return;
+  const b=e.target,uid=masc&&masc.elegida,er=$('#mascErr');if(!uid)return;er.textContent='';
+  b.disabled=true;b.textContent='Guardando…';
+  const r=await rpc('tribbi_mascota_descripcion',{p_uid:uid,p_texto:$('#descIn').value});
+  if(!r.ok){b.disabled=false;b.textContent='Guardar descripción';er.textContent=r.d.mensaje||'No se pudo guardar. Intenta de nuevo.';return}
+  const m=masc.mascotas.find(x=>x.uid===uid);if(m&&r.d.mascota)m.descripcion=r.d.mascota.descripcion;
+  b.textContent='Guardada ✓';
+});
+async function elegir(uid,sola){
+  const r=await rpc('tribbi_elegir_mascota',{p_slug:ED,p_uid:uid});
+  if(r.ok){masc.elegida=uid;$('#mascErr').textContent='';pintarMascota();return}
+  pintarMascota();if(!sola)$('#mascErr').textContent=r.d.mensaje||'No se pudo elegir. Intenta de nuevo.';
+}
+$('#mascotas').addEventListener('click',e=>{
+  const f=e.target.closest('[data-foto]');if(f){fotoPara=f.dataset.foto;$('#fotoIn').value='';$('#fotoIn').click();return}
+  const b=e.target.closest('[data-uid]');if(b&&!b.disabled&&b.dataset.uid!==masc.elegida)elegir(b.dataset.uid);
+});
+/* Achica la foto en el celular (máximo 800 px, como en PetzID) y la devuelve en base64 */
+async function achicar(archivo){
+  let img=null;
+  try{img=await createImageBitmap(archivo)}catch(e){img=await new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=URL.createObjectURL(archivo)})}
+  if(!img)return null;
+  const k=Math.min(1,800/Math.max(img.width,img.height)),cv=document.createElement('canvas');
+  cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+  return cv.toDataURL('image/jpeg',.8).split(',')[1];
+}
+$('#fotoIn').addEventListener('change',async e=>{
+  const archivo=e.target.files&&e.target.files[0],uid=fotoPara,er=$('#mascErr');if(!archivo||!uid)return;er.textContent='';
+  if(!/^image\//.test(archivo.type||'')){er.textContent='Elige una foto (JPG o PNG).';return}
+  const btn=document.querySelector(`[data-foto="${CSS.escape(uid)}"]`);if(btn){btn.disabled=true;btn.textContent='Subiendo foto…'}
+  const fin=m=>{pintarMascota();er.textContent=m||''};
+  const b64=await achicar(archivo);if(!b64)return fin('No pudimos leer esa foto. Prueba con otra.');
+  let url=null;
+  for(const espera of [0,1200,2500]){   // la red del celular a veces falla en el primer intento
+    if(espera)await new Promise(r=>setTimeout(r,espera));
+    try{const r=await fetch('/api/subir-foto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photoBase64:b64,mimeType:'image/jpeg',fileName:'mascota_'+Date.now()+'.jpg'})});
+      const d=await r.json();if(d&&d.ok&&d.url){url=d.url;break}}catch(_){}
+  }
+  if(!url)return fin('No pudimos subir la foto. Revisa tu conexión e intenta de nuevo.');
+  const r=await rpc('tribbi_mascota_foto',{p_uid:uid,p_url:url});
+  if(!r.ok)return fin(r.d.mensaje||'No se pudo guardar la foto.');
+  const m=masc.mascotas.find(x=>x.uid===uid);if(m){m.foto=(r.d.mascota&&r.d.mascota.foto)||url;m.tiene_foto=true}
+  fin('');
+});
 
 /* Tarjeta para raspar: el nombre NO está en la página hasta que se raspa */
 let scratchDone=false,pedido=null;
