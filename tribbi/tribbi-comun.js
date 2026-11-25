@@ -299,7 +299,12 @@ async function subirPortada(slug,archivo){
   const ruta='portadas/'+slug+'/'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)+'.jpg';
   try{
     const r=await fetch(SB+'/storage/v1/object/tribbi/'+ruta,{method:'POST',headers:{Authorization:'Bearer '+tk,apikey:KEY,'Content-Type':'image/jpeg','x-upsert':'false'},body:blob});
-    if(r.ok)return {url:SB+'/storage/v1/object/public/tribbi/'+ruta};
+    if(r.ok){
+      // Copia ligera para la vista previa de WhatsApp (1200×630, menos de ~200 KB) con el mismo nombre + "-og".
+      // La usa /api/tribbi-invita. Si falla, no pasa nada: se comparte la portada normal.
+      try{const og=await portadaParaCompartir(img);if(og)await fetch(SB+'/storage/v1/object/tribbi/'+ruta.replace(/\.jpg$/,'-og.jpg'),{method:'POST',headers:{Authorization:'Bearer '+tk,apikey:KEY,'Content-Type':'image/jpeg','x-upsert':'false'},body:og})}catch(e){}
+      return {url:SB+'/storage/v1/object/public/tribbi/'+ruta};
+    }
     let d={};try{d=await r.json()}catch(e){}
     const m=String(d.message||d.error||'').toLowerCase();
     if(m.includes('bucket'))return {error:'Falta correr 8_portadas.sql en Supabase.'};
@@ -308,10 +313,20 @@ async function subirPortada(slug,archivo){
     return {error:'No se pudo subir la foto. Intenta de nuevo.'};
   }catch(e){return {error:'Sin conexión. Revisa tu internet e intenta de nuevo.'}}
 }
-/* Borra una foto anterior (si falla, no pasa nada) */
+/* Recorta al centro a 1200×630 (lo que muestra WhatsApp) y baja la calidad hasta que pese menos de ~200 KB */
+async function portadaParaCompartir(img){
+  const W=1200,H=630,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const k=Math.max(W/img.width,H/img.height),w=img.width*k,h=img.height*k;
+  const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.drawImage(img,(W-w)/2,(H-h)/2,w,h);
+  let b=null;
+  for(const cal of [.8,.7,.6,.5,.4]){b=await new Promise(res=>cv.toBlob(res,'image/jpeg',cal));if(b&&b.size<=200*1024)break}
+  return b;
+}
+/* Borra una foto anterior y su copia para compartir (si falla, no pasa nada) */
 async function borrarPortada(url){
   if(!urlPortadaOk(url))return;const tk=await token();if(!tk)return;
-  try{await fetch(SB+'/storage/v1/object/tribbi/'+url.split('/object/public/tribbi/')[1],{method:'DELETE',headers:{Authorization:'Bearer '+tk,apikey:KEY}})}catch(e){}
+  const r=url.split('/object/public/tribbi/')[1];
+  for(const x of [r,r.replace(/\.jpg$/,'-og.jpg')])try{await fetch(SB+'/storage/v1/object/tribbi/'+x,{method:'DELETE',headers:{Authorization:'Bearer '+tk,apikey:KEY}})}catch(e){}
 }
 
 /* ── Fechas: días que faltan (por calendario de Guatemala) ── */
