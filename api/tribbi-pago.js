@@ -23,7 +23,7 @@ import crypto from 'crypto';
 
 export const config = { api: { bodyParser: false } };   // el webhook necesita el cuerpo tal cual llega para revisar la firma
 
-const VERSION = '2026-11-25-c';   // + aviso por correo del sorteo
+const VERSION = '2026-11-26-a';   // remitente info@revistapetmi.com   // + aviso por correo del sorteo
 const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 // Llave PÚBLICA (anon) de Supabase: es la misma que va en todas las páginas, no es un secreto.
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
@@ -70,8 +70,10 @@ async function usuarioDeToken(token) {
 
 // ── Correos con Wix (igual que /api/galeria: Email Transmissions, remitente ya verificado) ──
 const WIX_SITE_ID = '25b3d584-29fb-4861-b757-d9640d37c01f';
-const WIX_SENDER_NAME = 'PETmi';
-const WIX_SENDER_EMAIL = 'revistapetmi@gmail.com';
+// Remitente: info@revistapetmi.com (dominio de PetMi ya verificado). Antes salía como revistapetmi@gmail.com, que Gmail manda a spam
+// porque una dirección @gmail.com no se puede enviar desde Wix sin fallar la revisión de remitente.
+const WIX_SENDER_NAME = 'PetMi';
+const WIX_SENDER_EMAIL = 'info@revistapetmi.com';
 const WIX = () => limpio('WIX_API_KEY').replace(/^Bearer\s+/i, '').trim();
 async function enviarPorWix(email, asunto, html) {
   if (!WIX()) return { ok: false, error: 'WIX_API_KEY no configurada' };
