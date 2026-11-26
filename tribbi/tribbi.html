@@ -194,6 +194,17 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
 .dona .opc{display:flex;gap:10px;align-items:center;margin:8px 0 0;font-weight:500}
 .dona .opc input[type=radio]{width:20px;height:20px;accent-color:var(--pine);flex:none;margin:0}
 .dona .fila{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.dona-fila{flex-wrap:wrap}
+.dona-fila select.field{flex:1;min-width:170px;width:auto;margin:0;text-transform:none;letter-spacing:0}
+.masc-mas{grid-column:1/-1;background:var(--soft);border-radius:16px;padding:0 14px}
+.masc-mas>summary{cursor:pointer;list-style:none;padding:12px 24px 12px 0;position:relative;font-weight:700;display:flex;flex-direction:column;gap:2px}
+.masc-mas>summary small{font-weight:400;font-size:.88rem;color:var(--muted)}
+.masc-mas>summary::-webkit-details-marker{display:none}
+.masc-mas>summary::after{content:'▾';position:absolute;right:2px;top:12px;transition:transform .2s}
+.masc-mas[open]>summary::after{transform:rotate(180deg)}
+.masc-mas .pregunta,.masc-mas .curioso{background:var(--card);margin-bottom:10px}
+#donaSlot{grid-column:1/-1}
+#donaSlot .dona{margin-top:0}
 .dona.hecha{background:var(--ok)}
 .cupon{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--card);border:2px dashed var(--gold);border-radius:20px;padding:16px 18px;margin-top:18px}
 .cupon .ic{font-size:2.2rem;flex:none}
@@ -552,7 +563,7 @@ const CONFIG={
   cupon:{codigo:'AMIGOXMAS',monto:25,vence:'31 de enero',tienda:'https://app.revistapetmi.com/tienda.html'}
 };
 const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
-const VERSION_PAGINA='v22';   // súbelo con cada cambio para saber qué versión está publicada
+const VERSION_PAGINA='v25';   // súbelo con cada cambio para saber qué versión está publicada
 const REGISTRO_PETZID='https://app.revistapetmi.com/registro.html';
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
@@ -950,6 +961,7 @@ async function cargarPetzid(){
    Quien recibe elige "prefiero una donación a…"; quien regala, al descubrirlo, la paga en línea (Recurrente).
    Monto y organizaciones salen de Supabase (tribbi_donacion, 16_donaciones.sql). Sin ese SQL no se muestra nada. */
 let don=null,donEditando=false;
+const DONA_EL=document.getElementById('donaBox');   // se mueve debajo de la foto de la mascota; se guarda la referencia
 const AVISO_DONA={ok:'¡Gracias! Tu donación quedó registrada. 💚',pendiente:'Tu donación está en proceso. En cuanto se apruebe queda registrada.',
   revisar:'No pudimos confirmar tu donación. Si ya se te cobró, escríbele a PetMi.',cancelado:'Cancelaste la donación. Puedes hacerla cuando quieras.'};
 async function cargarDonacion(){
@@ -960,32 +972,30 @@ async function cargarDonacion(){
   if(JSON.stringify(don&&don.amigo)!==antes)renderMe(false);else pintarDonacion();
 }
 function pintarDonacion(){
-  const box=$('#donaBox'),am=$('#donaAmigo');
+  const box=DONA_EL,am=$('#donaAmigo');
   if(!don){box.hidden=true;am.hidden=true;return}
   // Lo mío (quien recibe)
   const mi=don.mi||{};box.hidden=false;
   if(mi.recibida_en)box.innerHTML=`<div class="dona hecha"><h3>💚 Se donaron ${q(mi.total)} en tu nombre</h3><p>Tu amigo secreto donó ${q(mi.monto||don.donacion_q)} y se sumó tu envío de ${q(mi.envio_q)}: PetMi entrega <b>${q(mi.total)} a ${esc(mi.dona_a)}</b>. ¡Gracias por participar así!</p></div>`;
-  else if(!donEditando)box.innerHTML=`<div class="dona"><h3>🐾 ¿Regalo o donación?</h3>
-    <p>${mi.dona_a?`Elegiste una <b>donación de ${q(mi.total)} a ${esc(mi.dona_a)}</b> en vez de regalo: tu amigo secreto dona ${q(don.donacion_q)} y se suma tu envío de ${q(mi.envio_q)}, que ya no se usa. PetMi la entrega en tu nombre.`
-      :don.puede_cambiar?`Si prefieres, en vez de regalo puedes pedir una donación de ${q(mi.total)} a una organización: tu amigo secreto dona ${q(don.donacion_q)} y se suma tu envío de ${q(mi.envio_q)}. PetMi la entrega en tu nombre.`
-      :'Vas a recibir un regalo 🎁.'}</p>
-    ${don.puede_cambiar?`<div class="fila"><button class="small-btn alt" type="button" data-dona-editar>${mi.dona_a?'Cambiar':'Prefiero una donación'}</button></div>`
-      :'<p class="tiny">Tu amigo secreto ya te descubrió: ya no se puede cambiar.</p>'}</div>`;
+  else if(!don.puede_cambiar)box.innerHTML=`<div class="dona"><h3>🎁 ¿Qué prefieres recibir?</h3>
+    <p>${mi.dona_a?`Una <b>donación de ${q(mi.total)} a ${esc(mi.dona_a)}</b> en tu nombre.`:'Un regalo 🎁.'}</p>
+    <p class="tiny">Tu amigo secreto ya te descubrió: ya no se puede cambiar.</p></div>`;
   else{
     const ops=don.opciones||[],otra=mi.dona_a&&!ops.includes(mi.dona_a)?mi.dona_a:'';
     const sel=mi.dona_a?(otra?'__otra':mi.dona_a):'';
-    box.innerHTML=`<div class="dona"><h3>🐾 ¿Qué prefieres recibir?</h3>
+    box.innerHTML=`<div class="dona"><h3>🎁 ¿Qué prefieres recibir?</h3>
       <label class="opc"><input type="radio" name="donaTipo" value="regalo" ${mi.dona_a?'':'checked'}> 🎁 Un regalo</label>
-      <label class="opc"><input type="radio" name="donaTipo" value="donacion" ${mi.dona_a?'checked':''}> 💚 Donación a</label>
-      <select class="field" id="donaSel" aria-label="Organización" style="margin-top:6px">
-        <option value="" ${sel===''?'selected':''} disabled>Elige una organización…</option>
-        ${ops.map(o=>`<option value="${esc(o)}" ${sel===o?'selected':''}>${esc(o)}</option>`).join('')}
-        <option value="__otra" ${sel==='__otra'?'selected':''}>Otra…</option>
-      </select>
-      <div id="donaOtraBox" ${sel==='__otra'?'':'hidden'}><label for="donaOtra" class="tiny" style="margin:8px 0 4px">¿Cuál? Escribe su nombre</label><input class="field" id="donaOtra" maxlength="80" value="${esc(otra)}" placeholder="Ej. Refugio Patitas Felices"></div>
-      <p class="tiny" style="margin:10px 0 0">Si eliges donación, tu amigo secreto dona ${q(don.donacion_q)} en línea, se suma tu envío de ${q(mi.envio_q)} (ya no hay paquete que llevar) y PetMi entrega <b>${q(mi.total)} en tu nombre</b> a la organización. Tus ideas de regalo se quedan por si acaso.</p>
-      <p class="msg bad" id="donaErr" role="alert"></p>
-      <div class="fila"><button class="small-btn alt" type="button" data-dona-guardar>Guardar</button><button class="link-btn" type="button" data-dona-cancelar>Cancelar</button></div></div>`;
+      <div class="opc dona-fila"><label class="opc" style="margin:0"><input type="radio" name="donaTipo" value="donacion" ${mi.dona_a?'checked':''}> 💚 Donación a</label>
+        <select class="field" id="donaSel" aria-label="Organización para la donación">
+          <option value="" ${sel===''?'selected':''} disabled>Elige…</option>
+          ${ops.map(o=>`<option value="${esc(o)}" ${sel===o?'selected':''}>${esc(o)}</option>`).join('')}
+          <option value="__otra" ${sel==='__otra'?'selected':''}>Otra…</option>
+        </select></div>
+      <div id="donaOtraBox" ${sel==='__otra'?'':'hidden'}><label for="donaOtra" class="tiny" style="margin:8px 0 4px">¿Cuál? Escribe su nombre</label>
+        <div class="fila" style="margin-top:0"><input class="field" id="donaOtra" maxlength="80" value="${esc(otra)}" placeholder="Ej. Refugio Patitas Felices" style="flex:1;min-width:180px"><button class="small-btn alt" type="button" data-dona-guardar>Guardar</button></div></div>
+      <p class="tiny" style="margin:10px 0 0">${mi.dona_a?`Tu amigo secreto dona ${q(don.donacion_q)} y se suma tu envío de ${q(mi.envio_q)}: PetMi entrega <b>${q(mi.total)} en tu nombre</b>.`
+        :`Con donación, tu amigo secreto dona ${q(don.donacion_q)} en vez de comprarte un regalo, se suma tu envío de ${q(mi.envio_q)} y PetMi entrega ${q(mi.total)} en tu nombre.`}</p>
+      <p class="msg" id="donaErr" role="status"></p></div>`;
   }
   // Lo de mi amigo secreto (quien regala)
   const da=don.amigo;
@@ -998,10 +1008,27 @@ function pintarDonacion(){
       <p class="msg" id="donaMsg" role="status">${esc(AVISO_DONA[DONA]&&DONA!=='ok'?AVISO_DONA[DONA]:'')}</p>
       <div class="fila"><button class="big-btn" type="button" id="donarBtn">Donar ${q(don.donacion_q)}</button></div></div>`;
 }
+/* Se guarda solo al elegir (Regalo, o una organización de la lista). "Otra…" se guarda con su botón. */
+async function guardarDona(valor,boton){
+  const m=$('#donaErr');if(m){m.className='msg';m.textContent='Guardando…'}
+  if(boton)boton.disabled=true;
+  const r=await rpc('tribbi_mi_donacion',{p_slug:ED,p_dona_a:valor||null});
+  if(boton)boton.disabled=false;
+  if(!r.ok){const m2=$('#donaErr');if(m2){m2.className='msg bad';m2.textContent=r.d.mensaje||'No se pudo guardar. Intenta de nuevo.'}return}
+  don=r.d;pintarDonacion();
+  const m3=$('#donaErr');if(m3){m3.className='msg';m3.textContent='Guardado ✓'}
+}
 document.addEventListener('change',e=>{
-  if(e.target.id==='donaSel'){const r=document.querySelector('input[name=donaTipo][value=donacion]');if(r)r.checked=true;
-    const b=$('#donaOtraBox');b.hidden=e.target.value!=='__otra';if(!b.hidden)$('#donaOtra').focus()}
-  if(e.target.name==='donaTipo'&&e.target.value==='donacion'&&!$('#donaSel').value)$('#donaSel').focus();
+  if(e.target.id==='donaSel'){
+    const r=document.querySelector('input[name=donaTipo][value=donacion]');if(r)r.checked=true;
+    const b=$('#donaOtraBox');b.hidden=e.target.value!=='__otra';
+    if(!b.hidden){$('#donaOtra').focus();return}
+    guardarDona(e.target.value);
+  }
+  if(e.target.name==='donaTipo'){
+    if(e.target.value==='regalo'){$('#donaOtraBox').hidden=true;if(don&&don.mi&&don.mi.dona_a)guardarDona('')}
+    else{const v=$('#donaSel').value;if(!v)$('#donaSel').focus();else if(v!=='__otra')guardarDona(v);else{$('#donaOtraBox').hidden=false;$('#donaOtra').focus()}}
+  }
 });
 document.addEventListener('click',async e=>{
   if(e.target.closest('[data-dona-editar]')){donEditando=true;pintarDonacion();return}
@@ -1011,12 +1038,8 @@ document.addEventListener('click',async e=>{
     const op=tipo==='donacion'?$('#donaSel').value:'';
     if(tipo==='donacion'&&!op){$('#donaErr').textContent='Elige a qué organización.';$('#donaSel').focus();return}
     const v=op==='__otra'?$('#donaOtra').value.trim():op;
-    if(op==='__otra'&&v.length<2){$('#donaErr').textContent='Escribe el nombre de la organización.';$('#donaOtra').focus();return}
-    b.disabled=true;
-    const r=await rpc('tribbi_mi_donacion',{p_slug:ED,p_dona_a:v||null});
-    b.disabled=false;
-    if(!r.ok){$('#donaErr').textContent=r.d.mensaje||'No se pudo guardar. Intenta de nuevo.';return}
-    don=r.d;donEditando=false;pintarDonacion();return;
+    if(op==='__otra'&&v.length<2){$('#donaErr').className='msg bad';$('#donaErr').textContent='Escribe el nombre de la organización.';$('#donaOtra').focus();return}
+    await guardarDona(v,b);return;
   }
   if(e.target.id==='donarBtn'){
     const b=e.target,m=$('#donaMsg');b.disabled=true;m.className='msg';m.textContent='Abriendo el pago…';
@@ -1363,9 +1386,11 @@ async function cargarMascota(){
   if(!masc.elegida&&masc.puede_cambiar&&masc.mascotas.length===1){await elegir(masc.mascotas[0].uid,true);return}
   pintarMascota();
 }
+let mascMasAbierto=false;
 function pintarMascota(){
   const dest=mascDestino();if(!dest||!masc)return;
   if(dest.id==='mascBox')$('#mascSec').hidden=false;
+  if(DONA_EL&&dest.contains(DONA_EL))$('#mineSec').insertBefore(DONA_EL,$('#mineSec').firstChild);
   const lista=masc.mascotas,el=lista.find(m=>m.uid===masc.elegida);
   let txt;
   if(!lista.length)txt=`Tu amigo secreto le va a regalar a tu mascota. Todavía no hay una mascota en PetzID con tu correo (<b>${esc(masc.correo||'')}</b>).`;
@@ -1382,7 +1407,11 @@ function pintarMascota(){
         ${m.tiene_foto?'':'<span class="sinfoto">Sin foto</span>'}</button>
       ${si?'<span class="sel">Participa ✓</span>':''}
       ${si?'':`<button class="foto-btn" type="button" data-foto="${esc(m.uid)}">📷 ${m.tiene_foto?'Actualizar foto':'Agregar foto'}</button>`}</div>`}).join('');
+  // Ya inscrito: foto y datos curiosos dentro de "Mi perfil" (cerrado). Después del sorteo ya están dentro del "Mi perfil" grande: no se repite.
+  const plegado=dest.id==='mascBox'&&$('#perfilDet').hidden;
+  if(plegado)h+=`<div id="donaSlot"></div>`;
   if(el){
+    if(plegado)h+=`<details class="masc-mas" id="mascMas" ${editandoDesc||mascMasAbierto?'open':''}><summary><span>👤 Mi perfil</span><small>Cambiar foto y datos curiosos de ${esc(el.nombre)}</small></summary>`;
     h+=`<div class="pregunta"><span>📷 ${el.tiene_foto?`¿Quieres actualizar la foto de ${esc(el.nombre)}?`:`${esc(el.nombre)} no tiene foto. ¿Le agregas una?`}</span>
       <button class="small-btn alt" type="button" data-foto="${esc(el.uid)}">${el.tiene_foto?'Actualizar foto':'Agregar foto'}</button></div>`;
     h+=`<div class="curioso"><b>✨ Datos curiosos de ${esc(el.nombre)}</b>`
@@ -1394,9 +1423,12 @@ function pintarMascota(){
       :`<p class="${el.descripcion?'':'vacio'}">${el.descripcion?esc(el.descripcion):'Todavía no tiene datos curiosos.'}</p>
         <button class="link-btn" type="button" data-desc-editar style="padding:0">${el.descripcion?'¿Quieres actualizarlos?':'¿Quieres agregarlos?'}</button>`)
       +`</div>`;
+    if(plegado)h+=`</details>`;
   }
   h+=`</div><p class="msg bad" id="mascErr" role="alert"></p>`;
   dest.innerHTML=h;
+  const slot=$('#donaSlot');if(slot&&DONA_EL)slot.appendChild(DONA_EL);   // regalo o donación, justo debajo de la foto
+  const mm=$('#mascMas');if(mm)mm.addEventListener('toggle',()=>{mascMasAbierto=mm.open});
   const t=$('#descIn');if(t){const cnt=()=>{$('#descCuenta').textContent=`${t.value.length}/300`};t.addEventListener('input',cnt);cnt();t.focus()}
 }
 const mascErr=m=>{const e=$('#mascErr');if(e)e.textContent=m||''};
@@ -1508,7 +1540,8 @@ function confetti(){
 function ordenarMe(verAmigo){
   const det=$('#perfilDet'),cont=$('#perfilCont');
   const mios=['entregaCard','mascSec','mineSec'].map(id=>$('#'+id));
-  const orden=verAmigo?['amigoBox','estado','cuponBox','perfilDet','ayudaBox']:['estado','entregaCard','amigoBox','cuponBox','mascSec','mineSec','perfilDet','ayudaBox'];
+  // Antes del sorteo (ya pagó): confirmación, su mascota, lo que quiere recibir, su entrega y el cupón
+  const orden=verAmigo?['amigoBox','estado','cuponBox','perfilDet','ayudaBox']:['estado','amigoBox','mascSec','mineSec','entregaCard','cuponBox','perfilDet','ayudaBox'];
   if(verAmigo)mios.forEach(el=>cont.appendChild(el));
   let ref=$('#facts2');
   orden.forEach(id=>{const el=$('#'+id);if(el&&el.previousElementSibling!==ref)ref.after(el);ref=el});
