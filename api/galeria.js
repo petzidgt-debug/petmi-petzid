@@ -168,7 +168,7 @@ async function _obtenerOElegirGanadoresSorteo() {
 const WIX_API_KEY = String(process.env.WIX_API_KEY || '').trim().replace(/^["'`]+|["'`]+$/g, '').replace(/^Bearer\s+/i, '').trim();
 const WIX_SITE_ID = '25b3d584-29fb-4861-b757-d9640d37c01f';
 const WIX_SENDER_NAME = 'PETmi';
-const WIX_SENDER_EMAIL = 'revistapetmi@gmail.com'; // remitente ya verificado en Wix
+const WIX_SENDER_EMAIL = 'info@revistapetmi.com'; // remitente ya verificado en Wix
 const APPS_SCRIPT_OTP_URL = 'https://script.google.com/macros/s/AKfycbxrE4a8FX3e1FWPfKeNjMPzBWPKiJl94MaHa0sQFVVJgJzKCYkwH60A_N_zFrqihDWt/exec';
 
 function _htmlOTP(saludo, code) {
