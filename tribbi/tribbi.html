@@ -494,7 +494,7 @@ const CONFIG={
   cupon:{codigo:'AMIGOXMAS',monto:25,vence:'31 de enero',tienda:'https://app.revistapetmi.com/tienda.html'}
 };
 const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
-const VERSION_PAGINA='v14';   // súbelo con cada cambio para saber qué versión está publicada
+const VERSION_PAGINA='v15';   // súbelo con cada cambio para saber qué versión está publicada
 const REGISTRO_PETZID='https://app.revistapetmi.com/registro.html';
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
@@ -679,29 +679,15 @@ async function showMe(){
   if(recienPagado)confetti();
   if((PAGO==='ok'||PAGO==='pendiente')&&est==='pendiente_pago')esperarPago();
 }
-function renderMe(fresh){
-  $('#meHola').textContent=yo.perfil&&yo.perfil.nombre_publico?`¡Hola, ${yo.perfil.nombre_publico}!`:'¡Hola!';
-  $('#editarDatos').hidden=!yo.perfil;
-  const i=yo.inscripcion,est=$('#estado');let h='';
-  const abierto=ed.inscripciones_abiertas,antes=new Date()<new Date(ed.inscripcion_desde);
-  const nIdeas=(yo.mis_ideas||[]).length,faltan=Math.max(0,ed.min_ideas-nIdeas);
-  const reglas=`<details class="rules" id="reglasDet"><summary>Leer el reglamento</summary><ol>
-      <li>Solo mayores de 18 años, dentro del área de entrega de PetMi. Una inscripción por persona.</li>
-      <li>El envío cuesta ${q(ed.envio_q)} y se paga al inscribirte. Después del sorteo no se reembolsa.</li>
-      <li>${ed.min_ideas>0?`Para entrar al sorteo necesitas al menos ${ed.min_ideas} idea en tu lista de deseos al cierre (${dia(ed.inscripcion_hasta)}).`:'No es necesario tener lista de regalos para participar.'}</li>
-      <li>El sorteo es el ${dia(ed.sorteo_en)}, al azar. Nadie queda consigo mismo.</li>
-      <li>El regalo tiene un presupuesto de ${q(ed.presupuesto_q)} y debe ser nuevo. No se permiten animales vivos, alimentos perecederos, medicamentos, alcohol, tabaco, armas, artículos ilegales ni contenido para adultos.</li>
-      <li>Envuélvelo, márcalo con tu código y entrégalo a PetMi a más tardar el ${dia(ed.entrega_hasta)}. PetMi te avisará cómo y dónde.</li>
-      <li>Quien no entregue a tiempo pierde el pago del envío y puede quedar fuera de futuras ediciones.</li>
-      <li>Tu dirección se guarda cifrada y solo la ve PetMi. Tu amigo secreto solo ve tu nombre público y tus ideas.</li>
-      <li>No reveles a quién le regalas ni contactes a tu amigo secreto para pedirle datos.</li>
-      ${(ed.reglas||[]).map(t=>`<li>${esc(t)}</li>`).join('')}
-    </ol>${CONFIG.reglamentoUrl?`<a href="${esc(CONFIG.reglamentoUrl)}" target="_blank" rel="noopener">Reglamento completo</a>`:''}</details>`;
-  if(!i||i.estado==='cancelada'){
-    if(abierto)h=`<div class="status go" id="unirCard">
+/* Asistente de inscripción por pasos (2 mascota · 3 datos y dirección · 4 pago). ya = ya tiene inscripción pendiente de pago. */
+let ASIST_YA=false,abrirEnPaso=0,msgPaso4='';
+function asistente(ya){
+  ASIST_YA=ya;
+  const reglas=REGLAS_HTML;
+  return `<div class="status go" id="unirCard">
       <div id="paso2">
         <div class="barra"><i class="on"></i><i class="on"></i><i></i><i></i></div>
-        <p class="paso">Paso 2 de 4 · Tu mascota</p><h2>¿Quién participa?</h2>
+        <p class="paso">Paso 2 de 4 · Tu mascota</p><h2>¿Quién participa?</h2>${ya?'<p class="tiny" style="margin:0 0 6px">Ya empezaste tu inscripción: revisa tus datos y termina con el pago.</p>':''}
         <div id="petzBox"><p class="tiny">Buscando tu cuenta de PetzID…</p></div>
         <div id="mascPre"></div>
         <p class="msg bad" id="err2" role="alert"></p>
@@ -724,13 +710,40 @@ function renderMe(fresh){
         <div id="resumenFinal"></div>
         <div id="envioResumen"></div>
         <p>Pagas <b data-envio>${q(ed.envio_q)}</b> de envío y con eso queda confirmado tu lugar. Después podrás dejar tus ideas de regalo. Las inscripciones cierran el ${dia(ed.inscripcion_hasta)}.</p>
-        ${reglas}<label class="check"><input type="checkbox" id="aceptoIn"> <span>Leí y acepto el <a href="#reglasDet" data-ver-reglas>reglamento</a>.</span></label>
-        <p class="msg bad" id="inscErr" role="alert"></p>
-        <div class="nav-pasos"><button class="link-btn" type="button" data-ir="3">← Atrás</button><button class="big-btn" id="inscBtn">Inscribirme y pagar <span data-envio>${q(ed.envio_q)}</span></button></div>
+        ${ya?'<input type="checkbox" id="aceptoIn" checked hidden>':`${reglas}<label class="check"><input type="checkbox" id="aceptoIn"> <span>Leí y acepto el <a href="#reglasDet" data-ver-reglas>reglamento</a>.</span></label>`}
+        <p class="msg bad" id="inscErr" role="alert"></p>${ya?'<p class="msg" id="pagoMsg" role="status"></p>':''}
+        <div class="nav-pasos"><button class="link-btn" type="button" data-ir="3">← Atrás</button><button class="big-btn" id="inscBtn">${ya?'Pagar':'Inscribirme y pagar'} <span data-envio>${q(ed.envio_q)}</span></button></div>
+        ${ya?'<div id="comproSlot"></div>':''}
       </div></div>`;
+}
+let REGLAS_HTML='';
+function renderMe(fresh){
+  $('#meHola').textContent=yo.perfil&&yo.perfil.nombre_publico?`¡Hola, ${yo.perfil.nombre_publico}!`:'¡Hola!';
+  $('#editarDatos').hidden=!yo.perfil;
+  const i=yo.inscripcion,est=$('#estado');let h='';
+  const abierto=ed.inscripciones_abiertas,antes=new Date()<new Date(ed.inscripcion_desde);
+  const nIdeas=(yo.mis_ideas||[]).length,faltan=Math.max(0,ed.min_ideas-nIdeas);
+  const reglas=`<details class="rules" id="reglasDet"><summary>Leer el reglamento</summary><ol>
+      <li>Solo mayores de 18 años, dentro del área de entrega de PetMi. Una inscripción por persona.</li>
+      <li>El envío cuesta ${q(ed.envio_q)} y se paga al inscribirte. Después del sorteo no se reembolsa.</li>
+      <li>${ed.min_ideas>0?`Para entrar al sorteo necesitas al menos ${ed.min_ideas} idea en tu lista de deseos al cierre (${dia(ed.inscripcion_hasta)}).`:'No es necesario tener lista de regalos para participar.'}</li>
+      <li>El sorteo es el ${dia(ed.sorteo_en)}, al azar. Nadie queda consigo mismo.</li>
+      <li>El regalo tiene un presupuesto de ${q(ed.presupuesto_q)} y debe ser nuevo. No se permiten animales vivos, alimentos perecederos, medicamentos, alcohol, tabaco, armas, artículos ilegales ni contenido para adultos.</li>
+      <li>Envuélvelo, márcalo con tu código y entrégalo a PetMi a más tardar el ${dia(ed.entrega_hasta)}. PetMi te avisará cómo y dónde.</li>
+      <li>Quien no entregue a tiempo pierde el pago del envío y puede quedar fuera de futuras ediciones.</li>
+      <li>Tu dirección se guarda cifrada y solo la ve PetMi. Tu amigo secreto solo ve tu nombre público y tus ideas.</li>
+      <li>No reveles a quién le regalas ni contactes a tu amigo secreto para pedirle datos.</li>
+      ${(ed.reglas||[]).map(t=>`<li>${esc(t)}</li>`).join('')}
+    </ol>${CONFIG.reglamentoUrl?`<a href="${esc(CONFIG.reglamentoUrl)}" target="_blank" rel="noopener">Reglamento completo</a>`:''}</details>`;
+  REGLAS_HTML=reglas;ASIST_YA=false;
+  if(!i||i.estado==='cancelada'){
+    if(abierto)h=asistente(false);
     else h=`<div class="status"><h2>${antes?'Las inscripciones todavía no abren':'Las inscripciones ya cerraron'}</h2><p>${antes?`Abren el ${dia(ed.inscripcion_desde)}. Tus datos ya quedaron guardados.`:'Gracias por tu interés. Te esperamos en el próximo intercambio.'}</p></div>`;
   }else if(i.estado==='excluida'){
     h=`<div class="status warn"><h2>Tu inscripción no está habilitada</h2><p>Escríbele a PetMi para más información.</p></div>`;
+  }else if(i.estado==='pendiente_pago'&&abierto){
+    h=asistente(true);
+    if(fresh&&AVISO_PAGO[PAGO])abrirEnPaso=4;      // volvió de Recurrente sin pagar: directo al paso del pago
   }else if(i.estado==='pendiente_pago'){
     h=`<div class="status warn"><p class="paso">Paso 4 de 4 · Pago</p><h2>Falta pagar el envío</h2><p>Tu lugar queda confirmado cuando se aprueba el pago de <b data-envio>${q(ed.envio_q)}</b>. Después podrás dejar tus ideas de regalo.${abierto?'':' Las inscripciones ya cerraron.'}</p>
       ${abierto?`<p class="msg bad" id="inscErr" role="alert"></p><button class="big-btn" id="pagarBtn">Pagar <span data-envio>${q(ed.envio_q)}</span></button>`:''}<p class="msg" id="pagoMsg" role="status"></p><div id="comproSlot"></div></div>`;
@@ -764,7 +777,7 @@ function renderMe(fresh){
   if(i&&i.estado==='pendiente_pago'&&AVISO_PAGO[PAGO]&&$('#pagoMsg')&&!$('#pagoMsg').textContent)$('#pagoMsg').textContent=AVISO_PAGO[PAGO];
   // Mascota: solo con la inscripción pagada
   const pagada=!!i&&i.estado==='pagada';
-  const conLugar=pagada||(!!i&&i.estado==='pendiente_pago');
+  const conLugar=pagada||(!!i&&i.estado==='pendiente_pago'&&!ASIST_YA);
   if(!conLugar)$('#mascSec').hidden=true;else if(fresh)cargarMascota();
   // Amigo secreto
   const verAmigo=yo.sorteo_hecho&&yo.tengo_amigo;$('#amigoBox').hidden=!verAmigo;
@@ -772,7 +785,7 @@ function renderMe(fresh){
   if(pagada&&fresh)cargarDonacion();
   pintarCupon(pagada);
   const inscrita=!!i&&['pagada','pendiente_pago'].includes(i.estado);
-  if(!inscrita)$('#entregaCard').hidden=true;else if(fresh)cargarEntrega();else pintarEntrega();
+  if(!inscrita||ASIST_YA)$('#entregaCard').hidden=true;else if(fresh)cargarEntrega();else pintarEntrega();
   pintarDonacion();
   // Mis ideas
   const editable=i&&!['cancelada','excluida'].includes(i.estado)&&new Date()<=new Date(ed.entrega_hasta);
@@ -815,7 +828,11 @@ async function cargarPetzid(){
   const nombre=tb.nombre||pz.nombre||'',wa=tb.whatsapp||pz.whatsapp||'';
   datosPz={nombre,wa,tiene:!!d.tiene_petzid};
   const correo=(ses&&ses.email)||'';
-  cargarZonas().then(()=>{const sl=$('#entregaSlot');if(sl&&ZONAS){sl.innerHTML=entregaCamposHTML(null);pintarNotaLugar()}});
+  cargarZonas().then(async()=>{
+    if(ASIST_YA&&ZONAS){const r2=await rpc('tribbi_mi_entrega',{p_slug:ED});miEnt=r2.ok?r2.d:null;if(miEnt&&miEnt.envio_q)ponerEnvio(miEnt.envio_q)}
+    const sl=$('#entregaSlot');if(sl&&ZONAS){sl.innerHTML=entregaCamposHTML(ASIST_YA?miEnt:null);pintarNotaLugar()}
+    if(abrirEnPaso){const n=abrirEnPaso;abrirEnPaso=0;irPaso(n)}
+  });
   if(d.tiene_petzid){box.innerHTML=`<div class="petz"><b>🐾 Encontramos tu cuenta de PetzID</b>${esc(nombre||correo)}</div>`;cargarMascota()}
   else box.innerHTML=`<div class="petz"><b>No encontramos una cuenta de PetzID con ${esc(correo||'tu correo')}</b>Tu amigo secreto le regala a tu mascota. Si ya tiene PetzID con otro correo, <button type="button" class="link-btn" data-salir style="padding:0">entra con ese correo</button>. Si no, <a href="${REGISTRO_PETZID}" target="_blank" rel="noopener">créale su PetzID</a> con este correo y vuelve aquí, o sigue sin ella.</div>`;
   $('#uNombre').value=nombre;$('#uWa').value=wa;
@@ -945,6 +962,7 @@ function validarEntrega(){
   const d=leerEntrega(),z=zonaElegida();
   if(!z){$('#uLugar').focus();return 'Elige dónde vives.'}
   if(z.pide_zona&&!d.zona.trim()){$('#uZona').focus();return 'Escribe tu zona.'}
+  if(!d.dir&&miEnt&&miEnt.tiene_direccion&&miEnt.lugar===z.nombre)return '';   // se queda la dirección que ya tenemos
   if(d.dir.length<10){$('#uDir').focus();return 'Escribe tu dirección completa: calle, número, colonia y una referencia.'}
   return '';
 }
@@ -1118,6 +1136,7 @@ function irPaso(n){
     const el=masc&&masc.mascotas.find(m=>m.uid===masc.elegida);
     $('#resumenFinal').innerHTML=el?amigoMascotaHTML(el).replace('Le regalas a','Participa'):'';
   }
+  if(n===4&&msgPaso4){const e=$('#inscErr');if(e)e.textContent=msgPaso4;msgPaso4=''}
   const c=$('#unirCard');if(c)c.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});
   const f=$('#paso'+n+' input:not([type=checkbox])');if(f&&!f.closest('[hidden]'))setTimeout(()=>f.focus(),60);
 }
@@ -1144,15 +1163,20 @@ async function inscribirme(){
   const nIn=$('#uNombre'),wIn=$('#uWa'),nombre=nIn?nIn.value.trim():'',wa=wIn?wIn.value.trim():'';
   if(!$('#aceptoIn').checked){err.textContent='Para inscribirte debes aceptar el reglamento.';return}
   b.disabled=true;err.textContent='';
-  const r=await rpc('tribbi_unirme',{p_slug:ED,p_invitacion:INV||null,p_acepto:true,p_nombre:nombre||null,p_whatsapp:wa||null});
+  const r=ASIST_YA?{ok:true,d:{estado:'pendiente_pago'}}
+    :await rpc('tribbi_unirme',{p_slug:ED,p_invitacion:INV||null,p_acepto:true,p_nombre:nombre||null,p_whatsapp:wa||null});
   if(!r.ok){b.disabled=false;
     if(r.d.error==='sesion'||r.d.error==='correo'){borrarSesion();abrirLogin();return}
     if(r.d.error==='datos'){const f=r.d.faltan||[];irPaso(3);if(f.includes('nombre'))$('#campoNombre').hidden=false;if(f.includes('whatsapp'))$('#campoWa').hidden=false;$('#err3').textContent='Completa tus datos para seguir.';return}
     err.textContent=r.d.error==='falta_sql'?'Falta correr 14_unirme_con_petzid.sql en Supabase.':(r.d.mensaje||'No se pudo inscribir. Intenta de nuevo.');return}
-  if(ZONAS){   // la dirección y el lugar (de ahí sale el precio del envío)
+  if(ZONAS&&$('#uLugar')&&leerEntrega().dir){   // la dirección y el lugar (de ahí sale el precio del envío)
     const d=leerEntrega(),g=await rpc('tribbi_guardar_entrega',{p_slug:ED,p_lugar:d.lugar,p_zona:d.zona,p_direccion:d.dir,p_ubicacion:d.ubic});
-    if(!g.ok){b.disabled=false;await showMe();const m=$('#entMsg');if(m){m.className='msg bad';m.textContent=(g.d.mensaje||'No se pudo guardar tu dirección.')+' Escríbela aquí para poder pagar.'}return}
-    miEnt=g.d;
+    if(!g.ok){
+      b.disabled=false;msgPaso4='';
+      if(ASIST_YA){irPaso(3);$('#err3').textContent=g.d.mensaje||'No se pudo guardar tu dirección.';return}
+      const y=await rpc('tribbi_yo',{p_slug:ED});if(y.ok)yo=y.d;abrirEnPaso=3;renderMe(false);return;
+    }
+    miEnt=g.d;ponerEnvio(miEnt.envio_q);
   }
   if(masc&&masc.local&&masc.elegida)await rpc('tribbi_elegir_mascota',{p_slug:ED,p_uid:masc.elegida});   // la mascota que eligió antes de inscribirse
   if(r.d.estado==='pagada'){await showMe();return}
@@ -1170,7 +1194,12 @@ async function pagar(b,err){
     if(err)err.textContent=r.status===404?'El pago en línea todavía no está activado. Ya quedaste inscrito: vuelve pronto para pagar.':(d.mensaje||'No se pudo abrir el pago. Intenta de nuevo.');
   }catch(e){if(err)err.textContent='Sin conexión. Revisa tu internet e intenta de nuevo.'}
   if(b)b.disabled=false;
-  const yo2=await rpc('tribbi_yo',{p_slug:ED});if(yo2.ok){yo=yo2.d;const m=err&&err.textContent;renderMe(false);const e2=$('#inscErr');if(e2&&m)e2.textContent=m}
+  const yo2=await rpc('tribbi_yo',{p_slug:ED});
+  if(yo2.ok){
+    const m=err&&err.textContent,estaba=ASIST_YA;yo=yo2.d;
+    if(estaba&&$('#unirCard')){if(m&&err)err.textContent=m;return}   // ya estaba en el paso 4: se queda ahí con el mensaje
+    msgPaso4=m||'';abrirEnPaso=4;renderMe(false);
+  }
 }
 /* Al volver de Recurrente: el pago se confirma por detrás (el aviso de Recurrente llega a la función de Vercel). Se revisa unas veces. */
 async function esperarPago(){
