@@ -543,7 +543,7 @@ const CONFIG={
   supabaseUrl:'https://ilcreewilnkchvozicyp.supabase.co',
   supabaseAnonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM',
   edicion:'navidad-petmi-2026',
-  recoleccionDesde:'',              // fecha desde la que PetMi recoge los regalos, ej. '2026-12-11'. Vacío = el día del sorteo
+  recoleccionDesde:'2026-11-25T12:00:00-06:00',   // desde cuándo PetMi recoge los regalos (con la hora de Guatemala). Vacío = el día del sorteo
   pagoApi:'/api/tribbi-pago',      // función de Vercel que crea el cobro en Recurrente (siguiente paso)
   reglamentoUrl:'',                // enlace al reglamento completo, cuando esté publicado
   contacto:'',                     // texto extra de contacto en el pie (opcional)
@@ -552,7 +552,7 @@ const CONFIG={
   cupon:{codigo:'AMIGOXMAS',monto:25,vence:'31 de enero',tienda:'https://app.revistapetmi.com/tienda.html'}
 };
 const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
-const VERSION_PAGINA='v21';   // súbelo con cada cambio para saber qué versión está publicada
+const VERSION_PAGINA='v22';   // súbelo con cada cambio para saber qué versión está publicada
 const REGISTRO_PETZID='https://app.revistapetmi.com/registro.html';
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
@@ -866,8 +866,8 @@ function renderMe(fresh){
     const paso=(n,ok,html)=>`<li class="${ok?'done':''}"><b>${ok?'✓':n+'.'}</b><span>${html}</span></li>`;
     h=`<div class="status go"><h2>Instrucciones de empaque</h2>
       <ol class="steps empaque">
-        ${paso(1,!!m.recibido_petmi_en,'Envuelve el regalo. No pongas tu nombre si quieres mantener la sorpresa.')}
-        ${paso(2,!!m.recibido_petmi_en,`Pega este código por fuera del paquete:<br><span class="tag">${esc(i.codigo)}</span>`)}
+        ${paso(1,!!m.recibido_petmi_en,'Envuelve el regalo de forma segura y no visible.')}
+        ${paso(2,!!m.recibido_petmi_en,'Puedes incluir una tarjeta o nota especial para tu amigo.')}
         ${paso(3,!!m.recibido_petmi_en,`PetMi coordinará contigo la recolección a partir del ${esc(desde)}.`+(m.recibido_petmi_en?' <b>¡Ya lo recibimos!</b>':''))}
         ${paso(4,!!m.entregado_en,'PetMi se encarga de entregar tu regalo.'+(m.entregado_en?' <b>¡Entregado!</b>':''))}
       </ol></div>`;
