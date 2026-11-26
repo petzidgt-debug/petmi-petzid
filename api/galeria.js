@@ -1,8 +1,7 @@
 const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
-// La llave de servicio se lee primero de la variable de Vercel SUPABASE_SERVICE_KEY. El valor escrito aquí es un respaldo TEMPORAL
-// (Paso 1): se quita en el Paso 2, cuando la variable ya esté puesta y comprobada en Sistema.
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAwNTc1MiwiZXhwIjoyMDkzNTgxNzUyfQ.heD60j_eM5MBjIhoZotR7G5nzQZu7kYv9aVvypbfE8A';
+// La llave de servicio se lee primero de la variable de Vercel SUPABASE_SERVICE_KEY. Ya no hay ninguna llave de servicio escrita en este archivo.
+const SUPABASE_SERVICE_KEY = String(process.env.SUPABASE_SERVICE_KEY || '').trim();
 
 // ── Interruptor de la reserva de bandanas de la Carrera ──────────────────
 // Está en false porque la carrera ya pasó: la acción pública crearReservaCarrera se niega a crear reservas y,
