@@ -23,7 +23,7 @@ import crypto from 'crypto';
 
 export const config = { api: { bodyParser: false } };   // el webhook necesita el cuerpo tal cual llega para revisar la firma
 
-const VERSION = '2026-11-25-b';   // + aviso por correo del sorteo
+const VERSION = '2026-11-25-c';   // + aviso por correo del sorteo
 const SUPABASE_URL = 'https://ilcreewilnkchvozicyp.supabase.co';
 // Llave PÚBLICA (anon) de Supabase: es la misma que va en todas las páginas, no es un secreto.
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM';
@@ -262,6 +262,12 @@ export default async function handler(req, res) {
   } catch (e) {
     console.error('tribbi-pago', accion, e && e.message);
     if (req.method === 'GET' && accion === 'volver') { res.writeHead(302, { Location: ORIGEN + '/tribbi/' }); return res.end(); }
+    // Aviso del sorteo: solo llega aquí quien ya pasó la revisión de administración, así que se le muestra el motivo para poder arreglarlo
+    if (accion === 'aviso_sorteo') {
+      const m = String((e && e.message) || '');
+      const falta = /404|PGRST202|Could not find the function/i.test(m) ? ' Falta correr 20_aviso_sorteo.sql (y antes 16_donaciones.sql) en Supabase.' : '';
+      return json(res, 500, { ok: false, mensaje: 'No se pudo mandar el aviso.' + falta + ' Detalle: ' + m.slice(0, 220) });
+    }
     return json(res, 500, { ok: false, mensaje: 'Algo salió mal con el pago. Intenta de nuevo.' });
   }
 }
