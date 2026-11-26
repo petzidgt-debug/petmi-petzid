@@ -33,7 +33,7 @@
   }
 })();
 
-// header.js — Header compartido PetMi v6 (se quito Ruleta de Premios del menu de usuario)
+// header.js — Header compartido PetMi v7 (+ banner del Amigo secreto PetMi 2026 debajo del header)
 (function(){
   function initHeader(){
     var sessionEmail = localStorage.getItem('petzid_email') || '';
@@ -248,6 +248,7 @@
         rightHTML +
       '</div>';
     document.body.insertBefore(header, document.body.firstChild);
+    petmiBannerAmigo(header);
 
 
     // PWA install banner
@@ -372,6 +373,60 @@
       if(loginOTP)    loginOTP.addEventListener('keydown',    function(e){ if(e.key==='Enter') petmiVerificarOTP(); });
     }, 500);
     if(sessionEmail) cargarNotifHeader(sessionEmail);
+  }
+
+  // ── Banner: Amigo secreto PetMi 2026 ──────────────────────
+  // Sale debajo del header hasta que cierran las inscripciones (FIN). Se puede cerrar con la X (vuelve a salir a los 3 días).
+  // Para apagarlo antes: BANNER_AMIGO.activo = false.
+  var BANNER_AMIGO = {
+    activo: true,
+    fin: '2026-12-10T23:59:59-06:00',
+    link: 'https://app.revistapetmi.com/tribbi/amigos-petmi-2026/GKFX',
+    clave: 'petmi_banner_amigo_cerrado'
+  };
+  function petmiBannerAmigo(header){
+    try {
+      if (!BANNER_AMIGO.activo || Date.now() > Date.parse(BANNER_AMIGO.fin)) return;
+      var cerrado = parseInt(localStorage.getItem(BANNER_AMIGO.clave) || '0', 10);
+      if (cerrado && Date.now() - cerrado < 3 * 24 * 60 * 60 * 1000) return;
+    } catch (e) {}
+    var css = document.createElement('style');
+    css.textContent =
+      '.h-amigo{position:relative;overflow:hidden;background:linear-gradient(100deg,#0F3D2C 0%,#1F6B4F 55%,#0F3D2C 100%);color:#fff;font-family:Arial,sans-serif;border-bottom:3px solid #D7263D}' +
+      '.h-amigo-luces{position:absolute;left:0;right:0;top:0;height:10px;display:flex;justify-content:space-around;pointer-events:none}' +
+      '.h-amigo-luces i{width:7px;height:9px;border-radius:0 0 50% 50%;opacity:.95;animation:hAmigoBrilla 1.6s ease-in-out infinite alternate}' +
+      '.h-amigo-luces i:nth-child(4n+1){background:#F5C842}.h-amigo-luces i:nth-child(4n+2){background:#E24B4A;animation-delay:.4s}.h-amigo-luces i:nth-child(4n+3){background:#36D6C4;animation-delay:.8s}.h-amigo-luces i:nth-child(4n){background:#F7B3C6;animation-delay:1.2s}' +
+      '@keyframes hAmigoBrilla{from{opacity:.35}to{opacity:1}}' +
+      '@media (prefers-reduced-motion:reduce){.h-amigo-luces i{animation:none}}' +
+      '.h-amigo-in{max-width:1100px;margin:0 auto;padding:14px 48px 12px 20px;display:flex;align-items:center;gap:14px;text-decoration:none;color:#fff}' +
+      '.h-amigo-ico{font-size:30px;line-height:1;flex-shrink:0}' +
+      '.h-amigo-tx{flex:1;min-width:0}' +
+      '.h-amigo-tx b{display:block;font-size:15px;font-weight:900;letter-spacing:.2px}' +
+      '.h-amigo-tx>span{display:block;font-size:12.5px;color:rgba(255,255,255,.82);margin-top:2px}' +
+      '.h-amigo-cta .corto{display:none}' +
+      '.h-amigo-cta{flex-shrink:0;background:#D7263D;color:#fff;font-weight:800;font-size:13px;padding:9px 16px;border-radius:99px;white-space:nowrap;box-shadow:0 3px 0 #8E1424}' +
+      '.h-amigo-x{position:absolute;top:50%;right:10px;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:16px;line-height:1;cursor:pointer}' +
+      '.h-amigo-x:hover{background:rgba(255,255,255,.25)}' +
+      '@media(max-width:600px){.h-amigo-in{padding:13px 44px 11px 12px;gap:10px}.h-amigo-ico{font-size:24px}.h-amigo-tx b{font-size:13.5px}.h-amigo-tx>span{font-size:11.5px}.h-amigo-cta{padding:8px 12px;font-size:12px}.h-amigo-tx .h-amigo-largo{display:none}.h-amigo-cta .largo{display:none}.h-amigo-cta .corto{display:inline}}';
+    document.head.appendChild(css);
+    var b = document.createElement('div');
+    b.className = 'h-amigo';
+    b.id = 'petmiBannerAmigo';
+    b.innerHTML =
+      '<div class="h-amigo-luces" aria-hidden="true">' + new Array(19).join('<i></i>') + '</div>' +
+      '<a class="h-amigo-in" href="' + BANNER_AMIGO.link + '">' +
+        '<span class="h-amigo-ico" aria-hidden="true">🎁</span>' +
+        '<span class="h-amigo-tx"><b>Amigo secreto PetMi 2026</b>' +
+          '<span>Regalo de Q75 para ti o tu mascota<span class="h-amigo-largo"> · PetMi recoge y entrega · Inscríbete hasta el 10 de diciembre</span></span></span>' +
+        '<span class="h-amigo-cta"><span class="largo">¡Quiero participar!</span><span class="corto">Participar</span></span>' +
+      '</a>' +
+      '<button class="h-amigo-x" type="button" aria-label="Cerrar aviso del amigo secreto">×</button>';
+    header.insertAdjacentElement('afterend', b);
+    b.querySelector('.h-amigo-x').addEventListener('click', function(e){
+      e.preventDefault();
+      try { localStorage.setItem(BANNER_AMIGO.clave, String(Date.now())); } catch (err) {}
+      b.remove();
+    });
   }
 
   function cargarNotifHeader(sessionEmail){
