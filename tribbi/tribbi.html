@@ -433,6 +433,9 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       <p class="lead">Entran las inscripciones pagadas que tengan al menos una idea de regalo. Solo se puede hacer después del cierre de inscripciones, y repetir mientras nadie haya descubierto a su amigo secreto.</p>
       <button class="big-btn" id="sortearBtn">Hacer el sorteo</button>
       <p class="msg" id="sorteoMsg" role="status"></p>
+      <p class="lead" style="margin-top:14px">Al hacer el sorteo se manda un correo a cada participante: "¡Ya se hizo el sorteo!" con el enlace para descubrir a su amigo secreto. Si alguno no se pudo mandar, toca el botón de nuevo (nunca se manda dos veces a la misma persona).</p>
+      <button class="small-btn alt" id="avisoBtn">Mandar el aviso por correo</button>
+      <p class="msg" id="avisoMsg" role="status"></p>
     </section>
 
     <section>
@@ -522,7 +525,7 @@ const CONFIG={
   cupon:{codigo:'AMIGOXMAS',monto:25,vence:'31 de enero',tienda:'https://app.revistapetmi.com/tienda.html'}
 };
 const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
-const VERSION_PAGINA='v17';   // súbelo con cada cambio para saber qué versión está publicada
+const VERSION_PAGINA='v18';   // súbelo con cada cambio para saber qué versión está publicada
 const REGISTRO_PETZID='https://app.revistapetmi.com/registro.html';
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
@@ -1453,6 +1456,29 @@ function confetti(){
   document.body.appendChild(c);setTimeout(()=>c.remove(),3200);
 }
 
+/* ── Panel de PetMi: aviso por correo del sorteo (lo manda /api/tribbi-pago con Wix, de 20 en 20) ── */
+async function mandarAvisoSorteo(){
+  const m=$('#avisoMsg'),b=$('#avisoBtn');b.disabled=true;m.className='msg';m.textContent='Mandando correos…';
+  let total=0,fallidos=[],quedan=0;
+  try{
+    for(let vuelta=0;vuelta<30;vuelta++){
+      const tk=await token();if(!tk){borrarSesion();volverA='admin';abrirLogin();return}
+      const r=await fetch(CONFIG.pagoApi+'?accion=aviso_sorteo',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({slug:ED})});
+      let d={};try{d=await r.json()}catch(_){}
+      if(!r.ok||!d.ok){m.className='msg bad';m.textContent=d.mensaje||'No se pudo mandar el aviso. Intenta de nuevo.';b.disabled=false;return}
+      total+=d.enviados;fallidos=fallidos.concat(d.fallidos||[]);quedan=d.quedan;
+      m.textContent=`Mandando correos… ${total} enviados`;
+      if(!d.enviados||!d.quedan)break;   // sin avances (solo quedan correos que fallan) o ya no queda nadie
+    }
+    m.className=fallidos.length?'msg bad':'msg';
+    m.textContent=total||fallidos.length
+      ?`Aviso enviado a ${total} persona${total===1?'':'s'}.${fallidos.length?` No se pudo a: ${[...new Set(fallidos)].join(', ')}.`:''}`
+      :'Ya se les había avisado a todos los que entraron al sorteo.';
+  }catch(_){m.className='msg bad';m.textContent='Sin conexión. Intenta de nuevo.'}
+  b.disabled=false;
+}
+$('#avisoBtn').onclick=mandarAvisoSorteo;
+
 /* ── Panel de PetMi ── */
 const falloAdmin=(r,base)=>(r.d.error==='servidor'?base:(r.d.mensaje||base))+(r.d.detalle?` (${r.d.detalle})`:'');
 async function admin(fn,args){
@@ -1478,7 +1504,7 @@ $('#sortearBtn').onclick=async()=>{
   if(!confirm('¿Hacer el sorteo ahora? Entran solo las inscripciones pagadas con ideas.'))return;
   m.className='msg';m.textContent='Sorteando…';
   const r=await admin('tribbi_admin_sortear');
-  if(r.ok){m.textContent=`Listo: ${r.d.participantes} personas en el sorteo.${r.d.fuera?` ${r.d.fuera} pagaron pero no tenían ideas y quedaron fuera.`:''}`;$('#refrescar').click()}
+  if(r.ok){m.textContent=`Listo: ${r.d.participantes} personas en el sorteo.${r.d.fuera?` ${r.d.fuera} pagaron pero no tenían ideas y quedaron fuera.`:''}`;$('#refrescar').click();mandarAvisoSorteo()}
   else{m.className='msg bad';m.textContent=falloAdmin(r,'No se pudo hacer el sorteo.')}
 };
 document.querySelectorAll('[data-marcar]').forEach(b=>b.onclick=async()=>{
