@@ -20,7 +20,7 @@ const crypto = require('crypto');
 // Llaves de las notificaciones push: primero las variables VAPID_PUBLIC_KEY y VAPID_PRIVATE_KEY de Vercel; los valores escritos aquí son un
 // respaldo TEMPORAL (se quitan en el Paso 2). Si una variable estuviera mal escrita, se usa el respaldo en vez de tumbar todo el servidor.
 (function () {
-  const correo = 'mailto:info@revistapetmi.com', pubRespaldo = 'BETkQ-teJGtPmnLMFc0OC6HqFvhFoMZySxoywrKincHOJIoixLxuDUSD5RelsWYQiq32p2wuRgn9StrCOcYhD8U', privRespaldo = 'QR9-huYL22s0wrUpc6Ou_kCAW86LfCOYqXZJY5bzx40';
+  const correo = 'mailto:revistapetmi@gmail.com', pubRespaldo = 'BETkQ-teJGtPmnLMFc0OC6HqFvhFoMZySxoywrKincHOJIoixLxuDUSD5RelsWYQiq32p2wuRgn9StrCOcYhD8U', privRespaldo = 'QR9-huYL22s0wrUpc6Ou_kCAW86LfCOYqXZJY5bzx40';
   try { webpush.setVapidDetails(correo, process.env.VAPID_PUBLIC_KEY || pubRespaldo, process.env.VAPID_PRIVATE_KEY || privRespaldo); }
   catch (e) { console.error('VAPID: las variables no son válidas, se usa el respaldo:', e.message); webpush.setVapidDetails(correo, pubRespaldo, privRespaldo); }
 })();
