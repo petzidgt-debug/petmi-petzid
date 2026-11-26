@@ -21,6 +21,8 @@ export default async function handler(req, res) {
   const base = 'https://' + host;
   const e = String((req.query && req.query.e) || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 60);
   const i = String((req.query && req.query.i) || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+  // ?v=2, ?v=3…: para que WhatsApp lea la vista previa de nuevo (guarda la anterior varios días por cada dirección)
+  const v = String((req.query && req.query.v) || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 10);
   let destino = base + '/tribbi/';
   let titulo = 'Tribbi · Intercambios que arman tribu';
   let texto = 'Organiza tu amigo secreto gratis: agrega a tu familia o amigos y Tribbi hace el sorteo.';
@@ -82,7 +84,7 @@ export default async function handler(req, res) {
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">` : ''}
 <meta property="og:image:alt" content="${esc(titulo)}">
-<meta property="og:url" content="${esc(e ? base + '/tribbi/' + e + (i ? '/' + i : '') : base + '/tribbi/')}">
+<meta property="og:url" content="${esc((e ? base + '/tribbi/' + e + (i ? '/' + i : '') : base + '/tribbi/') + (v ? '?v=' + v : ''))}">
 <meta name="twitter:card" content="summary_large_image">
 <meta http-equiv="refresh" content="0;url=${esc(destino)}">
 <link rel="canonical" href="${esc(destino)}">
