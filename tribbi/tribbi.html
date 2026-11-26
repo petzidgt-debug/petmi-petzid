@@ -197,6 +197,24 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
 .ent-campos select.field{text-transform:none}
 .ent-nota{background:var(--soft);border-radius:12px;padding:8px 12px;margin:8px 0 0;font-size:.93rem}
 .envio-chip{display:inline-block;background:var(--soft);border-radius:999px;padding:2px 12px;font-weight:600;margin-top:10px}
+.topbar [data-salir]{display:none}   /* Salir está en el menú */
+.topbar{padding-right:120px}
+.menu-btn{position:fixed;top:10px;right:10px;z-index:60;display:flex;align-items:center;gap:8px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:600;border-radius:999px;padding:7px 14px 7px 10px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.menu-btn .av{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--pine);color:#fff;font-size:.9rem}
+.menu-velo{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:70;opacity:0;pointer-events:none;transition:opacity .2s}
+.menu-velo.on{opacity:1;pointer-events:auto}
+.menu-panel{position:fixed;top:0;right:0;bottom:0;width:min(320px,88vw);background:var(--bg);z-index:80;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column;padding:16px;box-shadow:-8px 0 30px rgba(0,0,0,.2);overflow-y:auto}
+.menu-panel.on{transform:none}
+.menu-panel .cab{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.menu-panel .cab b{font-size:1.1rem}
+.menu-panel .cerrar{border:0;background:none;font-size:1.8rem;line-height:1;color:var(--ink);cursor:pointer}
+.menu-yo{display:flex;gap:10px;align-items:center;background:var(--soft);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.menu-yo small{display:block;color:var(--muted);overflow-wrap:anywhere}
+.menu-panel ul{list-style:none;margin:0;padding:0}
+.menu-panel li a,.menu-panel li button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;background:none;font:inherit;color:var(--ink);text-decoration:none;padding:12px 8px;border-radius:12px;cursor:pointer}
+.menu-panel li a:hover,.menu-panel li button:hover{background:var(--soft)}
+.menu-panel .pie{margin-top:auto;padding-top:14px}
+@media (prefers-reduced-motion:reduce){.menu-panel,.menu-velo{transition:none}}
 .petz{background:var(--soft);border-radius:14px;padding:10px 14px;margin:8px 0 0}
 .petz b{display:block}
 .status label{margin:12px 0 4px}
@@ -235,6 +253,9 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
 </style>
 </head>
 <body>
+<button class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="menuPanel" hidden><span class="av" id="menuAv" aria-hidden="true">☰</span><span>Menú</span></button>
+<div class="menu-velo" id="menuVelo"></div>
+<nav class="menu-panel" id="menuPanel" aria-label="Menú" aria-hidden="true"></nav>
 
 <!-- ====== INICIO (sin sesión) ====== -->
 <div id="inicioView" hidden>
@@ -445,6 +466,13 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
     </section>
 
     <section>
+      <h2>Donaciones</h2>
+      <p class="lead">Quienes pidieron donación en vez de regalo. Cada donación = lo que pagó quien regala (presupuesto del regalo) + el envío que ya pagó quien recibe. Estas personas no reciben paquete: no les actives el Ángel de Rescate.</p>
+      <button class="small-btn" id="donacionesBtn">Cargar lista</button>
+      <div id="donaciones"></div>
+    </section>
+
+    <section>
       <h2>Ruta de entrega</h2>
       <p class="lead">Regalos en PetMi y rescates pendientes de entregar, con dirección. Cada vez que se abre esta lista queda registrado.</p>
       <div class="row"><button class="small-btn" id="rutaBtn">Ver ruta</button><button class="link-btn" id="copiarRuta" hidden>Copiar para WhatsApp</button></div>
@@ -494,7 +522,7 @@ const CONFIG={
   cupon:{codigo:'AMIGOXMAS',monto:25,vence:'31 de enero',tienda:'https://app.revistapetmi.com/tienda.html'}
 };
 const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
-const VERSION_PAGINA='v15';   // súbelo con cada cambio para saber qué versión está publicada
+const VERSION_PAGINA='v17';   // súbelo con cada cambio para saber qué versión está publicada
 const REGISTRO_PETZID='https://app.revistapetmi.com/registro.html';
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
@@ -551,7 +579,39 @@ document.querySelectorAll('footer').forEach(f=>{const v=document.createElement('
 
 /* ── Navegación: tribbi.html, tribbi.html?admin=1 y tribbi.html?pago=ok (regreso de Recurrente) ── */
 const VIEWS=['inicioView','loginView','perfilView','meView','adminView'];
-function show(v){VIEWS.forEach(x=>$('#'+x).hidden=x!==v);window.scrollTo(0,0)}
+function show(v){VIEWS.forEach(x=>$('#'+x).hidden=x!==v);window.scrollTo(0,0);$('#menuBtn').hidden=v==='adminView';pintarMenu()}
+/* ── Menú: mi cuenta y accesos (la sesión es la misma de Tribbi, así que "Todos mis intercambios" abre la cuenta) ── */
+function pintarMenu(){
+  const conSes=!!ses,em=(ses&&ses.email)||'',nom=yo&&yo.perfil&&(yo.perfil.nombre_publico||yo.perfil.nombre);
+  $('#menuAv').textContent=conSes?((nom||em||'?').trim().charAt(0).toUpperCase()):'☰';
+  const wa=CONFIG.whatsapp?'https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent('Hola PetMi 👋 Tengo una duda sobre el amigo secreto.'):'';
+  const tienda=CONFIG.cupon&&CONFIG.cupon.tienda;
+  $('#menuPanel').innerHTML=`<div class="cab"><b>Amigo secreto PetMi</b><button class="cerrar" id="menuCerrar" aria-label="Cerrar menú">×</button></div>
+    ${conSes?`<div class="menu-yo"><span class="menu-btn av" style="position:static;box-shadow:none;border:0;padding:0" aria-hidden="true"><span class="av">${esc((nom||em||'?').trim().charAt(0).toUpperCase())}</span></span><span style="min-width:0"><b>${esc(nom||'Mi cuenta')}</b><small>${esc(em)}</small></span></div>`:''}
+    <ul>
+      ${conSes?`<li><button type="button" data-menu="yo">🐾 Mi amigo secreto PetMi</button></li>`:`<li><button type="button" data-menu="entrar">🔑 Entrar con mi correo</button></li>`}
+      ${conSes&&yo&&yo.perfil?`<li><button type="button" data-menu="datos">✏️ Mis datos</button></li>`:''}
+      ${conSes?`<li><a href="entrar.html">🎁 Mi cuenta: todos mis intercambios</a></li>`:''}
+      ${tienda?`<li><a href="${esc(tienda)}" target="_blank" rel="noopener">🛍️ Tienda PetMi</a></li>`:''}
+      ${wa?`<li><a href="${esc(wa)}" target="_blank" rel="noopener">💬 Contactar a PetMi</a></li>`:''}
+      <li><button type="button" data-menu="como">❓ Cómo funciona</button></li>
+    </ul>
+    <div class="pie">${conSes?'<button class="small-btn alt" type="button" data-salir>Salir</button>':''}</div>`;
+}
+function abrirMenuPetmi(){pintarMenu();$('#menuPanel').classList.add('on');$('#menuVelo').classList.add('on');$('#menuPanel').setAttribute('aria-hidden','false');$('#menuBtn').setAttribute('aria-expanded','true');setTimeout(()=>{const c=$('#menuCerrar');if(c)c.focus()},50)}
+function cerrarMenuPetmi(){$('#menuPanel').classList.remove('on');$('#menuVelo').classList.remove('on');$('#menuPanel').setAttribute('aria-hidden','true');$('#menuBtn').setAttribute('aria-expanded','false')}
+$('#menuBtn').onclick=abrirMenuPetmi;$('#menuVelo').onclick=cerrarMenuPetmi;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarMenuPetmi()});
+$('#menuPanel').addEventListener('click',async e=>{
+  if(e.target.id==='menuCerrar'){cerrarMenuPetmi();return}
+  if(e.target.closest('a')||e.target.closest('[data-salir]')){cerrarMenuPetmi();return}
+  const b=e.target.closest('[data-menu]');if(!b)return;cerrarMenuPetmi();
+  const k=b.dataset.menu;
+  if(k==='yo')await showMe();
+  else if(k==='datos')abrirPerfil();
+  else if(k==='entrar')$('#entrarBtn').click();
+  else if(k==='como'){show('inicioView');const c=document.querySelector('#inicioView h2');if(c)c.scrollIntoView()}
+});
 const qs=new URLSearchParams(location.search);
 const esAdmin=()=>new URLSearchParams(location.search).has('admin');
 let ed=null,yo=null,volverA=null;
@@ -675,7 +735,7 @@ async function showMe(){
   yo=r.d;
   const est=yo.inscripcion&&yo.inscripcion.estado;
   if(PAGO==='ok'&&est==='pagada'){recienPagado=true;history.replaceState(null,'',base())}
-  show('meView');renderMe(true);
+  show('meView');renderMe(true);pintarMenu();
   if(recienPagado)confetti();
   if((PAGO==='ok'||PAGO==='pendiente')&&est==='pendiente_pago')esperarPago();
 }
@@ -756,7 +816,7 @@ function renderMe(fresh){
   }else{
     const m=yo.mi_regalo||{},pm=yo.para_mi,da=don&&don.amigo&&don.amigo.dona_a?don.amigo:null;
     if(da)h=`<div class="status go"><h2>${da.pagada_en?'¡Gracias por tu donación! 💚':'Tu amigo secreto pidió una donación'}</h2>
-      <p>${da.pagada_en?`Donaste ${q(da.monto||don.donacion_q)} a ${esc(da.dona_a)} en su nombre. No tienes que comprar ni entregar regalo.`:`En vez de regalo, dona ${q(don.donacion_q)} a ${esc(da.dona_a)} en su nombre. No tienes que comprar ni entregar regalo.`}</p>
+      <p>${da.pagada_en?`Donaste ${q(da.monto||don.donacion_q)} y, con el envío de ${q(da.envio_q)} que ya pagó tu amigo secreto, PetMi entrega ${q(da.total)} a ${esc(da.dona_a)} en su nombre. No tienes que comprar ni entregar regalo.`:`En vez de comprar el regalo, dona ${q(don.donacion_q)} (el presupuesto del regalo). Con el envío de ${q(da.envio_q)} que ya pagó tu amigo secreto, PetMi entrega ${q(da.total)} a ${esc(da.dona_a)} en su nombre.`}</p>
       <ul class="steps"><li class="done"><b>✓</b>Descubre a tu amigo secreto</li><li class="${da.pagada_en?'done':''}"><b>${da.pagada_en?'✓':'○'}</b>Dona ${q(don.donacion_q)} a ${esc(da.dona_a)}</li></ul></div>`;
     else{
     const pasos=[[!!yo.amigo,'Descubre a tu amigo secreto'],[!!m.recibido_petmi_en,`Entrega su regalo a PetMi antes del ${dia(ed.entrega_hasta)}`],[!!m.entregado_en,'PetMi se lo entrega']];
@@ -855,10 +915,10 @@ function pintarDonacion(){
   if(!don){box.hidden=true;am.hidden=true;return}
   // Lo mío (quien recibe)
   const mi=don.mi||{};box.hidden=false;
-  if(mi.recibida_en)box.innerHTML=`<div class="dona hecha"><h3>💚 Tu amigo secreto donó en tu nombre</h3><p>Donó ${q(mi.monto||don.donacion_q)} a <b>${esc(mi.dona_a)}</b>. ¡Gracias por participar así!</p></div>`;
+  if(mi.recibida_en)box.innerHTML=`<div class="dona hecha"><h3>💚 Se donaron ${q(mi.total)} en tu nombre</h3><p>Tu amigo secreto donó ${q(mi.monto||don.donacion_q)} y se sumó tu envío de ${q(mi.envio_q)}: PetMi entrega <b>${q(mi.total)} a ${esc(mi.dona_a)}</b>. ¡Gracias por participar así!</p></div>`;
   else if(!donEditando)box.innerHTML=`<div class="dona"><h3>🐾 ¿Regalo o donación?</h3>
-    <p>${mi.dona_a?`Elegiste una <b>donación a ${esc(mi.dona_a)}</b>: quien te tiene de amigo secreto donará ${q(don.donacion_q)} y PetMi la entrega en tu nombre, en vez de un regalo.`
-      :`Si prefieres, tu amigo secreto puede donar ${q(don.donacion_q)} a una organización y PetMi la entrega en tu nombre, en vez de un regalo.`}</p>
+    <p>${mi.dona_a?`Elegiste una <b>donación de ${q(mi.total)} a ${esc(mi.dona_a)}</b> en vez de regalo: tu amigo secreto dona ${q(don.donacion_q)} y se suma tu envío de ${q(mi.envio_q)}, que ya no se usa. PetMi la entrega en tu nombre.`
+      :`Si prefieres, en vez de regalo puedes pedir una donación de ${q(mi.total)} a una organización: tu amigo secreto dona ${q(don.donacion_q)} y se suma tu envío de ${q(mi.envio_q)}. PetMi la entrega en tu nombre.`}</p>
     ${don.puede_cambiar?`<div class="fila"><button class="small-btn alt" type="button" data-dona-editar>${mi.dona_a?'Cambiar':'Prefiero una donación'}</button></div>`
       :'<p class="tiny">Tu amigo secreto ya te descubrió: ya no se puede cambiar.</p>'}</div>`;
   else{
@@ -873,7 +933,7 @@ function pintarDonacion(){
         <option value="__otra" ${sel==='__otra'?'selected':''}>Otra…</option>
       </select>
       <div id="donaOtraBox" ${sel==='__otra'?'':'hidden'}><label for="donaOtra" class="tiny" style="margin:8px 0 4px">¿Cuál? Escribe su nombre</label><input class="field" id="donaOtra" maxlength="80" value="${esc(otra)}" placeholder="Ej. Refugio Patitas Felices"></div>
-      <p class="tiny" style="margin:10px 0 0">Si eliges donación, tu amigo secreto dona ${q(don.donacion_q)} en línea y PetMi la entrega <b>en tu nombre</b> a la organización. Tus ideas de regalo se quedan por si acaso.</p>
+      <p class="tiny" style="margin:10px 0 0">Si eliges donación, tu amigo secreto dona ${q(don.donacion_q)} en línea, se suma tu envío de ${q(mi.envio_q)} (ya no hay paquete que llevar) y PetMi entrega <b>${q(mi.total)} en tu nombre</b> a la organización. Tus ideas de regalo se quedan por si acaso.</p>
       <p class="msg bad" id="donaErr" role="alert"></p>
       <div class="fila"><button class="small-btn alt" type="button" data-dona-guardar>Guardar</button><button class="link-btn" type="button" data-dona-cancelar>Cancelar</button></div></div>`;
   }
@@ -882,9 +942,9 @@ function pintarDonacion(){
   if(!da||!da.dona_a){am.hidden=true;am.innerHTML='';return}
   am.hidden=false;
   am.innerHTML=da.pagada_en
-    ?`<div class="dona hecha"><h3>✓ Donación hecha</h3><p>Donaste ${q(da.monto||don.donacion_q)} a <b>${esc(da.dona_a)}</b> en nombre de tu amigo secreto (${esc(diaHora(da.pagada_en))}). No tienes que comprar ni entregar regalo.</p></div>`
+    ?`<div class="dona hecha"><h3>✓ Donación hecha</h3><p>Donaste ${q(da.monto||don.donacion_q)} (${esc(diaHora(da.pagada_en))}). Con su envío, PetMi entrega <b>${q(da.total)} a ${esc(da.dona_a)}</b> en nombre de tu amigo secreto. No tienes que comprar ni entregar regalo.</p></div>`
     :`<div class="dona"><h3>💚 Pidió una donación a ${esc(da.dona_a)}</h3>
-      <p>En vez de comprarle un regalo, dona <b>${q(don.donacion_q)}</b> en línea en su nombre. PetMi entrega la donación a ${esc(da.dona_a)} y le avisa a tu amigo secreto. No tienes que entregar nada.</p>
+      <p>En vez de comprarle un regalo, dona <b>${q(don.donacion_q)}</b> en línea (el presupuesto del regalo). Se suma el envío de ${q(da.envio_q)} que ya pagó, y PetMi entrega <b>${q(da.total)} a ${esc(da.dona_a)}</b> en su nombre. No tienes que entregar nada.</p>
       <p class="msg" id="donaMsg" role="status">${esc(AVISO_DONA[DONA]&&DONA!=='ok'?AVISO_DONA[DONA]:'')}</p>
       <div class="fila"><button class="big-btn" type="button" id="donarBtn">Donar ${q(don.donacion_q)}</button></div></div>`;
 }
@@ -1056,6 +1116,19 @@ $('#entregas').addEventListener('click',async e=>{
   if(!r.ok){alert(falloAdmin(r,'No se pudo guardar.'));return}
   cargarEntregasAdmin();
 });
+
+/* ── Panel de PetMi: donaciones ── */
+$('#donacionesBtn').onclick=async()=>{
+  const r=await admin('tribbi_admin_donaciones'),el=$('#donaciones');
+  if(!r.ok){el.innerHTML=`<p class="msg bad">${esc(r.d.error==='falta_sql'?'Falta correr 19_donacion_110.sql en Supabase.':falloAdmin(r,'No se pudo cargar.'))}</p>`;return}
+  const l=r.d.donaciones||[],o=r.d.por_organizacion||[];
+  el.innerHTML=!l.length?'<p class="msg">Nadie ha pedido donación todavía.</p>'
+    :`<div class="nums" style="margin-top:12px">${o.map(x=>`<div><b>${q(x.total_pagado)}</b><span>${esc(x.dona_a)} · ${Number(x.pagadas)} pagada${x.pagadas==1?'':'s'}${x.pendientes?`, ${Number(x.pendientes)} pendiente${x.pendientes==1?'':'s'}`:''}</span></div>`).join('')}</div>
+     <div class="scroll"><table><thead><tr><th>Organización</th><th>Recibe</th><th>Quien regala pagó</th><th>Envío de quien recibe</th><th>Total a entregar</th><th>Estado</th></tr></thead><tbody>${l.map(x=>`<tr>
+       <td>${esc(x.dona_a)}</td><td class="nw">${esc(x.recibe)}<br><span class="tiny">${esc(x.recibe_nombre||'')}</span></td>
+       <td class="nw">${q(x.regalo_q)}</td><td class="nw">${q(x.envio_q)}</td><td class="nw"><b>${q(x.total)}</b></td>
+       <td class="nw">${x.pagada_en?'✓ Pagada<br><span class="tiny">'+esc(diaHora(x.pagada_en))+'</span>':'Pendiente'}</td></tr>`).join('')}</tbody></table></div>`;
+};
 
 /* ── Cupón de la tienda PetMi (solo con la inscripción pagada) ── */
 function pintarCupon(pagada){
