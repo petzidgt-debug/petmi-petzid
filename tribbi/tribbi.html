@@ -105,6 +105,9 @@ textarea.field{resize:vertical;min-height:84px}
 .steps li{display:flex;gap:10px;align-items:baseline;padding:4px 0}
 .steps li b{flex:none;width:1.4em;text-align:center}
 .steps li.done{color:var(--pine)}
+.steps.empaque li{padding:8px 0;align-items:flex-start}
+.steps.empaque li b{font-size:1.05rem}
+.steps.empaque .tag{margin:6px 0 0}
 
 .card-tag{background:var(--card);border:3px solid var(--red);border-radius:22px;padding:22px 22px 24px;text-align:center;box-shadow:0 8px 0 var(--soft);margin-top:18px}
 .card-tag .lbl{font-weight:500;color:var(--muted);margin:0 0 10px}
@@ -152,6 +155,17 @@ td.nw{white-space:nowrap}
 .msg{min-height:1.5em;margin:8px 0 0;color:var(--muted)}
 .msg.bad{color:var(--red);font-weight:500}
 
+/* Logo de Tribbi en el pie ("Powered by"), igual que en la portada de Tribbi */
+:root{--tb-logo:#0F9E90}
+@media (prefers-color-scheme:dark){:root{--tb-logo:#36D6C4}}
+.powered{display:inline-flex;align-items:center;gap:8px;color:var(--muted);text-decoration:none;font-size:.9rem}
+.powered:hover .tb-logo{opacity:.85}
+.tb-logo{font-family:"Fredoka","Trebuchet MS",sans-serif;font-weight:700;line-height:1;letter-spacing:0;color:var(--tb-logo);white-space:nowrap;display:inline-block;padding:.08em .3em 0 0;font-size:24px}
+.tb-logo .i{position:relative;display:inline-block;z-index:0}
+.tb-logo .i .c{position:absolute;z-index:-1;width:.181em;height:.181em;overflow:visible}
+.tb-logo .i .c.p{z-index:1}
+.tb-logo .i .c path{stroke:var(--bg);stroke-width:40px;paint-order:stroke}
+.tb-logo .i .c.p path{fill:var(--tb-logo)}
 footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:.95rem;border-top:2px dashed var(--line)}
 
 /* Pasos de la inscripción */
@@ -215,6 +229,14 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
 .menu-panel li a:hover,.menu-panel li button:hover{background:var(--soft)}
 .menu-panel .pie{margin-top:auto;padding-top:14px}
 @media (prefers-reduced-motion:reduce){.menu-panel,.menu-velo{transition:none}}
+.perfil-det{background:var(--card);border:2px solid var(--line);border-radius:20px;margin-top:22px;padding:0 16px}
+.perfil-det>summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:2px;padding:16px 28px 16px 0;position:relative;font-weight:700;font-size:1.15rem}
+.perfil-det>summary::-webkit-details-marker{display:none}
+.perfil-det>summary::after{content:'▾';position:absolute;right:4px;top:16px;transition:transform .2s}
+.perfil-det[open]>summary::after{transform:rotate(180deg)}
+.perfil-det>summary small{font-weight:400;font-size:.9rem;color:var(--muted)}
+#perfilCont{padding-bottom:16px}
+#perfilCont>:first-child{margin-top:0}
 .petz{background:var(--soft);border-radius:14px;padding:10px 14px;margin:8px 0 0}
 .petz b{display:block}
 .status label{margin:12px 0 4px}
@@ -294,7 +316,7 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       <ol id="pasos"></ol>
     </div>
   </div>
-  <footer><span>Una iniciativa de PetMi 🐾 · <a href="./" style="color:inherit">hecho con Tribbi</a></span><a id="waPie" target="_blank" rel="noopener" hidden>Contactar a PetMi</a><button class="link-btn" id="adminLink">Panel de PetMi</button></footer>
+  <footer><span>Una iniciativa de PetMi 🐾</span><a id="waPie" target="_blank" rel="noopener" hidden>Contactar a PetMi</a><button class="link-btn" id="adminLink">Panel de PetMi</button></footer>
 </div>
 
 <!-- ====== ENTRAR CON CÓDIGO POR CORREO ====== -->
@@ -409,6 +431,10 @@ footer{max-width:960px;margin:40px auto 0;padding:18px 20px 36px;display:flex;ju
       <p class="msg bad" id="wishErr" role="alert" hidden></p>
       <ul class="wishes" id="myWishes"></ul>
     </section>
+    <details class="perfil-det" id="perfilDet" hidden>
+      <summary><span>👤 Mi perfil</span><small>Mi mascota, mi entrega y lo que me gustaría recibir</small></summary>
+      <div id="perfilCont"></div>
+    </details>
     <div class="ayuda" id="ayudaBox" hidden>
       <h2>¿Dudas o algún inconveniente?</h2>
       <p>Escríbele a PetMi por WhatsApp y te ayudamos.</p>
@@ -517,6 +543,7 @@ const CONFIG={
   supabaseUrl:'https://ilcreewilnkchvozicyp.supabase.co',
   supabaseAnonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsY3JlZXdpbG5rY2h2b3ppY3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMDU3NTIsImV4cCI6MjA5MzU4MTc1Mn0.X5QoGsMIKU0oWd0q0qvKYxlbb1tZfMvttBxOwL0BCoM',
   edicion:'navidad-petmi-2026',
+  recoleccionDesde:'',              // fecha desde la que PetMi recoge los regalos, ej. '2026-12-11'. Vacío = el día del sorteo
   pagoApi:'/api/tribbi-pago',      // función de Vercel que crea el cobro en Recurrente (siguiente paso)
   reglamentoUrl:'',                // enlace al reglamento completo, cuando esté publicado
   contacto:'',                     // texto extra de contacto en el pie (opcional)
@@ -525,7 +552,7 @@ const CONFIG={
   cupon:{codigo:'AMIGOXMAS',monto:25,vence:'31 de enero',tienda:'https://app.revistapetmi.com/tienda.html'}
 };
 const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
-const VERSION_PAGINA='v18';   // súbelo con cada cambio para saber qué versión está publicada
+const VERSION_PAGINA='v21';   // súbelo con cada cambio para saber qué versión está publicada
 const REGISTRO_PETZID='https://app.revistapetmi.com/registro.html';
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
@@ -578,7 +605,18 @@ const bulbColors=['#D7263D','#F2B33D','#1F8A5B','#2F7FC1','#E0662A'];
 document.querySelectorAll('.lights').forEach(l=>l.innerHTML=Array.from({length:18},(_,i)=>`<span class="bulb" style="--c:${bulbColors[i%5]};--d:${(i%4)*.5}s"></span>`).join(''));
 if(CONFIG.contacto)$('#contacto').textContent='Dudas: '+CONFIG.contacto;
 if(CONFIG.whatsapp){const w=$('#waPie');w.hidden=false;w.href='https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent('Hola PetMi 👋 Tengo una duda sobre el amigo secreto.')}
-document.querySelectorAll('footer').forEach(f=>{const v=document.createElement('span');v.className='tiny';v.textContent=VERSION_PAGINA;f.appendChild(v)});
+/* Pie: "Powered by Tribbi" (con su logo, lleva a la portada de Tribbi) y la versión de la página */
+const LOGO_PATH="M125 547Q80 547 61.0 560.5Q42 574 38.5 595.0Q35 616 35 638Q35 661 39.0 681.5Q43 702 62.0 715.0Q81 728 126 728Q171 728 189.5 714.5Q208 701 212.0 680.0Q216 659 216 637Q216 615 212.0 594.0Q208 573 189.5 560.0Q171 547 125 547Z";
+function logoTribbi(){
+  const c=[['#F7B3C6',-.165],['#E86F94',.235],['#F2C14E',-.065],['#36D6C4',.135]];
+  const pieza=(f,l,cl)=>`<svg class="c${cl||''}" style="left:${l}em;top:.141em" viewBox="35 547 181 181"><path transform="translate(0 1275) scale(1 -1)" d="${LOGO_PATH}"${f?` fill="${f}"`:''}/></svg>`;
+  return `<span class="tb-logo">Tribb<span class="i" aria-hidden="true">i${c.map(([f,l])=>pieza(f,l)).join('')}${pieza(null,.035,' p')}</span></span>`;
+}
+document.querySelectorAll('footer').forEach(f=>{
+  const a=document.createElement('a');a.className='powered';a.href='./';a.setAttribute('aria-label','Powered by Tribbi: ir a la portada de Tribbi');
+  a.innerHTML='Powered by '+logoTribbi();f.appendChild(a);
+  const v=document.createElement('span');v.className='tiny';v.textContent=VERSION_PAGINA;f.appendChild(v);
+});
 
 /* ── Navegación: tribbi.html, tribbi.html?admin=1 y tribbi.html?pago=ok (regreso de Recurrente) ── */
 const VIEWS=['inicioView','loginView','perfilView','meView','adminView'];
@@ -593,6 +631,7 @@ function pintarMenu(){
     ${conSes?`<div class="menu-yo"><span class="menu-btn av" style="position:static;box-shadow:none;border:0;padding:0" aria-hidden="true"><span class="av">${esc((nom||em||'?').trim().charAt(0).toUpperCase())}</span></span><span style="min-width:0"><b>${esc(nom||'Mi cuenta')}</b><small>${esc(em)}</small></span></div>`:''}
     <ul>
       ${conSes?`<li><button type="button" data-menu="yo">🐾 Mi amigo secreto PetMi</button></li>`:`<li><button type="button" data-menu="entrar">🔑 Entrar con mi correo</button></li>`}
+      ${conSes&&yo&&yo.sorteo_hecho&&yo.tengo_amigo?`<li><button type="button" data-menu="perfil">👤 Mi perfil: mi mascota y lo que quiero recibir</button></li>`:''}
       ${conSes&&yo&&yo.perfil?`<li><button type="button" data-menu="datos">✏️ Mis datos</button></li>`:''}
       ${conSes?`<li><a href="entrar.html">🎁 Mi cuenta: todos mis intercambios</a></li>`:''}
       ${tienda?`<li><a href="${esc(tienda)}" target="_blank" rel="noopener">🛍️ Tienda PetMi</a></li>`:''}
@@ -612,6 +651,7 @@ $('#menuPanel').addEventListener('click',async e=>{
   const k=b.dataset.menu;
   if(k==='yo')await showMe();
   else if(k==='datos')abrirPerfil();
+  else if(k==='perfil'){if($('#meView').hidden)await showMe();abrirPerfilMio()}
   else if(k==='entrar')$('#entrarBtn').click();
   else if(k==='como'){show('inicioView');const c=document.querySelector('#inicioView h2');if(c)c.scrollIntoView()}
 });
@@ -822,10 +862,15 @@ function renderMe(fresh){
       <p>${da.pagada_en?`Donaste ${q(da.monto||don.donacion_q)} y, con el envío de ${q(da.envio_q)} que ya pagó tu amigo secreto, PetMi entrega ${q(da.total)} a ${esc(da.dona_a)} en su nombre. No tienes que comprar ni entregar regalo.`:`En vez de comprar el regalo, dona ${q(don.donacion_q)} (el presupuesto del regalo). Con el envío de ${q(da.envio_q)} que ya pagó tu amigo secreto, PetMi entrega ${q(da.total)} a ${esc(da.dona_a)} en su nombre.`}</p>
       <ul class="steps"><li class="done"><b>✓</b>Descubre a tu amigo secreto</li><li class="${da.pagada_en?'done':''}"><b>${da.pagada_en?'✓':'○'}</b>Dona ${q(don.donacion_q)} a ${esc(da.dona_a)}</li></ul></div>`;
     else{
-    const pasos=[[!!yo.amigo,'Descubre a tu amigo secreto'],[!!m.recibido_petmi_en,`Entrega su regalo a PetMi antes del ${dia(ed.entrega_hasta)}`],[!!m.entregado_en,'PetMi se lo entrega']];
-    h=`<div class="status go"><h2>Tu código para la etiqueta</h2><span class="tag">${esc(i.codigo)}</span>
-      <p>Envuelve el regalo, pega este código por fuera y entrégalo a PetMi. No pongas tu nombre si quieres mantener la sorpresa.</p>
-      <ul class="steps">${pasos.map(([ok,t])=>`<li class="${ok?'done':''}"><b>${ok?'✓':'○'}</b>${esc(t)}</li>`).join('')}</ul></div>`;
+    const desde=CONFIG.recoleccionDesde?dia(CONFIG.recoleccionDesde):dia(ed.sorteo_en);
+    const paso=(n,ok,html)=>`<li class="${ok?'done':''}"><b>${ok?'✓':n+'.'}</b><span>${html}</span></li>`;
+    h=`<div class="status go"><h2>Instrucciones de empaque</h2>
+      <ol class="steps empaque">
+        ${paso(1,!!m.recibido_petmi_en,'Envuelve el regalo. No pongas tu nombre si quieres mantener la sorpresa.')}
+        ${paso(2,!!m.recibido_petmi_en,`Pega este código por fuera del paquete:<br><span class="tag">${esc(i.codigo)}</span>`)}
+        ${paso(3,!!m.recibido_petmi_en,`PetMi coordinará contigo la recolección a partir del ${esc(desde)}.`+(m.recibido_petmi_en?' <b>¡Ya lo recibimos!</b>':''))}
+        ${paso(4,!!m.entregado_en,'PetMi se encarga de entregar tu regalo.'+(m.entregado_en?' <b>¡Entregado!</b>':''))}
+      </ol></div>`;
     }
     if(pm&&pm.entregado_en)h+=`<div class="status ${pm.confirmado_en?'':'go'}"><h2>${pm.confirmado_en?'Confirmaste que recibiste tu regalo 🎁':'¡Tu regalo ya fue entregado! 🎁'}</h2>
       ${pm.confirmado_en?'<p>Gracias por participar.</p>':'<p>Cuando lo tengas en tus manos, confírmalo aquí.</p><button class="small-btn alt" id="recibiBtn">Ya recibí mi regalo</button>'}</div>`;
@@ -844,6 +889,7 @@ function renderMe(fresh){
   if(!conLugar)$('#mascSec').hidden=true;else if(fresh)cargarMascota();
   // Amigo secreto
   const verAmigo=yo.sorteo_hecho&&yo.tengo_amigo;$('#amigoBox').hidden=!verAmigo;
+  ordenarMe(verAmigo);
   if(verAmigo)renderAmigo(fresh);
   if(pagada&&fresh)cargarDonacion();
   pintarCupon(pagada);
@@ -921,7 +967,8 @@ function pintarDonacion(){
   if(mi.recibida_en)box.innerHTML=`<div class="dona hecha"><h3>💚 Se donaron ${q(mi.total)} en tu nombre</h3><p>Tu amigo secreto donó ${q(mi.monto||don.donacion_q)} y se sumó tu envío de ${q(mi.envio_q)}: PetMi entrega <b>${q(mi.total)} a ${esc(mi.dona_a)}</b>. ¡Gracias por participar así!</p></div>`;
   else if(!donEditando)box.innerHTML=`<div class="dona"><h3>🐾 ¿Regalo o donación?</h3>
     <p>${mi.dona_a?`Elegiste una <b>donación de ${q(mi.total)} a ${esc(mi.dona_a)}</b> en vez de regalo: tu amigo secreto dona ${q(don.donacion_q)} y se suma tu envío de ${q(mi.envio_q)}, que ya no se usa. PetMi la entrega en tu nombre.`
-      :`Si prefieres, en vez de regalo puedes pedir una donación de ${q(mi.total)} a una organización: tu amigo secreto dona ${q(don.donacion_q)} y se suma tu envío de ${q(mi.envio_q)}. PetMi la entrega en tu nombre.`}</p>
+      :don.puede_cambiar?`Si prefieres, en vez de regalo puedes pedir una donación de ${q(mi.total)} a una organización: tu amigo secreto dona ${q(don.donacion_q)} y se suma tu envío de ${q(mi.envio_q)}. PetMi la entrega en tu nombre.`
+      :'Vas a recibir un regalo 🎁.'}</p>
     ${don.puede_cambiar?`<div class="fila"><button class="small-btn alt" type="button" data-dona-editar>${mi.dona_a?'Cambiar':'Prefiero una donación'}</button></div>`
       :'<p class="tiny">Tu amigo secreto ya te descubrió: ya no se puede cambiar.</p>'}</div>`;
   else{
@@ -1052,6 +1099,7 @@ function pintarEntrega(){
   const c=$('#entregaCard');
   if(!ZONAS||!miEnt){c.hidden=true;return}
   c.hidden=false;if(miEnt.envio_q)ponerEnvio(miEnt.envio_q);
+  if(!miEnt.tiene_direccion&&!$('#perfilDet').hidden)$('#perfilDet').open=true;
   const falta=!miEnt.tiene_direccion,pend=yo&&yo.inscripcion&&yo.inscripcion.estado==='pendiente_pago';
   const lugar=miEnt.lugar?esc(miEnt.lugar)+(miEnt.zona?`, zona ${esc(miEnt.zona)}`:''):'';
   let estado;
@@ -1455,6 +1503,18 @@ function confetti(){
   c.innerHTML=Array.from({length:60},(_,i)=>`<i style="left:${Math.random()*100}%;background:${cols[i%5]};animation-delay:${Math.random()*.5}s;animation-duration:${1.4+Math.random()}s"></i>`).join('');
   document.body.appendChild(c);setTimeout(()=>c.remove(),3200);
 }
+
+/* Después del sorteo: primero el amigo secreto, luego las instrucciones, y lo mío (mascota, entrega, lo que quiero recibir) dentro de "Mi perfil" */
+function ordenarMe(verAmigo){
+  const det=$('#perfilDet'),cont=$('#perfilCont');
+  const mios=['entregaCard','mascSec','mineSec'].map(id=>$('#'+id));
+  const orden=verAmigo?['amigoBox','estado','cuponBox','perfilDet','ayudaBox']:['estado','entregaCard','amigoBox','cuponBox','mascSec','mineSec','perfilDet','ayudaBox'];
+  if(verAmigo)mios.forEach(el=>cont.appendChild(el));
+  let ref=$('#facts2');
+  orden.forEach(id=>{const el=$('#'+id);if(el&&el.previousElementSibling!==ref)ref.after(el);ref=el});
+  det.hidden=!verAmigo;
+}
+function abrirPerfilMio(){const d=$('#perfilDet');if(!d||d.hidden)return false;d.open=true;d.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});return true}
 
 /* ── Panel de PetMi: aviso por correo del sorteo (lo manda /api/tribbi-pago con Wix, de 20 en 20) ── */
 async function mandarAvisoSorteo(){
