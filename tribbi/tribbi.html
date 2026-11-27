@@ -563,7 +563,7 @@ const CONFIG={
   cupon:{codigo:'AMIGOXMAS',monto:25,vence:'31 de enero',tienda:'https://app.revistapetmi.com/tienda.html'}
 };
 const SB=CONFIG.supabaseUrl,KEY=CONFIG.supabaseAnonKey;
-const VERSION_PAGINA='v25';   // súbelo con cada cambio para saber qué versión está publicada
+const VERSION_PAGINA='v26';   // súbelo con cada cambio para saber qué versión está publicada
 const REGISTRO_PETZID='https://app.revistapetmi.com/registro.html';
 /* El intercambio sale de la dirección (?e=identificador); sin ella, el de CONFIG */
 const ED_URL=(new URLSearchParams(location.search).get('e')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
@@ -804,6 +804,7 @@ function asistente(ya){
         <p class="paso">Paso 2 de 4 · Tu mascota</p><h2>¿Quién participa?</h2>${ya?'<p class="tiny" style="margin:0 0 6px">Ya empezaste tu inscripción: revisa tus datos y termina con el pago.</p>':''}
         <div id="petzBox"><p class="tiny">Buscando tu cuenta de PetzID…</p></div>
         <div id="mascPre"></div>
+        <div id="donaPre"></div>
         <p class="msg bad" id="err2" role="alert"></p>
         <div class="nav-pasos"><span></span><button class="big-btn" type="button" data-ir="3">Continuar</button></div>
       </div>
@@ -956,6 +957,28 @@ async function cargarPetzid(){
   if(d.tiene_petzid){box.innerHTML=`<div class="petz"><b>🐾 Encontramos tu cuenta de PetzID</b>${esc(nombre||correo)}</div>`;cargarMascota()}
   else box.innerHTML=`<div class="petz"><b>No encontramos una cuenta de PetzID con ${esc(correo||'tu correo')}</b>Tu amigo secreto le regala a tu mascota. Si ya tiene PetzID con otro correo, <button type="button" class="link-btn" data-salir style="padding:0">entra con ese correo</button>. Si no, <a href="${REGISTRO_PETZID}" target="_blank" rel="noopener">créale su PetzID</a> con este correo y vuelve aquí, o sigue sin ella.</div>`;
   $('#uNombre').value=nombre;$('#uWa').value=wa;
+  cargarDonacionPre();
+}
+/* Paso 2: "¿Qué prefieres recibir?" se elige ANTES de pagar.
+   Sin inscripción se guarda aquí (local) y se manda a Supabase al inscribirse. Ya inscrito (pendiente de pago) se guarda al momento.
+   Si falta 22_donacion_opciones.sql no se muestra y se elige después de pagar, como antes. */
+async function cargarDonacionPre(){
+  const slot=$('#donaPre');if(!slot||!DONA_EL)return;
+  if(ASIST_YA){const r=await rpc('tribbi_donacion',{p_slug:ED});don=r.ok?r.d:null}
+  else{
+    const r=await rpc('tribbi_donacion_opciones',{p_slug:ED});
+    if(!r.ok||!r.d||!r.d.ok){don=null;return}
+    const env=Number(r.d.envio_q)||0,dq=Number(r.d.donacion_q)||0,antes=don&&don.local?don.mi.dona_a:null;
+    don={local:true,donacion_q:dq,opciones:r.d.opciones||[],puede_cambiar:true,amigo:null,mi:{dona_a:antes,envio_q:env,total:dq+env}};
+  }
+  if(!don||!$('#donaPre'))return;
+  slot.appendChild(DONA_EL);pintarDonacion();
+}
+/* El envío (Q35/Q45) depende del lugar que elige en el paso 3: se recalcula el total de la donación. */
+function donaEnvio(envio){
+  if(!don||!don.mi||!envio)return;
+  don.mi.envio_q=Number(envio);don.mi.total=Number(don.donacion_q)+Number(envio);
+  if(DONA_EL&&DONA_EL.isConnected&&don.puede_cambiar)pintarDonacion();
 }
 /* ── Donación en vez de regalo ──
    Quien recibe elige "prefiero una donación a…"; quien regala, al descubrirlo, la paga en línea (Recurrente).
@@ -965,6 +988,7 @@ const DONA_EL=document.getElementById('donaBox');   // se mueve debajo de la fot
 const AVISO_DONA={ok:'¡Gracias! Tu donación quedó registrada. 💚',pendiente:'Tu donación está en proceso. En cuanto se apruebe queda registrada.',
   revisar:'No pudimos confirmar tu donación. Si ya se te cobró, escríbele a PetMi.',cancelado:'Cancelaste la donación. Puedes hacerla cuando quieras.'};
 async function cargarDonacion(){
+  if(DONA_EL&&!DONA_EL.isConnected&&$('#mineSec'))$('#mineSec').insertBefore(DONA_EL,$('#mineSec').firstChild);   // venía del paso 2
   const r=await rpc('tribbi_donacion',{p_slug:ED});
   const antes=JSON.stringify(don&&don.amigo);
   don=r.ok?r.d:null;
@@ -1010,6 +1034,11 @@ function pintarDonacion(){
 }
 /* Se guarda solo al elegir (Regalo, o una organización de la lista). "Otra…" se guarda con su botón. */
 async function guardarDona(valor,boton){
+  if(don&&don.local){   // todavía no está inscrito: se guarda al inscribirse
+    don.mi.dona_a=valor||null;pintarDonacion();
+    const m0=$('#donaErr');if(m0){m0.className='msg';m0.textContent=valor?'Listo ✓ Se guarda al inscribirte.':''}
+    return;
+  }
   const m=$('#donaErr');if(m){m.className='msg';m.textContent='Guardando…'}
   if(boton)boton.disabled=true;
   const r=await rpc('tribbi_mi_donacion',{p_slug:ED,p_dona_a:valor||null});
@@ -1279,9 +1308,11 @@ function irPaso(n){
   if(n===4){
     const z=zonaElegida();
     $('#envioResumen').innerHTML=z?`<span class="envio-chip">🚚 Envío a ${esc(z.nombre)}: ${q(z.envio_q)}</span>`:'';
-    if(z)ponerEnvio(z.envio_q);
+    if(z){ponerEnvio(z.envio_q);donaEnvio(z.envio_q)}
     const el=masc&&masc.mascotas.find(m=>m.uid===masc.elegida);
-    $('#resumenFinal').innerHTML=el?amigoMascotaHTML(el).replace('Le regalas a','Participa'):'';
+    const da=don&&don.mi&&don.mi.dona_a;
+    const recibe=don?`<p class="tiny" style="margin:8px 0 0"><b>Quieres recibir:</b> ${da?`💚 una donación de ${q(don.mi.total)} a ${esc(da)}, en tu nombre`:'🎁 un regalo'} · <button type="button" class="link-btn" data-ir="2" style="padding:0">cambiar</button></p>`:'';
+    $('#resumenFinal').innerHTML=(el?amigoMascotaHTML(el).replace('Le regalas a','Participa'):'')+recibe;
   }
   if(n===4&&msgPaso4){const e=$('#inscErr');if(e)e.textContent=msgPaso4;msgPaso4=''}
   const c=$('#unirCard');if(c)c.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});
@@ -1292,6 +1323,8 @@ document.addEventListener('click',e=>{
   if(n===3&&!$('#paso2').hidden){   // salir del paso 2: si tiene varias mascotas, que elija una
     if(masc&&masc.mascotas.length>1&&!masc.elegida){$('#err2').textContent='Toca la mascota que participa.';return}
     if(editandoDesc){$('#err2').textContent='Guarda o cancela los datos curiosos antes de seguir.';return}
+    const dn=document.querySelector('#donaPre input[name=donaTipo][value=donacion]');
+    if(dn&&dn.checked&&!(don&&don.mi&&don.mi.dona_a)){$('#err2').textContent='Elige a qué organización quieres la donación, o marca "Un regalo".';return}
     $('#err2').textContent='';
   }
   if(n===4){
@@ -1326,6 +1359,10 @@ async function inscribirme(){
     miEnt=g.d;ponerEnvio(miEnt.envio_q);
   }
   if(masc&&masc.local&&masc.elegida)await rpc('tribbi_elegir_mascota',{p_slug:ED,p_uid:masc.elegida});   // la mascota que eligió antes de inscribirse
+  if(don&&don.local&&don.mi.dona_a){   // regalo o donación, elegido en el paso 2
+    const g=await rpc('tribbi_mi_donacion',{p_slug:ED,p_dona_a:don.mi.dona_a});
+    if(g.ok)don=g.d;
+  }
   if(r.d.estado==='pagada'){await showMe();return}
   await pagar(b,err);
 }
